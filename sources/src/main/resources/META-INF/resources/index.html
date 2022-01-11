@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>Request elevated access</title>
+
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Google+Sans:100,300,400,500,700,900,100i,300i,400i,500i,700i,900i">
+    <link rel="stylesheet" href="/site.css"/>
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script language="javascript">
+            function validate() {
+                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                var textboxes = document.querySelectorAll('input[type="text"]');
+                var valid = Array.prototype.slice.call(checkboxes).some(x => x.checked) &&
+                    Array.prototype.slice.call(textboxes).some(x => x.value != null && x.value.trim() != "");
+
+                if (valid) {
+                    document.querySelectorAll('input[type="submit"]')[0].disabled = false;
+                }
+                else {
+                    document.querySelectorAll('input[type="submit"]')[0].disabled = true;
+                }
+            }
+
+            function showWarnings(result) {
+                if (result.warnings === undefined || result.warnings.length == 0) {
+                    $('.alert-box').hide();
+                }
+                else {
+                    $('.alert-box').show();
+                    $('.alert-box').text(result.warnings.join());
+                }
+            }
+
+            function showHomePane(result) {
+                showWarnings(result);
+                $('#justification-hint').text(result.justificationHint);
+
+                $.each(result.roleBindings, function(i, role) {
+                    var disabled = role.status == 'ACTIVATED' ? "disabled='disabled'" : '';
+                    var row = `<tr>
+                            <td>
+                                <input type="checkbox"
+                                   name="roles"
+                                   value="${role.resourceName}|${role.fullResourceName}|${role.role}"
+                                   onchange="validate()"
+                                   ${disabled} />
+                            </td>
+                            <td>${role.resourceName}</td>
+                            <td>${role.role}</td>
+                            <td>${role.status}</td>
+                        </tr>`;
+                    $('#eligible-roles').append(row);
+                });
+
+                $('#home-pane').toggle();
+            }
+
+            function showConfirmationPane(result) {
+                $('#home-pane').toggle();
+                $('#activation-duration').text(`${result.activationDuration} minutes`);
+
+                showWarnings(result);
+
+                $.each(result.roleBindings, function(i, role) {
+                    var row = `<tr>
+                            <td></td>
+                            <td>${role.resourceName}</td>
+                            <td>${role.role}</td>
+                            <td>${role.status}</td>
+                        </tr>`;
+                    $('#activated-roles').append(row);
+                });
+
+                $('#home-confirmation').toggle();
+            }
+
+            $(document).ajaxError(function (e, xhr, settings) {
+                var error = $.parseJSON(xhr.responseText)
+                $('.alert-box').html(error.message);
+            });
+
+            $(document).ready(function() {
+                $.ajax({
+                    url: "/api/",
+                    success: showHomePane
+                });
+
+                $('#activate-form').on('submit', function(e){
+                    e.preventDefault(); // Avoid regular post.
+
+                    $('.alert-box').show();
+                    $('.alert-box').text("Working...");
+                    $("#submit").children().prop('disabled',true);
+
+                    $.ajax({
+                        type: "POST",
+                        url:  $(this).attr('action'),
+                        data: $(this).serialize(),
+                        success: showConfirmationPane
+                    });
+                });
+            });
+
+
+    </script>
+</head>
+<body>
+<div class="container-outer">
+    <div class="container-middle">
+        <div class="container-content">
+            <div class="alert-box">Loading...</div>
+
+            <!-- Panes, only one shown at a time -->
+            <div id="home-pane" class="pane">
+                <h1 class="display-4">Request elevated access</h1>
+
+                <form action="/api/" method="POST" id="activate-form" autocomplete="off">
+                    <p>
+                    <table id="eligible-roles" class="roletable">
+                        <tr>
+                            <th></th>
+                            <th>Resource</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                        </tr>
+                    </table>
+                    </p>
+                    <p>
+                    <fieldset>
+                        <legend>Justification (<span id="justification-hint"></span>)</legend>
+                        <input name="justification"
+                               type="text"
+                               maxlength="32"
+                               oninput="validate()"/>
+                    </fieldset>
+                    </p>
+                    <p>
+                    <div id="submit">
+                        <input type="submit" value="Request access" class="button" disabled="disabled"/>
+                    </div>
+                    </p>
+                </form>
+            </div>
+
+            <div id="home-confirmation" class="pane">
+                <h1 class="display-4">Elevated access granted</h1>
+
+                <p>
+                    You've been temporarily granted the following roles:
+                </p>
+
+                <p>
+                <table id="activated-roles" class="roletable">
+                    <tr>
+                        <th></th>
+                        <th>Resource</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </table>
+                </p>
+                <p>
+                    Your access will expire automatically after <span id="activation-duration"></span>.
+                </p>
+                <p>
+                <form action="/" method="GET">
+                    <input type="submit" value="Back" class="button"/>
+                </form>
+                </p>
+                <b>
+                    <a href="https://console.cloud.google.com/">Open Cloud Console</a>.
+                </b>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

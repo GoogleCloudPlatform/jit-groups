@@ -1,0 +1,148 @@
+﻿/**
+ * Copyright 2021 Google LLC
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+body {
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-size: 14px;
+    color: #5f6368;
+}
+
+h1 {
+    font-size: 24px;
+    font-family: 'Google Sans','Noto Sans Myanmar UI',arial,sans-serif;
+    font-weight: 400;
+    color: #202124;
+}
+
+h2 {
+    font-size: 18px;
+    font-family: 'Google Sans','Noto Sans Myanmar UI',arial,sans-serif;
+    font-weight: 400;
+    color: #202124;
+    margin-top: 40px;
+}
+
+a {
+    font-family: "Google Sans", Roboto, Arial, sans-serif;
+    font-weight: 500;
+    text-transform: none;
+    color: #1a73e8;
+    text-decoration: none;
+}
+
+.button {
+    font-family: "Google Sans", Roboto, Arial, sans-serif;
+    font-weight: 500;
+    background-color: #1a73e8;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    padding: 8px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button:disabled {
+    background-color: lightgray;
+}
+
+.container-outer {
+    display: table;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.container-middle {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.container-content {
+    margin-left: auto;
+    margin-right: auto;
+    width: 600px;
+    padding: 30px;
+    border-radius: 10px;
+    border: 1px solid lightgray;
+}
+
+.email {
+    background-color: #eee;
+}
+
+th {
+    background-color: #fafafa;
+    text-align: left;
+    color: black;
+    padding: 4px;
+}
+
+td {
+    padding: 4px;
+}
+
+.roletable {
+    width: 100%;
+    margin-bottom: 30px;
+    margin-top: 30px;
+}
+
+fieldset {
+    border-radius: 4px;
+    color: #202124;
+    margin: 1px 1px 0 1px;
+    padding: 10px 10px;
+    border-width: thin;
+    border-style: solid;
+}
+
+legend {
+    font-size: 12px;
+}
+
+fieldset > input {
+    width: 100%;
+    outline: none;
+    border: none;
+}
+
+.diagnostics {
+    color: lightgray;
+    font-size: 7px;
+}
+
+.alert-box {
+    background-color: lightyellow;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+}
+
+.pane {
+    display:none;
+}
