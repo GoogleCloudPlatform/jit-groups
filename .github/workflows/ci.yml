@@ -45,7 +45,7 @@ jobs:
         cache: maven
         
     - name: Set version
-      run mvn versions:set -DnewVersion=$VERSION.$GITHUB_RUN_NUMBER --file $SOURCE_DIR/pom.xml
+      run: mvn versions:set -DnewVersion=$VERSION.$GITHUB_RUN_NUMBER --file $SOURCE_DIR/pom.xml
       
     - name: Build
       run: mvn -B package -Dmaven.test.skip=true --file $SOURCE_DIR/pom.xml
