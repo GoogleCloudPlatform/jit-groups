@@ -92,12 +92,14 @@ public class AssetInventoryAdapter {
                       .setOptions(
                           IamPolicyAnalysisQuery.Options.newBuilder()
                               .setExpandResources(expandResources))
-                      .setConditionContext(
-                          IamPolicyAnalysisQuery.ConditionContext.newBuilder()
-                              .setAccessTime(
-                                  Timestamp.newBuilder()
-                                      .setSeconds(System.currentTimeMillis() / 1000))
-                              .build()))
+                      // b/217301546
+                      // .setConditionContext(
+                      //     IamPolicyAnalysisQuery.ConditionContext.newBuilder()
+                      //         .setAccessTime(
+                      //             Timestamp.newBuilder()
+                      //                 .setSeconds(System.currentTimeMillis() / 1000))
+                      //         .build())
+              )
               .build();
 
       return client.analyzeIamPolicy(request).getMainAnalysis();
