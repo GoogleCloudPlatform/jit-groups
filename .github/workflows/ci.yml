@@ -54,5 +54,5 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: jit-access.jar
-        path: sources/target/
+        path: sources/target/*.jar
         retention-days: 14
