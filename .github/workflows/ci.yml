@@ -28,7 +28,7 @@ on:
     branches: [ master ]
 
 env:
-  VERSION: 1.0
+  VERSION: '1.0'
   SOURCE_DIR: sources
   
 jobs:
@@ -49,3 +49,10 @@ jobs:
       
     - name: Build
       run: mvn -B package -Dmaven.test.skip=true --file $SOURCE_DIR/pom.xml
+
+    - name: 'Upload artifact'
+      uses: actions/upload-artifact@v2
+      with:
+        name: Jar
+        path: sources/target/
+        retention-days: 14
