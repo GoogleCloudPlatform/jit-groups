@@ -23,7 +23,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
-  <artifactId>iam-elevate</artifactId>
+  <artifactId>jitaccess</artifactId>
   <version>1.0-SNAPSHOT</version>
   <properties>
     <surefire-plugin.version>2.22.2</surefire-plugin.version>
