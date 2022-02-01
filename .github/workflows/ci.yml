@@ -53,6 +53,6 @@ jobs:
     - name: 'Upload artifact'
       uses: actions/upload-artifact@v2
       with:
-        name: Jar
+        name: jit-access.jar
         path: sources/target/
         retention-days: 14
