@@ -64,6 +64,7 @@ public class TestElevationService {
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -85,6 +86,7 @@ public class TestElevationService {
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -105,6 +107,7 @@ public class TestElevationService {
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -132,6 +135,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -168,6 +172,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -219,6 +224,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -275,6 +281,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -398,6 +405,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -462,6 +470,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -546,6 +555,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -602,6 +612,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -661,6 +672,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
@@ -737,6 +749,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
+                true,
                 ELEVATION_SERVICE_NAME,
                 "hint",
                 Pattern.compile("^\\d+$"),

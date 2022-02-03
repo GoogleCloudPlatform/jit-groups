@@ -139,13 +139,21 @@ public class ElevationService {
     // user.
     //
     // NB. The Asset API considers group membership if the caller
-    // (i.e., the Cloud Run service account) has the 'Groups Reader'
+    // (i.e., the AppEngine service account) has the 'Groups Reader'
     // admin role.
+    //
+    // NB. In larger organizations, including inherited bindings
+    // causes excessive fan-out and results to be clipped.
+    // By default, inherited bindings should be ignored (meaning
+    // that eligible roles must be granted on the project, not
+    // on the parent folder or organization).
     //
 
     var analysisResult =
         this.assetInventoryAdapter.analyzeResourcesAccessibleByUser(
-            this.options.getScope(), user, true); // Expand resources.
+            this.options.getScope(),
+            user,
+            this.options.isIncludeInheritedBindings());
 
     //
     // Find role bindings which have already been activated.
@@ -262,6 +270,7 @@ public class ElevationService {
 
   public static class Options {
     private final String scope;
+    private final boolean includeInheritedBindings;
     private final String eligibilityServiceName;
     private final Duration activationDuration;
     private final String justificationHint;
@@ -269,11 +278,13 @@ public class ElevationService {
 
     public Options(
         String scope,
+        boolean includeInheritedBindings,
         String eligibilityServiceName,
         String justificationHint,
         Pattern justificationPattern,
         Duration activationDuration) {
       this.scope = scope;
+      this.includeInheritedBindings = includeInheritedBindings;
       this.eligibilityServiceName = eligibilityServiceName;
       this.activationDuration = activationDuration;
       this.justificationHint = justificationHint;
@@ -284,6 +295,9 @@ public class ElevationService {
     public String getScope() {
       return this.scope;
     }
+
+    /** Search inherited IAM policies */
+    public boolean isIncludeInheritedBindings() { return includeInheritedBindings; }
 
     /** Resource name that is used in IAM conditions to indicate eligibility. */
     public String getEligibilityServiceName() {
