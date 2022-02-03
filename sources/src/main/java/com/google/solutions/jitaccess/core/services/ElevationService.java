@@ -48,11 +48,13 @@ import java.util.stream.Collectors;
 /** Service that contains the logic required to find eligible roles, and to activate them. */
 @RequestScoped
 public class ElevationService {
+  public static final String DEFAULT_ATTRIBUTE_NAME = "gcp.solutions/jitaccess";
+
   private static final String PROJECT_RESOURCE_NAME_PREFIX =
       "//cloudresourcemanager.googleapis.com/projects/";
   public static final String ELEVATION_CONDITION_TITLE = "Temporary elevation";
   private static final Pattern ELEVATION_CONDITION_PATTERN =
-      Pattern.compile("^\\s*resource\\.service\\s*==\\s*['\"](.*)['\"]\\s*$");
+      Pattern.compile("^api.getattribute\\(['\"](.*)['\"],['\"]{2}\\)==['\"](.*)['\"]$");
 
   private final AssetInventoryAdapter assetInventoryAdapter;
   private final ResourceManagerAdapter resourceManagerAdapter;
@@ -77,8 +79,16 @@ public class ElevationService {
       return false;
     }
 
-    var match = ELEVATION_CONDITION_PATTERN.matcher(iamCondition.getExpression());
-    return match.find() && match.group(1).equals(this.options.getEligibilityServiceName());
+    // Strip all whitespace to simplify expression matching.
+    var expression = iamCondition
+        .getExpression()
+        .toLowerCase()
+        .replace(" ", "");
+
+    var match = ELEVATION_CONDITION_PATTERN.matcher(expression);
+    return match.find() &&
+           match.group(1).equals(this.options.getEligibilityAttributeName()) &&
+           match.group(2).equals("active");
   }
 
   private boolean isSupportedResource(String fullResourceName) {
@@ -271,7 +281,7 @@ public class ElevationService {
   public static class Options {
     private final String scope;
     private final boolean includeInheritedBindings;
-    private final String eligibilityServiceName;
+    private final String eligibilityAttributeName;
     private final Duration activationDuration;
     private final String justificationHint;
     private final Pattern justificationPattern;
@@ -279,13 +289,13 @@ public class ElevationService {
     public Options(
         String scope,
         boolean includeInheritedBindings,
-        String eligibilityServiceName,
+        String eligibilityAttributeName,
         String justificationHint,
         Pattern justificationPattern,
         Duration activationDuration) {
       this.scope = scope;
       this.includeInheritedBindings = includeInheritedBindings;
-      this.eligibilityServiceName = eligibilityServiceName;
+      this.eligibilityAttributeName = eligibilityAttributeName;
       this.activationDuration = activationDuration;
       this.justificationHint = justificationHint;
       this.justificationPattern = justificationPattern;
@@ -300,8 +310,8 @@ public class ElevationService {
     public boolean isIncludeInheritedBindings() { return includeInheritedBindings; }
 
     /** Resource name that is used in IAM conditions to indicate eligibility. */
-    public String getEligibilityServiceName() {
-      return this.eligibilityServiceName;
+    public String getEligibilityAttributeName() {
+      return this.eligibilityAttributeName;
     }
 
     /** Duration for an elevation. */

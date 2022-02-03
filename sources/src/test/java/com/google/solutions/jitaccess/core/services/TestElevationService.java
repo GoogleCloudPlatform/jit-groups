@@ -44,20 +44,18 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class TestElevationService {
-  private static final String ELEVATION_SERVICE_NAME = "test.googleapis.com";
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
   private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
-
   private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
   private static final String ELIGIBILITY_CONDITION =
-      "resource.service == \n'" + ELEVATION_SERVICE_NAME + "'";
+      "api.getAttribute('"+ ElevationService.DEFAULT_ATTRIBUTE_NAME + "', '') == 'active'";
 
   // ---------------------------------------------------------------------
   // isConditionIndicatorForEligibility.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenConditionUsesDoubleQuotes_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
+  public void whenConditionUsesDoubleQuotesAndWrongCasing_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
     var service =
         new ElevationService(
             Mockito.mock(AssetInventoryAdapter.class),
@@ -65,21 +63,20 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
     var condition =
         Expr.newBuilder()
-            .setExpression("resource.service==\"" + ELEVATION_SERVICE_NAME + "\"")
+            .setExpression("api.getAttribute(\""+ ElevationService.DEFAULT_ATTRIBUTE_NAME.toUpperCase() + "\", \"\" ) == \"ACTIVE\"")
             .build();
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
 
   @Test
-  public void
-      whenConditionUsesSingleQuotesAndRedundantWhitespace_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
+  public void whenConditionUsesSingleQuotesAndRedundantWhitespace_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
     var service =
         new ElevationService(
             Mockito.mock(AssetInventoryAdapter.class),
@@ -87,14 +84,15 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
     var condition =
         Expr.newBuilder()
-            .setExpression("   resource.service == \n'" + ELEVATION_SERVICE_NAME + "'\n")
+            .setExpression(
+                "  api.getAttribute( '"+ ElevationService.DEFAULT_ATTRIBUTE_NAME + "'  ,   '' )   == 'active'  \n")
             .build();
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
@@ -108,7 +106,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -136,7 +134,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -173,7 +171,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -225,7 +223,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -282,7 +280,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -406,7 +404,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -471,7 +469,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -556,7 +554,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -613,7 +611,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -673,7 +671,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -750,7 +748,7 @@ public class TestElevationService {
             new ElevationService.Options(
                 "organizations/0",
                 true,
-                ELEVATION_SERVICE_NAME,
+                ElevationService.DEFAULT_ATTRIBUTE_NAME,
                 "hint",
                 Pattern.compile("^\\d+$"),
                 Duration.ofMinutes(1)));
