@@ -196,7 +196,7 @@ public class RuntimeEnvironment {
             getConfigurationOption(
                 "RESOURCE_SCOPE",
                 "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-            getConfigurationOption("SERVICE_NAME", "jitaccess.cloud.google.com"),
+            Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")),
             getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
             Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
             Duration.ofMinutes(

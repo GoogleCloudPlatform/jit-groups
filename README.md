@@ -26,7 +26,7 @@ Just-In-Time Access uses [IAM conditions](https://cloud.google.com/iam/docs/cond
   adding a special IAM condition:
 
   ```
-  resource.service == 'jitaccess.cloud.google.com'
+  has({}.jitAccessConstraint)
   ```
 
   You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
