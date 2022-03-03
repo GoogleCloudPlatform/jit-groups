@@ -50,9 +50,9 @@ import java.util.stream.Collectors;
 public class ElevationService {
   private static final String PROJECT_RESOURCE_NAME_PREFIX =
       "//cloudresourcemanager.googleapis.com/projects/";
-  public static final String ELEVATION_CONDITION_TITLE = "Temporary elevation";
+  public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
   private static final Pattern ELEVATION_CONDITION_PATTERN =
-      Pattern.compile("^\\s*resource\\.service\\s*==\\s*['\"](.*)['\"]\\s*$");
+      Pattern.compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
   private final AssetInventoryAdapter assetInventoryAdapter;
   private final ResourceManagerAdapter resourceManagerAdapter;
@@ -77,8 +77,13 @@ public class ElevationService {
       return false;
     }
 
-    var match = ELEVATION_CONDITION_PATTERN.matcher(iamCondition.getExpression());
-    return match.find() && match.group(1).equals(this.options.getEligibilityServiceName());
+    // Strip all whitespace to simplify expression matching.
+    var expression = iamCondition
+        .getExpression()
+        .toLowerCase()
+        .replace(" ", "");
+
+    return ELEVATION_CONDITION_PATTERN.matcher(expression).matches();
   }
 
   private boolean isSupportedResource(String fullResourceName) {
@@ -139,13 +144,15 @@ public class ElevationService {
     // user.
     //
     // NB. The Asset API considers group membership if the caller
-    // (i.e., the Cloud Run service account) has the 'Groups Reader'
+    // (i.e., the App Engine service account) has the 'Groups Reader'
     // admin role.
     //
 
     var analysisResult =
         this.assetInventoryAdapter.analyzeResourcesAccessibleByUser(
-            this.options.getScope(), user, true); // Expand resources.
+            this.options.getScope(),
+            user,
+            this.options.isIncludeInheritedBindings());
 
     //
     // Find role bindings which have already been activated.
@@ -262,19 +269,19 @@ public class ElevationService {
 
   public static class Options {
     private final String scope;
-    private final String eligibilityServiceName;
+    private final boolean includeInheritedBindings;
     private final Duration activationDuration;
     private final String justificationHint;
     private final Pattern justificationPattern;
 
     public Options(
         String scope,
-        String eligibilityServiceName,
+        boolean includeInheritedBindings,
         String justificationHint,
         Pattern justificationPattern,
         Duration activationDuration) {
       this.scope = scope;
-      this.eligibilityServiceName = eligibilityServiceName;
+      this.includeInheritedBindings = includeInheritedBindings;
       this.activationDuration = activationDuration;
       this.justificationHint = justificationHint;
       this.justificationPattern = justificationPattern;
@@ -285,10 +292,8 @@ public class ElevationService {
       return this.scope;
     }
 
-    /** Resource name that is used in IAM conditions to indicate eligibility. */
-    public String getEligibilityServiceName() {
-      return this.eligibilityServiceName;
-    }
+    /** Search inherited IAM policies */
+    public boolean isIncludeInheritedBindings() { return includeInheritedBindings; }
 
     /** Duration for an elevation. */
     public Duration getActivationDuration() {

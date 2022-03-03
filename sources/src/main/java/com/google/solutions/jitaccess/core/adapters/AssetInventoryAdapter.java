@@ -31,6 +31,7 @@ import com.google.cloud.asset.v1.AssetServiceClient;
 import com.google.cloud.asset.v1.AssetServiceSettings;
 import com.google.cloud.asset.v1.IamPolicyAnalysisQuery;
 import com.google.common.base.Preconditions;
+import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -43,6 +44,7 @@ import java.io.IOException;
 @RequestScoped
 public class AssetInventoryAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+  private static final int ANALYZE_IAM_POLICY_TIMEOUT_SECS = 30;
 
   private final GoogleCredentials credentials;
 
@@ -92,14 +94,15 @@ public class AssetInventoryAdapter {
                       .setOptions(
                           IamPolicyAnalysisQuery.Options.newBuilder()
                               .setExpandResources(expandResources))
-                      // b/217301546
-                      // .setConditionContext(
-                      //     IamPolicyAnalysisQuery.ConditionContext.newBuilder()
-                      //         .setAccessTime(
-                      //             Timestamp.newBuilder()
-                      //                 .setSeconds(System.currentTimeMillis() / 1000))
-                      //         .build())
-              )
+                       .setConditionContext(
+                           IamPolicyAnalysisQuery.ConditionContext.newBuilder()
+                               .setAccessTime(
+                                   Timestamp.newBuilder()
+                                       .setSeconds(System.currentTimeMillis() / 1000))
+                               .build()))
+              .setExecutionTimeout(Duration.newBuilder()
+                  .setSeconds(ANALYZE_IAM_POLICY_TIMEOUT_SECS)
+                  .build())
               .build();
 
       return client.analyzeIamPolicy(request).getMainAnalysis();

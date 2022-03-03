@@ -44,55 +44,53 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class TestElevationService {
-  private static final String ELEVATION_SERVICE_NAME = "test.googleapis.com";
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
   private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
 
   private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
-  private static final String ELIGIBILITY_CONDITION =
-      "resource.service == \n'" + ELEVATION_SERVICE_NAME + "'";
+  private static final String ELIGIBILITY_CONDITION = "has({}.jitAccessConstraint)";
 
   // ---------------------------------------------------------------------
   // isConditionIndicatorForEligibility.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenConditionUsesDoubleQuotes_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
+  public void whenConditionHasRedundantWhitespace_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
     var service =
         new ElevationService(
             Mockito.mock(AssetInventoryAdapter.class),
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
     var condition =
         Expr.newBuilder()
-            .setExpression("resource.service==\"" + ELEVATION_SERVICE_NAME + "\"")
+            .setExpression(" \r\n\t has( {  }.jitAccessConstraint \t ) \t \r\n\r")
             .build();
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
 
   @Test
   public void
-      whenConditionUsesSingleQuotesAndRedundantWhitespace_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
+      whenConditionUsesWrongCase_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
     var service =
         new ElevationService(
             Mockito.mock(AssetInventoryAdapter.class),
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
     var condition =
         Expr.newBuilder()
-            .setExpression("   resource.service == \n'" + ELEVATION_SERVICE_NAME + "'\n")
+            .setExpression("HAS({}.JitacceSSConstraint)")
             .build();
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
@@ -105,7 +103,7 @@ public class TestElevationService {
             Mockito.mock(ResourceManagerAdapter.class),
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -132,7 +130,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -168,7 +166,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -219,7 +217,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -275,7 +273,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -398,7 +396,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -462,7 +460,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -546,7 +544,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -602,7 +600,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -661,7 +659,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
@@ -737,7 +735,7 @@ public class TestElevationService {
             resourceAdapter,
             new ElevationService.Options(
                 "organizations/0",
-                ELEVATION_SERVICE_NAME,
+                true,
                 "hint",
                 Pattern.compile("^\\d+$"),
                 Duration.ofMinutes(1)));
