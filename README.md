@@ -39,6 +39,8 @@ Just-In-Time Access uses [IAM conditions](https://cloud.google.com/iam/docs/cond
   then [grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access)
   to the resource.
 
+  ![Screenshot](doc/screenshot-small.png)
+
 * **As an administrator**, you can use Cloud Logging to review when and why eligible roles have been activated by users.  
 
 ## Deploying Just-In-Time Access
