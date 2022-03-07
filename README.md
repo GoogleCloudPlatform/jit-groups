@@ -45,7 +45,7 @@ Just-In-Time Access uses [IAM conditions](https://cloud.google.com/iam/docs/cond
 
 Just-In-Time Access runs on App Engine (standard) and uses Identity-Aware-Proxy for authentication and authorization.
 
-For detailed instructions on deploying Just-In-Time Access, see [LINK TO DOC ONCE PUBLISHED](#).
+For detailed instructions on deploying Just-In-Time Access, see [Deploying Just-In-Time Access](https://github.com/GoogleCloudPlatform/iam-privilege-manager/blob/master/Deployment.md).
 
 --- 
 
