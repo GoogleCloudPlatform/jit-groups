@@ -42,7 +42,7 @@ To prepare your Google Cloud project, do the following:
 
     [Open Cloud Shell](https://console.cloud.google.com/?cloudshell=true)
 
-2.  Set your default [project ID](/resource-manager/docs/creating-managing-projects):
+2.  Set your default [project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
 
     <pre class="devsite-click-to-copy">
     gcloud config set project <var>PROJECT_ID</var>
@@ -61,7 +61,7 @@ Prepare App Engine for the deployment of the Just-In-Time Access application:
     gcloud app create --region <var>LOCATION</var>
     </pre>
 
-    where <code><var>LOCATION</var></code>  is a [supported App Engine location](/about/locations#region).
+    where <code><var>LOCATION</var></code>  is a [supported App Engine location](https://cloud.google.com/about/locations#region).
 
 2.  Create a service account for the application:
 
@@ -261,7 +261,7 @@ To deploy the Just-In-Time Access application to App Engine, do the following:
 3.  Deploy the application:
 
     <pre class="devsite-click-to-copy">
-    gcloud app deploy jitaccess.jar --appyaml app.yaml
+    gcloud app deploy --appyaml app.yaml
     </pre>
 
     Note: If you see an error message `NOT_FOUND: Unable to retrieve P4SA`, retry the command.
@@ -386,8 +386,8 @@ Switch back to your administrative user and review the log:
 ## What's next
 
 *   Lean how you can use [context-aware access to secure access to Just-In-Time Access](https://support.google.com/a/answer/9275380)
-*   Read more about [IAM conditions](/iam/docs/conditions-overview)
-*   Configure [a custom domain for the Just-In-Time Access application](/run/docs/mapping-custom-domains)
+*   Read more about [IAM conditions](https://cloud.google.com/iam/docs/conditions-overview)
+*   Configure [a custom domain for the Just-In-Time Access application](https://cloud.google.com/run/docs/mapping-custom-domains)
 
 --- 
 
