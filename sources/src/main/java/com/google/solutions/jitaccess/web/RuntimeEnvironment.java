@@ -32,6 +32,7 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.DeviceInfo;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
@@ -111,8 +112,11 @@ public class RuntimeEnvironment {
             ((ComputeEngineCredentials) this.ApplicationCredentials).getAccount();
 
         LOG.infof(
-            "Running in project %s (%s) as %s",
-            this.ProjectId, this.ProjectNumber, this.ApplicationPrincipal);
+            "Running in project %s (%s) as %s, version %s",
+            this.ProjectId,
+            this.ProjectNumber,
+            this.ApplicationPrincipal,
+            ApplicationVersion.VERSION_STRING);
       } catch (IOException e) {
         LOG.errorf(e, "Failed to lookup instance metadata");
         throw new RuntimeException("Failed to initialize runtime environment", e);

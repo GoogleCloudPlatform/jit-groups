@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.1</version>
   <properties>
     <surefire-plugin.version>2.22.2</surefire-plugin.version>
     <maven.compiler.target>11</maven.compiler.target>
@@ -120,5 +120,16 @@
         </configuration>
       </plugin>
     </plugins>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources-filtered</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
   </build>
 </project>
