@@ -221,42 +221,7 @@ To deploy the Just-In-Time Access application to App Engine, do the following:
     EOF
     </pre>
 
-    Optionally, you can customize the following environment variables:
-
-    <table>
-      <tr>
-       <th>Name</th>
-       <th>Description</th>
-      </tr>
-      <tr>
-       <td>RESOURCE_SCOPE</td>
-       <td>Part of the Google Cloud resource hierarchy managed using this application:
-         <ul>
-           <li><code>organizations/<var>ID</var></code> (all projects)</li>
-           <li><code>folders/<var>ID</var></code> (projects underneath a specific project)</li>
-           <li><code>projects/<var>ID</var></code> (specific project)</li>
-         </ul>
-        The application's service account must be granted access to the respective node of the resource hierarchy.
-       </td>
-      </tr>
-      <tr>
-       <td>ELEVATION_DURATION</td>
-       <td>Duration (in minutes) for which privileged access is granted. Default is <code>2</code>.
-       </td>
-      </tr>
-      <tr>
-       <td>JUSTIFICATION_HINT</td>
-       <td>Hint displayed in UI indicating which justification to provide.
-       </td>
-      </tr>
-      <tr>
-       <td>JUSTIFICATION_PATTERN</td>
-       <td>Regular expression that a justification has to match. Can be used to
-           validate that justifications include a ticket number, or follow a certain
-           convention.
-       </td>
-      </tr>
-    </table>
+    For further details on configuration options, see [Configuration](Configuration.md).
 
 3.  Deploy the application:
 
