@@ -90,7 +90,8 @@
             $(document).ready(function() {
                 $.ajax({
                     url: "/api/",
-                    success: showHomePane
+                    success: showHomePane,
+                    headers: {'X-JITACCESS': '1'}
                 });
 
                 $('#activate-form').on('submit', function(e){
@@ -104,7 +105,8 @@
                         type: "POST",
                         url:  $(this).attr('action'),
                         data: $(this).serialize(),
-                        success: showConfirmationPane
+                        success: showConfirmationPane,
+                        headers: {'X-JITACCESS': '1'}
                     });
                 });
             });
