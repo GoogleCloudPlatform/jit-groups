@@ -109,7 +109,7 @@ public class AssetInventoryAdapter {
     } catch (UnauthenticatedException e) {
       throw new NotAuthenticatedException("Not authenticated", e);
     } catch (PermissionDeniedException e) {
-      throw new AccessDeniedException(String.format("Denied access to scope '%s'", scope), e);
+      throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
     }
   }
 }
