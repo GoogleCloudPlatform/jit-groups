@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.rpc.FixedHeaderProvider;
 import com.google.api.gax.rpc.PermissionDeniedException;
 import com.google.api.gax.rpc.UnauthenticatedException;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -31,10 +32,12 @@ import com.google.cloud.asset.v1.AssetServiceClient;
 import com.google.cloud.asset.v1.AssetServiceSettings;
 import com.google.cloud.asset.v1.IamPolicyAnalysisQuery;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Duration;
 import com.google.protobuf.Timestamp;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 
 import javax.enterprise.context.RequestScoped;
@@ -57,6 +60,8 @@ public class AssetInventoryAdapter {
   private AssetServiceClient createClient() throws IOException {
     var clientSettings = AssetServiceSettings.newBuilder()
         .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+        .setHeaderProvider(FixedHeaderProvider.create(
+                ImmutableMap.of("user-agent",ApplicationVersion.USER_AGENT)))
         .build();
 
     return AssetServiceClient.create(clientSettings);
