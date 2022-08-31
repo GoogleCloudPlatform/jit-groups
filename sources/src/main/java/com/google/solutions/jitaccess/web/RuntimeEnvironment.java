@@ -86,7 +86,7 @@ public class RuntimeEnvironment {
   private static String getConfigurationOption(String key, String defaultValue) {
     var value = System.getenv(key);
     if (value != null && !value.isEmpty()) {
-      return value;
+      return value.trim();
     } else if (defaultValue != null) {
       return defaultValue;
     } else {

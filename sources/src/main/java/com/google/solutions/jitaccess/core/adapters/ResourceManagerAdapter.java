@@ -31,14 +31,12 @@ import com.google.cloud.resourcemanager.v3.ProjectName;
 import com.google.cloud.resourcemanager.v3.ProjectsClient;
 import com.google.cloud.resourcemanager.v3.ProjectsSettings;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.iam.v1.Binding;
 import com.google.iam.v1.GetIamPolicyRequest;
 import com.google.iam.v1.GetPolicyOptions;
 import com.google.iam.v1.SetIamPolicyRequest;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.*;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
@@ -63,7 +61,10 @@ public class ResourceManagerAdapter {
   private ProjectsClient createClient(String requestReason) throws IOException {
     var clientSettings = ProjectsSettings.newBuilder()
         .setCredentialsProvider(FixedCredentialsProvider.create(this.credentials))
-        .setHeaderProvider(FixedHeaderProvider.create("x-goog-request-reason", requestReason))
+        .setHeaderProvider(FixedHeaderProvider.create(
+              ImmutableMap.of(
+                  "user-agent", ApplicationVersion.USER_AGENT,
+                  "x-goog-request-reason", requestReason)))
         .build();
 
     return ProjectsClient.create(clientSettings);
