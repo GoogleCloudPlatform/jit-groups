@@ -21,22 +21,18 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.cloud.asset.v1.AnalyzeIamPolicyResponse;
-import com.google.cloud.asset.v1.ConditionEvaluation;
-import com.google.cloud.asset.v1.IamPolicyAnalysisResult;
-import com.google.cloud.resourcemanager.v3.ProjectName;
-import com.google.iam.v1.Binding;
+import com.google.api.services.cloudasset.v1.model.*;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
-import com.google.type.Expr;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,10 +63,8 @@ public class TestElevationService {
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
-    var condition =
-        Expr.newBuilder()
-            .setExpression(" \r\n\t has( {  }.jitAccessConstraint \t ) \t \r\n\r")
-            .build();
+    var condition = new Expr()
+      .setExpression(" \r\n\t has( {  }.jitAccessConstraint \t ) \t \r\n\r");
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
 
@@ -88,10 +82,8 @@ public class TestElevationService {
                 JUSTIFICATION_PATTERN,
                 Duration.ofMinutes(1)));
 
-    var condition =
-        Expr.newBuilder()
-            .setExpression("HAS({}.JitacceSSConstraint)")
-            .build();
+    var condition = new Expr()
+      .setExpression("HAS({}.JitacceSSConstraint)");
     assertTrue(service.isConditionIndicatorForEligibility(condition));
   }
 
@@ -122,7 +114,7 @@ public class TestElevationService {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-        .thenReturn(AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder().build());
+        .thenReturn(new IamPolicyAnalysis());
 
     var service =
         new ElevationService(
@@ -152,13 +144,9 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .build())
-                .build());
+            new IamPolicyAnalysis()
+              .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                  .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1"))));
 
     var service =
         new ElevationService(
@@ -188,28 +176,16 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder().addMembers("user:" + SAMPLE_USER).build())
-                        .build())
-                .build());
+            new IamPolicyAnalysis()
+              .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                  .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+                  .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+                      .setResources(List.of(new GoogleCloudAssetV1Resource()
+                            .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+                      .setConditionEvaluation(new ConditionEvaluation()
+                              .setEvaluationValue("CONDITIONAL"))))
+                  .setIamBinding(new Binding()
+                    .setMembers(List.of("user:" + SAMPLE_USER))))));
 
     var service =
         new ElevationService(
@@ -239,33 +215,18 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder().setExpression(ELIGIBILITY_CONDITION).build())
-                                .build())
-                        .build())
-                .build());
+            new IamPolicyAnalysis()
+              .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                  .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+                .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+                  .setResources(List.of(new GoogleCloudAssetV1Resource()
+                      .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+                  .setConditionEvaluation(new ConditionEvaluation()
+                      .setEvaluationValue("CONDITIONAL"))))
+                .setIamBinding(new Binding()
+                  .setMembers(List.of("user:" + SAMPLE_USER))
+                  .setRole(SAMPLE_ROLE)
+                  .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
         new ElevationService(
@@ -299,96 +260,54 @@ public class TestElevationService {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
+    var eligibleBinding = new IamPolicyAnalysisResult()
+      .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+      .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+        .setResources(List.of(new GoogleCloudAssetV1Resource()
+          .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+        .setConditionEvaluation(new ConditionEvaluation()
+          .setEvaluationValue("CONDITIONAL"))))
+      .setIamBinding(new Binding()
+        .setMembers(List.of("user:" + SAMPLE_USER))
+        .setRole(SAMPLE_ROLE)
+        .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION)));
+
+    var activatedBinding = new IamPolicyAnalysisResult()
+      .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+      .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+        .setResources(List.of(new GoogleCloudAssetV1Resource()
+          .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+        .setConditionEvaluation(new ConditionEvaluation()
+          .setEvaluationValue("TRUE"))))
+      .setIamBinding(new Binding()
+        .setMembers(List.of("user:" + SAMPLE_USER))
+          .setRole(SAMPLE_ROLE)
+          .setCondition(new Expr()
+              .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
+              .setExpression("time ...")));
+
+    var activatedExpiredBinding = new IamPolicyAnalysisResult()
+      .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+      .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+        .setResources(List.of(new GoogleCloudAssetV1Resource()
+          .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+        .setConditionEvaluation(new ConditionEvaluation()
+          .setEvaluationValue("FALSE"))))
+      .setIamBinding(new Binding()
+        .setMembers(List.of("user:" + SAMPLE_USER))
+          .setRole(SAMPLE_ROLE)
+          .setCondition(new Expr()
+              .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
+              .setExpression("time ...")));
+
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                // Eligible binding
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder().setExpression(ELIGIBILITY_CONDITION).build())
-                                .build())
-                        .build())
-
-                // Activated binding
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.TRUE)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder()
-                                        .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
-                                        .setExpression("time ...")
-                                        .build())
-                                .build())
-                        .build())
-
-                // Activated, expired binding
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.FALSE)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder()
-                                        .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
-                                        .setExpression("time ...")
-                                        .build())
-                                .build())
-                        .build())
-                .build());
+            new IamPolicyAnalysis()
+              .setAnalysisResults(List.of(
+                eligibleBinding,
+                activatedBinding,
+                activatedExpiredBinding
+              )));
 
     var service =
         new ElevationService(
@@ -423,36 +342,19 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder()
-                                        .setExpression(
-                                            ELIGIBILITY_CONDITION + " && resource.name=='Foo'")
-                                        .build())
-                                .build())
-                        .build())
-                .build());
+          new IamPolicyAnalysis()
+            .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+              .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+              .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+                .setResources(List.of(new GoogleCloudAssetV1Resource()
+                    .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+                .setConditionEvaluation(new ConditionEvaluation()
+                    .setEvaluationValue("CONDITIONAL"))))
+              .setIamBinding(new Binding()
+                .setMembers(List.of("user:" + SAMPLE_USER))
+                .setRole(SAMPLE_ROLE)
+                .setCondition(new Expr()
+                        .setExpression(ELIGIBILITY_CONDITION + " && resource.name=='Foo'"))))));
 
     var service =
         new ElevationService(
@@ -481,62 +383,35 @@ public class TestElevationService {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
+    var parentFolderAcl = new GoogleCloudAssetV1AccessControlList()
+      .setResources(List.of(new GoogleCloudAssetV1Resource()
+          .setFullResourceName("//cloudresourcemanager.googleapis.com/folders/folder-1")))
+      .setConditionEvaluation(new ConditionEvaluation()
+          .setEvaluationValue("CONDITIONAL"));
+
+    var childFolderAndProjectAcl = new GoogleCloudAssetV1AccessControlList()
+      .setResources(List.of(
+          new GoogleCloudAssetV1Resource()
+            .setFullResourceName("//cloudresourcemanager.googleapis.com/folders/folder-1"),
+          new GoogleCloudAssetV1Resource()
+            .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1"),
+          new GoogleCloudAssetV1Resource()
+            .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-2")))
+      .setConditionEvaluation(new ConditionEvaluation()
+          .setEvaluationValue("CONDITIONAL"));
+
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/folders/folder-1")
-
-                        // Parent folder
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/folders/folder-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-
-                        // Child folder and projects
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/folders/folder-1")
-                                        .build())
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-2")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder().setExpression(ELIGIBILITY_CONDITION).build())
-                                .build())
-                        .build())
-                .build());
+          new IamPolicyAnalysis()
+            .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/folders/folder-1")
+                .setAccessControlLists(List.of(
+                  parentFolderAcl,
+                  childFolderAndProjectAcl))
+            .setIamBinding(new Binding()
+              .setMembers(List.of("user:" + SAMPLE_USER))
+              .setRole(SAMPLE_ROLE)
+              .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
         new ElevationService(
@@ -586,13 +461,9 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .build())
-                .build());
+          new IamPolicyAnalysis()
+            .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+              .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1"))));
 
     var service =
         new ElevationService(
@@ -625,33 +496,18 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder().setExpression(ELIGIBILITY_CONDITION).build())
-                                .build())
-                        .build())
-                .build());
+          new IamPolicyAnalysis()
+            .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+              .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+                .setResources(List.of(new GoogleCloudAssetV1Resource()
+                    .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+                  .setConditionEvaluation(new ConditionEvaluation()
+                      .setEvaluationValue("CONDITIONAL"))))
+                .setIamBinding(new Binding()
+                  .setMembers(List.of("user:" + SAMPLE_USER))
+                  .setRole(SAMPLE_ROLE)
+                  .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
         new ElevationService(
@@ -679,7 +535,7 @@ public class TestElevationService {
 
     verify(resourceAdapter)
         .addIamBinding(
-            eq(ProjectName.of("project-1")),
+            eq("project-1"),
             argThat(
                 b ->
                     b.getRole().equals(SAMPLE_ROLE)
@@ -701,33 +557,18 @@ public class TestElevationService {
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
         .thenReturn(
-            AnalyzeIamPolicyResponse.IamPolicyAnalysis.newBuilder()
-                .addAnalysisResults(
-                    IamPolicyAnalysisResult.newBuilder()
-                        .setAttachedResourceFullName(
-                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                        .addAccessControlLists(
-                            IamPolicyAnalysisResult.AccessControlList.newBuilder()
-                                .addResources(
-                                    IamPolicyAnalysisResult.Resource.newBuilder()
-                                        .setFullResourceName(
-                                            "//cloudresourcemanager.googleapis.com/projects/project-1")
-                                        .build())
-                                .setConditionEvaluation(
-                                    ConditionEvaluation.newBuilder()
-                                        .setEvaluationValue(
-                                            ConditionEvaluation.EvaluationValue.CONDITIONAL)
-                                        .build())
-                                .build())
-                        .setIamBinding(
-                            Binding.newBuilder()
-                                .addMembers("user:" + SAMPLE_USER)
-                                .setRole(SAMPLE_ROLE)
-                                .setCondition(
-                                    Expr.newBuilder().setExpression(ELIGIBILITY_CONDITION).build())
-                                .build())
-                        .build())
-                .build());
+          new IamPolicyAnalysis()
+            .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
+                .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
+              .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
+                .setResources(List.of(new GoogleCloudAssetV1Resource()
+                    .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
+                  .setConditionEvaluation(new ConditionEvaluation()
+                    .setEvaluationValue("CONDITIONAL"))))
+                .setIamBinding(new Binding()
+                  .setMembers(List.of("user:" + SAMPLE_USER))
+                  .setRole(SAMPLE_ROLE)
+                  .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
         new ElevationService(

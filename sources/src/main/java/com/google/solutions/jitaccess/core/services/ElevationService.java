@@ -21,11 +21,11 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.cloud.asset.v1.AnalyzeIamPolicyResponse;
-import com.google.cloud.asset.v1.ConditionEvaluation;
-import com.google.cloud.resourcemanager.v3.ProjectName;
+import com.google.api.services.cloudasset.v1.model.ConditionEvaluation;
+import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
-import com.google.iam.v1.Binding;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -33,7 +33,6 @@ import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.IamConditions;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
-import com.google.type.Expr;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
@@ -96,7 +95,7 @@ public class ElevationService {
   }
 
   private List<RoleBinding> findRoleBindings(
-      AnalyzeIamPolicyResponse.IamPolicyAnalysis analysisResult,
+      IamPolicyAnalysis analysisResult,
       Predicate<Expr> conditionPredicate,
       Predicate<ConditionEvaluation> conditionEvaluationPredicate,
       RoleBinding.RoleBindingStatus status) {
@@ -105,11 +104,11 @@ public class ElevationService {
     // (indicated by AttachedResourceFullName). Instead, we care about
     // which resources it applies to (including descendent resources).
     //
-    return analysisResult.getAnalysisResultsList().stream()
+    return analysisResult.getAnalysisResults().stream()
         // Narrow down to IAM bindings with a specific IAM condition.
         .filter(i -> conditionPredicate.test(i.getIamBinding().getCondition()))
         .flatMap(
-            i -> i.getAccessControlListsList().stream()
+            i -> i.getAccessControlLists().stream()
                 // Narrow down to ACLs with a specific IAM condition evaluation result.
                 .filter(
                     acl -> acl.getConditionEvaluation() != null
@@ -117,7 +116,7 @@ public class ElevationService {
 
                 // Collect all (supported) resources covered by these bindings/ACLs.
                 .flatMap(
-                    acl -> acl.getResourcesList().stream()
+                    acl -> acl.getResources().stream()
                         .filter(res -> isSupportedResource(res.getFullResourceName()))
                         .map(res -> new RoleBinding(
                             resourceNameFromFullResourceName(res.getFullResourceName()),
@@ -164,8 +163,7 @@ public class ElevationService {
         findRoleBindings(
             analysisResult,
             condition -> condition.getTitle().equals(ELEVATION_CONDITION_TITLE),
-            evalResult ->
-                evalResult.getEvaluationValue() == ConditionEvaluation.EvaluationValue.TRUE,
+            evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
             RoleBinding.RoleBindingStatus.ACTIVATED);
 
     //
@@ -177,8 +175,7 @@ public class ElevationService {
         findRoleBindings(
             analysisResult,
             expr -> isConditionIndicatorForEligibility(expr),
-            evalResult ->
-                evalResult.getEvaluationValue() == ConditionEvaluation.EvaluationValue.CONDITIONAL,
+            evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
             RoleBinding.RoleBindingStatus.ELIGIBLE);
 
     //
@@ -200,7 +197,7 @@ public class ElevationService {
         consolidatedRoles.stream()
             .sorted((r1, r2) -> r1.getResourceName().compareTo(r2.getResourceName()))
             .collect(Collectors.toList()),
-        analysisResult.getNonCriticalErrorsList().stream()
+        analysisResult.getNonCriticalErrors().stream()
             .map(e -> e.getCause())
             .collect(Collectors.toList()));
   }
@@ -242,23 +239,20 @@ public class ElevationService {
     var elevationStartTime = OffsetDateTime.now();
     var elevationEndTime = elevationStartTime.plus(this.options.getActivationDuration());
 
+    var binding = new Binding()
+      .setMembers(List.of("user:" + userId))
+      .setRole(role.getRole())
+      .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
+        .setTitle(ELEVATION_CONDITION_TITLE)
+        .setDescription("User-provided justification: " + justification)
+        .setExpression(IamConditions
+          .createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
+
     this.resourceManagerAdapter.addIamBinding(
-        ProjectName.of(role.getResourceName()),
-        Binding.newBuilder()
-            .addMembers("user:" + userId)
-            .setRole(role.getRole())
-            .setCondition(
-                Expr.newBuilder()
-                    .setTitle(ELEVATION_CONDITION_TITLE)
-                    .setDescription("User-provided justification: " + justification)
-                    .setExpression(
-                        IamConditions.createTemporaryConditionClause(
-                            elevationStartTime, elevationEndTime))
-                    .build())
-            .build(),
-        EnumSet.of(
-            ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
-        justification);
+      role.getResourceName(), // TODO: qualified or unqualified name?
+      binding,
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      justification);
 
     return elevationEndTime;
   }

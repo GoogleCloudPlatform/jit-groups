@@ -21,20 +21,17 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.api.gax.rpc.FixedHeaderProvider;
-import com.google.api.gax.rpc.PermissionDeniedException;
-import com.google.api.gax.rpc.UnauthenticatedException;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.HttpResponseException;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.cloudasset.v1.CloudAsset;
+import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
+import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.asset.v1.AnalyzeIamPolicyRequest;
-import com.google.cloud.asset.v1.AnalyzeIamPolicyResponse;
-import com.google.cloud.asset.v1.AssetServiceClient;
-import com.google.cloud.asset.v1.AssetServiceSettings;
-import com.google.cloud.asset.v1.IamPolicyAnalysisQuery;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Duration;
-import com.google.protobuf.Timestamp;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
@@ -42,6 +39,9 @@ import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 /** Adapter for the Asset Inventory API. */
 @RequestScoped
@@ -57,14 +57,20 @@ public class AssetInventoryAdapter {
     this.credentials = credentials;
   }
 
-  private AssetServiceClient createClient() throws IOException {
-    var clientSettings = AssetServiceSettings.newBuilder()
-        .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
-        .setHeaderProvider(FixedHeaderProvider.create(
-                ImmutableMap.of("user-agent",ApplicationVersion.USER_AGENT)))
+  private CloudAsset createService() throws IOException
+  {
+    try {
+      return new CloudAsset
+        .Builder(
+          GoogleNetHttpTransport.newTrustedTransport(),
+          new GsonFactory(),
+          new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
+        .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
-
-    return AssetServiceClient.create(clientSettings);
+    }
+    catch (GeneralSecurityException e) {
+      throw new IOException("Creating a CloudAsset client failed", e);
+    }
   }
 
   /**
@@ -75,7 +81,7 @@ public class AssetInventoryAdapter {
    * NB. For group membership resolution to work, the service account must have the right
    * privileges in Cloud Identity/Workspace.
    */
-  public AnalyzeIamPolicyResponse.IamPolicyAnalysis analyzeResourcesAccessibleByUser(
+  public IamPolicyAnalysis analyzeResourcesAccessibleByUser(
       String scope,
       UserId user,
       boolean expandResources)
@@ -87,33 +93,19 @@ public class AssetInventoryAdapter {
         || scope.startsWith("folders/")
         || scope.startsWith("projects/"));
 
-    try (var client = createClient()) {
-      var request =
-          AnalyzeIamPolicyRequest.newBuilder()
-              .setAnalysisQuery(
-                  IamPolicyAnalysisQuery.newBuilder()
-                      .setScope(scope)
-                      .setIdentitySelector(
-                          IamPolicyAnalysisQuery.IdentitySelector.newBuilder()
-                              .setIdentity("user:" + user.getEmail()))
-                      .setOptions(
-                          IamPolicyAnalysisQuery.Options.newBuilder()
-                              .setExpandResources(expandResources))
-                       .setConditionContext(
-                           IamPolicyAnalysisQuery.ConditionContext.newBuilder()
-                               .setAccessTime(
-                                   Timestamp.newBuilder()
-                                       .setSeconds(System.currentTimeMillis() / 1000))
-                               .build()))
-              .setExecutionTimeout(Duration.newBuilder()
-                  .setSeconds(ANALYZE_IAM_POLICY_TIMEOUT_SECS)
-                  .build())
-              .build();
-
-      return client.analyzeIamPolicy(request).getMainAnalysis();
-    } catch (UnauthenticatedException e) {
+    try {
+      return createService().v1()
+        .analyzeIamPolicy(scope)
+        .setAnalysisQueryIdentitySelectorIdentity("user:" + user.getEmail())
+        .setAnalysisQueryOptionsExpandResources(expandResources)
+        .setAnalysisQueryConditionContextAccessTime(
+          DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
+        .execute()
+        .getMainAnalysis();
+    } catch (GoogleJsonResponseException e) { // TODO Catch 403
       throw new NotAuthenticatedException("Not authenticated", e);
-    } catch (PermissionDeniedException e) {
+    } catch (HttpResponseException e) { // TODO: Catch 404
       throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
     }
   }
