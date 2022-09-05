@@ -62,9 +62,9 @@ public class ResourceManagerAdapter {
     try {
       return new CloudResourceManager
         .Builder(
-          GoogleNetHttpTransport.newTrustedTransport(),
+          HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
+          new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT) // TODO: Set "x-goog-request-reason", requestReason
         .build();
     }
@@ -157,10 +157,16 @@ public class ResourceManagerAdapter {
 
       throw new AlreadyExistsException(
           "Failed to update IAM bindings due to concurrent modifications");
-    } catch (GoogleJsonResponseException e) { // TODO Catch 403
-      throw new NotAuthenticatedException("Not authenticated", e);
-    } catch (HttpResponseException e) { // TODO: Catch 404
-      throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+      case 401:
+        throw new NotAuthenticatedException("Not authenticated", e);
+      case 403:
+        throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+      default:
+        throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
     }
   }
 

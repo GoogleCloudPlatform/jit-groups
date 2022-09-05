@@ -38,11 +38,13 @@ import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Service that contains the logic required to find eligible roles, and to activate them. */
 @RequestScoped
@@ -104,26 +106,27 @@ public class ElevationService {
     // (indicated by AttachedResourceFullName). Instead, we care about
     // which resources it applies to (including descendent resources).
     //
-    return analysisResult.getAnalysisResults().stream()
-        // Narrow down to IAM bindings with a specific IAM condition.
-        .filter(i -> conditionPredicate.test(i.getIamBinding().getCondition()))
-        .flatMap(
-            i -> i.getAccessControlLists().stream()
-                // Narrow down to ACLs with a specific IAM condition evaluation result.
-                .filter(
-                    acl -> acl.getConditionEvaluation() != null
-                            && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
+    return Stream.ofNullable(analysisResult.getAnalysisResults())
+      .flatMap(Collection::stream)
+      // Narrow down to IAM bindings with a specific IAM condition.
+      .filter(i -> conditionPredicate.test(i.getIamBinding().getCondition()))
+      .flatMap(
+          i -> i.getAccessControlLists().stream()
+              // Narrow down to ACLs with a specific IAM condition evaluation result.
+              .filter(
+                  acl -> acl.getConditionEvaluation() != null
+                          && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
 
-                // Collect all (supported) resources covered by these bindings/ACLs.
-                .flatMap(
-                    acl -> acl.getResources().stream()
-                        .filter(res -> isSupportedResource(res.getFullResourceName()))
-                        .map(res -> new RoleBinding(
-                            resourceNameFromFullResourceName(res.getFullResourceName()),
-                            res.getFullResourceName(),
-                            i.getIamBinding().getRole(),
-                            status))))
-        .collect(Collectors.toList());
+              // Collect all (supported) resources covered by these bindings/ACLs.
+              .flatMap(
+                  acl -> acl.getResources().stream()
+                      .filter(res -> isSupportedResource(res.getFullResourceName()))
+                      .map(res -> new RoleBinding(
+                          resourceNameFromFullResourceName(res.getFullResourceName()),
+                          res.getFullResourceName(),
+                          i.getIamBinding().getRole(),
+                          status))))
+      .collect(Collectors.toList());
   }
 
   public Options getOptions() {
@@ -162,7 +165,7 @@ public class ElevationService {
     var activatedRoles =
         findRoleBindings(
             analysisResult,
-            condition -> condition.getTitle().equals(ELEVATION_CONDITION_TITLE),
+            condition -> condition != null && ELEVATION_CONDITION_TITLE.equals(condition.getTitle()),
             evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
             RoleBinding.RoleBindingStatus.ACTIVATED);
 
@@ -174,7 +177,7 @@ public class ElevationService {
     var eligibleRoles =
         findRoleBindings(
             analysisResult,
-            expr -> isConditionIndicatorForEligibility(expr),
+            condition -> condition != null && isConditionIndicatorForEligibility(condition),
             evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
             RoleBinding.RoleBindingStatus.ELIGIBLE);
 
@@ -197,9 +200,10 @@ public class ElevationService {
         consolidatedRoles.stream()
             .sorted((r1, r2) -> r1.getResourceName().compareTo(r2.getResourceName()))
             .collect(Collectors.toList()),
-        analysisResult.getNonCriticalErrors().stream()
-            .map(e -> e.getCause())
-            .collect(Collectors.toList()));
+      Stream.ofNullable(analysisResult.getNonCriticalErrors())
+        .flatMap(Collection::stream)
+        .map(e -> e.getCause())
+        .collect(Collectors.toList()));
   }
 
   public OffsetDateTime activateEligibleRoleBinding(

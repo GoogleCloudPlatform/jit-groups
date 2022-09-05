@@ -130,7 +130,7 @@ public class TestResourceManagerAdapter {
 
     var service = new CloudResourceManager
       .Builder(
-        GoogleNetHttpTransport.newTrustedTransport(),
+        HttpTransport.newTransport(),
         new GsonFactory(),
         new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
       .build();
@@ -138,7 +138,7 @@ public class TestResourceManagerAdapter {
     var oldPolicy = service
       .projects()
       .getIamPolicy(
-        IntegrationTestEnvironment.PROJECT_ID,
+        String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
         new GetIamPolicyRequest()
           .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
       .execute();

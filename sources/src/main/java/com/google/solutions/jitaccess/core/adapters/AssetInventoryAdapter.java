@@ -27,11 +27,9 @@ import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
-import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
@@ -62,9 +60,9 @@ public class AssetInventoryAdapter {
     try {
       return new CloudAsset
         .Builder(
-          GoogleNetHttpTransport.newTrustedTransport(),
+          HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
+          new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -103,10 +101,16 @@ public class AssetInventoryAdapter {
         .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
         .execute()
         .getMainAnalysis();
-    } catch (GoogleJsonResponseException e) { // TODO Catch 403
-      throw new NotAuthenticatedException("Not authenticated", e);
-    } catch (HttpResponseException e) { // TODO: Catch 404
-      throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
     }
   }
 }
