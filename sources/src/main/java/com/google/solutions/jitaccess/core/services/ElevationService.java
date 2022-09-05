@@ -109,7 +109,7 @@ public class ElevationService {
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
       // Narrow down to IAM bindings with a specific IAM condition.
-      .filter(i -> conditionPredicate.test(i.getIamBinding().getCondition()))
+      .filter(i -> conditionPredicate.test(i.getIamBinding() != null ?i.getIamBinding().getCondition() : null))
       .flatMap(
           i -> i.getAccessControlLists().stream()
               // Narrow down to ACLs with a specific IAM condition evaluation result.

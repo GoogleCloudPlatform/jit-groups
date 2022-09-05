@@ -144,12 +144,12 @@ public class TestResourceManagerAdapter {
       .execute();
 
     assertTrue(
-        oldPolicy.getBindings().stream()
-            .anyMatch(b -> b.getCondition().getTitle().equals("old binding")),
+        oldPolicy.getBindings().stream().anyMatch(
+          b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")),
         "old binding has been added");
     assertTrue(
-        oldPolicy.getBindings().stream()
-            .anyMatch(b -> b.getCondition().getTitle().equals("permanent binding")));
+        oldPolicy.getBindings().stream().anyMatch(
+          b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")));
 
     // Add "new" temporary binding, overriding the old one.
     adapter.addIamBinding(
@@ -168,16 +168,16 @@ public class TestResourceManagerAdapter {
     var newPolicy = service
       .projects()
       .getIamPolicy(
-        IntegrationTestEnvironment.PROJECT_ID,
+        String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
         new GetIamPolicyRequest()
           .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
       .execute();
 
-    assertFalse(newPolicy.getBindings().stream()
-            .anyMatch(b -> b.getCondition().getTitle().equals("old binding")));
-    assertTrue(newPolicy.getBindings().stream()
-            .anyMatch(b -> b.getCondition().getTitle().equals("new binding")));
-    assertTrue(newPolicy.getBindings().stream()
-            .anyMatch(b -> b.getCondition().getTitle().equals("permanent binding")));
+    assertFalse(newPolicy.getBindings().stream().anyMatch(
+      b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")));
+    assertTrue(newPolicy.getBindings().stream().anyMatch(
+      b -> b.getCondition() != null && b.getCondition().getTitle().equals("new binding")));
+    assertTrue(newPolicy.getBindings().stream().anyMatch(
+      b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")));
   }
 }
