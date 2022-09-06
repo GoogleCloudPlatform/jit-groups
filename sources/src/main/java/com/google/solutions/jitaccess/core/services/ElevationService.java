@@ -166,7 +166,7 @@ public class ElevationService {
         findRoleBindings(
             analysisResult,
             condition -> condition != null && ELEVATION_CONDITION_TITLE.equals(condition.getTitle()),
-            evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
+            evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()),
             RoleBinding.RoleBindingStatus.ACTIVATED);
 
     //
@@ -178,7 +178,7 @@ public class ElevationService {
         findRoleBindings(
             analysisResult,
             condition -> condition != null && isConditionIndicatorForEligibility(condition),
-            evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()), // TODO: verify
+            evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
             RoleBinding.RoleBindingStatus.ELIGIBLE);
 
     //
@@ -250,7 +250,7 @@ public class ElevationService {
         .setExpression(IamConditions.createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
 
     this.resourceManagerAdapter.addIamBinding(
-      role.getResourceName(), // TODO: qualified or unqualified name?
+      role.getResourceName(),
       binding,
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
       justification);
