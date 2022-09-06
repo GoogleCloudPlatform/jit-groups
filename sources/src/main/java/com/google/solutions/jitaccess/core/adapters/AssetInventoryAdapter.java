@@ -21,9 +21,7 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
@@ -55,7 +53,7 @@ public class AssetInventoryAdapter {
     this.credentials = credentials;
   }
 
-  private CloudAsset createService() throws IOException
+  private CloudAsset createClient() throws IOException
   {
     try {
       return new CloudAsset
@@ -92,7 +90,7 @@ public class AssetInventoryAdapter {
         || scope.startsWith("projects/"));
 
     try {
-      return createService().v1()
+      return createClient().v1()
         .analyzeIamPolicy(scope)
         .setAnalysisQueryIdentitySelectorIdentity("user:" + user.getEmail())
         .setAnalysisQueryOptionsExpandResources(expandResources)

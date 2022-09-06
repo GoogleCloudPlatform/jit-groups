@@ -21,9 +21,7 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
@@ -33,7 +31,6 @@ import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.solutions.jitaccess.core.*;
 
 import javax.enterprise.context.RequestScoped;
@@ -57,7 +54,7 @@ public class ResourceManagerAdapter {
     this.credentials = credentials;
   }
 
-  private CloudResourceManager createService(String requestReason) throws IOException
+  private CloudResourceManager createClient() throws IOException
   {
     try {
       return new CloudResourceManager
@@ -65,7 +62,7 @@ public class ResourceManagerAdapter {
           HttpTransport.newTransport(),
           new GsonFactory(),
           new HttpCredentialsAdapter(this.credentials))
-        .setApplicationName(ApplicationVersion.USER_AGENT) // TODO: Set "x-goog-request-reason", requestReason
+        .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
     catch (GeneralSecurityException e) {
@@ -84,7 +81,7 @@ public class ResourceManagerAdapter {
     Preconditions.checkNotNull(binding, "binding");
 
     try {
-      var service = createService(requestReason);
+      var service = createClient();
 
       for (int attempt = 0; attempt < MAX_SET_IAM_POLICY_ATTEMPTS; attempt++) {
         //
@@ -133,12 +130,14 @@ public class ResourceManagerAdapter {
         policy.getBindings().add(binding);
 
         try {
-          service
+          var request = service
             .projects()
             .setIamPolicy(
               String.format("projects/%s", projectId),
-              new SetIamPolicyRequest().setPolicy((policy)))
-            .execute();
+              new SetIamPolicyRequest().setPolicy((policy)));
+
+          request.getRequestHeaders().set("x-goog-request-reason", requestReason);
+          request.execute();
 
           //
           // Successful update -> quit loop.
