@@ -531,7 +531,7 @@ public class TestElevationService {
             "justification");
 
     assertTrue(expiry.isAfter(OffsetDateTime.now()));
-    assertTrue(expiry.isBefore(OffsetDateTime.now().plusMinutes(1)));
+    assertTrue(expiry.isBefore(OffsetDateTime.now().plusMinutes(2)));
 
     verify(resourceAdapter)
         .addIamBinding(

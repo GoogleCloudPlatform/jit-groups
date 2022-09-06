@@ -145,11 +145,11 @@ public class TestResourceManagerAdapter {
 
     assertTrue(
         oldPolicy.getBindings().stream().anyMatch(
-          b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")),
+          b -> b.getCondition() != null && "old binding".equals(b.getCondition().getTitle())),
         "old binding has been added");
     assertTrue(
         oldPolicy.getBindings().stream().anyMatch(
-          b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")));
+          b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())));
 
     // Add "new" temporary binding, overriding the old one.
     adapter.addIamBinding(

@@ -115,6 +115,7 @@ public class ResourceManagerAdapter {
           Predicate<Binding> isObsolete = b ->
               b.getRole().equals(binding.getRole())
                   && b.getMembers().equals(binding.getMembers())
+                  && b.getCondition() != null
                   && IamConditions.isTemporaryConditionClause(b.getCondition().getExpression());
 
           var nonObsoleteBindings =
@@ -143,14 +144,18 @@ public class ResourceManagerAdapter {
           // Successful update -> quit loop.
           //
           return;
-        } catch (GoogleJsonResponseException e) // TODO: Catch 412
-        {
-          //
-          // Concurrent modification - back off and retry.
-          //
-          try {
-            Thread.sleep(200);
-          } catch (InterruptedException ignored) {
+        } catch (GoogleJsonResponseException e) {
+          if (e.getStatusCode() == 412) {
+            //
+            // Concurrent modification - back off and retry.
+            //
+            try {
+              Thread.sleep(200);
+            } catch (InterruptedException ignored) {
+            }
+          }
+          else {
+            throw (GoogleJsonResponseException)e.fillInStackTrace();
           }
         }
       }

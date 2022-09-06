@@ -37,7 +37,12 @@ public class IntegrationTestEnvironment {
 
   private static final String SETTINGS_FILE = "test.properties";
   public static final GoogleCredentials INVALID_CREDENTIAL =
-      GoogleCredentials.create(new AccessToken("ey00", new Date(Long.MAX_VALUE)));
+    new GoogleCredentials(new AccessToken("ey00", new Date(Long.MAX_VALUE)))
+    {
+      @Override
+      public void refresh() {
+      }
+    };
 
   public static final String PROJECT_ID;
 

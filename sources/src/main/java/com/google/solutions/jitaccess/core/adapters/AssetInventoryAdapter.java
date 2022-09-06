@@ -96,8 +96,7 @@ public class AssetInventoryAdapter {
         .analyzeIamPolicy(scope)
         .setAnalysisQueryIdentitySelectorIdentity("user:" + user.getEmail())
         .setAnalysisQueryOptionsExpandResources(expandResources)
-        .setAnalysisQueryConditionContextAccessTime(
-          DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
         .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
         .execute()
         .getMainAnalysis();

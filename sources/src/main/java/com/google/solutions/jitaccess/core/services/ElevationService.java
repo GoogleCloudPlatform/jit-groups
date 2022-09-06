@@ -109,7 +109,7 @@ public class ElevationService {
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
       // Narrow down to IAM bindings with a specific IAM condition.
-      .filter(i -> conditionPredicate.test(i.getIamBinding() != null ?i.getIamBinding().getCondition() : null))
+      .filter(i -> conditionPredicate.test(i.getIamBinding() != null ? i.getIamBinding().getCondition() : null))
       .flatMap(
           i -> i.getAccessControlLists().stream()
               // Narrow down to ACLs with a specific IAM condition evaluation result.
@@ -188,18 +188,18 @@ public class ElevationService {
     //  !activatedRoles.contains(...)
     // because of the different binding statuses.
     //
-    var consolidatedRoles =
-        eligibleRoles.stream()
-            .filter(r -> !activatedRoles.stream()
-                  .anyMatch(a -> a.getFullResourceName().equals(r.getFullResourceName())
-                                 && a.getRole().equals(r.getRole())))
-            .collect(Collectors.toList());
+    var consolidatedRoles = eligibleRoles.stream()
+      .filter(r -> !activatedRoles
+        .stream()
+        .anyMatch(a -> a.getFullResourceName().equals(r.getFullResourceName())
+                       && a.getRole().equals(r.getRole())))
+      .collect(Collectors.toList());
     consolidatedRoles.addAll(activatedRoles);
 
     return new EligibleRoleBindings(
-        consolidatedRoles.stream()
-            .sorted((r1, r2) -> r1.getResourceName().compareTo(r2.getResourceName()))
-            .collect(Collectors.toList()),
+      consolidatedRoles.stream()
+        .sorted((r1, r2) -> r1.getResourceName().compareTo(r2.getResourceName()))
+        .collect(Collectors.toList()),
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
         .map(e -> e.getCause())
@@ -224,14 +224,12 @@ public class ElevationService {
     //
     var eligibleRoles = listEligibleRoleBindings(userId);
     if (!eligibleRoles.getRoleBindings().contains(role)) {
-      throw new AccessDeniedException(
-          String.format("Your user %s is not eligible to activate this role", userId));
+      throw new AccessDeniedException(String.format("Your user %s is not eligible to activate this role", userId));
     }
 
     if (!this.options.getJustificationPattern().matcher(justification).matches()) {
       throw new AccessDeniedException(
-          String.format(
-              "Justification does not meet criteria: %s", this.options.getJustificationHint()));
+          String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
     }
 
     //
@@ -249,8 +247,7 @@ public class ElevationService {
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(ELEVATION_CONDITION_TITLE)
         .setDescription("User-provided justification: " + justification)
-        .setExpression(IamConditions
-          .createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
+        .setExpression(IamConditions.createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
 
     this.resourceManagerAdapter.addIamBinding(
       role.getResourceName(), // TODO: qualified or unqualified name?
