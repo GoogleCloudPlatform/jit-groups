@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.ws.rs.container.ContainerRequestContext;
-
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -62,7 +61,7 @@ public class TestXsrfRequestFilter {
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME))
-        .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
+      .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
 
     filter.filter(request);
 

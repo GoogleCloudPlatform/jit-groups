@@ -29,14 +29,14 @@ public class TestRoleBinding {
   @Test
   public void whenValueIsEquivalent_ThenEqualsReturnsTrue() {
     var ref1 = new RoleBinding(
-        "name", "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name", "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
     var ref2 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
 
     assertTrue(ref1.equals(ref2));
     assertTrue(ref1.equals((Object) ref2));
@@ -47,10 +47,10 @@ public class TestRoleBinding {
   @Test
   public void whenObjectsAreSame_ThenEqualsReturnsTrue() {
     var ref1 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
     var ref2 = ref1;
 
     assertTrue(ref1.equals(ref2));
@@ -61,15 +61,15 @@ public class TestRoleBinding {
   @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
     var ref1 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
     var ref2 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/admin",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/admin",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));
@@ -78,15 +78,15 @@ public class TestRoleBinding {
   @Test
   public void whenStatusesDiffer_ThenEqualsReturnsFalse() {
     var ref1 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
     var ref2 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ELIGIBLE);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ELIGIBLE);
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));
@@ -95,22 +95,21 @@ public class TestRoleBinding {
   @Test
   public void equalsNull() {
     var ref1 = new RoleBinding(
-        "name",
-        "//full-name",
-        "roles/test",
-        RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
 
     assertFalse(ref1.equals(null));
   }
 
   @Test
-  public void toStringReturnsDetails()
-  {
+  public void toStringReturnsDetails() {
     var ref1 = new RoleBinding(
-            "name",
-            "//full-name",
-            "roles/test",
-            RoleBinding.RoleBindingStatus.ACTIVATED);
+      "name",
+      "//full-name",
+      "roles/test",
+      RoleBinding.RoleBindingStatus.ACTIVATED);
 
     assertEquals("roles/test on //full-name (ACTIVATED)", ref1.toString());
   }

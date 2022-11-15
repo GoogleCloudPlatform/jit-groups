@@ -33,7 +33,9 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 
-/** Use AppEngine-specific headers to enrich the log. */
+/**
+ * Use AppEngine-specific headers to enrich the log.
+ */
 @Dependent
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
@@ -44,7 +46,8 @@ public class AppEngineRequestFilter implements ContainerRequestFilter {
    */
   private static final String TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context";
 
-  @Inject LogAdapter log;
+  @Inject
+  LogAdapter log;
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {

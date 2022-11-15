@@ -34,27 +34,27 @@ public class TestAssetInventoryAdapter {
 
   @Test
   public void WhenUnauthenticated_ThenAnalyzeResourcesAccessibleByUserThrowsException()
-      throws Exception {
+    throws Exception {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
-        NotAuthenticatedException.class,
-        () -> adapter.analyzeResourcesAccessibleByUser(
-          "projects/0",
-          new UserId("", "bob@example.com"),
-          true));
+      NotAuthenticatedException.class,
+      () -> adapter.analyzeResourcesAccessibleByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        true));
   }
 
   @Test
   public void WhenCallerLacksPermission_ThenAnalyzeResourcesAccessibleByUserThrowsException()
-      throws Exception {
+    throws Exception {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
-        AccessDeniedException.class,
-        () -> adapter.analyzeResourcesAccessibleByUser(
-          "projects/0",
-          new UserId("", "bob@example.com"),
-          true));
+      AccessDeniedException.class,
+      () -> adapter.analyzeResourcesAccessibleByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        true));
   }
 }

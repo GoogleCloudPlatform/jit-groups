@@ -37,31 +37,34 @@ public class IapAssertion {
     this.token = token;
   }
 
-  /** Extract user information */
+  /**
+   * Extract user information
+   */
   public UserId getUserId() {
     return new UserId(
-        this.token.getPayload().get("sub").toString(),
-        this.token.getPayload().get("email").toString());
+      this.token.getPayload().get("sub").toString(),
+      this.token.getPayload().get("email").toString());
   }
 
-  /** Extract device information (if available) */
+  /**
+   * Extract device information (if available)
+   */
   public DeviceInfo getDeviceInfo() {
     String deviceId = "unknown";
     List<String> accessLevels = List.of();
 
-    if (this.token.getPayload().containsKey("google"))
-    {
-      var googleClaim = (Map<?, ?>)this.token.getPayload().get("google");
+    if (this.token.getPayload().containsKey("google")) {
+      var googleClaim = (Map<?, ?>) this.token.getPayload().get("google");
 
       if (googleClaim.containsKey("device_id")) {
         deviceId = googleClaim.get("device_id").toString();
       }
 
       if (googleClaim.containsKey("access_levels")) {
-        accessLevels = ((Collection<?>)googleClaim.get("access_levels"))
-            .stream()
-            .map(a -> a.toString())
-            .collect(Collectors.toList());
+        accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
+          .stream()
+          .map(a -> a.toString())
+          .collect(Collectors.toList());
       }
     }
 

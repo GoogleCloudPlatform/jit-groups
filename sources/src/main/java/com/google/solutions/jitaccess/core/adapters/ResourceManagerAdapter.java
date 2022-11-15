@@ -40,7 +40,9 @@ import java.util.EnumSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-/** Adapter for Resource Manager API. */
+/**
+ * Adapter for Resource Manager API.
+ */
 @RequestScoped
 public class ResourceManagerAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
@@ -54,14 +56,13 @@ public class ResourceManagerAdapter {
     this.credentials = credentials;
   }
 
-  private CloudResourceManager createClient() throws IOException
-  {
+  private CloudResourceManager createClient() throws IOException {
     try {
       return new CloudResourceManager
         .Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+        HttpTransport.newTransport(),
+        new GsonFactory(),
+        new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -70,13 +71,15 @@ public class ResourceManagerAdapter {
     }
   }
 
-  /** Add an IAM binding using the optimistic concurrency control-mechanism. */
+  /**
+   * Add an IAM binding using the optimistic concurrency control-mechanism.
+   */
   public void addIamBinding(
-      String projectId,
-      Binding binding,
-      EnumSet<ResourceManagerAdapter.IamBindingOptions> options,
-      String requestReason)
-      throws AccessException, AlreadyExistsException, IOException {
+    String projectId,
+    Binding binding,
+    EnumSet<ResourceManagerAdapter.IamBindingOptions> options,
+    String requestReason)
+    throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(projectId, "projectId");
     Preconditions.checkNotNull(binding, "binding");
 
@@ -110,15 +113,15 @@ public class ResourceManagerAdapter {
           // helps avoid hitting this limit.
           //
           Predicate<Binding> isObsolete = b ->
-              b.getRole().equals(binding.getRole())
-                  && b.getMembers().equals(binding.getMembers())
-                  && b.getCondition() != null
-                  && IamConditions.isTemporaryConditionClause(b.getCondition().getExpression());
+            b.getRole().equals(binding.getRole())
+              && b.getMembers().equals(binding.getMembers())
+              && b.getCondition() != null
+              && IamConditions.isTemporaryConditionClause(b.getCondition().getExpression());
 
           var nonObsoleteBindings =
-              policy.getBindings().stream()
-                  .filter(isObsolete.negate())
-                  .collect(Collectors.toList());
+            policy.getBindings().stream()
+              .filter(isObsolete.negate())
+              .collect(Collectors.toList());
 
           policy.getBindings().clear();
           policy.getBindings().addAll(nonObsoleteBindings);
@@ -143,33 +146,35 @@ public class ResourceManagerAdapter {
           // Successful update -> quit loop.
           //
           return;
-        } catch (GoogleJsonResponseException e) {
+        }
+        catch (GoogleJsonResponseException e) {
           if (e.getStatusCode() == 412) {
             //
             // Concurrent modification - back off and retry.
             //
             try {
               Thread.sleep(200);
-            } catch (InterruptedException ignored) {
+            }
+            catch (InterruptedException ignored) {
             }
           }
           else {
-            throw (GoogleJsonResponseException)e.fillInStackTrace();
+            throw (GoogleJsonResponseException) e.fillInStackTrace();
           }
         }
       }
 
       throw new AlreadyExistsException(
-          "Failed to update IAM bindings due to concurrent modifications");
+        "Failed to update IAM bindings due to concurrent modifications");
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
-      case 401:
-        throw new NotAuthenticatedException("Not authenticated", e);
-      case 403:
-        throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
-      default:
-        throw (GoogleJsonResponseException)e.fillInStackTrace();
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
     }
   }

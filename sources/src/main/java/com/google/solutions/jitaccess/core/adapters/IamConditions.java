@@ -28,29 +28,30 @@ import java.util.regex.Pattern;
 
 public class IamConditions {
   private static final String CONDITION_TEMPLATE =
-      "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
+    "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
   private static final String CONDITION_PATTERN =
-      "^\\s*\\(request.time >= timestamp\\(\\\".*\\\"\\) && "
-          + "request.time < timestamp\\(\\\".*\\\"\\)\\)\\s*$";
+    "^\\s*\\(request.time >= timestamp\\(\\\".*\\\"\\) && "
+      + "request.time < timestamp\\(\\\".*\\\"\\)\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
-  private IamConditions() {}
+  private IamConditions() {
+  }
 
   public static boolean isTemporaryConditionClause(String expression) {
     return expression != null && CONDITION.matcher(expression).matches();
   }
 
   public static String createTemporaryConditionClause(
-      OffsetDateTime startTime, OffsetDateTime endTime) {
+    OffsetDateTime startTime, OffsetDateTime endTime) {
     assert (startTime.isBefore(endTime));
 
     var clause =
-        String.format(
-            CONDITION_TEMPLATE,
-            startTime.format(DateTimeFormatter.ISO_DATE_TIME),
-            endTime.format(DateTimeFormatter.ISO_DATE_TIME));
+      String.format(
+        CONDITION_TEMPLATE,
+        startTime.format(DateTimeFormatter.ISO_DATE_TIME),
+        endTime.format(DateTimeFormatter.ISO_DATE_TIME));
 
     assert (isTemporaryConditionClause(clause));
 
@@ -58,7 +59,7 @@ public class IamConditions {
   }
 
   public static String createTemporaryConditionClause(
-      OffsetDateTime startTime, TemporalAmount duration) {
+    OffsetDateTime startTime, TemporalAmount duration) {
     return createTemporaryConditionClause(startTime, startTime.plus(duration));
   }
 }

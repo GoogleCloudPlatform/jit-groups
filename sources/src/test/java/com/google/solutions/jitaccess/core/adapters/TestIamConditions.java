@@ -47,18 +47,18 @@ public class TestIamConditions {
   @Test
   public void whenExpressionIsTemporaryCondition_ThenIsTemporaryConditionClauseReturnsTrue() {
     var clause =
-        "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
-            + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))  ";
+      "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+        + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))  ";
 
     assertTrue(IamConditions.isTemporaryConditionClause(clause));
   }
 
   @Test
   public void
-      whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryConditionClauseReturnsTrue() {
+  whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryConditionClauseReturnsTrue() {
     var clause =
-        "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
-            + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";
+      "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+        + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";
 
     assertFalse(IamConditions.isTemporaryConditionClause(clause));
   }
@@ -70,12 +70,12 @@ public class TestIamConditions {
   @Test
   public void whenDurationValid_ThenCreateTemporaryConditionClauseReturnsClause() {
     var clause =
-        IamConditions.createTemporaryConditionClause(
-            OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), Duration.ofMinutes(5));
+      IamConditions.createTemporaryConditionClause(
+        OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), Duration.ofMinutes(5));
 
     assertEquals(
-        "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
-            + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))",
-        clause);
+      "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+        + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))",
+      clause);
   }
 }

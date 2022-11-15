@@ -23,12 +23,18 @@ package com.google.solutions.jitaccess.core.services;
 
 import java.util.List;
 
-/** Set of role bindings that a user has been found eligible for. */
+/**
+ * Set of role bindings that a user has been found eligible for.
+ */
 public class EligibleRoleBindings {
-  /** List of bindings. Might be incomplete if Warnings is non-empty. */
+  /**
+   * List of bindings. Might be incomplete if Warnings is non-empty.
+   */
   private final List<RoleBinding> roleBindings;
 
-  /** Non-fatal issues encountered. */
+  /**
+   * Non-fatal issues encountered.
+   */
   private final List<String> warnings;
 
   public EligibleRoleBindings(List<RoleBinding> roleBindings, List<String> warnings) {

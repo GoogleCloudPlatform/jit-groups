@@ -32,7 +32,9 @@ public class UserId {
     this.email = email;
   }
 
-  public String getId() { return id; }
+  public String getId() {
+    return id;
+  }
 
   public String getEmail() {
     return this.email;

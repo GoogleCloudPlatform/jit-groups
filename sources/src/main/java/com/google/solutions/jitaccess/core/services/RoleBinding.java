@@ -23,22 +23,32 @@ package com.google.solutions.jitaccess.core.services;
 
 import java.util.Objects;
 
-/** A role/resource combination. */
+/**
+ * A role/resource combination.
+ */
 public class RoleBinding {
-  /** Status of the binding. */
+  /**
+   * Status of the binding.
+   */
   private final RoleBindingStatus status;
 
-  /** Unqualified resource name such as "project-1". */
+  /**
+   * Unqualified resource name such as "project-1".
+   */
   private final String resourceName;
 
-  /** Qualified resource name such as "//cloudresourcemanager.googleapis.com/projects/project-1". */
+  /**
+   * Qualified resource name such as "//cloudresourcemanager.googleapis.com/projects/project-1".
+   */
   private final String fullResourceName;
 
-  /** Role name such as roles/xxx. */
+  /**
+   * Role name such as roles/xxx.
+   */
   private final String role;
 
   public RoleBinding(
-      String resourceName, String fullResourceName, String role, RoleBindingStatus status) {
+    String resourceName, String fullResourceName, String role, RoleBindingStatus status) {
     this.status = status;
     this.resourceName = resourceName;
     this.fullResourceName = fullResourceName;
@@ -67,13 +77,17 @@ public class RoleBinding {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     RoleBinding that = (RoleBinding) o;
     return status == that.status
-        && resourceName.equals(that.resourceName)
-        && fullResourceName.equals(that.fullResourceName)
-        && role.equals(that.role);
+      && resourceName.equals(that.resourceName)
+      && fullResourceName.equals(that.fullResourceName)
+      && role.equals(that.role);
   }
 
   @Override

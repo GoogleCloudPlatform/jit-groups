@@ -21,8 +21,7 @@
 
 package com.google.solutions.jitaccess.core;
 
-public class AccessDeniedException extends AccessException
-{
+public class AccessDeniedException extends AccessException {
   public AccessDeniedException(String message) {
     super(message, null);
   }

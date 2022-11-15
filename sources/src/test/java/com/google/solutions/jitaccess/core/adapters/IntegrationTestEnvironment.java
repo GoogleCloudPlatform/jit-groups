@@ -33,12 +33,12 @@ import java.util.List;
 import java.util.Properties;
 
 public class IntegrationTestEnvironment {
-  private IntegrationTestEnvironment() {}
+  private IntegrationTestEnvironment() {
+  }
 
   private static final String SETTINGS_FILE = "test.properties";
   public static final GoogleCredentials INVALID_CREDENTIAL =
-    new GoogleCredentials(new AccessToken("ey00", new Date(Long.MAX_VALUE)))
-    {
+    new GoogleCredentials(new AccessToken("ey00", new Date(Long.MAX_VALUE))) {
       @Override
       public void refresh() {
       }
@@ -59,8 +59,8 @@ public class IntegrationTestEnvironment {
     //
     if (!new File(SETTINGS_FILE).exists()) {
       throw new RuntimeException(
-          String.format(
-              "Cannot find %s. Create file to specify which test project to use.", SETTINGS_FILE));
+        String.format(
+          "Cannot find %s. Create file to specify which test project to use.", SETTINGS_FILE));
     }
 
     try (FileInputStream in = new FileInputStream(SETTINGS_FILE)) {
@@ -70,17 +70,18 @@ public class IntegrationTestEnvironment {
       PROJECT_ID = getMandatory(settings, "test.project");
 
       NO_ACCESS_USER = new UserId(
-          "no-access",
-          String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
+        "no-access",
+        String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
       TEMPORARY_ACCESS_USER = new UserId(
-          "temporary-access",
-          String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
+        "temporary-access",
+        String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
       APPLICATION_CREDENTIALS = GoogleCredentials.getApplicationDefault();
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.getEmail());
       TEMPORARY_ACCESS_CREDENTIALS =
-          impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.getEmail());
-    } catch (IOException e) {
+        impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.getEmail());
+    }
+    catch (IOException e) {
       throw new RuntimeException("Failed to load test settings", e);
     }
   }
@@ -89,7 +90,7 @@ public class IntegrationTestEnvironment {
     String value = properties.getProperty(property);
     if (value == null || value.isEmpty()) {
       throw new RuntimeException(
-          String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
+        String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
     }
 
     return value;
@@ -97,6 +98,6 @@ public class IntegrationTestEnvironment {
 
   private static GoogleCredentials impersonate(GoogleCredentials source, String serviceAccount) {
     return ImpersonatedCredentials.create(
-        source, serviceAccount, null, List.of("https://www.googleapis.com/auth/cloud-platform"), 0);
+      source, serviceAccount, null, List.of("https://www.googleapis.com/auth/cloud-platform"), 0);
   }
 }

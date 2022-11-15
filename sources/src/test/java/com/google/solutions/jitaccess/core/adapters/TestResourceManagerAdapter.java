@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
@@ -31,7 +30,6 @@ import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import org.junit.jupiter.api.Test;
 
@@ -54,15 +52,15 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
-        NotAuthenticatedException.class,
-        () ->
-            adapter.addIamBinding(
-                IntegrationTestEnvironment.PROJECT_ID,
-                new Binding()
-                    .setMembers(List.of("user:bob@example.com"))
-                    .setRole("roles/resourcemanager.projectIamAdmin"),
-                EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
-                REQUEST_REASON));
+      NotAuthenticatedException.class,
+      () ->
+        adapter.addIamBinding(
+          IntegrationTestEnvironment.PROJECT_ID,
+          new Binding()
+            .setMembers(List.of("user:bob@example.com"))
+            .setRole("roles/resourcemanager.projectIamAdmin"),
+          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          REQUEST_REASON));
   }
 
   @Test
@@ -70,15 +68,15 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
-        AccessDeniedException.class,
-        () ->
-            adapter.addIamBinding(
-                IntegrationTestEnvironment.PROJECT_ID,
-                new Binding()
-                    .setMembers(List.of("user:bob@example.com"))
-                    .setRole("roles/resourcemanager.projectIamAdmin"),
-                EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
-                REQUEST_REASON));
+      AccessDeniedException.class,
+      () ->
+        adapter.addIamBinding(
+          IntegrationTestEnvironment.PROJECT_ID,
+          new Binding()
+            .setMembers(List.of("user:bob@example.com"))
+            .setRole("roles/resourcemanager.projectIamAdmin"),
+          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          REQUEST_REASON));
   }
 
   @Test
@@ -86,16 +84,16 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     String condition =
-        IamConditions.createTemporaryConditionClause(OffsetDateTime.now(), Duration.ofMinutes(5));
+      IamConditions.createTemporaryConditionClause(OffsetDateTime.now(), Duration.ofMinutes(5));
 
     adapter.addIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
-        new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
-            .setRole("roles/browser")
-            .setCondition(new Expr().setExpression(condition)),
-        EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
-        REQUEST_REASON);
+      IntegrationTestEnvironment.PROJECT_ID,
+      new Binding()
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setRole("roles/browser")
+        .setCondition(new Expr().setExpression(condition)),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      REQUEST_REASON);
   }
 
   @Test
@@ -104,35 +102,35 @@ public class TestResourceManagerAdapter {
 
     // Add an "old" temporary IAM binding.
     adapter.addIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
-        new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
-            .setRole("roles/browser")
-            .setCondition(new Expr()
-                .setTitle("old binding")
-                .setExpression(IamConditions.createTemporaryConditionClause(
-                  OffsetDateTime.now().minusDays(1),
-                  Duration.ofMinutes(5)))),
-        EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
-        REQUEST_REASON);
+      IntegrationTestEnvironment.PROJECT_ID,
+      new Binding()
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setRole("roles/browser")
+        .setCondition(new Expr()
+          .setTitle("old binding")
+          .setExpression(IamConditions.createTemporaryConditionClause(
+            OffsetDateTime.now().minusDays(1),
+            Duration.ofMinutes(5)))),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+      REQUEST_REASON);
 
     // Add a permanent binding (with some random condition) for the same role.
     adapter.addIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
-        new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
-            .setRole("roles/browser")
-            .setCondition(new Expr()
-                .setTitle("permanent binding")
-                .setExpression("resource.service == \"storage.googleapis.com\"")),
-        EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
-        REQUEST_REASON);
+      IntegrationTestEnvironment.PROJECT_ID,
+      new Binding()
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setRole("roles/browser")
+        .setCondition(new Expr()
+          .setTitle("permanent binding")
+          .setExpression("resource.service == \"storage.googleapis.com\"")),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+      REQUEST_REASON);
 
     var service = new CloudResourceManager
       .Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
+      HttpTransport.newTransport(),
+      new GsonFactory(),
+      new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
       .build();
 
     var oldPolicy = service
@@ -144,26 +142,26 @@ public class TestResourceManagerAdapter {
       .execute();
 
     assertTrue(
-        oldPolicy.getBindings().stream().anyMatch(
-          b -> b.getCondition() != null && "old binding".equals(b.getCondition().getTitle())),
-        "old binding has been added");
+      oldPolicy.getBindings().stream().anyMatch(
+        b -> b.getCondition() != null && "old binding".equals(b.getCondition().getTitle())),
+      "old binding has been added");
     assertTrue(
-        oldPolicy.getBindings().stream().anyMatch(
-          b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())));
+      oldPolicy.getBindings().stream().anyMatch(
+        b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())));
 
     // Add "new" temporary binding, overriding the old one.
     adapter.addIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
-        new Binding()
-          .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
-          .setRole("roles/browser")
-          .setCondition(new Expr()
-              .setTitle("new binding")
-              .setExpression(
-                  IamConditions.createTemporaryConditionClause(
-                      OffsetDateTime.now(), Duration.ofMinutes(5)))),
-        EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
-        REQUEST_REASON);
+      IntegrationTestEnvironment.PROJECT_ID,
+      new Binding()
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setRole("roles/browser")
+        .setCondition(new Expr()
+          .setTitle("new binding")
+          .setExpression(
+            IamConditions.createTemporaryConditionClause(
+              OffsetDateTime.now(), Duration.ofMinutes(5)))),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      REQUEST_REASON);
 
     var newPolicy = service
       .projects()
