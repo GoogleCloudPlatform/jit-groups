@@ -42,13 +42,6 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>com.google.cloud</groupId>
-        <artifactId>libraries-bom</artifactId>
-        <version>25.1.0</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -64,22 +57,21 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
+      <version>1.10.0</version>
     </dependency>
     <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client</artifactId>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-cloudresourcemanager</artifactId>
+      <version>v3-rev20220828-2.0.0</version>
     </dependency>
     <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-resourcemanager</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-asset</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-logging</artifactId>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-cloudasset</artifactId>
+      <version>v1-rev20220826-2.0.0</version>
+    </dependency><dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-logging</artifactId>
+      <version>v2-rev20220819-2.0.0</version>
     </dependency>
 
     <!-- Test dependencies -->
