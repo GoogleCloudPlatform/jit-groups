@@ -86,7 +86,7 @@ public class TestRoleBinding {
       "name",
       "//full-name",
       "roles/test",
-      RoleBinding.RoleBindingStatus.ELIGIBLE);
+      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL);
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));

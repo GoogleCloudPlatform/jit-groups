@@ -33,6 +33,10 @@ public class JitConstraints {
   private static final Pattern JIT_CONDITION_PATTERN = Pattern
     .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
+  /** Condition that marks a role binding as eligible for MPA */
+  private static final Pattern MPA_CONDITION_PATTERN = Pattern
+    .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*$");
+
   private JitConstraints() {
   }
 
@@ -59,5 +63,10 @@ public class JitConstraints {
   public static boolean isActivated(Expr iamCondition) {
     return iamCondition != null &&
       ELEVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
+  }
+
+  /** Check if the IAM condition is an MPA constraint */
+  public static boolean isMultiPartyApprovalConstraint(Expr iamCondition) {
+    return isConstraint(iamCondition, MPA_CONDITION_PATTERN);
   }
 }

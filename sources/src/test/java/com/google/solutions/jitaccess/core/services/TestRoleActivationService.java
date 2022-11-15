@@ -21,9 +21,7 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.api.services.cloudasset.v1.model.*;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 import org.junit.jupiter.api.Test;
@@ -37,14 +35,14 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class TestRoleActivationService {
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2", "user-2@example.com");
+  private static final String SAMPLE_PROJECT_RESOURCE = "//cloudresourcemanager.googleapis.com/projects/project-1";
   private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
   private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
-  private static final String ELIGIBILITY_CONDITION = "has({}.jitAccessConstraint)";
 
   // ---------------------------------------------------------------------
   // activateEligibleRoleBinding.
@@ -54,20 +52,19 @@ public class TestRoleActivationService {
   public void whenRoleIsNotEligible_ThenActivateEligibleRoleBindingAsyncThrowsException()
     throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1"))));
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          "roles/compute.viewer", // Different role
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+        List.<String>of()));
 
     var service = new RoleActivationService(
-      new RoleDiscoveryService(
-        assetAdapter,
-        new RoleDiscoveryService.Options(
-          "organizations/0",
-          true)),
+      discoveryService,
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -76,43 +73,192 @@ public class TestRoleActivationService {
 
     assertThrows(
       AccessDeniedException.class,
-      () ->
-        service.activateEligibleRoleBinding(
-          SAMPLE_USER,
-          new RoleBinding(
-            "project-1",
-            "//cloudresourcemanager.googleapis.com/projects/project-1",
-            "roles/compute.admin",
-            RoleBinding.RoleBindingStatus.ELIGIBLE),
-          "justification"));
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        "justification"));
   }
 
   @Test
-  public void whenRoleIsEligible_ThenActivateEligibleRoleBindingAddsBinding() throws Exception {
+  public void whenRoleIsMpaEligibleAndCallerIsSameAsBeneficiary_ThenActivateEligibleRoleBindingThrowsException() throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
-            .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
-              .setResources(List.of(new GoogleCloudAssetV1Resource()
-                .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
-              .setConditionEvaluation(new ConditionEvaluation()
-                .setEvaluationValue("CONDITIONAL"))))
-            .setIamBinding(new Binding()
-              .setMembers(List.of("user:" + SAMPLE_USER))
-              .setRole(SAMPLE_ROLE)
-              .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+        List.<String>of()));
 
     var service = new RoleActivationService(
-      new RoleDiscoveryService(
-        assetAdapter,
-        new RoleDiscoveryService.Options(
-          "organizations/0",
-          true)),
+      discoveryService,
+      resourceAdapter,
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+        "justification"));
+    assertThrows(
+      AccessDeniedException.class,
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        "justification"));
+  }
+
+  @Test
+  public void whenRoleIsMpaEligibleForCallerButNotForBeneficiary_ThenActivateEligibleRoleBindingThrowsException() throws Exception {
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+        List.<String>of()));
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER_2)))
+      .thenReturn(new EligibleRoleBindings(
+        List.<RoleBinding>of(),
+        List.<String>of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      resourceAdapter,
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER_2,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+        "justification"));
+  }
+
+  @Test
+  public void whenRoleIsMpaEligibleForBeneficiaryButNotForCaller_ThenActivateEligibleRoleBindingThrowsException() throws Exception {
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.<RoleBinding>of(),
+        List.<String>of()));
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER_2)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+        List.<String>of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      resourceAdapter,
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER_2,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+        "justification"));
+  }
+
+  @Test
+  public void whenRoleIsJitEligibleAndCallerIsDifferentFromBeneficiary_ThenActivateEligibleRoleBindingThrowsException() throws Exception {
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+        List.<String>of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      resourceAdapter,
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> service.activateEligibleRoleBinding(
+        SAMPLE_USER,
+        SAMPLE_USER_2,
+        new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        "justification"));
+  }
+
+  @Test
+  public void whenRoleIsJitEligible_ThenActivateEligibleRoleBindingAddsBinding() throws Exception {
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+        List.<String>of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -122,11 +268,12 @@ public class TestRoleActivationService {
     var expiry =
       service.activateEligibleRoleBinding(
         SAMPLE_USER,
+        SAMPLE_USER,
         new RoleBinding(
           "project-1",
-          "//cloudresourcemanager.googleapis.com/projects/project-1",
+          SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
         "justification");
 
     assertTrue(expiry.isAfter(OffsetDateTime.now()));
@@ -148,48 +295,39 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenRoleIsEligibleButJustificationDoesNotMatch_ThenActivateEligibleRoleBindingThrowsException()
+  public void whenRoleIsJitEligibleButJustificationDoesNotMatch_ThenActivateEligibleRoleBindingThrowsException()
     throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
-            .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
-              .setResources(List.of(new GoogleCloudAssetV1Resource()
-                .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
-              .setConditionEvaluation(new ConditionEvaluation()
-                .setEvaluationValue("CONDITIONAL"))))
-            .setIamBinding(new Binding()
-              .setMembers(List.of("user:" + SAMPLE_USER))
-              .setRole(SAMPLE_ROLE)
-              .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
+    when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER)))
+      .thenReturn(new EligibleRoleBindings(
+        List.of(new RoleBinding(
+          "project-1",
+          SAMPLE_PROJECT_RESOURCE,
+          SAMPLE_ROLE,
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+        List.<String>of()));
 
     var service = new RoleActivationService(
-      new RoleDiscoveryService(
-        assetAdapter,
-        new RoleDiscoveryService.Options(
-          "organizations/0",
-          true)),
+      discoveryService,
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1)));
+          Pattern.compile("^\\d+$"),
+          Duration.ofMinutes(1)));
 
     assertThrows(
       AccessDeniedException.class,
       () ->
         service.activateEligibleRoleBinding(
           SAMPLE_USER,
+          SAMPLE_USER,
           new RoleBinding(
             "project-1",
-            "//cloudresourcemanager.googleapis.com/projects/project-1",
+            SAMPLE_PROJECT_RESOURCE,
             SAMPLE_ROLE,
-            RoleBinding.RoleBindingStatus.ELIGIBLE),
+            RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
           "not-numeric"));
   }
 }

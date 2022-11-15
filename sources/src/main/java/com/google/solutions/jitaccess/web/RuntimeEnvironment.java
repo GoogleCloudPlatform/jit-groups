@@ -60,7 +60,7 @@ public class RuntimeEnvironment {
   private final String ProjectId;
   private final String ProjectNumber;
   private final UserPrincipal StaticPrincipal;
-  private final String ApplicationPrincipal;
+  private final UserId ApplicationPrincipal;
   private final GoogleCredentials ApplicationCredentials;
   private final RoleDiscoveryService.Options roleDiscoveryServiceOptions;
   private final RoleActivationService.Options roleActivationServiceOptions;
@@ -111,8 +111,7 @@ public class RuntimeEnvironment {
         this.StaticPrincipal = null; // Use proper IAP authentication.
 
         this.ApplicationCredentials = GoogleCredentials.getApplicationDefault();
-        this.ApplicationPrincipal =
-          ((ComputeEngineCredentials) this.ApplicationCredentials).getAccount();
+        this.ApplicationPrincipal = new UserId(((ComputeEngineCredentials) this.ApplicationCredentials).getAccount());
 
         LOG.infof(
           "Running in project %s (%s) as %s, version %s",
@@ -177,15 +176,16 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.ApplicationCredentials.refresh();
-          this.ApplicationPrincipal = impersonateServiceAccount;
-        }
-        else if (defaultCredentials instanceof ServiceAccountCredentials) {
+
+          this.ApplicationPrincipal = new UserId(impersonateServiceAccount);
+        } else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.ApplicationCredentials = defaultCredentials;
-          this.ApplicationPrincipal =
-            ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser();
+
+          this.ApplicationPrincipal = new UserId(
+              ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser());
         }
         else {
           throw new RuntimeException(
@@ -230,7 +230,7 @@ public class RuntimeEnvironment {
     return StaticPrincipal;
   }
 
-  public String getApplicationPrincipal() {
+  public UserId getApplicationPrincipal() {
     return ApplicationPrincipal;
   }
 

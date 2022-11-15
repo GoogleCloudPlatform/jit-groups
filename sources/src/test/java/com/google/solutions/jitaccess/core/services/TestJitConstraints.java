@@ -52,4 +52,28 @@ public class TestJitConstraints {
     assertFalse(JitConstraints.isJitAccessConstraint(new Expr().setExpression("")));
     assertFalse(JitConstraints.isJitAccessConstraint(null));
   }
+
+  // ---------------------------------------------------------------------
+  // isMultiPartyApprovalConstraint.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenConditionHasRedundantWhitespace_ThenIsMultiPartyApprovalConstraintTrue() {
+    var condition = new Expr()
+      .setExpression(" \r\n\t has( { \t\n\r\n }.multiPartyApprovalConstraint \t ) \t \r\n\r");
+    assertTrue(JitConstraints.isMultiPartyApprovalConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionUsesWrongCase_ThenIsMultiPartyApprovalConstraintReturnsTrue() {
+    var condition = new Expr()
+      .setExpression("HAS({}.MultipARTYapproVALConstraint)");
+    assertTrue(JitConstraints.isMultiPartyApprovalConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionIsEmpty_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
+    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(new Expr().setExpression("")));
+    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(null));
+  }
 }

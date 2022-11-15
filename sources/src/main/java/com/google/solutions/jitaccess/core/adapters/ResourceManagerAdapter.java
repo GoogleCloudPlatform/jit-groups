@@ -50,13 +50,9 @@ public class ResourceManagerAdapter {
 
   private final GoogleCredentials credentials;
 
-  public ResourceManagerAdapter(GoogleCredentials credentials) {
-    Preconditions.checkNotNull(credentials, "credentials");
 
-    this.credentials = credentials;
-  }
-
-  private CloudResourceManager createClient() throws IOException {
+  private CloudResourceManager createClient() throws IOException
+  {
     try {
       return new CloudResourceManager
         .Builder(
@@ -71,9 +67,13 @@ public class ResourceManagerAdapter {
     }
   }
 
-  /**
-   * Add an IAM binding using the optimistic concurrency control-mechanism.
-   */
+  public ResourceManagerAdapter(GoogleCredentials credentials) {
+    Preconditions.checkNotNull(credentials, "credentials");
+
+    this.credentials = credentials;
+  }
+
+  /** Add an IAM binding using the optimistic concurrency control-mechanism. */
   public void addIamBinding(
     String projectId,
     Binding binding,

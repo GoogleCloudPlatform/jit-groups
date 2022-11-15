@@ -29,32 +29,61 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestAssetInventoryAdapter {
   // -------------------------------------------------------------------------
-  // analyzeResourcesAccessibleByUser.
+  // findAccessibleResourcesByUser.
   // -------------------------------------------------------------------------
 
   @Test
-  public void WhenUnauthenticated_ThenAnalyzeResourcesAccessibleByUserThrowsException()
-    throws Exception {
+
+  public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() throws Exception {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> adapter.analyzeResourcesAccessibleByUser(
+      () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
         new UserId("", "bob@example.com"),
         true));
   }
 
   @Test
-  public void WhenCallerLacksPermission_ThenAnalyzeResourcesAccessibleByUserThrowsException()
+  public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() throws Exception {
+    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> adapter.findAccessibleResourcesByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        true));
+  }
+
+  // -------------------------------------------------------------------------
+  // findPermissionedPrincipalsByResource.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException()
+    throws Exception {
+    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> adapter.findPermissionedPrincipalsByResource(
+        "projects/0",
+        "//cloudresourcemanager.googleapis.com/projects/132",
+        "roles/browser"));
+  }
+
+  @Test
+  public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException()
     throws Exception {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.analyzeResourcesAccessibleByUser(
+      () -> adapter.findPermissionedPrincipalsByResource(
         "projects/0",
-        new UserId("", "bob@example.com"),
-        true));
+        "//cloudresourcemanager.googleapis.com/projects/132",
+        "roles/browser"));
   }
 }

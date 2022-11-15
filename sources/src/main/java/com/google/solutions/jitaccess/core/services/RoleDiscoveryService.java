@@ -25,6 +25,7 @@ import com.google.api.services.cloudasset.v1.model.ConditionEvaluation;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
@@ -68,7 +69,7 @@ public class RoleDiscoveryService {
     return fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length());
   }
 
-  private List<RoleBinding> findRoleBindings(
+  private static List<RoleBinding> findRoleBindings(
     IamPolicyAnalysis analysisResult,
     Predicate<Expr> conditionPredicate,
     Predicate<ConditionEvaluation> conditionEvaluationPredicate,
@@ -76,28 +77,30 @@ public class RoleDiscoveryService {
     //
     // NB. We don't really care which resource a policy is attached to
     // (indicated by AttachedResourceFullName). Instead, we care about
-    // which resources it applies to (including descendent resources).
+    // which resources it applies to (including descendant resources).
     //
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
       // Narrow down to IAM bindings with a specific IAM condition.
-      .filter(i -> conditionPredicate.test(i.getIamBinding() != null ? i.getIamBinding().getCondition() : null))
-      .flatMap(
-        i -> i.getAccessControlLists().stream()
-          // Narrow down to ACLs with a specific IAM condition evaluation result.
-          .filter(
-            acl -> acl.getConditionEvaluation() != null
-              && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
+      .filter(result -> conditionPredicate.test(result.getIamBinding() != null ? result.getIamBinding().getCondition() : null))
+      .flatMap(result -> result
+        .getAccessControlLists()
+        .stream()
 
-          // Collect all (supported) resources covered by these bindings/ACLs.
-          .flatMap(
-            acl -> acl.getResources().stream()
-              .filter(res -> isSupportedResource(res.getFullResourceName()))
-              .map(res -> new RoleBinding(
-                resourceNameFromFullResourceName(res.getFullResourceName()),
-                res.getFullResourceName(),
-                i.getIamBinding().getRole(),
-                status))))
+        // Narrow down to ACLs with a specific IAM condition evaluation result.
+        .filter(
+          acl -> acl.getConditionEvaluation() != null
+            && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
+
+        // Collect all (supported) resources covered by these bindings/ACLs.
+        .flatMap(acl -> acl.getResources()
+          .stream()
+          .filter(res -> isSupportedResource(res.getFullResourceName()))
+          .map(res -> new RoleBinding(
+            resourceNameFromFullResourceName(res.getFullResourceName()),
+            res.getFullResourceName(),
+            result.getIamBinding().getRole(),
+            status))))
       .collect(Collectors.toList());
   }
 
@@ -105,6 +108,9 @@ public class RoleDiscoveryService {
     return options;
   }
 
+  /**
+   * List eligible role bindings for the given user.
+   */
   public EligibleRoleBindings listEligibleRoleBindings(UserId user)
     throws AccessException, IOException {
     Preconditions.checkNotNull(user, "user");
@@ -123,7 +129,7 @@ public class RoleDiscoveryService {
     //
 
     var analysisResult =
-      this.assetInventoryAdapter.analyzeResourcesAccessibleByUser(
+      this.assetInventoryAdapter.findAccessibleResourcesByUser(
         this.options.getScope(),
         user,
         this.options.isIncludeInheritedBindings());
@@ -142,25 +148,35 @@ public class RoleDiscoveryService {
         RoleBinding.RoleBindingStatus.ACTIVATED);
 
     //
-    // Find all eligible role bindings. The bindings are
+    // Find all JIT-eligible role bindings. The bindings are
     // conditional and have a special condition that serves
     // as marker.
     //
-    var eligibleRoles =
-      findRoleBindings(
-        analysisResult,
-        condition -> JitConstraints.isJitAccessConstraint(condition),
-        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
-        RoleBinding.RoleBindingStatus.ELIGIBLE);
+    var jitEligibleRoles = findRoleBindings(
+      analysisResult,
+      condition -> JitConstraints.isJitAccessConstraint(condition),
+      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
+      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL);
 
     //
-    // Merge the two lists.
+    // Find all MPA-eligible role bindings. The bindings are
+    // conditional and have a special condition that serves
+    // as marker.
     //
-    // NB. We can't use
-    //  !activatedRoles.contains(...)
+    var mpaEligibleRoles = findRoleBindings(
+      analysisResult,
+      condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
+      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL);
+
+    //
+    // Merge the three lists.
+    //
+    // NB. We can't use !activatedRoles.contains(...)
     // because of the different binding statuses.
     //
-    var consolidatedRoles = eligibleRoles.stream()
+    var allEligibleRoles = Stream.concat(jitEligibleRoles.stream(), mpaEligibleRoles.stream());
+    var consolidatedRoles = allEligibleRoles
       .filter(r -> !activatedRoles
         .stream()
         .anyMatch(a -> a.getFullResourceName().equals(r.getFullResourceName())
@@ -176,6 +192,57 @@ public class RoleDiscoveryService {
         .flatMap(Collection::stream)
         .map(e -> e.getCause())
         .collect(Collectors.toList()));
+  }
+
+  /**
+   * List users that can approve the activation of an eligible role binding
+   * */
+  public Collection<UserId> listApproversForEligibleRoleBinding(
+    UserId callerUserId,
+    RoleBinding role) throws AccessException, IOException {
+
+    Preconditions.checkNotNull(callerUserId, "callerUserId");
+    Preconditions.checkNotNull(role, "role");
+
+    assert(isSupportedResource(role.getFullResourceName()));
+    assert(role.getStatus() == RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL);
+
+    //
+    // Check that the (calling) user is really allowed to request approval
+    // this role.
+    //
+    var eligibleRoles = listEligibleRoleBindings(callerUserId);
+    if (!eligibleRoles.getRoleBindings().contains(role)) { // TODO: Test
+      throw new AccessDeniedException(
+        String.format("Your user %s is not eligible to request approval for this role", callerUserId));
+    }
+
+    //
+    // Find other eligible users.
+    //
+    var analysisResult = this.assetInventoryAdapter.findPermissionedPrincipalsByResource(
+      this.options.getScope(),
+      role.getFullResourceName(),
+      role.getRole());
+
+    var approvers = Stream.ofNullable(analysisResult.getAnalysisResults())
+      .flatMap(Collection::stream)
+
+      // Narrow down to IAM bindings with an MPA constraint.
+      .filter(result -> result.getIamBinding() != null &&
+                   JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
+
+      // Collect identities (users and group members)
+      .filter(result -> result.getIdentityList() != null)
+      .flatMap(result -> result.getIdentityList().getIdentities().stream()
+        .filter(id -> id.getName().startsWith("user:"))
+        .map(id -> new UserId(id.getName().substring("user:".length())))) // TODO: Collect group members!?
+
+      // Remove the caller.
+      .filter(user -> !user.equals(callerUserId))
+      .collect(Collectors.toList());
+
+    return approvers;
   }
 
   // -------------------------------------------------------------------------

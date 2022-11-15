@@ -59,34 +59,81 @@ public class RoleActivationService {
     this.options = configuration;
   }
 
+
+  /**
+   * Activate a role binding, either for the calling user (JIT) or
+   * for another beneficiary (MPA).
+   */
   public OffsetDateTime activateEligibleRoleBinding(
-    UserId userId,
+    UserId callerUserId,
+    UserId beneficiaryUserId,
     RoleBinding role,
-    String justification)
-    throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(userId, "userId");
+    String justification) throws AccessException, AlreadyExistsException, IOException {
+
+    Preconditions.checkNotNull(callerUserId, "userId");
     Preconditions.checkNotNull(role, "role");
     Preconditions.checkNotNull(justification, "justification");
 
     assert (RoleDiscoveryService.isSupportedResource(role.getFullResourceName()));
 
     //
-    // Double-check that the user is really allowed to activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
+    // Check that the justification looks reasonable.
     //
-    var eligibleRoles = this.roleDiscoveryService.listEligibleRoleBindings(userId);
-    if (!eligibleRoles.getRoleBindings().contains(role)) {
-      throw new AccessDeniedException(String.format("Your user %s is not eligible to activate this role", userId));
-    }
-
     if (!this.options.getJustificationPattern().matcher(justification).matches()) {
       throw new AccessDeniedException(
         String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
     }
 
     //
-    // Add time-bound IAM binding.
+    // Double-check that the (calling) user is really allowed to (JIT/MPA-) activate
+    // this role. This is to avoid us from being tricked to grant
+    // access to a role that they aren't eligible for.
+    //
+    var eligibleRoles = this.roleDiscoveryService.listEligibleRoleBindings(callerUserId);
+    if (!eligibleRoles.getRoleBindings().contains(role)) {
+      throw new AccessDeniedException(
+        String.format("Your user %s is not eligible to activate this role", callerUserId));
+    }
+
+    String bindingDescription;
+    if (callerUserId.equals(beneficiaryUserId)) {
+      //
+      // JIT access: The caller is trying to activate a role for themselves.
+      //
+      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL) {
+        throw new IllegalArgumentException("The role does not permit self-approval");
+      }
+
+      //
+      // We already checked that the caller is eligible, so we're good to proceed.
+      //
+      bindingDescription = String.format("Self-approved, justification: %s", justification);
+    }
+    else {
+      //
+      // Multi-party approval: The caller is trying to activate a role for somebody else.
+      //
+      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL) {
+        throw new IllegalArgumentException("The role does not permit multi party-approval");
+      }
+
+      //
+      // We already checked that the caller is eligible, but we still need to check that the beneficiary
+      // is eligible too.
+      //
+      if (!this.roleDiscoveryService.listEligibleRoleBindings(beneficiaryUserId).getRoleBindings().contains(role)) {
+        throw new AccessDeniedException(
+          String.format("Your user %s is not eligible to have this role activated for them", callerUserId));
+      }
+
+      //
+      // Both the caller and the beneficiary are eligible, so we're good to proceed.
+      //
+      bindingDescription = String.format("Approved by %s, justification: %s", callerUserId.getEmail(), justification);
+    }
+
+    //
+    // Add time-bound IAM binding for the beneficiary.
     //
     // Replace existing bindings for same user and role to avoid
     // accumulating junk, and to prevent hitting the binding limit.
@@ -95,11 +142,11 @@ public class RoleActivationService {
     var elevationEndTime = elevationStartTime.plus(this.options.getActivationDuration());
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + userId))
+      .setMembers(List.of("user:" + beneficiaryUserId))
       .setRole(role.getRole())
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ELEVATION_CONDITION_TITLE)
-        .setDescription("User-provided justification: " + justification)
+        .setDescription(bindingDescription)
         .setExpression(IamConditions.createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
 
     this.resourceManagerAdapter.addIamBinding(

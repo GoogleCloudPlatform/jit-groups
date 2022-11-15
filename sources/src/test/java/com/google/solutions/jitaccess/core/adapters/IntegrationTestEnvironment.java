@@ -69,9 +69,16 @@ public class IntegrationTestEnvironment {
 
       PROJECT_ID = getMandatory(settings, "test.project");
 
+      //
+      // Service account that doesn't have access to anything.
+      //
       NO_ACCESS_USER = new UserId(
         "no-access",
         String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
+
+      //
+      // Service account that can be granted temporary access.
+      //
       TEMPORARY_ACCESS_USER = new UserId(
         "temporary-access",
         String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));

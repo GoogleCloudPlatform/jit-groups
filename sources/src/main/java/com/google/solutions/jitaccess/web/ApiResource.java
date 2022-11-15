@@ -110,22 +110,25 @@ public class ApiResource {
               roleParts[0],
               roleParts[1],
               roleParts[2],
-              RoleBinding.RoleBindingStatus.ELIGIBLE);
+              RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL); // TODO: Consider MPA!?
           })
-        .collect(Collectors.toList());
+          .collect(Collectors.toList());
 
     for (var roleBinding : roleBindings) {
       try {
         this.roleActivationService.activateEligibleRoleBinding(
-          iapPricipal.getId(), roleBinding, justification);
+          iapPricipal.getId(),
+          iapPricipal.getId(),
+          roleBinding,
+          justification);
 
         this.logAdapter
           .newInfoEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Activated '%s' for '%s' on '%s', justified by '%s'",
-              roleBinding.getRole(),
+              "User %s successfully activated role '%s' on '%s' for themselves, justified by '%s'",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification))
           .addLabel("role", roleBinding.getRole())
@@ -138,9 +141,9 @@ public class ApiResource {
           .newErrorEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Denied to activate '%s' for '%s' on '%s', justified by '%s': %s",
-              roleBinding.getRole(),
+              "User %s was denied to activated role '%s' on '%s' for themselves, justified by '%s': %s",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification,
               e.getMessage()))
@@ -156,9 +159,9 @@ public class ApiResource {
           .newErrorEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Failed to activate '%s' for '%s' on '%s', justified by '%s': %s",
-              roleBinding.getRole(),
+              "User %s failed to activate role '%s' on '%s' for themselves, justified by '%s': %s",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification,
               e.getMessage()))
