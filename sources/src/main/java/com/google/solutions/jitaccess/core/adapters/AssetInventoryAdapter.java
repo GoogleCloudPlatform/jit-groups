@@ -39,7 +39,9 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 
-/** Adapter for the Asset Inventory API. */
+/**
+ * Adapter for the Asset Inventory API.
+ */
 @RequestScoped
 public class AssetInventoryAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
@@ -53,14 +55,13 @@ public class AssetInventoryAdapter {
     this.credentials = credentials;
   }
 
-  private CloudAsset createClient() throws IOException
-  {
+  private CloudAsset createClient() throws IOException {
     try {
       return new CloudAsset
         .Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+        HttpTransport.newTransport(),
+        new GsonFactory(),
+        new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -73,21 +74,21 @@ public class AssetInventoryAdapter {
    * Find resources accessible by a user: - resources the user has been directly granted access to -
    * resources which the user has inherited access to - resources which the user can access because
    * of a group membership
-   *
+   * <p>
    * NB. For group membership resolution to work, the service account must have the right
    * privileges in Cloud Identity/Workspace.
    */
   public IamPolicyAnalysis analyzeResourcesAccessibleByUser(
-      String scope,
-      UserId user,
-      boolean expandResources)
-      throws AccessException, IOException {
+    String scope,
+    UserId user,
+    boolean expandResources)
+    throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
 
     assert (scope.startsWith("organizations/")
-        || scope.startsWith("folders/")
-        || scope.startsWith("projects/"));
+      || scope.startsWith("folders/")
+      || scope.startsWith("projects/"));
 
     try {
       return createClient().v1()
@@ -106,7 +107,7 @@ public class AssetInventoryAdapter {
         case 403:
           throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
         default:
-          throw (GoogleJsonResponseException)e.fillInStackTrace();
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
     }
   }

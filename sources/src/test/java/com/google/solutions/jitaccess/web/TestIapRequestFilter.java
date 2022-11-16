@@ -77,9 +77,9 @@ public class TestIapRequestFilter {
 
     // Random JWT that doesn't even come from IAP.
     String randomJwt =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
-            + "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.S"
-            + "flKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMj"
+        + "M0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.S"
+        + "flKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(anyString())).thenReturn(randomJwt);

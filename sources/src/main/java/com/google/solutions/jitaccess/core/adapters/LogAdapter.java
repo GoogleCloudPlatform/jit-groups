@@ -29,7 +29,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Adapter class for writing structured logs. */
+/**
+ * Adapter class for writing structured logs.
+ */
 @RequestScoped
 public class LogAdapter {
   private final Appendable output;
@@ -37,22 +39,24 @@ public class LogAdapter {
   private String traceId;
   private UserPrincipal principal;
 
-  public LogAdapter(Appendable output)
-  {
+  public LogAdapter(Appendable output) {
     this.output = output;
   }
 
-  public LogAdapter()
-  {
+  public LogAdapter() {
     this(System.out);
   }
 
-  /** Set Trace ID for current request. */
+  /**
+   * Set Trace ID for current request.
+   */
   public void setTraceId(String traceId) {
     this.traceId = traceId;
   }
 
-  /** Set principal for current request. */
+  /**
+   * Set principal for current request.
+   */
   public void setPrincipal(UserPrincipal principal) {
     this.principal = principal;
   }
@@ -79,11 +83,11 @@ public class LogAdapter {
     private String traceId;
 
     private LogEntry(
-        String severity,
-        String eventId,
-        String message,
-        UserPrincipal principal,
-        String traceId) {
+      String severity,
+      String eventId,
+      String message,
+      UserPrincipal principal,
+      String traceId) {
       this.severity = severity;
       this.message = message;
       this.traceId = traceId;
@@ -96,7 +100,7 @@ public class LogAdapter {
         this.labels.put("user_id", principal.getId().getId());
         this.labels.put("device_id", principal.getDevice().getDeviceId());
         this.labels.put("device_access_levels",
-            String.join(", ", principal.getDevice().getAccessLevels()));
+          String.join(", ", principal.getDevice().getAccessLevels()));
       }
     }
 
@@ -111,10 +115,12 @@ public class LogAdapter {
         // Write to STDOUT, AppEngine picks it up from there.
         //
         output.append(new ObjectMapper().writeValueAsString(this) + "\n");
-      } catch (IOException e) {
+      }
+      catch (IOException e) {
         try {
           output.append(String.format("Failed to log: %s\n", message));
-        } catch (IOException ignored) {
+        }
+        catch (IOException ignored) {
         }
       }
     }

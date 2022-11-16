@@ -21,8 +21,7 @@
 
 package com.google.solutions.jitaccess.core;
 
-public class NotAuthenticatedException extends AccessException
-{
+public class NotAuthenticatedException extends AccessException {
   public NotAuthenticatedException(String message, Exception inner) {
     super(message, inner);
   }

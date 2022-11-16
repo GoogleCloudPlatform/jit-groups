@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 
 import javax.annotation.Priority;
@@ -33,7 +32,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 
-/** Require requests to have a special header to prevent against
+/**
+ * Require requests to have a special header to prevent against
  * unauthorized cross-site requests (XSRF).
  */
 @Dependent
@@ -51,14 +51,13 @@ public class XsrfRequestFilter implements ContainerRequestFilter {
     // that header from a different site would trigger a CORS check, which
     // we'd deny.
     //
-    if (!XSRF_HEADER_VALUE.equals(containerRequestContext.getHeaderString(XSRF_HEADER_NAME)))
-    {
+    if (!XSRF_HEADER_VALUE.equals(containerRequestContext.getHeaderString(XSRF_HEADER_NAME))) {
       containerRequestContext.abortWith(
-          Response
-              .status(400, "Invalid request")
-              .entity(new ExceptionMappers.ErrorEntity(
-                  new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
-              .build());
+        Response
+          .status(400, "Invalid request")
+          .entity(new ExceptionMappers.ErrorEntity(
+            new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
+          .build());
     }
   }
 }

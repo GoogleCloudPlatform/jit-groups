@@ -23,8 +23,11 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import java.security.Principal;
 
-/** Represents a logged-in user. */
+/**
+ * Represents a logged-in user.
+ */
 public interface UserPrincipal extends Principal {
   UserId getId();
+
   DeviceInfo getDevice();
 }

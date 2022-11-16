@@ -25,16 +25,15 @@ import com.google.common.base.Preconditions;
 
 import java.util.List;
 
-public class DeviceInfo
-{
+public class DeviceInfo {
   public static DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
 
   private final String deviceId;
   private final List<String> accessLevels;
 
   public DeviceInfo(
-      String deviceId,
-      List<String> accessLevels) {
+    String deviceId,
+    List<String> accessLevels) {
     Preconditions.checkNotNull(deviceId, "deviceId");
     Preconditions.checkNotNull(accessLevels, "accessLevels");
 

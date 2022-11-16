@@ -22,13 +22,13 @@
 package com.google.solutions.jitaccess.core;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestApplicationVersion {
 
   @Test
-  public void VersionStringIsNotEmpty()
-  {
+  public void VersionStringIsNotEmpty() {
     assertNotNull(ApplicationVersion.VERSION_STRING);
   }
 }

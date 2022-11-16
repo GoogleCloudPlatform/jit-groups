@@ -33,11 +33,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.DeviceInfo;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
-import com.google.solutions.jitaccess.core.adapters.UserId;
-import com.google.solutions.jitaccess.core.adapters.UserPrincipal;
+import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.services.ElevationService;
 import org.jboss.logging.Logger;
 
@@ -50,7 +46,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** Provides access to runtime configuration (AppEngine, local). To be injected using CDI. */
+/**
+ * Provides access to runtime configuration (AppEngine, local). To be injected using CDI.
+ */
 @ApplicationScoped
 public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
@@ -75,11 +73,12 @@ public class RuntimeEnvironment {
 
     try {
       return request.execute();
-    } catch (UnknownHostException exception) {
+    }
+    catch (UnknownHostException exception) {
       throw new IOException(
-          "Cannot find the metadata server. This is "
-              + "likely because code is not running on Google Cloud.",
-          exception);
+        "Cannot find the metadata server. This is "
+          + "likely because code is not running on Google Cloud.",
+        exception);
     }
   }
 
@@ -87,9 +86,11 @@ public class RuntimeEnvironment {
     var value = System.getenv(key);
     if (value != null && !value.isEmpty()) {
       return value.trim();
-    } else if (defaultValue != null) {
+    }
+    else if (defaultValue != null) {
       return defaultValue;
-    } else {
+    }
+    else {
       throw new RuntimeException(String.format("Missing configuration '%s'", key));
     }
   }
@@ -101,7 +102,7 @@ public class RuntimeEnvironment {
       //
       try {
         GenericData projectMetadata =
-            getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
+          getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
         this.ProjectId = (String) projectMetadata.get("projectId");
         this.ProjectNumber = projectMetadata.get("numericProjectId").toString();
@@ -109,19 +110,21 @@ public class RuntimeEnvironment {
 
         this.ApplicationCredentials = GoogleCredentials.getApplicationDefault();
         this.ApplicationPrincipal =
-            ((ComputeEngineCredentials) this.ApplicationCredentials).getAccount();
+          ((ComputeEngineCredentials) this.ApplicationCredentials).getAccount();
 
         LOG.infof(
-            "Running in project %s (%s) as %s, version %s",
-            this.ProjectId,
-            this.ProjectNumber,
-            this.ApplicationPrincipal,
-            ApplicationVersion.VERSION_STRING);
-      } catch (IOException e) {
+          "Running in project %s (%s) as %s, version %s",
+          this.ProjectId,
+          this.ProjectNumber,
+          this.ApplicationPrincipal,
+          ApplicationVersion.VERSION_STRING);
+      }
+      catch (IOException e) {
         LOG.errorf(e, "Failed to lookup instance metadata");
         throw new RuntimeException("Failed to initialize runtime environment", e);
       }
-    } else {
+    }
+    else {
       //
       // Running in development mode.
       //
@@ -154,14 +157,14 @@ public class RuntimeEnvironment {
           // service account. This can be used when using user credentials as ADC.
           //
           this.ApplicationCredentials =
-              ImpersonatedCredentials.create(
-                  defaultCredentials,
-                  impersonateServiceAccount,
-                  null,
-                  Stream.of(ResourceManagerAdapter.OAUTH_SCOPE, AssetInventoryAdapter.OAUTH_SCOPE)
-                      .distinct()
-                      .collect(Collectors.toList()),
-                  0);
+            ImpersonatedCredentials.create(
+              defaultCredentials,
+              impersonateServiceAccount,
+              null,
+              Stream.of(ResourceManagerAdapter.OAUTH_SCOPE, AssetInventoryAdapter.OAUTH_SCOPE)
+                .distinct()
+                .collect(Collectors.toList()),
+              0);
 
           //
           // If we lack impersonation permissions, ImpersonatedCredentials
@@ -173,22 +176,25 @@ public class RuntimeEnvironment {
           //
           this.ApplicationCredentials.refresh();
           this.ApplicationPrincipal = impersonateServiceAccount;
-        } else if (defaultCredentials instanceof ServiceAccountCredentials) {
+        }
+        else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.ApplicationCredentials = defaultCredentials;
           this.ApplicationPrincipal =
-              ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser();
-        } else {
-          throw new RuntimeException(
-              String.format(
-                  "You're using user credentials as application default "
-                      + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
-                      + "a service account during development",
-                  CONFIG_IMPERSONATE_SA));
+            ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser();
         }
-      } catch (IOException e) {
+        else {
+          throw new RuntimeException(
+            String.format(
+              "You're using user credentials as application default "
+                + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
+                + "a service account during development",
+              CONFIG_IMPERSONATE_SA));
+        }
+      }
+      catch (IOException e) {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
@@ -196,15 +202,15 @@ public class RuntimeEnvironment {
     }
 
     this.elevationConfiguration =
-        new ElevationService.Options(
-            getConfigurationOption(
-                "RESOURCE_SCOPE",
-                "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-            Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")),
-            getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
-            Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-            Duration.ofMinutes(
-                Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+      new ElevationService.Options(
+        getConfigurationOption(
+          "RESOURCE_SCOPE",
+          "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
+        Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")),
+        getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
+        Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
+        Duration.ofMinutes(
+          Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
   }
 
   public String getProjectId() {

@@ -52,9 +52,11 @@ public class IapRequestFilter implements ContainerRequestFilter {
   private static final String IAP_ISSUER_URL = "https://cloud.google.com/iap";
   private static final String IAP_ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
 
-  @Inject LogAdapter log;
+  @Inject
+  LogAdapter log;
 
-  @Inject RuntimeEnvironment runtimeEnvironment;
+  @Inject
+  RuntimeEnvironment runtimeEnvironment;
 
   private UserPrincipal authenticateRequest(ContainerRequestContext requestContext) {
     //
@@ -64,9 +66,9 @@ public class IapRequestFilter implements ContainerRequestFilter {
     // from the project number and name.
     //
     String expectedAudience =
-        String.format(
-            "/projects/%s/apps/%s",
-            this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getProjectId());
+      String.format(
+        "/projects/%s/apps/%s",
+        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getProjectId());
 
     String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
@@ -75,11 +77,11 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
     try {
       final var verifiedAssertion = new IapAssertion(
-          TokenVerifier.newBuilder()
-              .setAudience(expectedAudience)
-              .setIssuer(IAP_ISSUER_URL)
-              .build()
-              .verify(assertion));
+        TokenVerifier.newBuilder()
+          .setAudience(expectedAudience)
+          .setIssuer(IAP_ISSUER_URL)
+          .build()
+          .verify(assertion));
 
       //
       // Associate the token with the request so that controllers
@@ -101,7 +103,8 @@ public class IapRequestFilter implements ContainerRequestFilter {
           return verifiedAssertion.getDeviceInfo();
         }
       };
-    } catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
+    }
+    catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       throw new ForbiddenException("Invalid IAP assertion", e);
     }
   }
@@ -111,34 +114,34 @@ public class IapRequestFilter implements ContainerRequestFilter {
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
 
     var principal =
-        this.runtimeEnvironment.getStaticPrincipal() == null
-            ? authenticateRequest(requestContext)
-            : this.runtimeEnvironment.getStaticPrincipal();
+      this.runtimeEnvironment.getStaticPrincipal() == null
+        ? authenticateRequest(requestContext)
+        : this.runtimeEnvironment.getStaticPrincipal();
 
     this.log.setPrincipal(principal);
 
     requestContext.setSecurityContext(
-        new SecurityContext() {
-          @Override
-          public Principal getUserPrincipal() {
-            return principal;
-          }
+      new SecurityContext() {
+        @Override
+        public Principal getUserPrincipal() {
+          return principal;
+        }
 
-          @Override
-          public boolean isUserInRole(String s) {
-            return false;
-          }
+        @Override
+        public boolean isUserInRole(String s) {
+          return false;
+        }
 
-          @Override
-          public boolean isSecure() {
-            return true;
-          }
+        @Override
+        public boolean isSecure() {
+          return true;
+        }
 
-          @Override
-          public String getAuthenticationScheme() {
-            return "IAP";
-          }
-        });
+        @Override
+        public String getAuthenticationScheme() {
+          return "IAP";
+        }
+      });
 
     this.log.newInfoEntry(EVENT_AUTHENTICATE, "Authenticated IAP principal").write();
   }
