@@ -47,63 +47,6 @@ public class TestElevationService {
   private static final String ELIGIBILITY_CONDITION = "has({}.jitAccessConstraint)";
 
   // ---------------------------------------------------------------------
-  // isConditionIndicatorForEligibility.
-  // ---------------------------------------------------------------------
-
-  @Test
-  public void whenConditionHasRedundantWhitespace_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
-    var service =
-      new ElevationService(
-        Mockito.mock(AssetInventoryAdapter.class),
-        Mockito.mock(ResourceManagerAdapter.class),
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
-
-    var condition = new Expr()
-      .setExpression(" \r\n\t has( {  }.jitAccessConstraint \t ) \t \r\n\r");
-    assertTrue(service.isConditionIndicatorForEligibility(condition));
-  }
-
-  @Test
-  public void
-  whenConditionUsesWrongCase_ThenIsConditionIndicatorForEligibilityReturnsTrue() {
-    var service =
-      new ElevationService(
-        Mockito.mock(AssetInventoryAdapter.class),
-        Mockito.mock(ResourceManagerAdapter.class),
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
-
-    var condition = new Expr()
-      .setExpression("HAS({}.JitacceSSConstraint)");
-    assertTrue(service.isConditionIndicatorForEligibility(condition));
-  }
-
-  @Test
-  public void whenConditionIsEmpty_ThenIsConditionIndicatorForEligibilityReturnsFalse() {
-    var service =
-      new ElevationService(
-        Mockito.mock(AssetInventoryAdapter.class),
-        Mockito.mock(ResourceManagerAdapter.class),
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
-
-    assertFalse(service.isConditionIndicatorForEligibility(null));
-  }
-
-  // ---------------------------------------------------------------------
   // listEligibleRoleBindings.
   // ---------------------------------------------------------------------
 

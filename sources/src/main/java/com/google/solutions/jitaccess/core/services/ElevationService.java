@@ -54,8 +54,6 @@ public class ElevationService {
   private static final String PROJECT_RESOURCE_NAME_PREFIX =
     "//cloudresourcemanager.googleapis.com/projects/";
   public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
-  private static final Pattern ELEVATION_CONDITION_PATTERN =
-    Pattern.compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
   private final AssetInventoryAdapter assetInventoryAdapter;
   private final ResourceManagerAdapter resourceManagerAdapter;
@@ -73,20 +71,6 @@ public class ElevationService {
     this.assetInventoryAdapter = assetInventoryAdapter;
     this.resourceManagerAdapter = resourceManagerAdapter;
     this.options = configuration;
-  }
-
-  public boolean isConditionIndicatorForEligibility(Expr iamCondition) {
-    if (iamCondition == null) {
-      return false;
-    }
-
-    // Strip all whitespace to simplify expression matching.
-    var expression = iamCondition
-      .getExpression()
-      .toLowerCase()
-      .replace(" ", "");
-
-    return ELEVATION_CONDITION_PATTERN.matcher(expression).matches();
   }
 
   private boolean isSupportedResource(String fullResourceName) {
@@ -179,7 +163,7 @@ public class ElevationService {
     var eligibleRoles =
       findRoleBindings(
         analysisResult,
-        condition -> condition != null && isConditionIndicatorForEligibility(condition),
+        condition -> JitConstraints.isJitAccessConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
         RoleBinding.RoleBindingStatus.ELIGIBLE);
 
