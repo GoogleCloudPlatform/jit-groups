@@ -26,6 +26,9 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import java.util.regex.Pattern;
 
 public class JitConstraints {
+  /** Condition title for activated role bindings */
+  public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
+
   /** Condition that marks a role binding as eligible for JIT access */
   private static final Pattern JIT_CONDITION_PATTERN = Pattern
     .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
@@ -50,5 +53,11 @@ public class JitConstraints {
   /** Check if the IAM condition is a JIT Access constraint */
   public static boolean isJitAccessConstraint(Expr iamCondition) {
     return isConstraint(iamCondition, JIT_CONDITION_PATTERN);
+  }
+
+  /** Check if the IAM condition indicates an activated role binding */
+  public static boolean isActivated(Expr iamCondition) {
+    return iamCondition != null &&
+      ELEVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
   }
 }

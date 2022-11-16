@@ -34,7 +34,8 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
-import com.google.solutions.jitaccess.core.services.ElevationService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -61,7 +62,8 @@ public class RuntimeEnvironment {
   private final UserPrincipal StaticPrincipal;
   private final String ApplicationPrincipal;
   private final GoogleCredentials ApplicationCredentials;
-  private final ElevationService.Options elevationConfiguration;
+  private final RoleDiscoveryService.Options roleDiscoveryServiceOptions;
+  private final RoleActivationService.Options roleActivationServiceOptions;
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -201,12 +203,15 @@ public class RuntimeEnvironment {
       LOG.warnf("Running in development mode as %s", this.ApplicationPrincipal);
     }
 
-    this.elevationConfiguration =
-      new ElevationService.Options(
+    this.roleDiscoveryServiceOptions =
+      new RoleDiscoveryService.Options(
         getConfigurationOption(
           "RESOURCE_SCOPE",
           "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-        Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")),
+        Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
+
+    this.roleActivationServiceOptions =
+      new RoleActivationService.Options(
         getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
         Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
         Duration.ofMinutes(
@@ -235,7 +240,12 @@ public class RuntimeEnvironment {
   }
 
   @Produces // Make available for injection into adapter classes
-  public ElevationService.Options getElevationConfiguration() {
-    return this.elevationConfiguration;
+  public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
+    return this.roleDiscoveryServiceOptions;
+  }
+
+  @Produces // Make available for injection into adapter classes
+  public RoleActivationService.Options getRoleActivationServiceOptions() {
+    return this.roleActivationServiceOptions;
   }
 }

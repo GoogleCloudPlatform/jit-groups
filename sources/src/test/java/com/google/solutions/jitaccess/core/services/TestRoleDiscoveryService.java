@@ -22,27 +22,21 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.api.services.cloudasset.v1.model.*;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.EnumSet;
 import java.util.List;
-import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
-public class TestElevationService {
+public class TestRoleDiscoveryService {
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
-  private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
-
   private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
   private static final String ELIGIBILITY_CONDITION = "has({}.jitAccessConstraint)";
 
@@ -53,22 +47,17 @@ public class TestElevationService {
   @Test
   public void whenAnalysisResultEmpty_ThenListEligibleRoleBindingsReturnsEmptyList()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
       .thenReturn(new IamPolicyAnalysis());
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -82,7 +71,6 @@ public class TestElevationService {
   @Test
   public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleRoleBindingsReturnsEmptyList()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
@@ -92,15 +80,11 @@ public class TestElevationService {
             .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1"))));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -114,7 +98,6 @@ public class TestElevationService {
   @Test
   public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleRoleBindingsReturnsEmptyList()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
@@ -131,15 +114,11 @@ public class TestElevationService {
               .setMembers(List.of("user:" + SAMPLE_USER))))));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -153,7 +132,6 @@ public class TestElevationService {
   @Test
   public void whenAnalysisContainsEligibleBinding_ThenListEligibleRoleBindingsReturnsList()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
@@ -172,15 +150,11 @@ public class TestElevationService {
               .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -200,7 +174,6 @@ public class TestElevationService {
   public void whenAnalysisContainsActivatedBinding_ThenListEligibleRoleBindingsReturnsMergedList()
     throws Exception {
 
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     var eligibleBinding = new IamPolicyAnalysisResult()
@@ -226,7 +199,7 @@ public class TestElevationService {
         .setMembers(List.of("user:" + SAMPLE_USER))
         .setRole(SAMPLE_ROLE)
         .setCondition(new Expr()
-          .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
+          .setTitle(JitConstraints.ELEVATION_CONDITION_TITLE)
           .setExpression("time ...")));
 
     var activatedExpiredBinding = new IamPolicyAnalysisResult()
@@ -240,7 +213,7 @@ public class TestElevationService {
         .setMembers(List.of("user:" + SAMPLE_USER))
         .setRole(SAMPLE_ROLE)
         .setCondition(new Expr()
-          .setTitle(ElevationService.ELEVATION_CONDITION_TITLE)
+          .setTitle(JitConstraints.ELEVATION_CONDITION_TITLE)
           .setExpression("time ...")));
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
@@ -253,15 +226,11 @@ public class TestElevationService {
           )));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -280,7 +249,6 @@ public class TestElevationService {
   @Test
   public void whenAnalysisContainsEligibleBindingWithExtraCondition_ThenBindingIsIgnored()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
@@ -300,15 +268,11 @@ public class TestElevationService {
                 .setExpression(ELIGIBILITY_CONDITION + " && resource.name=='Foo'"))))));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -323,7 +287,6 @@ public class TestElevationService {
   public void
   whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleRoleBindingsAsyncReturnsList()
     throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     var parentFolderAcl = new GoogleCloudAssetV1AccessControlList()
@@ -357,15 +320,11 @@ public class TestElevationService {
               .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
 
     var service =
-      new ElevationService(
+      new RoleDiscoveryService(
         assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
+        new RoleDiscoveryService.Options(
           "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
+          true));
 
     var roles = service.listEligibleRoleBindings(SAMPLE_USER);
 
@@ -390,150 +349,5 @@ public class TestElevationService {
         SAMPLE_ROLE,
         RoleBinding.RoleBindingStatus.ELIGIBLE),
       roles.getRoleBindings().get(1));
-  }
-
-  // ---------------------------------------------------------------------
-  // activateEligibleRoleBinding.
-  // ---------------------------------------------------------------------
-
-  @Test
-  public void whenRoleIsNotEligible_ThenActivateEligibleRoleBindingAsyncThrowsException()
-    throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1"))));
-
-    var service =
-      new ElevationService(
-        assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
-
-    assertThrows(
-      AccessDeniedException.class,
-      () ->
-        service.activateEligibleRoleBinding(
-          SAMPLE_USER,
-          new RoleBinding(
-            "project-1",
-            "//cloudresourcemanager.googleapis.com/projects/project-1",
-            "roles/compute.admin",
-            RoleBinding.RoleBindingStatus.ELIGIBLE),
-          "justification"));
-  }
-
-  @Test
-  public void whenRoleIsEligible_ThenActivateEligibleRoleBindingAddsBinding() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
-            .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
-              .setResources(List.of(new GoogleCloudAssetV1Resource()
-                .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
-              .setConditionEvaluation(new ConditionEvaluation()
-                .setEvaluationValue("CONDITIONAL"))))
-            .setIamBinding(new Binding()
-              .setMembers(List.of("user:" + SAMPLE_USER))
-              .setRole(SAMPLE_ROLE)
-              .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
-
-    var service =
-      new ElevationService(
-        assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          JUSTIFICATION_PATTERN,
-          Duration.ofMinutes(1)));
-
-    var expiry =
-      service.activateEligibleRoleBinding(
-        SAMPLE_USER,
-        new RoleBinding(
-          "project-1",
-          "//cloudresourcemanager.googleapis.com/projects/project-1",
-          SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE),
-        "justification");
-
-    assertTrue(expiry.isAfter(OffsetDateTime.now()));
-    assertTrue(expiry.isBefore(OffsetDateTime.now().plusMinutes(2)));
-
-    verify(resourceAdapter)
-      .addIamBinding(
-        eq("project-1"),
-        argThat(
-          b ->
-            b.getRole().equals(SAMPLE_ROLE)
-              && b.getCondition().getExpression().contains("request.time < timestamp")
-              && b.getCondition().getDescription().contains("justification")),
-        eq(
-          EnumSet.of(
-            ResourceManagerAdapter.IamBindingOptions
-              .REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE)),
-        eq("justification"));
-  }
-
-  @Test
-  public void
-  whenRoleIsEligibleButJustificationDoesNotMatch_ThenActivateEligibleRoleBindingThrowsException()
-    throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-
-    when(assetAdapter.analyzeResourcesAccessibleByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(
-        new IamPolicyAnalysis()
-          .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-            .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/projects/project-1")
-            .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
-              .setResources(List.of(new GoogleCloudAssetV1Resource()
-                .setFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1")))
-              .setConditionEvaluation(new ConditionEvaluation()
-                .setEvaluationValue("CONDITIONAL"))))
-            .setIamBinding(new Binding()
-              .setMembers(List.of("user:" + SAMPLE_USER))
-              .setRole(SAMPLE_ROLE)
-              .setCondition(new Expr().setExpression(ELIGIBILITY_CONDITION))))));
-
-    var service =
-      new ElevationService(
-        assetAdapter,
-        resourceAdapter,
-        new ElevationService.Options(
-          "organizations/0",
-          true,
-          "hint",
-          Pattern.compile("^\\d+$"),
-          Duration.ofMinutes(1)));
-
-    assertThrows(
-      AccessDeniedException.class,
-      () ->
-        service.activateEligibleRoleBinding(
-          SAMPLE_USER,
-          new RoleBinding(
-            "project-1",
-            "//cloudresourcemanager.googleapis.com/projects/project-1",
-            SAMPLE_ROLE,
-            RoleBinding.RoleBindingStatus.ELIGIBLE),
-          "not-numeric"));
   }
 }

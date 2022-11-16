@@ -24,25 +24,16 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.api.services.cloudasset.v1.model.ConditionEvaluation;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.IamConditions;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,35 +41,30 @@ import java.util.stream.Stream;
  * Service that contains the logic required to find eligible roles, and to activate them.
  */
 @RequestScoped
-public class ElevationService {
+public class RoleDiscoveryService {
   private static final String PROJECT_RESOURCE_NAME_PREFIX =
     "//cloudresourcemanager.googleapis.com/projects/";
-  public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
 
   private final AssetInventoryAdapter assetInventoryAdapter;
-  private final ResourceManagerAdapter resourceManagerAdapter;
 
   private final Options options;
 
-  public ElevationService(
+  public RoleDiscoveryService(
     AssetInventoryAdapter assetInventoryAdapter,
-    ResourceManagerAdapter resourceManagerAdapter,
     Options configuration) {
     Preconditions.checkNotNull(assetInventoryAdapter, "assetInventoryAdapter");
-    Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.assetInventoryAdapter = assetInventoryAdapter;
-    this.resourceManagerAdapter = resourceManagerAdapter;
     this.options = configuration;
   }
 
-  private boolean isSupportedResource(String fullResourceName) {
+  protected static boolean isSupportedResource(String fullResourceName) {
     return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
       && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
   }
 
-  private String resourceNameFromFullResourceName(String fullResourceName) {
+  private static String resourceNameFromFullResourceName(String fullResourceName) {
     return fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length());
   }
 
@@ -151,7 +137,7 @@ public class ElevationService {
     var activatedRoles =
       findRoleBindings(
         analysisResult,
-        condition -> condition != null && ELEVATION_CONDITION_TITLE.equals(condition.getTitle()),
+        condition -> JitConstraints.isActivated(condition),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()),
         RoleBinding.RoleBindingStatus.ACTIVATED);
 
@@ -192,58 +178,6 @@ public class ElevationService {
         .collect(Collectors.toList()));
   }
 
-  public OffsetDateTime activateEligibleRoleBinding(
-    UserId userId,
-    RoleBinding role,
-    String justification)
-    throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(userId, "userId");
-    Preconditions.checkNotNull(role, "role");
-    Preconditions.checkNotNull(justification, "justification");
-
-    assert (isSupportedResource(role.getFullResourceName()));
-
-    //
-    // Double-check that the user is really allowed to activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
-    //
-    var eligibleRoles = listEligibleRoleBindings(userId);
-    if (!eligibleRoles.getRoleBindings().contains(role)) {
-      throw new AccessDeniedException(String.format("Your user %s is not eligible to activate this role", userId));
-    }
-
-    if (!this.options.getJustificationPattern().matcher(justification).matches()) {
-      throw new AccessDeniedException(
-        String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
-    }
-
-    //
-    // Add time-bound IAM binding.
-    //
-    // Replace existing bindings for same user and role to avoid
-    // accumulating junk, and to prevent hitting the binding limit.
-    //
-    var elevationStartTime = OffsetDateTime.now();
-    var elevationEndTime = elevationStartTime.plus(this.options.getActivationDuration());
-
-    var binding = new Binding()
-      .setMembers(List.of("user:" + userId))
-      .setRole(role.getRole())
-      .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
-        .setTitle(ELEVATION_CONDITION_TITLE)
-        .setDescription("User-provided justification: " + justification)
-        .setExpression(IamConditions.createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
-
-    this.resourceManagerAdapter.addIamBinding(
-      role.getResourceName(),
-      binding,
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
-      justification);
-
-    return elevationEndTime;
-  }
-
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
@@ -251,21 +185,12 @@ public class ElevationService {
   public static class Options {
     private final String scope;
     private final boolean includeInheritedBindings;
-    private final Duration activationDuration;
-    private final String justificationHint;
-    private final Pattern justificationPattern;
 
     public Options(
       String scope,
-      boolean includeInheritedBindings,
-      String justificationHint,
-      Pattern justificationPattern,
-      Duration activationDuration) {
+      boolean includeInheritedBindings) {
       this.scope = scope;
       this.includeInheritedBindings = includeInheritedBindings;
-      this.activationDuration = activationDuration;
-      this.justificationHint = justificationHint;
-      this.justificationPattern = justificationPattern;
     }
 
     /**
@@ -280,27 +205,6 @@ public class ElevationService {
      */
     public boolean isIncludeInheritedBindings() {
       return includeInheritedBindings;
-    }
-
-    /**
-     * Duration for an elevation.
-     */
-    public Duration getActivationDuration() {
-      return this.activationDuration;
-    }
-
-    /**
-     * Hint for justification pattern.
-     */
-    public String getJustificationHint() {
-      return this.justificationHint;
-    }
-
-    /**
-     * Pattern to validate justifications.
-     */
-    public Pattern getJustificationPattern() {
-      return this.justificationPattern;
     }
   }
 }
