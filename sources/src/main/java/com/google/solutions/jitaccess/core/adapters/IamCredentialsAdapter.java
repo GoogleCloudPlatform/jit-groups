@@ -1,7 +1,9 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -49,14 +51,21 @@ public class IamCredentialsAdapter {
   /**
    * Sign a JWT using the Google-managed service account key.
    */
-  public String signJwt(UserId serviceAccount, String payload)
+  public String signJwt(UserId serviceAccount, JsonWebToken.Payload payload)
     throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
 
     try
     {
+      if (payload.getFactory() == null) {
+        payload.setFactory(new GsonFactory());
+      }
+
+      var payloadJson = payload.toString();
+      assert (payloadJson.startsWith("{"));
+
       var request = new SignJwtRequest()
-        .setPayload(payload);
+        .setPayload(payloadJson);
 
       return createClient()
         .projects()
@@ -94,7 +103,7 @@ public class IamCredentialsAdapter {
   public static TokenVerifier createJwtVerifier(UserId serviceAccount)
   {
     return TokenVerifier
-      .newBuilder()
+      .newBuilder() // TODO: check exp
       .setCertificatesLocation(getJwksUrl(serviceAccount))
       .setIssuer(serviceAccount.getEmail())
       .setAudience(serviceAccount.getEmail())

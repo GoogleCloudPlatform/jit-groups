@@ -1,5 +1,6 @@
 package com.google.solutions.jitaccess.core.adapters;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import org.junit.jupiter.api.Test;
@@ -16,16 +17,22 @@ public class TestIamCredentialsAdapter {
   public void whenUnauthenticated_ThenSignJwtThrowsException() throws Exception {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
+    var payload = new JsonWebToken.Payload()
+      .setAudience("test");
+
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, "{}"));
+      () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
   }
 
   @Test
   public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
-    var jwt = adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, "{}");
+    var payload = new JsonWebToken.Payload()
+      .setAudience("test");
+
+    var jwt = adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload);
     assertNotNull(jwt);
   }
 
@@ -49,12 +56,11 @@ public class TestIamCredentialsAdapter {
   @Test
   public void whenJwtMissesAudienceClaim_ThenVerifyThrowsException() throws Exception {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var payload = new JsonWebToken.Payload()
+      .setIssuer(serviceAccount.getEmail());
 
-    var jwt = adapter.signJwt(
-      serviceAccount,
-      String.format("{\"iss\":\"%s\"}", serviceAccount.getEmail()));
+    var jwt = adapter.signJwt(serviceAccount, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
       () -> IamCredentialsAdapter
@@ -65,12 +71,11 @@ public class TestIamCredentialsAdapter {
   @Test
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var payload = new JsonWebToken.Payload()
+      .setAudience(serviceAccount.getEmail());
 
-    var jwt = adapter.signJwt(
-      serviceAccount,
-      String.format("{\"aud\":\"%s\"}", serviceAccount.getEmail()));
+    var jwt = adapter.signJwt(serviceAccount, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
       () -> IamCredentialsAdapter
@@ -83,13 +88,11 @@ public class TestIamCredentialsAdapter {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var payload = new JsonWebToken.Payload()
+      .setAudience(serviceAccount.getEmail())
+      .setIssuer(serviceAccount.getEmail());
 
-    var jwt = adapter.signJwt(
-      serviceAccount,
-      String.format(
-        "{\"aud\":\"%s\", \"iss\":\"%s\"}",
-        serviceAccount.getEmail(),
-        serviceAccount.getEmail()));
+    var jwt = adapter.signJwt(serviceAccount, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
       () -> IamCredentialsAdapter
@@ -102,13 +105,11 @@ public class TestIamCredentialsAdapter {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var payload = new JsonWebToken.Payload()
+      .setAudience(serviceAccount.getEmail())
+      .setIssuer(serviceAccount.getEmail());
 
-    var jwt = adapter.signJwt(
-      serviceAccount,
-      String.format(
-        "{\"aud\":\"%s\", \"iss\":\"%s\"}",
-        serviceAccount.getEmail(),
-        serviceAccount.getEmail()));
+    var jwt = adapter.signJwt(serviceAccount, payload);
 
     var verifiedJwt = IamCredentialsAdapter
         .createJwtVerifier(IntegrationTestEnvironment.NO_ACCESS_USER)

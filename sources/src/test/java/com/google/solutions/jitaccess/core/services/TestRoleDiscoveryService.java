@@ -491,32 +491,6 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenRoleIsJitEligibleButJustificationDoesNotMatch_ThenListApproversForEligibleRoleBindingThrowsException()
-    throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-
-    when(assetAdapter.findAccessibleResourcesByUser(anyString(), eq(SAMPLE_USER), eq(true)))
-      .thenReturn(new IamPolicyAnalysis());
-
-    var service =
-      new RoleDiscoveryService(
-        assetAdapter,
-        new RoleDiscoveryService.Options(
-          "organizations/0",
-          true));
-
-    assertThrows(
-      AccessDeniedException.class,
-      () -> service.listApproversForEligibleRoleBinding(
-        SAMPLE_USER,
-        new RoleBinding(
-          "project-1",
-          SAMPLE_PROJECT_RESOURCE,
-          SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)));
-  }
-
-  @Test
   public void whenCallerIsOnlyMpaEligibleUser_ThenListApproversForEligibleRoleBindingReturnsEmptyList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);

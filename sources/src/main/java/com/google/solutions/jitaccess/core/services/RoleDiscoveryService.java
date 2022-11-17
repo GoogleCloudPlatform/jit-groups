@@ -212,7 +212,7 @@ public class RoleDiscoveryService {
     // this role.
     //
     var eligibleRoles = listEligibleRoleBindings(callerUserId);
-    if (!eligibleRoles.getRoleBindings().contains(role)) { // TODO: Test
+    if (!eligibleRoles.getRoleBindings().contains(role)) {
       throw new AccessDeniedException(
         String.format("Your user %s is not eligible to request approval for this role", callerUserId));
     }
@@ -236,7 +236,7 @@ public class RoleDiscoveryService {
       .filter(result -> result.getIdentityList() != null)
       .flatMap(result -> result.getIdentityList().getIdentities().stream()
         .filter(id -> id.getName().startsWith("user:"))
-        .map(id -> new UserId(id.getName().substring("user:".length())))) // TODO: Collect group members!?
+        .map(id -> new UserId(id.getName().substring("user:".length()))))
 
       // Remove the caller.
       .filter(user -> !user.equals(callerUserId))
