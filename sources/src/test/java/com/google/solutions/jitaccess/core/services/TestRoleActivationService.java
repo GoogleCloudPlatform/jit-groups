@@ -65,6 +65,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -100,6 +101,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -150,6 +152,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -189,6 +192,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -224,6 +228,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -259,6 +264,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
@@ -311,6 +317,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
+      Mockito.mock(TokenService.class),
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",

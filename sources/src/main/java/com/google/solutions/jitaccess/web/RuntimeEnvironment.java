@@ -36,6 +36,8 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.TokenService;
+import io.vertx.codegen.doc.Token;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -64,6 +66,7 @@ public class RuntimeEnvironment {
   private final GoogleCredentials ApplicationCredentials;
   private final RoleDiscoveryService.Options roleDiscoveryServiceOptions;
   private final RoleActivationService.Options roleActivationServiceOptions;
+  private final TokenService.Options tokenServiceOptions;
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -203,19 +206,20 @@ public class RuntimeEnvironment {
       LOG.warnf("Running in development mode as %s", this.ApplicationPrincipal);
     }
 
-    this.roleDiscoveryServiceOptions =
-      new RoleDiscoveryService.Options(
+    this.roleDiscoveryServiceOptions = new RoleDiscoveryService.Options(
         getConfigurationOption(
           "RESOURCE_SCOPE",
           "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
         Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
 
-    this.roleActivationServiceOptions =
-      new RoleActivationService.Options(
+    this.roleActivationServiceOptions = new RoleActivationService.Options(
         getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
         Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-        Duration.ofMinutes(
-          Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+        Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+
+    this.tokenServiceOptions = new TokenService.Options(
+      ApplicationPrincipal,
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
   }
 
   public String getProjectId() {
@@ -234,18 +238,21 @@ public class RuntimeEnvironment {
     return ApplicationPrincipal;
   }
 
-  @Produces // Make available for injection into adapter classes
+  @Produces // Make available for injection into adapter classes.
   public GoogleCredentials getApplicationCredentials() {
     return ApplicationCredentials;
   }
 
-  @Produces // Make available for injection into adapter classes
+  @Produces // Make available for injection.
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
     return this.roleDiscoveryServiceOptions;
   }
 
-  @Produces // Make available for injection into adapter classes
+  @Produces // Make available for injection.
   public RoleActivationService.Options getRoleActivationServiceOptions() {
     return this.roleActivationServiceOptions;
   }
+
+  @Produces // Make available for injection.
+  public TokenService.Options getTokenServiceOptions() { return this.tokenServiceOptions; }
 }

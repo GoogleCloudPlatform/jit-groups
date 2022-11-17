@@ -28,12 +28,22 @@ public class TestIamCredentialsAdapter {
   @Test
   public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()
-      .setAudience("test");
+      .setAudience(serviceAccount.getEmail())
+      .setIssuer(serviceAccount.getEmail());
 
-    var jwt = adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload);
+    var jwt = adapter.signJwt(serviceAccount, payload);
     assertNotNull(jwt);
+
+    TokenVerifier
+      .newBuilder()
+      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(serviceAccount))
+      .setIssuer(serviceAccount.getEmail())
+      .setAudience(serviceAccount.getEmail())
+      .build()
+      .verify(jwt);
   }
 
   // -------------------------------------------------------------------------
@@ -47,75 +57,5 @@ public class TestIamCredentialsAdapter {
         "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
         IntegrationTestEnvironment.NO_ACCESS_USER.getEmail()),
       IamCredentialsAdapter.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
-  }
-
-  // -------------------------------------------------------------------------
-  // createJwtVerifier.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void whenJwtMissesAudienceClaim_ThenVerifyThrowsException() throws Exception {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var payload = new JsonWebToken.Payload()
-      .setIssuer(serviceAccount.getEmail());
-
-    var jwt = adapter.signJwt(serviceAccount, payload);
-
-    assertThrows(TokenVerifier.VerificationException.class,
-      () -> IamCredentialsAdapter
-      .createJwtVerifier(IntegrationTestEnvironment.NO_ACCESS_USER)
-      .verify(jwt));
-  }
-
-  @Test
-  public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail());
-
-    var jwt = adapter.signJwt(serviceAccount, payload);
-
-    assertThrows(TokenVerifier.VerificationException.class,
-      () -> IamCredentialsAdapter
-        .createJwtVerifier(IntegrationTestEnvironment.NO_ACCESS_USER)
-        .verify(jwt));
-  }
-
-  @Test
-  public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail());
-
-    var jwt = adapter.signJwt(serviceAccount, payload);
-
-    assertThrows(TokenVerifier.VerificationException.class,
-      () -> IamCredentialsAdapter
-        .createJwtVerifier(IntegrationTestEnvironment.TEMPORARY_ACCESS_USER)
-        .verify(jwt));
-  }
-
-  @Test
-  public void whenJwtValid_ThenVerifySucceeds() throws Exception {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail());
-
-    var jwt = adapter.signJwt(serviceAccount, payload);
-
-    var verifiedJwt = IamCredentialsAdapter
-        .createJwtVerifier(IntegrationTestEnvironment.NO_ACCESS_USER)
-        .verify(jwt);
-
-    assertEquals(serviceAccount.getEmail(), verifiedJwt.getPayload().getAudience());
-    assertEquals(serviceAccount.getEmail(), verifiedJwt.getPayload().getIssuer());
   }
 }

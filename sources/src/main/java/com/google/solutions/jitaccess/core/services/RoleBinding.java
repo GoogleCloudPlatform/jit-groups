@@ -113,6 +113,6 @@ public class RoleBinding {
     ELIGIBLE_FOR_MPA_APPROVAL,
 
     /** Eligible role binding has been activated */
-    ACTIVATED
+    ACTIVATED;
   }
 }

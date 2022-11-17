@@ -95,18 +95,4 @@ public class IamCredentialsAdapter {
   public static String getJwksUrl(UserId serviceAccount) {
     return String.format("https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", serviceAccount.getEmail());
   }
-
-  /**
-   * Create verifier for JWT that have been signed using
-   * the Google-managed service account key.
-   */
-  public static TokenVerifier createJwtVerifier(UserId serviceAccount)
-  {
-    return TokenVerifier
-      .newBuilder() // TODO: check exp
-      .setCertificatesLocation(getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.getEmail())
-      .setAudience(serviceAccount.getEmail())
-      .build();
-  }
 }

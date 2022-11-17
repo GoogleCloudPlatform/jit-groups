@@ -21,12 +21,15 @@
 
 package com.google.solutions.jitaccess.core.services;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
+import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.IamConditions;
+import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 
@@ -43,34 +46,55 @@ public class RoleActivationService {
 
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
+  private final TokenService tokenService;
   private final Options options;
+
+  private void checkJustification(String justification) throws AccessDeniedException{
+    if (!this.options.getJustificationPattern().matcher(justification).matches()) {
+      throw new AccessDeniedException(
+        String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
+    }
+  }
+
+  private void checkUserHasRoleBinding(UserId user, RoleBinding roleBinding) throws AccessException, IOException {
+    if (roleBinding.getStatus() == RoleBinding.RoleBindingStatus.ACTIVATED) {
+      throw new IllegalArgumentException("The role binding must be in eligible state");
+    }
+
+    if (!this.roleDiscoveryService.listEligibleRoleBindings(user).getRoleBindings().contains(roleBinding)) {
+      throw new AccessDeniedException(
+        String.format("The user %s does not have an eligible binding for %s", user, roleBinding));
+    }
+  }
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
+    TokenService tokenService,
     ResourceManagerAdapter resourceManagerAdapter,
     Options configuration)
   {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(tokenService, "tokenService");
     Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
     this.resourceManagerAdapter = resourceManagerAdapter;
+    this.tokenService = tokenService;
     this.options = configuration;
   }
-
 
   /**
    * Activate a role binding, either for the calling user (JIT) or
    * for another beneficiary (MPA).
    */
-  public OffsetDateTime activateEligibleRoleBinding(
-    UserId callerUserId,
-    UserId beneficiaryUserId,
+  public OffsetDateTime activateEligibleRoleBinding( // TODO: Return ActivatedRoleBinding
+    UserId caller,
+    UserId beneficiary,
     RoleBinding role,
     String justification) throws AccessException, AlreadyExistsException, IOException {
 
-    Preconditions.checkNotNull(callerUserId, "userId");
+    Preconditions.checkNotNull(caller, "userId");
     Preconditions.checkNotNull(role, "role");
     Preconditions.checkNotNull(justification, "justification");
 
@@ -79,24 +103,17 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    if (!this.options.getJustificationPattern().matcher(justification).matches()) {
-      throw new AccessDeniedException(
-        String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
-    }
+    checkJustification(justification);
 
     //
     // Double-check that the (calling) user is really allowed to (JIT/MPA-) activate
     // this role. This is to avoid us from being tricked to grant
     // access to a role that they aren't eligible for.
     //
-    var eligibleRoles = this.roleDiscoveryService.listEligibleRoleBindings(callerUserId);
-    if (!eligibleRoles.getRoleBindings().contains(role)) {
-      throw new AccessDeniedException(
-        String.format("Your user %s is not eligible to activate this role", callerUserId));
-    }
+    checkUserHasRoleBinding(caller, role);
 
     String bindingDescription;
-    if (callerUserId.equals(beneficiaryUserId)) {
+    if (caller.equals(beneficiary)) {
       //
       // JIT access: The caller is trying to activate a role for themselves.
       //
@@ -121,15 +138,12 @@ public class RoleActivationService {
       // We already checked that the caller is eligible, but we still need to check that the beneficiary
       // is eligible too.
       //
-      if (!this.roleDiscoveryService.listEligibleRoleBindings(beneficiaryUserId).getRoleBindings().contains(role)) {
-        throw new AccessDeniedException(
-          String.format("Your user %s is not eligible to have this role activated for them", callerUserId));
-      }
+      checkUserHasRoleBinding(beneficiary, role);
 
       //
       // Both the caller and the beneficiary are eligible, so we're good to proceed.
       //
-      bindingDescription = String.format("Approved by %s, justification: %s", callerUserId.getEmail(), justification);
+      bindingDescription = String.format("Approved by %s, justification: %s", caller.getEmail(), justification);
     }
 
     //
@@ -142,7 +156,7 @@ public class RoleActivationService {
     var elevationEndTime = elevationStartTime.plus(this.options.getActivationDuration());
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + beneficiaryUserId))
+      .setMembers(List.of("user:" + beneficiary))
       .setRole(role.getRole())
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ELEVATION_CONDITION_TITLE)
@@ -156,6 +170,62 @@ public class RoleActivationService {
       justification);
 
     return elevationEndTime;
+  }
+
+  public String createMultiPartyApprovalToken(
+    UserId caller,
+    UserId approver,
+    RoleBinding role,
+    String justification) throws AccessException, AlreadyExistsException, IOException {
+
+    //
+    // Check that the justification looks reasonable.
+    //
+    checkJustification(justification);
+
+    //
+    // Check that the (calling) user is really allowed to (JIT/MPA-) activate
+    // this role.
+    //
+    checkUserHasRoleBinding(caller, role);
+
+    //
+    // Issue a token that encodes all relevant information.
+    //
+    return this.tokenService.createToken(
+      new JsonWebToken.Payload()
+        .setSubject(approver.getEmail())
+        .set("benf", caller)
+        .set("just", justification)
+        .set("rr", role.getRole())
+        .set("rn", role.getResourceName())
+        .set("rf", role.getFullResourceName())
+        .set("rs", role.getStatus().name()));
+  }
+
+  public OffsetDateTime applyMultiPartyApprovalToken(
+    UserId caller,
+    String token) throws TokenVerifier.VerificationException, AccessException, IOException, AlreadyExistsException {
+
+    var payload = this.tokenService.verifyToken(token);
+    var role = new RoleBinding(
+      payload.get("rn").toString(),
+      payload.get("rf").toString(),
+      payload.get("rr").toString(),
+      RoleBinding.RoleBindingStatus.valueOf(payload.get("rs").toString()));
+    var beneficiary = new UserId(payload.get("benf").toString());
+    var justification = payload.get("just").toString();
+
+    //
+    // Activate the role binding on behalf of the beneficiary.
+    //
+    // The call also checks if the caller is permitted to approve.
+    //
+    return activateEligibleRoleBinding(
+      caller,
+      beneficiary,
+      role,
+      justification);
   }
 
   public Options getOptions() {
