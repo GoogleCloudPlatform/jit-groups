@@ -172,22 +172,30 @@ public class RoleActivationService {
     return elevationEndTime;
   }
 
-  public String createMultiPartyApprovalToken(
+  public String createMultiPartyApprovalToken( // TODO: Test
     UserId caller,
     UserId approver,
     RoleBinding role,
     String justification) throws AccessException, AlreadyExistsException, IOException {
 
+    Preconditions.checkNotNull(caller, "userId");
+    Preconditions.checkNotNull(approver, "approver");
+    Preconditions.checkNotNull(role, "role");
+    Preconditions.checkNotNull(justification, "justification");
+
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(justification);
+    checkJustification(justification); // TODO: Test
 
     //
     // Check that the (calling) user is really allowed to (JIT/MPA-) activate
     // this role.
     //
-    checkUserHasRoleBinding(caller, role);
+    // We're not checking if the approver is allowed, we'll do that when applying
+    // the approval token.
+    //
+    checkUserHasRoleBinding(caller, role); // TODO: Test
 
     //
     // Issue a token that encodes all relevant information.
@@ -203,18 +211,25 @@ public class RoleActivationService {
         .set("rs", role.getStatus().name()));
   }
 
-  public OffsetDateTime applyMultiPartyApprovalToken(
+  public OffsetDateTime applyMultiPartyApprovalToken( // TODO: Test
     UserId caller,
     String token) throws TokenVerifier.VerificationException, AccessException, IOException, AlreadyExistsException {
 
-    var payload = this.tokenService.verifyToken(token);
+    Preconditions.checkNotNull(caller, "userId");
+    Preconditions.checkNotNull(token, "token");
+
+    //
+    // Verify and decode the token. This fails if the token has been
+    // tampered with in any way, or has expired.
+    //
+    var payload = this.tokenService.verifyToken(token, caller); // TODO: Test
+    var beneficiary = new UserId(payload.get("benf").toString());
+    var justification = payload.get("just").toString();
     var role = new RoleBinding(
       payload.get("rn").toString(),
       payload.get("rf").toString(),
       payload.get("rr").toString(),
       RoleBinding.RoleBindingStatus.valueOf(payload.get("rs").toString()));
-    var beneficiary = new UserId(payload.get("benf").toString());
-    var justification = payload.get("just").toString();
 
     //
     // Activate the role binding on behalf of the beneficiary.

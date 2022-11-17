@@ -60,7 +60,7 @@ public class RoleBinding {
     return status;
   }
 
-  public String getResourceName() {
+  public String getResourceName() { // TODO: Remove
     return resourceName;
   }
 

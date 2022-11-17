@@ -3,6 +3,7 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
@@ -56,12 +57,26 @@ public class TokenService {
       payload);
   }
 
-  public JsonWebToken.Payload verifyToken(String token) throws TokenVerifier.VerificationException {
-    Preconditions.checkNotNull(token, "token");
+  public JsonWebToken.Payload verifyToken(
+    String token,
+    UserId expectedSubject) throws TokenVerifier.VerificationException {
 
-    return this.tokenVerifier
-      .verify(token)
-      .getPayload();
+    Preconditions.checkNotNull(token, "token");
+    Preconditions.checkNotNull(expectedSubject, "expectedSubject");
+
+    var decodedToken = this.tokenVerifier.verify(token);
+    if (!decodedToken.getHeader().getAlgorithm().equals("RS256")) {
+      //
+      // Service account keys are RS256, anything else is fishy.
+      //
+      throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
+    }
+
+    if (!expectedSubject.getEmail().equals(decodedToken.getPayload().getSubject())) {
+      throw new TokenVerifier.VerificationException("The token was issued to a different subject");
+    }
+
+    return decodedToken.getPayload();
   }
 
   // -------------------------------------------------------------------------
