@@ -34,10 +34,10 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
+import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.services.TokenService;
-import io.vertx.codegen.doc.Token;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -59,14 +59,12 @@ public class RuntimeEnvironment {
 
   private static final Logger LOG = Logger.getLogger(RuntimeEnvironment.class);
 
+  private final boolean DevelopmentMode;
   private final String ProjectId;
   private final String ProjectNumber;
   private final UserPrincipal StaticPrincipal;
   private final UserId ApplicationPrincipal;
   private final GoogleCredentials ApplicationCredentials;
-  private final RoleDiscoveryService.Options roleDiscoveryServiceOptions;
-  private final RoleActivationService.Options roleActivationServiceOptions;
-  private final TokenService.Options tokenServiceOptions;
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -109,6 +107,7 @@ public class RuntimeEnvironment {
         GenericData projectMetadata =
           getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
+        this.DevelopmentMode = false;
         this.ProjectId = (String) projectMetadata.get("projectId");
         this.ProjectNumber = projectMetadata.get("numericProjectId").toString();
         this.StaticPrincipal = null; // Use proper IAP authentication.
@@ -132,6 +131,7 @@ public class RuntimeEnvironment {
       //
       // Running in development mode.
       //
+      this.DevelopmentMode = true;
       this.ProjectId = "dev";
       this.ProjectNumber = "0";
       this.StaticPrincipal = new UserPrincipal() {
@@ -205,21 +205,6 @@ public class RuntimeEnvironment {
 
       LOG.warnf("Running in development mode as %s", this.ApplicationPrincipal);
     }
-
-    this.roleDiscoveryServiceOptions = new RoleDiscoveryService.Options(
-        getConfigurationOption(
-          "RESOURCE_SCOPE",
-          "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-        Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
-
-    this.roleActivationServiceOptions = new RoleActivationService.Options(
-        getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
-        Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-        Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
-
-    this.tokenServiceOptions = new TokenService.Options(
-      ApplicationPrincipal,
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
   }
 
   public String getProjectId() {
@@ -238,21 +223,41 @@ public class RuntimeEnvironment {
     return ApplicationPrincipal;
   }
 
-  @Produces // Make available for injection into adapter classes.
+  // -------------------------------------------------------------------------
+  // Producer methods.
+  // -------------------------------------------------------------------------
+
+  @Produces
   public GoogleCredentials getApplicationCredentials() {
     return ApplicationCredentials;
   }
 
-  @Produces // Make available for injection.
+  @Produces
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return this.roleDiscoveryServiceOptions;
+    return new RoleDiscoveryService.Options(
+      getConfigurationOption(
+        "RESOURCE_SCOPE",
+        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
+      Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
   }
 
-  @Produces // Make available for injection.
+  @Produces
   public RoleActivationService.Options getRoleActivationServiceOptions() {
-    return this.roleActivationServiceOptions;
+    return new RoleActivationService.Options(
+      getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
+      Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
   }
 
-  @Produces // Make available for injection.
-  public TokenService.Options getTokenServiceOptions() { return this.tokenServiceOptions; }
+  @Produces
+  public TokenService.Options getTokenServiceOptions() {
+    return new TokenService.Options(
+      ApplicationPrincipal,
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
+  }
+
+  @Produces
+  public NotificationService.Options getNotificationServiceOptions() {
+    return new NotificationService.Options(!DevelopmentMode);
+  }
 }

@@ -36,16 +36,18 @@ public class ApplicationVersion {
       // contain the version number, produced by the Maven
       // resources plugin.
       //
-      var propertiesFile = ApplicationVersion.class
+      try (var propertiesFile = ApplicationVersion.class
         .getClassLoader()
-        .getResourceAsStream("version.properties");
-      if (propertiesFile != null) {
-        var versionProperties = new Properties();
-        versionProperties.load(propertiesFile);
+        .getResourceAsStream("version.properties"))
+      {
+        if (propertiesFile != null) {
+          var versionProperties = new Properties();
+          versionProperties.load(propertiesFile);
 
-        var version = versionProperties.getProperty("application.version");
-        if (version != null && version.length() > 0) {
-          return version;
+          var version = versionProperties.getProperty("application.version");
+          if (version != null && version.length() > 0) {
+            return version;
+          }
         }
       }
     }
