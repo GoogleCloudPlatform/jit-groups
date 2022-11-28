@@ -23,10 +23,10 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.adapters.DeviceInfo;
+import com.google.solutions.jitaccess.core.data.DeviceInfo;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.adapters.UserId;
-import com.google.solutions.jitaccess.core.adapters.UserPrincipal;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 
 import javax.annotation.Priority;
 import javax.enterprise.context.Dependent;
@@ -72,7 +72,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
     String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
-      throw new ForbiddenException("IAP assertion missing, application must be accessed via IAP");
+      throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
     }
 
     try {

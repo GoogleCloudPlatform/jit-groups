@@ -31,8 +31,8 @@ public class TestIamCredentialsAdapter {
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail());
+      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.email);
 
     var jwt = adapter.signJwt(serviceAccount, payload);
     assertNotNull(jwt);
@@ -40,8 +40,8 @@ public class TestIamCredentialsAdapter {
     TokenVerifier
       .newBuilder()
       .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.getEmail())
-      .setAudience(serviceAccount.getEmail())
+      .setIssuer(serviceAccount.email)
+      .setAudience(serviceAccount.email)
       .build()
       .verify(jwt);
   }
@@ -55,7 +55,7 @@ public class TestIamCredentialsAdapter {
     assertEquals(
       String.format(
         "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
-        IntegrationTestEnvironment.NO_ACCESS_USER.getEmail()),
+        IntegrationTestEnvironment.NO_ACCESS_USER.email),
       IamCredentialsAdapter.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
   }
 }

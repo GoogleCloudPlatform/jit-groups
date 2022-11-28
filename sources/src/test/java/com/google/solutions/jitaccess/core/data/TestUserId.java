@@ -19,13 +19,19 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.adapters;
+package com.google.solutions.jitaccess.core.data;
 
+import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestUserId {
+
+  // -------------------------------------------------------------------------
+  // Equality.
+  // -------------------------------------------------------------------------
+
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
     UserId id1 = new UserId("bob", "bob@example.com");

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,57 +19,40 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.data;
+
+import com.google.api.services.cloudresourcemanager.v3.model.Project;
+import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
 /**
- * A role/resource combination.
+ * Represents an eligible role on a project.
  */
-public class RoleBinding {
-  /**
-   * Status of the binding.
-   */
-  private final RoleBindingStatus status;
+public class ProjectRole {
 
-  /**
-   * Unqualified resource name such as "project-1".
-   */
-  private final String resourceName;
+  public final RoleBinding roleBinding;
+  public final Status status;
 
-  /**
-   * Qualified resource name such as "//cloudresourcemanager.googleapis.com/projects/project-1".
-   */
-  private final String fullResourceName;
+  public ProjectRole(RoleBinding roleBinding, Status status) {
+    Preconditions.checkNotNull(roleBinding);
+    Preconditions.checkNotNull(status);
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
 
-  /**
-   * Role name such as roles/xxx.
-   */
-  private final String role;
-
-  public RoleBinding(
-    String resourceName, String fullResourceName, String role, RoleBindingStatus status) {
-
+    this.roleBinding = roleBinding;
     this.status = status;
-    this.resourceName = resourceName;
-    this.fullResourceName = fullResourceName;
-    this.role = role;
   }
 
-  public RoleBindingStatus getStatus() {
-    return status;
+  @Override
+  public String toString() {
+    return String.format("%s (%s)", this.roleBinding, this.status);
   }
 
-  public String getResourceName() { // TODO: Remove
-    return resourceName;
-  }
-
-  public String getFullResourceName() {
-    return fullResourceName;
-  }
-
-  public String getRole() {
-    return role;
+  /**
+   * Return the unqualified project ID.
+   */
+  public ProjectId getProjectId() {
+    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName);
   }
 
   // -------------------------------------------------------------------------
@@ -81,33 +64,27 @@ public class RoleBinding {
     if (this == o) {
       return true;
     }
+
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RoleBinding that = (RoleBinding) o;
-    return status == that.status
-      && resourceName.equals(that.resourceName)
-      && fullResourceName.equals(that.fullResourceName)
-      && role.equals(that.role);
+
+    var that = (ProjectRole) o;
+    return this.roleBinding.equals(that.roleBinding) && this.status.equals(that.status);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(status, resourceName, fullResourceName, role);
-  }
-
-  @Override
-  public String toString() {
-    return String.format("%s on %s (%s)", this.role, this.fullResourceName, this.status);
+    return Objects.hash(this.roleBinding, this.status);
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  public enum RoleBindingStatus {
+  public enum Status {
     /** Role binding can be activated using self-approval ("JIT approval") */
-    ELIGIBLE,
+    ELIGIBLE_FOR_JIT,
 
     /** Role binding can be activated using multi party-approval ("JIT approval") */
     ELIGIBLE_FOR_MPA,

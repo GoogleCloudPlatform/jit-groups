@@ -34,14 +34,18 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
+import com.google.solutions.jitaccess.core.data.DeviceInfo;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.services.TokenService;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -57,14 +61,14 @@ public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_STATIC_PRINCIPAL = "jitaccess.principal";
 
-  private static final Logger LOG = Logger.getLogger(RuntimeEnvironment.class);
+  private final LogAdapter logAdapter;
 
-  private final boolean DevelopmentMode;
-  private final String ProjectId;
-  private final String ProjectNumber;
-  private final UserPrincipal StaticPrincipal;
-  private final UserId ApplicationPrincipal;
-  private final GoogleCredentials ApplicationCredentials;
+  private final boolean developmentMode;
+  private final String projectId;
+  private final String projectNumber;
+  private final UserPrincipal staticPrincipal;
+  private final UserId applicationPrincipal;
+  private final GoogleCredentials applicationCredentials;
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -98,8 +102,18 @@ public class RuntimeEnvironment {
     }
   }
 
+  private static boolean isRunningOnAppEngine() {
+    return System.getenv().containsKey("GAE_SERVICE");
+  }
+
   public RuntimeEnvironment() {
-    if (System.getenv().containsKey("GAE_SERVICE")) {
+    //
+    // Create a log adapter. We can't rely on injection as the adapter
+    // is request-scoped.
+    //
+    this.logAdapter = new LogAdapter();
+
+    if (isRunningOnAppEngine()) {
       //
       // Running on AppEngine.
       //
@@ -107,23 +121,30 @@ public class RuntimeEnvironment {
         GenericData projectMetadata =
           getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
-        this.DevelopmentMode = false;
-        this.ProjectId = (String) projectMetadata.get("projectId");
-        this.ProjectNumber = projectMetadata.get("numericProjectId").toString();
-        this.StaticPrincipal = null; // Use proper IAP authentication.
+        this.developmentMode = false;
+        this.projectId = (String) projectMetadata.get("projectId");
+        this.projectNumber = projectMetadata.get("numericProjectId").toString();
+        this.staticPrincipal = null; // Use proper IAP authentication.
 
-        this.ApplicationCredentials = GoogleCredentials.getApplicationDefault();
-        this.ApplicationPrincipal = new UserId(((ComputeEngineCredentials) this.ApplicationCredentials).getAccount());
+        this.applicationCredentials = GoogleCredentials.getApplicationDefault();
+        this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
 
-        LOG.infof(
-          "Running in project %s (%s) as %s, version %s",
-          this.ProjectId,
-          this.ProjectNumber,
-          this.ApplicationPrincipal,
-          ApplicationVersion.VERSION_STRING);
+        this.logAdapter
+          .newInfoEntry(
+            LogEvents.RUNTIME_STARTUP,
+            String.format("Running in project %s (%s) as %s, version %s",
+              this.projectId,
+              this.projectNumber,
+              this.applicationPrincipal,
+              ApplicationVersion.VERSION_STRING))
+          .write();;
       }
       catch (IOException e) {
-        LOG.errorf(e, "Failed to lookup instance metadata");
+        this.logAdapter
+          .newErrorEntry(
+            LogEvents.RUNTIME_STARTUP,
+            "Failed to lookup instance metadata", e)
+          .write();
         throw new RuntimeException("Failed to initialize runtime environment", e);
       }
     }
@@ -131,10 +152,10 @@ public class RuntimeEnvironment {
       //
       // Running in development mode.
       //
-      this.DevelopmentMode = true;
-      this.ProjectId = "dev";
-      this.ProjectNumber = "0";
-      this.StaticPrincipal = new UserPrincipal() {
+      this.developmentMode = true;
+      this.projectId = "dev";
+      this.projectNumber = "0";
+      this.staticPrincipal = new UserPrincipal() {
         @Override
         public UserId getId() {
           return new UserId(getName(), getName());
@@ -160,7 +181,7 @@ public class RuntimeEnvironment {
           // Use the application default credentials (ADC) to impersonate a
           // service account. This can be used when using user credentials as ADC.
           //
-          this.ApplicationCredentials =
+          this.applicationCredentials =
             ImpersonatedCredentials.create(
               defaultCredentials,
               impersonateServiceAccount,
@@ -178,17 +199,18 @@ public class RuntimeEnvironment {
           // To prevent this from happening, force a refresh here. If the
           // refresh fails, fail application startup.
           //
-          this.ApplicationCredentials.refresh();
+          this.applicationCredentials.refresh();
 
-          this.ApplicationPrincipal = new UserId(impersonateServiceAccount);
-        } else if (defaultCredentials instanceof ServiceAccountCredentials) {
+          this.applicationPrincipal = new UserId(impersonateServiceAccount);
+        }
+        else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
-          this.ApplicationCredentials = defaultCredentials;
+          this.applicationCredentials = defaultCredentials;
 
-          this.ApplicationPrincipal = new UserId(
-              ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser());
+          this.applicationPrincipal = new UserId(
+              ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         }
         else {
           throw new RuntimeException(
@@ -203,24 +225,28 @@ public class RuntimeEnvironment {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
-      LOG.warnf("Running in development mode as %s", this.ApplicationPrincipal);
+      this.logAdapter
+        .newWarningEntry(
+          LogEvents.RUNTIME_STARTUP,
+          String.format("Running in development mode as %s", this.applicationPrincipal))
+        .write();
     }
   }
 
   public String getProjectId() {
-    return ProjectId;
+    return projectId;
   }
 
   public String getProjectNumber() {
-    return ProjectNumber;
+    return projectNumber;
   }
 
   public UserPrincipal getStaticPrincipal() {
-    return StaticPrincipal;
+    return staticPrincipal;
   }
 
   public UserId getApplicationPrincipal() {
-    return ApplicationPrincipal;
+    return applicationPrincipal;
   }
 
   // -------------------------------------------------------------------------
@@ -229,7 +255,7 @@ public class RuntimeEnvironment {
 
   @Produces
   public GoogleCredentials getApplicationCredentials() {
-    return ApplicationCredentials;
+    return applicationCredentials;
   }
 
   @Produces
@@ -237,8 +263,7 @@ public class RuntimeEnvironment {
     return new RoleDiscoveryService.Options(
       getConfigurationOption(
         "RESOURCE_SCOPE",
-        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-      Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
+        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)));
   }
 
   @Produces
@@ -252,12 +277,12 @@ public class RuntimeEnvironment {
   @Produces
   public TokenService.Options getTokenServiceOptions() {
     return new TokenService.Options(
-      ApplicationPrincipal,
+      applicationPrincipal,
       Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
   }
 
   @Produces
   public NotificationService.Options getNotificationServiceOptions() {
-    return new NotificationService.Options(!DevelopmentMode);
+    return new NotificationService.Options(!developmentMode);
   }
 }

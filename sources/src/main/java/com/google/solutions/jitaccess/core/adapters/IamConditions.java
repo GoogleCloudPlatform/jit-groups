@@ -47,11 +47,10 @@ public class IamConditions {
     OffsetDateTime startTime, OffsetDateTime endTime) {
     assert (startTime.isBefore(endTime));
 
-    var clause =
-      String.format(
-        CONDITION_TEMPLATE,
-        startTime.format(DateTimeFormatter.ISO_DATE_TIME),
-        endTime.format(DateTimeFormatter.ISO_DATE_TIME));
+    var clause = String.format(
+      CONDITION_TEMPLATE,
+      startTime.format(DateTimeFormatter.ISO_DATE_TIME),
+      endTime.format(DateTimeFormatter.ISO_DATE_TIME));
 
     assert (isTemporaryConditionClause(clause));
 
@@ -59,7 +58,9 @@ public class IamConditions {
   }
 
   public static String createTemporaryConditionClause(
-    OffsetDateTime startTime, TemporalAmount duration) {
+    OffsetDateTime startTime,
+    TemporalAmount duration
+  ) {
     return createTemporaryConditionClause(startTime, startTime.plus(duration));
   }
 }

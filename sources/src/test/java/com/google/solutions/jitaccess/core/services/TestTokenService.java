@@ -4,7 +4,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.IntegrationTestEnvironment;
-import com.google.solutions.jitaccess.core.adapters.UserId;
+import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -29,13 +29,13 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setSubject(SAMPLE_USER.getEmail());
+      .setSubject(SAMPLE_USER.email);
 
     var token = tokenService.createToken(payload);
     var verifiedPayload = tokenService.verifyToken(token, SAMPLE_USER);
 
-    assertEquals(serviceAccount.getEmail(), verifiedPayload.getIssuer());
-    assertEquals(serviceAccount.getEmail(), verifiedPayload.getAudience());
+    assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
+    assertEquals(serviceAccount.email, verifiedPayload.getAudience());
     assertNotNull(verifiedPayload.getExpirationTimeSeconds());
   }
 
@@ -54,8 +54,8 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setIssuer(serviceAccount.getEmail())
-      .setSubject(SAMPLE_USER.getEmail());
+      .setIssuer(serviceAccount.email)
+      .setSubject(SAMPLE_USER.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
@@ -74,8 +74,8 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setSubject(SAMPLE_USER.getEmail());
+      .setAudience(serviceAccount.email)
+      .setSubject(SAMPLE_USER.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
@@ -94,8 +94,8 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail());
+      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
@@ -114,9 +114,9 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail())
-      .setSubject(SAMPLE_USER.getEmail());
+      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.email)
+      .setSubject(SAMPLE_USER.email);
 
     var jwt = credentialsAdapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload);
 
@@ -135,9 +135,9 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.getEmail())
-      .setIssuer(serviceAccount.getEmail())
-      .setSubject(SAMPLE_USER.getEmail());
+      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.email)
+      .setSubject(SAMPLE_USER.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 

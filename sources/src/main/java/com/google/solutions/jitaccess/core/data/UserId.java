@@ -19,15 +19,15 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.adapters;
+package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
 public class UserId {
-  private final String id;
-  private final String email;
+  public final String id;
+  public final String email;
 
   public UserId(String id, String email) {
     Preconditions.checkNotNull(email, "email");
@@ -40,18 +40,14 @@ public class UserId {
     this(null, email);
   }
 
-  /** Unique ID */
-  public String getId() { return id; }
-
-  /** Email address */
-  public String getEmail() {
-    return this.email;
-  }
-
   @Override
   public String toString() {
     return this.email;
   }
+
+  // -------------------------------------------------------------------------
+  // Equality.
+  // -------------------------------------------------------------------------
 
   @Override
   public boolean equals(Object o) {

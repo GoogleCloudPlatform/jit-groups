@@ -32,6 +32,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
@@ -39,6 +40,7 @@ import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Adapter for the Asset Inventory API.
@@ -58,11 +60,10 @@ public class AssetInventoryAdapter {
 
   private CloudAsset createClient() throws IOException {
     try {
-      return new CloudAsset
-        .Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        new HttpCredentialsAdapter(this.credentials))
+      return new CloudAsset.Builder(
+          HttpTransport.newTransport(),
+          new GsonFactory(),
+          new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -82,26 +83,47 @@ public class AssetInventoryAdapter {
   public IamPolicyAnalysis findAccessibleResourcesByUser(
       String scope,
       UserId user,
-      boolean expandResources) throws AccessException, IOException {
+      Optional<String> permission,
+      Optional<String> fullResourceName,
+      boolean expandResources
+  ) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
+
+    assert !permission.isPresent() || permission.get().contains("");
+    assert !fullResourceName.isPresent() || fullResourceName.get().startsWith("//");
 
     assert (scope.startsWith("organizations/")
       || scope.startsWith("folders/")
       || scope.startsWith("projects/"));
 
     try {
-      return createClient().v1()
+      var request = createClient().v1()
         .analyzeIamPolicy(scope)
-        .setAnalysisQueryIdentitySelectorIdentity("user:" + user.getEmail())
+        .setAnalysisQueryIdentitySelectorIdentity("user:" + user.email)
         .setAnalysisQueryOptionsExpandResources(expandResources)
         .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
-        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
+        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS));
+
+      if (fullResourceName.isPresent()) {
+        request.setAnalysisQueryResourceSelectorFullResourceName(fullResourceName.get());
+      }
+
+      if (permission.isPresent()) {
+        request.setAnalysisQueryAccessSelectorPermissions(List.of(permission.get()));
+      }
+
+      return request
         .execute()
         .getMainAnalysis();
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
+        case 400:
+          //
+          // NB. The API returns 400 if the resource doesn't exist. Convert to empty result.
+          //
+          return new IamPolicyAnalysis();
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
@@ -118,7 +140,8 @@ public class AssetInventoryAdapter {
   public IamPolicyAnalysis findPermissionedPrincipalsByResource(
       String scope,
       String fullResourceName,
-      String role) throws AccessException, IOException {
+      String role
+  ) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(fullResourceName, "fullResourceName");
     Preconditions.checkNotNull(role, "role");

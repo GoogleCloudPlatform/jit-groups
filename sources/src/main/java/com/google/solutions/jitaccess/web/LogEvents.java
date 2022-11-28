@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,34 +19,14 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.web;
 
-import java.util.List;
+public class LogEvents {
+  public static final String API_LIST_ELIGIBLE_ROLES = "api.listEligibleRoles";
+  public static final String API_ACTIVATE_ROLE = "api.activateRole";
 
-/**
- * Set of role bindings that a user has been found eligible for.
- */
-public class EligibleRoleBindings {
-  /**
-   * List of bindings. Might be incomplete if Warnings is non-empty.
-   */
-  private final List<RoleBinding> roleBindings;
+  public static final String RUNTIME_STARTUP = "runtime.startup";
 
-  /**
-   * Non-fatal issues encountered.
-   */
-  private final List<String> warnings;
-
-  public EligibleRoleBindings(List<RoleBinding> roleBindings, List<String> warnings) {
-    this.roleBindings = roleBindings;
-    this.warnings = warnings;
-  }
-
-  public List<RoleBinding> getRoleBindings() {
-    return roleBindings;
-  }
-
-  public List<String> getWarnings() {
-    return warnings;
+  private LogEvents() {
   }
 }
