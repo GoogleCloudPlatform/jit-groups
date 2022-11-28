@@ -60,7 +60,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           "roles/compute.viewer", // Different role
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -81,7 +81,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE),
         "justification"));
   }
 
@@ -96,7 +96,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -117,7 +117,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA),
         "justification"));
     assertThrows(
       AccessDeniedException.class,
@@ -128,7 +128,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE),
         "justification"));
   }
 
@@ -143,7 +143,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA)),
         List.<String>of()));
     when(discoveryService.listEligibleRoleBindings(eq(SAMPLE_USER_2)))
       .thenReturn(new EligibleRoleBindings(
@@ -168,7 +168,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA),
         "justification"));
   }
 
@@ -187,7 +187,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -208,7 +208,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA),
         "justification"));
   }
 
@@ -223,7 +223,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -244,7 +244,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE),
         "justification"));
   }
 
@@ -259,7 +259,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -279,7 +279,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+          RoleBinding.RoleBindingStatus.ELIGIBLE),
         "justification");
 
     assertTrue(expiry.isAfter(OffsetDateTime.now()));
@@ -312,7 +312,7 @@ public class TestRoleActivationService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL)),
+          RoleBinding.RoleBindingStatus.ELIGIBLE)),
         List.<String>of()));
 
     var service = new RoleActivationService(
@@ -334,7 +334,7 @@ public class TestRoleActivationService {
             "project-1",
             SAMPLE_PROJECT_RESOURCE,
             SAMPLE_ROLE,
-            RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+            RoleBinding.RoleBindingStatus.ELIGIBLE),
           "not-numeric"));
   }
 }

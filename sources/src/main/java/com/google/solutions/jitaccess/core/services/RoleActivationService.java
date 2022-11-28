@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.IamConditions;
-import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 
@@ -117,7 +116,7 @@ public class RoleActivationService {
       //
       // JIT access: The caller is trying to activate a role for themselves.
       //
-      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL) {
+      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE) {
         throw new IllegalArgumentException("The role does not permit self-approval");
       }
 
@@ -130,7 +129,7 @@ public class RoleActivationService {
       //
       // Multi-party approval: The caller is trying to activate a role for somebody else.
       //
-      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL) {
+      if (role.getStatus() != RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA) {
         throw new IllegalArgumentException("The role does not permit multi party-approval");
       }
 

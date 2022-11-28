@@ -107,10 +107,10 @@ public class RoleBinding {
 
   public enum RoleBindingStatus {
     /** Role binding can be activated using self-approval ("JIT approval") */
-    ELIGIBLE_FOR_JIT_APPROVAL,
+    ELIGIBLE,
 
     /** Role binding can be activated using multi party-approval ("JIT approval") */
-    ELIGIBLE_FOR_MPA_APPROVAL,
+    ELIGIBLE_FOR_MPA,
 
     /** Eligible role binding has been activated */
     ACTIVATED;

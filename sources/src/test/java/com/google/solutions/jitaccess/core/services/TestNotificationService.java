@@ -41,7 +41,7 @@ public class TestNotificationService {
     var notification = new NotificationService.ApprovalRequest(
       new UserId("alice@example.com"),
       new UserId(recipient),
-      new RoleBinding("project-1", "//project-1", "project/browser", RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+      new RoleBinding("project-1", "//project-1", "project/browser", RoleBinding.RoleBindingStatus.ELIGIBLE),
       "I need it",
       new URI("https://github.com/GoogleCloudPlatform/jit-access"));
     service.sendNotification(notification);
@@ -60,7 +60,7 @@ public class TestNotificationService {
         "resource",
         "fullresource",
         "role",
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        RoleBinding.RoleBindingStatus.ELIGIBLE),
       "justification",
       new URI("https://example.com/")));
 
@@ -84,7 +84,7 @@ public class TestNotificationService {
         "resource",
         "fullresource",
         "role",
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        RoleBinding.RoleBindingStatus.ELIGIBLE),
       "justification",
       new URI("https://example.com/")));
 
@@ -108,7 +108,7 @@ public class TestNotificationService {
         "<resource>",
         "<fullresource>",
         "<role>",
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        RoleBinding.RoleBindingStatus.ELIGIBLE),
       "<justification>",
       new URI("https://example.com/")).format();
 

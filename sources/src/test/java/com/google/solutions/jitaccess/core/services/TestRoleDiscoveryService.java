@@ -207,7 +207,7 @@ public class TestRoleDiscoveryService {
     var roleBinding = roles.getRoleBindings().stream().findFirst().get();
     assertEquals("project-1", roleBinding.getResourceName());
     assertEquals(SAMPLE_ROLE, roleBinding.getRole());
-    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL, roleBinding.getStatus());
+    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE, roleBinding.getStatus());
   }
 
   @Test
@@ -244,7 +244,7 @@ public class TestRoleDiscoveryService {
     var roleBinding = roles.getRoleBindings().stream().findFirst().get();
     assertEquals("project-1", roleBinding.getResourceName());
     assertEquals(SAMPLE_ROLE, roleBinding.getRole());
-    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL, roleBinding.getStatus());
+    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA, roleBinding.getStatus());
   }
 
   @Test
@@ -291,12 +291,12 @@ public class TestRoleDiscoveryService {
     var roleBinding = roles.getRoleBindings().stream().findFirst().get();
     assertEquals("project-1", roleBinding.getResourceName());
     assertEquals(SAMPLE_ROLE, roleBinding.getRole());
-    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL, roleBinding.getStatus());
+    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE, roleBinding.getStatus());
 
     roleBinding = roles.getRoleBindings().stream().skip(1).findFirst().get();
     assertEquals("project-2", roleBinding.getResourceName());
     assertEquals(SAMPLE_ROLE, roleBinding.getRole());
-    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL, roleBinding.getStatus());
+    assertEquals(RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA, roleBinding.getStatus());
   }
 
   @Test
@@ -446,7 +446,7 @@ public class TestRoleDiscoveryService {
         "project-1",
         SAMPLE_PROJECT_RESOURCE,
         SAMPLE_ROLE,
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        RoleBinding.RoleBindingStatus.ELIGIBLE),
       roles.getRoleBindings().get(0));
 
     assertEquals(
@@ -454,7 +454,7 @@ public class TestRoleDiscoveryService {
         "project-2",
         "//cloudresourcemanager.googleapis.com/projects/project-2",
         SAMPLE_ROLE,
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL),
+        RoleBinding.RoleBindingStatus.ELIGIBLE),
       roles.getRoleBindings().get(1));
   }
 
@@ -487,7 +487,7 @@ public class TestRoleDiscoveryService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL)));
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA)));
   }
 
   @Test
@@ -520,7 +520,7 @@ public class TestRoleDiscoveryService {
           "project-1",
           SAMPLE_PROJECT_RESOURCE,
           SAMPLE_ROLE,
-          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL));
+          RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA));
 
     assertTrue(approvers.isEmpty());
   }
@@ -563,7 +563,7 @@ public class TestRoleDiscoveryService {
         "project-1",
         SAMPLE_PROJECT_RESOURCE,
         SAMPLE_ROLE,
-        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL));
+        RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA));
 
     assertEquals(1, approvers.size());
     assertEquals(SAMPLE_USER_2, approvers.stream().findFirst().get());

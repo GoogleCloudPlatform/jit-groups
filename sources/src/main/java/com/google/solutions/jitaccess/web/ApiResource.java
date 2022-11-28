@@ -110,7 +110,7 @@ public class ApiResource {
               roleParts[0],
               roleParts[1],
               roleParts[2],
-              RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL); // TODO: Consider MPA!?
+              RoleBinding.RoleBindingStatus.ELIGIBLE); // TODO: Consider MPA!?
           })
           .collect(Collectors.toList());
 

@@ -156,7 +156,7 @@ public class RoleDiscoveryService {
       analysisResult,
       condition -> JitConstraints.isJitAccessConstraint(condition),
       evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
-      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_JIT_APPROVAL);
+      RoleBinding.RoleBindingStatus.ELIGIBLE);
 
     //
     // Find all MPA-eligible role bindings. The bindings are
@@ -167,7 +167,7 @@ public class RoleDiscoveryService {
       analysisResult,
       condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
       evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
-      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL);
+      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA);
 
     //
     // Merge the three lists.
@@ -205,7 +205,7 @@ public class RoleDiscoveryService {
     Preconditions.checkNotNull(role, "role");
 
     assert(isSupportedResource(role.getFullResourceName()));
-    assert(role.getStatus() == RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA_APPROVAL);
+    assert(role.getStatus() == RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA);
 
     //
     // Check that the (calling) user is really allowed to request approval
