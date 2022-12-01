@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
  * Adapter for the Asset Inventory API.
@@ -71,18 +72,17 @@ public class AssetInventoryAdapter {
   }
 
   /**
-   * Find resources accessible by a user: - resources the user has been directly granted access to -
-   * resources which the user has inherited access to - resources which the user can access because
-   * of a group membership
-   * <p>
+   * Find resources accessible by a user, incl.:
+   * - resources the user has been directly granted access to
+   * - resources which the user can access because of a group membership
+   *
    * NB. For group membership resolution to work, the service account must have the right
    * privileges in Cloud Identity/Workspace.
    */
-  public IamPolicyAnalysis analyzeResourcesAccessibleByUser(
-    String scope,
-    UserId user,
-    boolean expandResources)
-    throws AccessException, IOException {
+  public IamPolicyAnalysis findAccessibleResourcesByUser(
+      String scope,
+      UserId user,
+      boolean expandResources) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
 
@@ -108,6 +108,43 @@ public class AssetInventoryAdapter {
           throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Find users or groups that have been (conditionally) granted a given role on a given resource.
+   */
+  public IamPolicyAnalysis findPermissionedPrincipalsByResource(
+      String scope,
+      String fullResourceName,
+      String role) throws AccessException, IOException {
+    Preconditions.checkNotNull(scope, "scope");
+    Preconditions.checkNotNull(fullResourceName, "fullResourceName");
+    Preconditions.checkNotNull(role, "role");
+
+    assert (scope.startsWith("organizations/")
+      || scope.startsWith("folders/")
+      || scope.startsWith("projects/"));
+
+    try {
+      return createClient().v1()
+        .analyzeIamPolicy(scope)
+        .setAnalysisQueryResourceSelectorFullResourceName(fullResourceName)
+        .setAnalysisQueryAccessSelectorRoles(List.of(role))
+        .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
+        .execute()
+        .getMainAnalysis();
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
     }
   }

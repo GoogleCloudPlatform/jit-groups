@@ -49,6 +49,7 @@ public class RoleBinding {
 
   public RoleBinding(
     String resourceName, String fullResourceName, String role, RoleBindingStatus status) {
+
     this.status = status;
     this.resourceName = resourceName;
     this.fullResourceName = fullResourceName;
@@ -59,7 +60,7 @@ public class RoleBinding {
     return status;
   }
 
-  public String getResourceName() {
+  public String getResourceName() { // TODO: Remove
     return resourceName;
   }
 
@@ -105,7 +106,13 @@ public class RoleBinding {
   // -------------------------------------------------------------------------
 
   public enum RoleBindingStatus {
+    /** Role binding can be activated using self-approval ("JIT approval") */
     ELIGIBLE,
-    ACTIVATED
+
+    /** Role binding can be activated using multi party-approval ("JIT approval") */
+    ELIGIBLE_FOR_MPA,
+
+    /** Eligible role binding has been activated */
+    ACTIVATED;
   }
 }

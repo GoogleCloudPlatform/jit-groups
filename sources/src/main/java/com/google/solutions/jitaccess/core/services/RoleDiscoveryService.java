@@ -24,25 +24,17 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.api.services.cloudasset.v1.model.ConditionEvaluation;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.IamConditions;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserId;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,55 +42,34 @@ import java.util.stream.Stream;
  * Service that contains the logic required to find eligible roles, and to activate them.
  */
 @RequestScoped
-public class ElevationService {
+public class RoleDiscoveryService {
   private static final String PROJECT_RESOURCE_NAME_PREFIX =
     "//cloudresourcemanager.googleapis.com/projects/";
-  public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
-  private static final Pattern ELEVATION_CONDITION_PATTERN =
-    Pattern.compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
   private final AssetInventoryAdapter assetInventoryAdapter;
-  private final ResourceManagerAdapter resourceManagerAdapter;
 
   private final Options options;
 
-  public ElevationService(
+  public RoleDiscoveryService(
     AssetInventoryAdapter assetInventoryAdapter,
-    ResourceManagerAdapter resourceManagerAdapter,
     Options configuration) {
     Preconditions.checkNotNull(assetInventoryAdapter, "assetInventoryAdapter");
-    Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.assetInventoryAdapter = assetInventoryAdapter;
-    this.resourceManagerAdapter = resourceManagerAdapter;
     this.options = configuration;
   }
 
-  public boolean isConditionIndicatorForEligibility(Expr iamCondition) {
-    if (iamCondition == null) {
-      return false;
-    }
-
-    // Strip all whitespace to simplify expression matching.
-    var expression = iamCondition
-      .getExpression()
-      .toLowerCase()
-      .replace(" ", "");
-
-    return ELEVATION_CONDITION_PATTERN.matcher(expression).matches();
-  }
-
-  private boolean isSupportedResource(String fullResourceName) {
+  protected static boolean isSupportedResource(String fullResourceName) {
     return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
       && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
   }
 
-  private String resourceNameFromFullResourceName(String fullResourceName) {
+  private static String resourceNameFromFullResourceName(String fullResourceName) {
     return fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length());
   }
 
-  private List<RoleBinding> findRoleBindings(
+  private static List<RoleBinding> findRoleBindings(
     IamPolicyAnalysis analysisResult,
     Predicate<Expr> conditionPredicate,
     Predicate<ConditionEvaluation> conditionEvaluationPredicate,
@@ -106,28 +77,30 @@ public class ElevationService {
     //
     // NB. We don't really care which resource a policy is attached to
     // (indicated by AttachedResourceFullName). Instead, we care about
-    // which resources it applies to (including descendent resources).
+    // which resources it applies to (including descendant resources).
     //
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
       // Narrow down to IAM bindings with a specific IAM condition.
-      .filter(i -> conditionPredicate.test(i.getIamBinding() != null ? i.getIamBinding().getCondition() : null))
-      .flatMap(
-        i -> i.getAccessControlLists().stream()
-          // Narrow down to ACLs with a specific IAM condition evaluation result.
-          .filter(
-            acl -> acl.getConditionEvaluation() != null
-              && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
+      .filter(result -> conditionPredicate.test(result.getIamBinding() != null ? result.getIamBinding().getCondition() : null))
+      .flatMap(result -> result
+        .getAccessControlLists()
+        .stream()
 
-          // Collect all (supported) resources covered by these bindings/ACLs.
-          .flatMap(
-            acl -> acl.getResources().stream()
-              .filter(res -> isSupportedResource(res.getFullResourceName()))
-              .map(res -> new RoleBinding(
-                resourceNameFromFullResourceName(res.getFullResourceName()),
-                res.getFullResourceName(),
-                i.getIamBinding().getRole(),
-                status))))
+        // Narrow down to ACLs with a specific IAM condition evaluation result.
+        .filter(
+          acl -> acl.getConditionEvaluation() != null
+            && conditionEvaluationPredicate.test(acl.getConditionEvaluation()))
+
+        // Collect all (supported) resources covered by these bindings/ACLs.
+        .flatMap(acl -> acl.getResources()
+          .stream()
+          .filter(res -> isSupportedResource(res.getFullResourceName()))
+          .map(res -> new RoleBinding(
+            resourceNameFromFullResourceName(res.getFullResourceName()),
+            res.getFullResourceName(),
+            result.getIamBinding().getRole(),
+            status))))
       .collect(Collectors.toList());
   }
 
@@ -135,6 +108,9 @@ public class ElevationService {
     return options;
   }
 
+  /**
+   * List eligible role bindings for the given user.
+   */
   public EligibleRoleBindings listEligibleRoleBindings(UserId user)
     throws AccessException, IOException {
     Preconditions.checkNotNull(user, "user");
@@ -153,7 +129,7 @@ public class ElevationService {
     //
 
     var analysisResult =
-      this.assetInventoryAdapter.analyzeResourcesAccessibleByUser(
+      this.assetInventoryAdapter.findAccessibleResourcesByUser(
         this.options.getScope(),
         user,
         this.options.isIncludeInheritedBindings());
@@ -167,30 +143,40 @@ public class ElevationService {
     var activatedRoles =
       findRoleBindings(
         analysisResult,
-        condition -> condition != null && ELEVATION_CONDITION_TITLE.equals(condition.getTitle()),
+        condition -> JitConstraints.isActivated(condition),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult.getEvaluationValue()),
         RoleBinding.RoleBindingStatus.ACTIVATED);
 
     //
-    // Find all eligible role bindings. The bindings are
+    // Find all JIT-eligible role bindings. The bindings are
     // conditional and have a special condition that serves
     // as marker.
     //
-    var eligibleRoles =
-      findRoleBindings(
-        analysisResult,
-        condition -> condition != null && isConditionIndicatorForEligibility(condition),
-        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
-        RoleBinding.RoleBindingStatus.ELIGIBLE);
+    var jitEligibleRoles = findRoleBindings(
+      analysisResult,
+      condition -> JitConstraints.isJitAccessConstraint(condition),
+      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
+      RoleBinding.RoleBindingStatus.ELIGIBLE);
 
     //
-    // Merge the two lists.
+    // Find all MPA-eligible role bindings. The bindings are
+    // conditional and have a special condition that serves
+    // as marker.
     //
-    // NB. We can't use
-    //  !activatedRoles.contains(...)
+    var mpaEligibleRoles = findRoleBindings(
+      analysisResult,
+      condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult.getEvaluationValue()),
+      RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA);
+
+    //
+    // Merge the three lists.
+    //
+    // NB. We can't use !activatedRoles.contains(...)
     // because of the different binding statuses.
     //
-    var consolidatedRoles = eligibleRoles.stream()
+    var allEligibleRoles = Stream.concat(jitEligibleRoles.stream(), mpaEligibleRoles.stream());
+    var consolidatedRoles = allEligibleRoles
       .filter(r -> !activatedRoles
         .stream()
         .anyMatch(a -> a.getFullResourceName().equals(r.getFullResourceName())
@@ -208,56 +194,55 @@ public class ElevationService {
         .collect(Collectors.toList()));
   }
 
-  public OffsetDateTime activateEligibleRoleBinding(
-    UserId userId,
-    RoleBinding role,
-    String justification)
-    throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(userId, "userId");
+  /**
+   * List users that can approve the activation of an eligible role binding
+   * */
+  public Collection<UserId> listApproversForEligibleRoleBinding(
+    UserId callerUserId,
+    RoleBinding role) throws AccessException, IOException {
+
+    Preconditions.checkNotNull(callerUserId, "callerUserId");
     Preconditions.checkNotNull(role, "role");
-    Preconditions.checkNotNull(justification, "justification");
 
-    assert (isSupportedResource(role.getFullResourceName()));
+    assert(isSupportedResource(role.getFullResourceName()));
+    assert(role.getStatus() == RoleBinding.RoleBindingStatus.ELIGIBLE_FOR_MPA);
 
     //
-    // Double-check that the user is really allowed to activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
+    // Check that the (calling) user is really allowed to request approval
+    // this role.
     //
-    var eligibleRoles = listEligibleRoleBindings(userId);
+    var eligibleRoles = listEligibleRoleBindings(callerUserId);
     if (!eligibleRoles.getRoleBindings().contains(role)) {
-      throw new AccessDeniedException(String.format("Your user %s is not eligible to activate this role", userId));
-    }
-
-    if (!this.options.getJustificationPattern().matcher(justification).matches()) {
       throw new AccessDeniedException(
-        String.format("Justification does not meet criteria: %s", this.options.getJustificationHint()));
+        String.format("Your user %s is not eligible to request approval for this role", callerUserId));
     }
 
     //
-    // Add time-bound IAM binding.
+    // Find other eligible users.
     //
-    // Replace existing bindings for same user and role to avoid
-    // accumulating junk, and to prevent hitting the binding limit.
-    //
-    var elevationStartTime = OffsetDateTime.now();
-    var elevationEndTime = elevationStartTime.plus(this.options.getActivationDuration());
+    var analysisResult = this.assetInventoryAdapter.findPermissionedPrincipalsByResource(
+      this.options.getScope(),
+      role.getFullResourceName(),
+      role.getRole());
 
-    var binding = new Binding()
-      .setMembers(List.of("user:" + userId))
-      .setRole(role.getRole())
-      .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
-        .setTitle(ELEVATION_CONDITION_TITLE)
-        .setDescription("User-provided justification: " + justification)
-        .setExpression(IamConditions.createTemporaryConditionClause(elevationStartTime, elevationEndTime)));
+    var approvers = Stream.ofNullable(analysisResult.getAnalysisResults())
+      .flatMap(Collection::stream)
 
-    this.resourceManagerAdapter.addIamBinding(
-      role.getResourceName(),
-      binding,
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
-      justification);
+      // Narrow down to IAM bindings with an MPA constraint.
+      .filter(result -> result.getIamBinding() != null &&
+                   JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
 
-    return elevationEndTime;
+      // Collect identities (users and group members)
+      .filter(result -> result.getIdentityList() != null)
+      .flatMap(result -> result.getIdentityList().getIdentities().stream()
+        .filter(id -> id.getName().startsWith("user:"))
+        .map(id -> new UserId(id.getName().substring("user:".length()))))
+
+      // Remove the caller.
+      .filter(user -> !user.equals(callerUserId))
+      .collect(Collectors.toList());
+
+    return approvers;
   }
 
   // -------------------------------------------------------------------------
@@ -267,21 +252,12 @@ public class ElevationService {
   public static class Options {
     private final String scope;
     private final boolean includeInheritedBindings;
-    private final Duration activationDuration;
-    private final String justificationHint;
-    private final Pattern justificationPattern;
 
     public Options(
       String scope,
-      boolean includeInheritedBindings,
-      String justificationHint,
-      Pattern justificationPattern,
-      Duration activationDuration) {
+      boolean includeInheritedBindings) {
       this.scope = scope;
       this.includeInheritedBindings = includeInheritedBindings;
-      this.activationDuration = activationDuration;
-      this.justificationHint = justificationHint;
-      this.justificationPattern = justificationPattern;
     }
 
     /**
@@ -296,27 +272,6 @@ public class ElevationService {
      */
     public boolean isIncludeInheritedBindings() {
       return includeInheritedBindings;
-    }
-
-    /**
-     * Duration for an elevation.
-     */
-    public Duration getActivationDuration() {
-      return this.activationDuration;
-    }
-
-    /**
-     * Hint for justification pattern.
-     */
-    public String getJustificationHint() {
-      return this.justificationHint;
-    }
-
-    /**
-     * Pattern to validate justifications.
-     */
-    public Pattern getJustificationPattern() {
-      return this.justificationPattern;
     }
   }
 }

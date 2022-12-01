@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Objects;
 
 public class UserId {
@@ -28,14 +30,20 @@ public class UserId {
   private final String email;
 
   public UserId(String id, String email) {
+    Preconditions.checkNotNull(email, "email");
+
     this.id = id;
     this.email = email;
   }
 
-  public String getId() {
-    return id;
+  public UserId(String email) {
+    this(null, email);
   }
 
+  /** Unique ID */
+  public String getId() { return id; }
+
+  /** Email address */
   public String getEmail() {
     return this.email;
   }

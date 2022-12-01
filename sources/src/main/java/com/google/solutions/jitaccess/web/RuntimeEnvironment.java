@@ -34,7 +34,10 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
-import com.google.solutions.jitaccess.core.services.ElevationService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.TokenService;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -56,12 +59,12 @@ public class RuntimeEnvironment {
 
   private static final Logger LOG = Logger.getLogger(RuntimeEnvironment.class);
 
+  private final boolean DevelopmentMode;
   private final String ProjectId;
   private final String ProjectNumber;
   private final UserPrincipal StaticPrincipal;
-  private final String ApplicationPrincipal;
+  private final UserId ApplicationPrincipal;
   private final GoogleCredentials ApplicationCredentials;
-  private final ElevationService.Options elevationConfiguration;
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -104,13 +107,13 @@ public class RuntimeEnvironment {
         GenericData projectMetadata =
           getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
+        this.DevelopmentMode = false;
         this.ProjectId = (String) projectMetadata.get("projectId");
         this.ProjectNumber = projectMetadata.get("numericProjectId").toString();
         this.StaticPrincipal = null; // Use proper IAP authentication.
 
         this.ApplicationCredentials = GoogleCredentials.getApplicationDefault();
-        this.ApplicationPrincipal =
-          ((ComputeEngineCredentials) this.ApplicationCredentials).getAccount();
+        this.ApplicationPrincipal = new UserId(((ComputeEngineCredentials) this.ApplicationCredentials).getAccount());
 
         LOG.infof(
           "Running in project %s (%s) as %s, version %s",
@@ -128,6 +131,7 @@ public class RuntimeEnvironment {
       //
       // Running in development mode.
       //
+      this.DevelopmentMode = true;
       this.ProjectId = "dev";
       this.ProjectNumber = "0";
       this.StaticPrincipal = new UserPrincipal() {
@@ -175,15 +179,16 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.ApplicationCredentials.refresh();
-          this.ApplicationPrincipal = impersonateServiceAccount;
-        }
-        else if (defaultCredentials instanceof ServiceAccountCredentials) {
+
+          this.ApplicationPrincipal = new UserId(impersonateServiceAccount);
+        } else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.ApplicationCredentials = defaultCredentials;
-          this.ApplicationPrincipal =
-            ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser();
+
+          this.ApplicationPrincipal = new UserId(
+              ((ServiceAccountCredentials) this.ApplicationCredentials).getServiceAccountUser());
         }
         else {
           throw new RuntimeException(
@@ -200,17 +205,6 @@ public class RuntimeEnvironment {
 
       LOG.warnf("Running in development mode as %s", this.ApplicationPrincipal);
     }
-
-    this.elevationConfiguration =
-      new ElevationService.Options(
-        getConfigurationOption(
-          "RESOURCE_SCOPE",
-          "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
-        Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")),
-        getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
-        Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-        Duration.ofMinutes(
-          Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
   }
 
   public String getProjectId() {
@@ -225,17 +219,45 @@ public class RuntimeEnvironment {
     return StaticPrincipal;
   }
 
-  public String getApplicationPrincipal() {
+  public UserId getApplicationPrincipal() {
     return ApplicationPrincipal;
   }
 
-  @Produces // Make available for injection into adapter classes
+  // -------------------------------------------------------------------------
+  // Producer methods.
+  // -------------------------------------------------------------------------
+
+  @Produces
   public GoogleCredentials getApplicationCredentials() {
     return ApplicationCredentials;
   }
 
-  @Produces // Make available for injection into adapter classes
-  public ElevationService.Options getElevationConfiguration() {
-    return this.elevationConfiguration;
+  @Produces
+  public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
+    return new RoleDiscoveryService.Options(
+      getConfigurationOption(
+        "RESOURCE_SCOPE",
+        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)),
+      Boolean.parseBoolean(getConfigurationOption("INCLUDE_INHERITED_BINDINGS", "false")));
+  }
+
+  @Produces
+  public RoleActivationService.Options getRoleActivationServiceOptions() {
+    return new RoleActivationService.Options(
+      getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
+      Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+  }
+
+  @Produces
+  public TokenService.Options getTokenServiceOptions() {
+    return new TokenService.Options(
+      ApplicationPrincipal,
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
+  }
+
+  @Produces
+  public NotificationService.Options getNotificationServiceOptions() {
+    return new NotificationService.Options(!DevelopmentMode);
   }
 }

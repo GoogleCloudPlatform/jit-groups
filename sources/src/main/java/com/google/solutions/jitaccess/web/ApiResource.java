@@ -27,8 +27,9 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.adapters.UserPrincipal;
-import com.google.solutions.jitaccess.core.services.ElevationService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleBinding;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -50,7 +51,10 @@ public class ApiResource {
   private static final String EVENT_ACTIVATE_ROLE = "api.activateRole";
 
   @Inject
-  ElevationService elevationService;
+  RoleDiscoveryService roleDiscoveryService;
+
+  @Inject
+  RoleActivationService roleActivationService;
 
   @Inject
   LogAdapter logAdapter;
@@ -59,17 +63,17 @@ public class ApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   public ResultEntity listEligibleRoleBindings(@Context SecurityContext securityContext)
     throws AccessException, IOException {
-    Preconditions.checkNotNull(elevationService, "elevationService");
+    Preconditions.checkNotNull(roleDiscoveryService, "elevationService");
     UserPrincipal iapPricipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var bindings = this.elevationService.listEligibleRoleBindings(iapPricipal.getId());
+      var bindings = this.roleDiscoveryService.listEligibleRoleBindings(iapPricipal.getId());
 
       return new ResultEntity(
         bindings.getRoleBindings(),
         bindings.getWarnings(),
-        this.elevationService.getOptions().getJustificationHint(),
-        (int) this.elevationService.getOptions().getActivationDuration().toMinutes());
+        this.roleActivationService.getOptions().getJustificationHint(),
+        (int) this.roleActivationService.getOptions().getActivationDuration().toMinutes());
     }
     catch (Exception e) {
       this.logAdapter
@@ -90,7 +94,7 @@ public class ApiResource {
     @FormParam("justification") String justification,
     @Context SecurityContext securityContext)
     throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(elevationService, "elevationService");
+    Preconditions.checkNotNull(roleDiscoveryService, "elevationService");
     UserPrincipal iapPricipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     var roleBindings =
@@ -106,22 +110,25 @@ public class ApiResource {
               roleParts[0],
               roleParts[1],
               roleParts[2],
-              RoleBinding.RoleBindingStatus.ELIGIBLE);
+              RoleBinding.RoleBindingStatus.ELIGIBLE); // TODO: Consider MPA!?
           })
-        .collect(Collectors.toList());
+          .collect(Collectors.toList());
 
     for (var roleBinding : roleBindings) {
       try {
-        this.elevationService.activateEligibleRoleBinding(
-          iapPricipal.getId(), roleBinding, justification);
+        this.roleActivationService.activateEligibleRoleBinding(
+          iapPricipal.getId(),
+          iapPricipal.getId(),
+          roleBinding,
+          justification);
 
         this.logAdapter
           .newInfoEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Activated '%s' for '%s' on '%s', justified by '%s'",
-              roleBinding.getRole(),
+              "User %s successfully activated role '%s' on '%s' for themselves, justified by '%s'",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification))
           .addLabel("role", roleBinding.getRole())
@@ -134,9 +141,9 @@ public class ApiResource {
           .newErrorEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Denied to activate '%s' for '%s' on '%s', justified by '%s': %s",
-              roleBinding.getRole(),
+              "User %s was denied to activated role '%s' on '%s' for themselves, justified by '%s': %s",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification,
               e.getMessage()))
@@ -152,9 +159,9 @@ public class ApiResource {
           .newErrorEntry(
             EVENT_ACTIVATE_ROLE,
             String.format(
-              "Failed to activate '%s' for '%s' on '%s', justified by '%s': %s",
-              roleBinding.getRole(),
+              "User %s failed to activate role '%s' on '%s' for themselves, justified by '%s': %s",
               iapPricipal.getId(),
+              roleBinding.getRole(),
               roleBinding.getFullResourceName(),
               justification,
               e.getMessage()))
@@ -178,8 +185,8 @@ public class ApiResource {
               RoleBinding.RoleBindingStatus.ACTIVATED))
         .collect(Collectors.toList()),
       List.of(),
-      this.elevationService.getOptions().getJustificationHint(),
-      (int) this.elevationService.getOptions().getActivationDuration().toMinutes());
+      this.roleActivationService.getOptions().getJustificationHint(),
+      (int) this.roleActivationService.getOptions().getActivationDuration().toMinutes());
   }
 
   public class ResultEntity {

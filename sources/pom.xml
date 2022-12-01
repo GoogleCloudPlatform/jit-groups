@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
-  <version>1.0.2</version>
+  <version>1.1.0</version>
   <properties>
     <surefire-plugin.version>2.22.2</surefire-plugin.version>
     <maven.compiler.target>11</maven.compiler.target>
@@ -68,10 +68,21 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudasset</artifactId>
       <version>v1-rev20220826-2.0.0</version>
-    </dependency><dependency>
+    </dependency>
+    <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-logging</artifactId>
       <version>v2-rev20220819-2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-iamcredentials</artifactId>
+      <version>v1-rev20211203-2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
     </dependency>
 
     <!-- Test dependencies -->
