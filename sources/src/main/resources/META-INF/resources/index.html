@@ -522,7 +522,7 @@
                     rolesResult.roles.forEach((item) => {
                         requestPane.roleTable.addRow(
                             item.roleBinding.role,
-                            [item.roleBinding.role, item.status],
+                            [item.roleBinding.role, backend.titleForStatus(item.status)],
                             true,
                             item.status !== "ACTIVATED");
                     });
@@ -561,7 +561,7 @@
                             confirmationPane.activatedRoleTable.addRow(
                                 item.projectRole.roleBinding.role,
                                 [item.projectRole.roleBinding.role,
-                                    item.projectRole.status,
+                                    backend.titleForStatus(item.projectRole.status),
                                     `${Math.floor((new Date(item.expiry).getTime() - new Date().getTime()) / 60000)} minutes`],
                                 false);
                         });

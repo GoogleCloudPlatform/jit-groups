@@ -31,6 +31,15 @@ class Model {
         return `${message} (HTTP ${error.status}: ${error.statusText})`;
     }
 
+    titleForStatus(statusCode) {
+        var titles = {
+            "ELIGIBLE_FOR_JIT": "Inactive",
+            "ACTIVATED": "Activated"
+        }
+
+        return titles[statusCode] ?? statusCode;
+    }
+
     async fetchPolicy() {
         try {
             await new Promise(r => setTimeout(r, 200));
