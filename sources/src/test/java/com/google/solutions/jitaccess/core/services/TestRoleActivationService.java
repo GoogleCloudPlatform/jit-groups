@@ -89,7 +89,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             "roles/compute.viewer"), // Different role
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -124,7 +124,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -169,11 +169,11 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.<String>of()));
+        List.of()));
     when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
       .thenReturn(new Result<ProjectRole>(
         List.<ProjectRole>of(),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -204,7 +204,7 @@ public class TestRoleActivationService {
     when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
       .thenReturn(new Result<ProjectRole>(
         List.<ProjectRole>of(),
-        List.<String>of()));
+        List.of()));
     when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
       .thenReturn(new Result<ProjectRole>(
         List.of(new ProjectRole(
@@ -212,7 +212,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -247,7 +247,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -282,7 +282,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -334,7 +334,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.<String>of()));
+        List.of()));
 
     var service = new RoleActivationService(
       discoveryService,

@@ -40,7 +40,7 @@ import java.security.Principal;
 
 public class RestDispatcher<TResource> {
   private final TResource resource;
-  private Dispatcher dispatcher;
+  private final Dispatcher dispatcher;
 
   public RestDispatcher(TResource resource, final UserId userId) {
     this.resource = resource;
@@ -101,7 +101,7 @@ public class RestDispatcher<TResource> {
   private <TResponse> Response<TResponse> invoke(
     MockHttpRequest request,
     Class<TResponse> responseType
-  ) throws URISyntaxException {
+  ) {
     var response = new MockHttpResponse();
     var synchronousExecutionContext = new SynchronousExecutionContext(
       (SynchronousDispatcher)dispatcher,
@@ -154,7 +154,7 @@ public class RestDispatcher<TResource> {
     }
 
     public T getBody() throws UnsupportedEncodingException {
-      return (T)new Gson().fromJson(this.mockResponse.getContentAsString(), responseType);
+      return new Gson().fromJson(this.mockResponse.getContentAsString(), responseType);
     }
   }
 }

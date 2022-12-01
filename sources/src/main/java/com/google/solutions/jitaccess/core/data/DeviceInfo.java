@@ -29,7 +29,7 @@ import java.util.List;
  * Information about the device of a user.
  */
 public class DeviceInfo {
-  public static DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
+  public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
   private final String deviceId;
   private final List<String> accessLevels;
 

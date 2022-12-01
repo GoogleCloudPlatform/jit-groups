@@ -512,7 +512,7 @@
 
                     const rolesResult = await backend.listRoles(requestPane.selectedProjectId)
                     if (!rolesResult.roles || rolesResult.roles.length == 0) {
-                        throw "The project doesn't exist or you don't have permission to activate any roles in this project";
+                        throw "The project doesn't exist, or you don't have permission to activate any roles in this project";
                     }
 
                     if (rolesResult.warnings && rolesResult.warnings.length > 0) {

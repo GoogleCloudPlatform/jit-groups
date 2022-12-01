@@ -52,7 +52,7 @@ public class AssetInventoryAdapter {
 
   private final GoogleCredentials credentials;
 
-  public AssetInventoryAdapter(GoogleCredentials credentials) throws IOException {
+  public AssetInventoryAdapter(GoogleCredentials credentials) {
     Preconditions.checkNotNull(credentials, "credentials");
 
     this.credentials = credentials;

@@ -135,7 +135,7 @@ public class TestApiResource {
   @Test
   public void whenProjectDiscoveryyReturnsNoProjects_ThenGetProjectsReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
-      .thenReturn(Set.<ProjectId>of());
+      .thenReturn(Set.of());
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
@@ -230,7 +230,7 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenReturn(new Result<ProjectRole>(
-        List.<ProjectRole>of(),
+        List.of(),
         List.of("warning")));
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
@@ -260,7 +260,7 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenReturn(new Result<ProjectRole>(
-        List.<ProjectRole>of(role1, role2),
+        List.of(role1, role2),
         null));
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
@@ -314,7 +314,7 @@ public class TestApiResource {
   @Test
   public void whenRolesEmpty_ThenSelfActivateReturnsError() throws Exception {
     var request = new ApiResource.SelfActivationRequestEntity();
-    request.roles = List.<String>of();
+    request.roles = List.of();
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
@@ -331,7 +331,7 @@ public class TestApiResource {
   @Test
   public void whenJustificationMissing_ThenSelfActivateReturnsError() throws Exception {
     var request = new ApiResource.SelfActivationRequestEntity();
-    request.roles = List.<String>of("roles/browser");
+    request.roles = List.of("roles/browser");
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
@@ -361,7 +361,7 @@ public class TestApiResource {
         OffsetDateTime.now()));
 
     var request = new ApiResource.SelfActivationRequestEntity();
-    request.roles = List.<String>of("roles/browser", "roles/browser");
+    request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
 
     var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(

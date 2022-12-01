@@ -54,7 +54,7 @@ public class TokenService {
     //
     this.tokenVerifier = TokenVerifier
       .newBuilder()
-      .setCertificatesLocation(iamCredentialsAdapter.getJwksUrl(options.serviceAccount))
+      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(options.serviceAccount))
       .setIssuer(options.serviceAccount.email)
       .setAudience(options.serviceAccount.email)
       .build();

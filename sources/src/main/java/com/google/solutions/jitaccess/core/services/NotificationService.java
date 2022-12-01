@@ -94,7 +94,7 @@ public class NotificationService {
     private final UserId recipient;
     private final String subject;
 
-    protected Map<String, String> properties = new HashMap<>();
+    protected final Map<String, String> properties = new HashMap<>();
 
     protected Notification(String template, UserId recipient, String subject) {
       Preconditions.checkNotNull(template, "template");
@@ -177,7 +177,7 @@ public class NotificationService {
     }
   }
 
-  public class NotificationException extends Exception {
+  public static class NotificationException extends Exception {
     public NotificationException(String message, Throwable cause) {
       super(message, cause);
     }
