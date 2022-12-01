@@ -355,22 +355,27 @@
                 const stepperElement = document.querySelector("ul.mdl-stepper");
                 console.assert(stepperElement);
 
-                const Stepper = stepperElement.MaterialStepper;
+                const stepper = stepperElement.MaterialStepper;
                 const stepElement = stepperElement.querySelector(this.selector);
 
-                stepElement.addEventListener(
-                    "onstepnext",
-                    async (event) => {
-                        try {
-                            await nextHandler();
-                            Stepper.next();
-                        }
-                        catch (error) {
-                            Stepper.error(error);
-                        }
-                    });
+                const wrappedHandler = async (event) => {
+                    try {
+                        await nextHandler();
+                        stepper.next();
+                    }
+                    catch (error) {
+                        stepper.error(error);
+                    }
+                };
 
+                stepElement.addEventListener("onstepnext", wrappedHandler);
                 stepElement.addEventListener("onstepcancel", (event) => location.reload());
+
+                // Trigger handler when a form is submitted.
+                $(this.selector + " form").submit(function (event) {
+                    event.preventDefault();
+                    wrappedHandler(event);
+                });
             }
         }
 
