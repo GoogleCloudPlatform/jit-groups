@@ -46,7 +46,8 @@ public class MailAdapter {
     String recipientName,
     String recipientEmail,
     String subject,
-    Multipart content) throws MailException {
+    Multipart content
+  ) throws MailException {
     Preconditions.checkNotNull(recipientName, "recipientName");
     Preconditions.checkNotNull(recipientEmail, "recipientEmail");
     Preconditions.checkNotNull(subject, "subject");
@@ -76,7 +77,12 @@ public class MailAdapter {
     String recipientName,
     String recipientEmail,
     String subject,
-    String htmlContent) throws MailException {
+    String htmlContent
+  ) throws MailException {
+    Preconditions.checkNotNull(recipientName, "recipientName");
+    Preconditions.checkNotNull(recipientEmail, "recipientEmail");
+    Preconditions.checkNotNull(subject, "subject");
+    Preconditions.checkNotNull(htmlContent, "htmlContent");
 
     try {
       var htmlPart = new MimeBodyPart();

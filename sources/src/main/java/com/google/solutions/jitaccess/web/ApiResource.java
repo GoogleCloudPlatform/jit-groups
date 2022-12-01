@@ -24,11 +24,12 @@ package com.google.solutions.jitaccess.web;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.adapters.UserPrincipal;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleBinding;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 import javax.enterprise.context.Dependent;
@@ -37,8 +38,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -47,8 +49,6 @@ import java.util.stream.Collectors;
 @Dependent
 @Path("/api/")
 public class ApiResource {
-  private static final String EVENT_LIST_ELIGIBLE_ROLES = "api.listEligibleRoles";
-  private static final String EVENT_ACTIVATE_ROLE = "api.activateRole";
 
   @Inject
   RoleDiscoveryService roleDiscoveryService;
@@ -59,97 +59,163 @@ public class ApiResource {
   @Inject
   LogAdapter logAdapter;
 
+  /**
+   * Return friendly error to browsers that still have the 1.0 frontend cached.
+   */
+  @GET
+  public void getRoot() {
+    throw new NotFoundException(
+      "You're viewing an outdated version of the application, please refresh your browser");
+  }
+
+  /**
+   * Get information about configured policies.
+   */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public ResultEntity listEligibleRoleBindings(@Context SecurityContext securityContext)
-    throws AccessException, IOException {
-    Preconditions.checkNotNull(roleDiscoveryService, "elevationService");
-    UserPrincipal iapPricipal = (UserPrincipal) securityContext.getUserPrincipal();
+  @Path("policy")
+  public PolicyResponseEntity getPolicy() {
+    return new PolicyResponseEntity(
+      this.roleActivationService.getOptions().justificationHint
+    );
+  }
+
+  /**
+   * List projects that the calling user can access.
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("projects")
+  public ProjectsResponseEntity listProjects(
+    @Context SecurityContext securityContext
+  ) throws AccessException {
+    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var bindings = this.roleDiscoveryService.listEligibleRoleBindings(iapPricipal.getId());
+      var projects = this.roleDiscoveryService.listAvailableProjects(iapPrincipal.getId());
 
-      return new ResultEntity(
-        bindings.getRoleBindings(),
-        bindings.getWarnings(),
-        this.roleActivationService.getOptions().getJustificationHint(),
-        (int) this.roleActivationService.getOptions().getActivationDuration().toMinutes());
+      return new ProjectsResponseEntity(
+        projects.stream().map(p -> p.id).collect(Collectors.toSet()));
     }
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          EVENT_LIST_ELIGIBLE_ROLES,
-          String.format("Failed to list eligible roles: %s", e.getMessage()))
+          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          String.format("Listing available projects failed: %s", e.getMessage()))
         .write();
 
-      throw new AccessDeniedException("Failed to list eligible roles", e);
+      throw new AccessDeniedException("Listing available projects failed, see logs for details");
+    }
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("projects/{projectId}/roles")
+  public ProjectRolesResponseEntity listEligibleRoleBindings(
+    @PathParam("projectId") String projectId,
+    @Context SecurityContext securityContext
+  ) throws AccessException {
+    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+
+    Preconditions.checkArgument(
+      projectId != null && !projectId.trim().isEmpty(),
+      "A projectId is required");
+    Preconditions.checkArgument(!projectId.trim().isEmpty(), "projectId must be provided");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+
+    try {
+      var bindings = this.roleDiscoveryService.listEligibleProjectRoles(
+        iapPrincipal.getId(),
+        new ProjectId(projectId));
+
+      return new ProjectRolesResponseEntity(
+        bindings.getItems(),
+        bindings.getWarnings());
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          String.format("Listing project roles failed: %s", e.getMessage()))
+        .write();
+
+      throw new AccessDeniedException("Listing project roles failed, see logs for details");
     }
   }
 
   @POST
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public ResultEntity activateRoleBindings(
-    @FormParam("roles") List<String> roles,
-    @FormParam("justification") String justification,
-    @Context SecurityContext securityContext)
-    throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(roleDiscoveryService, "elevationService");
-    UserPrincipal iapPricipal = (UserPrincipal) securityContext.getUserPrincipal();
+  @Path("projects/{projectId}/roles/self-activate")
+  public SelfActivationResponseEntity selfActivateProjectRoles(
+    @PathParam("projectId") String projectIdString,
+    SelfActivationRequestEntity request,
+    @Context SecurityContext securityContext
+  ) throws AccessDeniedException {
+    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
 
-    var roleBindings =
-      roles.stream()
-        .map(
-          encoded -> {
-            var roleParts = encoded.split("\\|");
-            if (roleParts.length != 3) {
-              throw new IllegalArgumentException("Malformed role");
-            }
+    Preconditions.checkArgument(
+      projectIdString != null && !projectIdString.trim().isEmpty(),
+      "A projectId is required");
+    Preconditions.checkArgument(
+      request != null && request.roles != null && request.roles.size() > 0 && request.roles.size() <= 10,
+      "At least one role is required");
+    Preconditions.checkArgument(
+      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
+      "A justification must be provided");
 
-            return new RoleBinding(
-              roleParts[0],
-              roleParts[1],
-              roleParts[2],
-              RoleBinding.RoleBindingStatus.ELIGIBLE); // TODO: Consider MPA!?
-          })
-          .collect(Collectors.toList());
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+    var projectId = new ProjectId(projectIdString);
 
+    var roleBindings = request.roles
+      .stream()
+      .map(r -> new RoleBinding(projectId.getFullResourceName(), r))
+      .collect(Collectors.toSet());
+
+    var activations = new ArrayList<RoleActivationService.Activation>();
     for (var roleBinding : roleBindings) {
       try {
-        this.roleActivationService.activateEligibleRoleBinding(
-          iapPricipal.getId(),
-          iapPricipal.getId(),
+        var activation = this.roleActivationService.activateProjectRole(
+          iapPrincipal.getId(),
+          iapPrincipal.getId(),
           roleBinding,
-          justification);
+          RoleActivationService.ActivationType.JIT,
+          request.justification);
+
+        assert activation != null;
+        activations.add(activation);
 
         this.logAdapter
           .newInfoEntry(
-            EVENT_ACTIVATE_ROLE,
+            LogEvents.API_ACTIVATE_ROLE,
             String.format(
               "User %s successfully activated role '%s' on '%s' for themselves, justified by '%s'",
-              iapPricipal.getId(),
-              roleBinding.getRole(),
-              roleBinding.getFullResourceName(),
-              justification))
-          .addLabel("role", roleBinding.getRole())
-          .addLabel("resource", roleBinding.getFullResourceName())
-          .addLabel("justification", justification)
+              iapPrincipal.getId(),
+              roleBinding.role,
+              roleBinding.fullResourceName,
+              request.justification))
+          .addLabel("role", roleBinding.role)
+          .addLabel("resource", roleBinding.fullResourceName)
+          .addLabel("justification", request.justification)
           .write();
       }
       catch (AccessDeniedException e) {
         this.logAdapter
           .newErrorEntry(
-            EVENT_ACTIVATE_ROLE,
+            LogEvents.API_ACTIVATE_ROLE,
             String.format(
               "User %s was denied to activated role '%s' on '%s' for themselves, justified by '%s': %s",
-              iapPricipal.getId(),
-              roleBinding.getRole(),
-              roleBinding.getFullResourceName(),
-              justification,
+              iapPrincipal.getId(),
+              roleBinding.role,
+              roleBinding.fullResourceName,
+              request.justification,
               e.getMessage()))
-          .addLabel("role", roleBinding.getRole())
-          .addLabel("resource", roleBinding.getFullResourceName())
-          .addLabel("justification", justification)
+          .addLabel("role", roleBinding.role)
+          .addLabel("resource", roleBinding.fullResourceName)
+          .addLabel("justification", request.justification)
           .write();
 
         throw e;
@@ -157,69 +223,81 @@ public class ApiResource {
       catch (Exception e) {
         this.logAdapter
           .newErrorEntry(
-            EVENT_ACTIVATE_ROLE,
+            LogEvents.API_ACTIVATE_ROLE,
             String.format(
               "User %s failed to activate role '%s' on '%s' for themselves, justified by '%s': %s",
-              iapPricipal.getId(),
-              roleBinding.getRole(),
-              roleBinding.getFullResourceName(),
-              justification,
+              iapPrincipal.getId(),
+              roleBinding.role,
+              roleBinding.fullResourceName,
+              request.justification,
               e.getMessage()))
-          .addLabel("role", roleBinding.getRole())
-          .addLabel("resource", roleBinding.getFullResourceName())
-          .addLabel("justification", justification)
+          .addLabel("role", roleBinding.role)
+          .addLabel("resource", roleBinding.fullResourceName)
+          .addLabel("justification", request.justification)
           .write();
 
         throw new AccessDeniedException("Activating role failed", e);
       }
     }
 
-    return new ResultEntity(
-      roleBindings.stream()
-        .map(
-          b ->
-            new RoleBinding(
-              b.getResourceName(),
-              b.getFullResourceName(),
-              b.getRole(),
-              RoleBinding.RoleBindingStatus.ACTIVATED))
-        .collect(Collectors.toList()),
-      List.of(),
-      this.roleActivationService.getOptions().getJustificationHint(),
-      (int) this.roleActivationService.getOptions().getActivationDuration().toMinutes());
+    assert activations.size() == roleBindings.size();
+
+    return new SelfActivationResponseEntity(activations);
   }
 
-  public class ResultEntity {
-    private final List<String> warnings;
-    private final List<RoleBinding> roleBindings;
-    private final String justificationHint;
-    private final int activationDuration;
+  // -------------------------------------------------------------------------
+  // Entity classes.
+  // -------------------------------------------------------------------------
 
-    public ResultEntity(
-      List<RoleBinding> roleBindings,
-      List<String> warnings,
-      String justificationHint,
-      int activationDuration) {
-      this.warnings = warnings;
-      this.roleBindings = roleBindings;
+  public static class PolicyResponseEntity {
+    public final String justificationHint;
+
+    public PolicyResponseEntity(String justificationHint) {
+      Preconditions.checkNotNull(justificationHint, "justificationHint");
       this.justificationHint = justificationHint;
-      this.activationDuration = activationDuration;
     }
+  }
 
-    public List<String> getWarnings() {
-      return warnings;
+  public static class ProjectsResponseEntity {
+    public final Set<String> projects;
+
+    public ProjectsResponseEntity(Set<String> projects) {
+      Preconditions.checkNotNull(projects, "projects");
+      this.projects = projects;
     }
+  }
 
-    public List<RoleBinding> getRoleBindings() {
-      return roleBindings;
+
+  public static class ProjectRolesResponseEntity {
+    public final List<String> warnings;
+    public final List<ProjectRole> roles;
+
+    public ProjectRolesResponseEntity(
+      List<ProjectRole> roleBindings,
+      List<String> warnings
+    ) {
+      Preconditions.checkNotNull(roleBindings, "roleBindings");
+
+      this.warnings = warnings;
+      this.roles = roleBindings;
     }
+  }
 
-    public String getJustificationHint() {
-      return justificationHint;
+  public static class SelfActivationRequestEntity {
+    public List<String> roles;
+    public String justification;
+
+    public SelfActivationRequestEntity() {
     }
+  }
 
-    public int getActivationDuration() {
-      return activationDuration;
+  public static class SelfActivationResponseEntity {
+    public final List<RoleActivationService.Activation> activatedRoles;
+
+    public SelfActivationResponseEntity(List<RoleActivationService.Activation> activatedRoles) {
+      Preconditions.checkNotNull(activatedRoles, "activatedRoles");
+
+      this.activatedRoles = activatedRoles;
     }
   }
 }

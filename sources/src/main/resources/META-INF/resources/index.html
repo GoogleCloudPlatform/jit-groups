@@ -1,189 +1,637 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <title>Request elevated access</title>
+    <title>Just-in-Time Access</title>
 
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
-    <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Google+Sans:100,300,400,500,700,900,100i,300i,400i,500i,700i,900i">
-    <link rel="stylesheet" href="/site.css"/>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <!-- All external resources are hosted by Google -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="/mdl-1.3.0/material.indigo-pink.min.css" />
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script language="javascript">
-            function validate() {
-                var checkboxes = document.querySelectorAll('input[type="checkbox"]');
-                var textboxes = document.querySelectorAll('input[type="text"]');
-                var valid = Array.prototype.slice.call(checkboxes).some(x => x.checked) &&
-                    Array.prototype.slice.call(textboxes).some(x => x.value != null && x.value.trim() != "");
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    
+    <script defer src="/mdl-1.3.0/material.min.js"></script>
+    <script defer src="stepper.min.js"></script>
 
-                if (valid) {
-                    document.querySelectorAll('input[type="submit"]')[0].disabled = false;
-                }
-                else {
-                    document.querySelectorAll('input[type="submit"]')[0].disabled = true;
-                }
-            }
-
-            function showWarnings(result) {
-                if (result.warnings === undefined || result.warnings.length == 0) {
-                    $('.alert-box').hide();
-                }
-                else {
-                    $('.alert-box').show();
-                    $('.alert-box').text(result.warnings.join());
-                }
-            }
-
-            function showHomePane(result) {
-                showWarnings(result);
-                $('#justification-hint').text(result.justificationHint);
-
-                $.each(result.roleBindings, function(i, role) {
-                    var disabled = role.status == 'ACTIVATED' ? "disabled='disabled'" : '';
-                    var row = `<tr>
-                            <td>
-                                <input type="checkbox"
-                                   name="roles"
-                                   value="${role.resourceName}|${role.fullResourceName}|${role.role}"
-                                   onchange="validate()"
-                                   ${disabled} />
-                            </td>
-                            <td>${role.resourceName}</td>
-                            <td>${role.role}</td>
-                            <td>${role.status}</td>
-                        </tr>`;
-                    $('#eligible-roles').append(row);
-                });
-
-                $('#home-pane').toggle();
-            }
-
-            function showConfirmationPane(result) {
-                $('#home-pane').toggle();
-                $('#activation-duration').text(`${result.activationDuration} minutes`);
-
-                showWarnings(result);
-
-                $.each(result.roleBindings, function(i, role) {
-                    var row = `<tr>
-                            <td></td>
-                            <td>${role.resourceName}</td>
-                            <td>${role.role}</td>
-                            <td>${role.status}</td>
-                        </tr>`;
-                    $('#activated-roles').append(row);
-                });
-
-                $('#home-confirmation').toggle();
-            }
-
-            $(document).ajaxError(function (e, xhr, settings) {
-                var error = $.parseJSON(xhr.responseText)
-                $('.alert-box').html(error.message);
-            });
-
-            $(document).ready(function() {
-                $.ajax({
-                    url: "/api/",
-                    success: showHomePane,
-                    headers: {'X-JITACCESS': '1'}
-                });
-
-                $('#activate-form').on('submit', function(e){
-                    e.preventDefault(); // Avoid regular post.
-
-                    $('.alert-box').show();
-                    $('.alert-box').text("Working...");
-                    $("#submit").children().prop('disabled',true);
-
-                    $.ajax({
-                        type: "POST",
-                        url:  $(this).attr('action'),
-                        data: $(this).serialize(),
-                        success: showConfirmationPane,
-                        headers: {'X-JITACCESS': '1'}
-                    });
-                });
-            });
-
-
-
-    </script>
+    <link rel="stylesheet" href="stepper.min.css" />
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="container-outer">
-    <div class="container-middle">
-        <div class="container-content">
-            <div class="alert-box">Loading...</div>
+    <div class="mdl-layout mdl-js-layout">
+        <header class="mdl-layout__header mdl-layout__header--transparent">
+            <div class="mdl-layout__header-row">
+                <!-- Title -->
+                <span class="mdl-layout-title">Just-in-Time access</span>
+            </div>
+        </header>
+        <div class="mdl-layout__drawer">
+            <span class="mdl-layout-title">JIT Access</span>
+            <nav class="mdl-navigation">
+                <a class="mdl-navigation__link" href="#" id="menu-requestaccess">Request access</a>
+                <a class="mdl-navigation__link" href="#" id="menu-help">User guide</a>
+            </nav>
+        </div>
+        <main class="mdl-layout__content app-pane" id="request-pane">
+            <div class="mdl-grid center-items">
+                <!-- stepper -->
+                <ul class="mdl-stepper mdl-stepper--feedback mdl-stepper--linear mdl-stepper--vertical">
+                    <li class="mdl-step" id="step-selectproject">
+                        <span class="mdl-step__label">
+                            <span class="mdl-step__title">
+                                <span class="mdl-step__title-text">Project</span>
+                            </span>
+                        </span>
+                        <div class="mdl-step__content">
+                            <div class="step-subsection">
+                                Select the project to request access to:
+                            </div>
+                            <div class="step-subsection">
+                                <form action="#">
+                                    <div>
+                                        <fieldset id="project-selector">
+                                            <legend>Project ID</legend>
+                                            <img src="icon.search.svg" />
+                                            <input id="project-selector-search"
+                                                   type="text"
+                                                   maxlength="32" autocomplete="off" autofocus />
+                                        </fieldset>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
 
-            <!-- Panes, only one shown at a time -->
-            <div id="home-pane" class="pane">
-                <h1 class="display-4">Request just-in-time access</h1>
+                        <div class="mdl-step__actions">
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                                Continue
+                            </button>
+                        </div>
 
-                <form action="/api/" method="POST" id="activate-form" autocomplete="off">
-                    <p>
-                    <table id="eligible-roles" class="roletable">
-                        <tr>
-                            <th></th>
-                            <th>Resource</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                        </tr>
-                    </table>
-                    </p>
-                    <p>
-                    <fieldset>
-                        <legend>Justification (<span id="justification-hint"></span>)</legend>
-                        <input name="justification"
-                               type="text"
-                               maxlength="32"
-                               oninput="validate()"/>
-                    </fieldset>
-                    </p>
-                    <p>
-                    <div id="submit">
-                        <input type="submit" value="Request access" class="button" disabled="disabled"/>
+                    </li>
+                    <li class="mdl-step" id="step-selectrole">
+                        <span class="mdl-step__label">
+                            <span class="mdl-step__title">
+                                <span class="mdl-step__title-text">Roles to activate</span>
+                            </span>
+                        </span>
+                        <div class="mdl-step__content">
+                            <div class="step-subsection">
+                                Select the roles that you want to activate for this project:
+                            </div>
+                            <div class="step-subsection">
+                                <table class="mdl-data-table mdl-shadow--2dp" id="step-selectrole-roles">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th class="mdl-data-table__cell--non-numeric">Role ID</th>
+                                            <th class="mdl-data-table__cell--non-numeric">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mdl-step__actions">
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                                Continue
+                            </button>
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
+                                Cancel
+                            </button>
+                        </div>
+                    </li>
+                    <li class="mdl-step" id="step-approve">
+                        <span class="mdl-step__label">
+                            <span class="mdl-step__title">
+                                <span class="mdl-step__title-text">Justification</span>
+                            </span>
+                        </span>
+                        <div class="mdl-step__content">
+                            <div class="step-subsection">
+                                Enter a justification that explains why you need to access the project:
+                            </div>
+                            <div class="step-subsection">
+                                <form action="#">
+                                    <div>
+                                        <fieldset>
+                                            <legend>Justification</legend>
+                                            <input id="justification"
+                                                   type="text"
+                                                   maxlength="100"
+                                                   autocomplete="off" />
+                                        </fieldset>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="step-subsection">
+                                The justification
+                                is logged and might be reviewed by an auditor.
+                            </div>
+                        </div>
+                        <div class="mdl-step__actions">
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                                Submit request
+                            </button>
+                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
+                                Cancel
+                            </button>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </main>
+        <main class="mdl-layout__content app-pane" id="busy-pane">
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Please wait</h2>
                     </div>
-                    </p>
-                </form>
+                    <div class="mdl-card__supporting-text">
+                        Your request is being processed...
+                        <div>
+                            <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div id="home-confirmation" class="pane">
-                <h1 class="display-4">Just-in-time access granted</h1>
-
-                <p>
-                    You've been temporarily granted the following roles:
-                </p>
-
-                <p>
-                <table id="activated-roles" class="roletable">
-                    <tr>
-                        <th></th>
-                        <th>Resource</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                    </tr>
-                </table>
-                </p>
-                <p>
-                    Your access will expire automatically after <span id="activation-duration"></span>.
-                </p>
-                <p>
-                <form action="/" method="GET">
-                    <input type="submit" value="Back" class="button"/>
-                </form>
-                </p>
-                <b>
-                    <a href="https://console.cloud.google.com/">Open Cloud Console</a>.
-                </b>
+        </main>
+        <main class="mdl-layout__content app-pane" id="confirmation-pane">
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Access granted</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <div class="step-subsection">
+                            You've been temporarily granted the following roles:
+                        </div>
+                        <div class="step-subsection">
+                            <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
+                                <thead>
+                                    <tr>
+                                        <th class="mdl-data-table__cell--non-numeric">Role ID</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Status</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Expiry</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank">
+                            Open Console
+                        </a>
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="/">
+                            Back
+                        </a>
+                    </div>
+                </div>
             </div>
+        </main>
+        <main class="mdl-layout__content app-pane" id="help-pane">
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Requesting just-in-time access</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <p>
+                            This application lets you request temporary access to a Google Cloud project. To request access,
+                            you need to provide the following:
+
+                            <ul>
+                                <li>The project to access</li>
+                                <li>One or more roles to activate</li>
+                                <li>A justification that explains why you need access to this project</li>
+                            </ul>
+                        </p>
+                        <p>
+                            You can only request access to projects and roles that you've been granted <i>eligible access</i> to,
+                            and your access automatically expires after a certain period of time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Grant just-in-time access</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <p>
+                            As an administrator you can grant users or groups <i>eligible access</i> to Google Cloud projects.
+                        </p>
+                        <p>
+                            To grant eligible access, use the Cloud Console or <code>gcloud</code> to create an IAM role binding for
+                            a user or group, and make it eligible by adding a special IAM condition:
+
+                            <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
+
+                            You can create the IAM role binding for a specific project, or for an entire folder.
+                        </p>
+                        <p>
+                            For example, the following <code>gcloud</code> grants eligible access to a user:
+                            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+    --member user:<b>USER</b> \
+    --role <b>ROLE</b> \
+    --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
+</code></pre>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Audit and review just-in-time access</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        <p>
+                            As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users.
+                        </p>
+                        <p>
+                            For example, the following filter lets you find all instances when a role has been activated:
+                            <pre><code class="language-cel">labels.event="api.activateRole"</code></pre>
+                        </p>
+                    </div>
+                    <div class="mdl-card__actions mdl-card--border">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/logs/query;query=labels.event%3D%22api.activateRole%22" target="_blank">
+                            Open Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="mdl-mini-footer">
+            Powered by <a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access</a>.
+        </footer>
+        <div id="toast" class="mdl-snackbar mdl-js-snackbar">
+            <div class="mdl-snackbar__text">Toast!</div>
+            <button type="button" class="mdl-snackbar__action"></button>
         </div>
     </div>
-</div>
+
+    <!-- script -->
+    <script src="model.js"></script>
+    <script>
+        "use strict"
+
+        /** Helper class for modifying MDL data tables */
+        class MdlDataTable {
+            constructor(selector) {
+                console.assert(selector);
+                console.assert($(selector).length > 0);
+
+                this.selector = selector;
+                this.rowIndex = 0;
+            }
+
+            /** Add data row */
+            addRow(value, columns, showCheckbox=true, enabled=true) {
+                console.assert(value);
+                console.assert(columns);
+
+                const tr = $("<tr>");
+                $(`${this.selector} tbody`).append(tr);
+
+                const id = $(this.selector).attr('id') + this.rowIndex;
+                if (showCheckbox) {
+                    const input = $("<input type='checkbox' class='mdl-checkbox__input'></label>");
+                    input.val(value);
+
+                    const label = $(`<label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select' id='${id}'></label>`);
+                    label.append(input);
+
+                    const td = $("<td></td>");
+                    td.append(label);
+                    tr.append(td);
+                }
+
+                columns.forEach((value) => {
+                    const td = $("<td class='mdl-data-table__cell--non-numeric'>");
+                    td.text(value);
+                    tr.append(td);
+                });
+
+                componentHandler.upgradeAllRegistered();
+
+                if (showCheckbox && !enabled) {
+                    document.querySelector("#" + id).MaterialCheckbox.disable();
+                }
+
+                this.rowIndex += 1;
+            }
+
+            /** Get values of selected rows */
+            get selected() {
+                var boxes = $(`${this.selector} input:checked`);
+                return $.map(boxes, input => input.value);
+            }
+        }
+
+        /** Helper class for modifying MDL steps */
+        class MdlStep {
+            constructor(selector) {
+                console.assert(selector);
+                console.assert($(selector).length > 0);
+
+                this.selector = selector;
+            }
+
+            /** Add handler that is triggered when a user clicks the "Continue" button of a step */
+            addHandler(nextHandler) {
+                console.assert(nextHandler);
+
+                const stepperElement = document.querySelector("ul.mdl-stepper");
+                console.assert(stepperElement);
+
+                const Stepper = stepperElement.MaterialStepper;
+                const stepElement = stepperElement.querySelector(this.selector);
+
+                stepElement.addEventListener(
+                    "onstepnext",
+                    async (event) => {
+                        try {
+                            await nextHandler();
+                            Stepper.next();
+                        }
+                        catch (error) {
+                            Stepper.error(error);
+                        }
+                    });
+
+                stepElement.addEventListener("onstepcancel", (event) => location.reload());
+            }
+        }
+
+        /** An SPA-style pane, only one of which is shown at a time */
+        class AppPane {
+            constructor(id) {
+                console.assert($("#" + id).length);
+
+                this.id = id;
+            }
+
+            /**
+             * Show a pane and hide all other panes.
+             */
+            show() {
+                $(".app-pane").hide();
+                $("#" + this.id).show();
+            }
+        }
+
+        class RequestPane extends AppPane {
+            constructor() {
+                super("request-pane");
+
+                this._requestStep = new MdlStep("#step-selectproject");
+                this._selectRoleStep = new MdlStep("#step-selectrole");
+                this._approveStep = new MdlStep("#step-approve");
+                this._roleTable = new MdlDataTable("#step-selectrole-roles");
+            }
+
+            get requestStep() {
+                return this._requestStep;
+            }
+
+            get selectRoleStep() {
+                return this._selectRoleStep;
+            }
+
+            get approveStep() {
+                return this._approveStep;
+            }
+
+            get roleTable() {
+                return this._roleTable;
+            }
+
+            get selectedProjectId() {
+                return $("#project-selector-search").val();
+            }
+
+            set selectedProjectId(projectId) {
+                $("#project-selector-search").val(projectId);
+            }
+
+            get justificationText() {
+                return $("#justification").val();
+            }
+
+            set justificationHint(hint) {
+                $("#step-approve legend").text(hint);
+            }
+        }
+
+        class ConfirmationPane extends AppPane {
+            constructor() {
+                super("confirmation-pane")
+            }
+
+            get activatedRoleTable() {
+                return new MdlDataTable("#activatedroles");
+            }
+        }
+
+        /** Wrapper for HTML-based view */
+        class View {
+            /** Display a toast bar at the bottom of the screen */
+            showToast(message, showReloadButton) {
+                console.assert(message);
+
+                const toast = document.querySelector("#toast");
+                console.assert(toast);
+
+                const config = {
+                    message: message,
+                    timeout: showReloadButton ? 60000 : 10000
+                }
+
+                // Show a button to perform a cache-busting reload.
+                if (showReloadButton) {
+                    config.actionText = "Reload";
+                    config.actionHandler = () => {
+                        const timestamp = Date.now();
+                        window.location.href = `${window.location.pathname}?_=${timestamp}`;
+                    }
+                }
+
+                toast.MaterialSnackbar.showSnackbar(config);
+            }
+
+            get requestPane() {
+                return new RequestPane();
+            }
+
+            get helpPane() {
+                return new AppPane("help-pane");
+            }
+
+            get busyPane() {
+                return new AppPane("busy-pane");
+            }
+
+            get confirmationPane() {
+                return new ConfirmationPane();
+            }
+        };
+
+        const gui = new View();
+        const backend = window.location.search === "?debug" ? new DebugModel() : new Model();
+        const localSettings = new LocalSettings();
+
+        $("#menu-requestaccess").click(() => gui.requestPane.show());
+        $("#menu-help").click(() => gui.helpPane.show());
+        $(document).ready(async () => {
+            //
+            // Configure steps.
+            //
+            (function () {
+                componentHandler.upgradeAllRegistered();
+
+                //
+                // Step: Select project.
+                //
+                const requestPane = gui.requestPane;
+                requestPane.selectedProjectId = localSettings.lastProjectId;
+                requestPane.requestStep.addHandler(async () => {
+                    if (!(requestPane.selectedProjectId)) {
+                        throw "Select a project";
+                    }
+
+                    localSettings.lastProjectId = requestPane.selectedProjectId;
+
+                    const rolesResult = await backend.listRoles(requestPane.selectedProjectId)
+                    if (!rolesResult.roles || rolesResult.roles.length == 0) {
+                        throw "The project doesn't exist, or you don't have permission to activate any roles in this project";
+                    }
+
+                    if (rolesResult.warnings && rolesResult.warnings.length > 0) {
+                        gui.showToast(rolesResult.warnings.join(", "));
+                    }
+
+                    rolesResult.roles.forEach((item) => {
+                        requestPane.roleTable.addRow(
+                            item.roleBinding.role,
+                            [item.roleBinding.role, backend.titleForStatus(item.status)],
+                            true,
+                            item.status !== "ACTIVATED");
+                    });
+                });
+
+                //
+                // Step: Select role.
+                //
+                requestPane.selectRoleStep.addHandler(() => {
+                    const selectedRoles = requestPane.roleTable.selected;
+
+                    if (selectedRoles.length === 0) {
+                        throw "Select one or more roles to actviate";
+                    }
+
+                    requestPane.justificationHint = backend.policy.justificationHint;
+                });
+
+                //
+                // Step: Approve.
+                //
+                requestPane.approveStep.addHandler(async () => {
+                    if (!requestPane.justificationText) {
+                        throw "Enter a justification";
+                    }
+
+                    gui.busyPane.show();
+                    try {
+                        const activatedRolesResult = await backend.selfActivateRoles(
+                            requestPane.selectedProjectId,
+                            requestPane.roleTable.selected,
+                            requestPane.justificationText)
+
+                        const confirmationPane = gui.confirmationPane;
+                        activatedRolesResult.activatedRoles.forEach((item) => {
+                            confirmationPane.activatedRoleTable.addRow(
+                                item.projectRole.roleBinding.role,
+                                [item.projectRole.roleBinding.role,
+                                    backend.titleForStatus(item.projectRole.status),
+                                    `${Math.floor((new Date(item.expiry).getTime() - new Date().getTime()) / 60000)} minutes`],
+                                false);
+                        });
+
+                        confirmationPane.show();
+                    }
+                    catch (error) {
+                        gui.showToast(error);
+                        gui.requestPane.show();
+                    }
+                });
+            }());
+
+            //
+            // Add Copy button to code blocks.
+            //
+            (function () {
+                document.querySelectorAll("pre").forEach((block) => {
+                    if (navigator.clipboard) {
+                        const img = document.createElement("img");
+                        img.src = "icon.copy.svg";
+
+                        const button = document.createElement("button");
+                        button.appendChild(img);
+                        block.appendChild(button);
+
+                        button.addEventListener("click", async () => {
+                            const code = block.querySelector("code");
+                            const text = code.innerText;
+
+                            await navigator.clipboard.writeText(text);
+                        });
+                    }
+                });
+            }());
+
+            //
+            // Configure project selector
+            //
+            $("#project-selector-search").autocomplete({
+                source: async (request, response) => {
+                    try {
+                        const projects = await backend.searchProjects(request.term);
+                        response($.map(projects, (item) => {
+                            return {
+                                label: item,
+                                value: item
+                            };
+                        }));
+                    }
+                    catch (e) {
+                        gui.showToast(`Loading projects failed: ${e}`, false);
+                    }
+                },
+                minLength: 2,
+                position: { of: $("#project-selector") }
+            });
+
+            //
+            // Downlaod policy to check if the communication with the backend
+            // works properly. 
+            //
+            try {
+                await backend.fetchPolicy();
+                gui.requestPane.show();
+            }
+            catch (error) {
+                gui.showToast(error, true);
+            }
+        });
+    </script>
 </body>
 </html>

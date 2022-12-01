@@ -1,9 +1,31 @@
+//
+// Copyright 2022 Google LLC
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.adapters.MailAdapter;
-import com.google.solutions.jitaccess.core.adapters.UserId;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.io.IOException;
 import java.net.URI;
@@ -21,7 +43,8 @@ public class NotificationService {
 
   public NotificationService(
     MailAdapter mailAdapter,
-    Options options) {
+    Options options
+  ) {
     Preconditions.checkNotNull(mailAdapter, "mailAdapter");
     Preconditions.checkNotNull(options, "options");
 
@@ -47,8 +70,8 @@ public class NotificationService {
     if (this.options.enableEmail) {
       try {
         this.mailAdapter.sendMail(
-          notification.recipient.getEmail(),
-          notification.recipient.getEmail(),
+          notification.recipient.email,
+          notification.recipient.email,
           notification.subject,
           notification.format());
       }
@@ -71,7 +94,7 @@ public class NotificationService {
     private final UserId recipient;
     private final String subject;
 
-    protected Map<String, String> properties = new HashMap<>();
+    protected final Map<String, String> properties = new HashMap<>();
 
     protected Notification(String template, UserId recipient, String subject) {
       Preconditions.checkNotNull(template, "template");
@@ -130,17 +153,17 @@ public class NotificationService {
     public ApprovalRequest(
       UserId requestor,
       UserId recipient,
-      RoleBinding roleBinding,
+      ProjectRole role,
       String justification,
       URI actionLink) {
       super(
         TEMPLATE,
         recipient,
-        String.format("%s requests your approval to access a Google Cloud resource", requestor.getEmail()));
+        String.format("%s requests access to a Google Cloud project", requestor.email));
 
-      super.properties.put("{{REQUESTOR}}", requestor.getEmail());
-      super.properties.put("{{RESOURCE}}", roleBinding.getResourceName());
-      super.properties.put("{{ROLE}}", roleBinding.getRole());
+      super.properties.put("{{REQUESTOR}}", requestor.email);
+      super.properties.put("{{PROJECT}}", role.getProjectId().id);
+      super.properties.put("{{ROLE}}", role.roleBinding.role);
       super.properties.put("{{JUSTIFICATION}}", justification);
       super.properties.put("{{ACTION_LINK}}", actionLink.toString());
     }
@@ -154,7 +177,7 @@ public class NotificationService {
     }
   }
 
-  public class NotificationException extends Exception {
+  public static class NotificationException extends Exception {
     public NotificationException(String message, Throwable cause) {
       super(message, cause);
     }

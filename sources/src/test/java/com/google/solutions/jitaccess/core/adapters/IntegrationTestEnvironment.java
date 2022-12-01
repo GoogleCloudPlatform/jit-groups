@@ -24,6 +24,8 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,7 +46,7 @@ public class IntegrationTestEnvironment {
       }
     };
 
-  public static final String PROJECT_ID;
+  public static final ProjectId PROJECT_ID;
 
   public static final GoogleCredentials APPLICATION_CREDENTIALS;
   public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
@@ -67,7 +69,7 @@ public class IntegrationTestEnvironment {
       Properties settings = new Properties();
       settings.load(in);
 
-      PROJECT_ID = getMandatory(settings, "test.project");
+      PROJECT_ID = new ProjectId( getMandatory(settings, "test.project"));
 
       //
       // Service account that doesn't have access to anything.
@@ -84,9 +86,8 @@ public class IntegrationTestEnvironment {
         String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
       APPLICATION_CREDENTIALS = GoogleCredentials.getApplicationDefault();
-      NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.getEmail());
-      TEMPORARY_ACCESS_CREDENTIALS =
-        impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.getEmail());
+      NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
+      TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
     }
     catch (IOException e) {
       throw new RuntimeException("Failed to load test settings", e);

@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
-import com.google.solutions.jitaccess.core.adapters.DeviceInfo;
-import com.google.solutions.jitaccess.core.adapters.UserId;
+import com.google.solutions.jitaccess.core.data.DeviceInfo;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.util.Collection;
 import java.util.List;

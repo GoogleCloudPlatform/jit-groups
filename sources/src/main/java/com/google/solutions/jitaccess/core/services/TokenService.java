@@ -1,12 +1,32 @@
+//
+// Copyright 2022 Google LLC
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
-import com.google.solutions.jitaccess.core.adapters.UserId;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
@@ -34,9 +54,9 @@ public class TokenService {
     //
     this.tokenVerifier = TokenVerifier
       .newBuilder()
-      .setCertificatesLocation(iamCredentialsAdapter.getJwksUrl(options.getServiceAccount()))
-      .setIssuer(options.getServiceAccount().getEmail())
-      .setAudience(options.getServiceAccount().getEmail())
+      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(options.serviceAccount))
+      .setIssuer(options.serviceAccount.email)
+      .setAudience(options.serviceAccount.email)
       .build();
   }
 
@@ -48,12 +68,12 @@ public class TokenService {
     //
     payload = payload
       .clone()
-      .setAudience(this.options.getServiceAccount().getEmail())
-      .setIssuer(this.options.getServiceAccount().getEmail())
-      .setExpirationTimeSeconds(Instant.now().plus(this.options.getTokenValidity()).getEpochSecond());
+      .setAudience(this.options.serviceAccount.email)
+      .setIssuer(this.options.serviceAccount.email)
+      .setExpirationTimeSeconds(Instant.now().plus(this.options.tokenValidity).getEpochSecond());
 
     return this.iamCredentialsAdapter.signJwt(
-      this.options.getServiceAccount(),
+      this.options.serviceAccount,
       payload);
   }
 
@@ -72,7 +92,7 @@ public class TokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    if (!expectedSubject.getEmail().equals(decodedToken.getPayload().getSubject())) {
+    if (!expectedSubject.email.equals(decodedToken.getPayload().getSubject())) {
       throw new TokenVerifier.VerificationException("The token was issued to a different subject");
     }
 
@@ -84,20 +104,12 @@ public class TokenService {
   // -------------------------------------------------------------------------
 
   public static class Options {
-    private final UserId serviceAccount;
-    private final Duration tokenValidity;
+    public final UserId serviceAccount;
+    public final Duration tokenValidity;
 
     public Options(UserId serviceAccount, Duration tokenValidity) {
       this.serviceAccount = serviceAccount;
       this.tokenValidity = tokenValidity;
-    }
-
-    public UserId getServiceAccount() {
-      return serviceAccount;
-    }
-
-    public Duration getTokenValidity() {
-      return tokenValidity;
     }
   }
 }

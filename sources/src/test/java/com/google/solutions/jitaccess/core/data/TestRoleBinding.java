@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,24 +19,36 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.data;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRoleBinding {
+
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void toStringReturnsResourceAndRole() {
+    var roleBinding = new RoleBinding("//project", "role/sample");
+    assertEquals("//project:role/sample", roleBinding.toString());
+  }
+
+  // -------------------------------------------------------------------------
+  // equals.
+  // -------------------------------------------------------------------------
+
   @Test
   public void whenValueIsEquivalent_ThenEqualsReturnsTrue() {
     var ref1 = new RoleBinding(
-      "name", "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
-    var ref2 = new RoleBinding(
-      "name",
       "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "roles/test");
+    var ref2 = new RoleBinding(
+      "//full-name",
+      "roles/test");
 
     assertTrue(ref1.equals(ref2));
     assertTrue(ref1.equals((Object) ref2));
@@ -47,10 +59,8 @@ public class TestRoleBinding {
   @Test
   public void whenObjectsAreSame_ThenEqualsReturnsTrue() {
     var ref1 = new RoleBinding(
-      "name",
       "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "roles/test");
     var ref2 = ref1;
 
     assertTrue(ref1.equals(ref2));
@@ -61,56 +71,35 @@ public class TestRoleBinding {
   @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
     var ref1 = new RoleBinding(
-      "name",
       "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "roles/test");
     var ref2 = new RoleBinding(
-      "name",
       "//full-name",
-      "roles/admin",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "roles/other");
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));
   }
 
   @Test
-  public void whenStatusesDiffer_ThenEqualsReturnsFalse() {
+  public void whenResourcesDiffer_ThenEqualsReturnsFalse() {
     var ref1 = new RoleBinding(
-      "name",
-      "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "//one",
+      "roles/test");
     var ref2 = new RoleBinding(
-      "name",
-      "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ELIGIBLE);
+      "//two",
+      "roles/test");
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));
   }
 
   @Test
-  public void equalsNull() {
+  public void equalsNullIsFalse() {
     var ref1 = new RoleBinding(
-      "name",
       "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
+      "roles/test");
 
     assertFalse(ref1.equals(null));
-  }
-
-  @Test
-  public void toStringReturnsDetails() {
-    var ref1 = new RoleBinding(
-      "name",
-      "//full-name",
-      "roles/test",
-      RoleBinding.RoleBindingStatus.ACTIVATED);
-
-    assertEquals("roles/test on //full-name (ACTIVATED)", ref1.toString());
   }
 }

@@ -50,7 +50,7 @@ public class AppEngineRequestFilter implements ContainerRequestFilter {
   LogAdapter log;
 
   @Override
-  public void filter(ContainerRequestContext containerRequestContext) throws IOException {
+  public void filter(ContainerRequestContext containerRequestContext) {
     Preconditions.checkNotNull(this.log, "log");
 
     var traceId = containerRequestContext.getHeaderString(TRACE_CONTEXT_HEADER_NAME);

@@ -19,15 +19,17 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.adapters;
+package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
 import java.util.List;
 
+/**
+ * Information about the device of a user.
+ */
 public class DeviceInfo {
-  public static DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
-
+  public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
   private final String deviceId;
   private final List<String> accessLevels;
 

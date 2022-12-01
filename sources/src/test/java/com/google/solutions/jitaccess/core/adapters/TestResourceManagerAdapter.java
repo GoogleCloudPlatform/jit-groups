@@ -44,17 +44,17 @@ public class TestResourceManagerAdapter {
   private static final String REQUEST_REASON = "testing";
 
   //---------------------------------------------------------------------
-  // addIamBinding.
+  // addProjectIamBinding.
   //---------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenAddIamBindingAsyncThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenAddIamProjectBindingAsyncThrowsException() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
       NotAuthenticatedException.class,
       () ->
-        adapter.addIamBinding(
+        adapter.addProjectIamBinding(
           IntegrationTestEnvironment.PROJECT_ID,
           new Binding()
             .setMembers(List.of("user:bob@example.com"))
@@ -64,13 +64,13 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenAddIamBindingAsyncThrowsException() throws Exception {
+  public void whenCallerLacksPermission_ThenAddProjectIamBindingAsyncThrowsException() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
       AccessDeniedException.class,
       () ->
-        adapter.addIamBinding(
+        adapter.addProjectIamBinding(
           IntegrationTestEnvironment.PROJECT_ID,
           new Binding()
             .setMembers(List.of("user:bob@example.com"))
@@ -80,16 +80,16 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
-  public void whenResourceIsProject_ThenAddIamBindingAsyncSucceeds() throws Exception {
+  public void whenResourceIsProject_ThenAddIamProjectBindingAsyncSucceeds() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     String condition =
       IamConditions.createTemporaryConditionClause(OffsetDateTime.now(), Duration.ofMinutes(5));
 
-    adapter.addIamBinding(
+    adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
       new Binding()
-        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr().setExpression(condition)),
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
@@ -101,10 +101,10 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     // Add an "old" temporary IAM binding.
-    adapter.addIamBinding(
+    adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
       new Binding()
-        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr()
           .setTitle("old binding")
@@ -115,10 +115,10 @@ public class TestResourceManagerAdapter {
       REQUEST_REASON);
 
     // Add a permanent binding (with some random condition) for the same role.
-    adapter.addIamBinding(
+    adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
       new Binding()
-        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr()
           .setTitle("permanent binding")
@@ -150,10 +150,10 @@ public class TestResourceManagerAdapter {
         b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())));
 
     // Add "new" temporary binding, overriding the old one.
-    adapter.addIamBinding(
+    adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
       new Binding()
-        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.getEmail()))
+        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr()
           .setTitle("new binding")

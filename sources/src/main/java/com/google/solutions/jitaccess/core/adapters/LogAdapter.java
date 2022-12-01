@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
@@ -65,8 +66,21 @@ public class LogAdapter {
     return new LogEntry("INFO", eventId, message, this.principal, this.traceId);
   }
 
+  public LogEntry newWarningEntry(String eventId, String message) {
+    return new LogEntry("WARNING", eventId, message, this.principal, this.traceId);
+  }
+
   public LogEntry newErrorEntry(String eventId, String message) {
     return new LogEntry("ERROR", eventId, message, this.principal, this.traceId);
+  }
+
+  public LogEntry newErrorEntry(String eventId, String message, Exception e) {
+    return new LogEntry(
+      "ERROR",
+      eventId,
+      String.format("%s: %s", message, e.getMessage()),
+      this.principal,
+      this.traceId);
   }
 
   public class LogEntry {
@@ -96,8 +110,8 @@ public class LogAdapter {
       this.labels.put("event", eventId);
 
       if (principal != null) {
-        this.labels.put("user", principal.getId().getEmail());
-        this.labels.put("user_id", principal.getId().getId());
+        this.labels.put("user", principal.getId().email);
+        this.labels.put("user_id", principal.getId().id);
         this.labels.put("device_id", principal.getDevice().getDeviceId());
         this.labels.put("device_access_levels",
           String.join(", ", principal.getDevice().getAccessLevels()));

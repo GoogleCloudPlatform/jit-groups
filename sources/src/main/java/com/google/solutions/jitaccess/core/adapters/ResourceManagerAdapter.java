@@ -32,6 +32,7 @@ import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.data.ProjectId;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
@@ -50,15 +51,14 @@ public class ResourceManagerAdapter {
 
   private final GoogleCredentials credentials;
 
-
   private CloudResourceManager createClient() throws IOException
   {
     try {
       return new CloudResourceManager
         .Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newTransport(),
+          new GsonFactory(),
+          new HttpCredentialsAdapter(this.credentials))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -74,12 +74,12 @@ public class ResourceManagerAdapter {
   }
 
   /** Add an IAM binding using the optimistic concurrency control-mechanism. */
-  public void addIamBinding(
-    String projectId,
+  public void addProjectIamBinding(
+    ProjectId projectId,
     Binding binding,
     EnumSet<ResourceManagerAdapter.IamBindingOptions> options,
-    String requestReason)
-    throws AccessException, AlreadyExistsException, IOException {
+    String requestReason
+  ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(projectId, "projectId");
     Preconditions.checkNotNull(binding, "binding");
 
@@ -97,7 +97,7 @@ public class ResourceManagerAdapter {
         var policy = service
           .projects()
           .getIamPolicy(
-            String.format("projects/%s", projectId),
+            String.format("projects/%s", projectId.id),
             new GetIamPolicyRequest()
               .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
           .execute();

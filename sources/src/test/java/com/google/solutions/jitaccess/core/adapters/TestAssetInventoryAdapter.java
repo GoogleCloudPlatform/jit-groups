@@ -23,9 +23,12 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAssetInventoryAdapter {
   // -------------------------------------------------------------------------
@@ -42,6 +45,8 @@ public class TestAssetInventoryAdapter {
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
         new UserId("", "bob@example.com"),
+        Optional.empty(),
+        Optional.empty(),
         true));
   }
 
@@ -54,7 +59,39 @@ public class TestAssetInventoryAdapter {
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
         new UserId("", "bob@example.com"),
+        Optional.empty(),
+        Optional.empty(),
         true));
+  }
+
+  @Test
+  public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
+    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+
+    var result = adapter.findAccessibleResourcesByUser(
+      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+      new UserId("", "bob@example.com"),
+      Optional.of("invalid.invalid.invalid"),
+      Optional.empty(),
+      true);
+
+    assertNotNull(result);
+    assertNull(result.getAnalysisResults());
+  }
+
+  @Test
+  public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
+    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+
+    var result = adapter.findAccessibleResourcesByUser(
+      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+      new UserId("", "bob@example.com"),
+      Optional.empty(),
+      Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
+      true);
+
+    assertNotNull(result);
+    assertNull(result.getAnalysisResults());
   }
 
   // -------------------------------------------------------------------------
