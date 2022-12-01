@@ -81,6 +81,15 @@ p {
     }
 }
 
+.mdl-mini-footer {
+    justify-content: center;
+    background-color: #fefefe;
+}
+
+.mdl-mini-footer a {
+    color: #9e9e9e;
+}
+
 /* ==== Forms === */
 fieldset {
     border-radius: 4px;
