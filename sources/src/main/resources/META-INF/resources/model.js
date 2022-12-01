@@ -72,7 +72,7 @@ class Model {
         }
 
         return projectsResult.projects.filter(
-            projectId => projectId.toLowerCase().startsWith(projectIdPrefix.trim().toLowerCase()));
+            projectId => projectId.toLowerCase().includes(projectIdPrefix.trim().toLowerCase()));
     }
 
     /** List eligible roles */
