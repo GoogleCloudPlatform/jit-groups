@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.data;
 
-import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.common.base.Preconditions;
 
 import java.util.Objects;

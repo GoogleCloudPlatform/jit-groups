@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.api.services.cloudasset.v1.model.ConditionEvaluation;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;

@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
+
 import java.util.Objects;
 
 /**

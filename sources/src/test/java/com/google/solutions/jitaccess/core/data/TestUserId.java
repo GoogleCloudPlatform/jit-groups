@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.data;
 
-import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
