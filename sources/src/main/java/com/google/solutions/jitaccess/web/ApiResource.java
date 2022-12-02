@@ -38,9 +38,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,8 +62,16 @@ public class ApiResource {
    */
   @GET
   public void getRoot() {
+    //
+    // Version 1.0 allowed static assets (including index.html) to be cached aggressively.
+    // After an upgrade, it's therefore likely that browsers still load the outdated
+    // frontend. Let the old frontend show a warning with a cache-busting link.
+    //
     throw new NotFoundException(
-      "You're viewing an outdated version of the application, please refresh your browser");
+      "You're viewing an outdated version of the application, " +
+      String.format(
+        "<a href='/?_=%s'>please refresh your browser</a>",
+        UUID.randomUUID()));
   }
 
   /**
