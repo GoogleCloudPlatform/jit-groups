@@ -1,10 +1,8 @@
 # Just-In-Time Access
 
-Just-In-Time Access is an AppEngine application that lets you manage just-in-time privileged access to Google Cloud projects.
+Just-In-Time Access is an open source application that lets you implement just-in-time privileged access to Google Cloud resources. 
 
-## Synopsis
-
-Just-In-Time Access adds the notion of _eligible role bindings_ to Cloud IAM. Unlike a [regular
+Just-In-Time Access adds _eligible role bindings_ to Cloud IAM. Unlike a [regular
 IAM role binding](https://cloud.google.com/iam/docs/overview#cloud-iam-policy), 
 an eligible role binding doesn't grant the user access to a project yet:
 Instead, a user first has to _activate_ the binding on demand by using the Just-In-Time Access application.
@@ -18,32 +16,56 @@ without having to grant them permanent access. This type of just-in-time privile
 * Conduct audits and reviews for analyzing past activity.
 
 
-## Using Just-In-Time Access
+## Request just-in-time access
 
-Just-In-Time Access uses [IAM conditions](https://cloud.google.com/iam/docs/conditions-overview) to manage eligible access:
+<a href='doc/Activation_1024.gif?raw=true'>
+<img src='doc/Activation_350.png' align='right'>
+</a>
 
-* **As an administrator** you can grant a role (to a user or group) and make it _eligible_ by 
-  adding a special IAM condition:
+As a user, you can list the roles and resources you're _eligible_ to access by using the Just-In-Time Access
+application. 
 
-  ```
-  has({}.jitAccessConstraint)
-  ```
+You can then _activate_ one or more role bindings and provide a justification for doing so. Just-In-Time Access
+then [grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access)
+to the resource.
 
-  You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
-  access to individual users, you can also use groups.
 
-* **As a user**, you can list the roles and resources you're _eligible_ to access by using the Just-In-Time Access
-  application. 
 
-  You can then _activate_ one or more role bindings and provide a justification for doing so. Just-In-Time Access
-  then [grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access)
-  to the resource.
+<img src='doc/images/pix.gif' width='100%' height='1'>
 
-  ![Screenshot](doc/screenshot-small.png)
 
-* **As an administrator**, you can use Cloud Logging to review when and why eligible roles have been activated by users.  
+## Grant just-in-time access
 
-## Deploying Just-In-Time Access
+<a href='doc/Condition.png?raw=true'>
+<img src='doc/Condition_350.png' align='right'>
+</a>
+
+As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
+
+```
+has({}.jitAccessConstraint)
+```
+
+You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
+access to individual users, you can also use groups.
+
+
+<img src='doc/images/pix.gif' width='100%' height='1'>
+
+
+## Audit just-in-time access
+
+<a href='doc/AuditLog.png?raw=true'>
+<img src='doc/AuditLog_350.png' align='right'>
+</a>
+
+As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users.  
+
+
+<img src='doc/images/pix.gif' width='100%' height='1'>
+
+
+## Deploying the application
 
 Just-In-Time Access runs on App Engine (standard) and uses Identity-Aware-Proxy for authentication and authorization.
 
