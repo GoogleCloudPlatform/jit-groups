@@ -94,7 +94,7 @@ public class LogAdapter {
     private final Map<String, String> labels;
 
     @JsonProperty("logging.googleapis.com/trace")
-    private String traceId;
+    private final String traceId;
 
     private LogEntry(
       String severity,
@@ -106,7 +106,7 @@ public class LogAdapter {
       this.message = message;
       this.traceId = traceId;
 
-      this.labels = new HashMap<String, String>();
+      this.labels = new HashMap<>();
       this.labels.put("event", eventId);
 
       if (principal != null) {
@@ -128,7 +128,7 @@ public class LogAdapter {
         //
         // Write to STDOUT, AppEngine picks it up from there.
         //
-        output.append(new ObjectMapper().writeValueAsString(this) + "\n");
+        output.append(new ObjectMapper().writeValueAsString(this)).append("\n");
       }
       catch (IOException e) {
         try {

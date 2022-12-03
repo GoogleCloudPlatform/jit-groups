@@ -58,27 +58,26 @@ public class TestRoleBinding {
 
   @Test
   public void whenObjectsAreSame_ThenEqualsReturnsTrue() {
-    var ref1 = new RoleBinding(
+    var role = new RoleBinding(
       "//full-name",
       "roles/test");
-    var ref2 = ref1;
 
-    assertTrue(ref1.equals(ref2));
-    assertTrue(ref1.equals((Object) ref2));
-    assertEquals(ref1.hashCode(), ref2.hashCode());
+    assertTrue(role.equals(role));
+    assertTrue(role.equals((Object) role));
+    assertEquals(role.hashCode(), role.hashCode());
   }
 
   @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
-    var ref1 = new RoleBinding(
+    var role1 = new RoleBinding(
       "//full-name",
       "roles/test");
-    var ref2 = new RoleBinding(
+    var role2 = new RoleBinding(
       "//full-name",
       "roles/other");
 
-    assertFalse(ref1.equals(ref2));
-    assertFalse(ref1.equals((Object) ref2));
+    assertFalse(role1.equals(role2));
+    assertFalse(role1.equals((Object) role2));
   }
 
   @Test

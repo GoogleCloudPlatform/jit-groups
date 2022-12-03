@@ -39,12 +39,9 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 
 public class RestDispatcher<TResource> {
-  private final TResource resource;
   private final Dispatcher dispatcher;
 
   public RestDispatcher(TResource resource, final UserId userId) {
-    this.resource = resource;
-
     dispatcher = MockDispatcherFactory.createDispatcher();
     dispatcher.getRegistry().addSingletonResource(resource);
 
@@ -110,7 +107,7 @@ public class RestDispatcher<TResource> {
 
     request.setAsynchronousContext(synchronousExecutionContext);
     dispatcher.invoke(request, response);
-    return new Response<TResponse>(response, responseType);
+    return new Response<>(response, responseType);
   }
 
   public <TResponse> Response<TResponse> get(

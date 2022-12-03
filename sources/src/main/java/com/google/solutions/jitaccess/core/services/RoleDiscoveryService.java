@@ -34,10 +34,7 @@ import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -227,9 +224,9 @@ public class RoleDiscoveryService {
       .collect(Collectors.toList());
     consolidatedRoles.addAll(activatedRoles);
 
-    return new Result<ProjectRole>(
+    return new Result<>(
       consolidatedRoles.stream()
-        .sorted((r1, r2) -> r1.roleBinding.fullResourceName.compareTo(r2.roleBinding.fullResourceName))
+        .sorted(Comparator.comparing(r -> r.roleBinding.fullResourceName))
         .collect(Collectors.toList()),
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
@@ -275,7 +272,7 @@ public class RoleDiscoveryService {
       roleBinding.fullResourceName,
       roleBinding.role);
 
-    var approvers = Stream.ofNullable(analysisResult.getAnalysisResults())
+    return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
 
       // Narrow down to IAM bindings with an MPA constraint.
@@ -291,8 +288,6 @@ public class RoleDiscoveryService {
       // Remove the caller.
       .filter(user -> !user.equals(callerUserId))
       .collect(Collectors.toList());
-
-    return approvers;
   }
 
   // -------------------------------------------------------------------------

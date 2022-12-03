@@ -35,7 +35,7 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 
 public class ExceptionMappers {
-  public static final Class[] ALL = new Class[] {
+  public static final Class<?>[] ALL = new Class<?>[] {
     NotAuthenticatedExceptionMapper.class,
     AccessDeniedExceptionExceptionMapper.class,
     ForbiddenExceptionMapper.class,

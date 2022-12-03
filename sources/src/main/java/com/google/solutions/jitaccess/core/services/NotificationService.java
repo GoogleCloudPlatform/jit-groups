@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
 public class NotificationService {
   private final Options options;
   private final MailAdapter mailAdapter;
-  private final String emailTemplate;
 
   public NotificationService(
     MailAdapter mailAdapter,
@@ -57,7 +56,7 @@ public class NotificationService {
     try (var stream = NotificationService.class
       .getClassLoader()
       .getResourceAsStream("ApprovalRequest.email.html")) {
-      this.emailTemplate = new String(stream.readAllBytes());
+      String emailTemplate = new String(stream.readAllBytes());
     }
     catch (IOException e) {
       throw new RuntimeException("The JAR file is missing the email template", e);
@@ -80,7 +79,7 @@ public class NotificationService {
       }
     }
     else {
-      System.out.println(notification.toString());
+      System.out.println(notification);
     }
   }
 
