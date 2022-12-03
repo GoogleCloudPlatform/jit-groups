@@ -45,7 +45,7 @@ public class XsrfRequestFilter implements ContainerRequestFilter {
   public static final String XSRF_HEADER_VALUE = "1";
 
   @Override
-  public void filter(ContainerRequestContext containerRequestContext) throws IOException {
+  public void filter(ContainerRequestContext containerRequestContext) {
     //
     // Verify that the request contains a special header. Trying to inject
     // that header from a different site would trigger a CORS check, which

@@ -64,7 +64,7 @@ public class TestApiResource {
 
   @Test
   public void whenPathNotMapped_ThenGetReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/unknown", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(404, response.getStatus());
@@ -82,7 +82,7 @@ public class TestApiResource {
         Pattern.compile("pattern"),
         Duration.ofMinutes(5)));
 
-    var response = new RestDispatcher<ApiResource>(resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(resource, SAMPLE_USER)
       .get("/api/policy", ApiResource.PolicyResponseEntity.class);
 
     assertEquals(200, response.getStatus());
@@ -98,7 +98,7 @@ public class TestApiResource {
 
   @Test
   public void postProjectsReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(405, response.getStatus());
@@ -109,7 +109,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
@@ -123,7 +123,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
@@ -137,7 +137,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenReturn(Set.of());
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
 
     assertEquals(200, response.getStatus());
@@ -152,7 +152,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenReturn(Set.of(new ProjectId("project-1"), new ProjectId("project-2")));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
 
     assertEquals(200, response.getStatus());
@@ -168,7 +168,7 @@ public class TestApiResource {
 
   @Test
   public void postProjectsRolesReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects/project-1/roles", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(405, response.getStatus());
@@ -179,7 +179,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/%20/roles", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(400, response.getStatus());
@@ -197,7 +197,7 @@ public class TestApiResource {
         eq(new ProjectId("project-1"))))
       .thenThrow(new AccessDeniedException("mock"));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
@@ -214,7 +214,7 @@ public class TestApiResource {
         eq(new ProjectId("project-1"))))
       .thenThrow(new IOException("mock"));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
@@ -233,7 +233,7 @@ public class TestApiResource {
         List.of(),
         List.of("warning")));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
 
     assertEquals(200, response.getStatus());
@@ -263,7 +263,7 @@ public class TestApiResource {
         List.of(role1, role2),
         null));
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
 
     assertEquals(200, response.getStatus());
@@ -283,7 +283,7 @@ public class TestApiResource {
 
   @Test
   public void getSelfActivateReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles/self-activate", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(405, response.getStatus());
@@ -291,7 +291,7 @@ public class TestApiResource {
 
   @Test
   public void whenBodyIsEmpty_ThenSelfActivateReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects/project-1/roles/self-activate", ExceptionMappers.ErrorEntity.class);
 
     assertEquals(415, response.getStatus());
@@ -299,7 +299,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsNull_ThenSelfActivateReturnsError() throws Exception {
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/%20/roles/self-activate",
       new ApiResource.SelfActivationRequestEntity(),
       ExceptionMappers.ErrorEntity.class);
@@ -316,7 +316,7 @@ public class TestApiResource {
     var request = new ApiResource.SelfActivationRequestEntity();
     request.roles = List.of();
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
       ExceptionMappers.ErrorEntity.class);
@@ -333,7 +333,7 @@ public class TestApiResource {
     var request = new ApiResource.SelfActivationRequestEntity();
     request.roles = List.of("roles/browser");
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
       ExceptionMappers.ErrorEntity.class);
@@ -364,7 +364,7 @@ public class TestApiResource {
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
 
-    var response = new RestDispatcher<ApiResource>(this.resource, SAMPLE_USER).post(
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
       ApiResource.SelfActivationResponseEntity.class);

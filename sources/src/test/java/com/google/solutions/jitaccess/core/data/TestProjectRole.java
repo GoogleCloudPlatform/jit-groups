@@ -93,11 +93,10 @@ public class TestProjectRole {
     var role1 = new ProjectRole(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
       ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = role1;
 
-    assertTrue(role1.equals(role2));
-    assertTrue(role1.equals((Object) role2));
-    assertEquals(role1.hashCode(), role2.hashCode());
+    assertTrue(role1.equals(role1));
+    assertTrue(role1.equals((Object) role1));
+    assertEquals(role1.hashCode(), role1.hashCode());
   }
 
   @Test

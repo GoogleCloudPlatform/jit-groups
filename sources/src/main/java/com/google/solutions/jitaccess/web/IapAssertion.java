@@ -63,7 +63,7 @@ public class IapAssertion {
       if (googleClaim.containsKey("access_levels")) {
         accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
           .stream()
-          .map(a -> a.toString())
+          .map(Object::toString)
           .collect(Collectors.toList());
       }
     }

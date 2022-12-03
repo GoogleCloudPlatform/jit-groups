@@ -61,8 +61,6 @@ public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_STATIC_PRINCIPAL = "jitaccess.principal";
 
-  private final LogAdapter logAdapter;
-
   private final boolean developmentMode;
   private final String projectId;
   private final String projectNumber;
@@ -111,7 +109,7 @@ public class RuntimeEnvironment {
     // Create a log adapter. We can't rely on injection as the adapter
     // is request-scoped.
     //
-    this.logAdapter = new LogAdapter();
+    var logAdapter = new LogAdapter();
 
     if (isRunningOnAppEngine()) {
       //
@@ -129,7 +127,7 @@ public class RuntimeEnvironment {
         this.applicationCredentials = GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
 
-        this.logAdapter
+        logAdapter
           .newInfoEntry(
             LogEvents.RUNTIME_STARTUP,
             String.format("Running in project %s (%s) as %s, version %s",
@@ -137,10 +135,10 @@ public class RuntimeEnvironment {
               this.projectNumber,
               this.applicationPrincipal,
               ApplicationVersion.VERSION_STRING))
-          .write();;
+          .write();
       }
       catch (IOException e) {
-        this.logAdapter
+        logAdapter
           .newErrorEntry(
             LogEvents.RUNTIME_STARTUP,
             "Failed to lookup instance metadata", e)
@@ -225,7 +223,7 @@ public class RuntimeEnvironment {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
-      this.logAdapter
+      logAdapter
         .newWarningEntry(
           LogEvents.RUNTIME_STARTUP,
           String.format("Running in development mode as %s", this.applicationPrincipal))
