@@ -30,6 +30,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import org.junit.jupiter.api.Test;
 
@@ -92,12 +93,12 @@ public class TestResourceManagerAdapter {
         .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr().setExpression(condition)),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       REQUEST_REASON);
   }
 
   @Test
-  public void whenReplaceBindingsForSamePrincipalAndRoleOptionOn_ThenExistingTemporaryBindingsAreRemoved() throws Exception {
+  public void whenPurgeExistingTemporaryBindingsFlagIsOn_ThenExistingTemporaryBindingsAreRemoved() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     // Add an "old" temporary IAM binding.
@@ -126,11 +127,10 @@ public class TestResourceManagerAdapter {
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
       REQUEST_REASON);
 
-    var service = new CloudResourceManager
-      .Builder(
+    var service = new CloudResourceManager.Builder(
       HttpTransport.newTransport(),
-      new GsonFactory(),
-      new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
+        new GsonFactory(),
+        new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault()))
       .build();
 
     var oldPolicy = service
@@ -165,7 +165,7 @@ public class TestResourceManagerAdapter {
           .setExpression(
             IamTemporaryAccessConditions.createExpression(
               OffsetDateTime.now(), Duration.ofMinutes(5)))),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       REQUEST_REASON);
 
     var newPolicy = service
@@ -194,5 +194,173 @@ public class TestResourceManagerAdapter {
         .stream()
         .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")),
       "permanent binding has been preserved");
+  }
+
+
+  @Test
+  public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException() throws Exception {
+    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+
+    var newBinding = new Binding()
+      .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+      .setRole("roles/browser")
+      .setCondition(new Expr()
+        .setTitle("temporary binding")
+        .setExpression(IamTemporaryAccessConditions.createExpression(OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)))));
+
+    // Add binding -> succeeds as no equivalent binding exists.
+    adapter.addProjectIamBinding(
+      IntegrationTestEnvironment.PROJECT_ID,
+      newBinding,
+      EnumSet.of(
+        ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+        ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+      "Test");
+
+    // Add same binding again -> fails.
+    assertThrows(AlreadyExistsException.class,
+      () -> adapter.addProjectIamBinding(
+        IntegrationTestEnvironment.PROJECT_ID,
+        newBinding,
+        EnumSet.of(
+          ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+          ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+        "Test"));
+
+    // Add binding again, but without flag -> succeeds
+    adapter.addProjectIamBinding(
+      IntegrationTestEnvironment.PROJECT_ID,
+      newBinding,
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
+      "Test");
+  }
+
+  //---------------------------------------------------------------------
+  // Bindings.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenBindingsEquivalentButOrderOfMembersIsDifferent_ThenEqualsIsTrue() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice", "bob"))
+      .setRole("role");
+
+    var rhs = new Binding()
+      .setMembers(List.of("bob", "alice"))
+      .setRole("role");
+
+    assertTrue(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentRole_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice", "bob"))
+      .setRole("role1");
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice", "bob"))
+      .setRole("role2");
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentMembers_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice", "bob"))
+      .setRole("role");
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role");
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentConditions_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr().setTitle("title"));
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role");
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentConditionsButConditionIsIgnored_ThenEqualsIsTrue() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr().setTitle("title"));
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role");
+
+    assertTrue(ResourceManagerAdapter.Bindings.equals(lhs, rhs, false));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentConditionExpressions_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title")
+        .setExpression("expr1"));
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title")
+        .setExpression("expr2"));
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentConditionTitles_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title1")
+        .setExpression("expr"));
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title2")
+        .setExpression("expr"));
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  @Test
+  public void whenBindingsHaveDifferentConditionDescriptions_ThenEqualsIsFalse() {
+    var lhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title")
+        .setExpression("expr"));
+
+    var rhs = new Binding()
+      .setMembers(List.of("alice"))
+      .setRole("role")
+      .setCondition(new Expr()
+        .setTitle("title")
+        .setExpression("expr")
+        .setDescription("description"));
+
+    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
   }
 }

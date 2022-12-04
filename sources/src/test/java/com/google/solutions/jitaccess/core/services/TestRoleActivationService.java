@@ -317,7 +317,7 @@ public class TestRoleActivationService {
         eq(
           EnumSet.of(
             ResourceManagerAdapter.IamBindingOptions
-              .REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE)),
+              .PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("justification"));
   }
 

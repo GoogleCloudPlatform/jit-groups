@@ -38,6 +38,8 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -104,19 +106,34 @@ public class ResourceManagerAdapter {
 
         policy.setVersion(3);
 
-        if (options.contains(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE)) {
+        if (options.contains(IamBindingOptions.FAIL_IF_BINDING_EXISTS)) {
+          if (policy.getBindings()
+            .stream()
+            .filter(b -> Bindings.equals(b, binding, true))
+            .findAny()
+            .isPresent()) {
+            //
+            // The exact same binding (incl. condition) exists.
+            //
+            throw new AlreadyExistsException("The binding already exists");
+          }
+        }
+
+        if (options.contains(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)) {
           //
-          // Remove bindings for the same principal and role.
+          // Remove existing temporary bindings for the same principal and role.
           //
           // NB. There's a hard limit on how many role bindings in a policy can
           // have the same principal and role. Removing existing bindings
           // helps avoid hitting this limit.
           //
-          Predicate<Binding> isObsolete = b ->
-            b.getRole().equals(binding.getRole())
-              && b.getMembers().equals(binding.getMembers())
-              && b.getCondition() != null
-              && IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression());
+          // NB. This check detects temporary bindings that we created, but it might not
+          // detect other temporary bindings (which might use a slightly different
+          // condition)
+          //
+          Predicate<Binding> isObsolete = b -> Bindings.equals(b, binding, false)
+            && b.getCondition() != null
+            && IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression());
 
           var nonObsoleteBindings =
             policy.getBindings().stream()
@@ -179,8 +196,51 @@ public class ResourceManagerAdapter {
     }
   }
 
+  //---------------------------------------------------------------------
+  // Inner classes.
+  //---------------------------------------------------------------------
+
+  public static class Bindings {
+    public static boolean equals(Binding lhs, Binding rhs, boolean compareCondition) {
+      if (!lhs.getRole().equals(rhs.getRole())) {
+        return  false;
+      }
+
+      if (!new HashSet<>(lhs.getMembers()).equals(new HashSet<>(rhs.getMembers()))) {
+        return false;
+      }
+
+      if (compareCondition) {
+        if ((lhs.getCondition() == null) != (rhs.getCondition() == null)) {
+          return false;
+        }
+
+        if (lhs.getCondition() != null && rhs.getCondition() != null) {
+          if (!Objects.equals(lhs.getCondition().getExpression(), rhs.getCondition().getExpression())) {
+            return false;
+          }
+
+          if (!Objects.equals(lhs.getCondition().getTitle(), rhs.getCondition().getTitle())) {
+            return false;
+          }
+
+          if (!Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription())) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+  }
+
   public enum IamBindingOptions {
     NONE,
-    REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE
+
+    /** Purge existing temporary bindings for the same principal and role */
+    PURGE_EXISTING_TEMPORARY_BINDINGS,
+
+    /** Throw an AlreadyExistsException if an equivalent binding for the same principal and role exists */
+    FAIL_IF_BINDING_EXISTS
   }
 }
