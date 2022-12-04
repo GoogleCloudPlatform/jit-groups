@@ -16,7 +16,7 @@ without having to grant them permanent access. This type of just-in-time privile
 * Conduct audits and reviews for analyzing past activity.
 
 
-## Request just-in-time access
+## Request access
 
 <a href='doc/Activation_1024.gif?raw=true'>
 <img src='doc/Activation_350.png' align='right'>
@@ -36,7 +36,7 @@ to the project.
 <img src='doc/images/pix.gif' width='100%' height='1'>
 
 
-## Grant just-in-time access
+## Grant access
 
 <a href='doc/Condition.png?raw=true'>
 <img src='doc/Condition_350.png' align='right'>
@@ -55,7 +55,7 @@ access to individual users, you can also use groups.
 <img src='doc/images/pix.gif' width='100%' height='1'>
 
 
-## Audit just-in-time access
+## Audit access
 
 <a href='doc/AuditLog.png?raw=true'>
 <img src='doc/AuditLog_350.png' align='right'>
