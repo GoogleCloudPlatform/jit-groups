@@ -29,48 +29,48 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestIamConditions {
+public class TestIamTemporaryAccessConditions {
   // -------------------------------------------------------------------------
-  // isTemporaryConditionClause.
+  // isTemporaryAccessCondition.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenExpressionIsNull_ThenIsTemporaryConditionClauseReturnsFalse() {
-    assertFalse(IamConditions.isTemporaryConditionClause(null));
+  public void whenExpressionIsNull_ThenIsTemporaryAccessConditionReturnsFalse() {
+    assertFalse(IamTemporaryAccessConditions.isTemporaryAccessCondition(null));
   }
 
   @Test
-  public void whenExpressionIsEmpty_ThenIsTemporaryConditionClauseReturnsFalse() {
-    assertFalse(IamConditions.isTemporaryConditionClause(""));
+  public void whenExpressionIsEmpty_ThenIsTemporaryAccessConditionReturnsFalse() {
+    assertFalse(IamTemporaryAccessConditions.isTemporaryAccessCondition(""));
   }
 
   @Test
-  public void whenExpressionIsTemporaryCondition_ThenIsTemporaryConditionClauseReturnsTrue() {
+  public void whenExpressionIsTemporaryCondition_ThenIsTemporaryAccessConditionReturnsTrue() {
     var clause =
       "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))  ";
 
-    assertTrue(IamConditions.isTemporaryConditionClause(clause));
+    assertTrue(IamTemporaryAccessConditions.isTemporaryAccessCondition(clause));
   }
 
   @Test
   public void
-  whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryConditionClauseReturnsTrue() {
+  whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryAccessConditionReturnsTrue() {
     var clause =
       "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";
 
-    assertFalse(IamConditions.isTemporaryConditionClause(clause));
+    assertFalse(IamTemporaryAccessConditions.isTemporaryAccessCondition(clause));
   }
 
   // -------------------------------------------------------------------------
-  // createTemporaryConditionClause.
+  // createExpression.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenDurationValid_ThenCreateTemporaryConditionClauseReturnsClause() {
+  public void whenDurationValid_ThenCreateExpressionReturnsClause() {
     var clause =
-      IamConditions.createTemporaryConditionClause(
+      IamTemporaryAccessConditions.createExpression(
         OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), Duration.ofMinutes(5));
 
     assertEquals(

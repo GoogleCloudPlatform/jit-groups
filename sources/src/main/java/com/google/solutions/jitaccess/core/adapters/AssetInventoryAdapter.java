@@ -34,7 +34,7 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -45,7 +45,7 @@ import java.util.Optional;
 /**
  * Adapter for the Asset Inventory API.
  */
-@RequestScoped
+@ApplicationScoped
 public class AssetInventoryAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int ANALYZE_IAM_POLICY_TIMEOUT_SECS = 30;

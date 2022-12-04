@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 public class JitConstraints {
   /** Condition title for activated role bindings */
-  public static final String ELEVATION_CONDITION_TITLE = "JIT access activation";
+  public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
   /** Condition that marks a role binding as eligible for JIT access */
   private static final Pattern JIT_CONDITION_PATTERN = Pattern
@@ -59,14 +59,14 @@ public class JitConstraints {
     return isConstraint(iamCondition, JIT_CONDITION_PATTERN);
   }
 
-  /** Check if the IAM condition indicates an activated role binding */
-  public static boolean isActivated(Expr iamCondition) {
-    return iamCondition != null &&
-      ELEVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
-  }
-
   /** Check if the IAM condition is an MPA constraint */
   public static boolean isMultiPartyApprovalConstraint(Expr iamCondition) {
     return isConstraint(iamCondition, MPA_CONDITION_PATTERN);
+  }
+
+  /** Check if the IAM condition indicates an activated role binding */
+  public static boolean isActivated(Expr iamCondition) {
+    return iamCondition != null &&
+      ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
   }
 }

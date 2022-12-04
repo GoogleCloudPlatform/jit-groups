@@ -32,6 +32,7 @@ import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
 import java.util.*;
@@ -42,9 +43,8 @@ import java.util.stream.Stream;
 /**
  * Service that contains the logic required to find eligible roles, and to activate them.
  */
-@RequestScoped
+@ApplicationScoped
 public class RoleDiscoveryService {
-
   private final AssetInventoryAdapter assetInventoryAdapter;
 
   private final Options options;

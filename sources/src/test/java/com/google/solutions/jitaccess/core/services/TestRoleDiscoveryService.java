@@ -457,7 +457,7 @@ public class TestRoleDiscoveryService {
       SAMPLE_ROLE,
       SAMPLE_USER,
       "time ...",
-      JitConstraints.ELEVATION_CONDITION_TITLE,
+      JitConstraints.ACTIVATION_CONDITION_TITLE,
       "TRUE");
 
     var activatedExpiredBinding = createConditionalIamPolicyAnalysisResult(
@@ -465,7 +465,7 @@ public class TestRoleDiscoveryService {
       SAMPLE_ROLE,
       SAMPLE_USER,
       "time ...",
-      JitConstraints.ELEVATION_CONDITION_TITLE,
+      JitConstraints.ACTIVATION_CONDITION_TITLE,
       "FALSE");
 
     when(assetAdapter

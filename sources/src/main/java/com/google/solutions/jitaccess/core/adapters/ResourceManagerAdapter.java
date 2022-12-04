@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.EnumSet;
@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 /**
  * Adapter for Resource Manager API.
  */
-@RequestScoped
+@ApplicationScoped
 public class ResourceManagerAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
@@ -116,7 +116,7 @@ public class ResourceManagerAdapter {
             b.getRole().equals(binding.getRole())
               && b.getMembers().equals(binding.getMembers())
               && b.getCondition() != null
-              && IamConditions.isTemporaryConditionClause(b.getCondition().getExpression());
+              && IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression());
 
           var nonObsoleteBindings =
             policy.getBindings().stream()
