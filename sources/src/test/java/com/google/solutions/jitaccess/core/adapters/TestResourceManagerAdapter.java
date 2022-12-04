@@ -142,12 +142,17 @@ public class TestResourceManagerAdapter {
       .execute();
 
     assertTrue(
-      oldPolicy.getBindings().stream().anyMatch(
-        b -> b.getCondition() != null && "old binding".equals(b.getCondition().getTitle())),
+      oldPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && "old binding".equals(b.getCondition().getTitle())),
       "old binding has been added");
     assertTrue(
-      oldPolicy.getBindings().stream().anyMatch(
-        b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())));
+      oldPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && "permanent binding".equals(b.getCondition().getTitle())),
+      "permanent binding has been added");
 
     // Add "new" temporary binding, overriding the old one.
     adapter.addProjectIamBinding(
@@ -171,11 +176,23 @@ public class TestResourceManagerAdapter {
           .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
       .execute();
 
-    assertFalse(newPolicy.getBindings().stream().anyMatch(
-      b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")));
-    assertTrue(newPolicy.getBindings().stream().anyMatch(
-      b -> b.getCondition() != null && b.getCondition().getTitle().equals("new binding")));
-    assertTrue(newPolicy.getBindings().stream().anyMatch(
-      b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")));
+    assertFalse(
+      newPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")),
+      "old binding has been removed");
+    assertTrue(
+      newPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("new binding")),
+      "new binding has been added");
+    assertTrue(
+      newPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")),
+      "permanent binding has been preserved");
   }
 }
