@@ -41,8 +41,8 @@ public class TokenService {
 
   public TokenService(
     IamCredentialsAdapter iamCredentialsAdapter,
-    Options options) {
-
+    Options options
+  ) {
     Preconditions.checkNotNull(iamCredentialsAdapter, "iamCredentialsAdapter");
     Preconditions.checkNotNull(options, "options");
 
@@ -79,8 +79,8 @@ public class TokenService {
 
   public JsonWebToken.Payload verifyToken(
     String token,
-    UserId expectedSubject) throws TokenVerifier.VerificationException {
-
+    UserId expectedSubject
+  ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
     Preconditions.checkNotNull(expectedSubject, "expectedSubject");
 

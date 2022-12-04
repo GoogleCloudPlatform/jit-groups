@@ -116,6 +116,9 @@ public class ApiResource {
     }
   }
 
+  /**
+   * List eligible roles within a project.
+   */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles")
@@ -152,6 +155,10 @@ public class ApiResource {
     }
   }
 
+  /**
+   * Self-activate one or more project roles.
+   * This is only allowed for JIT-eligible roles.
+   */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -176,6 +183,9 @@ public class ApiResource {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
 
+    //
+    // NB. The input list of roles might contain duplicates, therefore reduce to a set.
+    //
     var roleBindings = request.roles
       .stream()
       .map(r -> new RoleBinding(projectId.getFullResourceName(), r))

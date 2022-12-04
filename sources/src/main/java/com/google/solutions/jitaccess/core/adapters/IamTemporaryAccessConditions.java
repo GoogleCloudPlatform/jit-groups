@@ -26,7 +26,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAmount;
 import java.util.regex.Pattern;
 
-public class IamConditions {
+/**
+ * Helper class for creating temporary access IAM conditions.
+ */
+public class IamTemporaryAccessConditions {
   private static final String CONDITION_TEMPLATE =
     "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
@@ -36,14 +39,14 @@ public class IamConditions {
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
-  private IamConditions() {
+  private IamTemporaryAccessConditions() {
   }
 
-  public static boolean isTemporaryConditionClause(String expression) {
+  public static boolean isTemporaryAccessCondition(String expression) {
     return expression != null && CONDITION.matcher(expression).matches();
   }
 
-  public static String createTemporaryConditionClause(
+  public static String createExpression(
     OffsetDateTime startTime, OffsetDateTime endTime) {
     assert (startTime.isBefore(endTime));
 
@@ -52,15 +55,15 @@ public class IamConditions {
       startTime.format(DateTimeFormatter.ISO_DATE_TIME),
       endTime.format(DateTimeFormatter.ISO_DATE_TIME));
 
-    assert (isTemporaryConditionClause(clause));
+    assert (isTemporaryAccessCondition(clause));
 
     return clause;
   }
 
-  public static String createTemporaryConditionClause(
+  public static String createExpression(
     OffsetDateTime startTime,
     TemporalAmount duration
   ) {
-    return createTemporaryConditionClause(startTime, startTime.plus(duration));
+    return createExpression(startTime, startTime.plus(duration));
   }
 }

@@ -31,14 +31,14 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.adapters.IamConditions;
+import com.google.solutions.jitaccess.core.adapters.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.enterprise.context.RequestScoped;
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -47,9 +47,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
-@RequestScoped
+@ApplicationScoped
 public class RoleActivationService {
-
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
   private final TokenService tokenService;
@@ -193,9 +192,9 @@ public class RoleActivationService {
       .setMembers(List.of("user:" + beneficiary))
       .setRole(roleBinding.role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
-        .setTitle(JitConstraints.ELEVATION_CONDITION_TITLE)
+        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
-        .setExpression(IamConditions.createTemporaryConditionClause(activationTime, expiryTime)));
+        .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
       ProjectId.fromFullResourceName(roleBinding.fullResourceName),

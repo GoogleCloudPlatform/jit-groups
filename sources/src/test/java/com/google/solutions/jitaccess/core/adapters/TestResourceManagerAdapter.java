@@ -84,7 +84,7 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     String condition =
-      IamConditions.createTemporaryConditionClause(OffsetDateTime.now(), Duration.ofMinutes(5));
+      IamTemporaryAccessConditions.createExpression(OffsetDateTime.now(), Duration.ofMinutes(5));
 
     adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
@@ -108,7 +108,7 @@ public class TestResourceManagerAdapter {
         .setRole("roles/browser")
         .setCondition(new Expr()
           .setTitle("old binding")
-          .setExpression(IamConditions.createTemporaryConditionClause(
+          .setExpression(IamTemporaryAccessConditions.createExpression(
             OffsetDateTime.now().minusDays(1),
             Duration.ofMinutes(5)))),
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
@@ -158,7 +158,7 @@ public class TestResourceManagerAdapter {
         .setCondition(new Expr()
           .setTitle("new binding")
           .setExpression(
-            IamConditions.createTemporaryConditionClause(
+            IamTemporaryAccessConditions.createExpression(
               OffsetDateTime.now(), Duration.ofMinutes(5)))),
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
       REQUEST_REASON);

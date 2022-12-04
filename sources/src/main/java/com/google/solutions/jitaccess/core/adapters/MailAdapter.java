@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.common.base.Preconditions;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -53,7 +54,7 @@ public class MailAdapter {
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(content, "content");
 
-    Session session = Session.getDefaultInstance(
+    var session = Session.getDefaultInstance(
       this.options.smtpProperties,
       this.options.smtpAuthenticator);
 

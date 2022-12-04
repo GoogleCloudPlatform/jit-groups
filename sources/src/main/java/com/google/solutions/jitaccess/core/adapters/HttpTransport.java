@@ -29,7 +29,13 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 
+/**
+ * Factory for creating transports based on the 'javax.net.ssl.trustStore'
+ * system property.
+ */
 public class HttpTransport {
+  private HttpTransport() {}
+
   public static NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
     var trustStore = System.getProperty("javax.net.ssl.trustStore");
     var trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
@@ -37,6 +43,10 @@ public class HttpTransport {
     if (trustStore != null && trustStorePassword != null) {
       //
       // Use a custom keystore.
+      //
+      // NB. There's little reason to use a custom trust store in production, but
+      // during development, using a custom trust store is necessary if we want to
+      // trace and decrypt HTTPS traffic.
       //
       try (var trustStoreStream = new FileInputStream(trustStore)) {
         var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
