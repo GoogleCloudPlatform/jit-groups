@@ -211,6 +211,7 @@ public class ApiResource {
               roleBinding.role,
               roleBinding.fullResourceName,
               request.justification))
+          .addLabel("activationid", activation.id.toString())
           .addLabel("role", roleBinding.role)
           .addLabel("resource", roleBinding.fullResourceName)
           .addLabel("justification", request.justification)

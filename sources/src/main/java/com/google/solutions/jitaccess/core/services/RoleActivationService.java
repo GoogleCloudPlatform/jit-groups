@@ -190,7 +190,7 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(request.justification);
+    checkJustification(request.justification); // TODO: Remove check
 
     //
     // Verify that the calling user (reviewer) is allowed to (MPA-) activate
@@ -210,7 +210,7 @@ public class RoleActivationService {
     // was revoked access since the token was issued, so it's better to
     // check again.
     //
-    checkUserCanActivateProjectRole(// TODO: Test
+    checkUserCanActivateProjectRole(
       request.beneficiary,
       request.roleBinding,
       ActivationType.MPA);
