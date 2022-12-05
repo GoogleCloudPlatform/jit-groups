@@ -80,8 +80,8 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public PolicyResponseEntity getPolicy() {
-    return new PolicyResponseEntity(
+  public PolicyResponse getPolicy() {
+    return new PolicyResponse(
       this.roleActivationService.getOptions().justificationHint
     );
   }
@@ -92,7 +92,7 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
-  public ProjectsResponseEntity listProjects(
+  public ProjectsResponse listProjects(
     @Context SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
@@ -102,7 +102,7 @@ public class ApiResource {
     try {
       var projects = this.roleDiscoveryService.listAvailableProjects(iapPrincipal.getId());
 
-      return new ProjectsResponseEntity(
+      return new ProjectsResponse(
         projects.stream().map(p -> p.id).collect(Collectors.toSet()));
     }
     catch (Exception e) {
@@ -122,7 +122,7 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles")
-  public ProjectRolesResponseEntity listEligibleRoleBindings(
+  public ProjectRolesResponse listEligibleRoleBindings(
     @PathParam("projectId") String projectId,
     @Context SecurityContext securityContext
   ) throws AccessException {
@@ -140,7 +140,7 @@ public class ApiResource {
         iapPrincipal.getId(),
         new ProjectId(projectId));
 
-      return new ProjectRolesResponseEntity(
+      return new ProjectRolesResponse(
         bindings.getItems(),
         bindings.getWarnings());
     }
@@ -163,9 +163,9 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public SelfActivationResponseEntity selfActivateProjectRoles(
+  public ActivationResponse selfActivateProjectRoles(
     @PathParam("projectId") String projectIdString,
-    SelfActivationRequestEntity request,
+    SelfActivationRequest request,
     @Context SecurityContext securityContext
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
@@ -257,37 +257,46 @@ public class ApiResource {
 
     assert activations.size() == roleBindings.size();
 
-    return new SelfActivationResponseEntity(activations);
+    return new ActivationResponse(
+      activations
+        .stream()
+        .map(a -> new ActivationResponse.ActivationStatus(
+          a.id.toString(),
+          a.projectRole.roleBinding,
+          a.projectRole.status,
+          a.expiry.getEpochSecond()
+        ))
+        .collect(Collectors.toList()));
   }
 
   // -------------------------------------------------------------------------
-  // Entity classes.
+  // Request/response classes.
   // -------------------------------------------------------------------------
 
-  public static class PolicyResponseEntity {
+  public static class PolicyResponse {
     public final String justificationHint;
 
-    public PolicyResponseEntity(String justificationHint) {
+    public PolicyResponse(String justificationHint) {
       Preconditions.checkNotNull(justificationHint, "justificationHint");
       this.justificationHint = justificationHint;
     }
   }
 
-  public static class ProjectsResponseEntity {
+  public static class ProjectsResponse {
     public final Set<String> projects;
 
-    public ProjectsResponseEntity(Set<String> projects) {
+    public ProjectsResponse(Set<String> projects) {
       Preconditions.checkNotNull(projects, "projects");
       this.projects = projects;
     }
   }
 
 
-  public static class ProjectRolesResponseEntity {
+  public static class ProjectRolesResponse {
     public final List<String> warnings;
     public final List<ProjectRole> roles;
 
-    public ProjectRolesResponseEntity(
+    public ProjectRolesResponse(
       List<ProjectRole> roleBindings,
       List<String> warnings
     ) {
@@ -298,21 +307,34 @@ public class ApiResource {
     }
   }
 
-  public static class SelfActivationRequestEntity {
+  public static class SelfActivationRequest {
     public List<String> roles;
     public String justification;
 
-    public SelfActivationRequestEntity() {
+    public SelfActivationRequest() {
     }
   }
 
-  public static class SelfActivationResponseEntity {
-    public final List<RoleActivationService.Activation> activatedRoles;
+  public static class ActivationResponse {
+    public final List<ActivationStatus> items;
 
-    public SelfActivationResponseEntity(List<RoleActivationService.Activation> activatedRoles) {
-      Preconditions.checkNotNull(activatedRoles, "activatedRoles");
+    public ActivationResponse(List<ActivationStatus> items) {
+      Preconditions.checkNotNull(items);
+      this.items = items;
+    }
 
-      this.activatedRoles = activatedRoles;
+    public static class ActivationStatus {
+      public final String activationId;
+      public final RoleBinding roleBinding;
+      public final ProjectRole.Status status;
+      public final long expiry;
+
+      public ActivationStatus(String activationId, RoleBinding roleBinding, ProjectRole.Status status, long expiry) {
+        this.activationId = activationId;
+        this.roleBinding = roleBinding;
+        this.status = status;
+        this.expiry = expiry;
+      }
     }
   }
 }

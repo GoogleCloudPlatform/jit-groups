@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -83,7 +84,7 @@ public class TestApiResource {
         Duration.ofMinutes(5)));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/api/policy", ApiResource.PolicyResponseEntity.class);
+      .get("/api/policy", ApiResource.PolicyResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -138,7 +139,7 @@ public class TestApiResource {
       .thenReturn(Set.of());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
+      .get("/api/projects", ApiResource.ProjectsResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -153,7 +154,7 @@ public class TestApiResource {
       .thenReturn(Set.of(new ProjectId("project-1"), new ProjectId("project-2")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
+      .get("/api/projects", ApiResource.ProjectsResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -234,7 +235,7 @@ public class TestApiResource {
         List.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
+      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -264,7 +265,7 @@ public class TestApiResource {
         null));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
+      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -301,7 +302,7 @@ public class TestApiResource {
   public void whenProjectIsNull_ThenSelfActivateReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/%20/roles/self-activate",
-      new ApiResource.SelfActivationRequestEntity(),
+      new ApiResource.SelfActivationRequest(),
       ExceptionMappers.ErrorEntity.class);
 
     assertEquals(400, response.getStatus());
@@ -313,7 +314,7 @@ public class TestApiResource {
 
   @Test
   public void whenRolesEmpty_ThenSelfActivateReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequestEntity();
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of();
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -330,7 +331,7 @@ public class TestApiResource {
 
   @Test
   public void whenJustificationMissing_ThenSelfActivateReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequestEntity();
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser");
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -357,23 +358,24 @@ public class TestApiResource {
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
-        OffsetDateTime.now()));
+        Instant.now()));
 
-    var request = new ApiResource.SelfActivationRequestEntity();
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
-      ApiResource.SelfActivationResponseEntity.class);
+      ApiResource.ActivationResponse.class);
 
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertNotNull(body.activatedRoles);
-    assertEquals(1, body.activatedRoles.size());
-    assertEquals(roleBinding, body.activatedRoles.get(0).projectRole.roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATED, body.activatedRoles.get(0).projectRole.status);
+    assertNotNull(body.items);
+    assertEquals(1, body.items.size());
+    assertEquals(roleBinding, body.items.get(0).roleBinding);
+    assertEquals(ProjectRole.Status.ACTIVATED, body.items.get(0).status);
+    assertNotNull(ProjectRole.Status.ACTIVATED, body.items.get(0).activationId);
   }
 }

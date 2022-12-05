@@ -563,13 +563,14 @@
                             requestPane.roleTable.selected,
                             requestPane.justificationText)
 
+                        const nowUnixTimeSecs = (Date.now() / 1000);
                         const confirmationPane = gui.confirmationPane;
-                        activatedRolesResult.activatedRoles.forEach((item) => {
+                        activatedRolesResult.items.forEach((item) => {
                             confirmationPane.activatedRoleTable.addRow(
-                                item.projectRole.roleBinding.role,
-                                [item.projectRole.roleBinding.role,
-                                    backend.titleForStatus(item.projectRole.status),
-                                    `${Math.floor((new Date(item.expiry).getTime() - new Date().getTime()) / 60000)} minutes`],
+                                item.roleBinding.role,
+                                [item.roleBinding.role,
+                                    backend.titleForStatus(item.status),
+                                    `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes`],
                                 false);
                         });
 

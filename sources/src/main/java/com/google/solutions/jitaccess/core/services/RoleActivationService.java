@@ -21,9 +21,6 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.auth.oauth2.TokenVerifier;
@@ -39,7 +36,6 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
@@ -163,7 +159,7 @@ public class RoleActivationService {
     return new Activation(
       ActivationId.newId(ActivationType.JIT),
       new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
-      expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
+      expiryTime);
   }
 
   /**
@@ -247,7 +243,7 @@ public class RoleActivationService {
     return new Activation(
       request.id,
       new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
-      expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
+      expiryTime);
   }
 
   public ActivationRequest createActivationRequestForPeer( // TODO: Test
@@ -331,34 +327,18 @@ public class RoleActivationService {
   }
 
   /** Represents a successful activation of a project role */
-  public static class Activation { // TODO: Avoid serialization
+  public static class Activation {
+    public final ActivationId id;
     public final ProjectRole projectRole;
-    public final transient ActivationId id;
-    public final transient OffsetDateTime expiry;
+    public final Instant expiry;
 
-    @JsonProperty("expiry")
-    protected String getExpiryString() {
-      return this.expiry.format(DateTimeFormatter.ISO_INSTANT);
-    }
-
-    @JsonProperty("id")
-    protected String getId() {
-      return this.id.toString();
-    }
-
-    @JsonIgnore
-    private Activation(ActivationId id, ProjectRole projectRole, OffsetDateTime expiry) {
+    private Activation(ActivationId id, ProjectRole projectRole, Instant expiry) {
       this.id = id;
       this.projectRole = projectRole;
       this.expiry = expiry;
     }
 
-    @JsonCreator
-    public Activation(String id, ProjectRole projectRole, String expiry) { // TODO: Remove ctor?
-      this(new ActivationId(id), projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
-    }
-
-    public static Activation createForTestingOnly(ActivationId id, ProjectRole projectRole, OffsetDateTime expiry) {
+    public static Activation createForTestingOnly(ActivationId id, ProjectRole projectRole, Instant expiry) {
       return new Activation(id, projectRole, expiry);
     }
   }

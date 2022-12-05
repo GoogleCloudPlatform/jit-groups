@@ -109,6 +109,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
     }
   }
 
+  @Override
   public void filter(ContainerRequestContext requestContext) {
     Preconditions.checkNotNull(this.log, "log");
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");

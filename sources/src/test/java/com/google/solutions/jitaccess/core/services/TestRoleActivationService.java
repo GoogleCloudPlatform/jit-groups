@@ -165,8 +165,8 @@ public class TestRoleActivationService {
     assertTrue(activation.id.toString().startsWith("jit-"));
     assertEquals(activation.projectRole.roleBinding, roleBinding);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
-    assertTrue(activation.expiry.isAfter(OffsetDateTime.now()));
-    assertTrue(activation.expiry.isBefore(OffsetDateTime.now().plusMinutes(2)));
+    assertTrue(activation.expiry.isAfter(Instant.now().minusSeconds(60)));
+    assertTrue(activation.expiry.isBefore(Instant.now().plusSeconds(120)));
 
     verify(resourceAdapter)
       .addProjectIamBinding(
@@ -397,7 +397,7 @@ public class TestRoleActivationService {
     assertEquals(request.id, activation.id);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertEquals(roleBinding, activation.projectRole.roleBinding);
-    assertEquals(Instant.ofEpochSecond(issuedAt).plusSeconds(60).atOffset(ZoneOffset.UTC), activation.expiry);
+    assertEquals(Instant.ofEpochSecond(issuedAt).plusSeconds(60), activation.expiry);
 
     verify(resourceAdapter)
       .addProjectIamBinding(

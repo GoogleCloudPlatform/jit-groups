@@ -218,15 +218,14 @@ class DebugModel extends Model {
         }
         else {
             return Promise.resolve({
-                activatedRoles: roles.map(r => ({
-                    projectRole: {
-                        roleBinding: {
-                            fullResourceName: "//simulated",
-                            role: r
-                        },
-                        status: "SIMULATED"
+                items: roles.map(r => ({
+                    activationId: "sim-1",
+                    roleBinding: {
+                        fullResourceName: "//simulated",
+                        role: r
                     },
-                    expiry: new Date().toISOString()
+                    status: "SIMULATED",
+                    expiry: Math.floor(Date.now() / 1000) + 300
                 }))
             });
         }
