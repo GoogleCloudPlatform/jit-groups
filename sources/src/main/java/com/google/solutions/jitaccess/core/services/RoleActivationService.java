@@ -168,23 +168,23 @@ public class RoleActivationService {
    */
   public Activation activateProjectRoleForPeer(
     UserId caller,
-    String unverifiedReviewToken
+    String unverifiedActivationToken
   ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
     Preconditions.checkNotNull(caller, "caller");
-    Preconditions.checkNotNull(unverifiedReviewToken, "unverifiedReviewToken");
+    Preconditions.checkNotNull(unverifiedActivationToken, "unverifiedActivationToken");
 
     //
     // Verify and decode the token. This fails if the token has been
     // tampered with in any way, or has expired.
     //
-    var reviewToken = this.activationTokenService.verifyToken(unverifiedReviewToken); // TODO: Test
+    var activationToken = this.activationTokenService.verifyToken(unverifiedActivationToken); // TODO: Test
 
-    if (reviewToken.getBeneficiary().equals(caller)) {
+    if (activationToken.getBeneficiary().equals(caller)) {
       throw new IllegalArgumentException(
         "MPA activation requires the caller and beneficiary to be the different");
     }
 
-    if (!reviewToken.getReviewers().contains(caller)) {
+    if (!activationToken.getReviewers().contains(caller)) {
       throw new AccessDeniedException(
         String.format("The token does not permit approval by %s", caller));
     }
@@ -192,7 +192,7 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(reviewToken.getJustification());
+    checkJustification(activationToken.getJustification());
 
     //
     // Verify that the calling user (reviewer) is allowed to (MPA-) activate
@@ -201,15 +201,15 @@ public class RoleActivationService {
     //
     checkUserCanActivateProjectRole(
       caller,
-      reviewToken.getRoleBinding(),
+      activationToken.getRoleBinding(),
       ActivationType.MPA);
 
     //
     // Verify that the beneficiary allowed to (MPA-) activate this role.
     //
     checkUserCanActivateProjectRole(
-      reviewToken.getBeneficiary(),
-      reviewToken.getRoleBinding(),
+      activationToken.getBeneficiary(),
+      activationToken.getRoleBinding(),
       ActivationType.MPA);
 
     //
@@ -223,31 +223,31 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = reviewToken.getIssueTime();
+    var activationTime = activationToken.getIssueTime();
     var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
       caller.email,
-      reviewToken.getJustification());
+      activationToken.getJustification());
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + reviewToken.getBeneficiary().email))
-      .setRole(reviewToken.getRoleBinding().role)
+      .setMembers(List.of("user:" + activationToken.getBeneficiary().email))
+      .setRole(activationToken.getRoleBinding().role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(reviewToken.getRoleBinding().fullResourceName),
+      ProjectId.fromFullResourceName(activationToken.getRoleBinding().fullResourceName),
       binding,
       EnumSet.of(
         ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
         ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
-      reviewToken.getJustification());
+      activationToken.getJustification());
 
     return new Activation(
-      new ProjectRole(reviewToken.getRoleBinding(), ProjectRole.Status.ACTIVATED),
+      new ProjectRole(activationToken.getRoleBinding(), ProjectRole.Status.ACTIVATED),
       expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
