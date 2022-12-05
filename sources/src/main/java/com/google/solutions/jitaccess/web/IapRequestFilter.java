@@ -117,7 +117,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
    * Pseudo-authenticate request using debug header. Only used in debug mode.
    */
   private UserPrincipal authenticateDebugRequest(ContainerRequestContext requestContext) {
-    assert RuntimeEnvironment.isDebugModeEnabled();
+    assert this.runtimeEnvironment.isDebugModeEnabled();
 
     var debugPrincipalName = requestContext.getHeaderString(DEBUG_PRINCIPAL_HEADER);
     if (debugPrincipalName == null || debugPrincipalName.isEmpty()) {
@@ -147,7 +147,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
     Preconditions.checkNotNull(this.log, "log");
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
 
-    var principal = RuntimeEnvironment.isDebugModeEnabled()
+    var principal = this.runtimeEnvironment.isDebugModeEnabled()
       ? authenticateDebugRequest(requestContext)
       : authenticateIapRequest(requestContext);
 

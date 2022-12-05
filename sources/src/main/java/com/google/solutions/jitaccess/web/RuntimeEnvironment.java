@@ -34,6 +34,7 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
+import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
@@ -78,8 +79,7 @@ public class RuntimeEnvironment {
     }
     catch (UnknownHostException exception) {
       throw new IOException(
-        "Cannot find the metadata server. This is "
-          + "likely because code is not running on Google Cloud.",
+        "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
         exception);
     }
   }
@@ -97,11 +97,11 @@ public class RuntimeEnvironment {
     }
   }
 
-  private static boolean isRunningOnAppEngine() {
+  private boolean isRunningOnAppEngine() {
     return System.getenv().containsKey("GAE_SERVICE");
   }
 
-  public static boolean isDebugModeEnabled() {
+  public boolean isDebugModeEnabled() {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
@@ -155,23 +155,25 @@ public class RuntimeEnvironment {
       this.projectNumber = "0";
 
       try {
-        GoogleCredentials defaultCredentials = GoogleCredentials.getApplicationDefault();
+        var defaultCredentials = GoogleCredentials.getApplicationDefault();
 
-        String impersonateServiceAccount = System.getProperty(CONFIG_IMPERSONATE_SA);
+        var impersonateServiceAccount = System.getProperty(CONFIG_IMPERSONATE_SA);
         if (impersonateServiceAccount != null && !impersonateServiceAccount.isEmpty()) {
           //
           // Use the application default credentials (ADC) to impersonate a
           // service account. This can be used when using user credentials as ADC.
           //
-          this.applicationCredentials =
-            ImpersonatedCredentials.create(
-              defaultCredentials,
-              impersonateServiceAccount,
-              null,
-              Stream.of(ResourceManagerAdapter.OAUTH_SCOPE, AssetInventoryAdapter.OAUTH_SCOPE)
-                .distinct()
-                .collect(Collectors.toList()),
-              0);
+          this.applicationCredentials = ImpersonatedCredentials.create(
+            defaultCredentials,
+            impersonateServiceAccount,
+            null,
+            Stream.of(
+              ResourceManagerAdapter.OAUTH_SCOPE,
+              AssetInventoryAdapter.OAUTH_SCOPE,
+              IamCredentialsAdapter.OAUTH_SCOPE)
+              .distinct()
+              .collect(Collectors.toList()),
+            0);
 
           //
           // If we lack impersonation permissions, ImpersonatedCredentials
@@ -182,7 +184,6 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.applicationCredentials.refresh();
-
           this.applicationPrincipal = new UserId(impersonateServiceAccount);
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
@@ -190,17 +191,15 @@ public class RuntimeEnvironment {
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
-
           this.applicationPrincipal = new UserId(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         }
         else {
-          throw new RuntimeException(
-            String.format(
-              "You're using user credentials as application default "
-                + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
-                + "a service account during development",
-              CONFIG_IMPERSONATE_SA));
+          throw new RuntimeException(String.format(
+            "You're using user credentials as application default "
+              + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
+              + "a service account during development",
+            CONFIG_IMPERSONATE_SA));
         }
       }
       catch (IOException e) {
