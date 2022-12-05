@@ -196,6 +196,11 @@ public class TestRoleActivationService {
   // activateProjectRoleForPeer.
   // ---------------------------------------------------------------------
 
+  @Test
+  public void whenTokenInvalid_ThenActivateProjectRoleForPeerThrowsException() {
+    //var tokenService = new TokenService()
+  }
+
   //@Test
   //  public void whenRoleIsMpaEligibleButCallerIsSameAsBeneficiary_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
   //    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);

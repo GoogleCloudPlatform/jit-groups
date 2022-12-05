@@ -39,9 +39,12 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RoleActivationService {
@@ -182,7 +185,13 @@ public class RoleActivationService {
       this.tokenService.verifyToken(approvalToken)); // TODO: Test
 
     if (approvalRequestData.getBeneficiary().equals(caller)) {
-      throw new IllegalArgumentException("MPA activation requires the caller and beneficiary to be the different");
+      throw new IllegalArgumentException(
+        "MPA activation requires the caller and beneficiary to be the different");
+    }
+
+    if (!approvalRequestData.getReviewers().contains(caller)) {
+      throw new AccessDeniedException(
+        String.format("The token does not permit approval by %s", caller));
     }
 
     //
@@ -191,7 +200,7 @@ public class RoleActivationService {
     checkJustification(approvalRequestData.getJustification());
 
     //
-    // Verify that the (calling) user is allowed to (MPA-) activate
+    // Verify that the calling user (reviewer) is allowed to (MPA-) activate
     // this role. This is to avoid us from being tricked to grant
     // access to a role that they aren't eligible for.
     //
@@ -370,6 +379,14 @@ public class RoleActivationService {
       return new UserId(this.payload.get("beneficiary").toString());
     }
 
+    public Collection<UserId> getReviewers() {
+      var array = (String[])this.payload.get("reviewers");
+      return Arrays
+        .stream(array)
+        .map(email -> new UserId(email))
+        .collect(Collectors.toList());
+    }
+
     public String getJustification() {
       return this.payload.get("justification").toString();
     }
@@ -394,6 +411,14 @@ public class RoleActivationService {
       public Builder setBeneficiary(String beneficiary) {
         Preconditions.checkNotNull(beneficiary);
         this.payload.set("beneficiary", beneficiary);
+        return this;
+      }
+
+      public Builder setReviewers(Collection<UserId> reviewers) {
+        Preconditions.checkNotNull(reviewers);
+        this.payload.set(
+          "reviewers",
+          reviewers.stream().map(id -> id.email).collect(Collectors.toList()));
         return this;
       }
 
