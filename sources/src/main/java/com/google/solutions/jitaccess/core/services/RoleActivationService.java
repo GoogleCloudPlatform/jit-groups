@@ -188,11 +188,6 @@ public class RoleActivationService {
     }
 
     //
-    // Check that the justification looks reasonable.
-    //
-    checkJustification(request.justification); // TODO: Remove check
-
-    //
     // Verify that the calling user (reviewer) is allowed to (MPA-) activate
     // this role. This is to avoid us from being tricked to grant
     // access to a role that they aren't eligible for.

@@ -231,30 +231,6 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForPeerThrowsException() throws Exception {
-    var service = new RoleActivationService(
-      Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
-      new RoleActivationService.Options(
-        "hint",
-        Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1)));
-
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(
-        SAMPLE_PROJECT_RESOURCE_1,
-        SAMPLE_ROLE),
-      "non-numeric justification",
-      Instant.now());
-
-    assertThrows(AccessDeniedException.class,
-      () -> service.activateProjectRoleForPeer(SAMPLE_USER_2, request));
-  }
-
-  @Test
   public void whenRoleNotMpaEligibleForCaller_ThenActivateProjectRoleForPeerThrowsException() throws Exception {
     var caller = SAMPLE_USER;
     var peer = SAMPLE_USER_2;

@@ -202,7 +202,7 @@ public class ApiResource {
         assert activation != null;
         activations.add(activation);
 
-        this.logAdapter // TODO: Log activation ID
+        this.logAdapter
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
