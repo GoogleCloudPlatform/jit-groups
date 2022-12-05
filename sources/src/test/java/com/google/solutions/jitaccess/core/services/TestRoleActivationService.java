@@ -436,6 +436,131 @@ public class TestRoleActivationService {
   }
 
   // ---------------------------------------------------------------------
+  // createActivationRequestForPeer.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenJustificationDoesNotMatch_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        Pattern.compile("^\\d+$"),
+        Duration.ofMinutes(1)));
+
+    assertThrows(AccessDeniedException.class,
+      () -> service.createActivationRequestForPeer(
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER_2),
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "non-numeric justification"));
+  }
+
+  @Test
+  public void whenRoleNotMpaEligibleForCaller_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+    var caller = SAMPLE_USER;
+    var peer = SAMPLE_USER_2;
+    var roleBinding = new RoleBinding(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE);
+
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+    when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID)))
+      .thenReturn(new Result<ProjectRole>(
+        List.of(new ProjectRole(
+          roleBinding,
+          ProjectRole.Status.ACTIVATED)),
+        List.of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(AccessDeniedException.class,
+      () -> service.createActivationRequestForPeer(
+        caller,
+        Set.of(peer),
+        roleBinding,
+        "justification"));
+  }
+
+  @Test
+  public void whenRoleIsJitEligibleForCaller_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+    var caller = SAMPLE_USER;
+    var peer = SAMPLE_USER_2;
+    var roleBinding = new RoleBinding(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE);
+
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+    when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID)))
+      .thenReturn(new Result<ProjectRole>(
+        List.of(new ProjectRole(
+          roleBinding,
+          ProjectRole.Status.ELIGIBLE_FOR_JIT)),
+        List.of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(AccessDeniedException.class,
+      () -> service.createActivationRequestForPeer(
+        caller,
+        Set.of(peer),
+        roleBinding,
+        "justification"));
+  }
+
+  @Test
+  public void whenCallerEligible_ThenCreateActivationRequestForPeerSucceeds() throws Exception {
+    var caller = SAMPLE_USER;
+    var peer = SAMPLE_USER_2;
+    var roleBinding = new RoleBinding(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE);
+
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+    when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID)))
+      .thenReturn(new Result<ProjectRole>(
+        List.of(new ProjectRole(
+          roleBinding,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+        List.of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    var request = service.createActivationRequestForPeer(
+        caller,
+        Set.of(peer),
+        roleBinding,
+        "justification");
+
+    assertTrue(request.id.toString().startsWith("mpa-"));
+    assertEquals("justification", request.justification);
+    assertEquals(Set.of(peer), request.reviewers);
+    assertEquals(caller, request.beneficiary);
+    assertEquals(roleBinding, request.roleBinding);
+  }
+
+  // ---------------------------------------------------------------------
   // ActivationId.
   // ---------------------------------------------------------------------
 

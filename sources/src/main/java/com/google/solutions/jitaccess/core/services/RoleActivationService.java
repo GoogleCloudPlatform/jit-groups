@@ -272,7 +272,7 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(justification); // TODO: Test
+    checkJustification(justification);
 
     //
     // Check that the (calling) user is really allowed to (JIT/MPA-) activate
@@ -281,7 +281,7 @@ public class RoleActivationService {
     // We're not checking if the reviewers have the necessary permissions, we
     // do that on activation.
     //
-    checkUserCanActivateProjectRole(callerAndBeneficiary, roleBinding, ActivationType.MPA); // TODO: Test
+    checkUserCanActivateProjectRole(callerAndBeneficiary, roleBinding, ActivationType.MPA);
 
     //
     // Issue an activation request.
