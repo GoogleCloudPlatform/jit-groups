@@ -107,7 +107,8 @@ public class RoleActivationService {
   }
 
   /**
-   * Activate a role binding for the user themselves.
+   * Activate a role binding for the user themselves. This is only
+   * allowed for bindings with a JIT-constraint.
    */
   public Activation activateProjectRoleForSelf(
     UserId caller,
@@ -164,9 +165,10 @@ public class RoleActivationService {
   }
 
   /**
-   * Activate a role binding for a peer (MPA).
+   * Activate a role binding for a peer. This is only possible for bindings with
+   * an MPA-constraint.
    */
-  public Activation activateProjectRoleForPeer(
+  public Activation activateProjectRoleForPeer( // TODO: Rename to approveActivationRequest
     UserId caller,
     String unverifiedActivationToken
   ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
@@ -177,7 +179,11 @@ public class RoleActivationService {
     // Verify and decode the token. This fails if the token has been
     // tampered with in any way, or has expired.
     //
-    var activationToken = this.activationTokenService.verifyToken(unverifiedActivationToken); // TODO: Test
+    var activationToken = this.activationTokenService.verifyToken(unverifiedActivationToken);
+
+    assert activationToken.getRoleBinding() != null;
+    assert activationToken.getBeneficiary() != null;
+    assert activationToken.getReviewers() != null;
 
     if (activationToken.getBeneficiary().equals(caller)) {
       throw new IllegalArgumentException(
@@ -207,7 +213,12 @@ public class RoleActivationService {
     //
     // Verify that the beneficiary allowed to (MPA-) activate this role.
     //
-    checkUserCanActivateProjectRole(
+    // NB. This check is somewhat redundant to the check we're performing
+    // before issuing an approval token. But it's possible that the user
+    // was revoked access since the token was issued, so it's better to
+    // check again.
+    //
+    checkUserCanActivateProjectRole(// TODO: Test
       activationToken.getBeneficiary(),
       activationToken.getRoleBinding(),
       ActivationType.MPA);
@@ -251,7 +262,9 @@ public class RoleActivationService {
       expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
-//  public String createMultiPartyApprovalToken( // TODO: Test
+  // TODO: getActivationRequestDetails(token)
+
+//  public String requestPeerToActivateProjectRole( // TODO: Test
 //    UserId caller,
 //    Collection<UserId> reviewers,
 //    RoleBinding roleBinding,
@@ -340,7 +353,7 @@ public class RoleActivationService {
   }
 
   /** Represents a successful activation of a project role */
-  public static class Activation {
+  public static class Activation { // TODO: Avoid serialization
     public final ProjectRole projectRole;
 
     public final transient OffsetDateTime expiry;

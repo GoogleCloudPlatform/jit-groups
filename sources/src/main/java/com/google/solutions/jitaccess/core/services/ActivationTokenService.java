@@ -112,7 +112,7 @@ public class ActivationTokenService {
   public static class Payload {
     private final JsonWebToken.Payload payload;
 
-    private Payload(JsonWebToken.Payload payload) {
+    public Payload(JsonWebToken.Payload payload) {
       this.payload = payload;
     }
 
