@@ -154,6 +154,10 @@ public class ActivationTokenService {
       return (String)this.payload.getAudience();
     }
 
+    public String getId() {
+      return this.payload.getJwtId();
+    }
+
     public static class Builder {
       private final JsonWebToken.Payload payload = new JsonWebToken.Payload();
 
@@ -181,6 +185,12 @@ public class ActivationTokenService {
         Preconditions.checkNotNull(roleBinding);
         this.payload.set("resource", roleBinding.fullResourceName);
         this.payload.set("role", roleBinding.role);
+        return this;
+      }
+
+      public Builder setId(String id) {
+        Preconditions.checkNotNull(id);
+        this.payload.setJwtId(id);
         return this;
       }
 

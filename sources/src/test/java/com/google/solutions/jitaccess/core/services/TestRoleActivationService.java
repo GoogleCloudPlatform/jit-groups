@@ -114,6 +114,26 @@ public class TestRoleActivationService {
   }
 
   @Test
+  public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ActivationTokenService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        Pattern.compile("^\\d+$"),
+        Duration.ofMinutes(1)));
+
+    assertThrows(AccessDeniedException.class,
+      () -> service.activateProjectRoleForSelf(
+        SAMPLE_USER,
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "not-numeric"));
+  }
+
+  @Test
   public void whenCallerIsJitEligible_ThenActivateProjectRoleForSelfAddsBinding() throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
@@ -146,6 +166,7 @@ public class TestRoleActivationService {
       roleBinding,
       "justification");
 
+    assertTrue(activation.id.toString().startsWith("jit-"));
     assertEquals(activation.projectRole.roleBinding, roleBinding);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertTrue(activation.expiry.isAfter(OffsetDateTime.now()));
@@ -159,26 +180,6 @@ public class TestRoleActivationService {
           && b.getCondition().getDescription().contains("justification")),
         eq(EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("justification"));
-  }
-
-  @Test
-  public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
-    var service = new RoleActivationService(
-      Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ActivationTokenService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
-      new RoleActivationService.Options(
-        "hint",
-        Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1)));
-
-    assertThrows(AccessDeniedException.class,
-      () -> service.activateProjectRoleForSelf(
-        SAMPLE_USER,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        "not-numeric"));
   }
 
   // ---------------------------------------------------------------------
@@ -214,6 +215,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when (tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(caller)
         .setReviewers(List.of(caller, SAMPLE_USER_2))
         .setRoleBinding(new RoleBinding(
@@ -242,6 +244,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when (tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(SAMPLE_USER)
         .setReviewers(List.of(SAMPLE_USER_2))
         .setRoleBinding(new RoleBinding(
@@ -269,6 +272,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when(tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(SAMPLE_USER)
         .setReviewers(List.of(SAMPLE_USER_2))
         .setRoleBinding(new RoleBinding(
@@ -310,6 +314,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when(tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(peer)
         .setReviewers(List.of(caller))
         .setRoleBinding(roleBinding)
@@ -349,6 +354,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when(tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(peer)
         .setReviewers(List.of(caller))
         .setRoleBinding(roleBinding)
@@ -392,6 +398,7 @@ public class TestRoleActivationService {
     var tokenService = Mockito.mock(ActivationTokenService.class);
     when(tokenService.verifyToken(eq(token)))
       .thenReturn(new ActivationTokenService.Payload.Builder()
+        .setId("mpa-1")
         .setBeneficiary(peer)
         .setReviewers(List.of(caller))
         .setRoleBinding(roleBinding)
@@ -412,7 +419,7 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenPeerAndCallerEligible_ThenActivateProjectRoleSucceeds() throws Exception {
+  public void whenPeerAndCallerEligible_ThenActivateProjectRoleAddsBinding() throws Exception {
     var token = "token";
     var caller = SAMPLE_USER;
     var peer = SAMPLE_USER_2;
@@ -420,6 +427,7 @@ public class TestRoleActivationService {
       SAMPLE_PROJECT_RESOURCE_1,
       SAMPLE_ROLE);
 
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID)))
       .thenReturn(new Result<ProjectRole>(
@@ -440,6 +448,7 @@ public class TestRoleActivationService {
       .thenReturn(new ActivationTokenService.Payload(new JsonWebToken.Payload()
         .setIssuer("issuer")
         .setAudience("audience")
+        .setJwtId("mpa-1")
         .setIssuedAtTimeSeconds(issuedAt)
         .setExpirationTimeSeconds(2000L)
         .set("beneficiary", peer.email)
@@ -451,7 +460,7 @@ public class TestRoleActivationService {
     var service = new RoleActivationService(
       discoveryService,
       tokenService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      resourceAdapter,
       new RoleActivationService.Options(
         "hint",
         JUSTIFICATION_PATTERN,
@@ -460,8 +469,36 @@ public class TestRoleActivationService {
     var activation = service.activateProjectRoleForPeer(caller, token);
 
     assertNotNull(activation);
+    assertEquals("mpa-1", activation.id.toString());
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertEquals(roleBinding, activation.projectRole.roleBinding);
     assertEquals(Instant.ofEpochSecond(issuedAt).plusSeconds(60).atOffset(ZoneOffset.UTC), activation.expiry);
+
+    verify(resourceAdapter)
+      .addProjectIamBinding(
+        eq(SAMPLE_PROJECT_ID),
+        argThat(b -> b.getRole().equals(SAMPLE_ROLE)
+          && b.getCondition().getExpression().contains("request.time < timestamp")
+          && b.getCondition().getDescription().contains("justification")),
+        eq(EnumSet.of(
+          ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+          ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS)),
+        eq("justification"));
+  }
+
+  // ---------------------------------------------------------------------
+  // ActivationId.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenTypeIsMpa_ThenNewActivationIdUsesPrefix() {
+    var id = RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA);
+    assertTrue(id.toString().startsWith("mpa-"));
+  }
+
+  @Test
+  public void whenTypeIsJit_ThenNewActivationIdUsesPrefix() {
+    var id = RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT);
+    assertTrue(id.toString().startsWith("jit-"));
   }
 }
