@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
-  private final ReviewTokenService reviewTokenService;
+  private final ActivationTokenService activationTokenService;
   private final Options options;
 
   private void checkJustification(String justification) throws AccessDeniedException{
@@ -91,18 +91,18 @@ public class RoleActivationService {
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
-    ReviewTokenService reviewTokenService,
+    ActivationTokenService activationTokenService,
     ResourceManagerAdapter resourceManagerAdapter,
     Options configuration
   ) {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(reviewTokenService, "tokenService");
+    Preconditions.checkNotNull(activationTokenService, "tokenService");
     Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
     this.resourceManagerAdapter = resourceManagerAdapter;
-    this.reviewTokenService = reviewTokenService;
+    this.activationTokenService = activationTokenService;
     this.options = configuration;
   }
 
@@ -177,7 +177,7 @@ public class RoleActivationService {
     // Verify and decode the token. This fails if the token has been
     // tampered with in any way, or has expired.
     //
-    var reviewToken = this.reviewTokenService.verifyToken(unverifiedReviewToken); // TODO: Test
+    var reviewToken = this.activationTokenService.verifyToken(unverifiedReviewToken); // TODO: Test
 
     if (reviewToken.getBeneficiary().equals(caller)) {
       throw new IllegalArgumentException(

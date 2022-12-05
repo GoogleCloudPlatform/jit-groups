@@ -33,18 +33,23 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Creates and verifies activation tokens.
+ *
+ * An activation token is minted on behalf of a user that's requesting access to a resource,
+ * and then sent to peers for approval.
+ */
 @ApplicationScoped
-public class ReviewTokenService {
+public class ActivationTokenService {
   private final IamCredentialsAdapter iamCredentialsAdapter;
   private final Options options;
   private final TokenVerifier tokenVerifier;
 
-  public ReviewTokenService(
+  public ActivationTokenService(
     IamCredentialsAdapter iamCredentialsAdapter,
     Options options
   ) {
@@ -104,8 +109,6 @@ public class ReviewTokenService {
   // Inner classes.
   // -------------------------------------------------------------------------
 
-
-  /** Approval request data (used as token payload */
   public static class Payload {
     private final JsonWebToken.Payload payload;
 

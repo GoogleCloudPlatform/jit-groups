@@ -35,7 +35,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestReviewTokenService {
+public class TestActivationTokenService {
   private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
   private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
   private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
@@ -48,14 +48,14 @@ public class TestReviewTokenService {
   public void whenPayloadEmpty_ThenCreateTokenAddsObligatoryClaims() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new ReviewTokenService(
+    var tokenService = new ActivationTokenService(
       credentialsAdapter,
-      new ReviewTokenService.Options(
+      new ActivationTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
-    var payload = new ReviewTokenService.Payload.Builder()
+    var payload = new ActivationTokenService.Payload.Builder()
       .build();
 
     var token = tokenService.createToken(payload);
@@ -76,9 +76,9 @@ public class TestReviewTokenService {
   public void whenJwtMissesAudienceClaim_ThenVerifyTokenThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new ReviewTokenService(
+    var tokenService = new ActivationTokenService(
       credentialsAdapter,
-      new ReviewTokenService.Options(
+      new ActivationTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -95,9 +95,9 @@ public class TestReviewTokenService {
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new ReviewTokenService(
+    var tokenService = new ActivationTokenService(
       credentialsAdapter,
-      new ReviewTokenService.Options(
+      new ActivationTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -114,9 +114,9 @@ public class TestReviewTokenService {
   public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
-    var tokenService = new ReviewTokenService(
+    var tokenService = new ActivationTokenService(
       credentialsAdapter,
-      new ReviewTokenService.Options(
+      new ActivationTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -134,14 +134,14 @@ public class TestReviewTokenService {
   public void whenJwtValid_ThenVerifySucceeds() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new ReviewTokenService(
+    var tokenService = new ActivationTokenService(
       credentialsAdapter,
-      new ReviewTokenService.Options(
+      new ActivationTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
-    var payload = new ReviewTokenService.Payload.Builder()
+    var payload = new ActivationTokenService.Payload.Builder()
       .setBeneficiary(SAMPLE_USER_1)
       .setReviewers(List.of(SAMPLE_USER_2, SAMPLE_USER_3))
       .setJustification("justification")

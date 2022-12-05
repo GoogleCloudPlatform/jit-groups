@@ -42,7 +42,7 @@ import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.services.ReviewTokenService;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -273,8 +273,8 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public ReviewTokenService.Options getTokenServiceOptions() {
-    return new ReviewTokenService.Options(
+  public ActivationTokenService.Options getTokenServiceOptions() {
+    return new ActivationTokenService.Options(
       applicationPrincipal,
       Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
   }
