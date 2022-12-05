@@ -37,10 +37,7 @@ import com.google.solutions.jitaccess.core.data.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
@@ -142,8 +139,8 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = OffsetDateTime.now();
-    var expiryTime = activationTime.plus(this.options.activationDuration); // TODO: Use Instant.
+    var activationTime = Instant.now();
+    var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Self-approved, justification: %s",
       justification);
@@ -164,7 +161,7 @@ public class RoleActivationService {
 
     return new Activation(
       new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
-      expiryTime);
+      expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
   /**
@@ -222,7 +219,7 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = OffsetDateTime.ofInstant(approvalRequestData.getIssueTime(), ZoneId.systemDefault()); // TODO: Use Instant
+    var activationTime = approvalRequestData.getIssueTime();
     var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
@@ -247,7 +244,7 @@ public class RoleActivationService {
 
     return new Activation(
       new ProjectRole(approvalRequestData.getRoleBinding(), ProjectRole.Status.ACTIVATED),
-      expiryTime);
+      expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
 //  public String createMultiPartyApprovalToken( // TODO: Test

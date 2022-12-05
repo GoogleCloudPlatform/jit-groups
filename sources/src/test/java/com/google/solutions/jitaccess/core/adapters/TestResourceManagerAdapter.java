@@ -35,6 +35,7 @@ import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
@@ -85,7 +86,7 @@ public class TestResourceManagerAdapter {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     String condition =
-      IamTemporaryAccessConditions.createExpression(OffsetDateTime.now(), Duration.ofMinutes(5));
+      IamTemporaryAccessConditions.createExpression(Instant.now(), Duration.ofMinutes(5));
 
     adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
@@ -110,7 +111,7 @@ public class TestResourceManagerAdapter {
         .setCondition(new Expr()
           .setTitle("old binding")
           .setExpression(IamTemporaryAccessConditions.createExpression(
-            OffsetDateTime.now().minusDays(1),
+            Instant.now().minus(Duration.ofDays(1)),
             Duration.ofMinutes(5)))),
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
       REQUEST_REASON);
@@ -164,7 +165,7 @@ public class TestResourceManagerAdapter {
           .setTitle("new binding")
           .setExpression(
             IamTemporaryAccessConditions.createExpression(
-              OffsetDateTime.now(), Duration.ofMinutes(5)))),
+              Instant.now(), Duration.ofMinutes(5)))),
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       REQUEST_REASON);
 
@@ -206,7 +207,9 @@ public class TestResourceManagerAdapter {
       .setRole("roles/browser")
       .setCondition(new Expr()
         .setTitle("temporary binding")
-        .setExpression(IamTemporaryAccessConditions.createExpression(OffsetDateTime.now(), OffsetDateTime.now().plus(Duration.ofMinutes(1)))));
+        .setExpression(IamTemporaryAccessConditions.createExpression(
+          Instant.now(),
+          Instant.now().plus(Duration.ofMinutes(1)))));
 
     // Add binding -> succeeds as no equivalent binding exists.
     adapter.addProjectIamBinding(
