@@ -237,7 +237,7 @@ public class RoleDiscoveryService {
   /**
    * List users that can approve the activation of an eligible role binding
    */
-  public Collection<UserId> listApproversForProjectRole(
+  public Collection<UserId> listApproversForProjectRole( // TODO: Rename to listEligibleUsersForRole
     UserId callerUserId,
     RoleBinding roleBinding
   ) throws AccessException, IOException {

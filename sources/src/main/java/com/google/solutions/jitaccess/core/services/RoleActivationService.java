@@ -33,8 +33,6 @@ import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.*;
-import io.vertx.ext.auth.User;
-import org.checkerframework.checker.units.qual.A;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
@@ -170,7 +168,7 @@ public class RoleActivationService {
    * Activate a role binding for a peer. This is only possible for bindings with
    * an MPA-constraint.
    */
-  public Activation activateProjectRoleForPeer( // TODO: Rename to approveActivationRequest
+  public Activation activateProjectRoleForPeer(
     UserId caller,
     ActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
@@ -255,89 +253,45 @@ public class RoleActivationService {
       expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
-//  public ActivationTokenService.Payload verifyActivationToken( // TODO: Test
-//    String unverifiedActivationToken
-//  ) throws TokenVerifier.VerificationException {
-//    Preconditions.checkNotNull(unverifiedActivationToken, "unverifiedActivationToken");
-//
-//    //
-//    // Verify and decode the token. This fails if the token has been
-//    // tampered with in any way, or has expired.
-//    //
-//    return this.activationTokenService.verifyToken(unverifiedActivationToken);
-//  }
+  public ActivationRequest createActivationRequestForPeer( // TODO: Test
+    UserId callerAndBeneficiary,
+    Set<UserId> reviewers,
+    RoleBinding roleBinding,
+    String justification
+  ) throws AccessException, IOException {
+    Preconditions.checkNotNull(callerAndBeneficiary, "callerAndBeneficiary");
+    Preconditions.checkNotNull(reviewers, "reviewers");
+    Preconditions.checkNotNull(roleBinding, "roleBinding");
+    Preconditions.checkNotNull(justification, "justification");
 
-//  public String requestPeerToActivateProjectRole( // TODO: Test
-//    UserId caller,
-//    Collection<UserId> reviewers,
-//    RoleBinding roleBinding,
-//    String justification
-//  ) throws AccessException, IOException {
-//    Preconditions.checkNotNull(caller, "userId");
-//    Preconditions.checkNotNull(reviewers, "reviewers");
-//    Preconditions.checkNotNull(roleBinding, "roleBinding");
-//    Preconditions.checkNotNull(justification, "justification");
-//
-//    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
-//    Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
-//
-//    //
-//    // Check that the justification looks reasonable.
-//    //
-//    checkJustification(justification); // TODO: Test
-//
-//    //
-//    // Check that the (calling) user is really allowed to (JIT/MPA-) activate
-//    // this role.
-//    //
-//    // We're not checking if the reviewer has the necessary permissions, we
-//    // do that when applying the approval token.
-//    //
-//    checkUserCanActivateProjectRole(caller, roleBinding, ActivationType.MPA); // TODO: Test
-//
-//    //
-//    // Issue a token that encodes all relevant information.
-//    //
-//    return this.tokenService.createToken(
-//      new JsonWebToken.Payload()
-//        .set("user", caller)
-//        .set("reviewers", reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
-//        .set("justification", justification)
-//        .set("role", roleBinding.role)
-//        .set("project", roleBinding.fullResourceName));
-//    // TODO: Add request ID: mpa-RANDOM
-//  }
-//
-//  public Activation applyMultiPartyApprovalToken( // TODO: Test
-//    UserId caller,
-//    String token
-//  ) throws TokenVerifier.VerificationException, AccessException, IOException, AlreadyExistsException {
-//    Preconditions.checkNotNull(caller, "userId");
-//    Preconditions.checkNotNull(token, "token");
-//
-//    //
-//    // Verify and decode the token. This fails if the token has been
-//    // tampered with in any way, or has expired.
-//    //
-//    var payload = this.tokenService.verifyToken(token, caller); // TODO: Test
-//    var beneficiary = new UserId(payload.get("benf").toString());
-//    var justification = payload.get("just").toString();
-//    var roleBinding = new RoleBinding(
-//        payload.get("rsrc").toString(),
-//        payload.get("role").toString());
-//
-//    //
-//    // Activate the role binding on behalf of the beneficiary.
-//    //
-//    // The call also checks if the caller is permitted to approve.
-//    //
-//    return activateProjectRole(
-//      caller,
-//      beneficiary,
-//      roleBinding,
-//      ActivationType.MPA,
-//      justification);
-//  }
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
+
+    //
+    // Check that the justification looks reasonable.
+    //
+    checkJustification(justification); // TODO: Test
+
+    //
+    // Check that the (calling) user is really allowed to (JIT/MPA-) activate
+    // this role.
+    //
+    // We're not checking if the reviewers have the necessary permissions, we
+    // do that on activation.
+    //
+    checkUserCanActivateProjectRole(callerAndBeneficiary, roleBinding, ActivationType.MPA); // TODO: Test
+
+    //
+    // Issue an activation request.
+    //
+    return new ActivationRequest(
+      ActivationId.newId(ActivationType.MPA),
+      callerAndBeneficiary,
+      reviewers,
+      roleBinding,
+      justification,
+      Instant.now());
+  }
 
   public Options getOptions() {
     return options;
