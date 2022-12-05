@@ -194,11 +194,9 @@ public class ApiResource {
     var activations = new ArrayList<RoleActivationService.Activation>();
     for (var roleBinding : roleBindings) {
       try {
-        var activation = this.roleActivationService.activateProjectRole(
-          iapPrincipal.getId(),
+        var activation = this.roleActivationService.activateProjectRoleForSelf(
           iapPrincipal.getId(),
           roleBinding,
-          RoleActivationService.ActivationType.JIT,
           request.justification);
 
         assert activation != null;

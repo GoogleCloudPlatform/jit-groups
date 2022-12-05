@@ -350,11 +350,9 @@ public class TestApiResource {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
     when(this.resource.roleActivationService
-      .activateProjectRole(
-        eq(SAMPLE_USER),
+      .activateProjectRoleForSelf(
         eq(SAMPLE_USER),
         eq(roleBinding),
-        eq(RoleActivationService.ActivationType.JIT),
         eq("justification")))
       .thenReturn(new RoleActivationService.Activation(
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),

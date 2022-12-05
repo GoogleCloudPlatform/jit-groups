@@ -48,11 +48,11 @@ public class TestRoleActivationService {
   private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
 
   // ---------------------------------------------------------------------
-  // activateProjectRole.
+  // activateProjectRoleForSelf.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenResourceIsNotAProject_ThenActivateProjectRoleThrowsException() throws Exception {
+  public void whenResourceIsNotAProject_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
@@ -67,18 +67,16 @@ public class TestRoleActivationService {
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
+      () -> service.activateProjectRoleForSelf(
         SAMPLE_USER,
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1 + "/foo/bar",
           SAMPLE_ROLE),
-        RoleActivationService.ActivationType.JIT,
         "justification"));
   }
 
   @Test
-  public void whenUserLacksRoleBinding_ThenActivateProjectRoleThrowsException() throws Exception {
+  public void whenUserLacksRoleBinding_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
@@ -102,176 +100,16 @@ public class TestRoleActivationService {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
+      () -> service.activateProjectRoleForSelf(
         SAMPLE_USER,
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
           SAMPLE_ROLE),
-        RoleActivationService.ActivationType.JIT,
         "justification"));
   }
 
   @Test
-  public void whenRoleIsMpaEligibleButCallerIsSameAsBeneficiary_ThenActivateProjectRoleThrowsException() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
-
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.of(new ProjectRole(
-          new RoleBinding(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE),
-          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
-
-    var service = new RoleActivationService(
-      discoveryService,
-      Mockito.mock(TokenService.class),
-      resourceAdapter,
-      new RoleActivationService.Options(
-        "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
-
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
-        SAMPLE_USER,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        RoleActivationService.ActivationType.MPA,
-        "justification"));
-    assertThrows(
-      AccessDeniedException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
-        SAMPLE_USER,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        RoleActivationService.ActivationType.JIT,
-        "justification"));
-  }
-
-  @Test
-  public void whenRoleIsMpaEligibleForCallerButNotForBeneficiary_ThenActivateProjectRoleThrowsException() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
-
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.of(new ProjectRole(
-          new RoleBinding(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE),
-          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.<ProjectRole>of(),
-        List.of()));
-
-    var service = new RoleActivationService(
-      discoveryService,
-      Mockito.mock(TokenService.class),
-      resourceAdapter,
-      new RoleActivationService.Options(
-        "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
-
-    assertThrows(
-      AccessDeniedException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
-        SAMPLE_USER_2,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        RoleActivationService.ActivationType.MPA,
-        "justification"));
-  }
-
-  @Test
-  public void whenRoleIsMpaEligibleForBeneficiaryButNotForCaller_ThenActivateProjectRoleThrowsException() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
-
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.<ProjectRole>of(),
-        List.of()));
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.of(new ProjectRole(
-          new RoleBinding(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE),
-          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
-
-    var service = new RoleActivationService(
-      discoveryService,
-      Mockito.mock(TokenService.class),
-      resourceAdapter,
-      new RoleActivationService.Options(
-        "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
-
-    assertThrows(
-      AccessDeniedException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
-        SAMPLE_USER_2,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        RoleActivationService.ActivationType.MPA,
-        "justification"));
-  }
-
-  @Test
-  public void whenRoleIsJitEligibleAndCallerIsDifferentFromBeneficiary_ThenActivateProjectRoleThrowsException() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
-
-    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
-      .thenReturn(new Result<ProjectRole>(
-        List.of(new ProjectRole(
-          new RoleBinding(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE),
-          ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.of()));
-
-    var service = new RoleActivationService(
-      discoveryService,
-      Mockito.mock(TokenService.class),
-      resourceAdapter,
-      new RoleActivationService.Options(
-        "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
-
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> service.activateProjectRole(
-        SAMPLE_USER,
-        SAMPLE_USER_2,
-        new RoleBinding(
-          SAMPLE_PROJECT_RESOURCE_1,
-          SAMPLE_ROLE),
-        RoleActivationService.ActivationType.JIT,
-        "justification"));
-  }
-
-  @Test
-  public void whenRoleIsJitEligible_ThenActivateProjectRoleAddsBinding() throws Exception {
+  public void whenRoleIsJitEligible_ThenActivateProjectRoleForSelfAddsBinding() throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
@@ -296,11 +134,9 @@ public class TestRoleActivationService {
     var roleBinding = new RoleBinding(
       SAMPLE_PROJECT_RESOURCE_1,
       SAMPLE_ROLE);
-    var activation = service.activateProjectRole(
-        SAMPLE_USER,
+    var activation = service.activateProjectRoleForSelf(
         SAMPLE_USER,
         roleBinding,
-        RoleActivationService.ActivationType.JIT,
         "justification");
 
     assertEquals(activation.projectRole.roleBinding, roleBinding);
@@ -322,7 +158,7 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenRoleIsJitEligibleButJustificationDoesNotMatch_ThenActivateProjectRoleThrowsException()
+  public void whenRoleIsJitEligibleButJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException()
     throws Exception {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
@@ -348,13 +184,139 @@ public class TestRoleActivationService {
     assertThrows(
       AccessDeniedException.class,
       () ->
-        service.activateProjectRole(
-          SAMPLE_USER,
+        service.activateProjectRoleForSelf(
           SAMPLE_USER,
           new RoleBinding(
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
-          RoleActivationService.ActivationType.JIT,
           "not-numeric"));
   }
+
+  // ---------------------------------------------------------------------
+  // activateProjectRoleForPeer.
+  // ---------------------------------------------------------------------
+
+  //@Test
+  //  public void whenRoleIsMpaEligibleButCallerIsSameAsBeneficiary_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+  //    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+  //    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+  //
+  //    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
+  //      .thenReturn(new Result<ProjectRole>(
+  //        List.of(new ProjectRole(
+  //          new RoleBinding(
+  //            SAMPLE_PROJECT_RESOURCE_1,
+  //            SAMPLE_ROLE),
+  //          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+  //        List.of()));
+  //
+  //    var service = new RoleActivationService(
+  //      discoveryService,
+  //      Mockito.mock(TokenService.class),
+  //      resourceAdapter,
+  //      new RoleActivationService.Options(
+  //        "hint",
+  //        JUSTIFICATION_PATTERN,
+  //        Duration.ofMinutes(1)));
+  //
+  //    assertThrows(
+  //      IllegalArgumentException.class,
+  //      () -> service.activateProjectRoleForSelf(
+  //        SAMPLE_USER,
+  //        SAMPLE_USER,
+  //        new RoleBinding(
+  //          SAMPLE_PROJECT_RESOURCE_1,
+  //          SAMPLE_ROLE),
+  //        RoleActivationService.ActivationType.MPA,
+  //        "justification"));
+  //    assertThrows(
+  //      AccessDeniedException.class,
+  //      () -> service.activateProjectRoleForSelf(
+  //        SAMPLE_USER,
+  //        SAMPLE_USER,
+  //        new RoleBinding(
+  //          SAMPLE_PROJECT_RESOURCE_1,
+  //          SAMPLE_ROLE),
+  //        RoleActivationService.ActivationType.JIT,
+  //        "justification"));
+  //  }
+
+  //@Test
+  //  public void whenRoleIsMpaEligibleForCallerButNotForBeneficiary_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+  //    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+  //    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+  //
+  //    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
+  //      .thenReturn(new Result<ProjectRole>(
+  //        List.of(new ProjectRole(
+  //          new RoleBinding(
+  //            SAMPLE_PROJECT_RESOURCE_1,
+  //            SAMPLE_ROLE),
+  //          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+  //        List.of()));
+  //    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
+  //      .thenReturn(new Result<ProjectRole>(
+  //        List.<ProjectRole>of(),
+  //        List.of()));
+  //
+  //    var service = new RoleActivationService(
+  //      discoveryService,
+  //      Mockito.mock(TokenService.class),
+  //      resourceAdapter,
+  //      new RoleActivationService.Options(
+  //        "hint",
+  //        JUSTIFICATION_PATTERN,
+  //        Duration.ofMinutes(1)));
+  //
+  //    assertThrows(
+  //      AccessDeniedException.class,
+  //      () -> service.activateProjectRoleForSelf(
+  //        SAMPLE_USER,
+  //        SAMPLE_USER_2,
+  //        new RoleBinding(
+  //          SAMPLE_PROJECT_RESOURCE_1,
+  //          SAMPLE_ROLE),
+  //        RoleActivationService.ActivationType.MPA,
+  //        "justification"));
+  //  }
+  //
+  //  @Test
+  //  public void whenRoleIsMpaEligibleForBeneficiaryButNotForCaller_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+  //    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+  //    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+  //
+  //    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER), eq(SAMPLE_PROJECT_ID)))
+  //      .thenReturn(new Result<ProjectRole>(
+  //        List.<ProjectRole>of(),
+  //        List.of()));
+  //    when(discoveryService.listEligibleProjectRoles(eq(SAMPLE_USER_2), eq(SAMPLE_PROJECT_ID)))
+  //      .thenReturn(new Result<ProjectRole>(
+  //        List.of(new ProjectRole(
+  //          new RoleBinding(
+  //            SAMPLE_PROJECT_RESOURCE_1,
+  //            SAMPLE_ROLE),
+  //          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+  //        List.of()));
+  //
+  //    var service = new RoleActivationService(
+  //      discoveryService,
+  //      Mockito.mock(TokenService.class),
+  //      resourceAdapter,
+  //      new RoleActivationService.Options(
+  //        "hint",
+  //        JUSTIFICATION_PATTERN,
+  //        Duration.ofMinutes(1)));
+  //
+  //    assertThrows(
+  //      AccessDeniedException.class,
+  //      () -> service.activateProjectRoleForSelf(
+  //        SAMPLE_USER,
+  //        SAMPLE_USER_2,
+  //        new RoleBinding(
+  //          SAMPLE_PROJECT_RESOURCE_1,
+  //          SAMPLE_ROLE),
+  //        RoleActivationService.ActivationType.MPA,
+  //        "justification"));
+  //  }
+
 }
