@@ -26,20 +26,25 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class TokenService {
+public class ReviewTokenService {
   private final IamCredentialsAdapter iamCredentialsAdapter;
   private final Options options;
   private final TokenVerifier tokenVerifier;
 
-  public TokenService(
+  public ReviewTokenService(
     IamCredentialsAdapter iamCredentialsAdapter,
     Options options
   ) {
@@ -60,24 +65,26 @@ public class TokenService {
       .build();
   }
 
-  public String createToken(JsonWebToken.Payload payload) throws AccessException, IOException {
+  public String createToken(Payload payload) throws AccessException, IOException {
     Preconditions.checkNotNull(payload, "payload");
 
     //
     // Add obligatory claims.
     //
-    payload = payload
+    var now = Instant.now();
+    var jwtPayload = payload.payload
       .clone()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setExpirationTimeSeconds(Instant.now().plus(this.options.tokenValidity).getEpochSecond());
+      .setIssuedAtTimeSeconds(now.getEpochSecond())
+      .setExpirationTimeSeconds(now.plus(this.options.tokenValidity).getEpochSecond());
 
     return this.iamCredentialsAdapter.signJwt(
       this.options.serviceAccount,
-      payload);
+      jwtPayload);
   }
 
-  public JsonWebToken.Payload verifyToken(
+  public Payload verifyToken(
     String token
   ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
@@ -90,12 +97,95 @@ public class TokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    return decodedToken.getPayload();
+    return new Payload(decodedToken.getPayload());
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+
+  /** Approval request data (used as token payload */
+  public static class Payload {
+    private final JsonWebToken.Payload payload;
+
+    private Payload(JsonWebToken.Payload payload) {
+      this.payload = payload;
+    }
+
+    public UserId getBeneficiary() {
+      return new UserId(this.payload.get("beneficiary").toString());
+    }
+
+    public Collection<UserId> getReviewers() {
+      var list = (List<String>)this.payload.get("reviewers");
+      return list
+        .stream()
+        .map(email -> new UserId(email))
+        .collect(Collectors.toList());
+    }
+
+    public String getJustification() {
+      return this.payload.get("justification").toString();
+    }
+
+    public RoleBinding getRoleBinding() {
+      return new RoleBinding(
+        this.payload.get("resource").toString(),
+        this.payload.get("role").toString());
+    }
+
+    public Instant getIssueTime() {
+      return Instant.ofEpochSecond((Long)this.payload.get("iat"));
+    }
+
+    public Instant getExpiryTime() {
+      return Instant.ofEpochSecond((Long)this.payload.get("exp"));
+    }
+
+    public String getIssuer() {
+      return this.payload.getIssuer();
+    }
+
+    public String getAudience() {
+      return (String)this.payload.getAudience();
+    }
+
+    public static class Builder {
+      private final JsonWebToken.Payload payload = new JsonWebToken.Payload();
+
+      public Builder setBeneficiary(UserId beneficiary) {
+        Preconditions.checkNotNull(beneficiary);
+        this.payload.set("beneficiary", beneficiary.email);
+        return this;
+      }
+
+      public Builder setReviewers(Collection<UserId> reviewers) {
+        Preconditions.checkNotNull(reviewers);
+        this.payload.set(
+          "reviewers",
+          reviewers.stream().map(id -> id.email).collect(Collectors.toList()));
+        return this;
+      }
+
+      public Builder setJustification(String justification) {
+        Preconditions.checkNotNull(justification);
+        this.payload.set("justification", justification);
+        return this;
+      }
+
+      public Builder setRoleBinding(RoleBinding roleBinding) {
+        Preconditions.checkNotNull(roleBinding);
+        this.payload.set("resource", roleBinding.fullResourceName);
+        this.payload.set("role", roleBinding.role);
+        return this;
+      }
+
+      public Payload build() {
+        return new Payload(this.payload);
+      }
+    }
+  }
 
   public static class Options {
     public final UserId serviceAccount;

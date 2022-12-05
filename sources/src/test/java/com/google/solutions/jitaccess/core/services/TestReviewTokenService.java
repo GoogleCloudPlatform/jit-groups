@@ -25,14 +25,21 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.adapters.IntegrationTestEnvironment;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestTokenService {
+public class TestReviewTokenService {
+  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
+  private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
+
   // -------------------------------------------------------------------------
   // createToken.
   // -------------------------------------------------------------------------
@@ -41,20 +48,24 @@ public class TestTokenService {
   public void whenPayloadEmpty_ThenCreateTokenAddsObligatoryClaims() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new TokenService(
+    var tokenService = new ReviewTokenService(
       credentialsAdapter,
-      new TokenService.Options(
+      new ReviewTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
-    var payload = new JsonWebToken.Payload();
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
+    var payload = new ReviewTokenService.Payload.Builder()
+      .build();
 
     var token = tokenService.createToken(payload);
     var verifiedPayload = tokenService.verifyToken(token);
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
     assertEquals(serviceAccount.email, verifiedPayload.getAudience());
-    assertNotNull(verifiedPayload.getExpirationTimeSeconds());
+    assertNotNull(verifiedPayload.getIssueTime());
+    assertNotNull(verifiedPayload.getExpiryTime());
+    assertEquals(verifiedPayload.getIssueTime().plus(Duration.ofMinutes(5)), verifiedPayload.getExpiryTime());
   }
 
   // -------------------------------------------------------------------------
@@ -65,9 +76,9 @@ public class TestTokenService {
   public void whenJwtMissesAudienceClaim_ThenVerifyTokenThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new TokenService(
+    var tokenService = new ReviewTokenService(
       credentialsAdapter,
-      new TokenService.Options(
+      new ReviewTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -84,9 +95,9 @@ public class TestTokenService {
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new TokenService(
+    var tokenService = new ReviewTokenService(
       credentialsAdapter,
-      new TokenService.Options(
+      new ReviewTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -103,9 +114,9 @@ public class TestTokenService {
   public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
-    var tokenService = new TokenService(
+    var tokenService = new ReviewTokenService(
       credentialsAdapter,
-      new TokenService.Options(
+      new ReviewTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
@@ -123,18 +134,31 @@ public class TestTokenService {
   public void whenJwtValid_ThenVerifySucceeds() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new TokenService(
+    var tokenService = new ReviewTokenService(
       credentialsAdapter,
-      new TokenService.Options(
+      new ReviewTokenService.Options(
         serviceAccount,
         Duration.ofMinutes(5)));
 
-    var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
+    var payload = new ReviewTokenService.Payload.Builder()
+      .setBeneficiary(SAMPLE_USER_1)
+      .setReviewers(List.of(SAMPLE_USER_2, SAMPLE_USER_3))
+      .setJustification("justification")
+      .setRoleBinding(roleBinding)
+      .build();
 
-    var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
+    var token = tokenService.createToken(payload);
+    var verifiedPayload = tokenService.verifyToken(token);
 
-    tokenService.verifyToken(jwt);
+    assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
+    assertEquals(serviceAccount.email, verifiedPayload.getAudience());
+    assertNotNull(verifiedPayload.getExpiryTime());
+    assertEquals(SAMPLE_USER_1, verifiedPayload.getBeneficiary());
+    assertEquals(List.of(SAMPLE_USER_2, SAMPLE_USER_3), verifiedPayload.getReviewers());
+    assertEquals("justification", verifiedPayload.getJustification());
+    assertEquals(roleBinding, verifiedPayload.getRoleBinding());
+    assertNotNull(verifiedPayload.getIssueTime());
+    assertEquals(verifiedPayload.getIssueTime().plus(Duration.ofMinutes(5)), verifiedPayload.getExpiryTime());
   }
 }

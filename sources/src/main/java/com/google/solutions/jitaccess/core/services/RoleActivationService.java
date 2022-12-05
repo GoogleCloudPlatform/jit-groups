@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.services;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
@@ -39,18 +38,15 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
-  private final TokenService tokenService;
+  private final ReviewTokenService reviewTokenService;
   private final Options options;
 
   private void checkJustification(String justification) throws AccessDeniedException{
@@ -95,18 +91,18 @@ public class RoleActivationService {
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
-    TokenService tokenService,
+    ReviewTokenService reviewTokenService,
     ResourceManagerAdapter resourceManagerAdapter,
     Options configuration
   ) {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(tokenService, "tokenService");
+    Preconditions.checkNotNull(reviewTokenService, "tokenService");
     Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
     this.resourceManagerAdapter = resourceManagerAdapter;
-    this.tokenService = tokenService;
+    this.reviewTokenService = reviewTokenService;
     this.options = configuration;
   }
 
@@ -172,24 +168,23 @@ public class RoleActivationService {
    */
   public Activation activateProjectRoleForPeer(
     UserId caller,
-    String approvalToken
+    String unverifiedReviewToken
   ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
     Preconditions.checkNotNull(caller, "caller");
-    Preconditions.checkNotNull(approvalToken, "approvalToken");
+    Preconditions.checkNotNull(unverifiedReviewToken, "unverifiedReviewToken");
 
     //
     // Verify and decode the token. This fails if the token has been
     // tampered with in any way, or has expired.
     //
-    var approvalRequestData = new ApprovalRequestData(
-      this.tokenService.verifyToken(approvalToken)); // TODO: Test
+    var reviewToken = this.reviewTokenService.verifyToken(unverifiedReviewToken); // TODO: Test
 
-    if (approvalRequestData.getBeneficiary().equals(caller)) {
+    if (reviewToken.getBeneficiary().equals(caller)) {
       throw new IllegalArgumentException(
         "MPA activation requires the caller and beneficiary to be the different");
     }
 
-    if (!approvalRequestData.getReviewers().contains(caller)) {
+    if (!reviewToken.getReviewers().contains(caller)) {
       throw new AccessDeniedException(
         String.format("The token does not permit approval by %s", caller));
     }
@@ -197,7 +192,7 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(approvalRequestData.getJustification());
+    checkJustification(reviewToken.getJustification());
 
     //
     // Verify that the calling user (reviewer) is allowed to (MPA-) activate
@@ -206,15 +201,15 @@ public class RoleActivationService {
     //
     checkUserCanActivateProjectRole(
       caller,
-      approvalRequestData.getRoleBinding(),
+      reviewToken.getRoleBinding(),
       ActivationType.MPA);
 
     //
     // Verify that the beneficiary allowed to (MPA-) activate this role.
     //
     checkUserCanActivateProjectRole(
-      approvalRequestData.getBeneficiary(),
-      approvalRequestData.getRoleBinding(),
+      reviewToken.getBeneficiary(),
+      reviewToken.getRoleBinding(),
       ActivationType.MPA);
 
     //
@@ -228,31 +223,31 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = approvalRequestData.getIssueTime();
+    var activationTime = reviewToken.getIssueTime();
     var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
       caller.email,
-      approvalRequestData.getJustification());
+      reviewToken.getJustification());
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + approvalRequestData.getBeneficiary().email))
-      .setRole(approvalRequestData.getRoleBinding().role)
+      .setMembers(List.of("user:" + reviewToken.getBeneficiary().email))
+      .setRole(reviewToken.getRoleBinding().role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(approvalRequestData.getRoleBinding().fullResourceName),
+      ProjectId.fromFullResourceName(reviewToken.getRoleBinding().fullResourceName),
       binding,
       EnumSet.of(
         ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
         ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
-      approvalRequestData.getJustification());
+      reviewToken.getJustification());
 
     return new Activation(
-      new ProjectRole(approvalRequestData.getRoleBinding(), ProjectRole.Status.ACTIVATED),
+      new ProjectRole(reviewToken.getRoleBinding(), ProjectRole.Status.ACTIVATED),
       expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
@@ -364,97 +359,6 @@ public class RoleActivationService {
     @JsonCreator
     public Activation(ProjectRole projectRole, String expiry) {
       this(projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
-    }
-  }
-
-  /** Approval request data (used as token payload */
-  public class ApprovalRequestData {
-    private final JsonWebToken.Payload payload;
-
-    public ApprovalRequestData(JsonWebToken.Payload payload) {
-      this.payload = payload;
-    }
-
-    public UserId getBeneficiary() {
-      return new UserId(this.payload.get("beneficiary").toString());
-    }
-
-    public Collection<UserId> getReviewers() {
-      var array = (String[])this.payload.get("reviewers");
-      return Arrays
-        .stream(array)
-        .map(email -> new UserId(email))
-        .collect(Collectors.toList());
-    }
-
-    public String getJustification() {
-      return this.payload.get("justification").toString();
-    }
-
-    public RoleBinding getRoleBinding() {
-      return new RoleBinding(
-        this.payload.get("project").toString(),
-        this.payload.get("role").toString());
-    }
-
-    public Instant getIssueTime() {
-      return Instant.ofEpochSecond((Long)this.payload.get("iat"));
-    }
-
-    public Instant getExpiryTime() {
-      return Instant.ofEpochSecond((Long)this.payload.get("exp"));
-    }
-
-    public class Builder {
-      private final JsonWebToken.Payload payload = new JsonWebToken.Payload();
-
-      public Builder setBeneficiary(String beneficiary) {
-        Preconditions.checkNotNull(beneficiary);
-        this.payload.set("beneficiary", beneficiary);
-        return this;
-      }
-
-      public Builder setReviewers(Collection<UserId> reviewers) {
-        Preconditions.checkNotNull(reviewers);
-        this.payload.set(
-          "reviewers",
-          reviewers.stream().map(id -> id.email).collect(Collectors.toList()));
-        return this;
-      }
-
-      public Builder setJustification(String justification) {
-        Preconditions.checkNotNull(justification);
-        this.payload.set("justification", justification);
-        return this;
-      }
-
-      public Builder setRoleBinding(RoleBinding roleBinding) {
-        Preconditions.checkNotNull(roleBinding);
-        this.payload.set("roleBinding", roleBinding);
-        return this;
-      }
-
-      public Builder setIssuer(String issuer) {
-        Preconditions.checkNotNull(issuer);
-        this.payload.set("issuer", issuer);
-        return this;
-      }
-
-      public Builder setIssueTime(Instant iat) {
-        Preconditions.checkNotNull(iat);
-        this.payload.set("iat", iat);
-        return this;
-      }
-
-      public Builder setExpiryTime(Instant exp) {
-        Preconditions.checkNotNull(exp);
-        this.payload.set("exp", exp);
-        return this;
-      }
-
-      public JsonWebToken.Payload build() {
-        return  this.payload;
-      }
     }
   }
 
