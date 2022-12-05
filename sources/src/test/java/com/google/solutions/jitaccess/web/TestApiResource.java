@@ -354,7 +354,7 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         eq(roleBinding),
         eq("justification")))
-      .thenReturn(new RoleActivationService.Activation(
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
         OffsetDateTime.now()));

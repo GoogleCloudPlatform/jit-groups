@@ -33,6 +33,8 @@ import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.*;
+import io.vertx.ext.auth.User;
+import org.checkerframework.checker.units.qual.A;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
@@ -42,13 +44,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @ApplicationScoped
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
-  private final ActivationTokenService activationTokenService;
   private final Options options;
 
   private void checkJustification(String justification) throws AccessDeniedException{
@@ -93,18 +95,15 @@ public class RoleActivationService {
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
-    ActivationTokenService activationTokenService,
     ResourceManagerAdapter resourceManagerAdapter,
     Options configuration
   ) {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(activationTokenService, "tokenService");
     Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
     this.resourceManagerAdapter = resourceManagerAdapter;
-    this.activationTokenService = activationTokenService;
     this.options = configuration;
   }
 
@@ -173,28 +172,17 @@ public class RoleActivationService {
    */
   public Activation activateProjectRoleForPeer( // TODO: Rename to approveActivationRequest
     UserId caller,
-    String unverifiedActivationToken
+    ActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
     Preconditions.checkNotNull(caller, "caller");
-    Preconditions.checkNotNull(unverifiedActivationToken, "unverifiedActivationToken");
+    Preconditions.checkNotNull(request, "request");
 
-    //
-    // Verify and decode the token. This fails if the token has been
-    // tampered with in any way, or has expired.
-    //
-    var activationToken = this.activationTokenService.verifyToken(unverifiedActivationToken);
-
-    assert activationToken.getRoleBinding() != null;
-    assert activationToken.getBeneficiary() != null;
-    assert activationToken.getReviewers() != null;
-    assert activationToken.getId() != null;
-
-    if (activationToken.getBeneficiary().equals(caller)) {
+    if (request.beneficiary.equals(caller)) {
       throw new IllegalArgumentException(
         "MPA activation requires the caller and beneficiary to be the different");
     }
 
-    if (!activationToken.getReviewers().contains(caller)) {
+    if (!request.reviewers.contains(caller)) {
       throw new AccessDeniedException(
         String.format("The token does not permit approval by %s", caller));
     }
@@ -202,7 +190,7 @@ public class RoleActivationService {
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(activationToken.getJustification());
+    checkJustification(request.justification);
 
     //
     // Verify that the calling user (reviewer) is allowed to (MPA-) activate
@@ -211,7 +199,7 @@ public class RoleActivationService {
     //
     checkUserCanActivateProjectRole(
       caller,
-      activationToken.getRoleBinding(),
+      request.roleBinding,
       ActivationType.MPA);
 
     //
@@ -223,8 +211,8 @@ public class RoleActivationService {
     // check again.
     //
     checkUserCanActivateProjectRole(// TODO: Test
-      activationToken.getBeneficiary(),
-      activationToken.getRoleBinding(),
+      request.beneficiary,
+      request.roleBinding,
       ActivationType.MPA);
 
     //
@@ -238,36 +226,46 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = activationToken.getIssueTime();
+    var activationTime = request.creationTime;
     var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
       caller.email,
-      activationToken.getJustification());
+      request.justification);
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + activationToken.getBeneficiary().email))
-      .setRole(activationToken.getRoleBinding().role)
+      .setMembers(List.of("user:" + request.beneficiary.email))
+      .setRole(request.roleBinding.role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(activationToken.getRoleBinding().fullResourceName),
+      ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
       binding,
       EnumSet.of(
         ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
         ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
-      activationToken.getJustification());
+      request.justification);
 
     return new Activation(
-      new ActivationId(activationToken.getId()),
-      new ProjectRole(activationToken.getRoleBinding(), ProjectRole.Status.ACTIVATED),
+      request.id,
+      new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
       expiryTime.atOffset(ZoneOffset.UTC)); // TODO: Return instant instead?
   }
 
-  // TODO: getActivationRequestDetails(token)
+//  public ActivationTokenService.Payload verifyActivationToken( // TODO: Test
+//    String unverifiedActivationToken
+//  ) throws TokenVerifier.VerificationException {
+//    Preconditions.checkNotNull(unverifiedActivationToken, "unverifiedActivationToken");
+//
+//    //
+//    // Verify and decode the token. This fails if the token has been
+//    // tampered with in any way, or has expired.
+//    //
+//    return this.activationTokenService.verifyToken(unverifiedActivationToken);
+//  }
 
 //  public String requestPeerToActivateProjectRole( // TODO: Test
 //    UserId caller,
@@ -357,35 +355,7 @@ public class RoleActivationService {
     MPA
   }
 
-  /** Represents a successful activation of a project role */
-  public static class Activation { // TODO: Avoid serialization
-    public final ProjectRole projectRole;
-    public final transient ActivationId id;
-    public final transient OffsetDateTime expiry;
-
-    @JsonProperty("expiry")
-    protected String getExpiryString() {
-      return this.expiry.format(DateTimeFormatter.ISO_INSTANT);
-    }
-
-    @JsonProperty("id")
-    protected String getId() {
-      return this.id.toString();
-    }
-
-    @JsonIgnore
-    public Activation(ActivationId id, ProjectRole projectRole, OffsetDateTime expiry) {
-      this.id = id;
-      this.projectRole = projectRole;
-      this.expiry = expiry;
-    }
-
-    @JsonCreator
-    public Activation(String id, ProjectRole projectRole, String expiry) { // TODO: Remove ctor?
-      this(new ActivationId(id), projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
-    }
-  }
-
+  /** Unique ID for an activation */
   public static class ActivationId {
     private static final SecureRandom random = new SecureRandom();
 
@@ -406,6 +376,87 @@ public class RoleActivationService {
     @Override
     public String toString() {
       return this.id;
+    }
+  }
+
+  /** Represents a successful activation of a project role */
+  public static class Activation { // TODO: Avoid serialization
+    public final ProjectRole projectRole;
+    public final transient ActivationId id;
+    public final transient OffsetDateTime expiry;
+
+    @JsonProperty("expiry")
+    protected String getExpiryString() {
+      return this.expiry.format(DateTimeFormatter.ISO_INSTANT);
+    }
+
+    @JsonProperty("id")
+    protected String getId() {
+      return this.id.toString();
+    }
+
+    @JsonIgnore
+    private Activation(ActivationId id, ProjectRole projectRole, OffsetDateTime expiry) {
+      this.id = id;
+      this.projectRole = projectRole;
+      this.expiry = expiry;
+    }
+
+    @JsonCreator
+    public Activation(String id, ProjectRole projectRole, String expiry) { // TODO: Remove ctor?
+      this(new ActivationId(id), projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
+    }
+
+    public static Activation createForTestingOnly(ActivationId id, ProjectRole projectRole, OffsetDateTime expiry) {
+      return new Activation(id, projectRole, expiry);
+    }
+  }
+
+  public static class ActivationRequest {
+    public final ActivationId id;
+    public final UserId beneficiary;
+    public final Set<UserId> reviewers;
+    public final RoleBinding roleBinding;
+    public final String justification;
+    public final Instant creationTime;
+    public final Duration validity;
+
+    private ActivationRequest(
+      ActivationId id,
+      UserId beneficiary,
+      Set<UserId> reviewers,
+      RoleBinding roleBinding,
+      String justification,
+      Instant creationTime,
+      Duration validity
+    ) {
+      Preconditions.checkNotNull(id);
+      Preconditions.checkNotNull(beneficiary);
+      Preconditions.checkNotNull(reviewers);
+      Preconditions.checkNotNull(roleBinding);
+      Preconditions.checkNotNull(justification);
+      Preconditions.checkNotNull(creationTime);
+      Preconditions.checkNotNull(validity);
+
+      this.id = id;
+      this.beneficiary = beneficiary;
+      this.reviewers = reviewers;
+      this.roleBinding = roleBinding;
+      this.justification = justification;
+      this.creationTime = creationTime;
+      this.validity = validity;
+    }
+
+    public static ActivationRequest createForTestingOnly(
+      ActivationId id,
+      UserId beneficiary,
+      Set<UserId> reviewers,
+      RoleBinding roleBinding,
+      String justification,
+      Instant creationTime,
+      Duration validity
+      ) {
+      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, creationTime, validity);
     }
   }
 
