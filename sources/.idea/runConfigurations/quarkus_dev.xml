@@ -32,7 +32,7 @@
               <option value="-Dsuspend=y" />
               <option value="-Ddebug=true" />
               <option value="-Djitaccess.impersonateServiceAccount=jitaccess@jpassing-jitaccess-dev.iam.gserviceaccount.com" />
-              <option value="-Djitaccess.principal=jpassing-delegated@cloud.ntdev.net" />
+              <option value="-Djitaccess.debug=true" />
               <option value="-Djavax.net.ssl.trustStore=$PROJECT_DIR$/../../../FiddlerRoot.jks" />
               <option value="-Djavax.net.ssl.trustStorePassword=changeit" />
               <option value="-DproxyHost=127.0.0.1" />

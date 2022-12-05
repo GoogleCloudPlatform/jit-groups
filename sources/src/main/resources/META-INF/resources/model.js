@@ -24,6 +24,10 @@ class Model {
         return this._policy;
     }
 
+    _getHeaders() {
+        return { "X-JITACCESS": "1" };
+    }
+
     _formatError(error) {
         let message = (error.responseJSON && error.responseJSON.message)
             ? error.responseJSON.message
@@ -46,7 +50,7 @@ class Model {
             this._policy = await $.ajax({
                 url: "/api/policy",
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -59,7 +63,7 @@ class Model {
             return await $.ajax({
                 url: "/api/projects",
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -90,7 +94,7 @@ class Model {
             return await $.ajax({
                 url: `/api/projects/${projectId}/roles`,
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -114,7 +118,7 @@ class Model {
                     roles: roles,
                     justification: justification
                 }),
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -128,6 +132,10 @@ class DebugModel extends Model {
         super();
         $("body").append(`
             <div id="debug-pane">
+                <div>
+                Principal: <input type="text" id="debug-principal"/>
+                </div>
+                <hr/>
                 <div>
                     listProjects:
                     <select id="debug-listProjects">
@@ -158,6 +166,12 @@ class DebugModel extends Model {
                 </div>
             </div>
         `);
+
+        // Persist settings
+        $("#debug-principal").val(localStorage.getItem("debug-principal"))
+        $("#debug-principal").change(() => {
+            localStorage.setItem("debug-principal", $("#debug-principal").val());
+        });
     }
 
     get policy() {
@@ -166,7 +180,16 @@ class DebugModel extends Model {
         };
     }
 
-    async fetchPolicy() {}
+    async fetchPolicy() { }
+
+    _getHeaders() {
+        const headers = super._getHeaders();
+        const principal = $("#debug-principal").val();
+        if (principal) {
+            headers["X-Debug-Principal"] = principal;
+        }
+        return headers;
+    }
 
     async listRoles(projectId) {
         var setting = $("#debug-listRoles").val();

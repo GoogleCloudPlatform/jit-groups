@@ -51,6 +51,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   private static final String IAP_ISSUER_URL = "https://cloud.google.com/iap";
   private static final String IAP_ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
+  private static final String DEBUG_PRINCIPAL_HEADER = "x-debug-principal";
 
   @Inject
   LogAdapter log;
@@ -58,7 +59,10 @@ public class IapRequestFilter implements ContainerRequestFilter {
   @Inject
   RuntimeEnvironment runtimeEnvironment;
 
-  private UserPrincipal authenticateRequest(ContainerRequestContext requestContext) {
+  /**
+   * Authenticate request using IAP assertion.
+   */
+  private UserPrincipal authenticateIapRequest(ContainerRequestContext requestContext) {
     //
     // Read IAP assertion header and validate it.
     //
@@ -109,15 +113,43 @@ public class IapRequestFilter implements ContainerRequestFilter {
     }
   }
 
+  /**
+   * Pseudo-authenticate request using debug header. Only used in debug mode.
+   */
+  private UserPrincipal authenticateDebugRequest(ContainerRequestContext requestContext) {
+    assert RuntimeEnvironment.isDebugModeEnabled();
+
+    var debugPrincipalName = requestContext.getHeaderString(DEBUG_PRINCIPAL_HEADER);
+    if (debugPrincipalName == null || debugPrincipalName.isEmpty()) {
+      throw new ForbiddenException(DEBUG_PRINCIPAL_HEADER + " not set");
+    }
+
+    return new UserPrincipal() {
+      @Override
+      public String getName() {
+        return debugPrincipalName;
+      }
+
+      @Override
+      public UserId getId() {
+        return new UserId(debugPrincipalName);
+      }
+
+      @Override
+      public DeviceInfo getDevice() {
+        return DeviceInfo.UNKNOWN;
+      }
+    };
+  }
+
   @Override
   public void filter(ContainerRequestContext requestContext) {
     Preconditions.checkNotNull(this.log, "log");
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
 
-    var principal =
-      this.runtimeEnvironment.getStaticPrincipal() == null
-        ? authenticateRequest(requestContext)
-        : this.runtimeEnvironment.getStaticPrincipal();
+    var principal = RuntimeEnvironment.isDebugModeEnabled()
+      ? authenticateDebugRequest(requestContext)
+      : authenticateIapRequest(requestContext);
 
     this.log.setPrincipal(principal);
 

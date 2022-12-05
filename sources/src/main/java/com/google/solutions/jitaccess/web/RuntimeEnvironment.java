@@ -36,9 +36,7 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
-import com.google.solutions.jitaccess.core.data.DeviceInfo;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
@@ -59,12 +57,11 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
-  private static final String CONFIG_STATIC_PRINCIPAL = "jitaccess.principal";
+  private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
 
   private final boolean developmentMode;
   private final String projectId;
   private final String projectNumber;
-  private final UserPrincipal staticPrincipal;
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
@@ -104,6 +101,10 @@ public class RuntimeEnvironment {
     return System.getenv().containsKey("GAE_SERVICE");
   }
 
+  public static boolean isDebugModeEnabled() {
+    return Boolean.getBoolean(CONFIG_DEBUG_MODE);
+  }
+
   public RuntimeEnvironment() {
     //
     // Create a log adapter. We can't rely on injection as the adapter
@@ -122,7 +123,6 @@ public class RuntimeEnvironment {
         this.developmentMode = false;
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
-        this.staticPrincipal = null; // Use proper IAP authentication.
 
         this.applicationCredentials = GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
@@ -146,29 +146,13 @@ public class RuntimeEnvironment {
         throw new RuntimeException("Failed to initialize runtime environment", e);
       }
     }
-    else {
+    else if (isDebugModeEnabled()) {
       //
-      // Running in development mode.
+      // Running in debug mode.
       //
       this.developmentMode = true;
       this.projectId = "dev";
       this.projectNumber = "0";
-      this.staticPrincipal = new UserPrincipal() {
-        @Override
-        public UserId getId() {
-          return new UserId(getName(), getName());
-        }
-
-        @Override
-        public DeviceInfo getDevice() {
-          return DeviceInfo.UNKNOWN;
-        }
-
-        @Override
-        public String getName() {
-          return System.getProperty(CONFIG_STATIC_PRINCIPAL, "developer@example.com");
-        }
-      };
 
       try {
         GoogleCredentials defaultCredentials = GoogleCredentials.getApplicationDefault();
@@ -229,6 +213,10 @@ public class RuntimeEnvironment {
           String.format("Running in development mode as %s", this.applicationPrincipal))
         .write();
     }
+    else {
+      throw new RuntimeException(
+        "Application is not running on AppEngine, and debug mode is disabled. Aborting startup");
+    }
   }
 
   public String getProjectId() {
@@ -237,10 +225,6 @@ public class RuntimeEnvironment {
 
   public String getProjectNumber() {
     return projectNumber;
-  }
-
-  public UserPrincipal getStaticPrincipal() {
-    return staticPrincipal;
   }
 
   public UserId getApplicationPrincipal() {
