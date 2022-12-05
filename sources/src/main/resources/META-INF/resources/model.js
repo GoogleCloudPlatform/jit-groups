@@ -167,10 +167,20 @@ class DebugModel extends Model {
             </div>
         `);
 
-        // Persist settings
-        $("#debug-principal").val(localStorage.getItem("debug-principal"))
-        $("#debug-principal").change(() => {
-            localStorage.setItem("debug-principal", $("#debug-principal").val());
+        //
+        // Persist settings.
+        //
+        [
+            "debug-principal",
+            "debug-listProjects",
+            "debug-listRoles",
+            "debug-selfActivateRoles"
+        ].forEach(setting => {
+
+            $("#" + setting).val(localStorage.getItem(setting))
+            $("#" + setting).change(() => {
+                localStorage.setItem(setting, $("#" + setting).val());
+            });
         });
     }
 
