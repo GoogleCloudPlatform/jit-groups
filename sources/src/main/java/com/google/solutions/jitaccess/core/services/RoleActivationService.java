@@ -361,7 +361,7 @@ public class RoleActivationService {
 
     private final String id;
 
-    private ActivationId(String id) {
+    protected ActivationId(String id) {
       Preconditions.checkNotNull(id);
       this.id = id;
     }
@@ -419,16 +419,14 @@ public class RoleActivationService {
     public final RoleBinding roleBinding;
     public final String justification;
     public final Instant creationTime;
-    public final Duration validity;
 
-    private ActivationRequest(
+    protected ActivationRequest(
       ActivationId id,
       UserId beneficiary,
       Set<UserId> reviewers,
       RoleBinding roleBinding,
       String justification,
-      Instant creationTime,
-      Duration validity
+      Instant creationTime
     ) {
       Preconditions.checkNotNull(id);
       Preconditions.checkNotNull(beneficiary);
@@ -436,7 +434,6 @@ public class RoleActivationService {
       Preconditions.checkNotNull(roleBinding);
       Preconditions.checkNotNull(justification);
       Preconditions.checkNotNull(creationTime);
-      Preconditions.checkNotNull(validity);
 
       this.id = id;
       this.beneficiary = beneficiary;
@@ -444,7 +441,6 @@ public class RoleActivationService {
       this.roleBinding = roleBinding;
       this.justification = justification;
       this.creationTime = creationTime;
-      this.validity = validity;
     }
 
     public static ActivationRequest createForTestingOnly(
@@ -453,10 +449,9 @@ public class RoleActivationService {
       Set<UserId> reviewers,
       RoleBinding roleBinding,
       String justification,
-      Instant creationTime,
-      Duration validity
+      Instant creationTime
       ) {
-      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, creationTime, validity);
+      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, creationTime);
     }
   }
 

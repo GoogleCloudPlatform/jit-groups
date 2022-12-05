@@ -31,7 +31,9 @@ import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,7 +47,7 @@ public class TestActivationTokenService {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenPayloadEmpty_ThenCreateTokenAddsObligatoryClaims() throws Exception {
+  public void createTokenAddsObligatoryClaims() throws Exception {
     var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
     var tokenService = new ActivationTokenService(
@@ -54,18 +56,30 @@ public class TestActivationTokenService {
         serviceAccount,
         Duration.ofMinutes(5)));
 
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
-    var payload = new ActivationTokenService.Payload.Builder()
-      .build();
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER_1,
+      Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
+      new RoleBinding(new ProjectId("project-1"), "roles/role-1"),
+      "justification",
+      Instant.now());
 
-    var token = tokenService.createToken(payload);
-    var verifiedPayload = tokenService.verifyToken(token);
+    var token = tokenService.createToken(request);
+
+    var verifiedPayload = TokenVerifier
+      .newBuilder()
+      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(serviceAccount))
+      .setIssuer(serviceAccount.email)
+      .setAudience(serviceAccount.email)
+      .build()
+      .verify(token)
+      .getPayload();
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
     assertEquals(serviceAccount.email, verifiedPayload.getAudience());
-    assertNotNull(verifiedPayload.getIssueTime());
-    assertNotNull(verifiedPayload.getExpiryTime());
-    assertEquals(verifiedPayload.getIssueTime().plus(Duration.ofMinutes(5)), verifiedPayload.getExpiryTime());
+    assertNotNull(verifiedPayload.getIssuedAtTimeSeconds());
+    assertNotNull(verifiedPayload.getExpirationTimeSeconds());
+    assertEquals(verifiedPayload.getIssuedAtTimeSeconds() + 5 * 60, verifiedPayload.getExpirationTimeSeconds());
   }
 
   // -------------------------------------------------------------------------
@@ -140,25 +154,21 @@ public class TestActivationTokenService {
         serviceAccount,
         Duration.ofMinutes(5)));
 
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/role-1");
-    var payload = new ActivationTokenService.Payload.Builder()
-      .setBeneficiary(SAMPLE_USER_1)
-      .setReviewers(List.of(SAMPLE_USER_2, SAMPLE_USER_3))
-      .setJustification("justification")
-      .setRoleBinding(roleBinding)
-      .build();
+    var inputRequest = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER_1,
+      Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
+      new RoleBinding(new ProjectId("project-1"), "roles/role-1"),
+      "justification",
+      Instant.now());
 
-    var token = tokenService.createToken(payload);
-    var verifiedPayload = tokenService.verifyToken(token);
+    var token = tokenService.createToken(inputRequest);
+    var outputRequest = tokenService.verifyToken(token);
 
-    assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
-    assertEquals(serviceAccount.email, verifiedPayload.getAudience());
-    assertNotNull(verifiedPayload.getExpiryTime());
-    assertEquals(SAMPLE_USER_1, verifiedPayload.getBeneficiary());
-    assertEquals(List.of(SAMPLE_USER_2, SAMPLE_USER_3), verifiedPayload.getReviewers());
-    assertEquals("justification", verifiedPayload.getJustification());
-    assertEquals(roleBinding, verifiedPayload.getRoleBinding());
-    assertNotNull(verifiedPayload.getIssueTime());
-    assertEquals(verifiedPayload.getIssueTime().plus(Duration.ofMinutes(5)), verifiedPayload.getExpiryTime());
+    assertEquals(inputRequest.beneficiary, outputRequest.beneficiary);
+    assertEquals(inputRequest.reviewers, outputRequest.reviewers);
+    assertEquals(inputRequest.justification, outputRequest.justification);
+    assertEquals(inputRequest.reviewers, outputRequest.reviewers);
+    assertEquals(inputRequest.creationTime.getEpochSecond(), outputRequest.creationTime.getEpochSecond());
   }
 }

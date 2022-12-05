@@ -40,8 +40,7 @@ import java.util.stream.Collectors;
 /**
  * Creates and verifies activation tokens.
  *
- * An activation token is minted on behalf of a user that's requesting access to a resource,
- * and then sent to peers for approval.
+ * An activation token is a signed activation request that is safe to pass to the user.
  */
 @ApplicationScoped
 public class ActivationTokenService {
@@ -70,26 +69,32 @@ public class ActivationTokenService {
       .build();
   }
 
-  public String createToken(Payload payload) throws AccessException, IOException {
-    Preconditions.checkNotNull(payload, "payload");
+  public String createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(request.creationTime.isBefore(Instant.now().plusSeconds(10)));
+    Preconditions.checkArgument(request.creationTime.isAfter(Instant.now().minusSeconds(10)));
 
     //
     // Add obligatory claims.
     //
-    var now = Instant.now();
-    var jwtPayload = payload.payload
-      .clone()
+    var jwtPayload = new JsonWebToken.Payload()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setIssuedAtTimeSeconds(now.getEpochSecond())
-      .setExpirationTimeSeconds(now.plus(this.options.tokenValidity).getEpochSecond());
+      .setIssuedAtTimeSeconds(request.creationTime.getEpochSecond())
+      .setExpirationTimeSeconds(request.creationTime.plus(this.options.tokenValidity).getEpochSecond())
+      .setJwtId(request.id.toString())
+      .set("beneficiary", request.beneficiary.email)
+      .set("reviewers", request.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
+      .set("resource", request.roleBinding.fullResourceName)
+      .set("role", request.roleBinding.role)
+      .set("justification", request.justification);
 
     return this.iamCredentialsAdapter.signJwt(
       this.options.serviceAccount,
       jwtPayload);
   }
 
-  public Payload verifyToken(
+  public RoleActivationService.ActivationRequest verifyToken(
     String token
   ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
@@ -102,103 +107,29 @@ public class ActivationTokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    return new Payload(decodedToken.getPayload());
+    var payload = decodedToken.getPayload();
+
+    return new RoleActivationService.ActivationRequest(
+      new RoleActivationService.ActivationId(payload.getJwtId()),
+      new UserId(payload.get("beneficiary").toString()),
+      ((List<String>)payload.get("reviewers"))
+        .stream()
+        .map(email -> new UserId(email))
+        .collect(Collectors.toSet()),
+      new RoleBinding(
+        payload.get("resource").toString(),
+        payload.get("role").toString()),
+      payload.get("justification").toString(),
+      Instant.ofEpochSecond(payload.getIssuedAtTimeSeconds()));
+  }
+
+  public Options getOptions() {
+    return options;
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
-
-  public static class Payload {
-    private final JsonWebToken.Payload payload;
-
-    public Payload(JsonWebToken.Payload payload) {
-      this.payload = payload;
-    }
-
-    public UserId getBeneficiary() {
-      return new UserId(this.payload.get("beneficiary").toString());
-    }
-
-    public Collection<UserId> getReviewers() {
-      var list = (List<String>)this.payload.get("reviewers");
-      return list
-        .stream()
-        .map(email -> new UserId(email))
-        .collect(Collectors.toList());
-    }
-
-    public String getJustification() {
-      return this.payload.get("justification").toString();
-    }
-
-    public RoleBinding getRoleBinding() {
-      return new RoleBinding(
-        this.payload.get("resource").toString(),
-        this.payload.get("role").toString());
-    }
-
-    public Instant getIssueTime() {
-      return Instant.ofEpochSecond((Long)this.payload.get("iat"));
-    }
-
-    public Instant getExpiryTime() {
-      return Instant.ofEpochSecond((Long)this.payload.get("exp"));
-    }
-
-    public String getIssuer() {
-      return this.payload.getIssuer();
-    }
-
-    public String getAudience() {
-      return (String)this.payload.getAudience();
-    }
-
-    public String getId() {
-      return this.payload.getJwtId();
-    }
-
-    public static class Builder {
-      private final JsonWebToken.Payload payload = new JsonWebToken.Payload();
-
-      public Builder setBeneficiary(UserId beneficiary) {
-        Preconditions.checkNotNull(beneficiary);
-        this.payload.set("beneficiary", beneficiary.email);
-        return this;
-      }
-
-      public Builder setReviewers(Collection<UserId> reviewers) {
-        Preconditions.checkNotNull(reviewers);
-        this.payload.set(
-          "reviewers",
-          reviewers.stream().map(id -> id.email).collect(Collectors.toList()));
-        return this;
-      }
-
-      public Builder setJustification(String justification) {
-        Preconditions.checkNotNull(justification);
-        this.payload.set("justification", justification);
-        return this;
-      }
-
-      public Builder setRoleBinding(RoleBinding roleBinding) {
-        Preconditions.checkNotNull(roleBinding);
-        this.payload.set("resource", roleBinding.fullResourceName);
-        this.payload.set("role", roleBinding.role);
-        return this;
-      }
-
-      public Builder setId(String id) {
-        Preconditions.checkNotNull(id);
-        this.payload.setJwtId(id);
-        return this;
-      }
-
-      public Payload build() {
-        return new Payload(this.payload);
-      }
-    }
-  }
 
   public static class Options {
     public final UserId serviceAccount;

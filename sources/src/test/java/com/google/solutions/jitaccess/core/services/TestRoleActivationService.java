@@ -200,8 +200,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     assertThrows(IllegalArgumentException.class,
       () -> service.activateProjectRoleForPeer(request.beneficiary, request));
@@ -225,8 +224,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(SAMPLE_USER_3, request));
@@ -250,8 +248,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "non-numeric justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(SAMPLE_USER_2, request));
@@ -281,8 +278,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     var service = new RoleActivationService(
       discoveryService,
@@ -328,8 +324,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -371,8 +366,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now(),
-      Duration.ofMinutes(1));
+      Instant.now());
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -419,8 +413,7 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.ofEpochSecond(issuedAt),
-      Duration.ofMinutes(1));
+      Instant.ofEpochSecond(issuedAt));
 
     var activation = service.activateProjectRoleForPeer(caller, request);
 
