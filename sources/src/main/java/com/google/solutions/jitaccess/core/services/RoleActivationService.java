@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.services;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
@@ -44,6 +45,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RoleActivationService {
@@ -366,6 +368,7 @@ public class RoleActivationService {
     }
   }
 
+  /** Represents a pre-validated activation request that was created by the service */
   public static class ActivationRequest {
     public final ActivationId id;
     public final UserId beneficiary;
@@ -374,7 +377,7 @@ public class RoleActivationService {
     public final String justification;
     public final Instant creationTime;
 
-    protected ActivationRequest(
+    private ActivationRequest(
       ActivationId id,
       UserId beneficiary,
       Set<UserId> reviewers,
@@ -406,6 +409,32 @@ public class RoleActivationService {
       Instant creationTime
       ) {
       return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, creationTime);
+    }
+
+    protected static ActivationRequest fromJsonWebTokenPayload(JsonWebToken.Payload payload) {
+      return new RoleActivationService.ActivationRequest(
+        new RoleActivationService.ActivationId(payload.getJwtId()),
+        new UserId(payload.get("beneficiary").toString()),
+        ((List<String>)payload.get("reviewers"))
+          .stream()
+          .map(email -> new UserId(email))
+          .collect(Collectors.toSet()),
+        new RoleBinding(
+          payload.get("resource").toString(),
+          payload.get("role").toString()),
+        payload.get("justification").toString(),
+        Instant.ofEpochSecond(payload.getIssuedAtTimeSeconds()));
+    }
+
+    protected JsonWebToken.Payload toJsonWebTokenPayload() {
+      return new JsonWebToken.Payload()
+        .setIssuedAtTimeSeconds(this.creationTime.getEpochSecond())
+        .setJwtId(this.id.toString())
+        .set("beneficiary", this.beneficiary.email)
+        .set("reviewers", this.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
+        .set("resource", this.roleBinding.fullResourceName)
+        .set("role", this.roleBinding.role)
+        .set("justification", this.justification);
     }
   }
 

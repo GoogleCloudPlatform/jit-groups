@@ -77,17 +77,10 @@ public class ActivationTokenService {
     //
     // Add obligatory claims.
     //
-    var jwtPayload = new JsonWebToken.Payload()
+    var jwtPayload = request.toJsonWebTokenPayload()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setIssuedAtTimeSeconds(request.creationTime.getEpochSecond())
-      .setExpirationTimeSeconds(request.creationTime.plus(this.options.tokenValidity).getEpochSecond())
-      .setJwtId(request.id.toString())
-      .set("beneficiary", request.beneficiary.email)
-      .set("reviewers", request.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
-      .set("resource", request.roleBinding.fullResourceName)
-      .set("role", request.roleBinding.role)
-      .set("justification", request.justification);
+      .setExpirationTimeSeconds(request.creationTime.plus(this.options.tokenValidity).getEpochSecond());
 
     return this.iamCredentialsAdapter.signJwt(
       this.options.serviceAccount,
@@ -107,20 +100,7 @@ public class ActivationTokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    var payload = decodedToken.getPayload();
-
-    return new RoleActivationService.ActivationRequest(
-      new RoleActivationService.ActivationId(payload.getJwtId()),
-      new UserId(payload.get("beneficiary").toString()),
-      ((List<String>)payload.get("reviewers"))
-        .stream()
-        .map(email -> new UserId(email))
-        .collect(Collectors.toSet()),
-      new RoleBinding(
-        payload.get("resource").toString(),
-        payload.get("role").toString()),
-      payload.get("justification").toString(),
-      Instant.ofEpochSecond(payload.getIssuedAtTimeSeconds()));
+    return RoleActivationService.ActivationRequest.fromJsonWebTokenPayload(decodedToken.getPayload());
   }
 
   public Options getOptions() {
