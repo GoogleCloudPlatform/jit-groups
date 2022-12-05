@@ -318,5 +318,4 @@ public class TestRoleActivationService {
   //        RoleActivationService.ActivationType.MPA,
   //        "justification"));
   //  }
-
 }

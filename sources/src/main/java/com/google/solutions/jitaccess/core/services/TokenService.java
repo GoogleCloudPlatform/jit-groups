@@ -78,11 +78,9 @@ public class TokenService {
   }
 
   public JsonWebToken.Payload verifyToken(
-    String token,
-    UserId expectedSubject
+    String token
   ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
-    Preconditions.checkNotNull(expectedSubject, "expectedSubject");
 
     var decodedToken = this.tokenVerifier.verify(token);
     if (!decodedToken.getHeader().getAlgorithm().equals("RS256")) {
@@ -90,10 +88,6 @@ public class TokenService {
       // Service account keys are RS256, anything else is fishy.
       //
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
-    }
-
-    if (!expectedSubject.email.equals(decodedToken.getPayload().getSubject())) {
-      throw new TokenVerifier.VerificationException("The token was issued to a different subject");
     }
 
     return decodedToken.getPayload();

@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.services;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
@@ -37,6 +38,7 @@ import com.google.solutions.jitaccess.core.data.*;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -179,28 +181,35 @@ public class RoleActivationService {
     // Verify and decode the token. This fails if the token has been
     // tampered with in any way, or has expired.
     //
-    var payload = new ApprovalTokenPayload(this.tokenService.verifyToken(approvalToken, caller)); // TODO: Test
+    var approvalRequestData = new ApprovalRequestData(
+      this.tokenService.verifyToken(approvalToken)); // TODO: Test
 
-    if (payload.getBeneficiary().equals(caller)) {
+    if (approvalRequestData.getBeneficiary().equals(caller)) {
       throw new IllegalArgumentException("MPA activation requires the caller and beneficiary to be the different");
     }
 
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(payload.getJustification());
+    checkJustification(approvalRequestData.getJustification());
 
     //
     // Verify that the (calling) user is allowed to (MPA-) activate
     // this role. This is to avoid us from being tricked to grant
     // access to a role that they aren't eligible for.
     //
-    checkUserCanActivateProjectRole(caller, payload.getRoleBinding(), ActivationType.MPA);
+    checkUserCanActivateProjectRole(
+      caller,
+      approvalRequestData.getRoleBinding(),
+      ActivationType.MPA);
 
     //
     // Verify that the beneficiary allowed to (MPA-) activate this role.
     //
-    checkUserCanActivateProjectRole(payload.getBeneficiary(), payload.getRoleBinding(), ActivationType.MPA);
+    checkUserCanActivateProjectRole(
+      approvalRequestData.getBeneficiary(),
+      approvalRequestData.getRoleBinding(),
+      ActivationType.MPA);
 
     //
     // Add time-bound IAM binding for the beneficiary.
@@ -213,31 +222,31 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = OffsetDateTime.ofInstant(payload.getRequestTime(), ZoneId.systemDefault()); // TODO: Use Instant
+    var activationTime = OffsetDateTime.ofInstant(approvalRequestData.getIssueTime(), ZoneId.systemDefault()); // TODO: Use Instant
     var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
       caller.email,
-      payload.getJustification());
+      approvalRequestData.getJustification());
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + payload.getBeneficiary().email))
-      .setRole(payload.getRoleBinding().role)
+      .setMembers(List.of("user:" + approvalRequestData.getBeneficiary().email))
+      .setRole(approvalRequestData.getRoleBinding().role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(payload.getRoleBinding().fullResourceName),
+      ProjectId.fromFullResourceName(approvalRequestData.getRoleBinding().fullResourceName),
       binding,
       EnumSet.of(
         ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
         ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
-      payload.getJustification());
+      approvalRequestData.getJustification());
 
     return new Activation(
-      new ProjectRole(payload.getRoleBinding(), ProjectRole.Status.ACTIVATED),
+      new ProjectRole(approvalRequestData.getRoleBinding(), ProjectRole.Status.ACTIVATED),
       expiryTime);
   }
 
@@ -349,6 +358,81 @@ public class RoleActivationService {
     @JsonCreator
     public Activation(ProjectRole projectRole, String expiry) {
       this(projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
+    }
+  }
+
+  /** Approval request data (used as token payload */
+  public class ApprovalRequestData {
+    private final JsonWebToken.Payload payload;
+
+    public ApprovalRequestData(JsonWebToken.Payload payload) {
+      this.payload = payload;
+    }
+
+    public UserId getBeneficiary() {
+      return new UserId(this.payload.get("beneficiary").toString());
+    }
+
+    public String getJustification() {
+      return this.payload.get("justification").toString();
+    }
+
+    public RoleBinding getRoleBinding() {
+      return new RoleBinding(
+        this.payload.get("project").toString(),
+        this.payload.get("role").toString());
+    }
+
+    public Instant getIssueTime() {
+      return Instant.ofEpochSecond((Long)this.payload.get("iat"));
+    }
+
+    public Instant getExpiryTime() {
+      return Instant.ofEpochSecond((Long)this.payload.get("exp"));
+    }
+
+    public class Builder {
+      private final JsonWebToken.Payload payload = new JsonWebToken.Payload();
+
+      public Builder setBeneficiary(String beneficiary) {
+        Preconditions.checkNotNull(beneficiary);
+        this.payload.set("beneficiary", beneficiary);
+        return this;
+      }
+
+      public Builder setJustification(String justification) {
+        Preconditions.checkNotNull(justification);
+        this.payload.set("justification", justification);
+        return this;
+      }
+
+      public Builder setRoleBinding(RoleBinding roleBinding) {
+        Preconditions.checkNotNull(roleBinding);
+        this.payload.set("roleBinding", roleBinding);
+        return this;
+      }
+
+      public Builder setIssuer(String issuer) {
+        Preconditions.checkNotNull(issuer);
+        this.payload.set("issuer", issuer);
+        return this;
+      }
+
+      public Builder setIssueTime(Instant iat) {
+        Preconditions.checkNotNull(iat);
+        this.payload.set("iat", iat);
+        return this;
+      }
+
+      public Builder setExpiryTime(Instant exp) {
+        Preconditions.checkNotNull(exp);
+        this.payload.set("exp", exp);
+        return this;
+      }
+
+      public JsonWebToken.Payload build() {
+        return  this.payload;
+      }
     }
   }
 

@@ -33,8 +33,6 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTokenService {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
-
   // -------------------------------------------------------------------------
   // createToken.
   // -------------------------------------------------------------------------
@@ -49,11 +47,10 @@ public class TestTokenService {
         serviceAccount,
         Duration.ofMinutes(5)));
 
-    var payload = new JsonWebToken.Payload()
-      .setSubject(SAMPLE_USER.email);
+    var payload = new JsonWebToken.Payload();
 
     var token = tokenService.createToken(payload);
-    var verifiedPayload = tokenService.verifyToken(token, SAMPLE_USER);
+    var verifiedPayload = tokenService.verifyToken(token);
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
     assertEquals(serviceAccount.email, verifiedPayload.getAudience());
@@ -75,13 +72,12 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setIssuer(serviceAccount.email)
-      .setSubject(SAMPLE_USER.email);
+      .setIssuer(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
-      () -> tokenService.verifyToken(jwt, SAMPLE_USER));
+      () -> tokenService.verifyToken(jwt));
   }
 
   @Test
@@ -95,33 +91,12 @@ public class TestTokenService {
         Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setSubject(SAMPLE_USER.email);
+      .setAudience(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
-      () -> tokenService.verifyToken(jwt, SAMPLE_USER));
-  }
-
-  @Test
-  public void whenJwtMissesSubject_ThenVerifyThrowsException() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
-    var tokenService = new TokenService(
-      credentialsAdapter,
-      new TokenService.Options(
-        serviceAccount,
-        Duration.ofMinutes(5)));
-
-    var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
-
-    var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
-
-    assertThrows(TokenVerifier.VerificationException.class,
-      () -> tokenService.verifyToken(jwt, SAMPLE_USER));
+      () -> tokenService.verifyToken(jwt));
   }
 
   @Test
@@ -136,13 +111,12 @@ public class TestTokenService {
 
     var payload = new JsonWebToken.Payload()
       .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email)
-      .setSubject(SAMPLE_USER.email);
+      .setIssuer(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload);
 
     assertThrows(TokenVerifier.VerificationException.class,
-      () -> tokenService.verifyToken(jwt, SAMPLE_USER));
+      () -> tokenService.verifyToken(jwt));
   }
 
   @Test
@@ -157,11 +131,10 @@ public class TestTokenService {
 
     var payload = new JsonWebToken.Payload()
       .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email)
-      .setSubject(SAMPLE_USER.email);
+      .setIssuer(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
-    tokenService.verifyToken(jwt, SAMPLE_USER);
+    tokenService.verifyToken(jwt);
   }
 }
