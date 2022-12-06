@@ -449,31 +449,11 @@
             constructor() {
                 super("request-pane");
 
-                this._requestStep = new MdlStep("#step-selectproject");
-                this._selectRoleStep = new MdlStep("#step-selectrole");
-                this._approveStep = new MdlStep("#step-approve");
+                this.requestStep = new MdlStep("#step-selectproject");
+                this.selectRoleStep = new MdlStep("#step-selectrole");
+                this.approveStep = new MdlStep("#step-approve");
                 this._roleTable = new MdlDataTable("#step-selectrole-roles");
                 this._peersTable = new MdlDataTable("#step-approve-peers");
-            }
-
-            get requestStep() {
-                return this._requestStep;
-            }
-
-            get selectRoleStep() {
-                return this._selectRoleStep;
-            }
-
-            get approveStep() {
-                return this._approveStep;
-            }
-
-            get roleTable() {
-                return this._roleTable;
-            }
-
-            get peersTable() {
-                return this._peersTable;
             }
 
             get selectedProjectId() {
@@ -495,7 +475,7 @@
             set roles(roles) {
                 this._roles = roles;
                 roles.forEach((item) => {
-                    this.roleTable.addRow(
+                    this._roleTable.addRow(
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
@@ -508,12 +488,12 @@
 
             get selectedRoles() {
                 console.assert(this._roles);
-                return this._roles.filter(i => this.roleTable.selected.includes(i.roleBinding.role));
+                return this._roles.filter(i => this._roleTable.selected.includes(i.roleBinding.role));
             }
 
             set peers(peers) {
                 peers.forEach((item) => {
-                    this.peersTable.addRow(
+                    this._peersTable.addRow(
                         item.email,
                         [
                             { text: item.email }
@@ -521,15 +501,17 @@
                         true);
                 });
             }
+
+            get selectedPeers() {
+                return this._peersTable.selected;
+            }
         }
 
         class RequestStatusPane extends AppPane {
             constructor() {
                 super("request-status-pane")
-            }
 
-            get activatedRoleTable() {
-                return new MdlDataTable("#activatedroles");
+                this._activatedRoleTable = new MdlDataTable("#activatedroles");
             }
 
             set activationStatus(activationStatus) {
@@ -554,7 +536,7 @@
 
                 const nowUnixTimeSecs = (Date.now() / 1000);
                 activationStatus.items.forEach((item) => {
-                    this.activatedRoleTable.addRow(
+                    this._activatedRoleTable.addRow(
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
@@ -684,7 +666,7 @@
                 // Step: Approve.
                 //
                 requestPane.approveStep.addHandler(async () => {
-                    if (multiPartyApproval && gui.requestPane.peersTable.selected.length === 0) {
+                    if (multiPartyApproval && gui.requestPane.selectedPeers.length === 0) {
                         throw "Select one or more peers";
                     }
                     if (!requestPane.justificationText) {
@@ -695,17 +677,17 @@
                     try {
                         let activationStatus;
                         if (multiPartyApproval) {
-                            console.assert(requestPane.roleTable.selected.length == 1);
+                            console.assert(requestPane.selectedRoles.length == 1);
                             activationStatus = await backend.activateRole(
                                 requestPane.selectedProjectId,
-                                requestPane.roleTable.selected[0],
-                                requestPane.peersTable.selected,
+                                requestPane.selectedRoles[0].roleBinding.role,
+                                requestPane.selectedPeers,
                                 requestPane.justificationText);
                         }
                         else {
                             activationStatus = await backend.selfActivateRoles(
                                 requestPane.selectedProjectId,
-                                requestPane.roleTable.selected,
+                                requestPane.selectedRoles.map(r => r.roleBinding.role),
                                 requestPane.justificationText)
                         }
 
