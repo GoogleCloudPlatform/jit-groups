@@ -162,6 +162,18 @@ class Model {
             throw this._formatError(error);
         }
     }
+
+    /** Approve an activation request */
+    async approveActivationRequest(activationToken) {
+        console.assert(activationToken);
+
+        throw "NIY"; // TODO: Lookup
+        try {
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
 }
 
 class DebugModel extends Model {
@@ -227,6 +239,14 @@ class DebugModel extends Model {
                         <option value="error">Simulate error</option>
                     </select>
                 </div>
+                <div>
+                    approveActivationRequest:
+                    <select id="debug-approveActivationRequest">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
             </div>
         `);
 
@@ -240,7 +260,8 @@ class DebugModel extends Model {
             "debug-listPeers",
             "debug-selfActivateRoles",
             "debug-activateRole",
-            "debug-getActivationRequest"
+            "debug-getActivationRequest",
+            "debug-approveActivationRequest"
         ].forEach(setting => {
 
             $("#" + setting).val(localStorage.getItem(setting))
@@ -325,6 +346,7 @@ class DebugModel extends Model {
         }
     }
 
+    // TODO: Simplify these methods
     async selfActivateRoles(projectId, roles, justification) {
         var setting = $("#debug-selfActivateRoles").val();
         if (!setting) {
@@ -366,6 +388,11 @@ class DebugModel extends Model {
         }
         else {
             return Promise.resolve({
+                isBeneficiary: true,
+                isReviewer: false,
+                justification: justification,
+                requestTime: Math.floor(Date.now() / 1000 - 300),
+                beneficiary: "user@example.com",
                 items: [{
                     activationId: "sim-1",
                     roleBinding: {
@@ -402,6 +429,35 @@ class DebugModel extends Model {
                         role: "roles/role-1"
                     },
                     status: "ACTIVATION_PENDING",
+                    expiry: Math.floor(Date.now() / 1000) + 300
+                }]
+            });
+        }
+    }
+
+    async approveActivationRequest(activationToken) {
+        var setting = $("#debug-approveActivationRequest").val();
+        if (!setting) {
+            return super.approveActivationRequest(activationToken);
+        }
+        else if (setting === "error") {
+            await new Promise(r => setTimeout(r, 1000));
+            return Promise.reject("Simulated error");
+        }
+        else {
+            return Promise.resolve({
+                isBeneficiary: false,
+                isReviewer: true,
+                justification: "a justification",
+                requestTime: Math.floor(Date.now() / 1000 - 300),
+                beneficiary: "user@example.com",
+                items: [{
+                    activationId: "sim-1",
+                    roleBinding: {
+                        fullResourceName: "//simulated",
+                        role: "roles/role-1"
+                    },
+                    status: "ACTIVATED",
                     expiry: Math.floor(Date.now() / 1000) + 300
                 }]
             });

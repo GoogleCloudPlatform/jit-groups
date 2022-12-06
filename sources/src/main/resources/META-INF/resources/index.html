@@ -220,7 +220,7 @@
                         </div>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-approvebutton">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="#" id="request-status-pane-approvebutton">
                             Approve
                         </a>
                         <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-consolebutton">
@@ -526,21 +526,28 @@
                 $("#request-status-pane-consolebutton").hide();
 
                 if (activationStatus.isReviewer) {
-                    $("#request-status-pane-title").text("Access request");
-                    $("#request-status-pane-description").text("One of your peers is asking you to review the following access request.");
+
+                    if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                        $("#request-status-pane-title").text("Review access request");
+                        $("#request-status-pane-description").text("One of your peers is asking you to review the following access request.");
+                        $("#request-status-pane-approvebutton").show();
+                    }
+                    else {
+                        $("#request-status-pane-title").text("Access approved");
+                        $("#request-status-pane-description").text("You've approved the following access request.");
+                    }
 
                     const link = $("<a target='_blank'/>");
                     link.attr("href", `https://contacts.google.com/search/${activationStatus.beneficiary}`);
                     link.text(activationStatus.beneficiary);
-                    $("#request-status-pane-beneficiary").append(link);
+                    $("#request-status-pane-beneficiary").empty().append(link);
 
-                    $("#request-status-pane-approvebutton").show();
                     // TODO: Fix link color
                 }
                 else if (activationStatus.isBeneficiary) {
                     $("#request-status-pane-beneficiary").text("You");
                     if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
-                        $("#request-status-pane-title").text("Status of your request");
+                        $("#request-status-pane-title").text("Request submitted");
                         $("#request-status-pane-description").text("Your request has been submitted for approval. " +
                             "You'll receive an email once approval has been granted");
                     }
@@ -722,6 +729,19 @@
                     }
                 });
             }());
+
+            $("#request-status-pane-approvebutton").click(async () => {
+                gui.busyPane.show();
+                try {
+                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest("xxx"); // TODO: pass token
+                }
+                catch (error) {
+                    gui.showToast(error);
+                }
+                finally {
+                    gui.requestStatusPane.show();
+                }
+            });
 
             //
             // Add Copy button to code blocks.
