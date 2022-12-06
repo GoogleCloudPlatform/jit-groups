@@ -81,6 +81,8 @@ class Model {
 
     /** List eligible roles */
     async listRoles(projectId) {
+        console.assert(projectId);
+
         try {
             return await $.ajax({
                 url: `/api/projects/${projectId}/roles`,
@@ -93,7 +95,24 @@ class Model {
         }
     }
 
-    /** Activate a role */
+    /** List peers that can approve a request */
+    async listPeers(projectId, role) {
+        console.assert(projectId);
+        console.assert(role);
+
+        try {
+            return await $.ajax({
+                url: `/api/projects/${projectId}/roles/${role}/peers`,
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Activate roles without peer approval */
     async selfActivateRoles(projectId, roles, justification) {
         console.assert(projectId);
         console.assert(roles.length > 0);
@@ -111,6 +130,21 @@ class Model {
                 }),
                 headers: this._getHeaders()
             });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Activate a role with peer approval */
+    async activateRole(projectId, role, peers, justification) {
+        console.assert(projectId);
+        console.assert(role);
+        console.assert(peers.length > 0);
+        console.assert(justification)
+
+        try {
+            throw "NIY"; // TODO: Submit
         }
         catch (error) {
             throw this._formatError(error);
@@ -148,8 +182,26 @@ class DebugModel extends Model {
                     </select>
                 </div>
                 <div>
+                    listPeers:
+                    <select id="debug-listPeers">
+                        <option value="">(default)</option>
+                        <option value="error">Simulate error</option>
+                        <option value="0">Simulate 0 results</option>
+                        <option value="1">Simulate 1 result</option>
+                        <option value="10">Simulate 10 results</option>
+                    </select>
+                </div>
+                <div>
                     selfActivateRoles:
                     <select id="debug-selfActivateRoles">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
+                <div>
+                    activateRole:
+                    <select id="debug-activateRole">
                         <option value="">(default)</option>
                         <option value="success">Simulate success</option>
                         <option value="error">Simulate error</option>
@@ -165,7 +217,9 @@ class DebugModel extends Model {
             "debug-principal",
             "debug-listProjects",
             "debug-listRoles",
-            "debug-selfActivateRoles"
+            "debug-listPeers",
+            "debug-selfActivateRoles",
+            "debug-activateRole"
         ].forEach(setting => {
 
             $("#" + setting).val(localStorage.getItem(setting))
@@ -232,6 +286,24 @@ class DebugModel extends Model {
         }
     }
 
+    async listPeers(projectId, role) {
+        var setting = $("#debug-listPeers").val();
+        if (!setting) {
+            return super.listPeers();
+        }
+        else if (setting === "error") {
+            return Promise.reject("Simulated error");
+        }
+        else {
+            await new Promise(r => setTimeout(r, 2000));
+            return Promise.resolve({
+                peers: Array.from({ length: setting }, (e, i) => ({
+                    email: `user-${i}@example.com`
+                }))
+            });
+        }
+    }
+
     async selfActivateRoles(projectId, roles, justification) {
         var setting = $("#debug-selfActivateRoles").val();
         if (!setting) {
@@ -252,6 +324,22 @@ class DebugModel extends Model {
                     status: "ACTIVATED",
                     expiry: Math.floor(Date.now() / 1000) + 300
                 }))
+            });
+        }
+    }
+
+    async activateRole(projectId, role, peers, justification) {
+        var setting = $("#debug-activateRole").val();
+        if (!setting) {
+            return super.activateRole(projectId, role, peers, justification);
+        }
+        else if (setting === "error") {
+            await new Promise(r => setTimeout(r, 1000));
+            return Promise.reject("Simulated error");
+        }
+        else {
+            return Promise.resolve({
+                activationId: "sim-1"
             });
         }
     }

@@ -111,10 +111,26 @@
                     <li class="mdl-step" id="step-approve">
                         <span class="mdl-step__label">
                             <span class="mdl-step__title">
-                                <span class="mdl-step__title-text">Justification</span>
+                                <span class="mdl-step__title-text">Approval and justification</span>
                             </span>
                         </span>
                         <div class="mdl-step__content">
+                            <div class="step-subsection conditional-mpa">
+                                Activating this role requires approval from one of the following peers. Select
+                                one or more peers to send an approval request:
+                            </div>
+                            <div class="step-subsection conditional-mpa">
+                                <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-peers">
+                                    <thead>
+                                        <tr>
+                                            <th></th>
+                                            <th class="mdl-data-table__cell--non-numeric">User</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
                             <div class="step-subsection">
                                 Enter a justification that explains why you need to access the project:
                             </div>
@@ -159,6 +175,19 @@
                         <div>
                             <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <main class="mdl-layout__content app-pane" id="pending-pane">
+            <div class="mdl-grid center-items">
+                <div class="mdl-card mdl-shadow--2dp">
+                    <div class="mdl-card__title">
+                        <h2 class="mdl-card__title-text">Approval pending</h2>
+                    </div>
+                    <div class="mdl-card__supporting-text">
+                        Your request has been submitted for approval. You'll receive an email
+                        once approval has been granted.
                     </div>
                 </div>
             </div>
@@ -247,6 +276,7 @@
     --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
 </code></pre>
                         </p>
+                        <!-- TODO: Describe MPA -->
                     </div>
                 </div>
             </div>
@@ -413,6 +443,7 @@
                 this._selectRoleStep = new MdlStep("#step-selectrole");
                 this._approveStep = new MdlStep("#step-approve");
                 this._roleTable = new MdlDataTable("#step-selectrole-roles");
+                this._peersTable = new MdlDataTable("#step-approve-peers");
             }
 
             get requestStep() {
@@ -429,6 +460,10 @@
 
             get roleTable() {
                 return this._roleTable;
+            }
+
+            get peersTable() {
+                return this._peersTable;
             }
 
             get selectedProjectId() {
@@ -496,6 +531,10 @@
                 return new AppPane("busy-pane");
             }
 
+            get pendingPane() {
+                return new AppPane("pending-pane");
+            }
+
             get confirmationPane() {
                 return new ConfirmationPane();
             }
@@ -523,6 +562,7 @@
                 //
                 // Step: Select project.
                 //
+                let roles;
                 const requestPane = gui.requestPane;
                 requestPane.selectedProjectId = localSettings.lastProjectId;
                 requestPane.requestStep.addHandler(async () => {
@@ -532,6 +572,9 @@
 
                     localSettings.lastProjectId = requestPane.selectedProjectId;
 
+                    //
+                    // Request and list roles available in that project.
+                    //
                     const rolesResult = await backend.listRoles(requestPane.selectedProjectId)
                     if (!rolesResult.roles || rolesResult.roles.length == 0) {
                         throw "The project doesn't exist, or you don't have permission to activate any roles in this project";
@@ -541,7 +584,8 @@
                         gui.showToast(rolesResult.warnings.join(", "));
                     }
 
-                    rolesResult.roles.forEach((item) => {
+                    roles = rolesResult.roles;
+                    roles.forEach((item) => {
                         requestPane.roleTable.addRow(
                             item.roleBinding.role,
                             [
@@ -556,11 +600,46 @@
                 //
                 // Step: Select role.
                 //
-                requestPane.selectRoleStep.addHandler(() => {
-                    const selectedRoles = requestPane.roleTable.selected;
+                let multiPartyApproval;
+                requestPane.selectRoleStep.addHandler(async () => {
+                    console.assert(roles);
+                    const selectedRoles = roles.filter(i => requestPane.roleTable.selected.includes(i.roleBinding.role));
 
                     if (selectedRoles.length === 0) {
                         throw "Select one or more roles to actviate";
+                    }
+
+                    if (selectedRoles.some(i => i.status === "ELIGIBLE_FOR_MPA")) {
+                        //
+                        // Multi-party approval: Request and list peers available for this project and role.
+                        //
+                        multiPartyApproval = true;
+
+                        if (selectedRoles.length > 1) {
+                            throw "You can only request peer approval for a single role at a time";
+                        }
+
+                        const peersResult = await backend.listPeers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role);
+
+                        if (!peersResult.peers || peersResult.peers.length == 0) {
+                            throw "There are currently no peers that could approve your request";
+                        }
+
+                        peersResult.peers.forEach((item) => {
+                            requestPane.peersTable.addRow(
+                                item.email,
+                                [
+                                    { text: item.email }
+                                ],
+                                true);
+                        });
+                    }
+                    else {
+                        //
+                        // Self - approval.
+                        //
+                        multiPartyApproval = false;
+                        $(".conditional-mpa").hide();
                     }
 
                     requestPane.justificationHint = backend.policy.justificationHint;
@@ -570,31 +649,46 @@
                 // Step: Approve.
                 //
                 requestPane.approveStep.addHandler(async () => {
+                    if (multiPartyApproval && gui.requestPane.peersTable.selected.length === 0) {
+                        throw "Select one or more peers";
+                    }
                     if (!requestPane.justificationText) {
                         throw "Enter a justification";
                     }
 
                     gui.busyPane.show();
                     try {
-                        const activatedRolesResult = await backend.selfActivateRoles(
-                            requestPane.selectedProjectId,
-                            requestPane.roleTable.selected,
-                            requestPane.justificationText)
+                        if (multiPartyApproval) {
+                            console.assert(requestPane.roleTable.selected.length == 1);
+                            await backend.activateRole(
+                                requestPane.selectedProjectId,
+                                requestPane.roleTable.selected[0],
+                                requestPane.peersTable.selected,
+                                requestPane.justificationText);
 
-                        const nowUnixTimeSecs = (Date.now() / 1000);
-                        const confirmationPane = gui.confirmationPane;
-                        activatedRolesResult.items.forEach((item) => {
-                            confirmationPane.activatedRoleTable.addRow(
-                                item.roleBinding.role,
-                                [
-                                    { text: item.roleBinding.role },
-                                    { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
-                                    { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
-                                ],
-                                false);
-                        });
+                            gui.pendingPane.show();
+                        }
+                        else {
+                            const activatedRolesResult = await backend.selfActivateRoles(
+                                requestPane.selectedProjectId,
+                                requestPane.roleTable.selected,
+                                requestPane.justificationText)
 
-                        confirmationPane.show();
+                            const nowUnixTimeSecs = (Date.now() / 1000);
+                            const confirmationPane = gui.confirmationPane;
+                            activatedRolesResult.items.forEach((item) => {
+                                confirmationPane.activatedRoleTable.addRow(
+                                    item.roleBinding.role,
+                                    [
+                                        { text: item.roleBinding.role },
+                                        { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
+                                        { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
+                                    ],
+                                    false);
+                            });
+
+                            confirmationPane.show();
+                        }
                     }
                     catch (error) {
                         gui.showToast(error);
