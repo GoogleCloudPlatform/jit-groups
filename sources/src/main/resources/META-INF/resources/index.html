@@ -562,7 +562,6 @@
                 $("#request-status-pane-consolebutton").hide();
 
                 if (activationStatus.isReviewer) {
-
                     if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
                         $("#request-status-pane-title").text("Review access request");
                         $("#request-status-pane-description").text("One of your peers is asking you to review the following access request.");
@@ -577,8 +576,6 @@
                     link.attr("href", `https://contacts.google.com/search/${activationStatus.beneficiary}`);
                     link.text(activationStatus.beneficiary);
                     $("#request-status-pane-beneficiary").empty().append(link);
-
-                    // TODO: Fix link color
                 }
                 else if (activationStatus.isBeneficiary) {
                     $("#request-status-pane-beneficiary").text("You");

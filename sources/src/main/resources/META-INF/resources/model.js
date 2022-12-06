@@ -271,14 +271,6 @@ class DebugModel extends Model {
         });
     }
 
-    get policy() {
-        return {
-            justificationHint: "simulated hint"
-        };
-    }
-
-    async fetchPolicy() { }
-
     _getHeaders() {
         const headers = super._getHeaders();
         const principal = $("#debug-principal").val();
@@ -288,13 +280,47 @@ class DebugModel extends Model {
         return headers;
     }
 
+    async _simulateError() {
+        await new Promise(r => setTimeout(r, 1000));
+        return Promise.reject("Simulated error");
+    }
+
+    async _simulateActivationResponse(projectId, justification, roles, status, forSelf) {
+        await new Promise(r => setTimeout(r, 1000));
+        return Promise.resolve({
+            isBeneficiary: forSelf,
+            isReviewer: (!forSelf),
+            justification: justification,
+            requestTime: Math.floor(Date.now() / 1000),
+            beneficiary: "user",
+            projectId: projectId,
+            items: roles.map(r => ({
+                activationId: "sim-1",
+                roleBinding: {
+                    fullResourceName: "//simulated",
+                    role: r
+                },
+                status: status,
+                expiry: Math.floor(Date.now() / 1000) + 300
+            }))
+        });
+    }
+
+    get policy() {
+        return {
+            justificationHint: "simulated hint"
+        };
+    }
+
+    async fetchPolicy() { }
+
     async listRoles(projectId) {
         var setting = $("#debug-listRoles").val();
         if (!setting) {
             return super.listRoles(projectId);
         }
         else if (setting === "error") {
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
@@ -318,7 +344,7 @@ class DebugModel extends Model {
             return super.listProjects();
         }
         else if (setting === "error") {
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
@@ -334,7 +360,7 @@ class DebugModel extends Model {
             return super.listPeers();
         }
         else if (setting === "error") {
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
             await new Promise(r => setTimeout(r, 1000));
@@ -346,35 +372,21 @@ class DebugModel extends Model {
         }
     }
 
-    // TODO: Simplify these methods
     async selfActivateRoles(projectId, roles, justification) {
         var setting = $("#debug-selfActivateRoles").val();
         if (!setting) {
             return super.selfActivateRoles(projectId, roles, justification);
         }
         else if (setting === "error") {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.resolve({
-                isBeneficiary: true,
-                isReviewer: false,
-                justification: justification,
-                requestTime: Math.floor(Date.now() / 1000),
-                beneficiary: "Self",
-                projectId: projectId,
-                items: roles.map(r => ({
-                    activationId: "sim-1",
-                    roleBinding: {
-                        fullResourceName: "//simulated",
-                        role: r
-                    },
-                    status: "ACTIVATED",
-                    expiry: Math.floor(Date.now() / 1000) + 300
-                }))
-            });
+            return await this._simulateActivationResponse(
+                projectId,
+                justification,
+                roles,
+                "ACTIVATED",
+                true);
         }
     }
 
@@ -384,27 +396,15 @@ class DebugModel extends Model {
             return super.activateRole(projectId, role, peers, justification);
         }
         else if (setting === "error") {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
-            return Promise.resolve({
-                isBeneficiary: true,
-                isReviewer: false,
-                justification: justification,
-                requestTime: Math.floor(Date.now() / 1000 - 300),
-                beneficiary: "user@example.com",
-                projectId: projectId,
-                items: [{
-                    activationId: "sim-1",
-                    roleBinding: {
-                        fullResourceName: "//simulated",
-                        role: role
-                    },
-                    status: "ACTIVATION_PENDING",
-                    expiry: Math.floor(Date.now() / 1000) + 300
-                }]
-            });
+            return await this._simulateActivationResponse(
+                projectId,
+                justification,
+                [role],
+                "ACTIVATION_PENDING",
+                true);
         }
     }
 
@@ -414,27 +414,15 @@ class DebugModel extends Model {
             return super.getActivationRequest(activationToken);
         }
         else if (setting === "error") {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
-            return Promise.resolve({
-                isBeneficiary: false,
-                isReviewer: true,
-                justification: "a justification",
-                requestTime: Math.floor(Date.now() / 1000 - 300),
-                beneficiary: "user@example.com",
-                projectId: "project-1",
-                items: [{
-                    activationId: "sim-1",
-                    roleBinding: {
-                        fullResourceName: "//simulated",
-                        role: "roles/role-1"
-                    },
-                    status: "ACTIVATION_PENDING",
-                    expiry: Math.floor(Date.now() / 1000) + 300
-                }]
-            });
+            return await this._simulateActivationResponse(
+                "project-1",
+                "a justification",
+                ["roles/role-1"],
+                "ACTIVATION_PENDING",
+                false);
         }
     }
 
@@ -444,27 +432,15 @@ class DebugModel extends Model {
             return super.approveActivationRequest(activationToken);
         }
         else if (setting === "error") {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
-            return Promise.resolve({
-                isBeneficiary: false,
-                isReviewer: true,
-                justification: "a justification",
-                requestTime: Math.floor(Date.now() / 1000 - 300),
-                beneficiary: "user@example.com",
-                projectId: "project-1",
-                items: [{
-                    activationId: "sim-1",
-                    roleBinding: {
-                        fullResourceName: "//simulated",
-                        role: "roles/role-1"
-                    },
-                    status: "ACTIVATED",
-                    expiry: Math.floor(Date.now() / 1000) + 300
-                }]
-            });
+            return await this._simulateActivationResponse(
+                "project-1",
+                "a justification",
+                ["roles/role-1"],
+                "ACTIVATED",
+                false);
         }
     }
 }
