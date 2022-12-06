@@ -339,7 +339,15 @@ class DebugModel extends Model {
         }
         else {
             return Promise.resolve({
-                activationId: "sim-1"
+                items: [{
+                    activationId: "sim-1",
+                    roleBinding: {
+                        fullResourceName: "//simulated",
+                        role: role
+                    },
+                    status: "ACTIVATION_PENDING",
+                    expiry: Math.floor(Date.now() / 1000) + 300
+                }]
             });
         }
     }

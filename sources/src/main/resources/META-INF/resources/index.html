@@ -179,28 +179,15 @@
                 </div>
             </div>
         </main>
-        <main class="mdl-layout__content app-pane" id="pending-pane">
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Approval pending</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        Your request has been submitted for approval. You'll receive an email
-                        once approval has been granted.
-                    </div>
-                </div>
-            </div>
-        </main>
         <main class="mdl-layout__content app-pane" id="confirmation-pane">
             <div class="mdl-grid center-items">
                 <div class="mdl-card mdl-shadow--2dp">
                     <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Access granted</h2>
+                        <h2 class="mdl-card__title-text">Request submitted</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
                         <div class="step-subsection">
-                            You've been temporarily granted the following roles:
+                            You've requested access to the following roles:
                         </div>
                         <div class="step-subsection">
                             <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
@@ -531,10 +518,6 @@
                 return new AppPane("busy-pane");
             }
 
-            get pendingPane() {
-                return new AppPane("pending-pane");
-            }
-
             get confirmationPane() {
                 return new ConfirmationPane();
             }
@@ -555,6 +538,7 @@
 
                 const statusCaptions = {
                     "ACTIVATED": "Active",
+                    "ACTIVATION_PENDING": "Waiting for approval",
                     "ELIGIBLE_FOR_JIT": "Activation required",
                     "ELIGIBLE_FOR_MPA": "Peer approval required",
                 };
@@ -658,37 +642,36 @@
 
                     gui.busyPane.show();
                     try {
+                        let activationResult;
                         if (multiPartyApproval) {
                             console.assert(requestPane.roleTable.selected.length == 1);
-                            await backend.activateRole(
+                            activationResult = await backend.activateRole(
                                 requestPane.selectedProjectId,
                                 requestPane.roleTable.selected[0],
                                 requestPane.peersTable.selected,
                                 requestPane.justificationText);
-
-                            gui.pendingPane.show();
                         }
                         else {
-                            const activatedRolesResult = await backend.selfActivateRoles(
+                            activationResult = await backend.selfActivateRoles(
                                 requestPane.selectedProjectId,
                                 requestPane.roleTable.selected,
                                 requestPane.justificationText)
-
-                            const nowUnixTimeSecs = (Date.now() / 1000);
-                            const confirmationPane = gui.confirmationPane;
-                            activatedRolesResult.items.forEach((item) => {
-                                confirmationPane.activatedRoleTable.addRow(
-                                    item.roleBinding.role,
-                                    [
-                                        { text: item.roleBinding.role },
-                                        { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
-                                        { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
-                                    ],
-                                    false);
-                            });
-
-                            confirmationPane.show();
                         }
+
+                        const nowUnixTimeSecs = (Date.now() / 1000);
+                        const confirmationPane = gui.confirmationPane;
+                        activationResult.items.forEach((item) => {
+                            confirmationPane.activatedRoleTable.addRow(
+                                item.roleBinding.role,
+                                [
+                                    { text: item.roleBinding.role },
+                                    { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
+                                    { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
+                                ],
+                                false);
+                        });
+
+                        confirmationPane.show();
                     }
                     catch (error) {
                         gui.showToast(error);
