@@ -239,18 +239,33 @@
                     </div>
                     <div class="mdl-card__supporting-text">
                         <p>
-                            This application lets you request temporary access to a Google Cloud project. To request access,
-                            you need to provide the following:
+                            This application lets you request temporary access to a Google Cloud project:
+
+                            <ol>
+                                <li>Select the project that you need to access</li>
+                                <li>Select one or more roles to activate</li>
+                                <li>Provide a justification that explains why you need access to this project</li>
+                            </ol>
+
+                            You can only request access to projects and roles that you're <i>eligible</i> to access,
+                            and your access automatically expires after a certain period of time.
+                        </p>
+
+                        <h3 class="mdl-card__title-text">Approval</h3>
+                        <p>
+                            Roles differ in whether they require approval:
 
                             <ul>
-                                <li>The project to access</li>
-                                <li>One or more roles to activate</li>
-                                <li>A justification that explains why you need access to this project</li>
+                                <li>
+                                    <i>Self-approval</i> If a role permits self-approval, then providing a justification is sufficient
+                                    to activate the role. You don't need to request approval from another user.
+                                </li>
+                                <li>
+                                    <i>Multi-party approval</i>: If a role requires multi-party approval, then one of your <i>peers</i>
+                                    need to approve your access request before it takes effect. Peers are users that have been
+                                    granted the same role as you.
+                                </li>
                             </ul>
-                        </p>
-                        <p>
-                            You can only request access to projects and roles that you've been granted <i>eligible access</i> to,
-                            and your access automatically expires after a certain period of time.
                         </p>
                     </div>
                 </div>
@@ -262,25 +277,45 @@
                     </div>
                     <div class="mdl-card__supporting-text">
                         <p>
-                            As an administrator you can grant users or groups <i>eligible access</i> to Google Cloud projects.
-                        </p>
-                        <p>
-                            To grant eligible access, use the Cloud Console or <code>gcloud</code> to create an IAM role binding for
-                            a user or group, and make it eligible by adding a special IAM condition:
+                            As an administrator, you use IAM role bindings to decide which projects and roles users
+                            can request access to. To mark a role binding as <i>eligible</i>, you add a special
+                            <a href="https://cloud.google.com/iam/docs/conditions-overview" target="_blank">IAM condition</a>:
 
-                            <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
+                            <ul>
+                                <li>
+                                    <i>Self-approval</i>: To allow a user or group to activate a role without approval, add the
+                                    following IAM condition to the IAM binding:
+                                    <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
+                                </li>
+                                <li>
+                                    <i>Multi-party approval</i>: To allow a user or group to activate a role if at least one peer
+                                    approves their request, add the following IAM condition to the IAM binding:
+                                    <pre><code class="language-cel">has({}.multiPartyApprovalConstraint)</code></pre>
 
-                            You can create the IAM role binding for a specific project, or for an entire folder.
+                                    Peers are users that have been granted the same role binding on the same project.
+                                </li>
+                            </ul>
                         </p>
+                        <h3 class="mdl-card__title-text">Examples</h3>
                         <p>
-                            For example, the following <code>gcloud</code> grants eligible access to a user:
+                            The following <code>gcloud</code> command grants the user <code>alice@example.com</code>
+                            permision to activate the role <code>roles/compute.admin</code> without approval:
                             <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
-    --member user:<b>USER</b> \
-    --role <b>ROLE</b> \
-    --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
+  --member user:<b>alice@example.com</b> \
+  --role <b>roles/compute.admin</b> \
+  --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
 </code></pre>
                         </p>
-                        <!-- TODO: Describe MPA -->
+                        <p>
+                            The following <code>gcloud</code> command grants the group <code>compute-admins@example.com</code>
+                            permision to activate the role <code>roles/compute.admin</code>, and lets members of that group
+                            approve each other's requests:
+                            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+  --member user:<b>compute-admins@example.com</b> \
+  --role <b>roles/compute.admin</b> \
+  --condition "title=Eligible access,expression=has({}.multiPartyApprovalConstraint)"
+</code></pre>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -567,7 +602,7 @@
                 activationStatus.items.forEach((item) => {
                     this._activatedRoleTable.addRow(
                         item.roleBinding.role,
-                        [// TODO: Show projectID
+                        [
                             { text: activationStatus.projectId },
                             { text: item.roleBinding.role },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },

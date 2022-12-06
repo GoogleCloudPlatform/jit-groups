@@ -94,6 +94,12 @@ a {
     color: #9e9e9e;
 }
 
+h3.mdl-card__title-text {
+    font-size: 20px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
 /* ==== Forms === */
 fieldset {
     border-radius: 4px;
@@ -176,7 +182,8 @@ pre {
     background-color: #f0f0f0;
     position: relative;
     margin: 5px 0;
-    padding: 1rem 0 1rem 1rem
+    padding: 1rem 0 1rem 1rem;
+    font-size: 13px;
 }
 
 pre button {
