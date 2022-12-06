@@ -37,7 +37,6 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -358,6 +357,7 @@ public class TestApiResource {
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+        Instant.now(),
         Instant.now()));
 
     var request = new ApiResource.SelfActivationRequest();
@@ -367,11 +367,16 @@ public class TestApiResource {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
-      ApiResource.ActivationResponse.class);
+      ApiResource.ActivationStatusResponse.class);
 
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
+    assertEquals("project-1", body.projectId);
+    assertEquals(SAMPLE_USER.email, body.beneficiary);
+    assertTrue(body.isBeneficiary);
+    assertFalse(body.isReviewer);
+    assertEquals("justification", body.justification);
     assertNotNull(body.items);
     assertEquals(1, body.items.size());
     assertEquals(roleBinding, body.items.get(0).roleBinding);

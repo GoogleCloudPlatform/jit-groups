@@ -645,6 +645,7 @@
         };
 
         const queryParameters = new URLSearchParams(location.search);
+        const activationToken = queryParameters.get("activation");
         const gui = new View();
         const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
         const localSettings = new LocalSettings();
@@ -767,7 +768,8 @@
             $("#request-status-pane-approvebutton").click(async () => {
                 gui.busyPane.show();
                 try {
-                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest("xxx"); // TODO: pass token
+                    console.assert(activationToken);
+                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest(activationToken);
                 }
                 catch (error) {
                     gui.showToast(error);
@@ -828,8 +830,6 @@
                 // works properly. 
                 //
                 await backend.fetchPolicy();
-
-                const activationToken = queryParameters.get("activationToken");
                 if (activationToken) {
                     //
                     // Show approver UI.

@@ -159,6 +159,7 @@ public class RoleActivationService {
     return new Activation(
       ActivationId.newId(ActivationType.JIT),
       new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+      activationTime,
       expiryTime);
   }
 
@@ -243,6 +244,7 @@ public class RoleActivationService {
     return new Activation(
       request.id,
       new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+      request.creationTime,
       expiryTime);
   }
 
@@ -330,16 +332,30 @@ public class RoleActivationService {
   public static class Activation {
     public final ActivationId id;
     public final ProjectRole projectRole;
+    public final Instant requestTime;
     public final Instant expiry;
 
-    private Activation(ActivationId id, ProjectRole projectRole, Instant expiry) {
+    private Activation(
+      ActivationId id,
+      ProjectRole projectRole,
+      Instant requestTime,
+      Instant expiry
+    ) {
+      Preconditions.checkArgument(!requestTime.isAfter(expiry));
+
       this.id = id;
       this.projectRole = projectRole;
+      this.requestTime = requestTime;
       this.expiry = expiry;
     }
 
-    public static Activation createForTestingOnly(ActivationId id, ProjectRole projectRole, Instant expiry) {
-      return new Activation(id, projectRole, expiry);
+    public static Activation createForTestingOnly(
+      ActivationId id,
+      ProjectRole projectRole,
+      Instant requestTime,
+      Instant expiry
+    ) {
+      return new Activation(id, projectRole, requestTime, expiry);
     }
   }
 

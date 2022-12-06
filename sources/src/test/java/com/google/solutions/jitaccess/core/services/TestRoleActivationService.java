@@ -397,6 +397,7 @@ public class TestRoleActivationService {
     assertEquals(request.id, activation.id);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertEquals(roleBinding, activation.projectRole.roleBinding);
+    assertEquals(request.creationTime, activation.requestTime);
     assertEquals(Instant.ofEpochSecond(issuedAt).plusSeconds(60), activation.expiry);
 
     verify(resourceAdapter)

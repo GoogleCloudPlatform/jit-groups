@@ -25,10 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
-import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.core.data.*;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
@@ -38,6 +35,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -163,7 +161,7 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public ActivationResponse selfActivateProjectRoles(
+  public ActivationStatusResponse selfActivateProjectRoles(
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
     @Context SecurityContext securityContext
@@ -257,10 +255,25 @@ public class ApiResource {
 
     assert activations.size() == roleBindings.size();
 
-    return new ActivationResponse(
+    //
+    // All activations have been requested at once, so use the request time of the first.
+    //
+    var requestTime = activations
+      .stream()
+      .map(a -> a.requestTime)
+      .findFirst()
+      .get();
+
+    return new ActivationStatusResponse(
+      projectId,
+      iapPrincipal.getId(),
+      requestTime,
+      true,
+      false,
+      request.justification,
       activations
         .stream()
-        .map(a -> new ActivationResponse.ActivationStatus(
+        .map(a -> new ActivationStatusResponse.ActivationStatus(
           a.id.toString(),
           a.projectRole.roleBinding,
           a.projectRole.status,
@@ -315,18 +328,37 @@ public class ApiResource {
     }
   }
 
-  public static class ActivationResponse { // TODO: Rename to ActivationStatusResponse
+  public static class ActivationStatusResponse { // TODO: Rename to ActivationStatusResponse
+    public final String projectId;
+    public final String beneficiary;
+    public final long requestTime;
+    public final boolean isBeneficiary;
+    public final boolean isReviewer;
+    public final String justification;
     public final List<ActivationStatus> items;
 
-    // projectId
-    // justification
-    // beneficiary
-    // requesttime
-    // isBeneficiary
-    // isReviewer
-
-    public ActivationResponse(List<ActivationStatus> items) {
+    public ActivationStatusResponse(
+      ProjectId projectId,
+      UserId beneficiary,
+      Instant requestTime,
+      boolean isBeneficiary,
+      boolean isReviewer,
+      String justification,
+      List<ActivationStatus> items
+    ) {
+      Preconditions.checkNotNull(projectId);
+      Preconditions.checkNotNull(beneficiary);
+      Preconditions.checkNotNull(requestTime);
+      Preconditions.checkNotNull(justification);
       Preconditions.checkNotNull(items);
+      Preconditions.checkArgument(items.size() > 0);
+
+      this.projectId = projectId.id;
+      this.beneficiary = beneficiary.email;
+      this.requestTime = requestTime.getEpochSecond();
+      this.isBeneficiary = isBeneficiary;
+      this.isReviewer = isReviewer;
+      this.justification = justification;
       this.items = items;
     }
 
