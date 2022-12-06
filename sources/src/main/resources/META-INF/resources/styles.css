@@ -8,6 +8,10 @@ p {
 
 /* ==== MDL === */
 
+a {
+    color: #1a73e8;
+}
+
 .mdl-grid.center-items {
     justify-content: center;
 }

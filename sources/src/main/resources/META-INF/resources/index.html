@@ -209,6 +209,7 @@
                             <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
                                 <thead>
                                     <tr>
+                                        <th class="mdl-data-table__cell--non-numeric">Project</th>
                                         <th class="mdl-data-table__cell--non-numeric">Role</th>
                                         <th class="mdl-data-table__cell--non-numeric">Status</th>
                                         <th class="mdl-data-table__cell--non-numeric">Expiry</th>
@@ -567,6 +568,7 @@
                     this._activatedRoleTable.addRow(
                         item.roleBinding.role,
                         [// TODO: Show projectID
+                            { text: activationStatus.projectId },
                             { text: item.roleBinding.role },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
                             { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }

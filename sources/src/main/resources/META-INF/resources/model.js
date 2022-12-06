@@ -364,6 +364,7 @@ class DebugModel extends Model {
                 justification: justification,
                 requestTime: Math.floor(Date.now() / 1000),
                 beneficiary: "Self",
+                projectId: projectId,
                 items: roles.map(r => ({
                     activationId: "sim-1",
                     roleBinding: {
@@ -393,6 +394,7 @@ class DebugModel extends Model {
                 justification: justification,
                 requestTime: Math.floor(Date.now() / 1000 - 300),
                 beneficiary: "user@example.com",
+                projectId: projectId,
                 items: [{
                     activationId: "sim-1",
                     roleBinding: {
@@ -422,6 +424,7 @@ class DebugModel extends Model {
                 justification: "a justification",
                 requestTime: Math.floor(Date.now() / 1000 - 300),
                 beneficiary: "user@example.com",
+                projectId: "project-1",
                 items: [{
                     activationId: "sim-1",
                     roleBinding: {
@@ -451,6 +454,7 @@ class DebugModel extends Model {
                 justification: "a justification",
                 requestTime: Math.floor(Date.now() / 1000 - 300),
                 beneficiary: "user@example.com",
+                projectId: "project-1",
                 items: [{
                     activationId: "sim-1",
                     roleBinding: {
