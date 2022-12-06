@@ -189,6 +189,23 @@
                         <div class="step-subsection" id="request-status-pane-description">
                         </div>
                         <div class="step-subsection">
+                            Request details:
+                            <ul class="request-details">
+                                <li>
+                                    <label for="request-status-pane-beneficiary">User</label>
+                                    <span id="request-status-pane-beneficiary" />
+                                </li>
+                                <li>
+                                    <label for="request-status-pane-requesttime">Request time</label>
+                                    <span id="request-status-pane-requesttime" />
+                                </li>
+                                <li>
+                                    <label for="request-status-pane-justification">Justification</label>
+                                    <span id="request-status-pane-justification" />
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="step-subsection">
                             <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
                                 <thead>
                                     <tr>
@@ -472,18 +489,50 @@
         class RequestStatusPane extends AppPane {
             constructor() {
                 super("request-status-pane")
+
+                this.statusCaptions = {
+                    "ACTIVATED": "Active",
+                    "ACTIVATION_PENDING": "Waiting for approval",
+                    "ELIGIBLE_FOR_JIT": "Activation required",
+                    "ELIGIBLE_FOR_MPA": "Peer approval required",
+                };
             }
 
             get activatedRoleTable() {
                 return new MdlDataTable("#activatedroles");
             }
 
-            set title(title) {
-                $("#request-status-pane-title").text(title);
-            }
+            set activationStatus(activationStatus) {
+                if (activationStatus.isApprover) {
+                    // TODO: Approval UI
+                }
+                else {
+                    if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                        $("#request-status-pane-title").text("Status of your request");
+                        $("#request-status-pane-description").text("Your request has been submitted for approval. " +
+                            "You'll receive an email once approval has been granted");
+                    }
+                    else {
+                        $("#request-status-pane-title").text("Access granted");
+                        $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
+                    }
+                }
 
-            set description(description) {
-                $("#request-status-pane-description").text(description);
+                $("#request-status-pane-beneficiary").text(activationStatus.beneficiary);
+                $("#request-status-pane-requesttime").text(new Date(activationStatus.requestTime * 1000));
+                $("#request-status-pane-justification").text(activationStatus.justification);
+
+                const nowUnixTimeSecs = (Date.now() / 1000);
+                activationStatus.items.forEach((item) => {
+                    this.activatedRoleTable.addRow(
+                        item.roleBinding.role,
+                        [
+                            { text: item.roleBinding.role },
+                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
+                            { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
+                        ],
+                        false);
+                });
             }
         }
 
@@ -543,7 +592,7 @@
             (function () {
                 componentHandler.upgradeAllRegistered();
 
-                const statusCaptions = {
+                const statusCaptions = {// TODO: Move to AppPane
                     "ACTIVATED": "Active",
                     "ACTIVATION_PENDING": "Waiting for approval",
                     "ELIGIBLE_FOR_JIT": "Activation required",
@@ -649,43 +698,24 @@
 
                     gui.busyPane.show();
                     try {
-                        let activationResult;
+                        let activationStatus;
                         if (multiPartyApproval) {
                             console.assert(requestPane.roleTable.selected.length == 1);
-                            activationResult = await backend.activateRole(
+                            activationStatus = await backend.activateRole(
                                 requestPane.selectedProjectId,
                                 requestPane.roleTable.selected[0],
                                 requestPane.peersTable.selected,
                                 requestPane.justificationText);
-
-                            gui.requestStatusPane.title = "Request submitted";
-                            gui.requestStatusPane.description = "Your request has been submitted for approval. " +
-                                "You'll receive an email once approval has been granted";
                         }
                         else {
-                            activationResult = await backend.selfActivateRoles(
+                            activationStatus = await backend.selfActivateRoles(
                                 requestPane.selectedProjectId,
                                 requestPane.roleTable.selected,
                                 requestPane.justificationText)
-
-                            gui.requestStatusPane.title = "Access granted";
-                            gui.requestStatusPane.description = "You've been granted access to the following roles:";
                         }
 
-                        const nowUnixTimeSecs = (Date.now() / 1000);
-                        const requestStatusPane = gui.requestStatusPane;
-                        activationResult.items.forEach((item) => {
-                            requestStatusPane.activatedRoleTable.addRow(
-                                item.roleBinding.role,
-                                [
-                                    { text: item.roleBinding.role },
-                                    { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
-                                    { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
-                                ],
-                                false);
-                        });
-
-                        requestStatusPane.show();
+                        gui.requestStatusPane.activationStatus = activationStatus;
+                        gui.requestStatusPane.show();
                     }
                     catch (error) {
                         gui.showToast(error);

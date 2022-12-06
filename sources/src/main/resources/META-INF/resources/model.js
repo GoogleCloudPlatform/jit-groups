@@ -315,6 +315,11 @@ class DebugModel extends Model {
         }
         else {
             return Promise.resolve({
+                isBeneficiary: true,
+                isReviewer: false,
+                justification: justification,
+                requestTime: Math.floor(Date.now() / 1000),
+                beneficiary: "Self",
                 items: roles.map(r => ({
                     activationId: "sim-1",
                     roleBinding: {

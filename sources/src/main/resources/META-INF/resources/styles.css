@@ -129,7 +129,6 @@ legend {
     border: 0px;
 }
 
-
 .activated {
     background-color: #188038;
     color: #fff;
@@ -137,6 +136,25 @@ legend {
     padding: 4px;
     display: inline;
 }
+
+.request-details {
+    list-style: none;
+    display: table;
+}
+
+.request-details li {
+    list-style-type: square;
+}
+
+.request-details li label {
+    display: table-cell;
+    width: 100px;
+}
+
+.request-details li span {
+    display: table-cell;
+}
+
 
 /* ==== Navigation === */
 .step-subsection {

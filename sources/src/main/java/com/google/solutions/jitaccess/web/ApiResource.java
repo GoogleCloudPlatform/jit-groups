@@ -315,8 +315,14 @@ public class ApiResource {
     }
   }
 
-  public static class ActivationResponse {
+  public static class ActivationResponse { // TODO: Rename to ActivationStatusResponse
     public final List<ActivationStatus> items;
+
+    // justification
+    // beneficiary
+    // requesttime
+    // isBeneficiary
+    // isReviewer
 
     public ActivationResponse(List<ActivationStatus> items) {
       Preconditions.checkNotNull(items);
