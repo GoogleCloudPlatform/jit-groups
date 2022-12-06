@@ -19,11 +19,6 @@ class LocalSettings {
 }
 
 class Model {
-    get policy() {
-        console.assert(this._policy);
-        return this._policy;
-    }
-
     _getHeaders() {
         return { "X-JITACCESS": "1" };
     }
@@ -35,13 +30,9 @@ class Model {
         return `${message} (HTTP ${error.status}: ${error.statusText})`;
     }
 
-    titleForStatus(statusCode) {
-        var titles = {
-            "ELIGIBLE_FOR_JIT": "Inactive",
-            "ACTIVATED": "Activated"
-        }
-
-        return titles[statusCode] ?? statusCode;
+    get policy() {
+        console.assert(this._policy);
+        return this._policy;
     }
 
     async fetchPolicy() {
@@ -211,6 +202,7 @@ class DebugModel extends Model {
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
+            const statuses = ["ACTIVATED", "ELIGIBLE_FOR_JIT", "ELIGIBLE_FOR_MPA"]
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
                 roles: Array.from({ length: setting }, (e, i) => ({
@@ -218,7 +210,7 @@ class DebugModel extends Model {
                         id: "//project-1:roles/simulated-role-" + i,
                         role: "roles/simulated-role-" + i
                     },
-                    status: (i % 2) == 0 ? "ACTIVATED" : "ELIGIBLE_FOR_JIT"
+                    status: statuses[i % statuses.length]
                 }))
             });
         }
@@ -257,7 +249,7 @@ class DebugModel extends Model {
                         fullResourceName: "//simulated",
                         role: r
                     },
-                    status: "SIMULATED",
+                    status: "ACTIVATED",
                     expiry: Math.floor(Date.now() / 1000) + 300
                 }))
             });

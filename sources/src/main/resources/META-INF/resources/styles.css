@@ -127,7 +127,16 @@ legend {
 .ui-menu-item .ui-menu-item-wrapper.ui-state-active {
     background: #f0f0f0 !important;
     border: 0px;
-} 
+}
+
+
+.activated {
+    background-color: #188038;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px;
+    display: inline;
+}
 
 /* ==== Navigation === */
 .step-subsection {

@@ -90,7 +90,7 @@
                                     <thead>
                                         <tr>
                                             <th></th>
-                                            <th class="mdl-data-table__cell--non-numeric">Role ID</th>
+                                            <th class="mdl-data-table__cell--non-numeric">Role</th>
                                             <th class="mdl-data-table__cell--non-numeric">Status</th>
                                         </tr>
                                     </thead>
@@ -138,7 +138,7 @@
                         </div>
                         <div class="mdl-step__actions">
                             <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
-                                Submit request
+                                Request access
                             </button>
                             <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
                                 Cancel
@@ -177,7 +177,7 @@
                             <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
                                 <thead>
                                     <tr>
-                                        <th class="mdl-data-table__cell--non-numeric">Role ID</th>
+                                        <th class="mdl-data-table__cell--non-numeric">Role</th>
                                         <th class="mdl-data-table__cell--non-numeric">Status</th>
                                         <th class="mdl-data-table__cell--non-numeric">Expiry</th>
                                     </tr>
@@ -296,7 +296,10 @@
                 this.rowIndex = 0;
             }
 
-            /** Add data row */
+            /** 
+             *  Add data row.
+             *  Format of column: { class: ..., text: ... }
+             */
             addRow(value, columns, showCheckbox=true, enabled=true) {
                 console.assert(value);
                 console.assert(columns);
@@ -318,8 +321,14 @@
                 }
 
                 columns.forEach((value) => {
+                    const div = $("<div></div>");
+                    div.text(value.text);
+                    if (value.class) {
+                        div.attr("class", value.class);
+                    }
+
                     const td = $("<td class='mdl-data-table__cell--non-numeric'>");
-                    td.text(value);
+                    td.append(div);
                     tr.append(td);
                 });
 
@@ -505,6 +514,12 @@
             (function () {
                 componentHandler.upgradeAllRegistered();
 
+                const statusCaptions = {
+                    "ACTIVATED": "Active",
+                    "ELIGIBLE_FOR_JIT": "Activation required",
+                    "ELIGIBLE_FOR_MPA": "Peer approval required",
+                };
+
                 //
                 // Step: Select project.
                 //
@@ -529,7 +544,10 @@
                     rolesResult.roles.forEach((item) => {
                         requestPane.roleTable.addRow(
                             item.roleBinding.role,
-                            [item.roleBinding.role, backend.titleForStatus(item.status)],
+                            [
+                                { text: item.roleBinding.role },
+                                { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
+                            ],
                             true,
                             item.status !== "ACTIVATED");
                     });
@@ -568,9 +586,11 @@
                         activatedRolesResult.items.forEach((item) => {
                             confirmationPane.activatedRoleTable.addRow(
                                 item.roleBinding.role,
-                                [item.roleBinding.role,
-                                    backend.titleForStatus(item.status),
-                                    `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes`],
+                                [
+                                    { text: item.roleBinding.role },
+                                    { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
+                                    { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
+                                ],
                                 false);
                         });
 
