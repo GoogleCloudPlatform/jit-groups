@@ -427,6 +427,13 @@
                 console.assert($("#" + id).length);
 
                 this.id = id;
+
+                this.statusCaptions = {
+                    "ACTIVATED": "Active",
+                    "ACTIVATION_PENDING": "Waiting for approval",
+                    "ELIGIBLE_FOR_JIT": "Activation required",
+                    "ELIGIBLE_FOR_MPA": "Peer approval required",
+                };
             }
 
             /**
@@ -484,18 +491,41 @@
             set justificationHint(hint) {
                 $("#step-approve legend").text(hint);
             }
+
+            set roles(roles) {
+                this._roles = roles;
+                roles.forEach((item) => {
+                    this.roleTable.addRow(
+                        item.roleBinding.role,
+                        [
+                            { text: item.roleBinding.role },
+                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
+                        ],
+                        true,
+                        item.status !== "ACTIVATED");
+                });
+            }
+
+            get selectedRoles() {
+                console.assert(this._roles);
+                return this._roles.filter(i => this.roleTable.selected.includes(i.roleBinding.role));
+            }
+
+            set peers(peers) {
+                peers.forEach((item) => {
+                    this.peersTable.addRow(
+                        item.email,
+                        [
+                            { text: item.email }
+                        ],
+                        true);
+                });
+            }
         }
 
         class RequestStatusPane extends AppPane {
             constructor() {
                 super("request-status-pane")
-
-                this.statusCaptions = {
-                    "ACTIVATED": "Active",
-                    "ACTIVATION_PENDING": "Waiting for approval",
-                    "ELIGIBLE_FOR_JIT": "Activation required",
-                    "ELIGIBLE_FOR_MPA": "Peer approval required",
-                };
             }
 
             get activatedRoleTable() {
@@ -538,6 +568,13 @@
 
         /** Wrapper for HTML-based view */
         class View {
+            constructor() {
+                this.requestPane = new RequestPane();
+                this.helpPane = new AppPane("help-pane");
+                this.busyPane = new AppPane("busy-pane");
+                this.requestStatusPane = new RequestStatusPane();
+            }
+
             /** Display a toast bar at the bottom of the screen */
             showToast(message, showReloadButton) {
                 console.assert(message);
@@ -561,22 +598,6 @@
 
                 toast.MaterialSnackbar.showSnackbar(config);
             }
-
-            get requestPane() {
-                return new RequestPane();
-            }
-
-            get helpPane() {
-                return new AppPane("help-pane");
-            }
-
-            get busyPane() {
-                return new AppPane("busy-pane");
-            }
-
-            get requestStatusPane() {
-                return new RequestStatusPane();
-            }
         };
 
         const gui = new View();
@@ -592,17 +613,9 @@
             (function () {
                 componentHandler.upgradeAllRegistered();
 
-                const statusCaptions = {// TODO: Move to AppPane
-                    "ACTIVATED": "Active",
-                    "ACTIVATION_PENDING": "Waiting for approval",
-                    "ELIGIBLE_FOR_JIT": "Activation required",
-                    "ELIGIBLE_FOR_MPA": "Peer approval required",
-                };
-
                 //
                 // Step: Select project.
                 //
-                let roles;
                 const requestPane = gui.requestPane;
                 requestPane.selectedProjectId = localSettings.lastProjectId;
                 requestPane.requestStep.addHandler(async () => {
@@ -624,17 +637,7 @@
                         gui.showToast(rolesResult.warnings.join(", "));
                     }
 
-                    roles = rolesResult.roles;
-                    roles.forEach((item) => {
-                        requestPane.roleTable.addRow(
-                            item.roleBinding.role,
-                            [
-                                { text: item.roleBinding.role },
-                                { text: statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
-                            ],
-                            true,
-                            item.status !== "ACTIVATED");
-                    });
+                    requestPane.roles = rolesResult.roles;
                 });
 
                 //
@@ -642,8 +645,7 @@
                 //
                 let multiPartyApproval;
                 requestPane.selectRoleStep.addHandler(async () => {
-                    console.assert(roles);
-                    const selectedRoles = roles.filter(i => requestPane.roleTable.selected.includes(i.roleBinding.role));
+                    const selectedRoles = gui.requestPane.selectedRoles;
 
                     if (selectedRoles.length === 0) {
                         throw "Select one or more roles to actviate";
@@ -665,14 +667,7 @@
                             throw "There are currently no peers that could approve your request";
                         }
 
-                        peersResult.peers.forEach((item) => {
-                            requestPane.peersTable.addRow(
-                                item.email,
-                                [
-                                    { text: item.email }
-                                ],
-                                true);
-                        });
+                        requestPane.peers = peersResult.peers;
                     }
                     else {
                         //
