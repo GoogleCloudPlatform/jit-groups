@@ -179,15 +179,14 @@
                 </div>
             </div>
         </main>
-        <main class="mdl-layout__content app-pane" id="confirmation-pane">
+        <main class="mdl-layout__content app-pane" id="request-status-pane">
             <div class="mdl-grid center-items">
                 <div class="mdl-card mdl-shadow--2dp">
                     <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Request submitted</h2>
+                        <h2 class="mdl-card__title-text" id="request-status-pane-title">.</h2>
                     </div>
                     <div class="mdl-card__supporting-text">
-                        <div class="step-subsection">
-                            You've requested access to the following roles:
+                        <div class="step-subsection" id="request-status-pane-description">
                         </div>
                         <div class="step-subsection">
                             <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
@@ -202,12 +201,9 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="step-subsection conditional-mpa-pending">
-                            You'll receive an email once your request has been approved.
-                        </div>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored conditional-mpa-pending" href="https://console.cloud.google.com/" target="_blank">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-console">
                             Open Console
                         </a>
                         <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="/">
@@ -473,13 +469,21 @@
             }
         }
 
-        class ConfirmationPane extends AppPane {
+        class RequestStatusPane extends AppPane {
             constructor() {
-                super("confirmation-pane")
+                super("request-status-pane")
             }
 
             get activatedRoleTable() {
                 return new MdlDataTable("#activatedroles");
+            }
+
+            set title(title) {
+                $("#request-status-pane-title").text(title);
+            }
+
+            set description(description) {
+                $("#request-status-pane-description").text(description);
             }
         }
 
@@ -521,8 +525,8 @@
                 return new AppPane("busy-pane");
             }
 
-            get confirmationPane() {
-                return new ConfirmationPane();
+            get requestStatusPane() {
+                return new RequestStatusPane();
             }
         };
 
@@ -653,6 +657,10 @@
                                 requestPane.roleTable.selected[0],
                                 requestPane.peersTable.selected,
                                 requestPane.justificationText);
+
+                            gui.requestStatusPane.title = "Request submitted";
+                            gui.requestStatusPane.description = "Your request has been submitted for approval. " +
+                                "You'll receive an email once approval has been granted";
                         }
                         else {
                             activationResult = await backend.selfActivateRoles(
@@ -660,13 +668,14 @@
                                 requestPane.roleTable.selected,
                                 requestPane.justificationText)
 
-                            $(".conditional-mpa-pending").hide();
+                            gui.requestStatusPane.title = "Access granted";
+                            gui.requestStatusPane.description = "You've been granted access to the following roles:";
                         }
 
                         const nowUnixTimeSecs = (Date.now() / 1000);
-                        const confirmationPane = gui.confirmationPane;
+                        const requestStatusPane = gui.requestStatusPane;
                         activationResult.items.forEach((item) => {
-                            confirmationPane.activatedRoleTable.addRow(
+                            requestStatusPane.activatedRoleTable.addRow(
                                 item.roleBinding.role,
                                 [
                                     { text: item.roleBinding.role },
@@ -676,7 +685,7 @@
                                 false);
                         });
 
-                        confirmationPane.show();
+                        requestStatusPane.show();
                     }
                     catch (error) {
                         gui.showToast(error);
