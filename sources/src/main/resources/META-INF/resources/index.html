@@ -202,9 +202,12 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="step-subsection conditional-mpa-pending">
+                            You'll receive an email once your request has been approved.
+                        </div>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored conditional-mpa-pending" href="https://console.cloud.google.com/" target="_blank">
                             Open Console
                         </a>
                         <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="/">
@@ -656,6 +659,8 @@
                                 requestPane.selectedProjectId,
                                 requestPane.roleTable.selected,
                                 requestPane.justificationText)
+
+                            $(".conditional-mpa-pending").hide();
                         }
 
                         const nowUnixTimeSecs = (Date.now() / 1000);
