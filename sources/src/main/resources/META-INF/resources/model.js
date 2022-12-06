@@ -143,8 +143,20 @@ class Model {
         console.assert(peers.length > 0);
         console.assert(justification)
 
+        throw "NIY"; // TODO: Submit
         try {
-            throw "NIY"; // TODO: Submit
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Get details for an activation request */
+    async getActivationRequest(activationToken) {
+        console.assert(activationToken);
+
+        throw "NIY"; // TODO: Lookup
+        try {
         }
         catch (error) {
             throw this._formatError(error);
@@ -207,6 +219,14 @@ class DebugModel extends Model {
                         <option value="error">Simulate error</option>
                     </select>
                 </div>
+                <div>
+                    getActivationRequest:
+                    <select id="debug-getActivationRequest">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
             </div>
         `);
 
@@ -219,7 +239,8 @@ class DebugModel extends Model {
             "debug-listRoles",
             "debug-listPeers",
             "debug-selfActivateRoles",
-            "debug-activateRole"
+            "debug-activateRole",
+            "debug-getActivationRequest"
         ].forEach(setting => {
 
             $("#" + setting).val(localStorage.getItem(setting))
@@ -295,7 +316,7 @@ class DebugModel extends Model {
             return Promise.reject("Simulated error");
         }
         else {
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 1000));
             return Promise.resolve({
                 peers: Array.from({ length: setting }, (e, i) => ({
                     email: `user-${i}@example.com`
@@ -314,6 +335,7 @@ class DebugModel extends Model {
             return Promise.reject("Simulated error");
         }
         else {
+            await new Promise(r => setTimeout(r, 1000));
             return Promise.resolve({
                 isBeneficiary: true,
                 isReviewer: false,
@@ -349,6 +371,35 @@ class DebugModel extends Model {
                     roleBinding: {
                         fullResourceName: "//simulated",
                         role: role
+                    },
+                    status: "ACTIVATION_PENDING",
+                    expiry: Math.floor(Date.now() / 1000) + 300
+                }]
+            });
+        }
+    }
+
+    async getActivationRequest(activationToken) {
+        var setting = $("#debug-getActivationRequest").val();
+        if (!setting) {
+            return super.getActivationRequest(activationToken);
+        }
+        else if (setting === "error") {
+            await new Promise(r => setTimeout(r, 1000));
+            return Promise.reject("Simulated error");
+        }
+        else {
+            return Promise.resolve({
+                isBeneficiary: false,
+                isReviewer: true,
+                justification: "a justification",
+                requestTime: Math.floor(Date.now() / 1000 - 300),
+                beneficiary: "user@example.com",
+                items: [{
+                    activationId: "sim-1",
+                    roleBinding: {
+                        fullResourceName: "//simulated",
+                        role: "roles/role-1"
                     },
                     status: "ACTIVATION_PENDING",
                     expiry: Math.floor(Date.now() / 1000) + 300

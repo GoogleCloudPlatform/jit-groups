@@ -220,11 +220,11 @@
                         </div>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-console">
-                            Open Console
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-approvebutton">
+                            Approve
                         </a>
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="/">
-                            Back
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-consolebutton">
+                            Open Console
                         </a>
                     </div>
                 </div>
@@ -379,6 +379,10 @@
                 var boxes = $(`${this.selector} input:checked`);
                 return $.map(boxes, input => input.value);
             }
+
+            clear() {
+                $(`${this.selector} tbody`).empty();
+            }
         }
 
         /** Helper class for modifying MDL steps */
@@ -474,6 +478,8 @@
 
             set roles(roles) {
                 this._roles = roles;
+
+                this._roleTable.clear();
                 roles.forEach((item) => {
                     this._roleTable.addRow(
                         item.roleBinding.role,
@@ -492,6 +498,7 @@
             }
 
             set peers(peers) {
+                this._peersTable.clear();
                 peers.forEach((item) => {
                     this._peersTable.addRow(
                         item.email,
@@ -515,10 +522,23 @@
             }
 
             set activationStatus(activationStatus) {
-                if (activationStatus.isApprover) {
-                    // TODO: Approval UI
+                $("#request-status-pane-approvebutton").hide();
+                $("#request-status-pane-consolebutton").hide();
+
+                if (activationStatus.isReviewer) {
+                    $("#request-status-pane-title").text("Access request");
+                    $("#request-status-pane-description").text("One of your peers is asking you to review the following access request.");
+
+                    const link = $("<a target='_blank'/>");
+                    link.attr("href", `https://contacts.google.com/search/${activationStatus.beneficiary}`);
+                    link.text(activationStatus.beneficiary);
+                    $("#request-status-pane-beneficiary").append(link);
+
+                    $("#request-status-pane-approvebutton").show();
+                    // TODO: Fix link color
                 }
-                else {
+                else if (activationStatus.isBeneficiary) {
+                    $("#request-status-pane-beneficiary").text("You");
                     if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
                         $("#request-status-pane-title").text("Status of your request");
                         $("#request-status-pane-description").text("Your request has been submitted for approval. " +
@@ -527,18 +547,19 @@
                     else {
                         $("#request-status-pane-title").text("Access granted");
                         $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
+                        $("#request-status-pane-consolebutton").show();
                     }
                 }
 
-                $("#request-status-pane-beneficiary").text(activationStatus.beneficiary);
                 $("#request-status-pane-requesttime").text(new Date(activationStatus.requestTime * 1000));
                 $("#request-status-pane-justification").text(activationStatus.justification);
 
                 const nowUnixTimeSecs = (Date.now() / 1000);
+                this._activatedRoleTable.clear();
                 activationStatus.items.forEach((item) => {
                     this._activatedRoleTable.addRow(
                         item.roleBinding.role,
-                        [
+                        [// TODO: Show projectID
                             { text: item.roleBinding.role },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
                             { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
@@ -582,8 +603,9 @@
             }
         };
 
+        const queryParameters = new URLSearchParams(location.search);
         const gui = new View();
-        const backend = window.location.search === "?debug" ? new DebugModel() : new Model();
+        const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
         const localSettings = new LocalSettings();
 
         $("#menu-requestaccess").click(() => gui.requestPane.show());
@@ -746,13 +768,27 @@
                 position: { of: $("#project-selector") }
             });
 
-            //
-            // Downlaod policy to check if the communication with the backend
-            // works properly. 
-            //
             try {
+                //
+                // Download policy to check if the communication with the backend
+                // works properly. 
+                //
                 await backend.fetchPolicy();
-                gui.requestPane.show();
+
+                const activationToken = queryParameters.get("activationToken");
+                if (activationToken) {
+                    //
+                    // Show approver UI.
+                    //
+                    gui.requestStatusPane.activationStatus = await backend.getActivationRequest(activationToken);
+                    gui.requestStatusPane.show();
+                }
+                else {
+                    //
+                    // Show request UI.
+                    //
+                    gui.requestPane.show();
+                }
             }
             catch (error) {
                 gui.showToast(error, true);

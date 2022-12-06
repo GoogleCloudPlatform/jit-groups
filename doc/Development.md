@@ -16,7 +16,7 @@ In the command line above, replace `SERVICE_ACCOUNT` with a service account that
 * Your ADC can impersonate (i.e., you have the _Service Account Token Creator_ role on that service account
 * Can access the Policy Analyzer API
 
-You can then access the application on `http://localhost:8080/?debug`.
+You can then access the application on `http://localhost:8080/?debug=1`.
 
 
 ## HTTPS introspection

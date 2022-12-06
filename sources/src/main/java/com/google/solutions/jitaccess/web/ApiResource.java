@@ -318,6 +318,7 @@ public class ApiResource {
   public static class ActivationResponse { // TODO: Rename to ActivationStatusResponse
     public final List<ActivationStatus> items;
 
+    // projectId
     // justification
     // beneficiary
     // requesttime
