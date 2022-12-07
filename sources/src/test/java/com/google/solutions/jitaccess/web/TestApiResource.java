@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class TestApiResource {
@@ -133,7 +133,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectDiscoveryyReturnsNoProjects_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenProjectDiscoveryReturnsNoProjects_ThenGetProjectsReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenReturn(Set.of());
 
@@ -160,6 +160,91 @@ public class TestApiResource {
     var body = response.getBody();
     assertNotNull(body.projects);
     assertEquals(2, body.projects.size());
+  }
+
+
+  // -------------------------------------------------------------------------
+  // /api/projects/{projectId}/roles/peers.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void postPeersReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post("/api/projects/project-1/peers", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(405, response.getStatus());
+  }
+
+  @Test
+  public void getPeersWithoutRoleReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+  }
+
+  @Test
+  public void whenPeerDiscoveryThrowsAccessDeniedException_ThenGetPeersReturnsError() throws Exception {
+    when(this.resource.roleDiscoveryService.listApproversForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenPeerDiscoveryThrowsIOException_ThenGetPeersReturnsError() throws Exception {
+    when(this.resource.roleDiscoveryService.listApproversForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+      .thenThrow(new IOException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenPeerDiscoveryReturnsNoPeers_ThenGetProjectsReturnsEmptyList() throws Exception {
+    when(this.resource.roleDiscoveryService
+      .listApproversForProjectRole(
+        eq(SAMPLE_USER),
+        argThat(r -> r.role.equals("roles/browser"))))
+      .thenReturn(Set.of());
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.peers);
+    assertEquals(0, body.peers.size());
+  }
+
+  @Test
+  public void whenPeerDiscoveryReturnsProjects_ThenGetPeersReturnsList() throws Exception {
+    when(this.resource.roleDiscoveryService
+      .listApproversForProjectRole(
+        eq(SAMPLE_USER),
+        argThat(r -> r.role.equals("roles/browser"))))
+      .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.peers);
+    assertEquals(2, body.peers.size());
   }
 
   // -------------------------------------------------------------------------
@@ -224,7 +309,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryyReturnsNoRoles_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenRoleDiscoveryReturnsNoRoles_ThenGetProjectsReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),

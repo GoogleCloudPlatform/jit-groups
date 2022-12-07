@@ -156,6 +156,7 @@ public class AssetInventoryAdapter {
         .setAnalysisQueryResourceSelectorFullResourceName(fullResourceName)
         .setAnalysisQueryAccessSelectorRoles(List.of(role))
         .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .setAnalysisQueryOptionsExpandGroups(true)
         .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
         .execute()
         .getMainAnalysis();

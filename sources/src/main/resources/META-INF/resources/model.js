@@ -102,7 +102,7 @@ class Model {
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/roles/${role}/peers`,
+                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -357,7 +357,7 @@ class DebugModel extends Model {
     async listPeers(projectId, role) {
         var setting = $("#debug-listPeers").val();
         if (!setting) {
-            return super.listPeers();
+            return super.listPeers(projectId, role);
         }
         else if (setting === "error") {
             await this._simulateError();

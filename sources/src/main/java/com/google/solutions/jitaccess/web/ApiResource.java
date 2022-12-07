@@ -129,7 +129,6 @@ public class ApiResource {
     Preconditions.checkArgument(
       projectId != null && !projectId.trim().isEmpty(),
       "A projectId is required");
-    Preconditions.checkArgument(!projectId.trim().isEmpty(), "projectId must be provided");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
@@ -154,8 +153,49 @@ public class ApiResource {
   }
 
   /**
-   * Self-activate one or more project roles.
-   * This is only allowed for JIT-eligible roles.
+   * List qualified peers for a role.
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("projects/{projectId}/peers")
+  public ProjectRolePeersResponse listEligibleRoleBindings(
+    @PathParam("projectId") String projectId,
+    @QueryParam("role") String role,
+    @Context SecurityContext securityContext
+  ) throws AccessException {
+    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+
+    Preconditions.checkArgument(
+      projectId != null && !projectId.trim().isEmpty(),
+      "A projectId is required");
+    Preconditions.checkArgument(
+      role != null && !role.trim().isEmpty(),
+      "A role is required");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+
+    try {
+      var peers = this.roleDiscoveryService.listApproversForProjectRole(
+        iapPrincipal.getId(),
+        new RoleBinding(new ProjectId(projectId), role));
+
+      assert !peers.contains(iapPrincipal.getId());
+
+      return new ProjectRolePeersResponse(peers);
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          String.format("Listing peers failed: %s", e.getMessage()))
+        .write();
+
+      throw new AccessDeniedException("Listing peers failed, see logs for details");
+    }
+  }
+
+  /**
+   * Self-activate one or more project roles. Only allowed for JIT-eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -282,6 +322,35 @@ public class ApiResource {
         .collect(Collectors.toList()));
   }
 
+//
+//  /**
+//   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
+//   */
+//  @POST
+//  @Consumes(MediaType.APPLICATION_JSON)
+//  @Produces(MediaType.APPLICATION_JSON)
+//  @Path("projects/{projectId}/roles/self-activate")
+//  public ActivationStatusResponse selfActivateProjectRoles(
+//    @PathParam("projectId") String projectIdString,
+//    SelfActivationRequest request,
+//    @Context SecurityContext securityContext
+//  ) throws AccessDeniedException {
+//    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+//
+//    Preconditions.checkArgument(
+//      projectIdString != null && !projectIdString.trim().isEmpty(),
+//      "A projectId is required");
+//    Preconditions.checkArgument(
+//      request != null && request.roles != null && request.roles.size() > 0 && request.roles.size() <= 10,
+//      "At least one role is required");
+//    Preconditions.checkArgument(
+//      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
+//      "A justification must be provided");
+//
+//    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+//    var projectId = new ProjectId(projectIdString);
+//  }
+
   // -------------------------------------------------------------------------
   // Request/response classes.
   // -------------------------------------------------------------------------
@@ -317,6 +386,15 @@ public class ApiResource {
 
       this.warnings = warnings;
       this.roles = roleBindings;
+    }
+  }
+
+  public static class ProjectRolePeersResponse {
+    public final Set<UserId> peers;
+
+    public ProjectRolePeersResponse(Set<UserId> peers) {
+      Preconditions.checkNotNull(peers);
+      this.peers = peers;
     }
   }
 
