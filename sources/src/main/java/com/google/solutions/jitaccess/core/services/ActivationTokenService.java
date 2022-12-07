@@ -21,21 +21,16 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Creates and verifies activation tokens.
@@ -71,8 +66,8 @@ public class ActivationTokenService {
 
   public String createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
     Preconditions.checkNotNull(request, "request");
-    Preconditions.checkArgument(request.creationTime.isBefore(Instant.now().plusSeconds(10)));
-    Preconditions.checkArgument(request.creationTime.isAfter(Instant.now().minusSeconds(10)));
+    Preconditions.checkArgument(request.startTime.isBefore(Instant.now().plusSeconds(10)));
+    Preconditions.checkArgument(request.startTime.isAfter(Instant.now().minusSeconds(10)));
 
     //
     // Add obligatory claims.
@@ -80,7 +75,7 @@ public class ActivationTokenService {
     var jwtPayload = request.toJsonWebTokenPayload()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setExpirationTimeSeconds(request.creationTime.plus(this.options.tokenValidity).getEpochSecond());
+      .setExpirationTimeSeconds(request.startTime.plus(this.options.tokenValidity).getEpochSecond());
 
     return this.iamCredentialsAdapter.signJwt(
       this.options.serviceAccount,

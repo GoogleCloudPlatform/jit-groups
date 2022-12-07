@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.core.data.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.*;
 import java.util.Base64;
@@ -218,8 +219,6 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = request.creationTime;
-    var expiryTime = activationTime.plus(this.options.activationDuration);
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
       caller.email,
@@ -231,7 +230,9 @@ public class RoleActivationService {
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
-        .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
+        .setExpression(IamTemporaryAccessConditions.createExpression(
+          request.startTime,
+          request.endTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
       ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
@@ -244,8 +245,8 @@ public class RoleActivationService {
     return new Activation(
       request.id,
       new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
-      request.creationTime,
-      expiryTime);
+      request.startTime,
+      request.endTime);
   }
 
   public ActivationRequest createActivationRequestForPeer(
@@ -280,13 +281,17 @@ public class RoleActivationService {
     //
     // Issue an activation request.
     //
+    var startTime = Instant.now();
+    var endTime = startTime.plus(this.options.activationDuration);
+
     return new ActivationRequest(
       ActivationId.newId(ActivationType.MPA),
       callerAndBeneficiary,
       reviewers,
       roleBinding,
       justification,
-      Instant.now());
+      startTime,
+      endTime);
   }
 
   public Options getOptions() {
@@ -333,30 +338,33 @@ public class RoleActivationService {
   public static class Activation {
     public final ActivationId id;
     public final ProjectRole projectRole;
-    public final Instant requestTime;
-    public final Instant expiry;
+    public final Instant startTime;
+    public final Instant endTime;
 
     private Activation(
       ActivationId id,
       ProjectRole projectRole,
-      Instant requestTime,
-      Instant expiry
+      Instant startTime,
+      Instant endTime
     ) {
-      Preconditions.checkArgument(!requestTime.isAfter(expiry));
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
+
+      assert startTime.isBefore(endTime);
 
       this.id = id;
       this.projectRole = projectRole;
-      this.requestTime = requestTime;
-      this.expiry = expiry;
+      this.startTime = startTime;
+      this.endTime = endTime;
     }
 
     public static Activation createForTestingOnly(
       ActivationId id,
       ProjectRole projectRole,
-      Instant requestTime,
-      Instant expiry
+      Instant startTime,
+      Instant endTime
     ) {
-      return new Activation(id, projectRole, requestTime, expiry);
+      return new Activation(id, projectRole, startTime, endTime);
     }
   }
 
@@ -367,7 +375,8 @@ public class RoleActivationService {
     public final Set<UserId> reviewers;
     public final RoleBinding roleBinding;
     public final String justification;
-    public final Instant creationTime;
+    public final Instant startTime;
+    public final Instant endTime;
 
     private ActivationRequest(
       ActivationId id,
@@ -375,21 +384,26 @@ public class RoleActivationService {
       Set<UserId> reviewers,
       RoleBinding roleBinding,
       String justification,
-      Instant creationTime
+      Instant startTime,
+      Instant endTime
     ) {
       Preconditions.checkNotNull(id);
       Preconditions.checkNotNull(beneficiary);
       Preconditions.checkNotNull(reviewers);
       Preconditions.checkNotNull(roleBinding);
       Preconditions.checkNotNull(justification);
-      Preconditions.checkNotNull(creationTime);
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
+
+      assert startTime.isBefore(endTime);
 
       this.id = id;
       this.beneficiary = beneficiary;
       this.reviewers = reviewers;
       this.roleBinding = roleBinding;
       this.justification = justification;
-      this.creationTime = creationTime;
+      this.startTime = startTime;
+      this.endTime = endTime;
     }
 
     public static ActivationRequest createForTestingOnly(
@@ -398,9 +412,10 @@ public class RoleActivationService {
       Set<UserId> reviewers,
       RoleBinding roleBinding,
       String justification,
-      Instant creationTime
+      Instant startTime,
+      Instant endTime
       ) {
-      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, creationTime);
+      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, startTime, endTime);
     }
 
     protected static ActivationRequest fromJsonWebTokenPayload(JsonWebToken.Payload payload) {
@@ -415,18 +430,20 @@ public class RoleActivationService {
           payload.get("resource").toString(),
           payload.get("role").toString()),
         payload.get("justification").toString(),
-        Instant.ofEpochSecond(payload.getIssuedAtTimeSeconds()));
+        Instant.ofEpochSecond(((Number)payload.get("start")).longValue()),
+        Instant.ofEpochSecond(((Number)payload.get("end")).longValue()));
     }
 
     protected JsonWebToken.Payload toJsonWebTokenPayload() {
       return new JsonWebToken.Payload()
-        .setIssuedAtTimeSeconds(this.creationTime.getEpochSecond())
         .setJwtId(this.id.toString())
         .set("beneficiary", this.beneficiary.email)
         .set("reviewers", this.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
         .set("resource", this.roleBinding.fullResourceName)
         .set("role", this.roleBinding.role)
-        .set("justification", this.justification);
+        .set("justification", this.justification)
+        .set("start", this.startTime.getEpochSecond())
+        .set("end", this.endTime.getEpochSecond());
     }
   }
 

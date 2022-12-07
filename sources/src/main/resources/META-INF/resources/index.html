@@ -196,8 +196,12 @@
                                     <span id="request-status-pane-beneficiary" />
                                 </li>
                                 <li>
-                                    <label for="request-status-pane-requesttime">Request time</label>
-                                    <span id="request-status-pane-requesttime" />
+                                    <label for="request-status-pane-starttime">Start time</label>
+                                    <span id="request-status-pane-starttime" />
+                                </li>
+                                <li>
+                                    <label for="request-status-pane-endtime">End time</label>
+                                    <span id="request-status-pane-endtime" />
                                 </li>
                                 <li>
                                     <label for="request-status-pane-justification">Justification</label>
@@ -212,7 +216,6 @@
                                         <th class="mdl-data-table__cell--non-numeric">Project</th>
                                         <th class="mdl-data-table__cell--non-numeric">Role</th>
                                         <th class="mdl-data-table__cell--non-numeric">Status</th>
-                                        <th class="mdl-data-table__cell--non-numeric">Expiry</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -591,7 +594,11 @@
                     }
                 }
 
-                $("#request-status-pane-requesttime").text(new Date(activationStatus.requestTime * 1000));
+                // NB. All items have the same start/end time.
+                var expirySecs = activationStatus.items[0].endTime - activationStatus.items[0].startTime;
+                $("#request-status-pane-starttime").text(new Date(activationStatus.items[0].startTime * 1000).toLocaleString());
+                $("#request-status-pane-endtime").text(
+                    `${new Date(activationStatus.items[0].endTime * 1000).toLocaleString()} (in ${Math.floor(expirySecs / 60)} minutes)`);
                 $("#request-status-pane-justification").text(activationStatus.justification);
 
                 const nowUnixTimeSecs = (Date.now() / 1000);
@@ -602,8 +609,7 @@
                         [
                             { text: activationStatus.projectId },
                             { text: item.roleBinding.role },
-                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null },
-                            { text: `${Math.floor((item.expiry - nowUnixTimeSecs) / 60)} minutes` }
+                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
                         ],
                         false);
                 });

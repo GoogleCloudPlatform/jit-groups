@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,13 +55,15 @@ public class TestActivationTokenService {
         serviceAccount,
         Duration.ofMinutes(5)));
 
+    var startTime = Instant.now();
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
       SAMPLE_USER_1,
       Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
       new RoleBinding(new ProjectId("project-1"), "roles/role-1"),
       "justification",
-      Instant.now());
+      startTime,
+      startTime.plusSeconds(60));
 
     var token = tokenService.createToken(request);
 
@@ -77,9 +78,11 @@ public class TestActivationTokenService {
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
     assertEquals(serviceAccount.email, verifiedPayload.getAudience());
-    assertNotNull(verifiedPayload.getIssuedAtTimeSeconds());
+    assertNull(verifiedPayload.getIssuedAtTimeSeconds());
     assertNotNull(verifiedPayload.getExpirationTimeSeconds());
-    assertEquals(verifiedPayload.getIssuedAtTimeSeconds() + 5 * 60, verifiedPayload.getExpirationTimeSeconds());
+    assertEquals(
+      startTime.plus(Duration.ofMinutes(5)).getEpochSecond(),
+      verifiedPayload.getExpirationTimeSeconds());
   }
 
   // -------------------------------------------------------------------------
@@ -160,7 +163,8 @@ public class TestActivationTokenService {
       Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
       new RoleBinding(new ProjectId("project-1"), "roles/role-1"),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     var token = tokenService.createToken(inputRequest);
     var outputRequest = tokenService.verifyToken(token);
@@ -169,6 +173,6 @@ public class TestActivationTokenService {
     assertEquals(inputRequest.reviewers, outputRequest.reviewers);
     assertEquals(inputRequest.justification, outputRequest.justification);
     assertEquals(inputRequest.reviewers, outputRequest.reviewers);
-    assertEquals(inputRequest.creationTime.getEpochSecond(), outputRequest.creationTime.getEpochSecond());
+    assertEquals(inputRequest.startTime.getEpochSecond(), outputRequest.startTime.getEpochSecond());
   }
 }

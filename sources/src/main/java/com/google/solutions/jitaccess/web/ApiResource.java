@@ -37,6 +37,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -282,25 +283,20 @@ public class ApiResource {
           .addLabel("justification", request.justification)
           .write();
 
-        throw new AccessDeniedException("Activating role failed", e);
+        if (e instanceof AccessDeniedException) {
+          throw (AccessDeniedException)e.fillInStackTrace();
+        }
+        else {
+          throw new AccessDeniedException("Activating role failed", e);
+        }
       }
     }
 
     assert activations.size() == roleBindings.size();
 
-    //
-    // All activations have been requested at once, so use the request time of the first.
-    //
-    var requestTime = activations
-      .stream()
-      .map(a -> a.requestTime)
-      .findFirst()
-      .get();
-
     return new ActivationStatusResponse(
       projectId,
       iapPrincipal.getId(),
-      requestTime,
       true,
       false,
       request.justification,
@@ -310,7 +306,8 @@ public class ApiResource {
           a.id.toString(),
           a.projectRole.roleBinding,
           a.projectRole.status,
-          a.expiry.getEpochSecond()
+          a.startTime.getEpochSecond(),
+          a.endTime.getEpochSecond()
         ))
         .collect(Collectors.toList()));
   }
@@ -367,7 +364,6 @@ public class ApiResource {
       // TODO: Send token to peers.
       System.out.println("TOKEN: " + approvalToken);
 
-
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
@@ -401,7 +397,12 @@ public class ApiResource {
         .addLabel("justification", request.justification)
         .write();
 
-      throw new AccessDeniedException("Activating role failed", e);
+      if (e instanceof AccessDeniedException) {
+        throw (AccessDeniedException)e.fillInStackTrace();
+      }
+      else {
+        throw new AccessDeniedException("Activating role failed", e);
+      }
     }
   }
 
@@ -415,9 +416,11 @@ public class ApiResource {
   ) {
     return entry
       .addLabel("activation_id", request.id.toString())
+      .addLabel("activation_start", request.startTime.atOffset(ZoneOffset.UTC).toString())
+      .addLabel("activation_end", request.endTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("justification", request.justification)
       .addLabel("reviewers",  String.join(", ", request.reviewers.toString()))
-      .addLabels(e -> addLabels(e, request.roleBinding)); // TODO: add start/end
+      .addLabels(e -> addLabels(e, request.roleBinding));
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -503,7 +506,6 @@ public class ApiResource {
   public static class ActivationStatusResponse {
     public final String projectId;
     public final String beneficiary;
-    public final long requestTime;
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
@@ -512,7 +514,6 @@ public class ApiResource {
     private ActivationStatusResponse(
       ProjectId projectId,
       UserId beneficiary,
-      Instant requestTime,
       boolean isBeneficiary,
       boolean isReviewer,
       String justification,
@@ -520,14 +521,12 @@ public class ApiResource {
     ) {
       Preconditions.checkNotNull(projectId);
       Preconditions.checkNotNull(beneficiary);
-      Preconditions.checkNotNull(requestTime);
       Preconditions.checkNotNull(justification);
       Preconditions.checkNotNull(items);
       Preconditions.checkArgument(items.size() > 0);
 
       this.projectId = projectId.id;
       this.beneficiary = beneficiary.email;
-      this.requestTime = requestTime.getEpochSecond();
       this.isBeneficiary = isBeneficiary;
       this.isReviewer = isReviewer;
       this.justification = justification;
@@ -542,7 +541,6 @@ public class ApiResource {
       this(
         ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
         request.beneficiary,
-        request.creationTime,
         request.beneficiary.equals(caller),
         request.reviewers.contains(caller),
         request.justification,
@@ -550,21 +548,31 @@ public class ApiResource {
           request.id.toString(),
           request.roleBinding,
           status,
-          0 // TODO: pass expiry
-        )));
+          request.startTime.getEpochSecond(),
+          request.endTime.getEpochSecond())));
     }
 
     public static class ActivationStatus {
       public final String activationId;
       public final RoleBinding roleBinding;
       public final ProjectRole.Status status;
-      public final long expiry;
+      public final long startTime;
+      public final long endTime;
 
-      public ActivationStatus(String activationId, RoleBinding roleBinding, ProjectRole.Status status, long expiry) {
+      public ActivationStatus(
+        String activationId,
+        RoleBinding roleBinding,
+        ProjectRole.Status status,
+        long startTime,
+        long endTime
+      ) {
+        assert startTime < endTime;
+
         this.activationId = activationId;
         this.roleBinding = roleBinding;
         this.status = status;
-        this.expiry = expiry;
+        this.startTime = startTime;
+        this.endTime = endTime;
       }
     }
   }

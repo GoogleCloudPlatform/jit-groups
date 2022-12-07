@@ -443,7 +443,7 @@ public class TestApiResource {
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
         Instant.now(),
-        Instant.now()));
+        Instant.now().plusSeconds(60)));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");

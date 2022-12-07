@@ -302,7 +302,6 @@ class DebugModel extends Model {
             isBeneficiary: forSelf,
             isReviewer: (!forSelf),
             justification: justification,
-            requestTime: Math.floor(Date.now() / 1000),
             beneficiary: "user",
             projectId: projectId,
             items: roles.map(r => ({
@@ -312,7 +311,8 @@ class DebugModel extends Model {
                     role: r
                 },
                 status: status,
-                expiry: Math.floor(Date.now() / 1000) + 300
+                startTime: Math.floor(Date.now() / 1000),
+                endTime: Math.floor(Date.now() / 1000) + 300
             }))
         });
     }

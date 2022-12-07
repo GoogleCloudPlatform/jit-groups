@@ -260,6 +260,8 @@ public class RuntimeEnvironment {
     return new ActivationTokenService.Options(
       applicationPrincipal,
       Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
+
+    // TODO: Validate that token lifetime < elevation duration
   }
 
   @Produces

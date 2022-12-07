@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
@@ -33,8 +32,6 @@ import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -165,8 +162,9 @@ public class TestRoleActivationService {
     assertTrue(activation.id.toString().startsWith("jit-"));
     assertEquals(activation.projectRole.roleBinding, roleBinding);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
-    assertTrue(activation.expiry.isAfter(Instant.now().minusSeconds(60)));
-    assertTrue(activation.expiry.isBefore(Instant.now().plusSeconds(120)));
+    assertTrue(activation.endTime.isAfter(activation.startTime));
+    assertTrue(activation.endTime.isAfter(Instant.now().minusSeconds(60)));
+    assertTrue(activation.endTime.isBefore(Instant.now().plusSeconds(120)));
 
     verify(resourceAdapter)
       .addProjectIamBinding(
@@ -200,7 +198,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.activateProjectRoleForPeer(request.beneficiary, request));
@@ -224,7 +223,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(SAMPLE_USER_3, request));
@@ -254,7 +254,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -300,7 +301,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -342,7 +344,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.now());
+      Instant.now(),
+      Instant.now().plusSeconds(60));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -389,7 +392,8 @@ public class TestRoleActivationService {
         SAMPLE_PROJECT_RESOURCE_1,
         SAMPLE_ROLE),
       "justification",
-      Instant.ofEpochSecond(issuedAt));
+      Instant.ofEpochSecond(issuedAt),
+      Instant.ofEpochSecond(issuedAt).plusSeconds(60));
 
     var activation = service.activateProjectRoleForPeer(caller, request);
 
@@ -397,8 +401,8 @@ public class TestRoleActivationService {
     assertEquals(request.id, activation.id);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertEquals(roleBinding, activation.projectRole.roleBinding);
-    assertEquals(request.creationTime, activation.requestTime);
-    assertEquals(Instant.ofEpochSecond(issuedAt).plusSeconds(60), activation.expiry);
+    assertEquals(request.startTime, activation.startTime);
+    assertEquals(request.endTime, activation.endTime);
 
     verify(resourceAdapter)
       .addProjectIamBinding(
