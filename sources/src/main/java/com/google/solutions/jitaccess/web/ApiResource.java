@@ -352,7 +352,7 @@ public class ApiResource {
       //
       var approvalToken = this.activationTokenService.createToken(activationRequest);
 
-      // TODO: Send token to peers.
+      // TODO: Send notification, token to peers.
       System.out.println("TOKEN: " + approvalToken);
 
       this.logAdapter
@@ -447,7 +447,7 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public ActivationStatusResponse approveActivationRequest( // TODO: Test
+  public ActivationStatusResponse approveActivationRequest(
     @QueryParam("activation") String activationToken,
     @Context SecurityContext securityContext
   ) throws AccessException {
@@ -482,6 +482,8 @@ public class ApiResource {
 
       assert activation != null;
 
+      // TODO: Send notification
+
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
@@ -492,7 +494,6 @@ public class ApiResource {
             activationRequest.roleBinding.fullResourceName,
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
-        .addLabel("justification", activationRequest.justification)
         .write();
 
       return new ActivationStatusResponse(
@@ -515,7 +516,6 @@ public class ApiResource {
             activationRequest.beneficiary,
             e.getMessage()))
         .addLabels(le -> addLabels(le, activationRequest))
-        .addLabel("justification", activationRequest.justification)
         .addLabels(le -> addLabels(le, e))
         .write();
 
