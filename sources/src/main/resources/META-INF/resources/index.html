@@ -607,7 +607,7 @@
                     this._activatedRoleTable.addRow(
                         item.roleBinding.role,
                         [
-                            { text: activationStatus.projectId },
+                            { text: item.projectId },
                             { text: item.roleBinding.role },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
                         ],

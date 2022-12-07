@@ -295,7 +295,6 @@ public class ApiResource {
     assert activations.size() == roleBindings.size();
 
     return new ActivationStatusResponse(
-      projectId,
       iapPrincipal.getId(),
       true,
       false,
@@ -338,7 +337,7 @@ public class ApiResource {
       request.peers != null && request.peers.size() > 0 && request.peers.size() <= 10,
       "At least one peer is required");
     Preconditions.checkArgument(
-      request.justification.length() > 0 && request.justification.length() < 100,
+      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
       "A justification must be provided");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
@@ -403,6 +402,44 @@ public class ApiResource {
       else {
         throw new AccessDeniedException("Activating role failed", e);
       }
+    }
+  }
+
+  /**
+   * Get details of an activation request.
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("activation-request")
+  public ActivationStatusResponse getActivationRequest(
+    @QueryParam("activation") String activationToken,
+    @Context SecurityContext securityContext
+  ) throws AccessException {
+    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+
+    Preconditions.checkArgument(
+      activationToken != null && !activationToken.trim().isEmpty(),
+      "An activation token is required");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+
+    try {
+      var activationRequest = this.activationTokenService.verifyToken(activationToken);
+
+      return new ActivationStatusResponse(
+        iapPrincipal.getId(),
+        activationRequest,
+        ProjectRole.Status.ACTIVATION_PENDING); // TODO: Check if activated already.
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_LIST_PEERS,
+          String.format("Decoding or verifying activation request failed: %s", e.getMessage()))
+        .addLabels(le -> addLabels(le, e))
+        .write();
+
+      throw new AccessDeniedException("Decoding or verifying activation request failed");
     }
   }
 
@@ -504,7 +541,6 @@ public class ApiResource {
   }
 
   public static class ActivationStatusResponse {
-    public final String projectId;
     public final String beneficiary;
     public final boolean isBeneficiary;
     public final boolean isReviewer;
@@ -512,20 +548,17 @@ public class ApiResource {
     public final List<ActivationStatus> items;
 
     private ActivationStatusResponse(
-      ProjectId projectId,
       UserId beneficiary,
       boolean isBeneficiary,
       boolean isReviewer,
       String justification,
       List<ActivationStatus> items
     ) {
-      Preconditions.checkNotNull(projectId);
       Preconditions.checkNotNull(beneficiary);
       Preconditions.checkNotNull(justification);
       Preconditions.checkNotNull(items);
       Preconditions.checkArgument(items.size() > 0);
 
-      this.projectId = projectId.id;
       this.beneficiary = beneficiary.email;
       this.isBeneficiary = isBeneficiary;
       this.isReviewer = isReviewer;
@@ -539,7 +572,6 @@ public class ApiResource {
       ProjectRole.Status status
     ) {
       this(
-        ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
         request.beneficiary,
         request.beneficiary.equals(caller),
         request.reviewers.contains(caller),
@@ -554,6 +586,7 @@ public class ApiResource {
 
     public static class ActivationStatus {
       public final String activationId;
+      public final String projectId;
       public final RoleBinding roleBinding;
       public final ProjectRole.Status status;
       public final long startTime;
@@ -569,6 +602,7 @@ public class ApiResource {
         assert startTime < endTime;
 
         this.activationId = activationId;
+        this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName).id;
         this.roleBinding = roleBinding;
         this.status = status;
         this.startTime = startTime;

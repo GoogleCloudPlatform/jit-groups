@@ -303,9 +303,9 @@ class DebugModel extends Model {
             isReviewer: (!forSelf),
             justification: justification,
             beneficiary: "user",
-            projectId: projectId,
             items: roles.map(r => ({
                 activationId: "sim-1",
+                projectId: projectId,
                 roleBinding: {
                     fullResourceName: "//simulated",
                     role: r
