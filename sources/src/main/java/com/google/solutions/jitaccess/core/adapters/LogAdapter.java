@@ -120,6 +120,8 @@ public class LogAdapter {
     }
 
     public LogEntry addLabel(String label, String value) {
+      assert !this.labels.containsKey(label);
+
       this.labels.put(label, value);
       return this;
     }

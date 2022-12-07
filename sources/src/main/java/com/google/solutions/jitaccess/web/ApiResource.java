@@ -97,7 +97,7 @@ public class ApiResource {
   public ProjectsResponse listProjects(
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
@@ -128,7 +128,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -170,7 +170,7 @@ public class ApiResource {
     @QueryParam("role") String role,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -218,7 +218,7 @@ public class ApiResource {
     SelfActivationRequest request,
     @Context SecurityContext securityContext
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -260,9 +260,7 @@ public class ApiResource {
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName))
-          .addLabel("activation_id", activation.id.toString())
-          .addLabels(le -> addLabels(le, projectId))
-          .addLabels(le -> addLabels(le, roleBinding))
+          .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
       }
@@ -300,13 +298,7 @@ public class ApiResource {
       request.justification,
       activations
         .stream()
-        .map(a -> new ActivationStatusResponse.ActivationStatus(
-          a.id.toString(),
-          a.projectRole.roleBinding,
-          a.projectRole.status,
-          a.startTime.getEpochSecond(),
-          a.endTime.getEpochSecond()
-        ))
+        .map(a -> new ActivationStatusResponse.ActivationStatus(a))
         .collect(Collectors.toList()));
   }
 
@@ -322,8 +314,8 @@ public class ApiResource {
     ActivationRequest request,
     @Context SecurityContext securityContext
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -414,7 +406,7 @@ public class ApiResource {
     @QueryParam("activation") String activationToken,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
 
     Preconditions.checkArgument(
       activationToken != null && !activationToken.trim().isEmpty(),
@@ -439,14 +431,13 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_GET_REQUEST,
-          String.format("Decoding or verifying activation request failed: %s", e.getMessage()))
+          String.format("Accessing the activation request failed: %s", e.getMessage()))
         .addLabels(le -> addLabels(le, e))
         .write();
 
-      throw new AccessDeniedException("Decoding or verifying activation request failed");
+      throw new AccessDeniedException("Accessing the activation request failed");
     }
   }
-
 
   /**
    * Approve an activation request from a peer.
@@ -455,11 +446,12 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public ActivationStatusResponse approveActivationRequest(
+  public ActivationStatusResponse approveActivationRequest( // TODO: Test
     @QueryParam("activation") String activationToken,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
+    Preconditions.checkNotNull(this.roleActivationService, "roleActivationService");
 
     Preconditions.checkArgument(
       activationToken != null && !activationToken.trim().isEmpty(),
@@ -467,12 +459,87 @@ public class ApiResource {
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    throw new AccessDeniedException("NIY");
+    RoleActivationService.ActivationRequest activationRequest;
+    try {
+      activationRequest = this.activationTokenService.verifyToken(activationToken);
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_ACTIVATE_ROLE,
+          String.format("Accessing the activation request failed: %s", e.getMessage()))
+        .addLabels(le -> addLabels(le, e))
+        .write();
+
+      throw new AccessDeniedException("Accessing the activation request failed");
+    }
+
+    try {
+      var activation = this.roleActivationService.activateProjectRoleForPeer(
+        iapPrincipal.getId(),
+        activationRequest);
+
+      assert activation != null;
+
+      this.logAdapter
+        .newInfoEntry(
+          LogEvents.API_ACTIVATE_ROLE,
+          String.format(
+            "User %s approved role '%s' on '%s' for %s",
+            iapPrincipal.getId(),
+            activationRequest.roleBinding.role,
+            activationRequest.roleBinding.fullResourceName,
+            activationRequest.beneficiary))
+        .addLabels(le -> addLabels(le, activationRequest))
+        .addLabel("justification", activationRequest.justification)
+        .write();
+
+      return new ActivationStatusResponse(
+        iapPrincipal.getId(),
+        activationRequest.beneficiary.equals(iapPrincipal.getId()),
+        activationRequest.reviewers.contains(iapPrincipal.getId()),
+        activationRequest.justification,
+        List.of(new ActivationStatusResponse.ActivationStatus(activation)));
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_ACTIVATE_ROLE,
+          String.format(
+            "User %s failed to activate role '%s' on '%s' for %s: %s",
+            iapPrincipal.getId(),
+            activationRequest.roleBinding.role,
+            activationRequest.roleBinding.fullResourceName,
+            activationRequest.beneficiary,
+            e.getMessage()))
+        .addLabels(le -> addLabels(le, activationRequest))
+        .addLabel("justification", activationRequest.justification)
+        .addLabels(le -> addLabels(le, e))
+        .write();
+
+      if (e instanceof AccessDeniedException) {
+        throw (AccessDeniedException)e.fillInStackTrace();
+      }
+      else {
+        throw new AccessDeniedException("Approving the activation request failed", e);
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
   // Logging helper methods.
   // -------------------------------------------------------------------------
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    RoleActivationService.Activation activation
+  ) {
+    return entry
+      .addLabel("activation_id", activation.id.toString())
+      .addLabel("activation_start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+      .addLabel("activation_end", activation.endTime.atOffset(ZoneOffset.UTC).toString())
+      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding));
+  }
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
@@ -483,7 +550,11 @@ public class ApiResource {
       .addLabel("activation_start", request.startTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("activation_end", request.endTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("justification", request.justification)
-      .addLabel("reviewers",  String.join(", ", request.reviewers.toString()))
+      .addLabel("reviewers",  String.join(", ", request
+        .reviewers
+        .stream()
+        .map(u -> u.email)
+        .collect(Collectors.toList())))
       .addLabels(e -> addLabels(e, request.roleBinding));
   }
 
@@ -493,7 +564,8 @@ public class ApiResource {
   ) {
     return entry
       .addLabel("role", roleBinding.role)
-      .addLabel("resource", roleBinding.fullResourceName);
+      .addLabel("resource", roleBinding.fullResourceName)
+      .addLabel("project_id", ProjectId.fromFullResourceName(roleBinding.fullResourceName).id);
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -604,7 +676,7 @@ public class ApiResource {
         request.reviewers.contains(caller),
         request.justification,
         List.of(new ActivationStatus(
-          request.id.toString(),
+          request.id,
           request.roleBinding,
           status,
           request.startTime.getEpochSecond(),
@@ -619,8 +691,8 @@ public class ApiResource {
       public final long startTime;
       public final long endTime;
 
-      public ActivationStatus(
-        String activationId,
+      private ActivationStatus(
+        RoleActivationService.ActivationId activationId,
         RoleBinding roleBinding,
         ProjectRole.Status status,
         long startTime,
@@ -628,12 +700,21 @@ public class ApiResource {
       ) {
         assert startTime < endTime;
 
-        this.activationId = activationId;
+        this.activationId = activationId.toString();
         this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName).id;
         this.roleBinding = roleBinding;
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+      }
+
+      private ActivationStatus(RoleActivationService.Activation activation) {
+        this(
+          activation.id,
+          activation.projectRole.roleBinding,
+          activation.projectRole.status,
+          activation.startTime.getEpochSecond(),
+          activation.endTime.getEpochSecond());
       }
     }
   }

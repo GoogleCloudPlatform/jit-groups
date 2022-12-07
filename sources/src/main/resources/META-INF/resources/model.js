@@ -182,8 +182,12 @@ class Model {
     async approveActivationRequest(activationToken) {
         console.assert(activationToken);
 
-        throw "NIY"; // TODO: Lookup
         try {
+            return await $.ajax({
+                type: "POST",
+                url: `/api/activation-request?activation=${encodeURIComponent(activationToken)}`,
+                headers: this._getHeaders()
+            });
         }
         catch (error) {
             throw this._formatError(error);
