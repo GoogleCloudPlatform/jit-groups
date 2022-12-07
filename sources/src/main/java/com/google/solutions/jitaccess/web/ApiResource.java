@@ -36,7 +36,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -214,7 +213,7 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public ActivationStatusResponse selfActivateRoles(
+  public ActivationStatusResponse selfApproveActivation(
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
     @Context SecurityContext securityContext
@@ -255,7 +254,7 @@ public class ApiResource {
 
         this.logAdapter
           .newInfoEntry(
-            LogEvents.API_SELF_ACTIVATE_ROLE,
+            LogEvents.API_ACTIVATE_ROLE,
             String.format(
               "User %s activated role '%s' on '%s' for themselves",
               iapPrincipal.getId(),
@@ -270,7 +269,7 @@ public class ApiResource {
       catch (Exception e) {
         this.logAdapter
           .newErrorEntry(
-            LogEvents.API_SELF_ACTIVATE_ROLE,
+            LogEvents.API_ACTIVATE_ROLE,
             String.format(
               "User %s failed to activate role '%s' on '%s' for themselves: %s",
               iapPrincipal.getId(),
@@ -318,7 +317,7 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/request")
-  public ActivationStatusResponse requestRole(
+  public ActivationStatusResponse requestActivation(
     @PathParam("projectId") String projectIdString,
     ActivationRequest request,
     @Context SecurityContext securityContext
@@ -426,6 +425,11 @@ public class ApiResource {
     try {
       var activationRequest = this.activationTokenService.verifyToken(activationToken);
 
+      if (!activationRequest.beneficiary.equals(iapPrincipal.getId()) &&
+          !activationRequest.reviewers.contains(iapPrincipal.getId())) {
+        throw new AccessDeniedException("The calling user is not authorized to access this approval request");
+      }
+
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
@@ -434,13 +438,36 @@ public class ApiResource {
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_PEERS,
+          LogEvents.API_GET_REQUEST,
           String.format("Decoding or verifying activation request failed: %s", e.getMessage()))
         .addLabels(le -> addLabels(le, e))
         .write();
 
       throw new AccessDeniedException("Decoding or verifying activation request failed");
     }
+  }
+
+
+  /**
+   * Approve an activation request from a peer.
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("activation-request")
+  public ActivationStatusResponse approveActivationRequest(
+    @QueryParam("activation") String activationToken,
+    @Context SecurityContext securityContext
+  ) throws AccessException {
+    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+
+    Preconditions.checkArgument(
+      activationToken != null && !activationToken.trim().isEmpty(),
+      "An activation token is required");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+
+    throw new AccessDeniedException("NIY");
   }
 
   // -------------------------------------------------------------------------

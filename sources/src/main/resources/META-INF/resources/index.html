@@ -207,6 +207,7 @@
                                     <label for="request-status-pane-justification">Justification</label>
                                     <span id="request-status-pane-justification" />
                                 </li>
+                                <!-- TODO: Show reviewers -->
                             </ul>
                         </div>
                         <div class="step-subsection">
@@ -748,14 +749,14 @@
                         let activationStatus;
                         if (multiPartyApproval) {
                             console.assert(requestPane.selectedRoles.length == 1);
-                            activationStatus = await backend.requestRole(
+                            activationStatus = await backend.requestActivation(
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles[0].roleBinding.role,
                                 requestPane.selectedPeers,
                                 requestPane.justificationText);
                         }
                         else {
-                            activationStatus = await backend.selfActivateRoles(
+                            activationStatus = await backend.selfApproveActivation(
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles.map(r => r.roleBinding.role),
                                 requestPane.justificationText)
@@ -775,7 +776,7 @@
                 gui.busyPane.show();
                 try {
                     console.assert(activationToken);
-                    gui.requestStatusPane.activationStatus = await backend.approveRole(activationToken);
+                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest(activationToken);
                 }
                 catch (error) {
                     gui.showToast(error);
