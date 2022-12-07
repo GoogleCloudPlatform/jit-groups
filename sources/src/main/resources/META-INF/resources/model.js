@@ -310,7 +310,8 @@ class DebugModel extends Model {
             isBeneficiary: forSelf,
             isReviewer: (!forSelf),
             justification: justification,
-            beneficiary: "user",
+            beneficiary: { email: "user" },
+            reviewers: forSelf ? [] : [{ email: "reviewer"}],
             items: roles.map(r => ({
                 activationId: "sim-1",
                 projectId: projectId,
