@@ -207,6 +207,10 @@
                                     <label for="request-status-pane-justification">Justification</label>
                                     <span id="request-status-pane-justification" />
                                 </li>
+                                <li>
+                                    <label for="request-status-pane-reviewers">Reviewers</label>
+                                    <span id="request-status-pane-reviewers" />
+                                </li>
                                 <!-- TODO: Show reviewers -->
                             </ul>
                         </div>
@@ -561,6 +565,13 @@
                 this._activatedRoleTable = new MdlDataTable("#activatedroles");
             }
 
+            _createEmailLink(user) {
+                const link = $("<a target='_blank'/>");
+                link.attr("href", `https://contacts.google.com/search/${user.email}`);
+                link.text(user.email);
+                return link;
+            }
+
             set activationStatus(activationStatus) {
                 $("#request-status-pane-approvebutton").hide();
                 $("#request-status-pane-consolebutton").hide();
@@ -576,10 +587,7 @@
                         $("#request-status-pane-description").text("You've approved the following access request.");
                     }
 
-                    const link = $("<a target='_blank'/>");
-                    link.attr("href", `https://contacts.google.com/search/${activationStatus.beneficiary}`);
-                    link.text(activationStatus.beneficiary);
-                    $("#request-status-pane-beneficiary").empty().append(link);
+                    $("#request-status-pane-beneficiary").empty().append(this._createEmailLink(activationStatus.beneficiary));
                 }
                 else if (activationStatus.isBeneficiary) {
                     $("#request-status-pane-beneficiary").text("You");
@@ -601,6 +609,16 @@
                 $("#request-status-pane-endtime").text(
                     `${new Date(activationStatus.items[0].endTime * 1000).toLocaleString()} (in ${Math.floor(expirySecs / 60)} minutes)`);
                 $("#request-status-pane-justification").text(activationStatus.justification);
+
+                $("#request-status-pane-reviewers").empty();
+                if (activationStatus.reviewers && activationStatus.reviewers.length > 0) {
+                    for (const reviewer of activationStatus.reviewers) {
+                        $("#request-status-pane-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
+                    }
+                }
+                else {
+                    $("#request-status-pane-reviewers").text("-")
+                }
 
                 const nowUnixTimeSecs = (Date.now() / 1000);
                 this._activatedRoleTable.clear();

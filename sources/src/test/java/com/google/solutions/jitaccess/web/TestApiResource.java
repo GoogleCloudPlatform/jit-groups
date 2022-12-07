@@ -482,7 +482,8 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(SAMPLE_USER.email, body.beneficiary);
+    assertEquals(SAMPLE_USER, body.beneficiary);
+    assertEquals(0, body.reviewers.size());
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
     assertEquals("justification", body.justification);
@@ -637,7 +638,8 @@ public class TestApiResource {
       ApiResource.ActivationStatusResponse.class);
 
     var body = response.getBody();
-    assertEquals(SAMPLE_USER.email, body.beneficiary);
+    assertEquals(SAMPLE_USER, body.beneficiary);
+    assertEquals(Set.of(SAMPLE_USER_2), body.reviewers);
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
     assertEquals("justification", body.justification);
@@ -721,7 +723,8 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(request.beneficiary.email, body.beneficiary);
+    assertEquals(request.beneficiary, body.beneficiary);
+    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
     assertEquals(request.justification, body.justification);

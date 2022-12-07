@@ -293,6 +293,7 @@ public class ApiResource {
 
     return new ActivationStatusResponse(
       iapPrincipal.getId(),
+      Set.<UserId>of(),
       true,
       false,
       request.justification,
@@ -496,6 +497,7 @@ public class ApiResource {
 
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
+        activationRequest.reviewers,
         activationRequest.beneficiary.equals(iapPrincipal.getId()),
         activationRequest.reviewers.contains(iapPrincipal.getId()),
         activationRequest.justification,
@@ -640,7 +642,8 @@ public class ApiResource {
   }
 
   public static class ActivationStatusResponse {
-    public final String beneficiary;
+    public final UserId beneficiary;
+    public final Set<UserId> reviewers;
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
@@ -648,17 +651,20 @@ public class ApiResource {
 
     private ActivationStatusResponse(
       UserId beneficiary,
+      Set<UserId> reviewers,
       boolean isBeneficiary,
       boolean isReviewer,
       String justification,
       List<ActivationStatus> items
     ) {
       Preconditions.checkNotNull(beneficiary);
+      Preconditions.checkNotNull(reviewers);
       Preconditions.checkNotNull(justification);
       Preconditions.checkNotNull(items);
       Preconditions.checkArgument(items.size() > 0);
 
-      this.beneficiary = beneficiary.email;
+      this.beneficiary = beneficiary;
+      this.reviewers = reviewers;
       this.isBeneficiary = isBeneficiary;
       this.isReviewer = isReviewer;
       this.justification = justification;
@@ -672,6 +678,7 @@ public class ApiResource {
     ) {
       this(
         request.beneficiary,
+        request.reviewers,
         request.beneficiary.equals(caller),
         request.reviewers.contains(caller),
         request.justification,
