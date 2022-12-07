@@ -89,6 +89,9 @@ public class ProjectRole {
     ELIGIBLE_FOR_MPA,
 
     /** Eligible role binding has been activated */
-    ACTIVATED
+    ACTIVATED,
+
+    /** Approval pending */
+    ACTIVATION_PENDING
   }
 }

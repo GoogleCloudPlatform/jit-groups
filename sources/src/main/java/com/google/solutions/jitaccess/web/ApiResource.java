@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
@@ -35,6 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,6 +53,9 @@ public class ApiResource {
 
   @Inject
   RoleActivationService roleActivationService;
+
+  @Inject
+  ActivationTokenService activationTokenService;
 
   @Inject
   LogAdapter logAdapter;
@@ -322,34 +327,73 @@ public class ApiResource {
         .collect(Collectors.toList()));
   }
 
-//
-//  /**
-//   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
-//   */
-//  @POST
-//  @Consumes(MediaType.APPLICATION_JSON)
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @Path("projects/{projectId}/roles/self-activate")
-//  public ActivationStatusResponse selfActivateProjectRoles(
-//    @PathParam("projectId") String projectIdString,
-//    SelfActivationRequest request,
-//    @Context SecurityContext securityContext
-//  ) throws AccessDeniedException {
-//    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-//
-//    Preconditions.checkArgument(
-//      projectIdString != null && !projectIdString.trim().isEmpty(),
-//      "A projectId is required");
-//    Preconditions.checkArgument(
-//      request != null && request.roles != null && request.roles.size() > 0 && request.roles.size() <= 10,
-//      "At least one role is required");
-//    Preconditions.checkArgument(
-//      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
-//      "A justification must be provided");
-//
-//    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
-//    var projectId = new ProjectId(projectIdString);
-//  }
+  /**
+   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("projects/{projectId}/roles/activate")
+  public ActivationStatusResponse selfActivateProjectRoles(
+    @PathParam("projectId") String projectIdString,
+    ActivationRequest request,
+    @Context SecurityContext securityContext
+  ) throws AccessDeniedException {
+    Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(activationTokenService, "activationTokenService");
+
+    Preconditions.checkArgument(
+      projectIdString != null && !projectIdString.trim().isEmpty(),
+      "A projectId is required");
+    Preconditions.checkArgument(
+      request != null && request.role != null && !request.role.isEmpty(),
+      "A role is required");
+    Preconditions.checkArgument(
+      request != null && request.peers != null && request.peers.size() > 0 && request.peers.size() <= 10,
+      "At least one peer is required");
+    Preconditions.checkArgument(
+      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
+      "A justification must be provided");
+
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+    var projectId = new ProjectId(projectIdString);
+
+    try
+    {
+      //
+      // Validate request.
+      //
+
+      // TODO: test peer != caller
+      var activationRequest = this.roleActivationService.createActivationRequestForPeer(
+        iapPrincipal.getId(),
+        request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
+        new RoleBinding(projectId, request.role),
+        request.justification);
+
+      //
+      // Create an approval token.
+      //
+      var approvalToken = this.activationTokenService.createToken(activationRequest);
+
+      // TODO: Send token to peers.
+      System.out.println("TOKEN: " + approvalToken);
+
+      return new ActivationStatusResponse(
+        iapPrincipal.getId(),
+        activationRequest,
+        ProjectRole.Status.ACTIVATION_PENDING);
+    }
+    catch (AccessDeniedException e) {
+      // TODO: Log.
+      throw e;
+    }
+    catch (Exception e) {
+
+      // TODO: Log.
+      throw new AccessDeniedException("Activating role failed", e);
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Request/response classes.
@@ -358,7 +402,7 @@ public class ApiResource {
   public static class PolicyResponse {
     public final String justificationHint;
 
-    public PolicyResponse(String justificationHint) {
+    private PolicyResponse(String justificationHint) {
       Preconditions.checkNotNull(justificationHint, "justificationHint");
       this.justificationHint = justificationHint;
     }
@@ -367,18 +411,17 @@ public class ApiResource {
   public static class ProjectsResponse {
     public final Set<String> projects;
 
-    public ProjectsResponse(Set<String> projects) {
+    private ProjectsResponse(Set<String> projects) {
       Preconditions.checkNotNull(projects, "projects");
       this.projects = projects;
     }
   }
 
-
   public static class ProjectRolesResponse {
     public final List<String> warnings;
     public final List<ProjectRole> roles;
 
-    public ProjectRolesResponse(
+    private ProjectRolesResponse(
       List<ProjectRole> roleBindings,
       List<String> warnings
     ) {
@@ -392,7 +435,7 @@ public class ApiResource {
   public static class ProjectRolePeersResponse {
     public final Set<UserId> peers;
 
-    public ProjectRolePeersResponse(Set<UserId> peers) {
+    private ProjectRolePeersResponse(Set<UserId> peers) {
       Preconditions.checkNotNull(peers);
       this.peers = peers;
     }
@@ -401,9 +444,12 @@ public class ApiResource {
   public static class SelfActivationRequest {
     public List<String> roles;
     public String justification;
+  }
 
-    public SelfActivationRequest() {
-    }
+  public static class ActivationRequest {
+    public String role;
+    public String justification;
+    public List<String> peers;
   }
 
   public static class ActivationStatusResponse { // TODO: Rename to ActivationStatusResponse
@@ -415,7 +461,7 @@ public class ApiResource {
     public final String justification;
     public final List<ActivationStatus> items;
 
-    public ActivationStatusResponse(
+    private ActivationStatusResponse(
       ProjectId projectId,
       UserId beneficiary,
       Instant requestTime,
@@ -438,6 +484,26 @@ public class ApiResource {
       this.isReviewer = isReviewer;
       this.justification = justification;
       this.items = items;
+    }
+
+    private ActivationStatusResponse(
+      UserId caller,
+      RoleActivationService.ActivationRequest request,
+      ProjectRole.Status status
+    ) {
+      this(
+        ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
+        request.beneficiary,
+        request.creationTime,
+        request.beneficiary.equals(caller),
+        request.reviewers.contains(caller),
+        request.justification,
+        List.of(new ActivationStatus(
+          request.id.toString(),
+          request.roleBinding,
+          status,
+          0 // TODO: pass expiry
+        )));
     }
 
     public static class ActivationStatus {

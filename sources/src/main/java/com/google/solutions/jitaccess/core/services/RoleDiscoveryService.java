@@ -244,7 +244,7 @@ public class RoleDiscoveryService {
     Preconditions.checkNotNull(callerUserId, "callerUserId");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
-    assert (ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName);
 
     //
     // Check that the (calling) user is really allowed to request approval
