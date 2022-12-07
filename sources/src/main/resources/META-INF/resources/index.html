@@ -742,7 +742,7 @@
                         let activationStatus;
                         if (multiPartyApproval) {
                             console.assert(requestPane.selectedRoles.length == 1);
-                            activationStatus = await backend.activateRole(
+                            activationStatus = await backend.requestRole(
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles[0].roleBinding.role,
                                 requestPane.selectedPeers,
@@ -769,7 +769,7 @@
                 gui.busyPane.show();
                 try {
                     console.assert(activationToken);
-                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest(activationToken);
+                    gui.requestStatusPane.activationStatus = await backend.approveRole(activationToken);
                 }
                 catch (error) {
                     gui.showToast(error);

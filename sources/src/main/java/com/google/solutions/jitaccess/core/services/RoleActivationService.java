@@ -248,7 +248,7 @@ public class RoleActivationService {
       expiryTime);
   }
 
-  public ActivationRequest createActivationRequestForPeer( // TODO: Test
+  public ActivationRequest createActivationRequestForPeer(
     UserId callerAndBeneficiary,
     Set<UserId> reviewers,
     RoleBinding roleBinding,
@@ -261,6 +261,7 @@ public class RoleActivationService {
 
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
     Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
+    Preconditions.checkArgument(!reviewers.contains(callerAndBeneficiary), "The beneficiary cannot be a reviewer");
 
     //
     // Check that the justification looks reasonable.

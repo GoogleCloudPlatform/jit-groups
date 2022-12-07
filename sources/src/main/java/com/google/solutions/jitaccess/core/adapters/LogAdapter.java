@@ -29,6 +29,7 @@ import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Adapter class for writing structured logs.
@@ -121,6 +122,10 @@ public class LogAdapter {
     public LogEntry addLabel(String label, String value) {
       this.labels.put(label, value);
       return this;
+    }
+
+    public LogEntry addLabels(Function<LogEntry, LogEntry> func) {
+      return func.apply(this);
     }
 
     public void write() {

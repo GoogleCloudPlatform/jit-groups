@@ -36,7 +36,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,7 +110,7 @@ public class ApiResource {
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          LogEvents.API_LIST_ROLES,
           String.format("Listing available projects failed: %s", e.getMessage()))
         .write();
 
@@ -125,22 +124,23 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles")
-  public ProjectRolesResponse listEligibleRoleBindings(
-    @PathParam("projectId") String projectId,
+  public ProjectRolesResponse listRoles(
+    @PathParam("projectId") String projectIdString,
     @Context SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
-      projectId != null && !projectId.trim().isEmpty(),
+      projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+    var projectId = new ProjectId(projectIdString);
 
     try {
       var bindings = this.roleDiscoveryService.listEligibleProjectRoles(
         iapPrincipal.getId(),
-        new ProjectId(projectId));
+        projectId);
 
       return new ProjectRolesResponse(
         bindings.getItems(),
@@ -149,8 +149,10 @@ public class ApiResource {
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          LogEvents.API_LIST_ROLES,
           String.format("Listing project roles failed: %s", e.getMessage()))
+        .addLabels(le -> addLabels(le, e))
+        .addLabels(le -> addLabels(le, projectId))
         .write();
 
       throw new AccessDeniedException("Listing project roles failed, see logs for details");
@@ -163,26 +165,28 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/peers")
-  public ProjectRolePeersResponse listEligibleRoleBindings(
-    @PathParam("projectId") String projectId,
+  public ProjectRolePeersResponse listPeers(
+    @PathParam("projectId") String projectIdString,
     @QueryParam("role") String role,
     @Context SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
-      projectId != null && !projectId.trim().isEmpty(),
+      projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
     Preconditions.checkArgument(
       role != null && !role.trim().isEmpty(),
       "A role is required");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+    var projectId = new ProjectId(projectIdString);
+    var roleBinding = new RoleBinding(projectId, role);
 
     try {
       var peers = this.roleDiscoveryService.listApproversForProjectRole(
         iapPrincipal.getId(),
-        new RoleBinding(new ProjectId(projectId), role));
+        roleBinding);
 
       assert !peers.contains(iapPrincipal.getId());
 
@@ -191,8 +195,11 @@ public class ApiResource {
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_ELIGIBLE_ROLES,
+          LogEvents.API_LIST_PEERS,
           String.format("Listing peers failed: %s", e.getMessage()))
+        .addLabels(le -> addLabels(le, e))
+        .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, projectId))
         .write();
 
       throw new AccessDeniedException("Listing peers failed, see logs for details");
@@ -206,7 +213,7 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public ActivationStatusResponse selfActivateProjectRoles(
+  public ActivationStatusResponse selfActivateRoles(
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
     @Context SecurityContext securityContext
@@ -247,50 +254,31 @@ public class ApiResource {
 
         this.logAdapter
           .newInfoEntry(
-            LogEvents.API_ACTIVATE_ROLE,
+            LogEvents.API_SELF_ACTIVATE_ROLE,
             String.format(
-              "User %s successfully activated role '%s' on '%s' for themselves, justified by '%s'",
+              "User %s activated role '%s' on '%s' for themselves",
               iapPrincipal.getId(),
               roleBinding.role,
-              roleBinding.fullResourceName,
-              request.justification))
-          .addLabel("activationid", activation.id.toString())
-          .addLabel("role", roleBinding.role)
-          .addLabel("resource", roleBinding.fullResourceName)
+              roleBinding.fullResourceName))
+          .addLabel("activation_id", activation.id.toString())
+          .addLabels(le -> addLabels(le, projectId))
+          .addLabels(le -> addLabels(le, roleBinding))
           .addLabel("justification", request.justification)
           .write();
-      }
-      catch (AccessDeniedException e) {
-        this.logAdapter
-          .newErrorEntry(
-            LogEvents.API_ACTIVATE_ROLE,
-            String.format(
-              "User %s was denied to activated role '%s' on '%s' for themselves, justified by '%s': %s",
-              iapPrincipal.getId(),
-              roleBinding.role,
-              roleBinding.fullResourceName,
-              request.justification,
-              e.getMessage()))
-          .addLabel("role", roleBinding.role)
-          .addLabel("resource", roleBinding.fullResourceName)
-          .addLabel("justification", request.justification)
-          .write();
-
-        throw e;
       }
       catch (Exception e) {
         this.logAdapter
           .newErrorEntry(
-            LogEvents.API_ACTIVATE_ROLE,
+            LogEvents.API_SELF_ACTIVATE_ROLE,
             String.format(
-              "User %s failed to activate role '%s' on '%s' for themselves, justified by '%s': %s",
+              "User %s failed to activate role '%s' on '%s' for themselves: %s",
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
-              request.justification,
               e.getMessage()))
-          .addLabel("role", roleBinding.role)
-          .addLabel("resource", roleBinding.fullResourceName)
+          .addLabels(le -> addLabels(le, projectId))
+          .addLabels(le -> addLabels(le, roleBinding))
+          .addLabels(le -> addLabels(le, e))
           .addLabel("justification", request.justification)
           .write();
 
@@ -333,8 +321,8 @@ public class ApiResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/roles/activate")
-  public ActivationStatusResponse selfActivateProjectRoles(
+  @Path("projects/{projectId}/roles/request")
+  public ActivationStatusResponse requestRole(
     @PathParam("projectId") String projectIdString,
     ActivationRequest request,
     @Context SecurityContext securityContext
@@ -345,30 +333,30 @@ public class ApiResource {
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
+    Preconditions.checkArgument(request != null);
     Preconditions.checkArgument(
-      request != null && request.role != null && !request.role.isEmpty(),
+      request.role != null && !request.role.isEmpty(),
       "A role is required");
     Preconditions.checkArgument(
-      request != null && request.peers != null && request.peers.size() > 0 && request.peers.size() <= 10,
+      request.peers != null && request.peers.size() > 0 && request.peers.size() <= 10,
       "At least one peer is required");
     Preconditions.checkArgument(
-      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
+      request.justification.length() > 0 && request.justification.length() < 100,
       "A justification must be provided");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
+    var roleBinding = new RoleBinding(projectId, request.role);
 
     try
     {
       //
       // Validate request.
       //
-
-      // TODO: test peer != caller
       var activationRequest = this.roleActivationService.createActivationRequestForPeer(
         iapPrincipal.getId(),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
-        new RoleBinding(projectId, request.role),
+        roleBinding,
         request.justification);
 
       //
@@ -379,20 +367,80 @@ public class ApiResource {
       // TODO: Send token to peers.
       System.out.println("TOKEN: " + approvalToken);
 
+
+      this.logAdapter
+        .newInfoEntry(
+          LogEvents.API_REQUEST_ROLE,
+          String.format(
+            "User %s requested role '%s' on '%s'",
+            iapPrincipal.getId(),
+            roleBinding.role,
+            roleBinding.fullResourceName))
+        .addLabels(le -> addLabels(le, projectId))
+        .addLabels(le -> addLabels(le, activationRequest))
+        .write();
+
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
         ProjectRole.Status.ACTIVATION_PENDING);
     }
-    catch (AccessDeniedException e) {
-      // TODO: Log.
-      throw e;
-    }
     catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_REQUEST_ROLE,
+          String.format(
+            "User %s failed to request role '%s' on '%s': %s",
+            iapPrincipal.getId(),
+            roleBinding.role,
+            roleBinding.fullResourceName,
+            e.getMessage()))
+        .addLabels(le -> addLabels(le, projectId))
+        .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, e))
+        .addLabel("justification", request.justification)
+        .write();
 
-      // TODO: Log.
       throw new AccessDeniedException("Activating role failed", e);
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Logging helper methods.
+  // -------------------------------------------------------------------------
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    RoleActivationService.ActivationRequest request
+  ) {
+    return entry
+      .addLabel("activation_id", request.id.toString())
+      .addLabel("justification", request.justification)
+      .addLabel("reviewers",  String.join(", ", request.reviewers.toString()))
+      .addLabels(e -> addLabels(e, request.roleBinding)); // TODO: add start/end
+  }
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    RoleBinding roleBinding
+  ) {
+    return entry
+      .addLabel("role", roleBinding.role)
+      .addLabel("resource", roleBinding.fullResourceName);
+  }
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    Exception exception
+  ) {
+    return entry.addLabel("error", exception.getClass().getSimpleName());
+  }
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    ProjectId project
+  ) {
+    return entry.addLabel("project", project.id);
   }
 
   // -------------------------------------------------------------------------
@@ -452,7 +500,7 @@ public class ApiResource {
     public List<String> peers;
   }
 
-  public static class ActivationStatusResponse { // TODO: Rename to ActivationStatusResponse
+  public static class ActivationStatusResponse {
     public final String projectId;
     public final String beneficiary;
     public final long requestTime;

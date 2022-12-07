@@ -22,8 +22,10 @@
 package com.google.solutions.jitaccess.web;
 
 public class LogEvents {
-  public static final String API_LIST_ELIGIBLE_ROLES = "api.listEligibleRoles";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
+  public static final String API_LIST_ROLES = "api.listEligibleRoles";
+  public static final String API_LIST_PEERS = "api.listPeers";
+  public static final String API_SELF_ACTIVATE_ROLE = "api.activateRole";
+  public static final String API_REQUEST_ROLE = "api.requestActivateRole";
 
   public static final String RUNTIME_STARTUP = "runtime.startup";
 

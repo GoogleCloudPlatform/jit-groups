@@ -417,6 +417,26 @@ public class TestRoleActivationService {
   // ---------------------------------------------------------------------
 
   @Test
+  public void whenReviewerIncludesBeneficiary_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    assertThrows(IllegalArgumentException.class,
+      () -> service.createActivationRequestForPeer(
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER),
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "justification"));
+  }
+
+  @Test
   public void whenJustificationDoesNotMatch_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),

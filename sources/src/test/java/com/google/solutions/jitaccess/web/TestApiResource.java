@@ -212,7 +212,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenPeerDiscoveryReturnsNoPeers_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenPeerDiscoveryReturnsNoPeers_ThenGetPeersReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService
       .listApproversForProjectRole(
         eq(SAMPLE_USER),
@@ -252,7 +252,7 @@ public class TestApiResource {
   // -------------------------------------------------------------------------
 
   @Test
-  public void postProjectsRolesReturnsError() throws Exception {
+  public void postRolesReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects/project-1/roles", ExceptionMappers.ErrorEntity.class);
 
@@ -260,7 +260,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectIsEmpty_ThenGetProjectRolesReturnsError() throws Exception {
+  public void whenProjectIsEmpty_ThenGetRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -275,7 +275,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenGetRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
@@ -292,7 +292,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsIOException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenRoleDiscoveryThrowsIOException_ThenGetRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
@@ -309,7 +309,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsNoRoles_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenRoleDiscoveryReturnsNoRoles_ThenGetRolesReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
@@ -332,7 +332,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsRoles_ThenGetProjectsReturnsList() throws Exception {
+  public void whenRoleDiscoveryReturnsRoles_ThenGetRolesReturnsList() throws Exception {
     var role1 = new ProjectRole(
       new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser"),
       ProjectRole.Status.ELIGIBLE_FOR_JIT);

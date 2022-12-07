@@ -137,14 +137,25 @@ class Model {
     }
 
     /** Activate a role with peer approval */
-    async activateRole(projectId, role, peers, justification) {
+    async requestRole(projectId, role, peers, justification) {
         console.assert(projectId);
         console.assert(role);
         console.assert(peers.length > 0);
         console.assert(justification)
 
-        throw "NIY"; // TODO: Submit
         try {
+            return await $.ajax({
+                type: "POST",
+                url: `/api/projects/${projectId}/roles/request`,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    role: role,
+                    justification: justification,
+                    peers: peers
+                }),
+                headers: this._getHeaders()
+            });
         }
         catch (error) {
             throw this._formatError(error);
@@ -164,7 +175,7 @@ class Model {
     }
 
     /** Approve an activation request */
-    async approveActivationRequest(activationToken) {
+    async approveRole(activationToken) {
         console.assert(activationToken);
 
         throw "NIY"; // TODO: Lookup
@@ -224,8 +235,8 @@ class DebugModel extends Model {
                     </select>
                 </div>
                 <div>
-                    activateRole:
-                    <select id="debug-activateRole">
+                    requestRole:
+                    <select id="debug-requestRole">
                         <option value="">(default)</option>
                         <option value="success">Simulate success</option>
                         <option value="error">Simulate error</option>
@@ -240,8 +251,8 @@ class DebugModel extends Model {
                     </select>
                 </div>
                 <div>
-                    approveActivationRequest:
-                    <select id="debug-approveActivationRequest">
+                    approveRole:
+                    <select id="debug-approveRole">
                         <option value="">(default)</option>
                         <option value="success">Simulate success</option>
                         <option value="error">Simulate error</option>
@@ -259,9 +270,9 @@ class DebugModel extends Model {
             "debug-listRoles",
             "debug-listPeers",
             "debug-selfActivateRoles",
-            "debug-activateRole",
+            "debug-requestRole",
             "debug-getActivationRequest",
-            "debug-approveActivationRequest"
+            "debug-approveRole"
         ].forEach(setting => {
 
             $("#" + setting).val(localStorage.getItem(setting))
@@ -390,10 +401,10 @@ class DebugModel extends Model {
         }
     }
 
-    async activateRole(projectId, role, peers, justification) {
-        var setting = $("#debug-activateRole").val();
+    async requestRole(projectId, role, peers, justification) {
+        var setting = $("#debug-requestRole").val();
         if (!setting) {
-            return super.activateRole(projectId, role, peers, justification);
+            return super.requestRole(projectId, role, peers, justification);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -426,10 +437,10 @@ class DebugModel extends Model {
         }
     }
 
-    async approveActivationRequest(activationToken) {
-        var setting = $("#debug-approveActivationRequest").val();
+    async approveRole(activationToken) {
+        var setting = $("#debug-approveRole").val();
         if (!setting) {
-            return super.approveActivationRequest(activationToken);
+            return super.approveRole(activationToken);
         }
         else if (setting === "error") {
             await this._simulateError();
