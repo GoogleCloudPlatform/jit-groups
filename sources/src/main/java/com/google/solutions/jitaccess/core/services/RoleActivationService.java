@@ -427,7 +427,7 @@ public class RoleActivationService {
           .map(email -> new UserId(email))
           .collect(Collectors.toSet()),
         new RoleBinding(
-          payload.get("resource").toString(),
+          payload.get("resource").toString(), // TODO: Use project instead
           payload.get("role").toString()),
         payload.get("justification").toString(),
         Instant.ofEpochSecond(((Number)payload.get("start")).longValue()),

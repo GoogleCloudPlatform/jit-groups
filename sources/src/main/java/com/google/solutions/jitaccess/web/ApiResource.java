@@ -36,6 +36,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,6 +56,9 @@ public class ApiResource {
 
   @Inject
   ActivationTokenService activationTokenService;
+
+  @Inject
+  RuntimeEnvironment runtimeEnvironment;
 
   @Inject
   LogAdapter logAdapter;
@@ -293,7 +297,7 @@ public class ApiResource {
 
     return new ActivationStatusResponse(
       iapPrincipal.getId(),
-      Set.<UserId>of(),
+      Set.of(),
       true,
       false,
       request.justification,
@@ -313,7 +317,8 @@ public class ApiResource {
   public ActivationStatusResponse requestActivation(
     @PathParam("projectId") String projectIdString,
     ActivationRequest request,
-    @Context SecurityContext securityContext
+    @Context SecurityContext securityContext,
+    @Context UriInfo uriInfo
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
@@ -350,10 +355,16 @@ public class ApiResource {
       //
       // Create an approval token.
       //
-      var approvalToken = this.activationTokenService.createToken(activationRequest);
+      var activationToken = this.activationTokenService.createToken(activationRequest);
+      var uri = uriInfo.getBaseUriBuilder()
+        .scheme(this.runtimeEnvironment.getScheme())
+        .path("/")
+        .queryParam("activation", activationToken)
+        .build();
 
       // TODO: Send notification, token to peers.
-      System.out.println("TOKEN: " + approvalToken);
+      // use    @Context UriInfo uriInfo
+      System.out.println("APPROVAL-URL: " + uri);
 
       this.logAdapter
         .newInfoEntry(
@@ -552,11 +563,11 @@ public class ApiResource {
       .addLabel("activation_start", request.startTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("activation_end", request.endTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("justification", request.justification)
-      .addLabel("reviewers",  String.join(", ", request
+      .addLabel("reviewers", request
         .reviewers
         .stream()
         .map(u -> u.email)
-        .collect(Collectors.toList())))
+        .collect(Collectors.joining(", ")))
       .addLabels(e -> addLabels(e, request.roleBinding));
   }
 

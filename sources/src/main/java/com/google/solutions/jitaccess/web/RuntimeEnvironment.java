@@ -101,9 +101,9 @@ public class RuntimeEnvironment {
     return System.getenv().containsKey("GAE_SERVICE");
   }
 
-  public boolean isDebugModeEnabled() {
-    return Boolean.getBoolean(CONFIG_DEBUG_MODE);
-  }
+  // -------------------------------------------------------------------------
+  // Public methods.
+  // -------------------------------------------------------------------------
 
   public RuntimeEnvironment() {
     //
@@ -218,6 +218,14 @@ public class RuntimeEnvironment {
     }
   }
 
+  public boolean isDebugModeEnabled() {
+    return Boolean.getBoolean(CONFIG_DEBUG_MODE);
+  }
+
+  public String getScheme() {
+    return isRunningOnAppEngine() ? "https" : "http";
+  }
+
   public String getProjectId() {
     return projectId;
   }
@@ -259,9 +267,9 @@ public class RuntimeEnvironment {
   public ActivationTokenService.Options getTokenServiceOptions() {
     return new ActivationTokenService.Options(
       applicationPrincipal,
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
+      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ACTIVATION_REQUEST_TIMEOUT", "120"))));
 
-    // TODO: Validate that token lifetime < elevation duration
+    // TODO: Validate that token lifetime < elevation duration (or use miniumum)
   }
 
   @Produces
