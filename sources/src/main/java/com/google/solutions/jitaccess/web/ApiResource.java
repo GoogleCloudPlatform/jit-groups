@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
@@ -734,6 +735,33 @@ public class ApiResource {
           activation.startTime.getEpochSecond(),
           activation.endTime.getEpochSecond());
       }
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Notifications.
+  // -------------------------------------------------------------------------
+
+  private class RequestActivationNotification extends NotificationService.Notification
+  {
+    protected RequestActivationNotification(
+      UserId recipient,
+      String subject,
+      RoleActivationService.ActivationRequest request)
+    {
+      super(
+        NotificationService.Notification.loadMessageTemplate("notifications/RequestActivation.html"),
+        recipient,
+        subject);
+
+      this.properties.put("BENEFICIARY", request.beneficiary.email);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
+      this.properties.put("ROLE", request.roleBinding.role);
+      this.properties.put("START_TIME", request.startTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("END_TIME", request.endTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("JUSTIFICATION", request.justification);
+      this.properties.put("BASE_URL", "...");
+      this.properties.put("ACTION_URL", "...");
     }
   }
 }

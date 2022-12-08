@@ -29,7 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,6 +41,23 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestNotificationService {
+  private static class TestNotification extends NotificationService.Notification {
+    protected TestNotification(
+      UserId recipient,
+      String subject,
+      Map<String, String> properties
+    ) {
+      super(
+        properties
+          .entrySet()
+          .stream()
+          .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
+          .collect(Collectors.joining()),
+        recipient,
+        subject);
+      this.properties.putAll(properties);
+    }
+  }
 
   // -------------------------------------------------------------------------
   // sendNotification.
@@ -61,14 +82,14 @@ public class TestNotificationService {
       adapter,
       new NotificationService.Options(true));
 
-    var notification = new NotificationService.ApprovalRequest(
-      new UserId("alice@example.com"),
+    var properties = new HashMap<String, String>();
+    properties.put("TEST", "test-value");
+
+    var notification = new TestNotification(
       new UserId(recipient),
-      new ProjectRole(
-        new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "project/browser"),
-        ProjectRole.Status.ELIGIBLE_FOR_JIT),
-      "I need it",
-      new URI("https://github.com/GoogleCloudPlatform/jit-access"));
+      "Test email",
+      properties);
+
     service.sendNotification(notification);
   }
 
@@ -78,19 +99,16 @@ public class TestNotificationService {
     var service = new NotificationService(
       mailAdapter,
       new NotificationService.Options(true));
-    service.sendNotification(new NotificationService.ApprovalRequest(
-      new UserId("requestor@example.com"),
-      new UserId("recipient@example.com"),
-      new ProjectRole(
-        new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "project/browser"),
-        ProjectRole.Status.ELIGIBLE_FOR_JIT),
-      "justification",
-      new URI("https://example.com/")));
+
+    service.sendNotification(new TestNotification(
+      new UserId("user@example.com"),
+      "Test email",
+      new HashMap<String, String>()));
 
     verify(mailAdapter, times(1)).sendMail(
-      eq("recipient@example.com"),
-      eq("recipient@example.com"),
-      anyString(),
+      eq("user@example.com"),
+      eq("user@example.com"),
+      eq("Test email"),
       anyString());
   }
 
@@ -100,14 +118,11 @@ public class TestNotificationService {
     var service = new NotificationService(
       mailAdapter,
       new NotificationService.Options(false));
-    service.sendNotification(new NotificationService.ApprovalRequest(
-      new UserId("requestor@example.com"),
-      new UserId("recipient@example.com"),
-      new ProjectRole(
-        new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "project/browser"),
-        ProjectRole.Status.ELIGIBLE_FOR_JIT),
-      "justification",
-      new URI("https://example.com/")));
+
+    service.sendNotification(new TestNotification(
+      new UserId("user@example.com"),
+      "Test email",
+      new HashMap<String, String>()));
 
     verify(mailAdapter, times(0)).sendMail(
       eq("recipient@example.com"),
@@ -117,23 +132,22 @@ public class TestNotificationService {
   }
 
   // -------------------------------------------------------------------------
-  // ApprovalRequest.
+  // format.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenApprovalRequestContainsHtmlTags_ThenFormatEscapesTags() throws Exception {
-    var request = new NotificationService.ApprovalRequest(
-      new UserId("<requestor>"),
-      new UserId("<recipient>"),
-      new ProjectRole(
-        new RoleBinding("//cloudresourcemanager.googleapis.com/projects/<resource>", "<role>"),
-        ProjectRole.Status.ELIGIBLE_FOR_JIT),
-      "<justification>",
-      new URI("https://example.com/")).format();
+  public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() throws Exception {
+    var properties = new HashMap<String, String>();
+    properties.put("TEST-1", "<value1/>");
+    properties.put("TEST-2", "<value2/>");
 
-    assertTrue(request.contains("&lt;requestor&gt;"));
-    assertTrue(request.contains("&lt;resource&gt;"));
-    assertTrue(request.contains("&lt;role&gt;"));
-    assertTrue(request.contains("&lt;justification&gt;"));
+    var notification = new TestNotification(
+      new UserId("user@example.com"),
+      "Test email",
+      properties);
+
+    assertEquals(
+      "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
+      notification.formatMessage());
   }
 }

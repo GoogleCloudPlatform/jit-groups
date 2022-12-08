@@ -72,7 +72,7 @@ public class NotificationService {
           notification.recipient.email,
           notification.recipient.email,
           notification.subject,
-          notification.format());
+          notification.formatMessage());
       }
       catch (MailAdapter.MailException e) {
         throw new NotificationException("The notification could not be sent", e);
@@ -107,29 +107,33 @@ public class NotificationService {
       this.properties.put("{{SUBJECT}}", subject);
     }
 
-    protected String format() {
-      //
-      // Read email template file from JAR and replace {{PROPERTY}} placeholders.
-      //
+    protected static String loadMessageTemplate(String resourceName) {
       try (var stream = NotificationService.class
         .getClassLoader()
-        .getResourceAsStream("ApprovalRequest.email.html")) {
+        .getResourceAsStream(resourceName)) {
 
-        var template = new String(stream.readAllBytes());
-        var escaper = HtmlEscapers.htmlEscaper();
-
-        for (var property : this.properties.entrySet()) {
-          template = template.replace(
-            property.getKey(),
-            escaper.escape(property.getValue()));
-        }
-
-        return template;
+        return new String(stream.readAllBytes());
       }
       catch (IOException e) {
         throw new RuntimeException(
-          String.format("The JAR file does not contain an template named %s", this.template), e);
+          String.format("The JAR file does not contain an template named %s", resourceName), e);
       }
+    }
+
+    protected String formatMessage() {
+      //
+      // Read email template file from JAR and replace {{PROPERTY}} placeholders.
+      //
+      var escaper = HtmlEscapers.htmlEscaper();
+
+      var message = this.template;
+      for (var property : this.properties.entrySet()) {
+        message = message.replace(
+          "{{" + property.getKey() + "}}",
+          escaper.escape(property.getValue()));
+      }
+
+      return message;
     }
 
     @Override
@@ -143,28 +147,6 @@ public class NotificationService {
           .stream()
           .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
           .collect(Collectors.joining("\n", "", "")));
-    }
-  }
-
-  public static class ApprovalRequest extends Notification {
-    private static final String TEMPLATE = "ApprovalRequest.email.html";
-
-    public ApprovalRequest(
-      UserId requestor,
-      UserId recipient,
-      ProjectRole role,
-      String justification,
-      URI actionLink) {
-      super(
-        TEMPLATE,
-        recipient,
-        String.format("%s requests access to a Google Cloud project", requestor.email));
-
-      super.properties.put("{{REQUESTOR}}", requestor.email);
-      super.properties.put("{{PROJECT}}", role.getProjectId().id);
-      super.properties.put("{{ROLE}}", role.roleBinding.role);
-      super.properties.put("{{JUSTIFICATION}}", justification);
-      super.properties.put("{{ACTION_LINK}}", actionLink.toString());
     }
   }
 
