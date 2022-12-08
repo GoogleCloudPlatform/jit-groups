@@ -33,7 +33,6 @@ import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
@@ -237,7 +236,7 @@ public class RoleDiscoveryService {
   /**
    * List users that can approve the activation of an eligible role binding
    */
-  public Set<UserId> listApproversForProjectRole( // TODO: Rename to listEligibleUsersForRole
+  public Set<UserId> listEligibleUsersForProjectRole(
     UserId callerUserId,
     RoleBinding roleBinding
   ) throws AccessException, IOException {

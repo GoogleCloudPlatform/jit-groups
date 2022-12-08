@@ -193,7 +193,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listApproversForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -207,7 +207,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listApproversForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -222,7 +222,7 @@ public class TestApiResource {
   @Test
   public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService
-      .listApproversForProjectRole(
+      .listEligibleUsersForProjectRole(
         eq(SAMPLE_USER),
         argThat(r -> r.role.equals("roles/browser"))))
       .thenReturn(Set.of());
@@ -240,7 +240,7 @@ public class TestApiResource {
   @Test
   public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
     when(this.resource.roleDiscoveryService
-      .listApproversForProjectRole(
+      .listEligibleUsersForProjectRole(
         eq(SAMPLE_USER),
         argThat(r -> r.role.equals("roles/browser"))))
       .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));

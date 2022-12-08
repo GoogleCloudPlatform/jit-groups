@@ -213,7 +213,7 @@ public class ApiResource {
     var roleBinding = new RoleBinding(projectId, role);
 
     try {
-      var peers = this.roleDiscoveryService.listApproversForProjectRole(
+      var peers = this.roleDiscoveryService.listEligibleUsersForProjectRole(
         iapPrincipal.getId(),
         roleBinding);
 
@@ -346,8 +346,8 @@ public class ApiResource {
     @Context UriInfo uriInfo
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
-    Preconditions.checkNotNull(this.notificationService, "notificationService");
+    assert this.activationTokenService != null;
+    assert this.notificationService != null;
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -440,7 +440,7 @@ public class ApiResource {
     @QueryParam("activation") String activationToken,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
+    assert this.activationTokenService != null;
 
     Preconditions.checkArgument(
       activationToken != null && !activationToken.trim().isEmpty(),
@@ -485,9 +485,9 @@ public class ApiResource {
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
   ) throws AccessException {
-    Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
-    Preconditions.checkNotNull(this.roleActivationService, "roleActivationService");
-    Preconditions.checkNotNull(this.notificationService, "notificationService"); // TODO: use assert instead
+    assert this.activationTokenService != null;
+    assert this.roleActivationService != null;
+    assert this.notificationService != null;
 
     Preconditions.checkArgument(
       activationToken != null && !activationToken.trim().isEmpty(),
