@@ -33,10 +33,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
-import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
@@ -68,6 +65,15 @@ public class RuntimeEnvironment {
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
+  /**
+   * Configuration, based on app.yaml environment variables.
+   */
+  private final RuntimeConfiguration configuration = new RuntimeConfiguration(System::getenv);
+
+  // -------------------------------------------------------------------------
+  // Private helpers.
+  // -------------------------------------------------------------------------
+
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
     HttpRequest request = new NetHttpTransport().createRequestFactory().buildGetRequest(genericUrl);
@@ -83,19 +89,6 @@ public class RuntimeEnvironment {
       throw new IOException(
         "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
         exception);
-    }
-  }
-
-  private static String getConfigurationOption(String key, String defaultValue) {
-    var value = System.getenv(key);
-    if (value != null && !value.isEmpty()) {
-      return value.trim();
-    }
-    else if (defaultValue != null) {
-      return defaultValue;
-    }
-    else {
-      throw new RuntimeException(String.format("Missing configuration '%s'", key));
     }
   }
 
@@ -253,31 +246,40 @@ public class RuntimeEnvironment {
 
   @Produces
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(
-      getConfigurationOption(
-        "RESOURCE_SCOPE",
-        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)));
+    return new RoleDiscoveryService.Options(this.configuration.scope.getString());
   }
 
   @Produces
   public RoleActivationService.Options getRoleActivationServiceOptions() {
     return new RoleActivationService.Options(
-      getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
-      Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+      this.configuration.justificationHint.getString(),
+      Pattern.compile(this.configuration.justificationPattern.getString()),
+      this.configuration.activationTimeout.getDuration());
   }
 
   @Produces
   public ActivationTokenService.Options getTokenServiceOptions() {
+    //
+    // NB. The clock for activations "starts ticking" when the activation was
+    // requested. The time allotted for reviewers to approve the request
+    // must therefore not exceed the lifetime of the activation itself.
+    //
+    var effectiveRequestTimeout = Duration.ofSeconds(Math.min(
+      this.configuration.activationRequestTimeout.getDuration().getSeconds(),
+      this.configuration.activationTimeout.getDuration().getSeconds()));
+
     return new ActivationTokenService.Options(
       applicationPrincipal,
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ACTIVATION_REQUEST_TIMEOUT", "120"))));
-
-    // TODO: Validate that token lifetime < elevation duration (or use miniumum)
+      effectiveRequestTimeout);
   }
 
   @Produces
   public NotificationService.Options getNotificationServiceOptions() {
     return new NotificationService.Options(!developmentMode);
+  }
+
+  @Produces
+  public MailAdapter.Options getMailAdapterOptions() {
+    return null; // TODO: niy
   }
 }

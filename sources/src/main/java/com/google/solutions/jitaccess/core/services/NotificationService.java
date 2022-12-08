@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.core.adapters.MailAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.UserId;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Service for delivering notifications.
  */
+@ApplicationScoped
 public class NotificationService {
   private final Options options;
   private final MailAdapter mailAdapter;

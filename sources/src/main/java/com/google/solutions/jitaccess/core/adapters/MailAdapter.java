@@ -38,6 +38,7 @@ import java.util.Properties;
 /**
  * Adapter for sending email.
  */
+@ApplicationScoped
 public class MailAdapter {
   private final Options options;
 
@@ -146,10 +147,13 @@ public class MailAdapter {
       String smtpHost,
       int smtpPort,
       String senderName,
-      String senderAddress) {
+      String senderAddress
+    ) {
       Preconditions.checkNotNull(smtpHost, "smtpHost");
       Preconditions.checkNotNull(senderName, "senderName");
       Preconditions.checkNotNull(senderAddress, "senderAddress");
+
+      Preconditions.checkArgument(smtpPort != 25, "SMTP on port 25 is not allowed on Google Cloud");
 
       this.senderName = senderName;
       this.senderAddress = senderAddress;
@@ -157,6 +161,7 @@ public class MailAdapter {
       this.smtpProperties = new Properties();
       this.smtpProperties.put("mail.smtp.host", smtpHost);
       this.smtpProperties.put("mail.smtp.port", String.valueOf(smtpPort));
+      this.smtpProperties.put("mail.smtp.starttls.enable", "true");
     }
 
     /**
