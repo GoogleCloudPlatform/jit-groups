@@ -246,15 +246,15 @@ public class RuntimeEnvironment {
 
   @Produces
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(this.configuration.scope.getString());
+    return new RoleDiscoveryService.Options(this.configuration.scope.getValue());
   }
 
   @Produces
   public RoleActivationService.Options getRoleActivationServiceOptions() {
     return new RoleActivationService.Options(
-      this.configuration.justificationHint.getString(),
-      Pattern.compile(this.configuration.justificationPattern.getString()),
-      this.configuration.activationTimeout.getDuration());
+      this.configuration.justificationHint.getValue(),
+      Pattern.compile(this.configuration.justificationPattern.getValue()),
+      this.configuration.activationTimeout.getValue());
   }
 
   @Produces
@@ -265,8 +265,8 @@ public class RuntimeEnvironment {
     // must therefore not exceed the lifetime of the activation itself.
     //
     var effectiveRequestTimeout = Duration.ofSeconds(Math.min(
-      this.configuration.activationRequestTimeout.getDuration().getSeconds(),
-      this.configuration.activationTimeout.getDuration().getSeconds()));
+      this.configuration.activationRequestTimeout.getValue().getSeconds(),
+      this.configuration.activationTimeout.getValue().getSeconds()));
 
     return new ActivationTokenService.Options(
       applicationPrincipal,
@@ -275,11 +275,24 @@ public class RuntimeEnvironment {
 
   @Produces
   public NotificationService.Options getNotificationServiceOptions() {
-    return new NotificationService.Options(!developmentMode);
+    return new NotificationService.Options(
+      !developmentMode && this.configuration.isSmtpConfigured());
   }
 
   @Produces
   public MailAdapter.Options getMailAdapterOptions() {
-    return null; // TODO: niy
+    var options = new MailAdapter.Options(
+      this.configuration.smtpHost.getValue(),
+      this.configuration.smtpPort.getValue(),
+      this.configuration.smtpSenderName.getValue(),
+      this.configuration.smtpSenderAddress.getValue());
+
+    if (this.configuration.isSmtpAuthenticationConfigured()) {
+      options.setSmtpCredentials(
+        this.configuration.smtpUsername.getValue(),
+        this.configuration.smtpPassword.getValue());
+    }
+
+    return options;
   }
 }

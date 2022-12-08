@@ -60,21 +60,12 @@ public class RuntimeConfiguration {
     //
     // Mail settings.
     //
-    new StringSetting(
-      List.of("SMTP_HOST"),
-      "smtp.gmail.com");
-    new IntSetting(
-      List.of("SMTP_PORT"),
-      587);
-    new StringSetting(
-      List.of("SMTP_SENDER_NAME"),
-      "JIT Access");
-    new StringSetting(
-      List.of("SMTP_SENDER_ADDRESS"),
-      null);
-
-    new StringSetting(List.of("SMTP_USERNAME"), null);
-    new StringSetting(List.of("SMTP_PASSWORD"), null);
+    this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
+    this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
+    this.smtpSenderName = new StringSetting(List.of("SMTP_SENDER_NAME"), "JIT Access");
+    this.smtpSenderAddress = new StringSetting(List.of("SMTP_SENDER_ADDRESS"), null);
+    this.smtpUsername = new StringSetting(List.of("SMTP_USERNAME"), null);
+    this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
   }
 
   // -------------------------------------------------------------------------
@@ -108,83 +99,121 @@ public class RuntimeConfiguration {
    */
   public final StringSetting justificationHint;
 
+  /**
+   * SMTP server for sending notifications.
+    */
+  public final StringSetting smtpHost;
+
+  /**
+   * SMTP port for sending notifications.
+   */
+  public final IntSetting smtpPort;
+
+  /**
+   * Human-readable sender name used for notifications.
+   */
+  public final StringSetting smtpSenderName;
+
+  /**
+   * Email address used for notifications.
+   */
+  public final StringSetting smtpSenderAddress;
+
+  /**
+   * SMTP username
+   */
+  public final StringSetting smtpUsername;
+
+  /**
+   * SMTP password
+   */
+  public final StringSetting smtpPassword;
+
+  public boolean isSmtpConfigured() {
+    var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
+    return requiredSettings.stream().allMatch(s -> s.isValid());
+  }
+
+  public boolean isSmtpAuthenticationConfigured() {
+    var requiredSettings = List.of(smtpUsername, smtpPassword);
+    return requiredSettings.stream().allMatch(s -> s.isValid());
+  }
+
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  public abstract class Setting {
-    public final Collection<String> keys;
+  public abstract class Setting<T> {
+    private final Collection<String> keys;
+    private final T defaultValue;
 
-    protected <T> T colaesceValues(T value, T defaultValue) {
-      if (value != null) {
-        return value;
+    protected abstract T parse(String value);
+
+    protected Setting(Collection<String> keys, T defaultValue) {
+      this.keys = keys;
+      this.defaultValue = defaultValue;
+    }
+
+    public T getValue() {
+      for (var key : this.keys) {
+        var value = readSetting.apply(key);
+        if (value != null) {
+          value = value.trim();
+          if (!value.isEmpty()) {
+            return parse(value);
+          }
+        }
       }
-      else if (defaultValue != null) {
-        return defaultValue;
+
+      if (this.defaultValue != null) {
+        return this.defaultValue;
       }
       else {
         throw new IllegalStateException("No value provided for " + this.keys.toString());
       }
     }
 
-    protected String getValue() {
-      for (var key : this.keys) {
-        var value = readSetting.apply(key);
-        if (value != null) {
-          value = value.trim();
-          if (!value.isEmpty()) {
-            return value;
-          }
-        }
+    public boolean isValid() {
+      try {
+        getValue();
+        return true;
       }
-
-      return null;
-    }
-
-    public Setting(Collection<String> keys) {
-      this.keys = keys;
+      catch (Exception ignored) {
+        return false;
+      }
     }
   }
 
-  public class StringSetting extends Setting {
-    private final String defaultValue;
-
+  public class StringSetting extends Setting<String> {
     public StringSetting(Collection<String> keys, String defaultValue) {
-      super(keys);
-      this.defaultValue = defaultValue;
+      super(keys, defaultValue);
     }
 
-    public String getString() {
-      return colaesceValues(getValue(), this.defaultValue);
+    @Override
+    protected String parse(String value) {
+      return value;
     }
   }
 
-  public class IntSetting extends Setting {
-    private final Integer defaultValue;
-
+  public class IntSetting extends Setting<Integer> {
     public IntSetting(Collection<String> keys, Integer defaultValue) {
-      super(keys);
-      this.defaultValue = defaultValue;
+      super(keys, defaultValue);
     }
 
-    public int getString() {
-      return colaesceValues(Integer.parseInt(getValue()), this.defaultValue).intValue();
+    @Override
+    protected Integer parse(String value) {
+      return Integer.parseInt(value);
     }
   }
 
-  public class DurationSetting extends Setting {
-    private final Duration defaultValue;
-
+  public class DurationSetting extends Setting<Duration> {
     public DurationSetting(Collection<String> keys, Duration defaultValue) {
-      super(keys);
-      this.defaultValue = defaultValue;
+      super(keys, defaultValue);
     }
 
-    public Duration getDuration() {
-      var value = getValue();
-      return (value != null)
-        ? Duration.ofMinutes(Integer.parseInt(value))
-        : this.defaultValue;
+    @Override
+    protected Duration parse(String value) {
+      return Duration.ofMinutes(Integer.parseInt(value));
     }
   }
 }
