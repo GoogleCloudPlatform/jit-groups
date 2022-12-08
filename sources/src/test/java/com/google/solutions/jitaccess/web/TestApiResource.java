@@ -62,6 +62,7 @@ public class TestApiResource {
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.notificationService = Mockito.mock(NotificationService.class);
 
+    when(this.resource.notificationService.isConfigured()).thenReturn(true);
     when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
       .thenReturn(UriBuilder.fromUri("https://localhost/"));
   }
@@ -585,6 +586,28 @@ public class TestApiResource {
     var body = response.getBody();
     assertNotNull(body.getMessage());
     assertTrue(body.getMessage().contains("justification"));
+  }
+
+  @Test
+  public void whenNotificationsNotConfigured_ThenRequestActivationReturnsError() throws Exception {
+    this.resource.notificationService = Mockito.mock(NotificationService.class);
+    when(this.resource.notificationService.isConfigured()).thenReturn(false);
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(500, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("feature"));
   }
 
   @Test

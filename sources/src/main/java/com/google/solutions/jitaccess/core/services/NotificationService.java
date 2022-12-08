@@ -53,6 +53,10 @@ public class NotificationService {
     this.options = options;
   }
 
+  public boolean isConfigured() {
+    return this.options.enableEmail;
+  }
+
   public void sendNotification(Notification notification) throws NotificationException {
     Preconditions.checkNotNull(notification, "notification");
 

@@ -40,7 +40,8 @@ public class ExceptionMappers {
     AccessDeniedExceptionExceptionMapper.class,
     ForbiddenExceptionMapper.class,
     IllegalArgumentExceptionMapper.class,
-    NullPointerException.class,
+    IllegalStateExceptionMapper.class,
+    NullPointerExceptionMapper.class,
     IOExceptionMapper.class,
     UnhandledExceptionMapper.class,
     NotAllowedExceptionMapper.class,
@@ -86,6 +87,17 @@ public class ExceptionMappers {
     public Response toResponse(IllegalArgumentException exception) {
       return Response
         .status(Response.Status.BAD_REQUEST)
+        .entity(new ErrorEntity(exception))
+        .build();
+    }
+  }
+
+  @Provider
+  public static class IllegalStateExceptionMapper implements ExceptionMapper<IllegalStateException> {
+    @Override
+    public Response toResponse(IllegalStateException exception) {
+      return Response
+        .status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(new ErrorEntity(exception))
         .build();
     }
