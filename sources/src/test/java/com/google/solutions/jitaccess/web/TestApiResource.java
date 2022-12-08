@@ -28,14 +28,13 @@ import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.services.ActivationTokenService;
-import com.google.solutions.jitaccess.core.services.Result;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -45,7 +44,7 @@ import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TestApiResource {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
@@ -57,9 +56,14 @@ public class TestApiResource {
   public void before() {
     this.resource = new ApiResource();
     this.resource.logAdapter = new LogAdapter();
+    this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
     this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
+    this.resource.notificationService = Mockito.mock(NotificationService.class);
+
+    when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
+      .thenReturn(UriBuilder.fromUri("https://localhost/"));
   }
 
   // -------------------------------------------------------------------------
@@ -609,7 +613,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRequestValid_ThenRequestActivationSucceeds() throws Exception {
+  public void whenRequestValid_ThenRequestActivationSendsNotification() throws Exception {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
     when(this.resource.roleActivationService
@@ -626,6 +630,46 @@ public class TestApiResource {
         "justification",
         Instant.now(),
         Instant.now().plusSeconds(60)));
+    when(this.resource.activationTokenService
+      .createToken(any(RoleActivationService.ActivationRequest.class)))
+      .thenReturn("token");
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ApiResource.ActivationStatusResponse.class);
+    assertEquals(200, response.getStatus());
+
+    verify(this.resource.notificationService, times(1))
+      .sendNotification(argThat(n -> n instanceof ApiResource.RequestActivationNotification));
+  }
+
+  @Test
+  public void whenRequestValid_ThenRequestActivationReturnsSuccessResponse() throws Exception {
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+
+    when(this.resource.roleActivationService
+      .createActivationRequestForPeer(
+        eq(SAMPLE_USER),
+        eq(Set.of(SAMPLE_USER_2)),
+        argThat(r -> r.role.equals("roles/mock")),
+        eq("justification")))
+      .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
+        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER_2),
+        roleBinding,
+        "justification",
+        Instant.now(),
+        Instant.now().plusSeconds(60)));
+    when(this.resource.activationTokenService
+      .createToken(any(RoleActivationService.ActivationRequest.class)))
+      .thenReturn("token");
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -795,6 +839,37 @@ public class TestApiResource {
   }
 
   @Test
+  public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+    when(this.resource.activationTokenService.verifyToken(eq("token")))
+      .thenReturn(request);
+    when(this.resource.roleActivationService
+      .activateProjectRoleForPeer(
+        eq(SAMPLE_USER),
+        eq(request)))
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+        request.id,
+        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        request.startTime,
+        request.endTime));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post("/api/activation-request?activation=token", ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    verify(this.resource.notificationService, times(1))
+      .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
+  }
+
+  @Test
   public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -804,19 +879,17 @@ public class TestApiResource {
       "a justification",
       Instant.now(),
       Instant.now().plusSeconds(60));
-    var activation = RoleActivationService.Activation.createForTestingOnly(
-      request.id,
-      new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
-      request.startTime,
-      request.endTime);
-
     when(this.resource.activationTokenService.verifyToken(eq("token")))
       .thenReturn(request);
     when(this.resource.roleActivationService
       .activateProjectRoleForPeer(
         eq(SAMPLE_USER),
         eq(request)))
-      .thenReturn(activation);
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+        request.id,
+        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        request.startTime,
+        request.endTime));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/activation-request?activation=token", ApiResource.ActivationStatusResponse.class);

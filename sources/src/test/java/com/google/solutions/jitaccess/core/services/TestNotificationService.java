@@ -29,14 +29,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -53,7 +54,8 @@ public class TestNotificationService {
           .stream()
           .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
           .collect(Collectors.joining()),
-        recipient,
+        List.of(recipient),
+        List.of(),
         subject);
       this.properties.putAll(properties);
     }
@@ -100,16 +102,18 @@ public class TestNotificationService {
       mailAdapter,
       new NotificationService.Options(true));
 
+    var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      new UserId("user@example.com"),
+      to,
       "Test email",
       new HashMap<String, String>()));
 
     verify(mailAdapter, times(1)).sendMail(
-      eq("user@example.com"),
-      eq("user@example.com"),
+      eq(List.of(to)),
+      eq(List.of()),
       eq("Test email"),
-      anyString());
+      anyString(),
+      eq(EnumSet.of(MailAdapter.Flags.NONE)));
   }
 
   @Test
@@ -125,10 +129,11 @@ public class TestNotificationService {
       new HashMap<String, String>()));
 
     verify(mailAdapter, times(0)).sendMail(
-      eq("recipient@example.com"),
-      eq("recipient@example.com"),
+      anyList(),
+      anyList(),
       anyString(),
-      anyString());
+      anyString(),
+      eq(EnumSet.of(MailAdapter.Flags.NONE)));
   }
 
   // -------------------------------------------------------------------------

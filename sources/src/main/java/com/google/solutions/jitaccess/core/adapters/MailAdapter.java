@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.mail.*;
@@ -30,6 +31,8 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Properties;
 
 /**
@@ -44,13 +47,14 @@ public class MailAdapter {
   }
 
   public void sendMail(
-    String recipientName,
-    String recipientEmail,
+    Collection<UserId> toRecipients,
+    Collection<UserId> ccRecipients,
     String subject,
-    Multipart content
+    Multipart content,
+    EnumSet<Flags> flags
   ) throws MailException {
-    Preconditions.checkNotNull(recipientName, "recipientName");
-    Preconditions.checkNotNull(recipientEmail, "recipientEmail");
+    Preconditions.checkNotNull(toRecipients, "toRecipients");
+    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(content, "content");
 
@@ -61,11 +65,29 @@ public class MailAdapter {
     try {
       var message = new MimeMessage(session);
       message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
-      message.addRecipient(
-        Message.RecipientType.TO,
-        new InternetAddress(recipientEmail, recipientName));
-      message.setSubject(subject);
+
+      for (var recipient : toRecipients){
+        message.addRecipient(
+          Message.RecipientType.TO,
+          new InternetAddress(recipient.email, recipient.email));
+      }
+
+      for (var recipient : ccRecipients){
+        message.addRecipient(
+          Message.RecipientType.CC,
+          new InternetAddress(recipient.email, recipient.email));
+      }
+
+      message.addHeader("Precedence", "bulk");
       message.setContent(content);
+
+      if (flags.contains(Flags.REPLY)) {
+        message.setFlag(javax.mail.Flags.Flag.ANSWERED, true);
+        message.setSubject("Re: " + subject);
+      }
+      else {
+        message.setSubject(subject);
+      }
 
       Transport.send(message);
     }
@@ -75,13 +97,14 @@ public class MailAdapter {
   }
 
   public void sendMail(
-    String recipientName,
-    String recipientEmail,
+    Collection<UserId> toRecipients,
+    Collection<UserId> ccRecipients,
     String subject,
-    String htmlContent
+    String htmlContent,
+    EnumSet<Flags> flags
   ) throws MailException {
-    Preconditions.checkNotNull(recipientName, "recipientName");
-    Preconditions.checkNotNull(recipientEmail, "recipientEmail");
+    Preconditions.checkNotNull(toRecipients, "toRecipients");
+    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(htmlContent, "htmlContent");
 
@@ -93,10 +116,11 @@ public class MailAdapter {
       content.addBodyPart(htmlPart);
 
       sendMail(
-        recipientName,
-        recipientEmail,
+        toRecipients,
+        ccRecipients,
         subject,
-        content);
+        content,
+        flags);
     }
     catch (MessagingException e) {
       throw new MailException("The mail could not be formatted", e);
@@ -106,6 +130,11 @@ public class MailAdapter {
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public enum Flags {
+    NONE,
+    REPLY
+  }
 
   public static class Options {
     private final String senderName;

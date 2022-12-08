@@ -45,6 +45,8 @@ import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -222,8 +224,10 @@ public class RuntimeEnvironment {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
-  public String getScheme() {
-    return isRunningOnAppEngine() ? "https" : "http";
+  public UriBuilder createAbsoluteUriBuilder(UriInfo uriInfo) {
+    return uriInfo
+      .getBaseUriBuilder()
+      .scheme(isRunningOnAppEngine() ? "https" : "http");
   }
 
   public String getProjectId() {

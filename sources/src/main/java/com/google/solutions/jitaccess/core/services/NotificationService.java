@@ -29,6 +29,8 @@ import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,18 +51,6 @@ public class NotificationService {
 
     this.mailAdapter = mailAdapter;
     this.options = options;
-
-    //
-    // Read email template file from JAR.
-    //
-    try (var stream = NotificationService.class
-      .getClassLoader()
-      .getResourceAsStream("ApprovalRequest.email.html")) {
-      String emailTemplate = new String(stream.readAllBytes());
-    }
-    catch (IOException e) {
-      throw new RuntimeException("The JAR file is missing the email template", e);
-    }
   }
 
   public void sendNotification(Notification notification) throws NotificationException {
@@ -69,16 +59,22 @@ public class NotificationService {
     if (this.options.enableEmail) {
       try {
         this.mailAdapter.sendMail(
-          notification.recipient.email,
-          notification.recipient.email,
+          notification.toRecipients,
+          notification.ccRecipients,
           notification.subject,
-          notification.formatMessage());
+          notification.formatMessage(),
+          notification.isReply()
+            ? EnumSet.of(MailAdapter.Flags.REPLY)
+            : EnumSet.of(MailAdapter.Flags.NONE));
       }
       catch (MailAdapter.MailException e) {
         throw new NotificationException("The notification could not be sent", e);
       }
     }
     else {
+      //
+      // Print it so that we can see the message during development.
+      //
       System.out.println(notification);
     }
   }
@@ -90,21 +86,31 @@ public class NotificationService {
   /** Generic notification that can be formatted as a (HTML) email */
   public static abstract class Notification {
     private final String template;
-    private final UserId recipient;
+    private final Collection<UserId> toRecipients;
+    private final Collection<UserId> ccRecipients;
     private final String subject;
 
     protected final Map<String, String> properties = new HashMap<>();
 
-    protected Notification(String template, UserId recipient, String subject) {
+    protected boolean isReply() {
+      return false;
+    }
+
+    protected Notification(
+      String template,
+      Collection<UserId> toRecipients,
+      Collection<UserId> ccRecipients,
+      String subject
+    ) {
       Preconditions.checkNotNull(template, "template");
-      Preconditions.checkNotNull(recipient, "recipient");
+      Preconditions.checkNotNull(toRecipients, "toRecipients");
+      Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");
 
       this.template = template;
-      this.recipient = recipient;
+      this.toRecipients = toRecipients;
+      this.ccRecipients = ccRecipients;
       this.subject = subject;
-
-      this.properties.put("{{SUBJECT}}", subject);
     }
 
     protected static String loadMessageTemplate(String resourceName) {
@@ -140,7 +146,7 @@ public class NotificationService {
     public String toString() {
       return String.format(
         "Notification to %s: %s\n\n%s",
-        this.recipient,
+        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
         this.subject,
         this.properties
           .entrySet()

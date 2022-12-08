@@ -38,6 +38,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,10 +61,32 @@ public class ApiResource {
   ActivationTokenService activationTokenService;
 
   @Inject
+  NotificationService notificationService;
+
+  @Inject
   RuntimeEnvironment runtimeEnvironment;
 
   @Inject
   LogAdapter logAdapter;
+
+  private URL createActivationRequestUrl(
+    UriInfo uriInfo,
+    String activationToken
+  ) throws MalformedURLException {
+    Preconditions.checkNotNull(uriInfo);
+    Preconditions.checkNotNull(activationToken);
+
+    return this.runtimeEnvironment
+      .createAbsoluteUriBuilder(uriInfo)
+      .path("/")
+      .queryParam("activation", activationToken)
+      .build()
+      .toURL();
+  }
+
+  // -------------------------------------------------------------------------
+  // REST resources.
+  // -------------------------------------------------------------------------
 
   /**
    * Return friendly error to browsers that still have the 1.0 frontend cached.
@@ -323,6 +347,7 @@ public class ApiResource {
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
+    Preconditions.checkNotNull(this.notificationService, "notificationService");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -354,18 +379,12 @@ public class ApiResource {
         request.justification);
 
       //
-      // Create an approval token.
+      // Create an approval token and pass it to reviewers.
       //
       var activationToken = this.activationTokenService.createToken(activationRequest);
-      var uri = uriInfo.getBaseUriBuilder()
-        .scheme(this.runtimeEnvironment.getScheme())
-        .path("/")
-        .queryParam("activation", activationToken)
-        .build();
-
-      // TODO: Send notification, token to peers.
-      // use    @Context UriInfo uriInfo
-      System.out.println("APPROVAL-URL: " + uri);
+      this.notificationService.sendNotification(new RequestActivationNotification(
+        activationRequest,
+        createActivationRequestUrl(uriInfo, activationToken)));
 
       this.logAdapter
         .newInfoEntry(
@@ -461,10 +480,12 @@ public class ApiResource {
   @Path("activation-request")
   public ActivationStatusResponse approveActivationRequest(
     @QueryParam("activation") String activationToken,
-    @Context SecurityContext securityContext
+    @Context SecurityContext securityContext,
+    @Context UriInfo uriInfo
   ) throws AccessException {
     Preconditions.checkNotNull(this.activationTokenService, "activationTokenService");
     Preconditions.checkNotNull(this.roleActivationService, "roleActivationService");
+    Preconditions.checkNotNull(this.notificationService, "notificationService"); // TODO: use assert instead
 
     Preconditions.checkArgument(
       activationToken != null && !activationToken.trim().isEmpty(),
@@ -494,7 +515,10 @@ public class ApiResource {
 
       assert activation != null;
 
-      // TODO: Send notification
+      this.notificationService.sendNotification(new ActivationApprovedNotification(
+        activationRequest,
+        iapPrincipal.getId(),
+        createActivationRequestUrl(uriInfo, activationToken)));
 
       this.logAdapter
         .newInfoEntry(
@@ -742,17 +766,23 @@ public class ApiResource {
   // Notifications.
   // -------------------------------------------------------------------------
 
-  private class RequestActivationNotification extends NotificationService.Notification
+  /**
+   * Email to reviewers, requesting their approval.
+   */
+  public class RequestActivationNotification extends NotificationService.Notification
   {
     protected RequestActivationNotification(
-      UserId recipient,
-      String subject,
-      RoleActivationService.ActivationRequest request)
+      RoleActivationService.ActivationRequest request,
+      URL activationRequestUrl) throws MalformedURLException
     {
       super(
         NotificationService.Notification.loadMessageTemplate("notifications/RequestActivation.html"),
-        recipient,
-        subject);
+        request.reviewers,
+        List.of(request.beneficiary),
+        String.format(
+          "%s requests access to project %s",
+          request.beneficiary,
+          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
 
       this.properties.put("BENEFICIARY", request.beneficiary.email);
       this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
@@ -760,8 +790,42 @@ public class ApiResource {
       this.properties.put("START_TIME", request.startTime.atOffset(ZoneOffset.UTC).toString());
       this.properties.put("END_TIME", request.endTime.atOffset(ZoneOffset.UTC).toString());
       this.properties.put("JUSTIFICATION", request.justification);
-      this.properties.put("BASE_URL", "...");
-      this.properties.put("ACTION_URL", "...");
+      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
+      this.properties.put("ACTION_URL", activationRequestUrl.toString());
+    }
+  }
+
+  /**
+   * Email to the beneficiary, confirming an approval.
+   */
+  public class ActivationApprovedNotification extends NotificationService.Notification {
+    protected ActivationApprovedNotification(
+      RoleActivationService.ActivationRequest request,
+      UserId approver,
+      URL activationRequestUrl) throws MalformedURLException
+    {
+      super(
+        NotificationService.Notification.loadMessageTemplate("notifications/ActivationApproved.html"),
+        List.of(request.beneficiary),
+        request.reviewers, // Move reviewers to CC.
+        String.format(
+          "%s requests access to project %s",
+          request.beneficiary,
+          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
+
+      this.properties.put("APPROVER", approver.email);
+      this.properties.put("BENEFICIARY", request.beneficiary.email);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
+      this.properties.put("ROLE", request.roleBinding.role);
+      this.properties.put("START_TIME", request.startTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("END_TIME", request.endTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("JUSTIFICATION", request.justification);
+      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
+    }
+
+    @Override
+    protected boolean isReply() {
+      return true;
     }
   }
 }
