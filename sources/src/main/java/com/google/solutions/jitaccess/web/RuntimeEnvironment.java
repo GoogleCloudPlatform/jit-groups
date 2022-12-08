@@ -274,25 +274,24 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public NotificationService.Options getNotificationServiceOptions() {
-    return new NotificationService.Options(
-      !developmentMode && this.configuration.isSmtpConfigured());
-  }
-
-  @Produces
-  public MailAdapter.Options getMailAdapterOptions() {
-    var options = new MailAdapter.Options(
-      this.configuration.smtpHost.getValue(),
-      this.configuration.smtpPort.getValue(),
-      this.configuration.smtpSenderName.getValue(),
-      this.configuration.smtpSenderAddress.getValue());
-
-    if (this.configuration.isSmtpAuthenticationConfigured()) {
-      options.setSmtpCredentials(
-        this.configuration.smtpUsername.getValue(),
-        this.configuration.smtpPassword.getValue());
+  public NotificationService getNotificationService() {
+    if (developmentMode || !this.configuration.isSmtpConfigured()) {
+      return new NotificationService.SilentNotificationService();
     }
+    else {
+      var options = new MailAdapter.Options(
+        this.configuration.smtpHost.getValue(),
+        this.configuration.smtpPort.getValue(),
+        this.configuration.smtpSenderName.getValue(),
+        this.configuration.smtpSenderAddress.getValue());
 
-    return options;
+      if (this.configuration.isSmtpAuthenticationConfigured()) {
+        options.setSmtpCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpPassword.getValue());
+      }
+
+      return new NotificationService.MailNotificationService(new MailAdapter(options));
+    }
   }
 }

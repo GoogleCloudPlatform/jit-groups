@@ -62,7 +62,7 @@ public class TestApiResource {
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.notificationService = Mockito.mock(NotificationService.class);
 
-    when(this.resource.notificationService.isConfigured()).thenReturn(true);
+    when(this.resource.notificationService.canSendNotifications()).thenReturn(true);
     when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
       .thenReturn(UriBuilder.fromUri("https://localhost/"));
   }
@@ -591,7 +591,7 @@ public class TestApiResource {
   @Test
   public void whenNotificationsNotConfigured_ThenRequestActivationReturnsError() throws Exception {
     this.resource.notificationService = Mockito.mock(NotificationService.class);
-    when(this.resource.notificationService.isConfigured()).thenReturn(false);
+    when(this.resource.notificationService.canSendNotifications()).thenReturn(false);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";

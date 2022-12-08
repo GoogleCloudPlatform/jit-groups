@@ -79,10 +79,8 @@ public class TestNotificationService {
       senderAddress);
     options.setSmtpCredentials(username, password);
 
-    var adapter = new MailAdapter(options);
-    var service = new NotificationService(
-      adapter,
-      new NotificationService.Options(true));
+    var mailAdapter = new MailAdapter(options);
+    var service = new NotificationService.MailNotificationService(mailAdapter);
 
     var properties = new HashMap<String, String>();
     properties.put("TEST", "test-value");
@@ -96,11 +94,9 @@ public class TestNotificationService {
   }
 
   @Test
-  public void whenEmailEnabled_ThenSendNotificationSendsMail() throws Exception {
+  public void sendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(MailAdapter.class);
-    var service = new NotificationService(
-      mailAdapter,
-      new NotificationService.Options(true));
+    var service = new NotificationService.MailNotificationService(mailAdapter);
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
@@ -112,26 +108,6 @@ public class TestNotificationService {
       eq(List.of(to)),
       eq(List.of()),
       eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(MailAdapter.Flags.NONE)));
-  }
-
-  @Test
-  public void whenEmailDisabled_ThenSendNotificationDoesNothing() throws Exception {
-    var mailAdapter = Mockito.mock(MailAdapter.class);
-    var service = new NotificationService(
-      mailAdapter,
-      new NotificationService.Options(false));
-
-    service.sendNotification(new TestNotification(
-      new UserId("user@example.com"),
-      "Test email",
-      new HashMap<String, String>()));
-
-    verify(mailAdapter, times(0)).sendMail(
-      anyList(),
-      anyList(),
-      anyString(),
       anyString(),
       eq(EnumSet.of(MailAdapter.Flags.NONE)));
   }

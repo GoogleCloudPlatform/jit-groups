@@ -24,12 +24,10 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.adapters.MailAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -40,29 +38,33 @@ import java.util.stream.Collectors;
  * Service for delivering notifications.
  */
 @ApplicationScoped
-public class NotificationService {
-  private final Options options;
-  private final MailAdapter mailAdapter;
+public abstract class NotificationService {
 
-  public NotificationService(
-    MailAdapter mailAdapter,
-    Options options
-  ) {
-    Preconditions.checkNotNull(mailAdapter, "mailAdapter");
-    Preconditions.checkNotNull(options, "options");
+  public abstract void sendNotification(Notification notification) throws NotificationException;
 
-    this.mailAdapter = mailAdapter;
-    this.options = options;
-  }
+  public abstract boolean canSendNotifications();
 
-  public boolean isConfigured() {
-    return this.options.enableEmail;
-  }
+  // -------------------------------------------------------------------------
+  // Inner classes.
+  // -------------------------------------------------------------------------
 
-  public void sendNotification(Notification notification) throws NotificationException {
-    Preconditions.checkNotNull(notification, "notification");
+  public static class MailNotificationService extends NotificationService {
+    private final MailAdapter mailAdapter;
 
-    if (this.options.enableEmail) {
+    public MailNotificationService(MailAdapter mailAdapter) {
+      Preconditions.checkNotNull(mailAdapter);
+      this.mailAdapter = mailAdapter;
+    }
+
+    @Override
+    public boolean canSendNotifications() {
+      return true;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
+      Preconditions.checkNotNull(notification, "notification");
+
       try {
         this.mailAdapter.sendMail(
           notification.toRecipients,
@@ -77,17 +79,22 @@ public class NotificationService {
         throw new NotificationException("The notification could not be sent", e);
       }
     }
-    else {
+  }
+
+  public static class SilentNotificationService extends NotificationService {
+    @Override
+    public boolean canSendNotifications() {
+      return false;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
       //
       // Print it so that we can see the message during development.
       //
       System.out.println(notification);
     }
   }
-
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
 
   /** Generic notification that can be formatted as a (HTML) email */
   public static abstract class Notification {

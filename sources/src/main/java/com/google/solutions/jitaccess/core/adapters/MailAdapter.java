@@ -38,7 +38,6 @@ import java.util.Properties;
 /**
  * Adapter for sending email.
  */
-@ApplicationScoped
 public class MailAdapter {
   private final Options options;
 

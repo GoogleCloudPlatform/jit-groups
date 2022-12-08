@@ -363,7 +363,7 @@ public class ApiResource {
       request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
       "A justification must be provided");
 
-    Preconditions.checkState(this.notificationService.isConfigured(), "The feature is unavailable");
+    Preconditions.checkState(this.notificationService.canSendNotifications(), "The feature is unavailable");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
