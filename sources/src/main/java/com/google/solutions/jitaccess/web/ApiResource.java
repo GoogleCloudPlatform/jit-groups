@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
@@ -140,7 +141,7 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_ROLES,
-          String.format("Listing available projects failed: %s", e.getMessage()))
+          String.format("Listing available projects failed: %s", Exceptions.getFullMessage(e)))
         .write();
 
       throw new AccessDeniedException("Listing available projects failed, see logs for details");
@@ -179,7 +180,7 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_ROLES,
-          String.format("Listing project roles failed: %s", e.getMessage()))
+          String.format("Listing project roles failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
         .addLabels(le -> addLabels(le, projectId))
         .write();
@@ -225,7 +226,7 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_PEERS,
-          String.format("Listing peers failed: %s", e.getMessage()))
+          String.format("Listing peers failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
         .addLabels(le -> addLabels(le, roleBinding))
         .addLabels(le -> addLabels(le, projectId))
@@ -302,7 +303,7 @@ public class ApiResource {
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
-              e.getMessage()))
+              Exceptions.getFullMessage(e)))
           .addLabels(le -> addLabels(le, projectId))
           .addLabels(le -> addLabels(le, roleBinding))
           .addLabels(le -> addLabels(le, e))
@@ -363,7 +364,9 @@ public class ApiResource {
       request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
       "A justification must be provided");
 
-    Preconditions.checkState(this.notificationService.canSendNotifications(), "The feature is unavailable");
+    Preconditions.checkState(
+      this.notificationService.canSendNotifications(),
+      "The multi-party approval feature is disabled");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
@@ -414,7 +417,7 @@ public class ApiResource {
             iapPrincipal.getId(),
             roleBinding.role,
             roleBinding.fullResourceName,
-            e.getMessage()))
+            Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, roleBinding))
         .addLabels(le -> addLabels(le, e))
@@ -425,7 +428,7 @@ public class ApiResource {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
-        throw new AccessDeniedException("Activating role failed", e);
+        throw new AccessDeniedException("Requesting access failed", e);
       }
     }
   }
@@ -465,7 +468,7 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_GET_REQUEST,
-          String.format("Accessing the activation request failed: %s", e.getMessage()))
+          String.format("Accessing the activation request failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
         .write();
 
@@ -503,7 +506,7 @@ public class ApiResource {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
-          String.format("Accessing the activation request failed: %s", e.getMessage()))
+          String.format("Accessing the activation request failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
         .write();
 
@@ -552,7 +555,7 @@ public class ApiResource {
             activationRequest.roleBinding.role,
             activationRequest.roleBinding.fullResourceName,
             activationRequest.beneficiary,
-            e.getMessage()))
+            Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
         .addLabels(le -> addLabels(le, e))
         .write();

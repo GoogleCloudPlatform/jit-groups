@@ -64,6 +64,7 @@ public class RuntimeEnvironment {
   private final String projectNumber;
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
+  private final NotificationService notificationService;
 
   /**
    * Configuration, based on app.yaml environment variables.
@@ -107,6 +108,35 @@ public class RuntimeEnvironment {
     //
     var logAdapter = new LogAdapter();
 
+    //
+    // Configure SMTP if possible, and fall back to a fail-safe
+    // configuration if the configuration is incomplete.
+    //
+    if (this.configuration.isSmtpConfigured()) {
+      var options = new MailAdapter.Options(
+        this.configuration.smtpHost.getValue(),
+        this.configuration.smtpPort.getValue(),
+        this.configuration.smtpSenderName.getValue(),
+        this.configuration.smtpSenderAddress.getValue());
+
+      if (this.configuration.isSmtpAuthenticationConfigured()) {
+        options.setSmtpCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpPassword.getValue());
+      }
+
+      this.notificationService = new NotificationService.MailNotificationService(new MailAdapter(options));
+    }
+    else {
+      this.notificationService = new NotificationService.SilentNotificationService();
+
+      logAdapter
+        .newWarningEntry(
+          LogEvents.RUNTIME_STARTUP,
+          "The SMTP configuration is incomplete")
+        .write();
+    }
+
     if (isRunningOnAppEngine()) {
       //
       // Running on AppEngine.
@@ -121,6 +151,8 @@ public class RuntimeEnvironment {
 
         this.applicationCredentials = GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
+
+
 
         logAdapter
           .newInfoEntry(
@@ -275,23 +307,6 @@ public class RuntimeEnvironment {
 
   @Produces
   public NotificationService getNotificationService() {
-    if (developmentMode || !this.configuration.isSmtpConfigured()) {
-      return new NotificationService.SilentNotificationService();
-    }
-    else {
-      var options = new MailAdapter.Options(
-        this.configuration.smtpHost.getValue(),
-        this.configuration.smtpPort.getValue(),
-        this.configuration.smtpSenderName.getValue(),
-        this.configuration.smtpSenderAddress.getValue());
-
-      if (this.configuration.isSmtpAuthenticationConfigured()) {
-        options.setSmtpCredentials(
-          this.configuration.smtpUsername.getValue(),
-          this.configuration.smtpPassword.getValue());
-      }
-
-      return new NotificationService.MailNotificationService(new MailAdapter(options));
-    }
+    return this.notificationService;
   }
 }

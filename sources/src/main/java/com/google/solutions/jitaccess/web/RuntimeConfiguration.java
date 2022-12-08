@@ -120,12 +120,12 @@ public class RuntimeConfiguration {
   public final StringSetting smtpSenderAddress;
 
   /**
-   * SMTP username
+   * SMTP username.
    */
   public final StringSetting smtpUsername;
 
   /**
-   * SMTP password
+   * SMTP password. For Gmail, this should be an application-specific password.
    */
   public final StringSetting smtpPassword;
 
