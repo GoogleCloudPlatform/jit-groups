@@ -117,13 +117,17 @@ public class RuntimeEnvironment {
         this.configuration.smtpHost.getValue(),
         this.configuration.smtpPort.getValue(),
         this.configuration.smtpSenderName.getValue(),
-        this.configuration.smtpSenderAddress.getValue());
+        this.configuration.smtpSenderAddress.getValue(),
+        this.configuration.smtpEnableStartTls.getValue(),
+        this.configuration.getSmtpExtraOptionsMap());
 
       if (this.configuration.isSmtpAuthenticationConfigured()) {
         options.setSmtpCredentials(
           this.configuration.smtpUsername.getValue(),
           this.configuration.smtpPassword.getValue());
       }
+
+      // TODO: Pass extra JavaMail options
 
       this.notificationService = new NotificationService.MailNotificationService(new MailAdapter(options));
     }

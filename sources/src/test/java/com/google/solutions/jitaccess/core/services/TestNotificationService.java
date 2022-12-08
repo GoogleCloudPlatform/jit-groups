@@ -76,7 +76,9 @@ public class TestNotificationService {
       "smtp.mailgun.org",
       587,
       "JIT Access Test",
-      senderAddress);
+      senderAddress,
+      true,
+      Map.of());
     options.setSmtpCredentials(username, password);
 
     var mailAdapter = new MailAdapter(options);

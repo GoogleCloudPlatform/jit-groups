@@ -33,12 +33,13 @@ import javax.mail.internet.MimeMultipart;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Properties;
 
 /**
  * Adapter for sending email.
  */
-public class MailAdapter {
+public class MailAdapter { // TODO: Rename to SmtpAdapter
   private final Options options;
 
   public MailAdapter(Options options) {
@@ -146,7 +147,9 @@ public class MailAdapter {
       String smtpHost,
       int smtpPort,
       String senderName,
-      String senderAddress
+      String senderAddress,
+      boolean enableStartTls,
+      Map<String, String> extraOptions
     ) {
       Preconditions.checkNotNull(smtpHost, "smtpHost");
       Preconditions.checkNotNull(senderName, "senderName");
@@ -160,7 +163,11 @@ public class MailAdapter {
       this.smtpProperties = new Properties();
       this.smtpProperties.put("mail.smtp.host", smtpHost);
       this.smtpProperties.put("mail.smtp.port", String.valueOf(smtpPort));
-      this.smtpProperties.put("mail.smtp.starttls.enable", "true");
+      this.smtpProperties.put("mail.smtp.starttls.enable", String.valueOf(enableStartTls));
+
+      if (extraOptions != null) {
+        this.smtpProperties.putAll(extraOptions);
+      }
     }
 
     /**

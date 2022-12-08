@@ -26,8 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRuntimeConfiguration {
   @Test
@@ -94,4 +93,59 @@ public class TestRuntimeConfiguration {
   // Mail settings.
   // -------------------------------------------------------------------------
 
+  @Test
+  public void whenNotSet_ThenSmtpSettingsSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
+
+    assertEquals("smtp.gmail.com", configuration.smtpHost.getValue());
+    assertEquals(587, configuration.smtpPort.getValue());
+    assertTrue(configuration.smtpEnableStartTls.getValue());
+    assertEquals("JIT Access", configuration.smtpSenderName.getValue());
+    assertFalse(configuration.smtpSenderAddress.isValid());
+    assertFalse(configuration.smtpUsername.isValid());
+    assertFalse(configuration.smtpPassword.isValid());
+  }
+
+  @Test
+  public void whenSet_ThenSmtpSettingsReturnSettings() {
+    var configuration = new RuntimeConfiguration(Map.of(
+      "SMTP_HOST", "mail.example.com ",
+      "SMTP_PORT", " 25 ",
+      "SMTP_ENABLE_STARTTLS", " False ",
+      "SMTP_SENDER_NAME", "Sender",
+      "SMTP_SENDER_ADDRESS", "sender@example.com",
+      "SMTP_USERNAME", "user",
+      "SMTP_PASSWORD", "password"
+    ));
+
+    assertEquals("mail.example.com", configuration.smtpHost.getValue());
+    assertEquals(25, configuration.smtpPort.getValue());
+    assertFalse(configuration.smtpEnableStartTls.getValue());
+    assertEquals("Sender", configuration.smtpSenderName.getValue());
+    assertEquals("sender@example.com", configuration.smtpSenderAddress.getValue());
+    assertEquals("user", configuration.smtpUsername.getValue());
+    assertEquals("password", configuration.smtpPassword.getValue());
+  }
+
+  @Test
+  public void whenSmtpExtraOptionsEmpty_TheGetSmtpExtraOptionsRetunsMap() {
+    var settings = Map.of("SMTP_OPTIONS", "");
+    var configuration = new RuntimeConfiguration(settings);
+
+    var extraOptions = configuration.getSmtpExtraOptionsMap();
+    assertNotNull(extraOptions);
+    assertEquals(0, extraOptions.size());
+  }
+
+  @Test
+  public void whenSmtpExtraOptionsContainsPairs_TheGetSmtpExtraOptionsRetunsMap() {
+    var settings = Map.of("SMTP_OPTIONS", " , ONE = one, TWO=two,THREE,FOUR=,,   ");
+    var configuration = new RuntimeConfiguration(settings);
+
+    var extraOptions = configuration.getSmtpExtraOptionsMap();
+    assertNotNull(extraOptions);
+    assertEquals(2, extraOptions.size());
+    assertEquals("one", extraOptions.get("ONE"));
+    assertEquals("two", extraOptions.get("TWO"));
+  }
 }

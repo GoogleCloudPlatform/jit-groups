@@ -602,6 +602,8 @@
                     }
                 }
 
+                // TODO: Approver sees wrong "user" after approval
+
                 // NB. All items have the same start/end time.
                 var expirySecs = activationStatus.items[0].endTime - activationStatus.items[0].startTime;
                 $("#request-status-pane-starttime").text(new Date(activationStatus.items[0].startTime * 1000).toLocaleString());

@@ -22,9 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class RuntimeConfiguration {
@@ -62,10 +60,12 @@ public class RuntimeConfiguration {
     //
     this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
     this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
+    this.smtpEnableStartTls = new BooleanSetting(List.of("SMTP_ENABLE_STARTTLS"), true);
     this.smtpSenderName = new StringSetting(List.of("SMTP_SENDER_NAME"), "JIT Access");
     this.smtpSenderAddress = new StringSetting(List.of("SMTP_SENDER_ADDRESS"), null);
     this.smtpUsername = new StringSetting(List.of("SMTP_USERNAME"), null);
     this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
+    this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
   }
 
   // -------------------------------------------------------------------------
@@ -110,6 +110,11 @@ public class RuntimeConfiguration {
   public final IntSetting smtpPort;
 
   /**
+   * Enable StartTLS.
+   */
+  public final BooleanSetting smtpEnableStartTls;
+
+  /**
    * Human-readable sender name used for notifications.
    */
   public final StringSetting smtpSenderName;
@@ -129,6 +134,11 @@ public class RuntimeConfiguration {
    */
   public final StringSetting smtpPassword;
 
+  /**
+   * Extra JavaMail options.
+   */
+  public final StringSetting smtpExtraOptions;
+
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
     return requiredSettings.stream().allMatch(s -> s.isValid());
@@ -137,6 +147,21 @@ public class RuntimeConfiguration {
   public boolean isSmtpAuthenticationConfigured() {
     var requiredSettings = List.of(smtpUsername, smtpPassword);
     return requiredSettings.stream().allMatch(s -> s.isValid());
+  }
+
+  public Map<String, String> getSmtpExtraOptionsMap() {
+    var map = new HashMap<String, String>();
+
+    if (this.smtpExtraOptions.isValid()) {
+      for (var kvp : this.smtpExtraOptions.getValue().split(",")) {
+        var parts = kvp.split("=");
+        if (parts.length == 2) {
+          map.put(parts[0].trim(), parts[1].trim());
+        }
+      }
+    }
+
+    return map;
   }
 
   // -------------------------------------------------------------------------
@@ -203,6 +228,17 @@ public class RuntimeConfiguration {
     @Override
     protected Integer parse(String value) {
       return Integer.parseInt(value);
+    }
+  }
+
+  public class BooleanSetting extends Setting<Boolean> {
+    public BooleanSetting(Collection<String> keys, Boolean defaultValue) {
+      super(keys, defaultValue);
+    }
+
+    @Override
+    protected Boolean parse(String value) {
+      return Boolean.parseBoolean(value);
     }
   }
 
