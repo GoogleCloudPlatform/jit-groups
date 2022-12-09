@@ -50,6 +50,8 @@ public class TestApiResource {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
   private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
 
+  private static final String SAMPLE_TOKEN = "eySAMPLE";
+
   private ApiResource resource;
 
   @BeforeEach
@@ -655,7 +657,7 @@ public class TestApiResource {
         Instant.now().plusSeconds(60)));
     when(this.resource.activationTokenService
       .createToken(any(RoleActivationService.ActivationRequest.class)))
-      .thenReturn("token");
+      .thenReturn(SAMPLE_TOKEN);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -692,7 +694,7 @@ public class TestApiResource {
         Instant.now().plusSeconds(60)));
     when(this.resource.activationTokenService
       .createToken(any(RoleActivationService.ActivationRequest.class)))
-      .thenReturn("token");
+      .thenReturn(SAMPLE_TOKEN);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -735,11 +737,13 @@ public class TestApiResource {
 
   @Test
   public void whenTokenInvalid_ThenGetActivationRequestReturnsError() throws Exception {
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenThrow(new TokenVerifier.VerificationException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/activation-request?activation=token", ExceptionMappers.ErrorEntity.class);
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
 
@@ -758,11 +762,13 @@ public class TestApiResource {
       Instant.now(),
       Instant.now().plusSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenReturn(request);
 
     var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
-      .get("/api/activation-request?activation=token", ExceptionMappers.ErrorEntity.class);
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
 
@@ -781,11 +787,13 @@ public class TestApiResource {
       Instant.now(),
       Instant.now().plusSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenReturn(request);
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/activation-request?activation=token", ApiResource.ActivationStatusResponse.class);
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -820,11 +828,13 @@ public class TestApiResource {
 
   @Test
   public void whenTokenInvalid_ThenApproveActivationRequestReturnsError() throws Exception {
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenThrow(new TokenVerifier.VerificationException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .post("/api/activation-request?activation=token", ExceptionMappers.ErrorEntity.class);
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
 
@@ -843,7 +853,7 @@ public class TestApiResource {
       Instant.now(),
       Instant.now().plusSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenReturn(request);
     when(this.resource.roleActivationService
       .activateProjectRoleForPeer(
@@ -852,7 +862,9 @@ public class TestApiResource {
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .post("/api/activation-request?activation=token", ExceptionMappers.ErrorEntity.class);
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
 
     assertEquals(403, response.getStatus());
 
@@ -871,7 +883,7 @@ public class TestApiResource {
       "a justification",
       Instant.now(),
       Instant.now().plusSeconds(60));
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenReturn(request);
     when(this.resource.roleActivationService
       .activateProjectRoleForPeer(
@@ -884,7 +896,9 @@ public class TestApiResource {
         request.endTime));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .post("/api/activation-request?activation=token", ApiResource.ActivationStatusResponse.class);
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -902,7 +916,7 @@ public class TestApiResource {
       "a justification",
       Instant.now(),
       Instant.now().plusSeconds(60));
-    when(this.resource.activationTokenService.verifyToken(eq("token")))
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
       .thenReturn(request);
     when(this.resource.roleActivationService
       .activateProjectRoleForPeer(
@@ -915,7 +929,9 @@ public class TestApiResource {
         request.endTime));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .post("/api/activation-request?activation=token", ApiResource.ActivationStatusResponse.class);
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
 
     assertEquals(200, response.getStatus());
 

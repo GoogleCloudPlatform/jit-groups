@@ -77,10 +77,19 @@ public class ApiResource {
     Preconditions.checkNotNull(uriInfo);
     Preconditions.checkNotNull(activationToken);
 
+    //
+    // NB. Embedding the token verbatim can trigger overzealous phishing filters
+    // to assume that we're embedding an access token (or some other form of
+    // credential in the URL). But activation tokens aren't a credential, they
+    // don't grant access to anything and the embedded information isn't
+    // confidential.
+    //
+    // Obfuscating the token helps avoid false-flagging.
+    //
     return this.runtimeEnvironment
       .createAbsoluteUriBuilder(uriInfo)
       .path("/")
-      .queryParam("activation", activationToken)
+      .queryParam("activation", TokenObfuscator.encode(activationToken))
       .build()
       .toURL();
   }
@@ -440,15 +449,16 @@ public class ApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
   public ActivationStatusResponse getActivationRequest(
-    @QueryParam("activation") String activationToken,
+    @QueryParam("activation") String obfuscatedActivationToken,
     @Context SecurityContext securityContext
   ) throws AccessException {
     assert this.activationTokenService != null;
 
     Preconditions.checkArgument(
-      activationToken != null && !activationToken.trim().isEmpty(),
+      obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
       "An activation token is required");
 
+    var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
@@ -484,7 +494,7 @@ public class ApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
   public ActivationStatusResponse approveActivationRequest(
-    @QueryParam("activation") String activationToken,
+    @QueryParam("activation") String obfuscatedActivationToken,
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
   ) throws AccessException {
@@ -493,9 +503,10 @@ public class ApiResource {
     assert this.notificationService != null;
 
     Preconditions.checkArgument(
-      activationToken != null && !activationToken.trim().isEmpty(),
+      obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
       "An activation token is required");
 
+    var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     RoleActivationService.ActivationRequest activationRequest;
