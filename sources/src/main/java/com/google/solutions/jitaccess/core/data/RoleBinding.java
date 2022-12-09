@@ -71,19 +71,4 @@ public class RoleBinding {
   public int hashCode() {
     return Objects.hash(this.fullResourceName, this.role);
   }
-
-  // -------------------------------------------------------------------------
-  // Statics.
-  // -------------------------------------------------------------------------
-
-  public static RoleBinding fromId(String id) {
-    Preconditions.checkNotNull(id);
-
-    var parts = id.split(":");
-    if (parts.length != 2) {
-      throw new IllegalArgumentException("Invalid role binding ID: " + id);
-    }
-
-    return new RoleBinding(parts[0], parts[1]);
-  }
 }

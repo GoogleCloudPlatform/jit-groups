@@ -143,11 +143,28 @@ public abstract class NotificationService {
         .getClassLoader()
         .getResourceAsStream(resourceName)) {
 
-        return new String(stream.readAllBytes());
+        if (stream == null) {
+          throw new RuntimeException(
+            String.format("The JAR file does not contain an template named %s", resourceName));
+        }
+
+        var content = stream.readAllBytes();
+        if (content.length > 3 &&
+          content[0] == (byte)0xEF &&
+          content[1] == (byte)0xBB &&
+          content[2] == (byte)0xBF) {
+          //
+          // Strip UTF-8 BOM
+          //
+          return new String(content, 3, content.length - 3);
+        }
+        else {
+          return new String(content);
+        }
       }
       catch (IOException e) {
         throw new RuntimeException(
-          String.format("The JAR file does not contain an template named %s", resourceName), e);
+          String.format("Reading the template %s from the JAR file failed", resourceName), e);
       }
     }
 
