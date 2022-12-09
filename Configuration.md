@@ -99,6 +99,20 @@ The Just-In-Time Access application supports the following environment variables
     <td>1.2</td>
   </tr>
   <tr>
+    <td>
+        <code>NOTIFICATION_TIMEZONE</code>
+    </td>
+    <td>
+        <p>Timezone to use for dates in notification emails.</p>
+        <p>
+            The value must be a valid identifier from the IANA Time Zone Database (TZDB),
+            for example <code>Australia/Melbourne</code> or <code>Europe/Berlin</code>.</p>
+    </td>
+    <td>Required for MPA</td>
+    <td>UTC</td>
+    <td>1.2</td>
+  </tr>
+  <tr>
     <td><code>SMTP_HOST</code></td>
     <td><p>SMTP server to use for delivering notifications.</p></td>
     <td>Required for MPA</td>

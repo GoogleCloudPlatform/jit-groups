@@ -29,10 +29,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.URI;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,7 +45,7 @@ public class TestNotificationService {
     protected TestNotification(
       UserId recipient,
       String subject,
-      Map<String, String> properties
+      Map<String, Object> properties
     ) {
       super(
         properties
@@ -82,9 +81,11 @@ public class TestNotificationService {
     options.setSmtpCredentials(username, password);
 
     var mailAdapter = new MailAdapter(options);
-    var service = new NotificationService.MailNotificationService(mailAdapter);
+    var service = new NotificationService.MailNotificationService(
+      mailAdapter,
+      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
 
-    var properties = new HashMap<String, String>();
+    var properties = new HashMap<String, Object>();
     properties.put("TEST", "test-value");
 
     var notification = new TestNotification(
@@ -98,13 +99,15 @@ public class TestNotificationService {
   @Test
   public void sendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(MailAdapter.class);
-    var service = new NotificationService.MailNotificationService(mailAdapter);
+    var service = new NotificationService.MailNotificationService(
+      mailAdapter,
+      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
       to,
       "Test email",
-      new HashMap<String, String>()));
+      new HashMap<String, Object>()));
 
     verify(mailAdapter, times(1)).sendMail(
       eq(List.of(to)),
@@ -120,7 +123,7 @@ public class TestNotificationService {
 
   @Test
   public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() throws Exception {
-    var properties = new HashMap<String, String>();
+    var properties = new HashMap<String, Object>();
     properties.put("TEST-1", "<value1/>");
     properties.put("TEST-2", "<value2/>");
 
@@ -131,6 +134,21 @@ public class TestNotificationService {
 
     assertEquals(
       "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
-      notification.formatMessage());
+      notification.formatMessage(NotificationService.Options.DEFAULT_TIMEZONE));
+  }
+
+  @Test
+  public void whenPropertiesContainDates_ThenFormatAppliesTimezone() throws Exception {
+    var properties = new HashMap<String, Object>();
+    properties.put("TEST-1", Instant.ofEpochSecond(86400));
+
+    var notification = new TestNotification(
+      new UserId("user@example.com"),
+      "Test email",
+      properties);
+
+    assertEquals(
+      "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
+      notification.formatMessage(ZoneId.of("Australia/Melbourne")).trim());
   }
 }

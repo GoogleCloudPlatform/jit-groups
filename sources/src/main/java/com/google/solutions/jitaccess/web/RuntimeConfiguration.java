@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import java.time.Duration;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 
@@ -55,8 +56,14 @@ public class RuntimeConfiguration {
       List.of("JUSTIFICATION_HINT"),
       "Bug or case number");
 
+
     //
-    // Mail settings.
+    // Notification settings.
+    //
+    this.timeZoneForNotifications = new ZoneIdSetting(List.of("NOTIFICATION_TIMEZONE"));
+
+    //
+    // SMTP settings.
     //
     this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
     this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
@@ -98,6 +105,11 @@ public class RuntimeConfiguration {
    * need to supply.
    */
   public final StringSetting justificationHint;
+
+  /**
+   * Zone to apply to dates when sending notifications.
+   */
+  public final ZoneIdSetting timeZoneForNotifications;
 
   /**
    * SMTP server for sending notifications.
@@ -250,6 +262,17 @@ public class RuntimeConfiguration {
     @Override
     protected Duration parse(String value) {
       return Duration.ofMinutes(Integer.parseInt(value));
+    }
+  }
+
+  public class ZoneIdSetting extends Setting<ZoneId> {
+    public ZoneIdSetting(Collection<String> keys) {
+      super(keys, ZoneId.of("Z"));
+    }
+
+    @Override
+    protected ZoneId parse(String value) {
+      return ZoneId.of(value);
     }
   }
 }

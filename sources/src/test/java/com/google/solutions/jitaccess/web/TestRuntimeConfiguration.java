@@ -21,9 +21,12 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.services.NotificationService;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.time.ZoneId;
+import java.time.zone.ZoneRulesException;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,7 +85,7 @@ public class TestRuntimeConfiguration {
   }
 
   @Test
-  public void whenSet_TheActivationTimeoutReturnsSetting() {
+  public void whenSet_ThenActivationTimeoutReturnsSetting() {
     var settings = Map.of("ELEVATION_DURATION", "30");
     var configuration = new RuntimeConfiguration(settings);
 
@@ -90,7 +93,40 @@ public class TestRuntimeConfiguration {
   }
 
   // -------------------------------------------------------------------------
-  // Mail settings.
+  // Notification settings.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenSet_ThenTimeZoneForNotificationsIsUtc() {
+    var configuration = new RuntimeConfiguration(Map.of());
+
+    assertEquals(
+      NotificationService.Options.DEFAULT_TIMEZONE,
+      configuration.timeZoneForNotifications.getValue());
+  }
+
+  @Test
+  public void whenInvalid_ThenTimeZoneForNotificationsIsInvalid() {
+    var settings = Map.of("NOTIFICATION_TIMEZONE", "junk");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertFalse(configuration.timeZoneForNotifications.isValid());
+    assertThrows(ZoneRulesException.class,
+      () -> configuration.timeZoneForNotifications.getValue());
+  }
+
+  @Test
+  public void whenSet_ThenTimeZoneForNotificationsReturnsSetting() {
+    var settings = Map.of("NOTIFICATION_TIMEZONE", "Australia/Melbourne");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertNotEquals(
+      NotificationService.Options.DEFAULT_TIMEZONE,
+      configuration.timeZoneForNotifications.getValue());
+  }
+
+  // -------------------------------------------------------------------------
+  // SMTP settings.
   // -------------------------------------------------------------------------
 
   @Test

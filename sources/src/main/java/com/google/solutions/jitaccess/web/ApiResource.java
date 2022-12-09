@@ -792,8 +792,8 @@ public class ApiResource {
       this.properties.put("BENEFICIARY", request.beneficiary.email);
       this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
       this.properties.put("ROLE", request.roleBinding.role);
-      this.properties.put("START_TIME", request.startTime.atOffset(ZoneOffset.UTC).toString());
-      this.properties.put("END_TIME", request.endTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("START_TIME", request.startTime);
+      this.properties.put("END_TIME", request.endTime);
       this.properties.put("JUSTIFICATION", request.justification);
       this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
       this.properties.put("ACTION_URL", activationRequestUrl.toString());
@@ -822,8 +822,8 @@ public class ApiResource {
       this.properties.put("BENEFICIARY", request.beneficiary.email);
       this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
       this.properties.put("ROLE", request.roleBinding.role);
-      this.properties.put("START_TIME", request.startTime.atOffset(ZoneOffset.UTC).toString());
-      this.properties.put("END_TIME", request.endTime.atOffset(ZoneOffset.UTC).toString());
+      this.properties.put("START_TIME", request.startTime);
+      this.properties.put("END_TIME", request.endTime);
       this.properties.put("JUSTIFICATION", request.justification);
       this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
     }

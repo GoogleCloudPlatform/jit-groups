@@ -127,9 +127,9 @@ public class RuntimeEnvironment {
           this.configuration.smtpPassword.getValue());
       }
 
-      // TODO: Pass extra JavaMail options
-
-      this.notificationService = new NotificationService.MailNotificationService(new MailAdapter(options));
+      this.notificationService = new NotificationService.MailNotificationService(
+        new MailAdapter(options),
+        new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {
       this.notificationService = new NotificationService.SilentNotificationService();

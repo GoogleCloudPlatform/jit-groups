@@ -28,6 +28,12 @@ import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -49,11 +55,18 @@ public abstract class NotificationService {
   // -------------------------------------------------------------------------
 
   public static class MailNotificationService extends NotificationService {
+    private final Options options;
     private final MailAdapter mailAdapter;
 
-    public MailNotificationService(MailAdapter mailAdapter) {
+    public MailNotificationService(
+        MailAdapter mailAdapter,
+        Options options
+    ) {
       Preconditions.checkNotNull(mailAdapter);
+      Preconditions.checkNotNull(options);
+
       this.mailAdapter = mailAdapter;
+      this.options = options;
     }
 
     @Override
@@ -70,7 +83,7 @@ public abstract class NotificationService {
           notification.toRecipients,
           notification.ccRecipients,
           notification.subject,
-          notification.formatMessage(),
+          notification.formatMessage(this.options.timeZone),
           notification.isReply()
             ? EnumSet.of(MailAdapter.Flags.REPLY)
             : EnumSet.of(MailAdapter.Flags.NONE));
@@ -103,7 +116,7 @@ public abstract class NotificationService {
     private final Collection<UserId> ccRecipients;
     private final String subject;
 
-    protected final Map<String, String> properties = new HashMap<>();
+    protected final Map<String, Object> properties = new HashMap<>();
 
     protected boolean isReply() {
       return false;
@@ -139,7 +152,7 @@ public abstract class NotificationService {
       }
     }
 
-    protected String formatMessage() {
+    protected String formatMessage(ZoneId zone) {
       //
       // Read email template file from JAR and replace {{PROPERTY}} placeholders.
       //
@@ -147,9 +160,21 @@ public abstract class NotificationService {
 
       var message = this.template;
       for (var property : this.properties.entrySet()) {
-        message = message.replace(
-          "{{" + property.getKey() + "}}",
-          escaper.escape(property.getValue()));
+        String propertyValue;
+        if (property.getValue() instanceof Instant) {
+          //
+          // Apply time zone.
+          //
+          propertyValue = OffsetDateTime
+            .ofInstant((Instant)property.getValue(), zone)
+            .truncatedTo(ChronoUnit.SECONDS)
+            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        }
+        else {
+          propertyValue = escaper.escape(property.getValue().toString());
+        }
+
+        message = message.replace("{{" + property.getKey() + "}}", propertyValue);
       }
 
       return message;
@@ -170,10 +195,13 @@ public abstract class NotificationService {
   }
 
   public static class Options {
-    private final boolean enableEmail;
+    public static final ZoneId DEFAULT_TIMEZONE = ZoneId.of("Z");
 
-    public Options(boolean enableEmail) {
-      this.enableEmail = enableEmail;
+    private final ZoneId timeZone;
+
+    public Options(ZoneId timeZone) {
+      Preconditions.checkNotNull(timeZone);
+      this.timeZone = timeZone;
     }
   }
 
