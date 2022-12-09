@@ -64,7 +64,7 @@ public class ActivationTokenService {
       .build();
   }
 
-  public String createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
+  public TokenWithExpiry createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(request.startTime.isBefore(Instant.now().plusSeconds(10)));
     Preconditions.checkArgument(request.startTime.isAfter(Instant.now().minusSeconds(10)));
@@ -72,14 +72,15 @@ public class ActivationTokenService {
     //
     // Add obligatory claims.
     //
+    var expiryTime = request.startTime.plus(this.options.tokenValidity);
     var jwtPayload = request.toJsonWebTokenPayload()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setExpirationTimeSeconds(request.startTime.plus(this.options.tokenValidity).getEpochSecond());
+      .setExpirationTimeSeconds(expiryTime.getEpochSecond());
 
-    return this.iamCredentialsAdapter.signJwt(
-      this.options.serviceAccount,
-      jwtPayload);
+    return new TokenWithExpiry(
+      this.iamCredentialsAdapter.signJwt(this.options.serviceAccount, jwtPayload),
+      expiryTime);
   }
 
   public RoleActivationService.ActivationRequest verifyToken(
@@ -105,6 +106,16 @@ public class ActivationTokenService {
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public static class TokenWithExpiry {
+    public final String token;
+    public final Instant expiryTime;
+
+    public TokenWithExpiry(String token, Instant expiryTime) {
+      this.token = token;
+      this.expiryTime = expiryTime;
+    }
+  }
 
   public static class Options {
     public final UserId serviceAccount;

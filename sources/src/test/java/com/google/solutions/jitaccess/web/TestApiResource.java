@@ -51,6 +51,8 @@ public class TestApiResource {
   private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
 
   private static final String SAMPLE_TOKEN = "eySAMPLE";
+  private static final ActivationTokenService.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
+    new ActivationTokenService.TokenWithExpiry(SAMPLE_TOKEN, Instant.now().plusSeconds(10));
 
   private ApiResource resource;
 
@@ -657,7 +659,7 @@ public class TestApiResource {
         Instant.now().plusSeconds(60)));
     when(this.resource.activationTokenService
       .createToken(any(RoleActivationService.ActivationRequest.class)))
-      .thenReturn(SAMPLE_TOKEN);
+      .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -694,7 +696,7 @@ public class TestApiResource {
         Instant.now().plusSeconds(60)));
     when(this.resource.activationTokenService
       .createToken(any(RoleActivationService.ActivationRequest.class)))
-      .thenReturn(SAMPLE_TOKEN);
+      .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";

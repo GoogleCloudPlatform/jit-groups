@@ -41,6 +41,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -398,7 +399,8 @@ public class ApiResource {
       var activationToken = this.activationTokenService.createToken(activationRequest);
       this.notificationService.sendNotification(new RequestActivationNotification(
         activationRequest,
-        createActivationRequestUrl(uriInfo, activationToken)));
+        activationToken.expiryTime,
+        createActivationRequestUrl(uriInfo, activationToken.token)));
 
       this.logAdapter
         .newInfoEntry(
@@ -789,6 +791,7 @@ public class ApiResource {
   {
     protected RequestActivationNotification(
       RoleActivationService.ActivationRequest request,
+      Instant requestExpiryTime,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
@@ -805,6 +808,7 @@ public class ApiResource {
       this.properties.put("ROLE", request.roleBinding.role);
       this.properties.put("START_TIME", request.startTime);
       this.properties.put("END_TIME", request.endTime);
+      this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
       this.properties.put("JUSTIFICATION", request.justification);
       this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
       this.properties.put("ACTION_URL", activationRequestUrl.toString());

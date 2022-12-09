@@ -66,6 +66,8 @@ public class TestActivationTokenService {
       startTime.plusSeconds(60));
 
     var token = tokenService.createToken(request);
+    assertNotNull(token.token);
+    assertEquals(startTime.plus(tokenService.getOptions().tokenValidity), token.expiryTime);
 
     var verifiedPayload = TokenVerifier
       .newBuilder()
@@ -73,7 +75,7 @@ public class TestActivationTokenService {
       .setIssuer(serviceAccount.email)
       .setAudience(serviceAccount.email)
       .build()
-      .verify(token)
+      .verify(token.token)
       .getPayload();
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
@@ -167,7 +169,7 @@ public class TestActivationTokenService {
       Instant.now().plusSeconds(60));
 
     var token = tokenService.createToken(inputRequest);
-    var outputRequest = tokenService.verifyToken(token);
+    var outputRequest = tokenService.verifyToken(token.token);
 
     assertEquals(inputRequest.beneficiary, outputRequest.beneficiary);
     assertEquals(inputRequest.reviewers, outputRequest.reviewers);
