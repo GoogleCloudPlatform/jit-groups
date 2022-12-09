@@ -113,7 +113,7 @@ public class RuntimeEnvironment {
     // configuration if the configuration is incomplete.
     //
     if (this.configuration.isSmtpConfigured()) {
-      var options = new MailAdapter.Options(
+      var options = new SmtpAdapter.Options(
         this.configuration.smtpHost.getValue(),
         this.configuration.smtpPort.getValue(),
         this.configuration.smtpSenderName.getValue(),
@@ -128,7 +128,7 @@ public class RuntimeEnvironment {
       }
 
       this.notificationService = new NotificationService.MailNotificationService(
-        new MailAdapter(options),
+        new SmtpAdapter(options),
         new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {

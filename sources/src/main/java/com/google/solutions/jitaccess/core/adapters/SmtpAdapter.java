@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -39,10 +38,10 @@ import java.util.Properties;
 /**
  * Adapter for sending email.
  */
-public class MailAdapter { // TODO: Rename to SmtpAdapter
+public class SmtpAdapter {
   private final Options options;
 
-  public MailAdapter(Options options) {
+  public SmtpAdapter(Options options) {
     Preconditions.checkNotNull(options, "options");
     this.options = options;
   }

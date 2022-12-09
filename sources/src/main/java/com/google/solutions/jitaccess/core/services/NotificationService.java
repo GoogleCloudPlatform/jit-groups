@@ -23,13 +23,12 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.adapters.MailAdapter;
+import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -56,16 +55,16 @@ public abstract class NotificationService {
 
   public static class MailNotificationService extends NotificationService {
     private final Options options;
-    private final MailAdapter mailAdapter;
+    private final SmtpAdapter smtpAdapter;
 
     public MailNotificationService(
-        MailAdapter mailAdapter,
+        SmtpAdapter smtpAdapter,
         Options options
     ) {
-      Preconditions.checkNotNull(mailAdapter);
+      Preconditions.checkNotNull(smtpAdapter);
       Preconditions.checkNotNull(options);
 
-      this.mailAdapter = mailAdapter;
+      this.smtpAdapter = smtpAdapter;
       this.options = options;
     }
 
@@ -79,16 +78,16 @@ public abstract class NotificationService {
       Preconditions.checkNotNull(notification, "notification");
 
       try {
-        this.mailAdapter.sendMail(
+        this.smtpAdapter.sendMail(
           notification.toRecipients,
           notification.ccRecipients,
           notification.subject,
           notification.formatMessage(this.options.timeZone),
           notification.isReply()
-            ? EnumSet.of(MailAdapter.Flags.REPLY)
-            : EnumSet.of(MailAdapter.Flags.NONE));
+            ? EnumSet.of(SmtpAdapter.Flags.REPLY)
+            : EnumSet.of(SmtpAdapter.Flags.NONE));
       }
-      catch (MailAdapter.MailException e) {
+      catch (SmtpAdapter.MailException e) {
         throw new NotificationException("The notification could not be sent", e);
       }
     }

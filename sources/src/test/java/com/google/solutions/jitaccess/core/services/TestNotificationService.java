@@ -21,14 +21,11 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.solutions.jitaccess.core.adapters.MailAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.net.URI;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
@@ -71,7 +68,7 @@ public class TestNotificationService {
     String username = "...";
     String password = "...";
 
-    var options = new MailAdapter.Options(
+    var options = new SmtpAdapter.Options(
       "smtp.mailgun.org",
       587,
       "JIT Access Test",
@@ -80,7 +77,7 @@ public class TestNotificationService {
       Map.of());
     options.setSmtpCredentials(username, password);
 
-    var mailAdapter = new MailAdapter(options);
+    var mailAdapter = new SmtpAdapter(options);
     var service = new NotificationService.MailNotificationService(
       mailAdapter,
       new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
@@ -98,7 +95,7 @@ public class TestNotificationService {
 
   @Test
   public void sendNotificationSendsMail() throws Exception {
-    var mailAdapter = Mockito.mock(MailAdapter.class);
+    var mailAdapter = Mockito.mock(SmtpAdapter.class);
     var service = new NotificationService.MailNotificationService(
       mailAdapter,
       new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
@@ -114,7 +111,7 @@ public class TestNotificationService {
       eq(List.of()),
       eq("Test email"),
       anyString(),
-      eq(EnumSet.of(MailAdapter.Flags.NONE)));
+      eq(EnumSet.of(SmtpAdapter.Flags.NONE)));
   }
 
   // -------------------------------------------------------------------------
