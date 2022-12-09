@@ -920,7 +920,7 @@ public class TestApiResource {
       .thenReturn(request);
     when(this.resource.roleActivationService
       .activateProjectRoleForPeer(
-        eq(SAMPLE_USER),
+        eq(SAMPLE_USER_2),
         eq(request)))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         request.id,
@@ -928,7 +928,7 @@ public class TestApiResource {
         request.startTime,
         request.endTime));
 
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER_2)
       .post(
         "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
         ApiResource.ActivationStatusResponse.class);
@@ -938,8 +938,8 @@ public class TestApiResource {
     var body = response.getBody();
     assertEquals(request.beneficiary, body.beneficiary);
     assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
-    assertTrue(body.isBeneficiary);
-    assertFalse(body.isReviewer);
+    assertFalse(body.isBeneficiary);
+    assertTrue(body.isReviewer);
     assertEquals(request.justification, body.justification);
     assertEquals(1, body.items.size());
     assertEquals(request.id.toString(), body.items.get(0).activationId);

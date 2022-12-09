@@ -472,7 +472,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
-        ProjectRole.Status.ACTIVATION_PENDING); // TODO: Check if activated already.
+        ProjectRole.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
     }
     catch (Exception e) {
       this.logAdapter
@@ -549,7 +549,7 @@ public class ApiResource {
         .write();
 
       return new ActivationStatusResponse(
-        iapPrincipal.getId(),
+        activationRequest.beneficiary,
         activationRequest.reviewers,
         activationRequest.beneficiary.equals(iapPrincipal.getId()),
         activationRequest.reviewers.contains(iapPrincipal.getId()),
