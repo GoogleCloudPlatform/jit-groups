@@ -36,13 +36,17 @@ public class TokenObfuscator {
     //
     // JWTs start with "ey" and use dots to separate the segments.
     // By removing the prefix and changing the separator, we
-    // break Base64-decodeability and make it look less like a JWT.
+    // disturb Base64-decodeability and make it look less like a JWT.
     //
-    return jwt.substring(2).replace('.', '~');
+    return jwt.substring(2)
+      .replace(".ey", "~~")
+      .replace('.', '~');
   }
 
   public static String decode(String encodedJwt) {
     Preconditions.checkNotNull(encodedJwt);
-    return "ey" + encodedJwt.replace('~', '.');
+    return "ey" + encodedJwt
+      .replace("~~", ".ey")
+      .replace('~', '.');
   }
 }

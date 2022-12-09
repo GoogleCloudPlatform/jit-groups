@@ -27,8 +27,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestTokenObfuscator {
   @Test
+  public void encode() {
+    var jwt = "eyABC.eyDE.FG";
+
+    assertEquals("ABC~~DE~FG", TokenObfuscator.encode(jwt));
+  }
+
+  @Test
   public void roundtrip() {
-    var jwt = "eyABC.DE.FG";
+    var jwt = "eyABC.eyDE.FG";
 
     assertEquals(jwt, TokenObfuscator.decode(TokenObfuscator.encode(jwt)));
   }
