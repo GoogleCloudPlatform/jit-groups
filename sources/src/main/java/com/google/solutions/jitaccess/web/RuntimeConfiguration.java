@@ -23,7 +23,10 @@ package com.google.solutions.jitaccess.web;
 
 import java.time.Duration;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class RuntimeConfiguration {

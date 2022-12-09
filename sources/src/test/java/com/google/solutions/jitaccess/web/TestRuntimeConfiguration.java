@@ -25,7 +25,6 @@ import com.google.solutions.jitaccess.core.services.NotificationService;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
-import java.time.ZoneId;
 import java.time.zone.ZoneRulesException;
 import java.util.Map;
 

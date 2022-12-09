@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAmount;
