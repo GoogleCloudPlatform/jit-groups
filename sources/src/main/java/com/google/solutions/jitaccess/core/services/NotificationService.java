@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
@@ -211,7 +212,7 @@ public abstract class NotificationService {
   }
 
   public static class Options {
-    public static final ZoneId DEFAULT_TIMEZONE = ZoneId.of("Z");
+    public static final ZoneId DEFAULT_TIMEZONE = ZoneOffset.UTC;
 
     private final ZoneId timeZone;
 

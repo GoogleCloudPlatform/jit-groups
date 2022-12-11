@@ -100,30 +100,40 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <!--
+            NB. ErrorProne isn't compatible with Quarkus hot-reloading, so
+            we only run in release builds.
+          -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <configuration>
+              <compilerArgs>
+                <arg>-XDcompilePolicy=simple</arg>
+                <arg>-Xplugin:ErrorProne</arg>
+              </compilerArgs>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>com.google.errorprone</groupId>
+                  <artifactId>error_prone_core</artifactId>
+                  <version>2.16</version>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
-        <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
-<!--        TODO: Only use error-prone on build, not in IntelliJ-->
-<!--          <encoding>UTF-8</encoding>-->
-<!--          <compilerArgs>-->
-<!--            <arg>-XDcompilePolicy=simple</arg>-->
-<!--            <arg>-Xplugin:ErrorProne</arg>-->
-<!--          </compilerArgs>-->
-<!--          <annotationProcessorPaths>-->
-<!--            <path>-->
-<!--              <groupId>com.google.errorprone</groupId>-->
-<!--              <artifactId>error_prone_core</artifactId>-->
-<!--              <version>2.16</version>-->
-<!--            </path>-->
-<!--          </annotationProcessorPaths>-->
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>

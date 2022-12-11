@@ -16,18 +16,34 @@ The Just-In-Time Access application supports the following environment variables
   </tr>
   <tr>
     <td colspan="4"><b>Basic configuration</b></td>
-  </tr>  <tr>
+  </tr>
     <td>
         <code>RESOURCE_SCOPE</code>
     </td>
     <td>
-        The part of the Google Cloud resource hierarchy that's managed by using this application.
-        You can use one of the following values:
-        <ul>
-            <li><code>organizations/ORGANIZATION_ID</code> (all projects)</li>
-            <li><code>folders/FOLDER_ID</code> (projects underneath a specific project)</li>
-            <li><code>projects/PROJECT_ID</code> (specific project)</li>
-        </ul>
+        <p>
+            The organization, folder, or project that JIT Access can access and manage. The resource scope constrains:
+            <ul>
+                <li>
+                    The set of projects that you can grant just-in-time access to: For example, if you specify a 
+                    folder or organization as scope, then you can only grant users just-in-time access to projects within this
+                    folder or organization. 
+                </li>
+                <li>
+                    The IAM policies that JIT Access analyzes to determine eligible access: For example, if you specify a 
+                    folder as scope, JIT Access analyzes the IAM policies of this folder and all its sub-folders and projects
+                    to determine eligible access, but ignores IAM policies inherited from the organization node.
+                </li>
+            </ul>
+        </p>
+        <p>You can use one of the following values:</p>
+        <p>
+            <ul>
+                <li><code>organizations/ORGANIZATION_ID</code> (all projects)</li>
+                <li><code>folders/FOLDER_ID</code> (projects underneath a specific folder, including nested folders)</li>
+                <li><code>projects/PROJECT_ID</code> (specific project)</li>
+            </ul>
+        </p>
         <p>
             For ORGANIZATION_ID, FOLDER_ID, or PROJECT_ID, use the ID of the organization, folder, or project that you're using
             the application with.

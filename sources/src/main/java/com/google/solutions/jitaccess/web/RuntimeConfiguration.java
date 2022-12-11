@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.web;
 
 import java.time.Duration;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -270,7 +271,7 @@ public class RuntimeConfiguration {
 
   public class ZoneIdSetting extends Setting<ZoneId> {
     public ZoneIdSetting(Collection<String> keys) {
-      super(keys, ZoneId.of("Z"));
+      super(keys, ZoneOffset.UTC);
     }
 
     @Override
