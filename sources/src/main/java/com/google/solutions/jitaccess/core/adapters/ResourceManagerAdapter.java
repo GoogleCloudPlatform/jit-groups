@@ -108,9 +108,7 @@ public class ResourceManagerAdapter {
         if (options.contains(IamBindingOptions.FAIL_IF_BINDING_EXISTS)) {
           if (policy.getBindings()
             .stream()
-            .filter(b -> Bindings.equals(b, binding, true))
-            .findAny()
-            .isPresent()) {
+            .anyMatch(b -> Bindings.equals(b, binding, true))) {
             //
             // The exact same binding (incl. condition) exists.
             //

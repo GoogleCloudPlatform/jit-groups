@@ -75,7 +75,7 @@ public class RoleActivationService {
     RoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {
-    if (!this.roleDiscoveryService.listEligibleProjectRoles(
+    if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
         ProjectId.fromFullResourceName(roleBinding.fullResourceName))
       .getItems()
@@ -83,7 +83,7 @@ public class RoleActivationService {
       .filter(pr -> pr.roleBinding.equals(roleBinding))
       .filter(pr -> canActivateProjectRole(pr, activationType))
       .findAny()
-      .isPresent()) {
+      .isEmpty()) {
       throw new AccessDeniedException(
         String.format(
           "The user %s does not have a suitable project role on %s to activate",

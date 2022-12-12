@@ -252,13 +252,13 @@ public class RoleDiscoveryService {
     var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName);
 
     var eligibleRoles = listEligibleProjectRoles(callerUserId, projectId);
-    if (!eligibleRoles
+    if (eligibleRoles
       .getItems()
       .stream()
       .filter(pr -> pr.roleBinding.equals(roleBinding))
       .filter(pr -> pr.status == ProjectRole.Status.ELIGIBLE_FOR_MPA)
       .findAny()
-      .isPresent()) {
+      .isEmpty()) {
       throw new AccessDeniedException(
         String.format("The user %s is not eligible to request approval for this role", callerUserId));
     }

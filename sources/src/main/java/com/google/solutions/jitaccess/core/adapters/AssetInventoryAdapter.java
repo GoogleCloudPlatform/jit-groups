@@ -90,8 +90,8 @@ public class AssetInventoryAdapter {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
 
-    assert !permission.isPresent() || permission.get().contains("");
-    assert !fullResourceName.isPresent() || fullResourceName.get().startsWith("//");
+    assert permission.isEmpty() || permission.get().contains("");
+    assert fullResourceName.isEmpty() || fullResourceName.get().startsWith("//");
 
     assert (scope.startsWith("organizations/")
       || scope.startsWith("folders/")
