@@ -49,7 +49,7 @@ public class TestResourceManagerAdapter {
   //---------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenAddIamProjectBindingAsyncThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
@@ -65,7 +65,7 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenAddProjectIamBindingAsyncThrowsException() throws Exception {
+  public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
@@ -81,7 +81,7 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
-  public void whenResourceIsProject_ThenAddIamProjectBindingAsyncSucceeds() throws Exception {
+  public void whenResourceIsProject_ThenAddIamProjectBindingSucceeds() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     String condition =
@@ -364,5 +364,33 @@ public class TestResourceManagerAdapter {
         .setDescription("description"));
 
     assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+  }
+
+  //---------------------------------------------------------------------
+  // testIamPermissions.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() throws Exception {
+    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> adapter.testIamPermissions(
+        IntegrationTestEnvironment.PROJECT_ID,
+        List.of("resourcemanager.projects.get")));
+  }
+
+  @Test
+  public void whenAuthorized_ThenTestIamPermissionsSucceeds() throws Exception {
+    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+
+    var heldPermissions = adapter.testIamPermissions(
+      IntegrationTestEnvironment.PROJECT_ID,
+      List.of(
+        "resourcemanager.projects.get",
+        "resourcemanager.projects.xxx"));
+
+    assertNotNull(heldPermissions);
   }
 }

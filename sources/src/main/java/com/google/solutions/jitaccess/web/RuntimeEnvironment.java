@@ -143,7 +143,7 @@ public class RuntimeEnvironment {
 
     if (isRunningOnAppEngine()) {
       //
-      // Running on AppEngine.
+      // Initialize using service account attached to AppEngine.
       //
       try {
         GenericData projectMetadata =
@@ -155,8 +155,6 @@ public class RuntimeEnvironment {
 
         this.applicationCredentials = GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
-
-
 
         logAdapter
           .newInfoEntry(
@@ -179,7 +177,7 @@ public class RuntimeEnvironment {
     }
     else if (isDebugModeEnabled()) {
       //
-      // Running in debug mode.
+      // Initialize using development settings and credential.
       //
       this.developmentMode = true;
       this.projectId = "dev";
@@ -199,9 +197,9 @@ public class RuntimeEnvironment {
             impersonateServiceAccount,
             null,
             Stream.of(
-              ResourceManagerAdapter.OAUTH_SCOPE,
-              AssetInventoryAdapter.OAUTH_SCOPE,
-              IamCredentialsAdapter.OAUTH_SCOPE)
+                ResourceManagerAdapter.OAUTH_SCOPE,
+                AssetInventoryAdapter.OAUTH_SCOPE,
+                IamCredentialsAdapter.OAUTH_SCOPE)
               .distinct()
               .collect(Collectors.toList()),
             0);

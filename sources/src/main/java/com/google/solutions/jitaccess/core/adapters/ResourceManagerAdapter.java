@@ -24,10 +24,7 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
-import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest;
-import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
-import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest;
+import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
@@ -37,9 +34,7 @@ import com.google.solutions.jitaccess.core.data.ProjectId;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -190,6 +185,34 @@ public class ResourceManagerAdapter {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  public List<String> testIamPermissions(
+    ProjectId projectId,
+    List<String> permissions
+  ) throws NotAuthenticatedException, IOException {
+    try
+    {
+      var response = createClient()
+        .projects()
+        .testIamPermissions(
+          String.format("projects/%s", projectId),
+          new TestIamPermissionsRequest()
+            .setPermissions(permissions))
+        .execute();
+
+      return response.getPermissions() != null
+        ? response.getPermissions()
+        : List.of();
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
