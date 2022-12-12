@@ -54,7 +54,7 @@ public class TestRoleActivationService {
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenResourceIsNotAProject_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+  public void whenResourceIsNotAProject_ThenActivateProjectRoleForSelfThrowsException() {
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
@@ -109,7 +109,7 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
+  public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),
@@ -181,7 +181,7 @@ public class TestRoleActivationService {
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenCallerSameAsBeneficiary_ThenActivateProjectRoleForPeerThrowsException() throws Exception {
+  public void whenCallerSameAsBeneficiary_ThenActivateProjectRoleForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),
@@ -206,7 +206,7 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenCallerNotListedAsReviewer_ThenActivateProjectRoleForPeerThrowsException() throws Exception {
+  public void whenCallerNotListedAsReviewer_ThenActivateProjectRoleForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),
@@ -421,7 +421,7 @@ public class TestRoleActivationService {
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenReviewerIncludesBeneficiary_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+  public void whenReviewerIncludesBeneficiary_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),
@@ -441,7 +441,7 @@ public class TestRoleActivationService {
   }
 
   @Test
-  public void whenJustificationDoesNotMatch_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+  public void whenJustificationDoesNotMatch_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),

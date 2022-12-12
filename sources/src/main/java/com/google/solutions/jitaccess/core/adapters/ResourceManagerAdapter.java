@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 /**
  * Adapter for Resource Manager API.
  */
+@SuppressWarnings("SwitchStatementWithTooFewBranches")
 @ApplicationScoped
 public class ResourceManagerAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";

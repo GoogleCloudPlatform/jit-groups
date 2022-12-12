@@ -210,7 +210,7 @@ public class RuntimeConfiguration {
         return this.defaultValue;
       }
       else {
-        throw new IllegalStateException("No value provided for " + this.keys.toString());
+        throw new IllegalStateException("No value provided for " + this.keys);
       }
     }
 

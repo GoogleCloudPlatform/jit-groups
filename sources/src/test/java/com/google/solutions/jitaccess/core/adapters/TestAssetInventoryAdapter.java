@@ -37,7 +37,7 @@ public class TestAssetInventoryAdapter {
 
   @Test
 
-  public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
@@ -51,7 +51,7 @@ public class TestAssetInventoryAdapter {
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() throws Exception {
+  public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
@@ -99,8 +99,7 @@ public class TestAssetInventoryAdapter {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException()
-    throws Exception {
+  public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
@@ -112,8 +111,7 @@ public class TestAssetInventoryAdapter {
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException()
-    throws Exception {
+  public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(

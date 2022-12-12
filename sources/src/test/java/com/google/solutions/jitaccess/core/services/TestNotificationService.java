@@ -122,7 +122,7 @@ public class TestNotificationService {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() throws Exception {
+  public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() {
     var properties = new HashMap<String, Object>();
     properties.put("TEST-1", "<value1/>");
     properties.put("TEST-2", "<value2/>");
@@ -138,7 +138,7 @@ public class TestNotificationService {
   }
 
   @Test
-  public void whenPropertiesContainDates_ThenFormatAppliesTimezone() throws Exception {
+  public void whenPropertiesContainDates_ThenFormatAppliesTimezone() {
     var properties = new HashMap<String, Object>();
     properties.put("TEST-1", Instant.ofEpochSecond(86400));
 

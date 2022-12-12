@@ -174,7 +174,7 @@ public class RoleActivationService {
   public Activation activateProjectRoleForPeer(
     UserId caller,
     ActivationRequest request
-  ) throws AccessException, AlreadyExistsException, IOException, TokenVerifier.VerificationException {
+  ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(caller, "caller");
     Preconditions.checkNotNull(request, "request");
 
@@ -422,6 +422,7 @@ public class RoleActivationService {
     }
 
     protected static ActivationRequest fromJsonWebTokenPayload(JsonWebToken.Payload payload) {
+      //noinspection unchecked
       return new RoleActivationService.ActivationRequest(
         new RoleActivationService.ActivationId(payload.getJwtId()),
         new UserId(payload.get("beneficiary").toString()),

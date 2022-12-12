@@ -34,7 +34,7 @@ public class TestProjectRole {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenResourceIsNotAProject_ThenConstructorThrowsException() throws  Exception {
+  public void whenResourceIsNotAProject_ThenConstructorThrowsException() {
     assertThrows(
       IllegalArgumentException.class,
       () -> new ProjectRole(

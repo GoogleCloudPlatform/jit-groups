@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 
 public class TestXsrfRequestFilter {
   @Test()
-  public void whenHeaderMissing_ThenRequestIsAborted() throws IOException {
+  public void whenHeaderMissing_ThenRequestIsAborted() {
     var filter = new XsrfRequestFilter();
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
@@ -44,7 +44,7 @@ public class TestXsrfRequestFilter {
   }
 
   @Test()
-  public void whenHeaderHasWrongValue_ThenRequestIsAborted() throws IOException {
+  public void whenHeaderHasWrongValue_ThenRequestIsAborted() {
     var filter = new XsrfRequestFilter();
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
@@ -56,7 +56,7 @@ public class TestXsrfRequestFilter {
   }
 
   @Test()
-  public void whenHeaderHasCorrectValue_ThenRequestProceeds() throws IOException {
+  public void whenHeaderHasCorrectValue_ThenRequestProceeds() {
     var filter = new XsrfRequestFilter();
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);

@@ -14,7 +14,7 @@ public class TestIamCredentialsAdapter {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenSignJwtThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenSignJwtThrowsException() {
     var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     var payload = new JsonWebToken.Payload()
@@ -51,7 +51,7 @@ public class TestIamCredentialsAdapter {
   // -------------------------------------------------------------------------
 
   @Test
-  public void getJwksUrl() throws Exception {
+  public void getJwksUrl() {
     assertEquals(
       String.format(
         "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",

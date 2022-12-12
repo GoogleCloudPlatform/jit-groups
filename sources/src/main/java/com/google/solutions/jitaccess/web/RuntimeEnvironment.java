@@ -59,7 +59,6 @@ public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
 
-  private final boolean developmentMode;
   private final String projectId;
   private final String projectNumber;
   private final UserId applicationPrincipal;
@@ -149,7 +148,6 @@ public class RuntimeEnvironment {
         GenericData projectMetadata =
           getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
-        this.developmentMode = false;
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
@@ -179,7 +177,6 @@ public class RuntimeEnvironment {
       //
       // Initialize using development settings and credential.
       //
-      this.developmentMode = true;
       this.projectId = "dev";
       this.projectNumber = "0";
 

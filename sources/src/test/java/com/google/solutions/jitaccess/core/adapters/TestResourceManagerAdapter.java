@@ -49,7 +49,7 @@ public class TestResourceManagerAdapter {
   //---------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
@@ -65,7 +65,7 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() throws Exception {
+  public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
@@ -371,7 +371,7 @@ public class TestResourceManagerAdapter {
   //---------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() throws Exception {
+  public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
