@@ -36,7 +36,8 @@ public class DeviceInfo {
 
   public DeviceInfo(
     String deviceId,
-    List<String> accessLevels) {
+    List<String> accessLevels
+  ) {
     Preconditions.checkNotNull(deviceId, "deviceId");
     Preconditions.checkNotNull(accessLevels, "accessLevels");
 

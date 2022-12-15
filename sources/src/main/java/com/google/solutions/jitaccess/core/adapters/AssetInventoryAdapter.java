@@ -73,9 +73,7 @@ public class AssetInventoryAdapter {
   }
 
   /**
-   * Find resources accessible by a user, incl.:
-   * - resources the user has been directly granted access to
-   * - resources which the user can access because of a group membership
+   * Find resources that a user can access, considering inherited IAM bindings and group memberships.
    *
    * NB. For group membership resolution to work, the service account must have the right
    * privileges in Cloud Identity/Workspace.

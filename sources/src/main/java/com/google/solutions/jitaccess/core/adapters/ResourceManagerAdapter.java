@@ -87,6 +87,10 @@ public class ResourceManagerAdapter {
     try {
       var service = createClient();
 
+      //
+      // IAM policies use optimistic concurrency control, so we might need to perform
+      // multiple attempts to update the policy.
+      //
       for (int attempt = 0; attempt < MAX_SET_IAM_POLICY_ATTEMPTS; attempt++) {
         //
         // Read current version of policy.
@@ -103,6 +107,9 @@ public class ResourceManagerAdapter {
               .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
           .execute();
 
+        //
+        // Make sure we're using v3; older versions don't support conditions.
+        //
         policy.setVersion(3);
 
         if (options.contains(IamBindingOptions.FAIL_IF_BINDING_EXISTS)) {
@@ -225,6 +232,9 @@ public class ResourceManagerAdapter {
   // Inner classes.
   //---------------------------------------------------------------------
 
+  /**
+   * Helper class for using Binding objects.
+   */
   public static class Bindings {
     public static boolean equals(Binding lhs, Binding rhs, boolean compareCondition) {
       if (!lhs.getRole().equals(rhs.getRole())) {

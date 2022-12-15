@@ -41,11 +41,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service for delivering notifications.
+ * Service for notifying users about activation requests..
  */
 @ApplicationScoped
 public abstract class NotificationService {
-
   public abstract void sendNotification(Notification notification) throws NotificationException;
 
   public abstract boolean canSendNotifications();
@@ -54,6 +53,9 @@ public abstract class NotificationService {
   // Inner classes.
   // -------------------------------------------------------------------------
 
+  /**
+   * Concrete class that delivers notifications over SMTP.
+   */
   public static class MailNotificationService extends NotificationService {
     private final Options options;
     private final SmtpAdapter smtpAdapter;
@@ -94,6 +96,9 @@ public abstract class NotificationService {
     }
   }
 
+  /**
+   * Concrete class that prints notifications to STDOUT. Useful for local development only.
+   */
   public static class SilentNotificationService extends NotificationService {
     @Override
     public boolean canSendNotifications() {
@@ -109,7 +114,9 @@ public abstract class NotificationService {
     }
   }
 
-  /** Generic notification that can be formatted as a (HTML) email */
+  /**
+   * Generic notification that can be formatted as a (HTML) email
+   */
   public static abstract class Notification {
     private final String template;
     private final Collection<UserId> toRecipients;
@@ -139,6 +146,9 @@ public abstract class NotificationService {
       this.subject = subject;
     }
 
+    /**
+     * Load a message template from a JAR resource.
+     */
     protected static String loadMessageTemplate(String resourceName) {
       try (var stream = NotificationService.class
         .getClassLoader()
@@ -155,7 +165,7 @@ public abstract class NotificationService {
           content[1] == (byte)0xBB &&
           content[2] == (byte)0xBF) {
           //
-          // Strip UTF-8 BOM
+          // Strip UTF-8 BOM.
           //
           return new String(content, 3, content.length - 3);
         }
@@ -180,7 +190,7 @@ public abstract class NotificationService {
         String propertyValue;
         if (property.getValue() instanceof Instant) {
           //
-          // Apply time zone.
+          // Apply time zone and convert to string.
           //
           propertyValue = OffsetDateTime
             .ofInstant((Instant)property.getValue(), zone)
@@ -188,6 +198,9 @@ public abstract class NotificationService {
             .format(DateTimeFormatter.RFC_1123_DATE_TIME);
         }
         else {
+          //
+          // Convert to a HTML-safe string.
+          //
           propertyValue = escaper.escape(property.getValue().toString());
         }
 

@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Adapter for sending email.
+ * Adapter for sending email over SMTP.
  */
 public class SmtpAdapter {
   private final Options options;
@@ -64,6 +64,8 @@ public class SmtpAdapter {
 
     try {
       var message = new MimeMessage(session);
+      message.setContent(content);
+
       message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
 
       for (var recipient : toRecipients){
@@ -78,8 +80,11 @@ public class SmtpAdapter {
           new InternetAddress(recipient.email, recipient.email));
       }
 
+      //
+      // NB. Setting the Precendence header prevents (some) mail readers to not send
+      // out of office-replies.
+      //
       message.addHeader("Precedence", "bulk");
-      message.setContent(content);
 
       if (flags.contains(Flags.REPLY)) {
         message.setFlag(javax.mail.Flags.Flag.ANSWERED, true);

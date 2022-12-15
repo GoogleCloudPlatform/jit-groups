@@ -25,6 +25,9 @@ import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
+/**
+ * Project ID for a Google Cloud project.
+ */
 public class ProjectId {
   private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
@@ -46,10 +49,16 @@ public class ProjectId {
   // Full resource name conversion.
   // -------------------------------------------------------------------------
 
+  /**
+   * Return a full resource name as used by the Asset API.
+   */
   public String getFullResourceName() {
     return PROJECT_RESOURCE_NAME_PREFIX + this.id;
   }
 
+  /**
+   * Parse a full resource name (as used by the Asset API).
+   */
   public static ProjectId fromFullResourceName(String fullResourceName) {
     return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
   }

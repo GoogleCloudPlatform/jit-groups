@@ -84,11 +84,11 @@ public class ApiResource {
     //
     // NB. Embedding the token verbatim can trigger overzealous phishing filters
     // to assume that we're embedding an access token (or some other form of
-    // credential in the URL). But activation tokens aren't a credential, they
+    // credential in the URL). But activation tokens aren't credentials, they
     // don't grant access to anything and the embedded information isn't
     // confidential.
     //
-    // Obfuscating the token helps avoid false-flagging.
+    // Obfuscate the token to avoid such false-flagging.
     //
     return this.runtimeEnvironment
       .createAbsoluteUriBuilder(uriInfo)
@@ -147,8 +147,9 @@ public class ApiResource {
     try {
       var projects = this.roleDiscoveryService.listAvailableProjects(iapPrincipal.getId());
 
-      return new ProjectsResponse(
-        projects.stream().map(p -> p.id).collect(Collectors.toSet()));
+      return new ProjectsResponse(projects
+        .stream().map(p -> p.id)
+        .collect(Collectors.toSet()));
     }
     catch (Exception e) {
       this.logAdapter
@@ -162,7 +163,7 @@ public class ApiResource {
   }
 
   /**
-   * List eligible roles within a project.
+   * List roles (within a project) that the user can activate.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -203,7 +204,7 @@ public class ApiResource {
   }
 
   /**
-   * List qualified peers for a role.
+   * List peers that are qualified to approve the activation of a role.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)

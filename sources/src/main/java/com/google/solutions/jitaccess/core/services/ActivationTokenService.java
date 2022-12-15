@@ -35,7 +35,17 @@ import java.time.Instant;
 /**
  * Creates and verifies activation tokens.
  *
- * An activation token is a signed activation request that is safe to pass to the user.
+ * An activation token is a signed activation request that is passed to reviewers.
+ * It contains all information necessary to review (and approve) the activation
+ * request.
+ *
+ * We must ensure that the information that reviewers see (and base their approval
+ * on) is authentic. Therefore, activation tokens are signed, using the service account
+ * as signing authority.
+ *
+ * Although activation tokens are JWTs, and might look like credentials, they aren't
+ * credentials: They don't grant access to any information, and are insufficient to
+ * approve an activation request.
  */
 @ApplicationScoped
 public class ActivationTokenService {
@@ -88,6 +98,10 @@ public class ActivationTokenService {
   ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
 
+    //
+    // Verify the token against the service account's JWKs. If that succeeds, we know
+    // that the token has been issued by us.
+    //
     var decodedToken = this.tokenVerifier.verify(token);
     if (!decodedToken.getHeader().getAlgorithm().equals("RS256")) {
       //

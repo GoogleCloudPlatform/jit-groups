@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserPrincipal;
 
 import javax.enterprise.context.RequestScoped;
@@ -42,6 +43,7 @@ public class LogAdapter {
   private UserPrincipal principal;
 
   public LogAdapter(Appendable output) {
+    Preconditions.checkNotNull(output);
     this.output = output;
   }
 
@@ -84,6 +86,13 @@ public class LogAdapter {
       this.traceId);
   }
 
+  //---------------------------------------------------------------------
+  // Inner classes.
+  //---------------------------------------------------------------------
+
+  /**
+   * Entry that, when serialized to JSON, can be parsed and interpreted by Cloud Logging.
+   */
   public class LogEntry {
     @JsonProperty("severity")
     private final String severity;
@@ -102,7 +111,8 @@ public class LogAdapter {
       String eventId,
       String message,
       UserPrincipal principal,
-      String traceId) {
+      String traceId
+    ) {
       this.severity = severity;
       this.message = message;
       this.traceId = traceId;
@@ -130,6 +140,9 @@ public class LogAdapter {
       return func.apply(this);
     }
 
+    /**
+     * Emit the log entry to the log.
+     */
     public void write() {
       try {
         //

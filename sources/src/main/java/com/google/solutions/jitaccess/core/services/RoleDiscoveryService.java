@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Service that contains the logic required to find eligible roles, and to activate them.
+ * Service for discovering eligible roles.
  */
 @ApplicationScoped
 public class RoleDiscoveryService {
@@ -102,19 +102,24 @@ public class RoleDiscoveryService {
     return options;
   }
 
-
   /**
-   * List projects available to the given user. The user may or may not have
-   * eligible roles in these projects.
+   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
   public Set<ProjectId> listAvailableProjects(
     UserId user
   ) throws AccessException, IOException {
     //
-    // Use Asset API to search projects on which the user has been
-    // granted the 'resourcemanager.projects.get' permission.
+    // NB. To reliably find projects, we have to let the Asset API consider
+    // inherited role bindings by using the "expand resources" flag. This
+    // flag causes the API to return *all* resources for which an IAM binding
+    // applies.
     //
-    // Always expand resources.
+    // The risk here is that the list of resources grows so large that we're hitting
+    // the limits of the API, in which case it starts truncating results. To
+    // mitigate this risk, filter on a permission that:
+    //
+    // - only applies to projects, and has no meaning on descendent resources
+    // - represents the lowest level of access to a project.
     //
     var analysisResult = this.assetInventoryAdapter.findAccessibleResourcesByUser(
       this.options.scope,
@@ -123,7 +128,9 @@ public class RoleDiscoveryService {
       Optional.empty(),
       true);
 
+    //
     // Consider permanent and eligible bindings.
+    //
     var roleBindings = findRoleBindings(
       analysisResult,
       condition -> condition == null ||
@@ -150,7 +157,7 @@ public class RoleDiscoveryService {
     Preconditions.checkNotNull(projectId, "projectId");
 
     //
-    // Use Asset API to search for resources that the user **could**
+    // Use Asset API to search for resources that the user could
     // access if they satisfied the eligibility condition.
     //
     // NB. The existence of an eligibility condition alone isn't

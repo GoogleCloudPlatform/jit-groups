@@ -46,6 +46,15 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Service for creating, verifying, and approving activation requests.
+ *
+ * An activation request is a request from a user to "activate" an eligible role
+ * on a project.
+ *
+ * NB. Activations always occur on the level of a project, even if the IAM binding
+ * that made the user eligible has been inherited from a folder.
+ */
 @ApplicationScoped
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
@@ -107,7 +116,7 @@ public class RoleActivationService {
   }
 
   /**
-   * Activate a role binding for the user themselves. This is only
+   * Activate a role binding on behalf of the calling user. This is only
    * allowed for bindings with a JIT-constraint.
    */
   public Activation activateProjectRoleForSelf(
@@ -126,11 +135,18 @@ public class RoleActivationService {
     checkJustification(justification);
 
     //
-    // Verify that the user is really allowed to (JIT-) activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
+    // Verify that the user is allowed to (JIT-) activate
+    // this role.
+    //
+    // NB. This check might seem redundant to the checks done during role discovery but is
+    // necessary to (a) prevent TOCTOU situations and (b) a situation where a user requests
+    // activation without performing discovery first.
     //
     checkUserCanActivateProjectRole(caller, roleBinding, ActivationType.JIT);
+
+    //
+    // The caller is eligible.
+    //
 
     //
     // Add time-bound IAM binding.
@@ -167,8 +183,8 @@ public class RoleActivationService {
   }
 
   /**
-   * Activate a role binding for a peer. This is only possible for bindings with
-   * an MPA-constraint.
+   * Activate a role binding for a different user (beneficiary). This is only allowed
+   * for bindings with an MPA-constraint.
    */
   public Activation activateProjectRoleForPeer(
     UserId caller,
@@ -188,23 +204,16 @@ public class RoleActivationService {
     }
 
     //
-    // Verify that the calling user (reviewer) is allowed to (MPA-) activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
+    // Verify that both, the calling user and beneficiary are allowed to MPA-activate
+    // this role. If they are, then that makes them "peers", and the calling user is
+    // qualified to act as a reviewer.
     //
+
     checkUserCanActivateProjectRole(
       caller,
       request.roleBinding,
       ActivationType.MPA);
 
-    //
-    // Verify that the beneficiary allowed to (MPA-) activate this role.
-    //
-    // NB. This check is somewhat redundant to the check we're performing
-    // before issuing an approval token. But it's possible that the user
-    // was revoked access since the token was issued, so it's better to
-    // check again.
-    //
     checkUserCanActivateProjectRole(
       request.beneficiary,
       request.roleBinding,
@@ -251,6 +260,9 @@ public class RoleActivationService {
       request.endTime);
   }
 
+  /**
+   * Create an activation request that can be passed to reviewers.
+   */
   public ActivationRequest createActivationRequestForPeer(
     UserId callerAndBeneficiary,
     Set<UserId> reviewers,
@@ -272,11 +284,11 @@ public class RoleActivationService {
     checkJustification(justification);
 
     //
-    // Check that the (calling) user is really allowed to (JIT/MPA-) activate
+    // Check that the calling user (who is the beneficiary) is  allowed to MPA-activate
     // this role.
     //
-    // We're not checking if the reviewers have the necessary permissions, we
-    // do that on activation.
+    // NB. We're not checking if the reviewers have the necessary permissions. It's sufficient
+    // to do that on activation.
     //
     checkUserCanActivateProjectRole(callerAndBeneficiary, roleBinding, ActivationType.MPA);
 
@@ -370,7 +382,7 @@ public class RoleActivationService {
     }
   }
 
-  /** Represents a pre-validated activation request that was created by the service */
+  /** Represents a pre-validated activation request */
   public static class ActivationRequest {
     public final ActivationId id;
     public final UserId beneficiary;
