@@ -613,13 +613,12 @@
                 }
 
                 // NB. All roles have the same start/end time.
-                const expirySecs = activationStatus.items[0].endTime - activationStatus.items[0].startTime;
                 const startTime = new Date(activationStatus.items[0].startTime * 1000);
                 const endTime = new Date(activationStatus.items[0].endTime * 1000);
 
-                $("#request-status-pane-starttime").text(startTime.toLocaleString());
+                $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
                 $("#request-status-pane-starttime-utc").text(startTime.toUTCString());
-                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor(expirySecs / 60)} minutes)`);
+                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
                 $("#request-status-pane-endtime-utc").text(endTime.toUTCString());
                 $("#request-status-pane-justification").text(activationStatus.justification);
 
