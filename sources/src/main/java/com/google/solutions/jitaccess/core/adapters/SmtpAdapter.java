@@ -22,35 +22,39 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Map;
 import java.util.Properties;
 
 /**
- * Adapter for sending email.
+ * Adapter for sending email over SMTP.
  */
-public class MailAdapter {
+public class SmtpAdapter {
   private final Options options;
 
-  public MailAdapter(Options options) {
+  public SmtpAdapter(Options options) {
     Preconditions.checkNotNull(options, "options");
     this.options = options;
   }
 
   public void sendMail(
-    String recipientName,
-    String recipientEmail,
+    Collection<UserId> toRecipients,
+    Collection<UserId> ccRecipients,
     String subject,
-    Multipart content
+    Multipart content,
+    EnumSet<Flags> flags
   ) throws MailException {
-    Preconditions.checkNotNull(recipientName, "recipientName");
-    Preconditions.checkNotNull(recipientEmail, "recipientEmail");
+    Preconditions.checkNotNull(toRecipients, "toRecipients");
+    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(content, "content");
 
@@ -60,12 +64,35 @@ public class MailAdapter {
 
     try {
       var message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
-      message.addRecipient(
-        Message.RecipientType.TO,
-        new InternetAddress(recipientEmail, recipientName));
-      message.setSubject(subject);
       message.setContent(content);
+
+      message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
+
+      for (var recipient : toRecipients){
+        message.addRecipient(
+          Message.RecipientType.TO,
+          new InternetAddress(recipient.email, recipient.email));
+      }
+
+      for (var recipient : ccRecipients){
+        message.addRecipient(
+          Message.RecipientType.CC,
+          new InternetAddress(recipient.email, recipient.email));
+      }
+
+      //
+      // NB. Setting the Precendence header prevents (some) mail readers to not send
+      // out of office-replies.
+      //
+      message.addHeader("Precedence", "bulk");
+
+      if (flags.contains(Flags.REPLY)) {
+        message.setFlag(javax.mail.Flags.Flag.ANSWERED, true);
+        message.setSubject("Re: " + subject);
+      }
+      else {
+        message.setSubject(subject);
+      }
 
       Transport.send(message);
     }
@@ -75,13 +102,14 @@ public class MailAdapter {
   }
 
   public void sendMail(
-    String recipientName,
-    String recipientEmail,
+    Collection<UserId> toRecipients,
+    Collection<UserId> ccRecipients,
     String subject,
-    String htmlContent
+    String htmlContent,
+    EnumSet<Flags> flags
   ) throws MailException {
-    Preconditions.checkNotNull(recipientName, "recipientName");
-    Preconditions.checkNotNull(recipientEmail, "recipientEmail");
+    Preconditions.checkNotNull(toRecipients, "toRecipients");
+    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(htmlContent, "htmlContent");
 
@@ -93,10 +121,11 @@ public class MailAdapter {
       content.addBodyPart(htmlPart);
 
       sendMail(
-        recipientName,
-        recipientEmail,
+        toRecipients,
+        ccRecipients,
         subject,
-        content);
+        content,
+        flags);
     }
     catch (MessagingException e) {
       throw new MailException("The mail could not be formatted", e);
@@ -106,6 +135,11 @@ public class MailAdapter {
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public enum Flags {
+    NONE,
+    REPLY
+  }
 
   public static class Options {
     private final String senderName;
@@ -117,10 +151,15 @@ public class MailAdapter {
       String smtpHost,
       int smtpPort,
       String senderName,
-      String senderAddress) {
+      String senderAddress,
+      boolean enableStartTls,
+      Map<String, String> extraOptions
+    ) {
       Preconditions.checkNotNull(smtpHost, "smtpHost");
       Preconditions.checkNotNull(senderName, "senderName");
       Preconditions.checkNotNull(senderAddress, "senderAddress");
+
+      Preconditions.checkArgument(smtpPort != 25, "SMTP on port 25 is not allowed on Google Cloud");
 
       this.senderName = senderName;
       this.senderAddress = senderAddress;
@@ -128,6 +167,11 @@ public class MailAdapter {
       this.smtpProperties = new Properties();
       this.smtpProperties.put("mail.smtp.host", smtpHost);
       this.smtpProperties.put("mail.smtp.port", String.valueOf(smtpPort));
+      this.smtpProperties.put("mail.smtp.starttls.enable", String.valueOf(enableStartTls));
+
+      if (extraOptions != null) {
+        this.smtpProperties.putAll(extraOptions);
+      }
     }
 
     /**

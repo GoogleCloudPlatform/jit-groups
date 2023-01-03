@@ -21,7 +21,8 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAmount;
 import java.util.regex.Pattern;
@@ -46,14 +47,13 @@ public class IamTemporaryAccessConditions {
     return expression != null && CONDITION.matcher(expression).matches();
   }
 
-  public static String createExpression(
-    OffsetDateTime startTime, OffsetDateTime endTime) {
+  public static String createExpression(Instant startTime, Instant endTime) {
     assert (startTime.isBefore(endTime));
 
     var clause = String.format(
       CONDITION_TEMPLATE,
-      startTime.format(DateTimeFormatter.ISO_DATE_TIME),
-      endTime.format(DateTimeFormatter.ISO_DATE_TIME));
+      startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+      endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
 
     assert (isTemporaryAccessCondition(clause));
 
@@ -61,7 +61,7 @@ public class IamTemporaryAccessConditions {
   }
 
   public static String createExpression(
-    OffsetDateTime startTime,
+    Instant startTime,
     TemporalAmount duration
   ) {
     return createExpression(startTime, startTime.plus(duration));

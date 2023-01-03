@@ -33,19 +33,17 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
-import com.google.solutions.jitaccess.core.data.DeviceInfo;
+import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.services.TokenService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -59,14 +57,22 @@ import java.util.stream.Stream;
 @ApplicationScoped
 public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
-  private static final String CONFIG_STATIC_PRINCIPAL = "jitaccess.principal";
+  private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
 
-  private final boolean developmentMode;
   private final String projectId;
   private final String projectNumber;
-  private final UserPrincipal staticPrincipal;
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
+  private final NotificationService notificationService;
+
+  /**
+   * Configuration, based on app.yaml environment variables.
+   */
+  private final RuntimeConfiguration configuration = new RuntimeConfiguration(System::getenv);
+
+  // -------------------------------------------------------------------------
+  // Private helpers.
+  // -------------------------------------------------------------------------
 
   private static HttpResponse getMetadata(String path) throws IOException {
     GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
@@ -81,28 +87,18 @@ public class RuntimeEnvironment {
     }
     catch (UnknownHostException exception) {
       throw new IOException(
-        "Cannot find the metadata server. This is "
-          + "likely because code is not running on Google Cloud.",
+        "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
         exception);
     }
   }
 
-  private static String getConfigurationOption(String key, String defaultValue) {
-    var value = System.getenv(key);
-    if (value != null && !value.isEmpty()) {
-      return value.trim();
-    }
-    else if (defaultValue != null) {
-      return defaultValue;
-    }
-    else {
-      throw new RuntimeException(String.format("Missing configuration '%s'", key));
-    }
-  }
-
-  private static boolean isRunningOnAppEngine() {
+  private boolean isRunningOnAppEngine() {
     return System.getenv().containsKey("GAE_SERVICE");
   }
+
+  // -------------------------------------------------------------------------
+  // Public methods.
+  // -------------------------------------------------------------------------
 
   public RuntimeEnvironment() {
     //
@@ -111,18 +107,49 @@ public class RuntimeEnvironment {
     //
     var logAdapter = new LogAdapter();
 
+    //
+    // Configure SMTP if possible, and fall back to a fail-safe
+    // configuration if the configuration is incomplete.
+    //
+    if (this.configuration.isSmtpConfigured()) {
+      var options = new SmtpAdapter.Options(
+        this.configuration.smtpHost.getValue(),
+        this.configuration.smtpPort.getValue(),
+        this.configuration.smtpSenderName.getValue(),
+        this.configuration.smtpSenderAddress.getValue(),
+        this.configuration.smtpEnableStartTls.getValue(),
+        this.configuration.getSmtpExtraOptionsMap());
+
+      if (this.configuration.isSmtpAuthenticationConfigured()) {
+        options.setSmtpCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpPassword.getValue());
+      }
+
+      this.notificationService = new NotificationService.MailNotificationService(
+        new SmtpAdapter(options),
+        new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
+    }
+    else {
+      this.notificationService = new NotificationService.SilentNotificationService();
+
+      logAdapter
+        .newWarningEntry(
+          LogEvents.RUNTIME_STARTUP,
+          "The SMTP configuration is incomplete")
+        .write();
+    }
+
     if (isRunningOnAppEngine()) {
       //
-      // Running on AppEngine.
+      // Initialize using service account attached to AppEngine.
       //
       try {
         GenericData projectMetadata =
           getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
 
-        this.developmentMode = false;
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
-        this.staticPrincipal = null; // Use proper IAP authentication.
 
         this.applicationCredentials = GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
@@ -146,48 +173,33 @@ public class RuntimeEnvironment {
         throw new RuntimeException("Failed to initialize runtime environment", e);
       }
     }
-    else {
+    else if (isDebugModeEnabled()) {
       //
-      // Running in development mode.
+      // Initialize using development settings and credential.
       //
-      this.developmentMode = true;
       this.projectId = "dev";
       this.projectNumber = "0";
-      this.staticPrincipal = new UserPrincipal() {
-        @Override
-        public UserId getId() {
-          return new UserId(getName(), getName());
-        }
-
-        @Override
-        public DeviceInfo getDevice() {
-          return DeviceInfo.UNKNOWN;
-        }
-
-        @Override
-        public String getName() {
-          return System.getProperty(CONFIG_STATIC_PRINCIPAL, "developer@example.com");
-        }
-      };
 
       try {
-        GoogleCredentials defaultCredentials = GoogleCredentials.getApplicationDefault();
+        var defaultCredentials = GoogleCredentials.getApplicationDefault();
 
-        String impersonateServiceAccount = System.getProperty(CONFIG_IMPERSONATE_SA);
+        var impersonateServiceAccount = System.getProperty(CONFIG_IMPERSONATE_SA);
         if (impersonateServiceAccount != null && !impersonateServiceAccount.isEmpty()) {
           //
           // Use the application default credentials (ADC) to impersonate a
           // service account. This can be used when using user credentials as ADC.
           //
-          this.applicationCredentials =
-            ImpersonatedCredentials.create(
-              defaultCredentials,
-              impersonateServiceAccount,
-              null,
-              Stream.of(ResourceManagerAdapter.OAUTH_SCOPE, AssetInventoryAdapter.OAUTH_SCOPE)
-                .distinct()
-                .collect(Collectors.toList()),
-              0);
+          this.applicationCredentials = ImpersonatedCredentials.create(
+            defaultCredentials,
+            impersonateServiceAccount,
+            null,
+            Stream.of(
+                ResourceManagerAdapter.OAUTH_SCOPE,
+                AssetInventoryAdapter.OAUTH_SCOPE,
+                IamCredentialsAdapter.OAUTH_SCOPE)
+              .distinct()
+              .collect(Collectors.toList()),
+            0);
 
           //
           // If we lack impersonation permissions, ImpersonatedCredentials
@@ -198,7 +210,6 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.applicationCredentials.refresh();
-
           this.applicationPrincipal = new UserId(impersonateServiceAccount);
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
@@ -206,17 +217,15 @@ public class RuntimeEnvironment {
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
-
           this.applicationPrincipal = new UserId(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         }
         else {
-          throw new RuntimeException(
-            String.format(
-              "You're using user credentials as application default "
-                + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
-                + "a service account during development",
-              CONFIG_IMPERSONATE_SA));
+          throw new RuntimeException(String.format(
+            "You're using user credentials as application default "
+              + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
+              + "a service account during development",
+            CONFIG_IMPERSONATE_SA));
         }
       }
       catch (IOException e) {
@@ -229,6 +238,20 @@ public class RuntimeEnvironment {
           String.format("Running in development mode as %s", this.applicationPrincipal))
         .write();
     }
+    else {
+      throw new RuntimeException(
+        "Application is not running on AppEngine, and debug mode is disabled. Aborting startup");
+    }
+  }
+
+  public boolean isDebugModeEnabled() {
+    return Boolean.getBoolean(CONFIG_DEBUG_MODE);
+  }
+
+  public UriBuilder createAbsoluteUriBuilder(UriInfo uriInfo) {
+    return uriInfo
+      .getBaseUriBuilder()
+      .scheme(isRunningOnAppEngine() ? "https" : "http");
   }
 
   public String getProjectId() {
@@ -237,10 +260,6 @@ public class RuntimeEnvironment {
 
   public String getProjectNumber() {
     return projectNumber;
-  }
-
-  public UserPrincipal getStaticPrincipal() {
-    return staticPrincipal;
   }
 
   public UserId getApplicationPrincipal() {
@@ -258,29 +277,35 @@ public class RuntimeEnvironment {
 
   @Produces
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(
-      getConfigurationOption(
-        "RESOURCE_SCOPE",
-        "projects/" + getConfigurationOption("GOOGLE_CLOUD_PROJECT", null)));
+    return new RoleDiscoveryService.Options(this.configuration.scope.getValue());
   }
 
   @Produces
   public RoleActivationService.Options getRoleActivationServiceOptions() {
     return new RoleActivationService.Options(
-      getConfigurationOption("JUSTIFICATION_HINT", "Bug or case number"),
-      Pattern.compile(getConfigurationOption("JUSTIFICATION_PATTERN", ".*")),
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("ELEVATION_DURATION", "5"))));
+      this.configuration.justificationHint.getValue(),
+      Pattern.compile(this.configuration.justificationPattern.getValue()),
+      this.configuration.activationTimeout.getValue());
   }
 
   @Produces
-  public TokenService.Options getTokenServiceOptions() {
-    return new TokenService.Options(
+  public ActivationTokenService.Options getTokenServiceOptions() {
+    //
+    // NB. The clock for activations "starts ticking" when the activation was
+    // requested. The time allotted for reviewers to approve the request
+    // must therefore not exceed the lifetime of the activation itself.
+    //
+    var effectiveRequestTimeout = Duration.ofSeconds(Math.min(
+      this.configuration.activationRequestTimeout.getValue().getSeconds(),
+      this.configuration.activationTimeout.getValue().getSeconds()));
+
+    return new ActivationTokenService.Options(
       applicationPrincipal,
-      Duration.ofMinutes(Integer.parseInt(getConfigurationOption("MPA_TOKEN_LIFETIME", "120"))));
+      effectiveRequestTimeout);
   }
 
   @Produces
-  public NotificationService.Options getNotificationServiceOptions() {
-    return new NotificationService.Options(!developmentMode);
+  public NotificationService getNotificationService() {
+    return this.notificationService;
   }
 }

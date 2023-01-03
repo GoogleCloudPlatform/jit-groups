@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.adapters;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -71,7 +72,7 @@ public class TestIamTemporaryAccessConditions {
   public void whenDurationValid_ThenCreateExpressionReturnsClause() {
     var clause =
       IamTemporaryAccessConditions.createExpression(
-        OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC), Duration.ofMinutes(5));
+        Instant.from(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)), Duration.ofMinutes(5));
 
     assertEquals(
       "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "

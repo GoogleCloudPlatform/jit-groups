@@ -609,7 +609,7 @@ public class TestRoleDiscoveryService {
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenRoleIsNotEligible_ThenListApproversForProjectRoleThrowsException() throws Exception {
+  public void whenRoleIsNotEligible_ThenListEligibleUsersForProjectRoleThrowsException() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -630,7 +630,7 @@ public class TestRoleDiscoveryService {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> service.listApproversForProjectRole(
+      () -> service.listEligibleUsersForProjectRole(
         SAMPLE_USER,
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
@@ -638,7 +638,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenCallerIsOnlyMpaEligibleUser_ThenListApproversForProjectRoleReturnsEmptyList()
+  public void whenCallerIsOnlyMpaEligibleUser_ThenListEligibleUsersForProjectRoleReturnsEmptyList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -664,7 +664,7 @@ public class TestRoleDiscoveryService {
       assetAdapter,
       new RoleDiscoveryService.Options("organizations/0"));
 
-    var approvers = service.listApproversForProjectRole(
+    var approvers = service.listEligibleUsersForProjectRole(
         SAMPLE_USER,
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
@@ -674,7 +674,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenMpaEligibleUsersIncludesOtherUser_ThenListApproversForProjectRoleReturnsList() throws Exception {
+  public void whenMpaEligibleUsersIncludesOtherUser_ThenListEligibleUsersForProjectRoleReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     var mpaBindingResult = createConditionalIamPolicyAnalysisResult(
@@ -717,7 +717,7 @@ public class TestRoleDiscoveryService {
       assetAdapter,
       new RoleDiscoveryService.Options("organizations/0"));
 
-    var approvers = service.listApproversForProjectRole(
+    var approvers = service.listEligibleUsersForProjectRole(
       SAMPLE_USER,
       new RoleBinding(
         SAMPLE_PROJECT_RESOURCE_1,

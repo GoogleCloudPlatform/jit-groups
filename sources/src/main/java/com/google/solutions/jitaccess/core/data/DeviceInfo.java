@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.data;
 import com.google.common.base.Preconditions;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Information about the device of a user.
@@ -35,7 +36,8 @@ public class DeviceInfo {
 
   public DeviceInfo(
     String deviceId,
-    List<String> accessLevels) {
+    List<String> accessLevels
+  ) {
     Preconditions.checkNotNull(deviceId, "deviceId");
     Preconditions.checkNotNull(accessLevels, "accessLevels");
 
@@ -54,5 +56,22 @@ public class DeviceInfo {
   @Override
   public String toString() {
     return this.deviceId;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    var that = (DeviceInfo) o;
+    return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(deviceId, accessLevels);
   }
 }

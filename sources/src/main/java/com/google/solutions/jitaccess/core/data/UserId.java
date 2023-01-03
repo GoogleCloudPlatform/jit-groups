@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 public class UserId {
-  public final String id;
+  public final transient String id;
   public final String email;
 
   public UserId(String id, String email) {

@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -33,13 +32,28 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Creates and verifies activation tokens.
+ *
+ * An activation token is a signed activation request that is passed to reviewers.
+ * It contains all information necessary to review (and approve) the activation
+ * request.
+ *
+ * We must ensure that the information that reviewers see (and base their approval
+ * on) is authentic. Therefore, activation tokens are signed, using the service account
+ * as signing authority.
+ *
+ * Although activation tokens are JWTs, and might look like credentials, they aren't
+ * credentials: They don't grant access to any information, and are insufficient to
+ * approve an activation request.
+ */
 @ApplicationScoped
-public class TokenService {
+public class ActivationTokenService {
   private final IamCredentialsAdapter iamCredentialsAdapter;
   private final Options options;
   private final TokenVerifier tokenVerifier;
 
-  public TokenService(
+  public ActivationTokenService(
     IamCredentialsAdapter iamCredentialsAdapter,
     Options options
   ) {
@@ -60,30 +74,34 @@ public class TokenService {
       .build();
   }
 
-  public String createToken(JsonWebToken.Payload payload) throws AccessException, IOException {
-    Preconditions.checkNotNull(payload, "payload");
+  public TokenWithExpiry createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(request.startTime.isBefore(Instant.now().plusSeconds(10)));
+    Preconditions.checkArgument(request.startTime.isAfter(Instant.now().minusSeconds(10)));
 
     //
     // Add obligatory claims.
     //
-    payload = payload
-      .clone()
+    var expiryTime = request.startTime.plus(this.options.tokenValidity);
+    var jwtPayload = request.toJsonWebTokenPayload()
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
-      .setExpirationTimeSeconds(Instant.now().plus(this.options.tokenValidity).getEpochSecond());
+      .setExpirationTimeSeconds(expiryTime.getEpochSecond());
 
-    return this.iamCredentialsAdapter.signJwt(
-      this.options.serviceAccount,
-      payload);
+    return new TokenWithExpiry(
+      this.iamCredentialsAdapter.signJwt(this.options.serviceAccount, jwtPayload),
+      expiryTime);
   }
 
-  public JsonWebToken.Payload verifyToken(
-    String token,
-    UserId expectedSubject
+  public RoleActivationService.ActivationRequest verifyToken(
+    String token
   ) throws TokenVerifier.VerificationException {
     Preconditions.checkNotNull(token, "token");
-    Preconditions.checkNotNull(expectedSubject, "expectedSubject");
 
+    //
+    // Verify the token against the service account's JWKs. If that succeeds, we know
+    // that the token has been issued by us.
+    //
     var decodedToken = this.tokenVerifier.verify(token);
     if (!decodedToken.getHeader().getAlgorithm().equals("RS256")) {
       //
@@ -92,16 +110,26 @@ public class TokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    if (!expectedSubject.email.equals(decodedToken.getPayload().getSubject())) {
-      throw new TokenVerifier.VerificationException("The token was issued to a different subject");
-    }
+    return RoleActivationService.ActivationRequest.fromJsonWebTokenPayload(decodedToken.getPayload());
+  }
 
-    return decodedToken.getPayload();
+  public Options getOptions() {
+    return options;
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public static class TokenWithExpiry {
+    public final String token;
+    public final Instant expiryTime;
+
+    public TokenWithExpiry(String token, Instant expiryTime) {
+      this.token = token;
+      this.expiryTime = expiryTime;
+    }
+  }
 
   public static class Options {
     public final UserId serviceAccount;

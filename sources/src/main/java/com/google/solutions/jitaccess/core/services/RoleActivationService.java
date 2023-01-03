@@ -21,12 +21,8 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
-import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -40,18 +36,29 @@ import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+/**
+ * Service for creating, verifying, and approving activation requests.
+ *
+ * An activation request is a request from a user to "activate" an eligible role
+ * on a project.
+ *
+ * NB. Activations always occur on the level of a project, even if the IAM binding
+ * that made the user eligible has been inherited from a folder.
+ */
 @ApplicationScoped
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
   private final ResourceManagerAdapter resourceManagerAdapter;
-  private final TokenService tokenService;
   private final Options options;
 
   private void checkJustification(String justification) throws AccessDeniedException{
@@ -77,7 +84,7 @@ public class RoleActivationService {
     RoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {
-    if (!this.roleDiscoveryService.listEligibleProjectRoles(
+    if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
         ProjectId.fromFullResourceName(roleBinding.fullResourceName))
       .getItems()
@@ -85,7 +92,7 @@ public class RoleActivationService {
       .filter(pr -> pr.roleBinding.equals(roleBinding))
       .filter(pr -> canActivateProjectRole(pr, activationType))
       .findAny()
-      .isPresent()) {
+      .isEmpty()) {
       throw new AccessDeniedException(
         String.format(
           "The user %s does not have a suitable project role on %s to activate",
@@ -96,43 +103,31 @@ public class RoleActivationService {
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
-    TokenService tokenService,
     ResourceManagerAdapter resourceManagerAdapter,
     Options configuration
   ) {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(tokenService, "tokenService");
     Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
     this.resourceManagerAdapter = resourceManagerAdapter;
-    this.tokenService = tokenService;
     this.options = configuration;
   }
 
   /**
-   * Activate a role binding, either for the calling user (JIT) or
-   * for another beneficiary (MPA).
+   * Activate a role binding on behalf of the calling user. This is only
+   * allowed for bindings with a JIT-constraint.
    */
-  public Activation activateProjectRole(
+  public Activation activateProjectRoleForSelf(
     UserId caller,
-    UserId beneficiary,
     RoleBinding roleBinding,
-    ActivationType activationType,
     String justification
   ) throws AccessException, AlreadyExistsException, IOException {
-    Preconditions.checkNotNull(caller, "userId");
+    Preconditions.checkNotNull(caller, "caller");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
-
-    if (activationType == ActivationType.JIT && !beneficiary.equals(caller)) {
-      throw new IllegalArgumentException("JIT activation requires the caller and beneficiary to be the same");
-    }
-    else if (activationType == ActivationType.MPA && beneficiary.equals(caller)) {
-      throw new IllegalArgumentException("MPA activation requires the caller and beneficiary to be the different");
-    }
 
     //
     // Check that the justification looks reasonable.
@@ -140,56 +135,34 @@ public class RoleActivationService {
     checkJustification(justification);
 
     //
-    // Double-check that the (calling) user is really allowed to (JIT/MPA-) activate
-    // this role. This is to avoid us from being tricked to grant
-    // access to a role that they aren't eligible for.
+    // Verify that the user is allowed to (JIT-) activate
+    // this role.
     //
-    checkUserCanActivateProjectRole(caller, roleBinding, activationType);
-
-    String bindingDescription;
-    if (activationType == ActivationType.JIT) {
-      //
-      // JIT access: The caller is trying to activate a role for themselves.
-      //
-      // We already checked that the caller is eligible, so we're good to proceed.
-      //
-      bindingDescription = String.format(
-        "Self-approved, justification: %s",
-        justification);
-    }
-    else if (activationType == ActivationType.MPA) {
-      //
-      // Multi-party approval: The caller is trying to activate a role for somebody else.
-      //
-      // We already checked that the caller is eligible, but we still need to check that the beneficiary
-      // is eligible too.
-      //
-      checkUserCanActivateProjectRole(beneficiary, roleBinding, activationType);
-
-      //
-      // Both the caller and the beneficiary are eligible, so we're good to proceed.
-      //
-      bindingDescription = String.format(
-        "Approved by %s, justification: %s",
-        caller.email,
-        justification);
-    }
-    else {
-      throw new IllegalArgumentException("The activation type is not supported");
-    }
+    // NB. This check might seem redundant to the checks done during role discovery but is
+    // necessary to (a) prevent TOCTOU situations and (b) a situation where a user requests
+    // activation without performing discovery first.
+    //
+    checkUserCanActivateProjectRole(caller, roleBinding, ActivationType.JIT);
 
     //
-    // Add time-bound IAM binding for the beneficiary.
+    // The caller is eligible.
+    //
+
+    //
+    // Add time-bound IAM binding.
     //
     // Replace existing bindings for same user and role to avoid
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = OffsetDateTime.now();
+    var activationTime = Instant.now();
     var expiryTime = activationTime.plus(this.options.activationDuration);
+    var bindingDescription = String.format(
+      "Self-approved, justification: %s",
+      justification);
 
     var binding = new Binding()
-      .setMembers(List.of("user:" + beneficiary))
+      .setMembers(List.of("user:" + caller))
       .setRole(roleBinding.role)
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
@@ -199,80 +172,140 @@ public class RoleActivationService {
     this.resourceManagerAdapter.addProjectIamBinding(
       ProjectId.fromFullResourceName(roleBinding.fullResourceName),
       binding,
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.REPLACE_BINDINGS_FOR_SAME_PRINCIPAL_AND_ROLE),
+      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       justification);
 
     return new Activation(
+      ActivationId.newId(ActivationType.JIT),
       new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+      activationTime,
       expiryTime);
   }
 
-  public String createMultiPartyApprovalToken( // TODO: Test
+  /**
+   * Activate a role binding for a different user (beneficiary). This is only allowed
+   * for bindings with an MPA-constraint.
+   */
+  public Activation activateProjectRoleForPeer(
     UserId caller,
-    UserId approver,
+    ActivationRequest request
+  ) throws AccessException, AlreadyExistsException, IOException {
+    Preconditions.checkNotNull(caller, "caller");
+    Preconditions.checkNotNull(request, "request");
+
+    if (request.beneficiary.equals(caller)) {
+      throw new IllegalArgumentException(
+        "MPA activation requires the caller and beneficiary to be the different");
+    }
+
+    if (!request.reviewers.contains(caller)) {
+      throw new AccessDeniedException(
+        String.format("The token does not permit approval by %s", caller));
+    }
+
+    //
+    // Verify that both, the calling user and beneficiary are allowed to MPA-activate
+    // this role. If they are, then that makes them "peers", and the calling user is
+    // qualified to act as a reviewer.
+    //
+
+    checkUserCanActivateProjectRole(
+      caller,
+      request.roleBinding,
+      ActivationType.MPA);
+
+    checkUserCanActivateProjectRole(
+      request.beneficiary,
+      request.roleBinding,
+      ActivationType.MPA);
+
+    //
+    // Add time-bound IAM binding for the beneficiary.
+    //
+    // NB. The start/end time for the binding is derived from the approval token. If multiple
+    // reviewers try to approve the same token, the resulting condition (and binding) will
+    // be the same. This is important so that we can use the FAIL_IF_BINDING_EXISTS flag.
+    //
+    // Replace existing bindings for same user and role to avoid
+    // accumulating junk, and to prevent hitting the binding limit.
+    //
+
+    var bindingDescription = String.format(
+      "Approved by %s, justification: %s",
+      caller.email,
+      request.justification);
+
+    var binding = new Binding()
+      .setMembers(List.of("user:" + request.beneficiary.email))
+      .setRole(request.roleBinding.role)
+      .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
+        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setDescription(bindingDescription)
+        .setExpression(IamTemporaryAccessConditions.createExpression(
+          request.startTime,
+          request.endTime)));
+
+    this.resourceManagerAdapter.addProjectIamBinding(
+      ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
+      binding,
+      EnumSet.of(
+        ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+        ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+      request.justification);
+
+    return new Activation(
+      request.id,
+      new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+      request.startTime,
+      request.endTime);
+  }
+
+  /**
+   * Create an activation request that can be passed to reviewers.
+   */
+  public ActivationRequest createActivationRequestForPeer(
+    UserId callerAndBeneficiary,
+    Set<UserId> reviewers,
     RoleBinding roleBinding,
     String justification
   ) throws AccessException, IOException {
-    Preconditions.checkNotNull(caller, "userId");
-    Preconditions.checkNotNull(approver, "approver");
+    Preconditions.checkNotNull(callerAndBeneficiary, "callerAndBeneficiary");
+    Preconditions.checkNotNull(reviewers, "reviewers");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     Preconditions.checkNotNull(justification, "justification");
+
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
+    Preconditions.checkArgument(!reviewers.contains(callerAndBeneficiary), "The beneficiary cannot be a reviewer");
 
     //
     // Check that the justification looks reasonable.
     //
-    checkJustification(justification); // TODO: Test
+    checkJustification(justification);
 
     //
-    // Check that the (calling) user is really allowed to (JIT/MPA-) activate
+    // Check that the calling user (who is the beneficiary) is  allowed to MPA-activate
     // this role.
     //
-    // We're not checking if the approver is allowed, we'll do that when applying
-    // the approval token.
+    // NB. We're not checking if the reviewers have the necessary permissions. It's sufficient
+    // to do that on activation.
     //
-    checkUserCanActivateProjectRole(caller, roleBinding, ActivationType.MPA); // TODO: Test
+    checkUserCanActivateProjectRole(callerAndBeneficiary, roleBinding, ActivationType.MPA);
 
     //
-    // Issue a token that encodes all relevant information.
+    // Issue an activation request.
     //
-    return this.tokenService.createToken(
-      new JsonWebToken.Payload()
-        .setSubject(approver.email) // TODO: Add version
-        .set("benf", caller)
-        .set("just", justification)
-        .set("role", roleBinding.role)
-        .set("rsrc", roleBinding.fullResourceName));
-  }
+    var startTime = Instant.now();
+    var endTime = startTime.plus(this.options.activationDuration);
 
-  public Activation applyMultiPartyApprovalToken( // TODO: Test
-    UserId caller,
-    String token
-  ) throws TokenVerifier.VerificationException, AccessException, IOException, AlreadyExistsException {
-    Preconditions.checkNotNull(caller, "userId");
-    Preconditions.checkNotNull(token, "token");
-
-    //
-    // Verify and decode the token. This fails if the token has been
-    // tampered with in any way, or has expired.
-    //
-    var payload = this.tokenService.verifyToken(token, caller); // TODO: Test
-    var beneficiary = new UserId(payload.get("benf").toString());
-    var justification = payload.get("just").toString();
-    var roleBinding = new RoleBinding(
-        payload.get("rsrc").toString(),
-        payload.get("role").toString());
-
-    //
-    // Activate the role binding on behalf of the beneficiary.
-    //
-    // The call also checks if the caller is permitted to approve.
-    //
-    return activateProjectRole(
-      caller,
-      beneficiary,
+    return new ActivationRequest(
+      ActivationId.newId(ActivationType.MPA),
+      callerAndBeneficiary,
+      reviewers,
       roleBinding,
-      ActivationType.MPA,
-      justification);
+      justification,
+      startTime,
+      endTime);
   }
 
   public Options getOptions() {
@@ -291,26 +324,141 @@ public class RoleActivationService {
     MPA
   }
 
+  /** Unique ID for an activation */
+  public static class ActivationId {
+    private static final SecureRandom random = new SecureRandom();
+
+    private final String id;
+
+    protected ActivationId(String id) {
+      Preconditions.checkNotNull(id);
+      this.id = id;
+    }
+
+    public static ActivationId newId(ActivationType type) {
+      var id = new byte[12];
+      random.nextBytes(id);
+
+      return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
+    }
+
+    @Override
+    public String toString() {
+      return this.id;
+    }
+  }
+
   /** Represents a successful activation of a project role */
   public static class Activation {
+    public final ActivationId id;
     public final ProjectRole projectRole;
+    public final Instant startTime;
+    public final Instant endTime;
 
-    public final transient OffsetDateTime expiry;
+    private Activation(
+      ActivationId id,
+      ProjectRole projectRole,
+      Instant startTime,
+      Instant endTime
+    ) {
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
 
-    @JsonProperty("expiry")
-    protected String getExpiryString() {
-      return this.expiry.format(DateTimeFormatter.ISO_INSTANT);
-    }
+      assert startTime.isBefore(endTime);
 
-    @JsonIgnore
-    public Activation(ProjectRole projectRole, OffsetDateTime expiry) {
+      this.id = id;
       this.projectRole = projectRole;
-      this.expiry = expiry;
+      this.startTime = startTime;
+      this.endTime = endTime;
     }
 
-    @JsonCreator
-    public Activation(ProjectRole projectRole, String expiry) {
-      this(projectRole, OffsetDateTime.parse(expiry, DateTimeFormatter.ISO_INSTANT));
+    public static Activation createForTestingOnly(
+      ActivationId id,
+      ProjectRole projectRole,
+      Instant startTime,
+      Instant endTime
+    ) {
+      return new Activation(id, projectRole, startTime, endTime);
+    }
+  }
+
+  /** Represents a pre-validated activation request */
+  public static class ActivationRequest {
+    public final ActivationId id;
+    public final UserId beneficiary;
+    public final Set<UserId> reviewers;
+    public final RoleBinding roleBinding;
+    public final String justification;
+    public final Instant startTime;
+    public final Instant endTime;
+
+    private ActivationRequest(
+      ActivationId id,
+      UserId beneficiary,
+      Set<UserId> reviewers,
+      RoleBinding roleBinding,
+      String justification,
+      Instant startTime,
+      Instant endTime
+    ) {
+      Preconditions.checkNotNull(id);
+      Preconditions.checkNotNull(beneficiary);
+      Preconditions.checkNotNull(reviewers);
+      Preconditions.checkNotNull(roleBinding);
+      Preconditions.checkNotNull(justification);
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
+
+      assert startTime.isBefore(endTime);
+
+      this.id = id;
+      this.beneficiary = beneficiary;
+      this.reviewers = reviewers;
+      this.roleBinding = roleBinding;
+      this.justification = justification;
+      this.startTime = startTime;
+      this.endTime = endTime;
+    }
+
+    public static ActivationRequest createForTestingOnly(
+      ActivationId id,
+      UserId beneficiary,
+      Set<UserId> reviewers,
+      RoleBinding roleBinding,
+      String justification,
+      Instant startTime,
+      Instant endTime
+      ) {
+      return new ActivationRequest(id, beneficiary, reviewers, roleBinding, justification, startTime, endTime);
+    }
+
+    protected static ActivationRequest fromJsonWebTokenPayload(JsonWebToken.Payload payload) {
+      //noinspection unchecked
+      return new RoleActivationService.ActivationRequest(
+        new RoleActivationService.ActivationId(payload.getJwtId()),
+        new UserId(payload.get("beneficiary").toString()),
+        ((List<String>)payload.get("reviewers"))
+          .stream()
+          .map(email -> new UserId(email))
+          .collect(Collectors.toSet()),
+        new RoleBinding(
+          payload.get("resource").toString(),
+          payload.get("role").toString()),
+        payload.get("justification").toString(),
+        Instant.ofEpochSecond(((Number)payload.get("start")).longValue()),
+        Instant.ofEpochSecond(((Number)payload.get("end")).longValue()));
+    }
+
+    protected JsonWebToken.Payload toJsonWebTokenPayload() {
+      return new JsonWebToken.Payload()
+        .setJwtId(this.id.toString())
+        .set("beneficiary", this.beneficiary.email)
+        .set("reviewers", this.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
+        .set("resource", this.roleBinding.fullResourceName)
+        .set("role", this.roleBinding.role)
+        .set("justification", this.justification)
+        .set("start", this.startTime.getEpochSecond())
+        .set("end", this.endTime.getEpochSecond());
     }
   }
 

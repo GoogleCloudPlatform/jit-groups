@@ -21,32 +21,38 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.services.Result;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class TestApiResource {
-  private static final UserId SAMPLE_USER = new UserId("mock", "mock@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
+
+  private static final String SAMPLE_TOKEN = "eySAMPLE";
+  private static final ActivationTokenService.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
+    new ActivationTokenService.TokenWithExpiry(SAMPLE_TOKEN, Instant.now().plusSeconds(10));
 
   private ApiResource resource;
 
@@ -54,12 +60,19 @@ public class TestApiResource {
   public void before() {
     this.resource = new ApiResource();
     this.resource.logAdapter = new LogAdapter();
+    this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
     this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
+    this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
+    this.resource.notificationService = Mockito.mock(NotificationService.class);
+
+    when(this.resource.notificationService.canSendNotifications()).thenReturn(true);
+    when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
+      .thenReturn(UriBuilder.fromUri("https://localhost/"));
   }
 
   // -------------------------------------------------------------------------
-  // Invalid path.
+  // getPolicy.
   // -------------------------------------------------------------------------
 
   @Test
@@ -71,7 +84,7 @@ public class TestApiResource {
   }
 
   // -------------------------------------------------------------------------
-  // /api/policy.
+  // getPolicy.
   // -------------------------------------------------------------------------
 
   @Test
@@ -83,7 +96,7 @@ public class TestApiResource {
         Duration.ofMinutes(5)));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/api/policy", ApiResource.PolicyResponseEntity.class);
+      .get("/api/policy", ApiResource.PolicyResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -93,7 +106,7 @@ public class TestApiResource {
   }
 
   // -------------------------------------------------------------------------
-  // /api/projects.
+  // listProjects.
   // -------------------------------------------------------------------------
 
   @Test
@@ -105,7 +118,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectDiscoveryThrowsAccessDeniedException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -119,7 +132,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectDiscoveryThrowsIOException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
@@ -133,12 +146,12 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectDiscoveryyReturnsNoProjects_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenReturn(Set.of());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
+      .get("/api/projects", ApiResource.ProjectsResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -148,12 +161,12 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectDiscoveryReturnsProjects_ThenGetProjectsReturnsList() throws Exception {
+  public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenReturn(Set.of(new ProjectId("project-1"), new ProjectId("project-2")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponseEntity.class);
+      .get("/api/projects", ApiResource.ProjectsResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -163,11 +176,95 @@ public class TestApiResource {
   }
 
   // -------------------------------------------------------------------------
-  // /api/projects/{projectId}/roles.
+  // listPeers.
   // -------------------------------------------------------------------------
 
   @Test
-  public void postProjectsRolesReturnsError() throws Exception {
+  public void postPeersReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post("/api/projects/project-1/peers", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(405, response.getStatus());
+  }
+
+  @Test
+  public void getPeersWithoutRoleReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+  }
+
+  @Test
+  public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
+    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
+    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+      .thenThrow(new IOException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
+    when(this.resource.roleDiscoveryService
+      .listEligibleUsersForProjectRole(
+        eq(SAMPLE_USER),
+        argThat(r -> r.role.equals("roles/browser"))))
+      .thenReturn(Set.of());
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.peers);
+    assertEquals(0, body.peers.size());
+  }
+
+  @Test
+  public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
+    when(this.resource.roleDiscoveryService
+      .listEligibleUsersForProjectRole(
+        eq(SAMPLE_USER),
+        argThat(r -> r.role.equals("roles/browser"))))
+      .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.peers);
+    assertEquals(2, body.peers.size());
+  }
+
+  // -------------------------------------------------------------------------
+  // listRoles.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void postRolesReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects/project-1/roles", ExceptionMappers.ErrorEntity.class);
 
@@ -175,7 +272,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectIsEmpty_ThenGetProjectRolesReturnsError() throws Exception {
+  public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -190,7 +287,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
@@ -207,7 +304,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsIOException_ThenGetProjectsReturnsError() throws Exception {
+  public void whenRoleDiscoveryThrowsIOException_ThenListRolesReturnsError() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
@@ -224,17 +321,17 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryyReturnsNoRoles_ThenGetProjectsReturnsEmptyList() throws Exception {
+  public void whenRoleDiscoveryReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
     when(this.resource.roleDiscoveryService
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new Result<>(
         List.of(),
         List.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
+      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -247,7 +344,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsRoles_ThenGetProjectsReturnsList() throws Exception {
+  public void whenRoleDiscoveryReturnsRoles_ThenListRolesReturnsList() throws Exception {
     var role1 = new ProjectRole(
       new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser"),
       ProjectRole.Status.ELIGIBLE_FOR_JIT);
@@ -259,12 +356,12 @@ public class TestApiResource {
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new Result<>(
         List.of(role1, role2),
         null));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponseEntity.class);
+      .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
 
     assertEquals(200, response.getStatus());
 
@@ -276,13 +373,12 @@ public class TestApiResource {
     assertNull(body.warnings);
   }
 
-
   // -------------------------------------------------------------------------
-  // /api/projects/{projectId}/roles/self-activate.
+  // selfApproveActivation.
   // -------------------------------------------------------------------------
 
   @Test
-  public void getSelfActivateReturnsError() throws Exception {
+  public void getSelfApproveActivationReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles/self-activate", ExceptionMappers.ErrorEntity.class);
 
@@ -290,7 +386,7 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenBodyIsEmpty_ThenSelfActivateReturnsError() throws Exception {
+  public void whenBodyIsEmpty_ThenSelfApproveActivationReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post("/api/projects/project-1/roles/self-activate", ExceptionMappers.ErrorEntity.class);
 
@@ -298,10 +394,10 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenProjectIsNull_ThenSelfActivateReturnsError() throws Exception {
+  public void whenProjectIsNull_ThenSelfApproveActivationReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/%20/roles/self-activate",
-      new ApiResource.SelfActivationRequestEntity(),
+      new ApiResource.SelfActivationRequest(),
       ExceptionMappers.ErrorEntity.class);
 
     assertEquals(400, response.getStatus());
@@ -312,8 +408,8 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRolesEmpty_ThenSelfActivateReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequestEntity();
+  public void whenRolesEmpty_ThenSelfApproveActivationReturnsError() throws Exception {
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of();
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -329,8 +425,8 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenJustificationMissing_ThenSelfActivateReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequestEntity();
+  public void whenJustificationMissing_ThenSelfApproveActivationReturnsError() throws Exception {
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser");
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -346,35 +442,512 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRolesContainDuplicates_ThenDuplicatesAreIgnored() throws Exception {
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
-
+  public void whenActivationServiceThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
     when(this.resource.roleActivationService
-      .activateProjectRole(
+      .activateProjectRoleForSelf(
         eq(SAMPLE_USER),
-        eq(SAMPLE_USER),
-        eq(roleBinding),
-        eq(RoleActivationService.ActivationType.JIT),
-        eq("justification")))
-      .thenReturn(new RoleActivationService.Activation(
-        new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
-        OffsetDateTime.now()));
+        any(RoleBinding.class),
+        anyString()))
+      .thenThrow(new AccessDeniedException("mock"));
 
-    var request = new ApiResource.SelfActivationRequestEntity();
+    var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
       request,
-      ApiResource.SelfActivationResponseEntity.class);
+      ExceptionMappers.ErrorEntity.class);
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("mock"));
+  }
+
+  @Test
+  public void whenRolesContainDuplicates_ThenSelfApproveActivationSucceedsAndIgnoresDuplicates() throws Exception {
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+
+    when(this.resource.roleActivationService
+      .activateProjectRoleForSelf(
+        eq(SAMPLE_USER),
+        eq(roleBinding),
+        eq("justification")))
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+        Instant.now(),
+        Instant.now().plusSeconds(60)));
+
+    var request = new ApiResource.SelfActivationRequest();
+    request.roles = List.of("roles/browser", "roles/browser");
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/self-activate",
+      request,
+      ApiResource.ActivationStatusResponse.class);
 
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertNotNull(body.activatedRoles);
-    assertEquals(1, body.activatedRoles.size());
-    assertEquals(roleBinding, body.activatedRoles.get(0).projectRole.roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATED, body.activatedRoles.get(0).projectRole.status);
+    assertEquals(SAMPLE_USER, body.beneficiary);
+    assertEquals(0, body.reviewers.size());
+    assertTrue(body.isBeneficiary);
+    assertFalse(body.isReviewer);
+    assertEquals("justification", body.justification);
+    assertNotNull(body.items);
+    assertEquals(1, body.items.size());
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals(roleBinding, body.items.get(0).roleBinding);
+    assertEquals(ProjectRole.Status.ACTIVATED, body.items.get(0).status);
+    assertNotNull(body.items.get(0).activationId);
+  }
+
+  // -------------------------------------------------------------------------
+  // requestActivation.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void getRequestActivationReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/projects/project-1/roles/request", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(405, response.getStatus());
+  }
+
+  @Test
+  public void whenBodyIsEmpty_ThenRequestActivationReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post("/api/projects/project-1/roles/request", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(415, response.getStatus());
+  }
+
+  @Test
+  public void whenProjectIsNull_ThenRequestActivationReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/%20/roles/request",
+      new ApiResource.SelfActivationRequest(),
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("projectId"));
+  }
+
+  @Test
+  public void whenRoleEmpty_ThenRequestActivationReturnsError() throws Exception {
+    var request = new ApiResource.ActivationRequest();
+    request.peers = List.of(SAMPLE_USER.email);
+    request.role = null;
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("role"));
+  }
+
+  @Test
+  public void whenPeersEmpty_ThenRequestActivationReturnsError() throws Exception {
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of();
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("peer"));
+  }
+
+  @Test
+  public void whenJustificationEmpty_ThenRequestActivationReturnsError() throws Exception {
+    var request = new ApiResource.ActivationRequest();
+    request.peers = List.of(SAMPLE_USER.email);
+    request.role = "roles/mock";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("justification"));
+  }
+
+  @Test
+  public void whenNotificationsNotConfigured_ThenRequestActivationReturnsError() throws Exception {
+    this.resource.notificationService = Mockito.mock(NotificationService.class);
+    when(this.resource.notificationService.canSendNotifications()).thenReturn(false);
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(500, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("feature"));
+  }
+
+  @Test
+  public void whenActivationServiceThrowsException_ThenRequestActivationReturnsError() throws Exception {
+    when(this.resource.roleActivationService
+      .createActivationRequestForPeer(
+        eq(SAMPLE_USER),
+        anySet(),
+        any(RoleBinding.class),
+        anyString()))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("mock"));
+  }
+
+  @Test
+  public void whenRequestValid_ThenRequestActivationSendsNotification() throws Exception {
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+
+    when(this.resource.roleActivationService
+      .createActivationRequestForPeer(
+        eq(SAMPLE_USER),
+        eq(Set.of(SAMPLE_USER_2)),
+        argThat(r -> r.role.equals("roles/mock")),
+        eq("justification")))
+      .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
+        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER_2),
+        roleBinding,
+        "justification",
+        Instant.now(),
+        Instant.now().plusSeconds(60)));
+    when(this.resource.activationTokenService
+      .createToken(any(RoleActivationService.ActivationRequest.class)))
+      .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ApiResource.ActivationStatusResponse.class);
+    assertEquals(200, response.getStatus());
+
+    verify(this.resource.notificationService, times(1))
+      .sendNotification(argThat(n -> n instanceof ApiResource.RequestActivationNotification));
+  }
+
+  @Test
+  public void whenRequestValid_ThenRequestActivationReturnsSuccessResponse() throws Exception {
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+
+    when(this.resource.roleActivationService
+      .createActivationRequestForPeer(
+        eq(SAMPLE_USER),
+        eq(Set.of(SAMPLE_USER_2)),
+        argThat(r -> r.role.equals("roles/mock")),
+        eq("justification")))
+      .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
+        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER_2),
+        roleBinding,
+        "justification",
+        Instant.now(),
+        Instant.now().plusSeconds(60)));
+    when(this.resource.activationTokenService
+      .createToken(any(RoleActivationService.ActivationRequest.class)))
+      .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
+
+    var request = new ApiResource.ActivationRequest();
+    request.role = "roles/mock";
+    request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+    request.justification = "justification";
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/request",
+      request,
+      ApiResource.ActivationStatusResponse.class);
+
+    var body = response.getBody();
+    assertEquals(SAMPLE_USER, body.beneficiary);
+    assertEquals(Set.of(SAMPLE_USER_2), body.reviewers);
+    assertTrue(body.isBeneficiary);
+    assertFalse(body.isReviewer);
+    assertEquals("justification", body.justification);
+    assertNotNull(body.items);
+    assertEquals(1, body.items.size());
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals(roleBinding, body.items.get(0).roleBinding);
+    assertEquals(ProjectRole.Status.ACTIVATION_PENDING, body.items.get(0).status);
+    assertNotNull(body.items.get(0).activationId);
+  }
+  
+  // -------------------------------------------------------------------------
+  // getActivationRequest.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenTokenMissing_ThenGetActivationRequestReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get("/api/activation-request", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenTokenInvalid_ThenGetActivationRequestReturnsError() throws Exception {
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenThrow(new TokenVerifier.VerificationException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertEquals(request.beneficiary, body.beneficiary);
+    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
+    assertTrue(body.isBeneficiary);
+    assertFalse(body.isReviewer);
+    assertEquals(request.justification, body.justification);
+    assertEquals(1, body.items.size());
+    assertEquals(request.id.toString(), body.items.get(0).activationId);
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals("ACTIVATION_PENDING", body.items.get(0).status.name());
+    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
+  }
+
+  // -------------------------------------------------------------------------
+  // approveActivationRequest.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenTokenMissing_ThenApproveActivationRequestReturnsError() throws Exception {
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post("/api/activation-request", ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenTokenInvalid_ThenApproveActivationRequestReturnsError() throws Exception {
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenThrow(new TokenVerifier.VerificationException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenActivationServiceThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+    when(this.resource.roleActivationService
+      .activateProjectRoleForPeer(
+        eq(SAMPLE_USER),
+        eq(request)))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("mock"));
+  }
+
+  @Test
+  public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+    when(this.resource.roleActivationService
+      .activateProjectRoleForPeer(
+        eq(SAMPLE_USER),
+        eq(request)))
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+        request.id,
+        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        request.startTime,
+        request.endTime));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    verify(this.resource.notificationService, times(1))
+      .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
+  }
+
+  @Test
+  public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      SAMPLE_USER,
+      Set.of(SAMPLE_USER_2),
+      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
+      "a justification",
+      Instant.now(),
+      Instant.now().plusSeconds(60));
+    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+    when(this.resource.roleActivationService
+      .activateProjectRoleForPeer(
+        eq(SAMPLE_USER_2),
+        eq(request)))
+      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+        request.id,
+        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        request.startTime,
+        request.endTime));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER_2)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertEquals(request.beneficiary, body.beneficiary);
+    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
+    assertFalse(body.isBeneficiary);
+    assertTrue(body.isReviewer);
+    assertEquals(request.justification, body.justification);
+    assertEquals(1, body.items.size());
+    assertEquals(request.id.toString(), body.items.get(0).activationId);
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals("ACTIVATED", body.items.get(0).status.name());
+    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
   }
 }

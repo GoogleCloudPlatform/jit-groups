@@ -23,120 +23,198 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.adapters.MailAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
-import java.net.URI;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service for delivering notifications.
+ * Service for notifying users about activation requests..
  */
-public class NotificationService {
-  private final Options options;
-  private final MailAdapter mailAdapter;
+@ApplicationScoped
+public abstract class NotificationService {
+  public abstract void sendNotification(Notification notification) throws NotificationException;
 
-  public NotificationService(
-    MailAdapter mailAdapter,
-    Options options
-  ) {
-    Preconditions.checkNotNull(mailAdapter, "mailAdapter");
-    Preconditions.checkNotNull(options, "options");
-
-    this.mailAdapter = mailAdapter;
-    this.options = options;
-
-    //
-    // Read email template file from JAR.
-    //
-    try (var stream = NotificationService.class
-      .getClassLoader()
-      .getResourceAsStream("ApprovalRequest.email.html")) {
-      String emailTemplate = new String(stream.readAllBytes());
-    }
-    catch (IOException e) {
-      throw new RuntimeException("The JAR file is missing the email template", e);
-    }
-  }
-
-  public void sendNotification(Notification notification) throws NotificationException {
-    Preconditions.checkNotNull(notification, "notification");
-
-    if (this.options.enableEmail) {
-      try {
-        this.mailAdapter.sendMail(
-          notification.recipient.email,
-          notification.recipient.email,
-          notification.subject,
-          notification.format());
-      }
-      catch (MailAdapter.MailException e) {
-        throw new NotificationException("The notification could not be sent", e);
-      }
-    }
-    else {
-      System.out.println(notification);
-    }
-  }
+  public abstract boolean canSendNotifications();
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  /** Generic notification that can be formatted as a (HTML) email */
+  /**
+   * Concrete class that delivers notifications over SMTP.
+   */
+  public static class MailNotificationService extends NotificationService {
+    private final Options options;
+    private final SmtpAdapter smtpAdapter;
+
+    public MailNotificationService(
+        SmtpAdapter smtpAdapter,
+        Options options
+    ) {
+      Preconditions.checkNotNull(smtpAdapter);
+      Preconditions.checkNotNull(options);
+
+      this.smtpAdapter = smtpAdapter;
+      this.options = options;
+    }
+
+    @Override
+    public boolean canSendNotifications() {
+      return true;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
+      Preconditions.checkNotNull(notification, "notification");
+
+      try {
+        this.smtpAdapter.sendMail(
+          notification.toRecipients,
+          notification.ccRecipients,
+          notification.subject,
+          notification.formatMessage(this.options.timeZone),
+          notification.isReply()
+            ? EnumSet.of(SmtpAdapter.Flags.REPLY)
+            : EnumSet.of(SmtpAdapter.Flags.NONE));
+      }
+      catch (SmtpAdapter.MailException e) {
+        throw new NotificationException("The notification could not be sent", e);
+      }
+    }
+  }
+
+  /**
+   * Concrete class that prints notifications to STDOUT. Useful for local development only.
+   */
+  public static class SilentNotificationService extends NotificationService {
+    @Override
+    public boolean canSendNotifications() {
+      return false;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
+      //
+      // Print it so that we can see the message during development.
+      //
+      System.out.println(notification);
+    }
+  }
+
+  /**
+   * Generic notification that can be formatted as a (HTML) email
+   */
   public static abstract class Notification {
     private final String template;
-    private final UserId recipient;
+    private final Collection<UserId> toRecipients;
+    private final Collection<UserId> ccRecipients;
     private final String subject;
 
-    protected final Map<String, String> properties = new HashMap<>();
+    protected final Map<String, Object> properties = new HashMap<>();
 
-    protected Notification(String template, UserId recipient, String subject) {
+    protected boolean isReply() {
+      return false;
+    }
+
+    protected Notification(
+      String template,
+      Collection<UserId> toRecipients,
+      Collection<UserId> ccRecipients,
+      String subject
+    ) {
       Preconditions.checkNotNull(template, "template");
-      Preconditions.checkNotNull(recipient, "recipient");
+      Preconditions.checkNotNull(toRecipients, "toRecipients");
+      Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");
 
       this.template = template;
-      this.recipient = recipient;
+      this.toRecipients = toRecipients;
+      this.ccRecipients = ccRecipients;
       this.subject = subject;
-
-      this.properties.put("{{SUBJECT}}", subject);
     }
 
-    protected String format() {
-      //
-      // Read email template file from JAR and replace {{PROPERTY}} placeholders.
-      //
+    /**
+     * Load a message template from a JAR resource.
+     */
+    protected static String loadMessageTemplate(String resourceName) {
       try (var stream = NotificationService.class
         .getClassLoader()
-        .getResourceAsStream("ApprovalRequest.email.html")) {
+        .getResourceAsStream(resourceName)) {
 
-        var template = new String(stream.readAllBytes());
-        var escaper = HtmlEscapers.htmlEscaper();
-
-        for (var property : this.properties.entrySet()) {
-          template = template.replace(
-            property.getKey(),
-            escaper.escape(property.getValue()));
+        if (stream == null) {
+          throw new RuntimeException(
+            String.format("The JAR file does not contain an template named %s", resourceName));
         }
 
-        return template;
+        var content = stream.readAllBytes();
+        if (content.length > 3 &&
+          content[0] == (byte)0xEF &&
+          content[1] == (byte)0xBB &&
+          content[2] == (byte)0xBF) {
+          //
+          // Strip UTF-8 BOM.
+          //
+          return new String(content, 3, content.length - 3);
+        }
+        else {
+          return new String(content);
+        }
       }
       catch (IOException e) {
         throw new RuntimeException(
-          String.format("The JAR file does not contain an template named %s", this.template), e);
+          String.format("Reading the template %s from the JAR file failed", resourceName), e);
       }
+    }
+
+    protected String formatMessage(ZoneId zone) {
+      //
+      // Read email template file from JAR and replace {{PROPERTY}} placeholders.
+      //
+      var escaper = HtmlEscapers.htmlEscaper();
+
+      var message = this.template;
+      for (var property : this.properties.entrySet()) {
+        String propertyValue;
+        if (property.getValue() instanceof Instant) {
+          //
+          // Apply time zone and convert to string.
+          //
+          propertyValue = OffsetDateTime
+            .ofInstant((Instant)property.getValue(), zone)
+            .truncatedTo(ChronoUnit.SECONDS)
+            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        }
+        else {
+          //
+          // Convert to a HTML-safe string.
+          //
+          propertyValue = escaper.escape(property.getValue().toString());
+        }
+
+        message = message.replace("{{" + property.getKey() + "}}", propertyValue);
+      }
+
+      return message;
     }
 
     @Override
     public String toString() {
       return String.format(
         "Notification to %s: %s\n\n%s",
-        this.recipient,
+        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
         this.subject,
         this.properties
           .entrySet()
@@ -146,33 +224,14 @@ public class NotificationService {
     }
   }
 
-  public static class ApprovalRequest extends Notification {
-    private static final String TEMPLATE = "ApprovalRequest.email.html";
-
-    public ApprovalRequest(
-      UserId requestor,
-      UserId recipient,
-      ProjectRole role,
-      String justification,
-      URI actionLink) {
-      super(
-        TEMPLATE,
-        recipient,
-        String.format("%s requests access to a Google Cloud project", requestor.email));
-
-      super.properties.put("{{REQUESTOR}}", requestor.email);
-      super.properties.put("{{PROJECT}}", role.getProjectId().id);
-      super.properties.put("{{ROLE}}", role.roleBinding.role);
-      super.properties.put("{{JUSTIFICATION}}", justification);
-      super.properties.put("{{ACTION_LINK}}", actionLink.toString());
-    }
-  }
-
   public static class Options {
-    private final boolean enableEmail;
+    public static final ZoneId DEFAULT_TIMEZONE = ZoneOffset.UTC;
 
-    public Options(boolean enableEmail) {
-      this.enableEmail = enableEmail;
+    private final ZoneId timeZone;
+
+    public Options(ZoneId timeZone) {
+      Preconditions.checkNotNull(timeZone);
+      this.timeZone = timeZone;
     }
   }
 

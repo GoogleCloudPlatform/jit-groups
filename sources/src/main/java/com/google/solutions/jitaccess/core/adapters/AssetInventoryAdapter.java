@@ -73,9 +73,7 @@ public class AssetInventoryAdapter {
   }
 
   /**
-   * Find resources accessible by a user, incl.:
-   * - resources the user has been directly granted access to
-   * - resources which the user can access because of a group membership
+   * Find resources that a user can access, considering inherited IAM bindings and group memberships.
    *
    * NB. For group membership resolution to work, the service account must have the right
    * privileges in Cloud Identity/Workspace.
@@ -90,8 +88,8 @@ public class AssetInventoryAdapter {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
 
-    assert !permission.isPresent() || permission.get().contains("");
-    assert !fullResourceName.isPresent() || fullResourceName.get().startsWith("//");
+    assert permission.isEmpty() || permission.get().contains("");
+    assert fullResourceName.isEmpty() || fullResourceName.get().startsWith("//");
 
     assert (scope.startsWith("organizations/")
       || scope.startsWith("folders/")
@@ -156,6 +154,7 @@ public class AssetInventoryAdapter {
         .setAnalysisQueryResourceSelectorFullResourceName(fullResourceName)
         .setAnalysisQueryAccessSelectorRoles(List.of(role))
         .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
+        .setAnalysisQueryOptionsExpandGroups(true)
         .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
         .execute()
         .getMainAnalysis();

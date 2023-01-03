@@ -41,3 +41,5 @@ replay_pid*
 target/
 app.yaml
 test.properties
+
+runConfigurations/

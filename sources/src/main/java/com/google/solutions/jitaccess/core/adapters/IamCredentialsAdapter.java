@@ -39,7 +39,9 @@ import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-/** Adapter for IAM Credentials API */
+/**
+ * Adapter for IAM Credentials API
+ */
 @ApplicationScoped
 public class IamCredentialsAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";

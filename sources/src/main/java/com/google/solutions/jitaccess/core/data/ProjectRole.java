@@ -29,7 +29,6 @@ import java.util.Objects;
  * Represents an eligible role on a project.
  */
 public class ProjectRole {
-
   public final RoleBinding roleBinding;
   public final Status status;
 
@@ -85,10 +84,13 @@ public class ProjectRole {
     /** Role binding can be activated using self-approval ("JIT approval") */
     ELIGIBLE_FOR_JIT,
 
-    /** Role binding can be activated using multi party-approval ("JIT approval") */
+    /** Role binding can be activated using multi party-approval ("MPA approval") */
     ELIGIBLE_FOR_MPA,
 
     /** Eligible role binding has been activated */
-    ACTIVATED
+    ACTIVATED,
+
+    /** Approval pending */
+    ACTIVATION_PENDING
   }
 }

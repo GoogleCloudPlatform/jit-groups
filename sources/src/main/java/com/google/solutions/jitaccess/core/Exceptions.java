@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,16 +19,29 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.core;
 
-public class LogEvents {
-  public static final String API_LIST_ROLES = "api.listEligibleRoles";
-  public static final String API_LIST_PEERS = "api.listPeers";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
-  public static final String API_REQUEST_ROLE = "api.requestRole";
-  public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String RUNTIME_STARTUP = "runtime.startup";
+public class Exceptions {
+  private Exceptions() {}
 
-  private LogEvents() {
+  public static String getFullMessage(Throwable e) {
+    var buffer = new StringBuilder();
+
+    for (var exception = e; e != null; e = e.getCause()) {
+      if (buffer.length() > 0) {
+        buffer.append(", caused by ");
+        buffer.append(e.getClass().getSimpleName());
+
+        if (e.getMessage() != null) {
+          buffer.append(": ");
+          buffer.append(e.getMessage());
+        }
+      }
+      else {
+        buffer.append(e.getMessage());
+      }
+    }
+
+    return buffer.toString();
   }
 }

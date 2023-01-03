@@ -21,14 +21,22 @@
 
 package com.google.solutions.jitaccess.web;
 
-public class LogEvents {
-  public static final String API_LIST_ROLES = "api.listEligibleRoles";
-  public static final String API_LIST_PEERS = "api.listPeers";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
-  public static final String API_REQUEST_ROLE = "api.requestRole";
-  public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String RUNTIME_STARTUP = "runtime.startup";
+import org.junit.jupiter.api.Test;
 
-  private LogEvents() {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TestTokenObfuscator {
+  @Test
+  public void encode() {
+    var jwt = "eyABC.eyDE.FG";
+
+    assertEquals("ABC~~DE~FG", TokenObfuscator.encode(jwt));
+  }
+
+  @Test
+  public void roundtrip() {
+    var jwt = "eyABC.eyDE.FG";
+
+    assertEquals(jwt, TokenObfuscator.decode(TokenObfuscator.encode(jwt)));
   }
 }

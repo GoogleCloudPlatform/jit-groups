@@ -19,9 +19,8 @@ class LocalSettings {
 }
 
 class Model {
-    get policy() {
-        console.assert(this._policy);
-        return this._policy;
+    _getHeaders() {
+        return { "X-JITACCESS": "1" };
     }
 
     _formatError(error) {
@@ -31,13 +30,9 @@ class Model {
         return `${message} (HTTP ${error.status}: ${error.statusText})`;
     }
 
-    titleForStatus(statusCode) {
-        var titles = {
-            "ELIGIBLE_FOR_JIT": "Inactive",
-            "ACTIVATED": "Activated"
-        }
-
-        return titles[statusCode] ?? statusCode;
+    get policy() {
+        console.assert(this._policy);
+        return this._policy;
     }
 
     async fetchPolicy() {
@@ -46,7 +41,7 @@ class Model {
             this._policy = await $.ajax({
                 url: "/api/policy",
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -59,7 +54,7 @@ class Model {
             return await $.ajax({
                 url: "/api/projects",
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -86,11 +81,13 @@ class Model {
 
     /** List eligible roles */
     async listRoles(projectId) {
+        console.assert(projectId);
+
         try {
             return await $.ajax({
                 url: `/api/projects/${projectId}/roles`,
                 dataType: "json",
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -98,8 +95,25 @@ class Model {
         }
     }
 
-    /** Activate a role */
-    async selfActivateRoles(projectId, roles, justification) {
+    /** List peers that can approve a request */
+    async listPeers(projectId, role) {
+        console.assert(projectId);
+        console.assert(role);
+
+        try {
+            return await $.ajax({
+                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}`,
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Activate roles without peer approval */
+    async selfApproveActivation(projectId, roles, justification) {
         console.assert(projectId);
         console.assert(roles.length > 0);
         console.assert(justification)
@@ -114,7 +128,65 @@ class Model {
                     roles: roles,
                     justification: justification
                 }),
-                headers: { "X-JITACCESS": "1" }
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Activate a role with peer approval */
+    async requestActivation(projectId, role, peers, justification) {
+        console.assert(projectId);
+        console.assert(role);
+        console.assert(peers.length > 0);
+        console.assert(justification)
+
+        try {
+            return await $.ajax({
+                type: "POST",
+                url: `/api/projects/${projectId}/roles/request`,
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    role: role,
+                    justification: justification,
+                    peers: peers
+                }),
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Get details for an activation request */
+    async getActivationRequest(activationToken) {
+        console.assert(activationToken);
+
+        try {
+            return await $.ajax({
+                url: `/api/activation-request?activation=${encodeURIComponent(activationToken)}`,
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    /** Approve an activation request */
+    async approveActivationRequest(activationToken) {
+        console.assert(activationToken);
+
+        try {
+            return await $.ajax({
+                type: "POST",
+                url: `/api/activation-request?activation=${encodeURIComponent(activationToken)}`,
+                headers: this._getHeaders()
             });
         }
         catch (error) {
@@ -128,6 +200,10 @@ class DebugModel extends Model {
         super();
         $("body").append(`
             <div id="debug-pane">
+                <div>
+                Principal: <input type="text" id="debug-principal"/>
+                </div>
+                <hr/>
                 <div>
                     listProjects:
                     <select id="debug-listProjects">
@@ -149,8 +225,42 @@ class DebugModel extends Model {
                     </select>
                 </div>
                 <div>
-                    selfActivateRoles:
-                    <select id="debug-selfActivateRoles">
+                    listPeers:
+                    <select id="debug-listPeers">
+                        <option value="">(default)</option>
+                        <option value="error">Simulate error</option>
+                        <option value="0">Simulate 0 results</option>
+                        <option value="1">Simulate 1 result</option>
+                        <option value="10">Simulate 10 results</option>
+                    </select>
+                </div>
+                <div>
+                    selfApproveActivation:
+                    <select id="debug-selfApproveActivation">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
+                <div>
+                    requestActivation:
+                    <select id="debug-requestActivation">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
+                <div>
+                    getActivationRequest:
+                    <select id="debug-getActivationRequest">
+                        <option value="">(default)</option>
+                        <option value="success">Simulate success</option>
+                        <option value="error">Simulate error</option>
+                    </select>
+                </div>
+                <div>
+                    approveActivationRequest:
+                    <select id="debug-approveActivationRequest">
                         <option value="">(default)</option>
                         <option value="success">Simulate success</option>
                         <option value="error">Simulate error</option>
@@ -158,6 +268,62 @@ class DebugModel extends Model {
                 </div>
             </div>
         `);
+
+        //
+        // Persist settings.
+        //
+        [
+            "debug-principal",
+            "debug-listProjects",
+            "debug-listRoles",
+            "debug-listPeers",
+            "debug-selfApproveActivation",
+            "debug-requestActivation",
+            "debug-getActivationRequest",
+            "debug-approveActivationRequest"
+        ].forEach(setting => {
+
+            $("#" + setting).val(localStorage.getItem(setting))
+            $("#" + setting).change(() => {
+                localStorage.setItem(setting, $("#" + setting).val());
+            });
+        });
+    }
+
+    _getHeaders() {
+        const headers = super._getHeaders();
+        const principal = $("#debug-principal").val();
+        if (principal) {
+            headers["X-Debug-Principal"] = principal;
+        }
+        return headers;
+    }
+
+    async _simulateError() {
+        await new Promise(r => setTimeout(r, 1000));
+        return Promise.reject("Simulated error");
+    }
+
+    async _simulateActivationResponse(projectId, justification, roles, status, forSelf) {
+        await new Promise(r => setTimeout(r, 1000));
+        return Promise.resolve({
+            isBeneficiary: forSelf,
+            isReviewer: (!forSelf),
+            justification: justification,
+            beneficiary: { email: "user" },
+            reviewers: forSelf ? [] : [{ email: "reviewer"}],
+            items: roles.map(r => ({
+                activationId: "sim-1",
+                projectId: projectId,
+                roleBinding: {
+                    fullResourceName: "//simulated",
+                    role: r
+                },
+                status: status,
+                startTime: Math.floor(Date.now() / 1000),
+                endTime: Math.floor(Date.now() / 1000) + 300
+            }))
+        });
     }
 
     get policy() {
@@ -166,7 +332,7 @@ class DebugModel extends Model {
         };
     }
 
-    async fetchPolicy() {}
+    async fetchPolicy() { }
 
     async listRoles(projectId) {
         var setting = $("#debug-listRoles").val();
@@ -174,10 +340,11 @@ class DebugModel extends Model {
             return super.listRoles(projectId);
         }
         else if (setting === "error") {
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
+            const statuses = ["ACTIVATED", "ELIGIBLE_FOR_JIT", "ELIGIBLE_FOR_MPA"]
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
                 roles: Array.from({ length: setting }, (e, i) => ({
@@ -185,7 +352,7 @@ class DebugModel extends Model {
                         id: "//project-1:roles/simulated-role-" + i,
                         role: "roles/simulated-role-" + i
                     },
-                    status: (i % 2) == 0 ? "ACTIVATED" : "ELIGIBLE_FOR_JIT"
+                    status: statuses[i % statuses.length]
                 }))
             });
         }
@@ -197,7 +364,7 @@ class DebugModel extends Model {
             return super.listProjects();
         }
         else if (setting === "error") {
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
@@ -207,28 +374,93 @@ class DebugModel extends Model {
         }
     }
 
-    async selfActivateRoles(projectId, roles, justification) {
-        var setting = $("#debug-selfActivateRoles").val();
+    async listPeers(projectId, role) {
+        var setting = $("#debug-listPeers").val();
         if (!setting) {
-            return super.selfActivateRoles(projectId, roles, justification);
+            return super.listPeers(projectId, role);
         }
         else if (setting === "error") {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.reject("Simulated error");
+            await this._simulateError();
         }
         else {
+            await new Promise(r => setTimeout(r, 1000));
             return Promise.resolve({
-                activatedRoles: roles.map(r => ({
-                    projectRole: {
-                        roleBinding: {
-                            fullResourceName: "//simulated",
-                            role: r
-                        },
-                        status: "SIMULATED"
-                    },
-                    expiry: new Date().toISOString()
+                peers: Array.from({ length: setting }, (e, i) => ({
+                    email: `user-${i}@example.com`
                 }))
             });
+        }
+    }
+
+    async selfApproveActivation(projectId, roles, justification) {
+        var setting = $("#debug-selfApproveActivation").val();
+        if (!setting) {
+            return super.selfApproveActivation(projectId, roles, justification);
+        }
+        else if (setting === "error") {
+            await this._simulateError();
+        }
+        else {
+            return await this._simulateActivationResponse(
+                projectId,
+                justification,
+                roles,
+                "ACTIVATED",
+                true);
+        }
+    }
+
+    async requestActivation(projectId, role, peers, justification) {
+        var setting = $("#debug-requestActivation").val();
+        if (!setting) {
+            return super.requestActivation(projectId, role, peers, justification);
+        }
+        else if (setting === "error") {
+            await this._simulateError();
+        }
+        else {
+            return await this._simulateActivationResponse(
+                projectId,
+                justification,
+                [role],
+                "ACTIVATION_PENDING",
+                true);
+        }
+    }
+
+    async getActivationRequest(activationToken) {
+        var setting = $("#debug-getActivationRequest").val();
+        if (!setting) {
+            return super.getActivationRequest(activationToken);
+        }
+        else if (setting === "error") {
+            await this._simulateError();
+        }
+        else {
+            return await this._simulateActivationResponse(
+                "project-1",
+                "a justification",
+                ["roles/role-1"],
+                "ACTIVATION_PENDING",
+                false);
+        }
+    }
+
+    async approveActivationRequest(activationToken) {
+        var setting = $("#debug-approveActivationRequest").val();
+        if (!setting) {
+            return super.approveActivationRequest(activationToken);
+        }
+        else if (setting === "error") {
+            await this._simulateError();
+        }
+        else {
+            return await this._simulateActivationResponse(
+                "project-1",
+                "a justification",
+                ["roles/role-1"],
+                "ACTIVATED",
+                false);
         }
     }
 }
