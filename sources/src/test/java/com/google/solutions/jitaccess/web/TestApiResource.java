@@ -105,6 +105,24 @@ public class TestApiResource {
     assertEquals("hint", body.justificationHint);
   }
 
+  @Test
+  public void getPolicyReturnsSignedInUser() throws Exception {
+    when(this.resource.roleActivationService.getOptions())
+      .thenReturn(new RoleActivationService.Options(
+        "hint",
+        Pattern.compile("pattern"),
+        Duration.ofMinutes(5)));
+
+    var response = new RestDispatcher<>(resource, SAMPLE_USER)
+      .get("/api/policy", ApiResource.PolicyResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body);
+    assertEquals(SAMPLE_USER, body.signedInUser);
+  }
+
   // -------------------------------------------------------------------------
   // listProjects.
   // -------------------------------------------------------------------------
