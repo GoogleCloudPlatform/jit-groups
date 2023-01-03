@@ -328,7 +328,10 @@ class DebugModel extends Model {
 
     get policy() {
         return {
-            justificationHint: "simulated hint"
+            justificationHint: "simulated hint",
+            signedInUser: {
+                email: "user@example.com"
+            }
         };
     }
 

@@ -88,6 +88,7 @@ a {
 .mdl-mini-footer {
     justify-content: center;
     background-color: #fefefe;
+    font-size: 12px;
 }
 
 .mdl-mini-footer a {

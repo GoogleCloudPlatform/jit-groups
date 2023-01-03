@@ -125,9 +125,14 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public PolicyResponse getPolicy() {
+  public PolicyResponse getPolicy(
+    @Context SecurityContext securityContext
+  ) {
+    var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
+
     return new PolicyResponse(
-      this.roleActivationService.getOptions().justificationHint
+      this.roleActivationService.getOptions().justificationHint,
+      iapPrincipal.getId()
     );
   }
 
@@ -648,10 +653,17 @@ public class ApiResource {
 
   public static class PolicyResponse {
     public final String justificationHint;
+    public final UserId signedInUser;
 
-    private PolicyResponse(String justificationHint) {
+    private PolicyResponse(
+      String justificationHint,
+      UserId signedInUser
+    ) {
       Preconditions.checkNotNull(justificationHint, "justificationHint");
+      Preconditions.checkNotNull(signedInUser, "signedInUser");
+
       this.justificationHint = justificationHint;
+      this.signedInUser = signedInUser;
     }
   }
 
