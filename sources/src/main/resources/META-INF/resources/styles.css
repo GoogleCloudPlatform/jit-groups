@@ -105,6 +105,12 @@ h3.mdl-card__title-text {
     margin-bottom: 10px;
 }
 
+.mdl-layout-title a {
+    color: rgb(66,66,66);
+    text-decoration: none;
+    font-weight: 400;
+}
+
 /* ==== Forms === */
 fieldset {
     border-radius: 4px;

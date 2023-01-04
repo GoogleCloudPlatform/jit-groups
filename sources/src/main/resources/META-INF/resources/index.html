@@ -29,7 +29,7 @@
         <header class="mdl-layout__header mdl-layout__header--transparent">
             <div class="mdl-layout__header-row">
                 <!-- Title -->
-                <span class="mdl-layout-title">Just-in-Time Access</span>
+                <span class="mdl-layout-title"><a href="javascript:window.location.reload()">Just-in-Time Access</a></span>
             </div>
         </header>
         <div class="mdl-layout__drawer">
@@ -686,7 +686,7 @@
         const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
         const localSettings = new LocalSettings();
 
-        $("#menu-requestaccess").click(() => gui.requestPane.show());
+        $("#menu-requestaccess").click(() => window.location.reload());
         $("#menu-help").click(() => gui.helpPane.show());
         $(document).ready(async () => {
             //
