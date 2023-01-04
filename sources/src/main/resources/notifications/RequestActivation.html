@@ -4,10 +4,10 @@
         <div style="width:100%; max-width: 600px; height: auto; margin: auto; border:1px solid rgba(224,224,224,1);">
             <div style="height: 20px;"></div>
             <div style="text-align: left; color: #202124; font-family: Roboto, sans-serif; font-size: 24px; font-weight: normal; text-decoration: none; padding-top: 10px; padding-right: 40px; padding-bottom: 10px; padding-left: 40px; line-height: 36px;">
-                {{BENEFICIARY}} requests access to project {{PROJECT_ID}}
+                Access request
             </div>
             <div style="color: #3c4043; text-align: left; font-family: Roboto, sans-serif; font-size: 16px; font-weight: normal; line-height: 24px; text-decoration: none; padding-top:0; padding-right:40px; padding-bottom:10px; padding-left:40px;">
-                {{BENEFICIARY}} requests your approval to access the Google Cloud project <i>{{PROJECT_ID}}</i>.
+                {{BENEFICIARY}} requests your approval to access the Google Cloud project <code>{{PROJECT_ID}}</code>.
                 <div style="margin-top: 16px;">
                     <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">Request details</div>
                     <ul style="padding-left: 1em; margin: 0;">
@@ -22,13 +22,13 @@
                         <li>
                             <div style="display: flex; flow-direction: row;">
                                 <div style="color: #5F6368; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400; min-width: 174px;">Project</div>
-                                <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">{{PROJECT_ID}}</div>
+                                <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;"><code>{{PROJECT_ID}}</code></div>
                             </div>
                         </li>
                         <li>
                             <div style="display: flex; flow-direction: row;">
                                 <div style="color: #5F6368; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400; min-width: 174px;">Role</div>
-                                <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">{{ROLE}}</div>
+                                <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;"><code>{{ROLE}}</code></div>
                             </div>
                         </li>
                         <li>
@@ -52,20 +52,20 @@
                     </ul>
                 </div>
                 <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
-                    <a style="display: flex; flex-direction: column; align-items: center; padding: 8px 24px; gap: 8px; border: 1px solid #dadce0; box-sizing: border-box; border-radius: 4px; text-decoration: none;" href="{{ACTION_URL}}">
-                        <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; line-height: 20px; display: flex; align-items: center; text-align: center; letter-spacing: 0.25px; color: #1a73e8; white-space: nowrap;">View request</div>
+                    <a style="display: flex; flex-direction: column; align-items: center; padding: 8px 24px; gap: 8px; ; background: #1a73e8; box-sizing: border-box; border-radius: 4px; text-decoration: none;" href="{{ACTION_URL}}">
+                        <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; line-height: 20px; display: flex; align-items: center; text-align: center; letter-spacing: 0.25px; color: #1a73e8; white-space: nowrap; color: white;">View request</div>
                     </a>
                 </div>
-                <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
+                <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 14px; margin-top: 32px;">
                     This request automatically expires on {{REQUEST_EXPIRY_TIME}}.
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: flex-start; padding: 32px 0;">
                     <div style="width: 100%; height: 1px; background: #dadce0;"></div>
                 </div>
-                <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 700; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; color: #3c4043;">Why am I seeing this?</div>
-                <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 400; font-size: 16px; line-height: 24px; letter-spacing: 0.1px; color: #3c4043;">
-                    To actviate the role {{ROLE}} on {{PROJECT_ID}}, {{BENEFICIARY}} requires approval from another user. You are qualified to approve their request because 
-                    you also have {{ROLE}} access too {{PROJECT_ID}}.
+                <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 700; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; color: #3c4043;">Why am I seeing this?</div>
+                <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 400; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; color: #3c4043;">
+                    To actviate the role <code>{{ROLE}}</code> on <code>{{PROJECT_ID}}</code>, {{BENEFICIARY}} requires approval from another user.
+                    You are qualified to approve their request because you also have <code>{{ROLE}}</code> access to <code>{{PROJECT_ID}}</code>.
                 </div>
             </div>
         </div>
