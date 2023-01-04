@@ -28,6 +28,10 @@ a {
     height: calc(100% - 32px);
 }
 
+.mdl-step__label {
+        padding: 12px 24px 14px 24px;
+}
+
 .mdl-layout__drawer-button, .mdl-layout__header {
     color: rgb(66,66,66);
 }
@@ -168,6 +172,12 @@ legend {
 
 
 /* ==== Navigation === */
+.step-subheader {
+    padding-top: 10px;
+    font-weight: bold;
+    color: darkgray;
+}
+
 .step-subsection {
     padding-bottom: 10px;
     padding-top: 10px;

@@ -384,8 +384,8 @@ public class ApiResource {
       "A justification must be provided");
 
     Preconditions.checkState(
-      this.notificationService.canSendNotifications(),
-      "The multi-party approval feature is disabled");
+      this.notificationService.canSendNotifications() || this.runtimeEnvironment.isDebugModeEnabled(),
+      "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);

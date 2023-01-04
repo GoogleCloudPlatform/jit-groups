@@ -115,9 +115,12 @@
                             </span>
                         </span>
                         <div class="mdl-step__content">
+                            <div class="step-subheader conditional-mpa">
+                                Peer approval
+                            </div>
                             <div class="step-subsection conditional-mpa">
-                                Activating this role requires approval from one of the following peers. Select
-                                one or more peers to send an approval request:
+                                Select one or more peers to request approval from. To activate the role, at least one
+                                of your peers has to approve your request.
                             </div>
                             <div class="step-subsection conditional-mpa">
                                 <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-peers">
@@ -131,8 +134,11 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="step-subheader conditional-mpa">
+                                Justification
+                            </div>
                             <div class="step-subsection">
-                                Enter a justification that explains why you need to access the project:
+                                Provide a justification that explains why you need to access the project:
                             </div>
                             <div class="step-subsection">
                                 <form action="#">
@@ -607,13 +613,12 @@
                 }
 
                 // NB. All roles have the same start/end time.
-                const expirySecs = activationStatus.items[0].endTime - activationStatus.items[0].startTime;
                 const startTime = new Date(activationStatus.items[0].startTime * 1000);
                 const endTime = new Date(activationStatus.items[0].endTime * 1000);
 
-                $("#request-status-pane-starttime").text(startTime.toLocaleString());
+                $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
                 $("#request-status-pane-starttime-utc").text(startTime.toUTCString());
-                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor(expirySecs / 60)} minutes)`);
+                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
                 $("#request-status-pane-endtime-utc").text(endTime.toUTCString());
                 $("#request-status-pane-justification").text(activationStatus.justification);
 
