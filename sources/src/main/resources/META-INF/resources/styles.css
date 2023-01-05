@@ -160,22 +160,19 @@ legend {
 
 .request-details {
     list-style: none;
-    display: table;
 }
 
 .request-details li {
     list-style-type: square;
 }
 
-.request-details li label {
-    display: table-cell;
-    width: 100px;
-}
-
 .request-details li span {
-    display: table-cell;
+    display: inline-block;
 }
 
+.request-details li span:first-of-type {
+    width: 130px;
+}
 
 /* ==== Navigation === */
 .step-subheader {
