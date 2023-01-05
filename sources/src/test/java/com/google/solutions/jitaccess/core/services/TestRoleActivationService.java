@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
@@ -374,7 +375,6 @@ public class TestRoleActivationService {
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
         List.of()));
 
-
     var service = new RoleActivationService(
       discoveryService,
       resourceAdapter,
@@ -414,6 +414,60 @@ public class TestRoleActivationService {
           ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
           ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS)),
         eq("justification"));
+  }
+
+  @Test
+  public void whenRoleAlreadyActivated_ThenActivateProjectRoleAddsBinding() throws Exception {
+    var caller = SAMPLE_USER;
+    var peer = SAMPLE_USER_2;
+    var roleBinding = new RoleBinding(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE);
+
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+    when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID)))
+      .thenReturn(new Result<ProjectRole>(
+        List.of(new ProjectRole(
+          roleBinding,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+        List.of()));
+    when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID)))
+      .thenReturn(new Result<ProjectRole>(
+        List.of(new ProjectRole(
+          roleBinding,
+          ProjectRole.Status.ACTIVATED)), // Pretend someone else approved already
+        List.of()));
+
+    var service = new RoleActivationService(
+      discoveryService,
+      resourceAdapter,
+      new RoleActivationService.Options(
+        "hint",
+        JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1)));
+
+    var issuedAt = 1000L;
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      peer,
+      Set.of(caller),
+      new RoleBinding(
+        SAMPLE_PROJECT_RESOURCE_1,
+        SAMPLE_ROLE),
+      "justification",
+      Instant.ofEpochSecond(issuedAt),
+      Instant.ofEpochSecond(issuedAt).plusSeconds(60));
+
+    assertThrows(AccessDeniedException.class,
+      () -> service.activateProjectRoleForPeer(caller, request));
+
+    verify(resourceAdapter, times(0))
+      .addProjectIamBinding(
+        eq(SAMPLE_PROJECT_ID),
+        any(),
+        any(),
+        any());
   }
 
   // ---------------------------------------------------------------------

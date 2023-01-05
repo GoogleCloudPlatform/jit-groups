@@ -95,9 +95,9 @@ public class RoleActivationService {
       .isEmpty()) {
       throw new AccessDeniedException(
         String.format(
-          "The user %s does not have a suitable project role on %s to activate",
+          "The user %s is not allowed to activate the role %s",
           user,
-          roleBinding.fullResourceName));
+          roleBinding.role));
     }
   }
 
@@ -214,10 +214,18 @@ public class RoleActivationService {
       request.roleBinding,
       ActivationType.MPA);
 
-    checkUserCanActivateProjectRole(
-      request.beneficiary,
-      request.roleBinding,
-      ActivationType.MPA);
+    try {
+      checkUserCanActivateProjectRole(
+        request.beneficiary,
+        request.roleBinding,
+        ActivationType.MPA);
+    }
+    catch (AccessDeniedException e) {
+      throw new AccessDeniedException(
+        String.format(
+          "The request has been approved already, or the user %s is no longer allowed to activate the role",
+          request.beneficiary));
+    }
 
     //
     // Add time-bound IAM binding for the beneficiary.
