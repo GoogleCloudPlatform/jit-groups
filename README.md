@@ -16,7 +16,7 @@ without having to grant them permanent access. This type of just-in-time privile
 * Conduct audits and reviews for analyzing past activity.
 
 
-## Activate a role on demand
+## Activate roles on demand
 
 <a href='doc/Screencast-JIT.gif?raw=true'>
 <img src='doc/JIT-Activation_350.png' align='right'>
@@ -42,7 +42,8 @@ to the project.
 <img src='doc/MPA-Activation_350.png' align='right'>
 </a>
 
-For roles that require approval, you can request access in four steps:
+For roles that require [multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval), 
+you can request access in four steps:
 
 1. Select the project you need to access
 2. Select the role to activate (from your list of eligible roles)
@@ -66,8 +67,8 @@ and notifies you via email.
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
-* `has({}.jitAccessConstraint)` (if no approval required)
-* `has({}.multiPartyApprovalConstraint)` (if approval required) 
+* `has({}.jitAccessConstraint)` (no approval required)
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
