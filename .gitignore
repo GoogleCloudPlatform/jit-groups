@@ -43,3 +43,5 @@ app.yaml
 test.properties
 
 runConfigurations/
+.metals
+.vscode
