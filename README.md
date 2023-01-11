@@ -5,8 +5,8 @@ Just-In-Time Access is an open source application that lets you implement just-i
 Just-In-Time Access works by introducing the notion of _eligible role bindings_ to Cloud IAM. Unlike a [regular
 IAM role binding](https://cloud.google.com/iam/docs/overview#cloud-iam-policy), 
 an eligible role binding doesn't grant the user access to a project yet:
-Instead, a user first has to _activate_ the binding on demand by using the Just-In-Time Access application.
-Activation is temporary and requires the user to provide a justification (like a bug or case number).
+Instead, a user first has to _activate_ the binding on demand by using the Just-In-Time Access application. As an administrator,
+you can decide whether activating a role requires approval, or whether users only need to provide a justification (like a bug or case number).
 
 You can use _eligible role bindings_ to grant users privileged (or break-glass) access to resources
 without having to grant them permanent access. This type of just-in-time privileged access helps you to:
@@ -16,20 +16,43 @@ without having to grant them permanent access. This type of just-in-time privile
 * Conduct audits and reviews for analyzing past activity.
 
 
-## Request access
+## Activate roles on demand
 
-<a href='doc/Activation_1024.gif?raw=true'>
-<img src='doc/Activation_350.png' align='right'>
+<a href='doc/Screencast-JIT.gif?raw=true'>
+<img src='doc/JIT-Activation_350.png' align='right'>
 </a>
 
-As a user, you request just-in-time access in three steps:
+As a user, you can activate a role in three steps:
 
 1. Select the project you need to access
-2. Select one or more roles to activate (from your list of eligible role bindings)
+2. Select one or more roles to activate (from your list of eligible roles)
 3. Enter a justification (like a bug or case number)
 
 After validating your request, the application then [grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access)
 to the project.
+
+
+
+<img src='doc/images/pix.gif' width='100%' height='1'>
+
+
+## Request approval to activate a role
+
+<a href='doc/Screencast-MPA.gif?raw=true'>
+<img src='doc/MPA-Activation_350.png' align='right'>
+</a>
+
+For roles that require [multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval), 
+you can request access in four steps:
+
+1. Select the project you need to access
+2. Select the role to activate (from your list of eligible roles)
+3. Select one or more peers to approve your request (peers are users that share the same level of access as you)
+3. Enter a justification (like a bug or case number)
+
+Your selected peers are notified via email and can approve your request. Once approved, the application 
+[grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access) to the project
+and notifies you via email.
 
 
 
@@ -44,9 +67,8 @@ to the project.
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
-```
-has({}.jitAccessConstraint)
-```
+* `has({}.jitAccessConstraint)` (no approval required)
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
