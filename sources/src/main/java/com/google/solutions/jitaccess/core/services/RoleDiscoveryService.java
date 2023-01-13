@@ -188,7 +188,7 @@ public class RoleDiscoveryService {
       evalResult -> "TRUE".equalsIgnoreCase(evalResult))
       .stream()
       .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     //
     // Find all JIT-eligible role bindings. The bindings are
@@ -201,7 +201,7 @@ public class RoleDiscoveryService {
       evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
       .stream()
       .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     //
     // Find all MPA-eligible role bindings. The bindings are
@@ -214,7 +214,7 @@ public class RoleDiscoveryService {
       evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
       .stream()
       .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     //
     // Merge the three lists.

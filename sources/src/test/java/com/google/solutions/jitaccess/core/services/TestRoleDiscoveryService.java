@@ -310,7 +310,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -328,6 +328,52 @@ public class TestRoleDiscoveryService {
             SAMPLE_USER,
             JIT_CONDITION,
             "eligible binding",
+            "CONDITIONAL"))));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+  }
+
+  @Test
+  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            JIT_CONDITION,
+            "eligible binding #1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            JIT_CONDITION,
+            "eligible binding #2",
             "CONDITIONAL"))));
 
     var service = new RoleDiscoveryService(
@@ -371,6 +417,52 @@ public class TestRoleDiscoveryService {
 
     var service = new RoleDiscoveryService(
         assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+  }
+
+  @Test
+  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            MPA_CONDITION,
+            "eligible binding # 1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            MPA_CONDITION,
+            "eligible binding # 2",
+            "CONDITIONAL"))));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
       new RoleDiscoveryService.Options("organizations/0"));
 
     var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
