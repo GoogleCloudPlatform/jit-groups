@@ -217,16 +217,27 @@ public class RoleDiscoveryService {
       .collect(Collectors.toSet());
 
     //
-    // Merge the three lists.
+    // Determine effective set of eligible roles. If a role is both JIT- and
+    // MPA-eligible, only retain the JIT-eligible one.
+    //
+    // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
+    //
+    var allEligibleRoles = new ArrayList<ProjectRole>();
+    allEligibleRoles.addAll(jitEligibleRoles);
+    allEligibleRoles.addAll(mpaEligibleRoles
+      .stream()
+      .filter(r -> !jitEligibleRoles.stream().anyMatch(a -> a.roleBinding.equals(r.roleBinding)))
+      .collect(Collectors.toList()));
+
+    //
+    // Replace roles that have been activated already.
     //
     // NB. We can't use !activatedRoles.contains(...)
     // because of the different binding statuses.
     //
-    var allEligibleRoles = Stream.concat(jitEligibleRoles.stream(), mpaEligibleRoles.stream());
     var consolidatedRoles = allEligibleRoles
-      .filter(r -> !activatedRoles
-        .stream()
-        .anyMatch(a -> a.roleBinding.equals(r.roleBinding)))
+      .stream()
+      .filter(r -> !activatedRoles.stream().anyMatch(a -> a.roleBinding.equals(r.roleBinding)))
       .collect(Collectors.toList());
     consolidatedRoles.addAll(activatedRoles);
 
