@@ -47,7 +47,8 @@ public class TestRoleDiscoveryService {
   private static final ProjectId SAMPLE_PROJECT_ID_2 = new ProjectId("project-2");
   private static final String SAMPLE_PROJECT_RESOURCE_1 = "//cloudresourcemanager.googleapis.com/projects/project-1";
   private static final String SAMPLE_PROJECT_RESOURCE_2 = "//cloudresourcemanager.googleapis.com/projects/project-2";
-  private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
+  private static final String SAMPLE_ROLE = "roles/resourcemanager.role1";
+  private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
   private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
   private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
 
@@ -310,7 +311,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -328,6 +329,52 @@ public class TestRoleDiscoveryService {
             SAMPLE_USER,
             JIT_CONDITION,
             "eligible binding",
+            "CONDITIONAL"))));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+  }
+
+  @Test
+  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            JIT_CONDITION,
+            "eligible binding #1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            JIT_CONDITION,
+            "eligible binding #2",
             "CONDITIONAL"))));
 
     var service = new RoleDiscoveryService(
@@ -388,7 +435,53 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList()
+  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            MPA_CONDITION,
+            "eligible binding # 1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE,
+            SAMPLE_USER,
+            MPA_CONDITION,
+            "eligible binding # 2",
+            "CONDITIONAL"))));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+  }
+
+  @Test
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleRoleBindingsReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -397,15 +490,15 @@ public class TestRoleDiscoveryService {
       SAMPLE_ROLE,
       SAMPLE_USER,
       JIT_CONDITION,
-      "eligible binding",
+      "JIT-eligible binding",
       "CONDITIONAL");
 
     var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
-      SAMPLE_PROJECT_RESOURCE_2,
-      SAMPLE_ROLE,
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE_2,
       SAMPLE_USER,
       MPA_CONDITION,
-      "eligible binding",
+      "MPA-eligible binding",
       "CONDITIONAL");
 
     when(assetAdapter.findAccessibleResourcesByUser(
@@ -435,9 +528,58 @@ public class TestRoleDiscoveryService {
     assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
 
     role = roles.getItems().stream().skip(1).findFirst().get();
-    assertEquals(SAMPLE_PROJECT_ID_2, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE_2, role.roleBinding.role);
     assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+  }
+
+  @Test
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleRoleBindingsReturnsList()
+    throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "JIT-eligible binding",
+      "CONDITIONAL");
+
+    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      MPA_CONDITION,
+      "MPA-eligible binding",
+      "CONDITIONAL");
+
+    when(assetAdapter.findAccessibleResourcesByUser(
+      anyString(),
+      eq(SAMPLE_USER),
+      eq(Optional.empty()),
+      eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+      eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(jitEligibleBinding, mpaEligibleBinding)));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(SAMPLE_USER, SAMPLE_PROJECT_ID_1);
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    // Only the JIT-eligible binding is retained.
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
   }
 
   @Test
