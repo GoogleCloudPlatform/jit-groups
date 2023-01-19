@@ -50,6 +50,10 @@ public class JitConstraints {
       return false;
     }
 
+    if (iamCondition.getExpression() == null) {
+      return false;
+    }
+
     // Strip all whitespace to simplify expression matching.
     var expression = iamCondition
       .getExpression()

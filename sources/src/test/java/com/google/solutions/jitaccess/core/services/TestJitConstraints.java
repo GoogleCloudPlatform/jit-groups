@@ -53,6 +53,12 @@ public class TestJitConstraints {
     assertFalse(JitConstraints.isJitAccessConstraint(null));
   }
 
+  @Test
+  public void whenExpressionIsNull_ThenIsJitAccessConstraintReturnsFalse() {
+    var condition = new Expr().setExpression(null);
+    assertFalse(JitConstraints.isJitAccessConstraint(condition));
+  }
+
   // ---------------------------------------------------------------------
   // isMultiPartyApprovalConstraint.
   // ---------------------------------------------------------------------
@@ -75,5 +81,11 @@ public class TestJitConstraints {
   public void whenConditionIsEmpty_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
     assertFalse(JitConstraints.isMultiPartyApprovalConstraint(new Expr().setExpression("")));
     assertFalse(JitConstraints.isMultiPartyApprovalConstraint(null));
+  }
+
+  @Test
+  public void whenExpressionIsNull_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
+    var condition = new Expr().setExpression(null);
+    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(condition));
   }
 }
