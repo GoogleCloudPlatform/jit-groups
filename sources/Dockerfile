@@ -1,7 +1,7 @@
-# FROM maven:3.8.7-eclipse-temurin-17-alpine AS build
-# COPY src /home/app/src
-# COPY pom.xml /home/app
-# RUN mvn -f /home/app/pom.xml package -DskipTests
+FROM maven:3.8.7-eclipse-temurin-17-alpine AS build
+COPY src /home/app/src
+COPY pom.xml /home/app
+RUN mvn -f /home/app/pom.xml package -DskipTests
 
 #
 # Package stage
