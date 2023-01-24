@@ -59,7 +59,11 @@ public class RuntimeConfiguration {
     this.justificationHint = new StringSetting(
       List.of("JUSTIFICATION_HINT"),
       "Bug or case number");
-
+    
+    //
+    // Backend service id
+    //
+    this.backendServiceId = new StringSetting(List.of("BACKEND_SERVICE_ID"), null);
 
     //
     // Notification settings.
@@ -78,6 +82,9 @@ public class RuntimeConfiguration {
     this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
   }
+
+    //CE token settings
+
 
   // -------------------------------------------------------------------------
   // Settings.
@@ -154,6 +161,11 @@ public class RuntimeConfiguration {
    * Extra JavaMail options.
    */
   public final StringSetting smtpExtraOptions;
+
+  /**
+   * Backend Service Id for token validation
+   */
+  public final StringSetting backendServiceId;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);

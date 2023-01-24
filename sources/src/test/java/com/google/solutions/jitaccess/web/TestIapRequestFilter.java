@@ -28,6 +28,7 @@ import org.mockito.Mockito;
 import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.container.ContainerRequestContext;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -123,5 +124,20 @@ public class TestIapRequestFilter {
 
     verify(request, times(1))
       .setSecurityContext(argThat(a -> a.getUserPrincipal().getName().equals("bob")));
+  }
+
+  @Test
+  public void whenRunsInCloudRun_returnsCorrectAudience() {
+    RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
+    when(environment.getProjectId()).thenReturn("123");
+    when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isDebugModeEnabled()).thenReturn(false);
+    when(environment.isRunningOnCloudRun()).thenReturn(true);
+    when(environment.getBackendServiceId()).thenReturn("12345");
+
+    IapRequestFilter filter = new IapRequestFilter();
+    filter.runtimeEnvironment = environment;
+
+    assertEquals(filter.getExpectedAudience(), "/projects/123/global/backendServices/12345");
   }
 }
