@@ -58,7 +58,12 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   @Inject
   RuntimeEnvironment runtimeEnvironment;
-
+  //
+  // For AppEngine, we can derive the expected audience
+  // from the project number and name.
+  // For running it inside Cloud Run, we need to use provided backend service id
+  // through the env variable
+  //
   public String getExpectedAudience() {
     if (runtimeEnvironment.isRunningOnAppEngine()) {
       return String.format(
@@ -77,9 +82,6 @@ public class IapRequestFilter implements ContainerRequestFilter {
   private UserPrincipal authenticateIapRequest(ContainerRequestContext requestContext) {
     //
     // Read IAP assertion header and validate it.
-    //
-    // NB. For AppEngine, we can derive the expected audience
-    // from the project number and name.
     //
     
     String expectedAudience = getExpectedAudience();
