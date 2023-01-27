@@ -83,9 +83,6 @@ public class RuntimeConfiguration {
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
   }
 
-    //CE token settings
-
-
   // -------------------------------------------------------------------------
   // Settings.
   // -------------------------------------------------------------------------

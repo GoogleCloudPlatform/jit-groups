@@ -98,7 +98,7 @@ public class RuntimeEnvironment {
   }
 
   public boolean isRunningOnCloudRun() {
-    return System.getenv().containsKey("CLOUD_RUN");
+    return System.getenv().containsKey("K_SERVICE");
   }
 
   public String getBackendServiceId() {
