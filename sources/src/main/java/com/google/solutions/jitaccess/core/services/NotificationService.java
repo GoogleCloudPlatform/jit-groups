@@ -25,10 +25,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.adapters.SlackAdapter;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -41,6 +41,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.enterprise.context.ApplicationScoped;
 
 /**
  * Service for notifying users about activation requests..
@@ -53,33 +54,31 @@ public abstract class NotificationService {
 
   /**
    * Load a resource from a JAR resource.
+   *
    * @return null if not found.
    */
-  public static String loadResource(String resourceName) throws NotificationException{
-    try (var stream = NotificationService.class
-      .getClassLoader()
-      .getResourceAsStream(resourceName)) {
+  public static String loadResource(String resourceName) throws NotificationException {
+    try (var stream =
+           NotificationService.class.getClassLoader().getResourceAsStream(resourceName)) {
 
       if (stream == null) {
         return null;
       }
 
       var content = stream.readAllBytes();
-      if (content.length > 3 &&
-        content[0] == (byte)0xEF &&
-        content[1] == (byte)0xBB &&
-        content[2] == (byte)0xBF) {
+      if (content.length > 3
+        && content[0] == (byte) 0xEF
+        && content[1] == (byte) 0xBB
+        && content[2] == (byte) 0xBF) {
 
         //
         // Strip UTF-8 BOM.
         //
         return new String(content, 3, content.length - 3);
-      }
-      else {
+      } else {
         return new String(content);
       }
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       throw new NotificationException(
         String.format("Reading the template %s from the JAR file failed", resourceName), e);
     }
@@ -96,10 +95,8 @@ public abstract class NotificationService {
     private final Options options;
     private final SmtpAdapter smtpAdapter;
 
-    public MailNotificationService(
-        SmtpAdapter smtpAdapter,
-        Options options
-    ) {
+    public MailNotificationService(SmtpAdapter smtpAdapter,
+                                   Options options) {
       Preconditions.checkNotNull(smtpAdapter);
       Preconditions.checkNotNull(options);
 
@@ -116,8 +113,8 @@ public abstract class NotificationService {
     public void sendNotification(Notification notification) throws NotificationException {
       Preconditions.checkNotNull(notification, "notification");
 
-      var htmlTemplate = loadResource(
-        String.format("notifications/%s.html", notification.getTemplateId()));
+      var htmlTemplate =
+        loadResource(String.format("notifications/%s.html", notification.getTemplateId()));
       if (htmlTemplate == null) {
         //
         // Unknown kind of notification, ignore.
@@ -125,11 +122,9 @@ public abstract class NotificationService {
         return;
       }
 
-      var formattedMessage = new NotificationTemplate(
-          htmlTemplate,
-          this.options.timeZone,
-          HtmlEscapers.htmlEscaper())
-        .format(notification);
+      var formattedMessage =
+        new NotificationTemplate(htmlTemplate, this.options.timeZone, HtmlEscapers.htmlEscaper())
+          .format(notification);
 
       try {
         this.smtpAdapter.sendMail(
@@ -140,9 +135,41 @@ public abstract class NotificationService {
           notification.isReply()
             ? EnumSet.of(SmtpAdapter.Flags.REPLY)
             : EnumSet.of(SmtpAdapter.Flags.NONE));
-      }
-      catch (SmtpAdapter.MailException | AccessException | IOException e) {
+      } catch (SmtpAdapter.MailException | AccessException | IOException e) {
         throw new NotificationException("The notification could not be sent", e);
+      }
+    }
+  }
+
+  public static class SlackNotificationService extends NotificationService {
+    private final SlackAdapter slackAdapter;
+
+    public SlackNotificationService(SlackAdapter slackAdapter) {
+      Preconditions.checkNotNull(slackAdapter);
+
+      this.slackAdapter = slackAdapter;
+    }
+
+    public boolean canSendNotifications() {
+      return true;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
+      Preconditions.checkNotNull(notification, "notification");
+
+      var message =
+        String.format(
+          "User `%s` has activated role `%s` in project `%s`.\n\nJustification: _%s_",
+          notification.properties.get("BENEFICIARY"),
+          notification.properties.get("ROLE"),
+          notification.properties.get("PROJECT_ID"),
+          notification.properties.get("JUSTIFICATION"));
+
+      try {
+        this.slackAdapter.sendSlackMessage(message);
+      } catch (SlackAdapter.SlackException e) {
+        throw new NotificationException("The message cound not be sent", e);
       }
     }
   }
@@ -166,10 +193,10 @@ public abstract class NotificationService {
   }
 
   /**
-   * Generic notification. The object contains the data for a notification,
-   * but doesn't define its format.
+   * Generic notification. The object contains the data for a notification, but doesn't define its
+   * format.
    */
-  public static abstract class Notification {
+  public abstract static class Notification {
     private final Collection<UserId> toRecipients;
     private final Collection<UserId> ccRecipients;
     private final String subject;
@@ -185,8 +212,7 @@ public abstract class NotificationService {
     protected Notification(
       Collection<UserId> toRecipients,
       Collection<UserId> ccRecipients,
-      String subject
-    ) {
+      String subject) {
       Preconditions.checkNotNull(toRecipients, "toRecipients");
       Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");
@@ -202,9 +228,7 @@ public abstract class NotificationService {
         "Notification to %s: %s\n\n%s",
         this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
         this.subject,
-        this.properties
-          .entrySet()
-          .stream()
+        this.properties.entrySet().stream()
           .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
           .collect(Collectors.joining("\n", "", "")));
     }
@@ -218,11 +242,9 @@ public abstract class NotificationService {
     private final Escaper escaper;
     private final ZoneId timezoneId;
 
-    public NotificationTemplate(
-      String template,
-      ZoneId timezoneId,
-      Escaper escaper
-    ) {
+    public NotificationTemplate(String template,
+                                ZoneId timezoneId,
+                                Escaper escaper) {
       Preconditions.checkNotNull(template, "template");
       Preconditions.checkNotNull(timezoneId, "timezoneId");
       Preconditions.checkNotNull(escaper, "escaper");
@@ -246,12 +268,11 @@ public abstract class NotificationService {
           //
           // Apply time zone and convert to string.
           //
-          propertyValue = OffsetDateTime
-            .ofInstant((Instant)property.getValue(), this.timezoneId)
-            .truncatedTo(ChronoUnit.SECONDS)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
-        }
-        else {
+          propertyValue =
+            OffsetDateTime.ofInstant((Instant) property.getValue(), this.timezoneId)
+              .truncatedTo(ChronoUnit.SECONDS)
+              .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        } else {
           //
           // Convert to a safe string.
           //
@@ -277,7 +298,8 @@ public abstract class NotificationService {
   }
 
   public static class NotificationException extends Exception {
-    public NotificationException(String message, Throwable cause) {
+    public NotificationException(String message,
+                                 Throwable cause) {
       super(message, cause);
     }
   }

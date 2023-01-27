@@ -85,6 +85,12 @@ public class RuntimeConfiguration {
     this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
     this.smtpSecret = new StringSetting(List.of("SMTP_SECRET"), null);
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
+
+    //
+    // Slack settings.
+    //
+
+    this.slackHookUrl = new StringSetting(List.of("SLACK_HOOK_URL"), null);
   }
 
   // -------------------------------------------------------------------------
@@ -172,6 +178,11 @@ public class RuntimeConfiguration {
   public final StringSetting smtpExtraOptions;
 
   /**
+   * Hook url for Slack
+   */
+  public final StringSetting slackHookUrl;
+
+  /**
    * Backend Service Id for token validation
    */
   public final StringSetting backendServiceId;
@@ -180,6 +191,10 @@ public class RuntimeConfiguration {
    * Maximum number of reviewers foa an activation request.
    */
   public final IntSetting maxNumberOfReviewersPerActivationRequest;
+
+  public boolean isSlackConfigured() {
+    return this.slackHookUrl.isValid();
+  }
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);

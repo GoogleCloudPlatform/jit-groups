@@ -76,8 +76,7 @@ public class ApiResource {
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
-    String activationToken
-  ) throws MalformedURLException {
+    String activationToken) throws MalformedURLException {
     Preconditions.checkNotNull(uriInfo);
     Preconditions.checkNotNull(activationToken);
 
@@ -108,15 +107,16 @@ public class ApiResource {
   @GET
   public void getRoot() {
     //
-    // Version 1.0 allowed static assets (including index.html) to be cached aggressively.
+    // Version 1.0 allowed static assets (including index.html) to be cached
+    // aggressively.
     // After an upgrade, it's therefore likely that browsers still load the outdated
     // frontend. Let the old frontend show a warning with a cache-busting link.
     //
     throw new NotFoundException(
       "You're viewing an outdated version of the application, " +
-      String.format(
-        "<a href='/?_=%s'>please refresh your browser</a>",
-        UUID.randomUUID()));
+        String.format(
+          "<a href='/?_=%s'>please refresh your browser</a>",
+          UUID.randomUUID()));
   }
 
   /**
@@ -126,14 +126,12 @@ public class ApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
   public PolicyResponse getPolicy(
-    @Context SecurityContext securityContext
-  ) {
+    @Context SecurityContext securityContext) {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     return new PolicyResponse(
       this.roleActivationService.getOptions().justificationHint,
-      iapPrincipal.getId()
-    );
+      iapPrincipal.getId());
   }
 
   /**
@@ -143,8 +141,7 @@ public class ApiResource {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
   public ProjectsResponse listProjects(
-    @Context SecurityContext securityContext
-  ) throws AccessException {
+    @Context SecurityContext securityContext) throws AccessException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
@@ -155,8 +152,7 @@ public class ApiResource {
       return new ProjectsResponse(projects
         .stream().map(p -> p.id)
         .collect(Collectors.toSet()));
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_ROLES,
@@ -175,8 +171,7 @@ public class ApiResource {
   @Path("projects/{projectId}/roles")
   public ProjectRolesResponse listRoles(
     @PathParam("projectId") String projectIdString,
-    @Context SecurityContext securityContext
-  ) throws AccessException {
+    @Context SecurityContext securityContext) throws AccessException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
@@ -194,8 +189,7 @@ public class ApiResource {
       return new ProjectRolesResponse(
         bindings.getItems(),
         bindings.getWarnings());
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_ROLES,
@@ -217,8 +211,7 @@ public class ApiResource {
   public ProjectRolePeersResponse listPeers(
     @PathParam("projectId") String projectIdString,
     @QueryParam("role") String role,
-    @Context SecurityContext securityContext
-  ) throws AccessException {
+    @Context SecurityContext securityContext) throws AccessException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
@@ -240,8 +233,7 @@ public class ApiResource {
       assert !peers.contains(iapPrincipal.getId());
 
       return new ProjectRolePeersResponse(peers);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_LIST_PEERS,
@@ -265,8 +257,7 @@ public class ApiResource {
   public ActivationStatusResponse selfApproveActivation(
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
-    @Context SecurityContext securityContext
-  ) throws AccessDeniedException {
+    @Context SecurityContext securityContext) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
@@ -283,7 +274,8 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
 
     //
-    // NB. The input list of roles might contain duplicates, therefore reduce to a set.
+    // NB. The input list of roles might contain duplicates, therefore reduce to a
+    // set.
     //
     var roleBindings = request.roles
       .stream()
@@ -312,8 +304,11 @@ public class ApiResource {
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
-      }
-      catch (Exception e) {
+
+        this.notificationService
+          .sendNotification(new SelfApprovedSlackNotification(request, iapPrincipal, projectId, roleBinding.role));
+
+      } catch (Exception e) {
         this.logAdapter
           .newErrorEntry(
             LogEvents.API_ACTIVATE_ROLE,
@@ -330,9 +325,8 @@ public class ApiResource {
           .write();
 
         if (e instanceof AccessDeniedException) {
-          throw (AccessDeniedException)e.fillInStackTrace();
-        }
-        else {
+          throw (AccessDeniedException) e.fillInStackTrace();
+        } else {
           throw new AccessDeniedException("Activating role failed", e);
         }
       }
@@ -353,7 +347,8 @@ public class ApiResource {
   }
 
   /**
-   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
+   * Request approval to activate one or more project roles. Only allowed for
+   * MPA-eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -363,8 +358,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     ActivationRequest request,
     @Context SecurityContext securityContext,
-    @Context UriInfo uriInfo
-  ) throws AccessDeniedException {
+    @Context UriInfo uriInfo) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     assert this.activationTokenService != null;
     assert this.notificationService != null;
@@ -396,8 +390,7 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
 
-    try
-    {
+    try {
       //
       // Validate request.
       //
@@ -432,8 +425,7 @@ public class ApiResource {
         iapPrincipal.getId(),
         activationRequest,
         ProjectRole.Status.ACTIVATION_PENDING);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
@@ -450,9 +442,8 @@ public class ApiResource {
         .write();
 
       if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
+        throw (AccessDeniedException) e.fillInStackTrace();
+      } else {
         throw new AccessDeniedException("Requesting access failed", e);
       }
     }
@@ -466,8 +457,7 @@ public class ApiResource {
   @Path("activation-request")
   public ActivationStatusResponse getActivationRequest(
     @QueryParam("activation") String obfuscatedActivationToken,
-    @Context SecurityContext securityContext
-  ) throws AccessException {
+    @Context SecurityContext securityContext) throws AccessException {
     assert this.activationTokenService != null;
 
     Preconditions.checkArgument(
@@ -481,7 +471,7 @@ public class ApiResource {
       var activationRequest = this.activationTokenService.verifyToken(activationToken);
 
       if (!activationRequest.beneficiary.equals(iapPrincipal.getId()) &&
-          !activationRequest.reviewers.contains(iapPrincipal.getId())) {
+        !activationRequest.reviewers.contains(iapPrincipal.getId())) {
         throw new AccessDeniedException("The calling user is not authorized to access this approval request");
       }
 
@@ -489,8 +479,7 @@ public class ApiResource {
         iapPrincipal.getId(),
         activationRequest,
         ProjectRole.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_GET_REQUEST,
@@ -512,8 +501,7 @@ public class ApiResource {
   public ActivationStatusResponse approveActivationRequest(
     @QueryParam("activation") String obfuscatedActivationToken,
     @Context SecurityContext securityContext,
-    @Context UriInfo uriInfo
-  ) throws AccessException {
+    @Context UriInfo uriInfo) throws AccessException {
     assert this.activationTokenService != null;
     assert this.roleActivationService != null;
     assert this.notificationService != null;
@@ -528,8 +516,7 @@ public class ApiResource {
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
@@ -571,8 +558,7 @@ public class ApiResource {
         activationRequest.reviewers.contains(iapPrincipal.getId()),
         activationRequest.justification,
         List.of(new ActivationStatusResponse.ActivationStatus(activation)));
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
@@ -588,9 +574,8 @@ public class ApiResource {
         .write();
 
       if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
+        throw (AccessDeniedException) e.fillInStackTrace();
+      } else {
         throw new AccessDeniedException("Approving the activation request failed", e);
       }
     }
@@ -602,8 +587,7 @@ public class ApiResource {
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    RoleActivationService.Activation activation
-  ) {
+    RoleActivationService.Activation activation) {
     return entry
       .addLabel("activation_id", activation.id.toString())
       .addLabel("activation_start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
@@ -613,15 +597,13 @@ public class ApiResource {
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    RoleActivationService.ActivationRequest request
-  ) {
+    RoleActivationService.ActivationRequest request) {
     return entry
       .addLabel("activation_id", request.id.toString())
       .addLabel("activation_start", request.startTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("activation_end", request.endTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("justification", request.justification)
-      .addLabel("reviewers", request
-        .reviewers
+      .addLabel("reviewers", request.reviewers
         .stream()
         .map(u -> u.email)
         .collect(Collectors.joining(", ")))
@@ -630,8 +612,7 @@ public class ApiResource {
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    RoleBinding roleBinding
-  ) {
+    RoleBinding roleBinding) {
     return entry
       .addLabel("role", roleBinding.role)
       .addLabel("resource", roleBinding.fullResourceName)
@@ -640,15 +621,13 @@ public class ApiResource {
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    Exception exception
-  ) {
+    Exception exception) {
     return entry.addLabel("error", exception.getClass().getSimpleName());
   }
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    ProjectId project
-  ) {
+    ProjectId project) {
     return entry.addLabel("project", project.id);
   }
 
@@ -662,8 +641,7 @@ public class ApiResource {
 
     private PolicyResponse(
       String justificationHint,
-      UserId signedInUser
-    ) {
+      UserId signedInUser) {
       Preconditions.checkNotNull(justificationHint, "justificationHint");
       Preconditions.checkNotNull(signedInUser, "signedInUser");
 
@@ -687,8 +665,7 @@ public class ApiResource {
 
     private ProjectRolesResponse(
       List<ProjectRole> roleBindings,
-      List<String> warnings
-    ) {
+      List<String> warnings) {
       Preconditions.checkNotNull(roleBindings, "roleBindings");
 
       this.warnings = warnings;
@@ -730,8 +707,7 @@ public class ApiResource {
       boolean isBeneficiary,
       boolean isReviewer,
       String justification,
-      List<ActivationStatus> items
-    ) {
+      List<ActivationStatus> items) {
       Preconditions.checkNotNull(beneficiary);
       Preconditions.checkNotNull(reviewers);
       Preconditions.checkNotNull(justification);
@@ -749,8 +725,7 @@ public class ApiResource {
     private ActivationStatusResponse(
       UserId caller,
       RoleActivationService.ActivationRequest request,
-      ProjectRole.Status status
-    ) {
+      ProjectRole.Status status) {
       this(
         request.beneficiary,
         request.reviewers,
@@ -778,8 +753,7 @@ public class ApiResource {
         RoleBinding roleBinding,
         ProjectRole.Status status,
         long startTime,
-        long endTime
-      ) {
+        long endTime) {
         assert startTime < endTime;
 
         this.activationId = activationId.toString();
@@ -808,13 +782,11 @@ public class ApiResource {
   /**
    * Email to reviewers, requesting their approval.
    */
-  public class RequestActivationNotification extends NotificationService.Notification
-  {
+  public class RequestActivationNotification extends NotificationService.Notification {
     protected RequestActivationNotification(
       RoleActivationService.ActivationRequest request,
       Instant requestExpiryTime,
-      URL activationRequestUrl) throws MalformedURLException
-    {
+      URL activationRequestUrl) throws MalformedURLException {
       super(
         request.reviewers,
         List.of(request.beneficiary),
@@ -847,8 +819,7 @@ public class ApiResource {
     protected ActivationApprovedNotification(
       RoleActivationService.ActivationRequest request,
       UserId approver,
-      URL activationRequestUrl) throws MalformedURLException
-    {
+      URL activationRequestUrl) throws MalformedURLException {
       super(
         List.of(request.beneficiary),
         request.reviewers, // Move reviewers to CC.
@@ -875,6 +846,29 @@ public class ApiResource {
     @Override
     public String getTemplateId() {
       return "ActivationApproved";
+    }
+  }
+
+  public class SelfApprovedSlackNotification extends NotificationService.Notification {
+    protected SelfApprovedSlackNotification(
+      SelfActivationRequest request,
+      UserPrincipal iapPrincipal,
+      ProjectId projectId,
+      String role) {
+      super(
+        List.of(),
+        Set.of(),
+        request.justification);
+
+      this.properties.put("BENEFICIARY", iapPrincipal.getId().email);
+      this.properties.put("PROJECT_ID", projectId.id);
+      this.properties.put("ROLE", role);
+      this.properties.put("JUSTIFICATION", request.justification);
+    }
+
+    @Override
+    public String getTemplateId() {
+      return "SelfApprovedSlack";
     }
   }
 }

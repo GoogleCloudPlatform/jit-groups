@@ -325,6 +325,13 @@ public class RuntimeEnvironment {
         new SmtpAdapter(secretManagerAdapter, options),
         new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
+    else if (this.configuration.isSlackConfigured()) {
+      return new NotificationService.SlackNotificationService(
+        new SlackAdapter(
+          new SlackAdapter.Options(this.configuration.slackHookUrl.getValue())
+        )
+      );
+    }
     else {
       return new NotificationService.SilentNotificationService();
     }
