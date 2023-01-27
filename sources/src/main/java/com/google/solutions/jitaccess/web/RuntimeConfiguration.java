@@ -63,7 +63,7 @@ public class RuntimeConfiguration {
     //
     // Backend service id
     //
-    this.backendServiceId = new StringSetting(List.of("BACKEND_SERVICE_ID"), null);
+    this.backendServiceId = new StringSetting(List.of("IAP_BACKEND_SERVICE_ID"), null);
 
     //
     // Notification settings.
