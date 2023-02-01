@@ -28,6 +28,6 @@ RUN mvn -f /home/app/pom.xml package -DskipTests -Dquarkus.package.output-name=j
 # Package stage
 #
 FROM openjdk:17
-COPY /target/jitaccess-runner.jar /usr/local/lib/jitaccess.jar
+COPY --from=build /target/jitaccess-runner.jar /usr/local/lib/jitaccess.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar", "/usr/local/lib/jitaccess.jar"]

@@ -249,7 +249,7 @@ public class RuntimeEnvironment {
     }
     else {
       throw new RuntimeException(
-        "Application is not running on AppEngine, and debug mode is disabled. Aborting startup");
+        "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
     }
   }
 
