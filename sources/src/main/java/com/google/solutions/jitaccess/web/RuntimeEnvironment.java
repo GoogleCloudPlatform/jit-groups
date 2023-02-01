@@ -151,7 +151,7 @@ public class RuntimeEnvironment {
 
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
       //
-      // Initialize using service account attached to AppEngine.
+      // Initialize using service account attached to AppEngine or Cloud Run.
       //
       try {
         GenericData projectMetadata =
