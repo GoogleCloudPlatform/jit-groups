@@ -19,15 +19,25 @@
 # under the License.
 #
 
+#
+# Build stage.
+#
 FROM maven:3.8.7-eclipse-temurin-17-alpine AS build
-COPY src /home/app/src
-COPY pom.xml /home/app
-RUN mvn -f /home/app/pom.xml package -DskipTests -Dquarkus.package.output-name=jitaccess
+WORKDIR /app
+
+# Copy local code to the container image.
+COPY . ./
+
+# Build jitaccess-runner.jar
+RUN mvn package -DskipTests -Dquarkus.package.output-name=jitaccess
 
 #
-# Package stage
+# Package stage.
 #
 FROM openjdk:17
-COPY --from=build /target/jitaccess-runner.jar /usr/local/lib/jitaccess.jar
+WORKDIR /app
+
+COPY --from=build /app/target/jitaccess-runner.jar .
+
 EXPOSE 8080
-ENTRYPOINT ["java","-jar", "/usr/local/lib/jitaccess.jar"]
+ENTRYPOINT ["java", "-jar", "/app/jitaccess-runner.jar"]
