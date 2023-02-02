@@ -38,7 +38,7 @@ import javax.ws.rs.ext.Provider;
 @Dependent
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
-public class AppEngineRequestFilter implements ContainerRequestFilter {
+public class TraceContextRequestFilter implements ContainerRequestFilter {
   /**
    * Header that contains a unique identifier for the request, cf.
    * https://cloud.google.com/appengine/docs/standard/java11/reference/request-response-headers

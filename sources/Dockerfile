@@ -9,7 +9,7 @@
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
@@ -19,29 +19,15 @@
 # under the License.
 #
 
-# Compiled class file
-*.class
+FROM maven:3.8.7-eclipse-temurin-17-alpine AS build
+COPY src /home/app/src
+COPY pom.xml /home/app
+RUN mvn -f /home/app/pom.xml package -DskipTests -Dquarkus.package.output-name=jitaccess
 
-# Log file
-*.log
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
-
-target/
-app.yaml
-test.properties
-
-runConfigurations/
-.metals
-.vscode
+#
+# Package stage
+#
+FROM openjdk:17
+COPY --from=build /target/jitaccess-runner.jar /usr/local/lib/jitaccess.jar
+EXPOSE 8080
+ENTRYPOINT ["java","-jar", "/usr/local/lib/jitaccess.jar"]

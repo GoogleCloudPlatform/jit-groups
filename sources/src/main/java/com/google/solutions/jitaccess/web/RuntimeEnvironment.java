@@ -39,6 +39,7 @@ import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.web.RuntimeConfiguration.StringSetting;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -92,8 +93,16 @@ public class RuntimeEnvironment {
     }
   }
 
-  private boolean isRunningOnAppEngine() {
+  public boolean isRunningOnAppEngine() {
     return System.getenv().containsKey("GAE_SERVICE");
+  }
+
+  public boolean isRunningOnCloudRun() {
+    return System.getenv().containsKey("K_SERVICE");
+  }
+
+  public String getBackendServiceId() {
+    return configuration.backendServiceId.getValue();
   }
 
   // -------------------------------------------------------------------------
@@ -140,9 +149,9 @@ public class RuntimeEnvironment {
         .write();
     }
 
-    if (isRunningOnAppEngine()) {
+    if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
       //
-      // Initialize using service account attached to AppEngine.
+      // Initialize using service account attached to AppEngine or Cloud Run.
       //
       try {
         GenericData projectMetadata =
@@ -240,7 +249,7 @@ public class RuntimeEnvironment {
     }
     else {
       throw new RuntimeException(
-        "Application is not running on AppEngine, and debug mode is disabled. Aborting startup");
+        "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
     }
   }
 
