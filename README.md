@@ -96,8 +96,8 @@ For each activation, the Just-In-Time application writes an audit log entry that
 
 ## Deploying the application
 
-Just-In-Time Access runs on App Engine (standard) and uses Identity-Aware-Proxy for authentication and authorization. The application
-is stateless and uses the [Policy Analyzer API](https://cloud.google.com/policy-intelligence/docs/analyze-iam-policies) and [IAM API](https://cloud.google.com/iam/docs/reference/rest) to manage access.
+Just-In-Time Access runs on App Engine (standard) and Cloud Run. The application
+is stateless and uses [Identity-Aware-Proxy](https://cloud.google.com/iap/docs/concepts-overview) for authentication and authorization, and the [Policy Analyzer API](https://cloud.google.com/policy-intelligence/docs/analyze-iam-policies) and [IAM API](https://cloud.google.com/iam/docs/reference/rest) to manage access.
 
 For detailed instructions on deploying Just-In-Time Access, see [Manage just-in-time privileged access to projects ](https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project) on the Google Cloud website.
 
