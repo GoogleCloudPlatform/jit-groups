@@ -369,6 +369,8 @@ public class ApiResource {
     assert this.activationTokenService != null;
     assert this.notificationService != null;
 
+    var maxReviewers = this.roleActivationService.getOptions().maxNumberOfReviewersPerActivationRequest;
+
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
@@ -379,6 +381,9 @@ public class ApiResource {
     Preconditions.checkArgument(
       request.peers != null && request.peers.size() > 0,
       "At least one peer is required");
+    Preconditions.checkArgument(
+      request.peers.size() <= maxReviewers,
+      "The number of reviewers must not exceed " + maxReviewers);
     Preconditions.checkArgument(
       request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
       "A justification must be provided");
