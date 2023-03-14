@@ -59,6 +59,9 @@ public class RuntimeConfiguration {
     this.justificationHint = new StringSetting(
       List.of("JUSTIFICATION_HINT"),
       "Bug or case number");
+    this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
+      List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
+      10);
     
     //
     // Backend service id
@@ -163,6 +166,11 @@ public class RuntimeConfiguration {
    * Backend Service Id for token validation
    */
   public final StringSetting backendServiceId;
+
+  /**
+   * Maximum number of reviewers foa an activation request.
+   */
+  public final IntSetting maxNumberOfReviewersPerActivationRequest;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
