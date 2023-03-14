@@ -377,7 +377,7 @@ public class ApiResource {
       request.role != null && !request.role.isEmpty(),
       "A role is required");
     Preconditions.checkArgument(
-      request.peers != null && request.peers.size() > 0 && request.peers.size() <= 10,
+      request.peers != null && request.peers.size() > 0,
       "At least one peer is required");
     Preconditions.checkArgument(
       request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,

@@ -51,6 +51,8 @@ public class TestApiResource {
   private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
 
   private static final String SAMPLE_TOKEN = "eySAMPLE";
+  private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile("pattern");
+  private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
   private static final ActivationTokenService.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
     new ActivationTokenService.TokenWithExpiry(SAMPLE_TOKEN, Instant.now().plusSeconds(10));
 
@@ -92,8 +94,9 @@ public class TestApiResource {
     when(this.resource.roleActivationService.getOptions())
       .thenReturn(new RoleActivationService.Options(
         "hint",
-        Pattern.compile("pattern"),
-        Duration.ofMinutes(5)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(5),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
       .get("/api/policy", ApiResource.PolicyResponse.class);
@@ -110,8 +113,9 @@ public class TestApiResource {
     when(this.resource.roleActivationService.getOptions())
       .thenReturn(new RoleActivationService.Options(
         "hint",
-        Pattern.compile("pattern"),
-        Duration.ofMinutes(5)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(5),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
       .get("/api/policy", ApiResource.PolicyResponse.class);

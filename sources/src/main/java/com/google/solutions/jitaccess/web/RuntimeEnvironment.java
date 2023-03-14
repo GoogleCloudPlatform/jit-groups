@@ -39,7 +39,6 @@ import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
-import com.google.solutions.jitaccess.web.RuntimeConfiguration.StringSetting;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -294,7 +293,8 @@ public class RuntimeEnvironment {
     return new RoleActivationService.Options(
       this.configuration.justificationHint.getValue(),
       Pattern.compile(this.configuration.justificationPattern.getValue()),
-      this.configuration.activationTimeout.getValue());
+      this.configuration.activationTimeout.getValue(),
+      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
 
   @Produces

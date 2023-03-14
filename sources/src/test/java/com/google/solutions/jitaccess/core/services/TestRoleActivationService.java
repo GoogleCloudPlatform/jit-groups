@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
@@ -48,7 +47,8 @@ public class TestRoleActivationService {
   private static final ProjectId SAMPLE_PROJECT_ID = new ProjectId("project-1");
   private static final String SAMPLE_PROJECT_RESOURCE_1 = "//cloudresourcemanager.googleapis.com/projects/project-1";
   private static final String SAMPLE_ROLE = "roles/resourcemanager.projectIamAdmin";
-  private static final Pattern JUSTIFICATION_PATTERN = Pattern.compile(".*");
+  private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile(".*");
+  private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
 
   // ---------------------------------------------------------------------
   // activateProjectRoleForSelf.
@@ -64,8 +64,9 @@ public class TestRoleActivationService {
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.activateProjectRoleForSelf(
@@ -97,8 +98,9 @@ public class TestRoleActivationService {
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForSelf(
@@ -117,7 +119,8 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1)));
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForSelf(
@@ -149,8 +152,9 @@ public class TestRoleActivationService {
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var roleBinding = new RoleBinding(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -188,8 +192,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -213,8 +218,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -263,8 +269,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -291,8 +298,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -334,8 +342,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -380,8 +389,9 @@ public class TestRoleActivationService {
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
@@ -444,8 +454,9 @@ public class TestRoleActivationService {
       resourceAdapter,
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
@@ -475,14 +486,36 @@ public class TestRoleActivationService {
   // ---------------------------------------------------------------------
 
   @Test
+  public void whenNumberOfReviewersExceedLimit_ThenCreateActivationRequestForPeerThrowsException() {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        2));
+
+    assertThrows(IllegalArgumentException.class,
+      () -> service.createActivationRequestForPeer(
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER, SAMPLE_USER_2, SAMPLE_USER_3),
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "justification"));
+  }
+
+  @Test
   public void whenReviewerIncludesBeneficiary_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.createActivationRequestForPeer(
@@ -502,7 +535,8 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1)));
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -535,8 +569,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -567,8 +602,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -599,8 +635,9 @@ public class TestRoleActivationService {
       Mockito.mock(ResourceManagerAdapter.class),
       new RoleActivationService.Options(
         "hint",
-        JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1)));
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(1),
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = service.createActivationRequestForPeer(
         caller,

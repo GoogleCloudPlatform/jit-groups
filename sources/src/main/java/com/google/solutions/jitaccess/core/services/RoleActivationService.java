@@ -284,6 +284,8 @@ public class RoleActivationService {
 
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
     Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
+    Preconditions.checkArgument(reviewers.size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+      "The number of reviewers must not exceed " + this.options.maxNumberOfReviewersPerActivationRequest);
     Preconditions.checkArgument(!reviewers.contains(callerAndBeneficiary), "The beneficiary cannot be a reviewer");
 
     //
@@ -474,14 +476,17 @@ public class RoleActivationService {
     public final Duration activationDuration;
     public final String justificationHint;
     public final Pattern justificationPattern;
+    public final int maxNumberOfReviewersPerActivationRequest;
 
     public Options(
       String justificationHint,
       Pattern justificationPattern,
-      Duration activationDuration) {
+      Duration activationDuration,
+      int maxNumberOfReviewersPerActivationRequest) {
       this.activationDuration = activationDuration;
       this.justificationHint = justificationHint;
       this.justificationPattern = justificationPattern;
+      this.maxNumberOfReviewersPerActivationRequest = maxNumberOfReviewersPerActivationRequest;
     }
   }
 }
