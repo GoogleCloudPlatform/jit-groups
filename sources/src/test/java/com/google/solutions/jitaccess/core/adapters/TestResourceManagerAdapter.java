@@ -387,10 +387,9 @@ public class TestResourceManagerAdapter {
 
     var heldPermissions = adapter.testIamPermissions(
       IntegrationTestEnvironment.PROJECT_ID,
-      List.of(
-        "resourcemanager.projects.get",
-        "resourcemanager.projects.xxx"));
+      List.of("resourcemanager.projects.get"));
 
     assertNotNull(heldPermissions);
+    assertEquals(1, heldPermissions.size());
   }
 }
