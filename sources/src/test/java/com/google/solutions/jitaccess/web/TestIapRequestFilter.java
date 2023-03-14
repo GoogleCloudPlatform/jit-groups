@@ -39,6 +39,7 @@ public class TestIapRequestFilter {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
     when(environment.getProjectId()).thenReturn("123");
     when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
@@ -56,6 +57,7 @@ public class TestIapRequestFilter {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
     when(environment.getProjectId()).thenReturn("123");
     when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
@@ -73,6 +75,7 @@ public class TestIapRequestFilter {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
     when(environment.getProjectId()).thenReturn("123");
     when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
