@@ -75,6 +75,11 @@
       <version>v1-rev20211203-2.0.0</version>
     </dependency>
     <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-secretmanager</artifactId>
+      <version>v1-rev20230128-2.0.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.sun.mail</groupId>
       <artifactId>javax.mail</artifactId>
       <version>1.6.2</version>

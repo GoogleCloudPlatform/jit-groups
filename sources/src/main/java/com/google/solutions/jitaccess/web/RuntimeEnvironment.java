@@ -204,7 +204,8 @@ public class RuntimeEnvironment {
             Stream.of(
                 ResourceManagerAdapter.OAUTH_SCOPE,
                 AssetInventoryAdapter.OAUTH_SCOPE,
-                IamCredentialsAdapter.OAUTH_SCOPE)
+                IamCredentialsAdapter.OAUTH_SCOPE,
+                SecretManagerAdapter.OAUTH_SCOPE)
               .distinct()
               .collect(Collectors.toList()),
             0);
