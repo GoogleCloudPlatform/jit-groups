@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.html.HtmlEscapers;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
@@ -90,7 +91,7 @@ public abstract class NotificationService {
             ? EnumSet.of(SmtpAdapter.Flags.REPLY)
             : EnumSet.of(SmtpAdapter.Flags.NONE));
       }
-      catch (SmtpAdapter.MailException e) {
+      catch (SmtpAdapter.MailException | AccessException | IOException e) {
         throw new NotificationException("The notification could not be sent", e);
       }
     }

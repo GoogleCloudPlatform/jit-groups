@@ -63,7 +63,6 @@ public class RuntimeEnvironment {
   private final String projectNumber;
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
-  private final NotificationService notificationService;
 
   /**
    * Configuration, based on app.yaml environment variables.
@@ -115,32 +114,7 @@ public class RuntimeEnvironment {
     //
     var logAdapter = new LogAdapter();
 
-    //
-    // Configure SMTP if possible, and fall back to a fail-safe
-    // configuration if the configuration is incomplete.
-    //
     if (this.configuration.isSmtpConfigured()) {
-      var options = new SmtpAdapter.Options(
-        this.configuration.smtpHost.getValue(),
-        this.configuration.smtpPort.getValue(),
-        this.configuration.smtpSenderName.getValue(),
-        this.configuration.smtpSenderAddress.getValue(),
-        this.configuration.smtpEnableStartTls.getValue(),
-        this.configuration.getSmtpExtraOptionsMap());
-
-      if (this.configuration.isSmtpAuthenticationConfigured()) {
-        options.setSmtpCredentials(
-          this.configuration.smtpUsername.getValue(),
-          this.configuration.smtpPassword.getValue());
-      }
-
-      this.notificationService = new NotificationService.MailNotificationService(
-        new SmtpAdapter(options),
-        new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
-    }
-    else {
-      this.notificationService = new NotificationService.SilentNotificationService();
-
       logAdapter
         .newWarningEntry(
           LogEvents.RUNTIME_STARTUP,
@@ -315,7 +289,40 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public NotificationService getNotificationService() {
-    return this.notificationService;
+  @ApplicationScoped
+  public NotificationService getNotificationService(
+    SecretManagerAdapter secretManagerAdapter
+  ) {
+    //
+    // Configure SMTP if possible, and fall back to a fail-safe
+    // configuration if the configuration is incomplete.
+    //
+    if (this.configuration.isSmtpConfigured()) {
+      var options = new SmtpAdapter.Options(
+        this.configuration.smtpHost.getValue(),
+        this.configuration.smtpPort.getValue(),
+        this.configuration.smtpSenderName.getValue(),
+        this.configuration.smtpSenderAddress.getValue(),
+        this.configuration.smtpEnableStartTls.getValue(),
+        this.configuration.getSmtpExtraOptionsMap());
+
+      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
+        options.setSmtpCleartextCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpPassword.getValue());
+      }
+      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
+        options.setSmtpSecretCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpSecret.getValue());
+      }
+
+      return new NotificationService.MailNotificationService(
+        new SmtpAdapter(secretManagerAdapter, options),
+        new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
+    }
+    else {
+      return new NotificationService.SilentNotificationService();
+    }
   }
 }

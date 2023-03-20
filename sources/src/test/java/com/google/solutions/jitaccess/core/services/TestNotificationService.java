@@ -64,38 +64,6 @@ public class TestNotificationService {
   // sendNotification.
   // -------------------------------------------------------------------------
 
-  //@Test
-  public void whenSmtpConfigured_ThenSendNotificationSendsMail() throws Exception {
-    String senderAddress = "...";
-    String recipient = "...";
-    String username = "...";
-    String password = "...";
-
-    var options = new SmtpAdapter.Options(
-      "smtp.mailgun.org",
-      587,
-      "JIT Access Test",
-      senderAddress,
-      true,
-      Map.of());
-    options.setSmtpCredentials(username, password);
-
-    var mailAdapter = new SmtpAdapter(options);
-    var service = new NotificationService.MailNotificationService(
-      mailAdapter,
-      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
-
-    var properties = new HashMap<String, Object>();
-    properties.put("TEST", "test-value");
-
-    var notification = new TestNotification(
-      new UserId(recipient),
-      "Test email",
-      properties);
-
-    service.sendNotification(notification);
-  }
-
   @Test
   public void sendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpAdapter.class);
