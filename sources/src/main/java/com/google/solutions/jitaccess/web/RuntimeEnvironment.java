@@ -306,15 +306,19 @@ public class RuntimeEnvironment {
         this.configuration.smtpEnableStartTls.getValue(),
         this.configuration.getSmtpExtraOptionsMap());
 
-      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
-        options.setSmtpCleartextCredentials(
-          this.configuration.smtpUsername.getValue(),
-          this.configuration.smtpPassword.getValue());
-      }
-      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
+      //
+      // Lookup credentials from config and/or secret. Use the secret
+      // if both are configured.
+      //
+      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
         options.setSmtpSecretCredentials(
           this.configuration.smtpUsername.getValue(),
           this.configuration.smtpSecret.getValue());
+      }
+      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
+        options.setSmtpCleartextCredentials(
+          this.configuration.smtpUsername.getValue(),
+          this.configuration.smtpPassword.getValue());
       }
 
       return new NotificationService.MailNotificationService(
