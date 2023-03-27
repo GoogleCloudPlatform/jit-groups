@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
+import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
@@ -49,6 +50,40 @@ public abstract class NotificationService {
   public abstract void sendNotification(Notification notification) throws NotificationException;
 
   public abstract boolean canSendNotifications();
+
+  /**
+   * Load a resource from a JAR resource.
+   * @return null if not found.
+   */
+  public static String loadResource(String resourceName) throws NotificationException{
+    try (var stream = NotificationService.class
+      .getClassLoader()
+      .getResourceAsStream(resourceName)) {
+
+      if (stream == null) {
+        return null;
+      }
+
+      var content = stream.readAllBytes();
+      if (content.length > 3 &&
+        content[0] == (byte)0xEF &&
+        content[1] == (byte)0xBB &&
+        content[2] == (byte)0xBF) {
+
+        //
+        // Strip UTF-8 BOM.
+        //
+        return new String(content, 3, content.length - 3);
+      }
+      else {
+        return new String(content);
+      }
+    }
+    catch (IOException e) {
+      throw new NotificationException(
+        String.format("Reading the template %s from the JAR file failed", resourceName), e);
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Inner classes.
@@ -81,12 +116,27 @@ public abstract class NotificationService {
     public void sendNotification(Notification notification) throws NotificationException {
       Preconditions.checkNotNull(notification, "notification");
 
+      var htmlTemplate = loadResource(
+        String.format("notifications/%s.html", notification.getTemplateId()));
+      if (htmlTemplate == null) {
+        //
+        // Unknown kind of notification, ignore.
+        //
+        return;
+      }
+
+      var formattedMessage = new NotificationTemplate(
+          htmlTemplate,
+          this.options.timeZone,
+          HtmlEscapers.htmlEscaper())
+        .format(notification);
+
       try {
         this.smtpAdapter.sendMail(
           notification.toRecipients,
           notification.ccRecipients,
           notification.subject,
-          notification.formatMessage(this.options.timeZone),
+          formattedMessage,
           notification.isReply()
             ? EnumSet.of(SmtpAdapter.Flags.REPLY)
             : EnumSet.of(SmtpAdapter.Flags.NONE));
@@ -116,10 +166,10 @@ public abstract class NotificationService {
   }
 
   /**
-   * Generic notification that can be formatted as a (HTML) email
+   * Generic notification. The object contains the data for a notification,
+   * but doesn't define its format.
    */
   public static abstract class Notification {
-    private final String template;
     private final Collection<UserId> toRecipients;
     private final Collection<UserId> ccRecipients;
     private final String subject;
@@ -130,85 +180,20 @@ public abstract class NotificationService {
       return false;
     }
 
+    public abstract String getTemplateId();
+
     protected Notification(
-      String template,
       Collection<UserId> toRecipients,
       Collection<UserId> ccRecipients,
       String subject
     ) {
-      Preconditions.checkNotNull(template, "template");
       Preconditions.checkNotNull(toRecipients, "toRecipients");
       Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");
 
-      this.template = template;
       this.toRecipients = toRecipients;
       this.ccRecipients = ccRecipients;
       this.subject = subject;
-    }
-
-    /**
-     * Load a message template from a JAR resource.
-     */
-    protected static String loadMessageTemplate(String resourceName) {
-      try (var stream = NotificationService.class
-        .getClassLoader()
-        .getResourceAsStream(resourceName)) {
-
-        if (stream == null) {
-          throw new RuntimeException(
-            String.format("The JAR file does not contain an template named %s", resourceName));
-        }
-
-        var content = stream.readAllBytes();
-        if (content.length > 3 &&
-          content[0] == (byte)0xEF &&
-          content[1] == (byte)0xBB &&
-          content[2] == (byte)0xBF) {
-          //
-          // Strip UTF-8 BOM.
-          //
-          return new String(content, 3, content.length - 3);
-        }
-        else {
-          return new String(content);
-        }
-      }
-      catch (IOException e) {
-        throw new RuntimeException(
-          String.format("Reading the template %s from the JAR file failed", resourceName), e);
-      }
-    }
-
-    protected String formatMessage(ZoneId zone) {
-      //
-      // Read email template file from JAR and replace {{PROPERTY}} placeholders.
-      //
-      var escaper = HtmlEscapers.htmlEscaper();
-
-      var message = this.template;
-      for (var property : this.properties.entrySet()) {
-        String propertyValue;
-        if (property.getValue() instanceof Instant) {
-          //
-          // Apply time zone and convert to string.
-          //
-          propertyValue = OffsetDateTime
-            .ofInstant((Instant)property.getValue(), zone)
-            .truncatedTo(ChronoUnit.SECONDS)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
-        }
-        else {
-          //
-          // Convert to a HTML-safe string.
-          //
-          propertyValue = escaper.escape(property.getValue().toString());
-        }
-
-        message = message.replace("{{" + property.getKey() + "}}", propertyValue);
-      }
-
-      return message;
     }
 
     @Override
@@ -222,6 +207,61 @@ public abstract class NotificationService {
           .stream()
           .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
           .collect(Collectors.joining("\n", "", "")));
+    }
+  }
+
+  /**
+   * Template for turning a notification object into some textual representation.
+   */
+  public static class NotificationTemplate {
+    private final String template;
+    private final Escaper escaper;
+    private final ZoneId timezoneId;
+
+    public NotificationTemplate(
+      String template,
+      ZoneId timezoneId,
+      Escaper escaper
+    ) {
+      Preconditions.checkNotNull(template, "template");
+      Preconditions.checkNotNull(timezoneId, "timezoneId");
+      Preconditions.checkNotNull(escaper, "escaper");
+
+      this.template = template;
+      this.timezoneId = timezoneId;
+      this.escaper = escaper;
+    }
+
+    public String format(NotificationService.Notification notification) {
+      Preconditions.checkNotNull(notification, "notification");
+
+      //
+      // Replace all {{PROPERTY}} placeholders in the template.
+      //
+
+      var message = this.template;
+      for (var property : notification.properties.entrySet()) {
+        String propertyValue;
+        if (property.getValue() instanceof Instant) {
+          //
+          // Apply time zone and convert to string.
+          //
+          propertyValue = OffsetDateTime
+            .ofInstant((Instant)property.getValue(), this.timezoneId)
+            .truncatedTo(ChronoUnit.SECONDS)
+            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        }
+        else {
+          //
+          // Convert to a safe string.
+          //
+          propertyValue = escaper.escape(property.getValue().toString());
+        }
+
+        message = message.replace("{{" + property.getKey() + "}}", propertyValue);
+      }
+
+      return message;
     }
   }
 

@@ -816,7 +816,6 @@ public class ApiResource {
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
-        NotificationService.Notification.loadMessageTemplate("notifications/RequestActivation.html"),
         request.reviewers,
         List.of(request.beneficiary),
         String.format(
@@ -834,6 +833,11 @@ public class ApiResource {
       this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
       this.properties.put("ACTION_URL", activationRequestUrl.toString());
     }
+
+    @Override
+    public String getTemplateId() {
+      return "RequestActivation";
+    }
   }
 
   /**
@@ -846,7 +850,6 @@ public class ApiResource {
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
-        NotificationService.Notification.loadMessageTemplate("notifications/ActivationApproved.html"),
         List.of(request.beneficiary),
         request.reviewers, // Move reviewers to CC.
         String.format(
@@ -867,6 +870,11 @@ public class ApiResource {
     @Override
     protected boolean isReply() {
       return true;
+    }
+
+    @Override
+    public String getTemplateId() {
+      return "ActivationApproved";
     }
   }
 }
