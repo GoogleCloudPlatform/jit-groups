@@ -21,21 +21,16 @@
 
 package com.google.solutions.jitaccess.core.services;
 
-import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -115,67 +110,13 @@ public class TestNotificationService {
   }
 
   // -------------------------------------------------------------------------
-  // tryLoadMessageTemplate.
+  // loadResource.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenTemplateNotFound_ThenTryLoadMessageTemplateReturnsNull() throws Exception
+  public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception
   {
-    assertNull(NotificationService.tryLoadMessageTemplate("doesnotexist"));
+    assertNull(NotificationService.loadResource("doesnotexist"));
   }
 
-  // -------------------------------------------------------------------------
-  // format.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() {
-    var properties = new HashMap<String, Object>();
-    properties.put("TEST-1", "<value1/>");
-    properties.put("TEST-2", "<value2/>");
-
-    var notification = new TestNotification(
-      new UserId("user@example.com"),
-      "Test email",
-      properties,
-      "ignored-templateid");
-
-    var template = notification.properties
-      .entrySet()
-      .stream()
-      .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-      .collect(Collectors.joining());
-
-    assertEquals(
-      "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
-      notification.formatMessage(
-        template,
-        NotificationService.Options.DEFAULT_TIMEZONE,
-        HtmlEscapers.htmlEscaper()));
-  }
-
-  @Test
-  public void whenPropertiesContainDates_ThenFormatAppliesTimezone() {
-    var properties = new HashMap<String, Object>();
-    properties.put("TEST-1", Instant.ofEpochSecond(86400));
-
-    var notification = new TestNotification(
-      new UserId("user@example.com"),
-      "Test email",
-      properties,
-      "ignored-templateid");
-
-    var template = notification.properties
-      .entrySet()
-      .stream()
-      .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-      .collect(Collectors.joining());
-
-    assertEquals(
-      "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
-      notification.formatMessage(
-        template,
-        ZoneId.of("Australia/Melbourne"),
-        HtmlEscapers.htmlEscaper()).trim());
-  }
 }

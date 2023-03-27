@@ -52,9 +52,10 @@ public abstract class NotificationService {
   public abstract boolean canSendNotifications();
 
   /**
-   * Load a message template from a JAR resource.
+   * Load a resource from a JAR resource.
+   * @return null if not found.
    */
-  public static String tryLoadMessageTemplate(String resourceName) throws NotificationException{
+  public static String loadResource(String resourceName) throws NotificationException{
     try (var stream = NotificationService.class
       .getClassLoader()
       .getResourceAsStream(resourceName)) {
@@ -68,6 +69,7 @@ public abstract class NotificationService {
         content[0] == (byte)0xEF &&
         content[1] == (byte)0xBB &&
         content[2] == (byte)0xBF) {
+
         //
         // Strip UTF-8 BOM.
         //
@@ -114,19 +116,20 @@ public abstract class NotificationService {
     public void sendNotification(Notification notification) throws NotificationException {
       Preconditions.checkNotNull(notification, "notification");
 
-      var template = tryLoadMessageTemplate(
+      var htmlTemplate = loadResource(
         String.format("notifications/%s.html", notification.getTemplateId()));
-      if (template == null) {
+      if (htmlTemplate == null) {
         //
         // Unknown kind of notification, ignore.
         //
         return;
       }
 
-      var formattedMessage = notification.formatMessage(
-        template,
-        this.options.timeZone,
-        HtmlEscapers.htmlEscaper());
+      var formattedMessage = new NotificationTemplate(
+          htmlTemplate,
+          this.options.timeZone,
+          HtmlEscapers.htmlEscaper())
+        .format(notification);
 
       try {
         this.smtpAdapter.sendMail(
@@ -163,7 +166,8 @@ public abstract class NotificationService {
   }
 
   /**
-   * Generic notification that can be formatted as a (HTML) email
+   * Generic notification. The object contains the data for a notification,
+   * but doesn't define its format.
    */
   public static abstract class Notification {
     private final Collection<UserId> toRecipients;
@@ -192,28 +196,58 @@ public abstract class NotificationService {
       this.subject = subject;
     }
 
-    protected String formatMessage(
+    @Override
+    public String toString() {
+      return String.format(
+        "Notification to %s: %s\n\n%s",
+        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
+        this.subject,
+        this.properties
+          .entrySet()
+          .stream()
+          .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
+          .collect(Collectors.joining("\n", "", "")));
+    }
+  }
+
+  /**
+   * Template for turning a notification object into some textual representation.
+   */
+  public static class NotificationTemplate {
+    private final String template;
+    private final Escaper escaper;
+    private final ZoneId timezoneId;
+
+    public NotificationTemplate(
       String template,
-      ZoneId zone,
+      ZoneId timezoneId,
       Escaper escaper
-      ) {
+    ) {
       Preconditions.checkNotNull(template, "template");
-      Preconditions.checkNotNull(zone, "zone");
+      Preconditions.checkNotNull(timezoneId, "timezoneId");
       Preconditions.checkNotNull(escaper, "escaper");
+
+      this.template = template;
+      this.timezoneId = timezoneId;
+      this.escaper = escaper;
+    }
+
+    public String format(NotificationService.Notification notification) {
+      Preconditions.checkNotNull(notification, "notification");
 
       //
       // Replace all {{PROPERTY}} placeholders in the template.
       //
 
-      var message = template;
-      for (var property : this.properties.entrySet()) {
+      var message = this.template;
+      for (var property : notification.properties.entrySet()) {
         String propertyValue;
         if (property.getValue() instanceof Instant) {
           //
           // Apply time zone and convert to string.
           //
           propertyValue = OffsetDateTime
-            .ofInstant((Instant)property.getValue(), zone)
+            .ofInstant((Instant)property.getValue(), this.timezoneId)
             .truncatedTo(ChronoUnit.SECONDS)
             .format(DateTimeFormatter.RFC_1123_DATE_TIME);
         }
@@ -228,19 +262,6 @@ public abstract class NotificationService {
       }
 
       return message;
-    }
-
-    @Override
-    public String toString() {
-      return String.format(
-        "Notification to %s: %s\n\n%s",
-        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
-        this.subject,
-        this.properties
-          .entrySet()
-          .stream()
-          .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
-          .collect(Collectors.joining("\n", "", "")));
     }
   }
 
