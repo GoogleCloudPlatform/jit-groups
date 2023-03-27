@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import javax.mail.*;
@@ -29,6 +30,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -39,10 +41,18 @@ import java.util.Properties;
  * Adapter for sending email over SMTP.
  */
 public class SmtpAdapter {
+  private final SecretManagerAdapter secretManagerAdapter;
   private final Options options;
 
-  public SmtpAdapter(Options options) {
+
+  public SmtpAdapter(
+    SecretManagerAdapter secretManagerAdapter,
+    Options options
+  ) {
+    Preconditions.checkNotNull(secretManagerAdapter, "secretManagerAdapter");
     Preconditions.checkNotNull(options, "options");
+
+    this.secretManagerAdapter = secretManagerAdapter;
     this.options = options;
   }
 
@@ -58,9 +68,22 @@ public class SmtpAdapter {
     Preconditions.checkNotNull(subject, "subject");
     Preconditions.checkNotNull(content, "content");
 
+    PasswordAuthentication authentication;
+    try {
+      authentication = this.options.createPasswordAuthentication(this.secretManagerAdapter);
+    }
+    catch (Exception e) {
+      throw new MailException("Looking up SMTP credentials failed", e);
+    }
+
     var session = Session.getDefaultInstance(
       this.options.smtpProperties,
-      this.options.smtpAuthenticator);
+      new Authenticator() {
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+          return authentication;
+        }
+      });
 
     try {
       var message = new MimeMessage(session);
@@ -81,7 +104,7 @@ public class SmtpAdapter {
       }
 
       //
-      // NB. Setting the Precendence header prevents (some) mail readers to not send
+      // NB. Setting the Precedence header prevents (some) mail readers to not send
       // out of office-replies.
       //
       message.addHeader("Precedence", "bulk");
@@ -107,7 +130,7 @@ public class SmtpAdapter {
     String subject,
     String htmlContent,
     EnumSet<Flags> flags
-  ) throws MailException {
+  ) throws MailException, AccessException, IOException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");
     Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
@@ -142,10 +165,13 @@ public class SmtpAdapter {
   }
 
   public static class Options {
+    private PasswordAuthentication cachedAuthentication = null;
     private final String senderName;
     private final String senderAddress;
-    private Authenticator smtpAuthenticator = null;
     private final Properties smtpProperties;
+    private String smtpUsername;
+    private String smtpPassword;
+    private String smtpSecretPath;
 
     public Options(
       String smtpHost,
@@ -187,19 +213,62 @@ public class SmtpAdapter {
     /**
      * Add credentials for SMTP authentication.
      */
-    public Options setSmtpCredentials(String username, String password) {
+    public Options setSmtpCleartextCredentials(String username, String password) {
       Preconditions.checkNotNull(username, "username");
       Preconditions.checkNotNull(password, "password");
 
       this.smtpProperties.put("mail.smtp.auth", "true");
-      this.smtpAuthenticator = new Authenticator() {
-        @Override
-        protected PasswordAuthentication getPasswordAuthentication() {
-          return new PasswordAuthentication(username, password);
-        }
-      };
+      this.smtpUsername = username;
+      this.smtpPassword = password;
 
       return this;
+    }
+
+    /**
+     * Add credentials for SMTP authentication.
+     */
+    public Options setSmtpSecretCredentials(String username, String secretPath) {
+      Preconditions.checkNotNull(username, "username");
+      Preconditions.checkNotNull(secretPath, "secretPath");
+
+      this.smtpProperties.put("mail.smtp.auth", "true");
+      this.smtpUsername = username;
+      this.smtpSecretPath = secretPath;
+
+      return this;
+    }
+
+    public PasswordAuthentication createPasswordAuthentication(
+      SecretManagerAdapter adapter
+    ) throws AccessException, IOException {
+      //
+      // Resolve authenticator on first use. To avoid holding a lock for
+      // longer than necessary, we allow the lookup to occur multiple times and
+      // let the first writer win.
+      //
+      if (this.cachedAuthentication == null)
+      {
+        String password;
+        if (this.smtpSecretPath != null && this.smtpSecretPath.length() > 0) {
+          //
+          // Read password from secret manager.
+          //
+          password = adapter.accessSecret(this.smtpSecretPath);
+        }
+        else {
+          //
+          // Use clear-text password.
+          //
+          password = this.smtpPassword;
+        }
+
+        synchronized (this) {
+          this.cachedAuthentication = new PasswordAuthentication(smtpUsername, password);
+        }
+      }
+
+      assert this.cachedAuthentication != null;
+      return this.cachedAuthentication;
     }
   }
 

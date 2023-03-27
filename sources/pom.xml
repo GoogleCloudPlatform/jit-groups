@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
   <properties>
     <surefire-plugin.version>2.22.2</surefire-plugin.version>
     <maven.compiler.target>11</maven.compiler.target>
@@ -73,6 +73,11 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-iamcredentials</artifactId>
       <version>v1-rev20211203-2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-secretmanager</artifactId>
+      <version>v1-rev20230128-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.sun.mail</groupId>

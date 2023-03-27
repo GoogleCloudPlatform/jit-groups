@@ -163,7 +163,7 @@ public class TestRuntimeConfiguration {
   }
 
   @Test
-  public void whenSmtpExtraOptionsEmpty_TheGetSmtpExtraOptionsRetunsMap() {
+  public void whenSmtpExtraOptionsEmpty_ThenGetSmtpExtraOptionsRetunsMap() {
     var settings = Map.of("SMTP_OPTIONS", "");
     var configuration = new RuntimeConfiguration(settings);
 
@@ -173,7 +173,7 @@ public class TestRuntimeConfiguration {
   }
 
   @Test
-  public void whenSmtpExtraOptionsContainsPairs_TheGetSmtpExtraOptionsRetunsMap() {
+  public void whenSmtpExtraOptionsContainsPairs_ThenGetSmtpExtraOptionsRetunsMap() {
     var settings = Map.of("SMTP_OPTIONS", " , ONE = one, TWO=two,THREE,FOUR=,,   ");
     var configuration = new RuntimeConfiguration(settings);
 
@@ -182,5 +182,26 @@ public class TestRuntimeConfiguration {
     assertEquals(2, extraOptions.size());
     assertEquals("one", extraOptions.get("ONE"));
     assertEquals("two", extraOptions.get("TWO"));
+  }
+
+  @Test
+  public void whenSmtpPasswordAndSecretNotSet_ThenIsSmtpAuthenticationConfiguredIsFalse() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+  }
+
+  @Test
+  public void whenSmtpUserAndPasswordSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_PASSWORD= pwd");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+  }
+
+  @Test
+  public void whenSmtpUserAndSecretSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=path");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
   }
 }
