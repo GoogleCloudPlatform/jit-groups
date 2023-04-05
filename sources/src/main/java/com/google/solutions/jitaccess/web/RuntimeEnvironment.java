@@ -114,7 +114,7 @@ public class RuntimeEnvironment {
     //
     var logAdapter = new LogAdapter();
 
-    if (this.configuration.isSmtpConfigured()) {
+    if (!this.configuration.isSmtpConfigured()) {
       logAdapter
         .newWarningEntry(
           LogEvents.RUNTIME_STARTUP,
