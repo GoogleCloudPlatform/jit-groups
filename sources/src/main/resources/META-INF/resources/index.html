@@ -132,7 +132,7 @@
                                         <tr>
                                             <th>
                                                 <label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
-                                                    <input type='checkbox' class='mdl-checkbox__input'>
+                                                    <input type='checkbox' class='mdl-checkbox__input checkall__input'>
                                                 </label>
                                             </th>
                                             <th class="mdl-data-table__cell--non-numeric">User</th>
@@ -452,7 +452,7 @@
 
             /** Get values of selected rows */
             get selected() {
-                var boxes = $(`${this.selector} input:checked`);
+                var boxes = $(`${this.selector} input:checked`).not(".checkall__input");
                 return $.map(boxes, input => input.value);
             }
 
