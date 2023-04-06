@@ -283,7 +283,8 @@ public class RoleActivationService {
     Preconditions.checkNotNull(justification, "justification");
 
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
-    Preconditions.checkArgument(!reviewers.isEmpty(), "At least one reviewer must be provided");
+    Preconditions.checkArgument(reviewers != null && reviewers.size() >= this.options.minNumberOfReviewersPerActivationRequest,
+      "At least " + this.options.minNumberOfReviewersPerActivationRequest + " reviewers must be specified");
     Preconditions.checkArgument(reviewers.size() <= this.options.maxNumberOfReviewersPerActivationRequest,
       "The number of reviewers must not exceed " + this.options.maxNumberOfReviewersPerActivationRequest);
     Preconditions.checkArgument(!reviewers.contains(callerAndBeneficiary), "The beneficiary cannot be a reviewer");
@@ -476,16 +477,27 @@ public class RoleActivationService {
     public final Duration activationDuration;
     public final String justificationHint;
     public final Pattern justificationPattern;
+    public final int minNumberOfReviewersPerActivationRequest;
     public final int maxNumberOfReviewersPerActivationRequest;
 
     public Options(
       String justificationHint,
       Pattern justificationPattern,
       Duration activationDuration,
-      int maxNumberOfReviewersPerActivationRequest) {
+      int minNumberOfReviewersPerActivationRequest,
+      int maxNumberOfReviewersPerActivationRequest)
+    {
+      Preconditions.checkArgument(
+          minNumberOfReviewersPerActivationRequest > 0,
+          "The minimum number of reviewers cannot be 0");
+      Preconditions.checkArgument(
+          minNumberOfReviewersPerActivationRequest <= maxNumberOfReviewersPerActivationRequest,
+          "The minimum number of reviewers must not exceed the maximum");
+
       this.activationDuration = activationDuration;
       this.justificationHint = justificationHint;
       this.justificationPattern = justificationPattern;
+      this.minNumberOfReviewersPerActivationRequest = minNumberOfReviewersPerActivationRequest;
       this.maxNumberOfReviewersPerActivationRequest = maxNumberOfReviewersPerActivationRequest;
     }
   }

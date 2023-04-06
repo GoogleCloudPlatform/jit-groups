@@ -369,6 +369,7 @@ public class ApiResource {
     assert this.activationTokenService != null;
     assert this.notificationService != null;
 
+    var minReviewers = this.roleActivationService.getOptions().minNumberOfReviewersPerActivationRequest;
     var maxReviewers = this.roleActivationService.getOptions().maxNumberOfReviewersPerActivationRequest;
 
     Preconditions.checkArgument(
@@ -379,8 +380,8 @@ public class ApiResource {
       request.role != null && !request.role.isEmpty(),
       "A role is required");
     Preconditions.checkArgument(
-      request.peers != null && request.peers.size() > 0,
-      "At least one peer is required");
+      request.peers != null && request.peers.size() >= minReviewers,
+      "At least one " + minReviewers + " reviewers are required");
     Preconditions.checkArgument(
       request.peers.size() <= maxReviewers,
       "The number of reviewers must not exceed " + maxReviewers);

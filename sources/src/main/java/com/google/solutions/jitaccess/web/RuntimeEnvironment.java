@@ -269,6 +269,7 @@ public class RuntimeEnvironment {
       this.configuration.justificationHint.getValue(),
       Pattern.compile(this.configuration.justificationPattern.getValue()),
       this.configuration.activationTimeout.getValue(),
+      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
       this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
 
