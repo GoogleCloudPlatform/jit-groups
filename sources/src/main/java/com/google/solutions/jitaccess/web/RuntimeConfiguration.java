@@ -59,12 +59,15 @@ public class RuntimeConfiguration {
     this.justificationHint = new StringSetting(
       List.of("JUSTIFICATION_HINT"),
       "Bug or case number");
+    this.minNumberOfReviewersPerActivationRequest = new IntSetting(
+      List.of("ACTIVATION_REQUEST_MIN_REVIEWERS"),
+      1);
     this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
       10);
     
     //
-    // Backend service id
+    // Backend service id (Cloud Run only).
     //
     this.backendServiceId = new StringSetting(List.of("IAP_BACKEND_SERVICE_ID"), null);
 
@@ -175,6 +178,11 @@ public class RuntimeConfiguration {
    * Backend Service Id for token validation
    */
   public final StringSetting backendServiceId;
+
+  /**
+   * Minimum number of reviewers foa an activation request.
+   */
+  public final IntSetting minNumberOfReviewersPerActivationRequest;
 
   /**
    * Maximum number of reviewers foa an activation request.
