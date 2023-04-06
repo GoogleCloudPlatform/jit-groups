@@ -129,6 +129,8 @@ public class RoleActivationService {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(activationTimeout.toMinutes() >= Options.MIN_ACTIVATION_TIMEOUT_MINUTES,
+      "The activation timeout is too short");
     Preconditions.checkArgument(activationTimeout.toMinutes() <= this.options.maxActivationTimeout.toMinutes(),
       "The requested activation timeout exceeds the maximum permitted timeout");
 
@@ -292,6 +294,8 @@ public class RoleActivationService {
     Preconditions.checkArgument(reviewers.size() <= this.options.maxNumberOfReviewersPerActivationRequest,
       "The number of reviewers must not exceed " + this.options.maxNumberOfReviewersPerActivationRequest);
     Preconditions.checkArgument(!reviewers.contains(callerAndBeneficiary), "The beneficiary cannot be a reviewer");
+    Preconditions.checkArgument(activationTimeout.toMinutes() >= Options.MIN_ACTIVATION_TIMEOUT_MINUTES,
+      "The activation timeout is too short");
     Preconditions.checkArgument(activationTimeout.toMinutes() <= this.options.maxActivationTimeout.toMinutes(),
       "The requested activation timeout exceeds the maximum permitted timeout");
 
@@ -480,6 +484,8 @@ public class RoleActivationService {
   }
 
   public static class Options {
+    public static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
+
     public final Duration maxActivationTimeout;
     public final String justificationHint;
     public final Pattern justificationPattern;
@@ -494,7 +500,7 @@ public class RoleActivationService {
       int maxNumberOfReviewersPerActivationRequest)
     {
       Preconditions.checkArgument(
-        maxActivationTimeout.toMinutes() >= 5,
+        maxActivationTimeout.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
         "Activation timeout must be at least 5 minutes");
       Preconditions.checkArgument(
         minNumberOfReviewersPerActivationRequest > 0,

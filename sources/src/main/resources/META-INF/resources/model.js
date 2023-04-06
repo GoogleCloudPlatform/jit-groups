@@ -404,7 +404,7 @@ class DebugModel extends Model {
     async selfApproveActivation(projectId, roles, justification, activationTimeout) {
         var setting = $("#debug-selfApproveActivation").val();
         if (!setting) {
-            return super.selfApproveActivation(projectId, roles, justification);
+            return super.selfApproveActivation(projectId, roles, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -423,7 +423,7 @@ class DebugModel extends Model {
     async requestActivation(projectId, role, peers, justification, activationTimeout) {
         var setting = $("#debug-requestActivation").val();
         if (!setting) {
-            return super.requestActivation(projectId, role, peers, justification);
+            return super.requestActivation(projectId, role, peers, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
