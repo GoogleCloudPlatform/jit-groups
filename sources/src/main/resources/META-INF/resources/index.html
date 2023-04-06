@@ -89,7 +89,11 @@
                                 <table class="mdl-data-table mdl-shadow--2dp" id="step-selectrole-roles">
                                     <thead>
                                         <tr>
-                                            <th></th>
+                                            <th>
+                                                <label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                                                    <input type='checkbox' class='mdl-checkbox__input'>
+                                                </label>
+                                            </th>
                                             <th class="mdl-data-table__cell--non-numeric">Role</th>
                                             <th class="mdl-data-table__cell--non-numeric">Status</th>
                                         </tr>
@@ -126,7 +130,11 @@
                                 <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-peers">
                                     <thead>
                                         <tr>
-                                            <th></th>
+                                            <th>
+                                                <label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                                                    <input type='checkbox' class='mdl-checkbox__input checkall__input'>
+                                                </label>
+                                            </th>
                                             <th class="mdl-data-table__cell--non-numeric">User</th>
                                         </tr>
                                     </thead>
@@ -380,6 +388,21 @@
 
                 this.selector = selector;
                 this.rowIndex = 0;
+
+                const checkAllCheckbox = $(`${selector} .checkall`)
+                checkAllCheckbox.change(() => {
+
+                    $(`${selector} .mdl-checkbox__input`).each((index, element) => {
+                        const checkbox = element.parentElement.MaterialCheckbox;
+
+                        if (checkAllCheckbox.children("input").is(":checked")) {
+                            checkbox.check();
+                        }
+                        else {
+                            checkbox.uncheck();
+                        }
+                    });
+                });
             }
 
             /** 
@@ -429,7 +452,7 @@
 
             /** Get values of selected rows */
             get selected() {
-                var boxes = $(`${this.selector} input:checked`);
+                var boxes = $(`${this.selector} input:checked`).not(".checkall__input");
                 return $.map(boxes, input => input.value);
             }
 
