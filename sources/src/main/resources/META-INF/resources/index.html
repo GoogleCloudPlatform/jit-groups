@@ -102,6 +102,10 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <div class="step-subsection">
+                                Duration: <span id="selected-activation-timeout"></span> minutes.
+                                <input class="mdl-slider mdl-js-slider" id="activation-timeout" type="range" min="5" max="10" value="5" step="5" tabindex="0">
+                            </div>
                         </div>
                         <div class="mdl-step__actions">
                             <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
@@ -534,6 +538,10 @@
                 this.approveStep = new MdlStep("#step-approve");
                 this._roleTable = new MdlDataTable("#step-selectrole-roles");
                 this._peersTable = new MdlDataTable("#step-approve-peers");
+
+                $("#activation-timeout").change(() => {
+                    $("#selected-activation-timeout").text(this.activationTimeout);
+                });
             }
 
             get selectedProjectId() {
@@ -550,6 +558,23 @@
 
             set justificationHint(hint) {
                 $("#step-approve legend").text(hint);
+            }
+
+            get activationTimeout() {
+                return $("#activation-timeout")[0].value;
+            }
+
+            set activationTimeout(timeoutInMinutes) {
+                $("#activation-timeout")[0].MaterialSlider.change(timeoutInMinutes);
+                $("#selected-activation-timeout").text(timeoutInMinutes);
+            }
+
+            get maxActivationTimeout() {
+                return $("#activation-timeout")[0].max;
+            }
+
+            set maxActivationTimeout(timeoutInMinutes) {
+                $("#activation-timeout")[0].max = timeoutInMinutes;
             }
 
             set roles(roles) {
@@ -744,6 +769,8 @@
                     }
 
                     requestPane.roles = rolesResult.roles;
+                    requestPane.maxActivationTimeout = backend.policy.maxActivationTimeout;
+                    requestPane.activationTimeout = backend.policy.defaultActivationTimeout;
                 });
 
                 //
@@ -806,13 +833,15 @@
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles[0].roleBinding.role,
                                 requestPane.selectedPeers,
-                                requestPane.justificationText);
+                                requestPane.justificationText,
+                                parseInt(requestPane.activationTimeout));
                         }
                         else {
                             activationStatus = await backend.selfApproveActivation(
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles.map(r => r.roleBinding.role),
-                                requestPane.justificationText)
+                                requestPane.justificationText,
+                                parseInt(requestPane.activationTimeout))
                         }
 
                         gui.requestStatusPane.activationStatus = activationStatus;

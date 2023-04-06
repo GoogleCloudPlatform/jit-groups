@@ -50,6 +50,7 @@ public class TestRoleActivationService {
   private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile(".*");
   private static final int DEFAULT_MIN_NUMBER_OF_REVIEWERS = 1;
   private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
+  private static Duration DEFAULT_ACTIVATION_TIMEOUT = Duration.ofMinutes(10);
 
   // ---------------------------------------------------------------------
   // activateProjectRoleForSelf.
@@ -66,7 +67,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -76,7 +77,8 @@ public class TestRoleActivationService {
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1 + "/foo/bar",
           SAMPLE_ROLE),
-        "justification"));
+        "justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -101,7 +103,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -111,7 +113,8 @@ public class TestRoleActivationService {
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
           SAMPLE_ROLE),
-        "justification"));
+        "justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -122,7 +125,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -132,7 +135,30 @@ public class TestRoleActivationService {
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
           SAMPLE_ROLE),
-        "not-numeric"));
+        "not-numeric",
+        DEFAULT_ACTIVATION_TIMEOUT));
+  }
+
+  @Test
+  public void whenActivationTimeoutExceedsMax_ThenActivateProjectRoleForSelfThrowsException() {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(120),
+        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+
+    assertThrows(IllegalArgumentException.class,
+      () -> service.activateProjectRoleForSelf(
+        SAMPLE_USER,
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "justification",
+        Duration.ofMinutes(121)));
   }
 
   @Test
@@ -157,24 +183,26 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var roleBinding = new RoleBinding(
       SAMPLE_PROJECT_RESOURCE_1,
       SAMPLE_ROLE);
+    var activationTimeout = Duration.ofMinutes(5);
     var activation = service.activateProjectRoleForSelf(
       caller,
       roleBinding,
-      "justification");
+      "justification",
+      activationTimeout);
 
     assertTrue(activation.id.toString().startsWith("jit-"));
     assertEquals(activation.projectRole.roleBinding, roleBinding);
     assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
     assertTrue(activation.endTime.isAfter(activation.startTime));
     assertTrue(activation.endTime.isAfter(Instant.now().minusSeconds(60)));
-    assertTrue(activation.endTime.isBefore(Instant.now().plusSeconds(120)));
+    assertTrue(activation.endTime.isBefore(Instant.now().plus(activationTimeout).plusSeconds(60)));
 
     verify(resourceAdapter)
       .addProjectIamBinding(
@@ -198,7 +226,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -225,7 +253,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -277,7 +305,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -307,7 +335,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -352,7 +380,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -400,7 +428,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -466,7 +494,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -503,11 +531,11 @@ public class TestRoleActivationService {
         Mockito.mock(RoleDiscoveryService.class),
         Mockito.mock(ResourceManagerAdapter.class),
         new RoleActivationService.Options(
-            "hint",
-            DEFAULT_JUSTIFICATION_PATTERN,
-            Duration.ofMinutes(1),
-            3,
-            DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+          "hint",
+          DEFAULT_JUSTIFICATION_PATTERN,
+          DEFAULT_ACTIVATION_TIMEOUT,
+          3,
+          DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     assertThrows(IllegalArgumentException.class,
         () -> service.createActivationRequestForPeer(
@@ -516,7 +544,8 @@ public class TestRoleActivationService {
             new RoleBinding(
                 SAMPLE_PROJECT_RESOURCE_1,
                 SAMPLE_ROLE),
-            "justification"));
+            "justification",
+            DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -527,7 +556,7 @@ public class TestRoleActivationService {
         new RoleActivationService.Options(
             "hint",
             DEFAULT_JUSTIFICATION_PATTERN,
-            Duration.ofMinutes(1),
+            DEFAULT_ACTIVATION_TIMEOUT,
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             2));
 
@@ -538,7 +567,8 @@ public class TestRoleActivationService {
             new RoleBinding(
                 SAMPLE_PROJECT_RESOURCE_1,
                 SAMPLE_ROLE),
-            "justification"));
+            "justification",
+            DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -549,7 +579,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -560,7 +590,8 @@ public class TestRoleActivationService {
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
           SAMPLE_ROLE),
-        "justification"));
+        "justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -571,7 +602,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -582,7 +613,31 @@ public class TestRoleActivationService {
         new RoleBinding(
           SAMPLE_PROJECT_RESOURCE_1,
           SAMPLE_ROLE),
-        "non-numeric justification"));
+        "non-numeric justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
+  }
+
+  @Test
+  public void whenActivationTimeoutExceedsMax_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
+    var service = new RoleActivationService(
+      Mockito.mock(RoleDiscoveryService.class),
+      Mockito.mock(ResourceManagerAdapter.class),
+      new RoleActivationService.Options(
+        "hint",
+        DEFAULT_JUSTIFICATION_PATTERN,
+        Duration.ofMinutes(60),
+        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+
+    assertThrows(IllegalArgumentException.class,
+      () -> service.createActivationRequestForPeer(
+        SAMPLE_USER,
+        Set.of(SAMPLE_USER_2),
+        new RoleBinding(
+          SAMPLE_PROJECT_RESOURCE_1,
+          SAMPLE_ROLE),
+        "justification",
+        Duration.ofMinutes(61)));
   }
 
   @Test
@@ -607,7 +662,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -616,7 +671,8 @@ public class TestRoleActivationService {
         caller,
         Set.of(peer),
         roleBinding,
-        "justification"));
+        "justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -641,7 +697,7 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
@@ -650,7 +706,8 @@ public class TestRoleActivationService {
         caller,
         Set.of(peer),
         roleBinding,
-        "justification"));
+        "justification",
+        DEFAULT_ACTIVATION_TIMEOUT));
   }
 
   @Test
@@ -675,15 +732,16 @@ public class TestRoleActivationService {
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
-        Duration.ofMinutes(1),
+        DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = service.createActivationRequestForPeer(
-        caller,
-        Set.of(peer),
-        roleBinding,
-        "justification");
+      caller,
+      Set.of(peer),
+      roleBinding,
+      "justification",
+      DEFAULT_ACTIVATION_TIMEOUT);
 
     assertTrue(request.id.toString().startsWith("mpa-"));
     assertEquals("justification", request.justification);
