@@ -671,8 +671,8 @@ public class ApiResource {
     private PolicyResponse(
       String justificationHint,
       UserId signedInUser,
-      int defaultActivationTimeoutInMinutes,
-      int maxActivationTimeoutInMinutes
+      int maxActivationTimeoutInMinutes,
+      int defaultActivationTimeoutInMinutes
     ) {
       Preconditions.checkNotNull(justificationHint, "justificationHint");
       Preconditions.checkNotNull(signedInUser, "signedInUser");
