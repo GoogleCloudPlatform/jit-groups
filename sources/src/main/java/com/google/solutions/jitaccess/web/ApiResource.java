@@ -381,7 +381,7 @@ public class ApiResource {
       "A role is required");
     Preconditions.checkArgument(
       request.peers != null && request.peers.size() >= minReviewers,
-      "At least one " + minReviewers + " reviewers are required");
+      "At least " + minReviewers + " reviewers are required");
     Preconditions.checkArgument(
       request.peers.size() <= maxReviewers,
       "The number of reviewers must not exceed " + maxReviewers);
