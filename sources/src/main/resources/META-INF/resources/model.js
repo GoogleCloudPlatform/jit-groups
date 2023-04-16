@@ -113,10 +113,11 @@ class Model {
     }
 
     /** Activate roles without peer approval */
-    async selfApproveActivation(projectId, roles, justification) {
+    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
         console.assert(projectId);
         console.assert(roles.length > 0);
         console.assert(justification)
+        console.assert(activationTimeout)
 
         try {
             return await $.ajax({
@@ -126,7 +127,8 @@ class Model {
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
                     roles: roles,
-                    justification: justification
+                    justification: justification,
+                    activationTimeout: activationTimeout
                 }),
                 headers: this._getHeaders()
             });
@@ -137,11 +139,12 @@ class Model {
     }
 
     /** Activate a role with peer approval */
-    async requestActivation(projectId, role, peers, justification) {
+    async requestActivation(projectId, role, peers, justification, activationTimeout) {
         console.assert(projectId);
         console.assert(role);
         console.assert(peers.length > 0);
         console.assert(justification)
+        console.assert(activationTimeout)
 
         try {
             return await $.ajax({
@@ -152,7 +155,8 @@ class Model {
                 data: JSON.stringify({
                     role: role,
                     justification: justification,
-                    peers: peers
+                    peers: peers,
+                    activationTimeout: activationTimeout
                 }),
                 headers: this._getHeaders()
             });
@@ -304,7 +308,7 @@ class DebugModel extends Model {
         return Promise.reject("Simulated error");
     }
 
-    async _simulateActivationResponse(projectId, justification, roles, status, forSelf) {
+    async _simulateActivationResponse(projectId, justification, roles, status, forSelf, activationTimeout) {
         await new Promise(r => setTimeout(r, 1000));
         return Promise.resolve({
             isBeneficiary: forSelf,
@@ -321,7 +325,7 @@ class DebugModel extends Model {
                 },
                 status: status,
                 startTime: Math.floor(Date.now() / 1000),
-                endTime: Math.floor(Date.now() / 1000) + 300
+                endTime: Math.floor(Date.now() / 1000) + activationTimeout * 60
             }))
         });
     }
@@ -331,7 +335,9 @@ class DebugModel extends Model {
             justificationHint: "simulated hint",
             signedInUser: {
                 email: "user@example.com"
-            }
+            },
+            defaultActivationTimeout: 60,
+            maxActivationTimeout: 120
         };
     }
 
@@ -395,10 +401,10 @@ class DebugModel extends Model {
         }
     }
 
-    async selfApproveActivation(projectId, roles, justification) {
+    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
         var setting = $("#debug-selfApproveActivation").val();
         if (!setting) {
-            return super.selfApproveActivation(projectId, roles, justification);
+            return super.selfApproveActivation(projectId, roles, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -409,14 +415,15 @@ class DebugModel extends Model {
                 justification,
                 roles,
                 "ACTIVATED",
-                true);
+                true,
+                activationTimeout);
         }
     }
 
-    async requestActivation(projectId, role, peers, justification) {
+    async requestActivation(projectId, role, peers, justification, activationTimeout) {
         var setting = $("#debug-requestActivation").val();
         if (!setting) {
-            return super.requestActivation(projectId, role, peers, justification);
+            return super.requestActivation(projectId, role, peers, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -427,7 +434,8 @@ class DebugModel extends Model {
                 justification,
                 [role],
                 "ACTIVATION_PENDING",
-                true);
+                true,
+                activationTimeout);
         }
     }
 
@@ -445,7 +453,8 @@ class DebugModel extends Model {
                 "a justification",
                 ["roles/role-1"],
                 "ACTIVATION_PENDING",
-                false);
+                false,
+                60);
         }
     }
 
@@ -463,7 +472,8 @@ class DebugModel extends Model {
                 "a justification",
                 ["roles/role-1"],
                 "ACTIVATED",
-                false);
+                false,
+                60);
         }
     }
 }

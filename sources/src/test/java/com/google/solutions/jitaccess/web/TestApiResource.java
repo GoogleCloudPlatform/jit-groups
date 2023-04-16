@@ -476,12 +476,14 @@ public class TestApiResource {
       .activateProjectRoleForSelf(
         eq(SAMPLE_USER),
         any(RoleBinding.class),
-        anyString()))
+        anyString(),
+        any(Duration.class)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
+    request.activationTimeout = 5;
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
@@ -501,7 +503,8 @@ public class TestApiResource {
       .activateProjectRoleForSelf(
         eq(SAMPLE_USER),
         eq(roleBinding),
-        eq("justification")))
+        eq("justification"),
+        eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
@@ -511,6 +514,7 @@ public class TestApiResource {
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
+    request.activationTimeout = 5;
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/self-activate",
@@ -752,13 +756,15 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         anySet(),
         any(RoleBinding.class),
-        anyString()))
+        anyString(),
+        any(Duration.class)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
+    request.activationTimeout = 5;
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/request",
@@ -787,7 +793,8 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         eq(Set.of(SAMPLE_USER_2)),
         argThat(r -> r.role.equals("roles/mock")),
-        eq("justification")))
+        eq("justification"),
+        eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         SAMPLE_USER,
@@ -804,6 +811,7 @@ public class TestApiResource {
     request.role = "roles/mock";
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
+    request.activationTimeout = 5;
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/request",
@@ -832,7 +840,8 @@ public class TestApiResource {
         eq(SAMPLE_USER),
         eq(Set.of(SAMPLE_USER_2)),
         argThat(r -> r.role.equals("roles/mock")),
-        eq("justification")))
+        eq("justification"),
+        eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
         RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
         SAMPLE_USER,
@@ -849,6 +858,7 @@ public class TestApiResource {
     request.role = "roles/mock";
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
+    request.activationTimeout = 5;
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/project-1/roles/request",

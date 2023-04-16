@@ -111,6 +111,11 @@ h3.mdl-card__title-text {
     font-weight: 400;
 }
 
+.mdl-slider__container {
+    height: 40px;
+    width: 200px;
+}
+
 /* ==== Forms === */
 fieldset {
     border-radius: 4px;
@@ -182,8 +187,8 @@ legend {
 }
 
 .step-subsection {
-    padding-bottom: 10px;
-    padding-top: 10px;
+    padding-bottom: 15px;
+    padding-top: 15px;
 }
 
 .app-pane {
