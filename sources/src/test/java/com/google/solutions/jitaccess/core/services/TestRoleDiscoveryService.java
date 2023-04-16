@@ -222,11 +222,11 @@ public class TestRoleDiscoveryService {
   }
 
   // ---------------------------------------------------------------------
-  // listEligibleRoleBindings.
+  // listEligibleProjectRoles.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenAnalysisResultEmpty_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisResultEmpty_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -252,7 +252,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -280,7 +280,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -311,7 +311,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -350,7 +350,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -396,7 +396,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -435,7 +435,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -481,7 +481,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleRoleBindingsReturnsList()
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -534,7 +534,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleRoleBindingsReturnsList()
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -583,7 +583,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsActivatedBinding_ThenListEligibleRoleBindingsReturnsMergedList() throws Exception {
+  public void whenAnalysisContainsActivatedBinding_ThenListEligibleProjectRolesReturnsMergedList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     var eligibleBinding = createConditionalIamPolicyAnalysisResult(
@@ -678,7 +678,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleRoleBindingsAsyncReturnsList()
+  public void whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleProjectRolesAsyncReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
