@@ -396,7 +396,7 @@
                 const checkAllCheckbox = $(`${selector} .checkall`)
                 checkAllCheckbox.change(() => {
 
-                    $(`${selector} .mdl-checkbox__input`).each((index, element) => {
+                    $(`${selector} .mdl-checkbox__input`).not(':disabled').each((index, element) => {
                         const checkbox = element.parentElement.MaterialCheckbox;
 
                         if (checkAllCheckbox.children("input").is(":checked")) {
