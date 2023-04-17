@@ -84,9 +84,19 @@ public class RoleActivationService {
     RoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {
+    //
+    // Check if the given role is among the roles that the
+    // user is eligible to JIT-/MPA-activate.
+    //
+    // NB. It doesn't matter whether the user has already
+    // activated the role.
+    //
     if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
-        ProjectId.fromFullResourceName(roleBinding.fullResourceName))
+        ProjectId.fromFullResourceName(roleBinding.fullResourceName),
+        EnumSet.of(
+          ProjectRole.Status.ELIGIBLE_FOR_JIT,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA))
       .getItems()
       .stream()
       .filter(pr -> pr.roleBinding.equals(roleBinding))
@@ -219,18 +229,10 @@ public class RoleActivationService {
       request.roleBinding,
       ActivationType.MPA);
 
-    try {
-      checkUserCanActivateProjectRole(
-        request.beneficiary,
-        request.roleBinding,
-        ActivationType.MPA);
-    }
-    catch (AccessDeniedException e) {
-      throw new AccessDeniedException(
-        String.format(
-          "The request has been approved already, or the user %s is no longer allowed to activate the role",
-          request.beneficiary));
-    }
+    checkUserCanActivateProjectRole(
+      request.beneficiary,
+      request.roleBinding,
+      ActivationType.MPA);
 
     //
     // Add time-bound IAM binding for the beneficiary.

@@ -31,6 +31,7 @@ import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -222,11 +223,11 @@ public class TestRoleDiscoveryService {
   }
 
   // ---------------------------------------------------------------------
-  // listEligibleRoleBindings.
+  // listEligibleProjectRoles.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenAnalysisResultEmpty_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisResultEmpty_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -252,7 +253,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -280,7 +281,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleRoleBindingsReturnsEmptyList() throws Exception {
+  public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -311,7 +312,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -350,7 +351,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -396,7 +397,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -435,7 +436,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleRoleBindingsReturnsList() throws Exception {
+  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     when(assetAdapter
@@ -481,7 +482,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleRoleBindingsReturnsList()
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -534,7 +535,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleRoleBindingsReturnsList()
+  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -583,7 +584,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsActivatedBinding_ThenListEligibleRoleBindingsReturnsMergedList() throws Exception {
+  public void whenAnalysisContainsActivatedBinding_ThenListEligibleProjectRolesReturnsMergedList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
     var eligibleBinding = createConditionalIamPolicyAnalysisResult(
@@ -678,7 +679,7 @@ public class TestRoleDiscoveryService {
   }
 
   @Test
-  public void whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleRoleBindingsAsyncReturnsList()
+  public void whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleProjectRolesAsyncReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
 
@@ -746,8 +747,191 @@ public class TestRoleDiscoveryService {
       roles.getItems().get(1));
   }
 
+  @Test
+  public void whenStatusSetToJitOnly_ThenListEligibleProjectRolesOnlyReturnsJitEligibleBindings() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+
+    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE_2,
+      SAMPLE_USER,
+      MPA_CONDITION,
+      "MPA-eligible binding",
+      "CONDITIONAL");
+
+    var activatedBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      "time ...",
+      JitConstraints.ACTIVATION_CONDITION_TITLE,
+      "TRUE");
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          jitEligibleBinding,
+          mpaEligibleBinding,
+          activatedBinding)));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ProjectRole.Status.ELIGIBLE_FOR_JIT));
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+  }
+
+  @Test
+  public void whenStatusSetToMpaOnly_ThenListEligibleProjectRolesOnlyReturnsMpaEligibleBindings() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+
+    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE_2,
+      SAMPLE_USER,
+      MPA_CONDITION,
+      "MPA-eligible binding",
+      "CONDITIONAL");
+
+    var activatedBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      "time ...",
+      JitConstraints.ACTIVATION_CONDITION_TITLE,
+      "TRUE");
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          jitEligibleBinding,
+          mpaEligibleBinding,
+          activatedBinding)));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ProjectRole.Status.ELIGIBLE_FOR_MPA));
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+  }
+
+  @Test
+  public void whenStatusSetToActivatedOnly_ThenListEligibleProjectRolesOnlyReturnsActivatedBindings() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
+
+    var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+
+    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE_2,
+      SAMPLE_USER,
+      MPA_CONDITION,
+      "MPA-eligible binding",
+      "CONDITIONAL");
+
+    var activatedBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_RESOURCE_1,
+      SAMPLE_ROLE,
+      SAMPLE_USER,
+      "time ...",
+      JitConstraints.ACTIVATION_CONDITION_TITLE,
+      "TRUE");
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_RESOURCE_1)),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          jitEligibleBinding,
+          mpaEligibleBinding,
+          activatedBinding)));
+
+    var service = new RoleDiscoveryService(
+      assetAdapter,
+      new RoleDiscoveryService.Options("organizations/0"));
+
+    var roles = service.listEligibleProjectRoles(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ProjectRole.Status.ACTIVATED));
+
+    assertNotNull(roles.getWarnings());
+    assertEquals(0, roles.getWarnings().size());
+
+    assertNotNull(roles.getItems());
+    assertEquals(1, roles.getItems().size());
+
+    var role = roles.getItems().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
+    assertEquals(ProjectRole.Status.ACTIVATED, role.status);
+  }
+
   // ---------------------------------------------------------------------
-  // listApproversForProjectRole.
+  // listEligibleUsersForProjectRole.
   // ---------------------------------------------------------------------
 
   @Test

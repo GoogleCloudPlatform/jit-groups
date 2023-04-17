@@ -153,6 +153,23 @@ public class RoleDiscoveryService {
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
+    return listEligibleProjectRoles(
+      user,
+      projectId,
+      EnumSet.of(
+        ProjectRole.Status.ACTIVATED,
+        ProjectRole.Status.ELIGIBLE_FOR_JIT,
+        ProjectRole.Status.ELIGIBLE_FOR_MPA));
+  }
+
+  /**
+   * List eligible role bindings for the given user.
+   */
+  public Result<ProjectRole> listEligibleProjectRoles(
+    UserId user,
+    ProjectId projectId,
+    EnumSet<ProjectRole.Status> statusesToInclude
+  ) throws AccessException, IOException {
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(projectId, "projectId");
 
@@ -182,39 +199,57 @@ public class RoleDiscoveryService {
     // the condition evaluates to true (indicating it's still
     // valid).
     //
-    var activatedRoles = findRoleBindings(
-      analysisResult,
-      condition -> JitConstraints.isActivated(condition),
-      evalResult -> "TRUE".equalsIgnoreCase(evalResult))
-      .stream()
-      .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
-      .collect(Collectors.toSet());
+    Set<ProjectRole> activatedRoles;
+    if (statusesToInclude.contains(ProjectRole.Status.ACTIVATED)) {
+      activatedRoles = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isActivated(condition),
+        evalResult -> "TRUE".equalsIgnoreCase(evalResult))
+        .stream()
+        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
+        .collect(Collectors.toSet());
+    }
+    else {
+      activatedRoles = Set.of();
+    }
 
     //
     // Find all JIT-eligible role bindings. The bindings are
     // conditional and have a special condition that serves
     // as marker.
     //
-    var jitEligibleRoles = findRoleBindings(
-      analysisResult,
-      condition -> JitConstraints.isJitAccessConstraint(condition),
-      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
-      .stream()
-      .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
-      .collect(Collectors.toSet());
+    Set<ProjectRole> jitEligibleRoles;
+    if (statusesToInclude.contains(ProjectRole.Status.ELIGIBLE_FOR_JIT)) {
+      jitEligibleRoles = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isJitAccessConstraint(condition),
+        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+        .stream()
+        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
+        .collect(Collectors.toSet());
+    }
+    else {
+      jitEligibleRoles = Set.of();
+    }
 
     //
     // Find all MPA-eligible role bindings. The bindings are
     // conditional and have a special condition that serves
     // as marker.
     //
-    var mpaEligibleRoles = findRoleBindings(
-      analysisResult,
-      condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
-      evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
-      .stream()
-      .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
-      .collect(Collectors.toSet());
+    Set<ProjectRole> mpaEligibleRoles;
+    if (statusesToInclude.contains(ProjectRole.Status.ELIGIBLE_FOR_MPA)) {
+      mpaEligibleRoles = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+        .stream()
+        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
+        .collect(Collectors.toSet());
+    }
+    else {
+      mpaEligibleRoles = Set.of();
+    }
 
     //
     // Determine effective set of eligible roles. If a role is both JIT- and
@@ -252,7 +287,7 @@ public class RoleDiscoveryService {
   }
 
   /**
-   * List users that can approve the activation of an eligible role binding
+   * List users that can approve the activation of an eligible role binding.
    */
   public Set<UserId> listEligibleUsersForProjectRole(
     UserId callerUserId,
