@@ -747,7 +747,7 @@ public class TestRoleDiscoveryService {
   }
 
   // ---------------------------------------------------------------------
-  // listApproversForProjectRole.
+  // listEligibleUsersForProjectRole.
   // ---------------------------------------------------------------------
 
   @Test

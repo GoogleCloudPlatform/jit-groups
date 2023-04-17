@@ -84,9 +84,20 @@ public class RoleActivationService {
     RoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {
+    //
+    // Check if the given role is among the roles that the
+    // user is eligible to JIT-/MPA-activate.
+    //
+    // NB. It doesn't matter whether the user has already
+    // activated the role.
+    //
     if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
-        ProjectId.fromFullResourceName(roleBinding.fullResourceName))
+        ProjectId.fromFullResourceName(roleBinding.fullResourceName),
+        EnumSet.of(
+          ProjectRole.Status.ACTIVATED,
+          ProjectRole.Status.ELIGIBLE_FOR_JIT,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA)) // TODO: Exclude ACTIVATED
       .getItems()
       .stream()
       .filter(pr -> pr.roleBinding.equals(roleBinding))
