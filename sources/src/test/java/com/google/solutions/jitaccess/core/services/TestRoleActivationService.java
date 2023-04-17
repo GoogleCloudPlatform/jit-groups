@@ -409,13 +409,23 @@ public class TestRoleActivationService {
 
     var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
-    when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
+    when(discoveryService.listEligibleProjectRoles(
+        eq(caller),
+        eq(SAMPLE_PROJECT_ID),
+        eq(EnumSet.of(
+          ProjectRole.Status.ELIGIBLE_FOR_JIT,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA))))
       .thenReturn(new Result<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
         List.of()));
-    when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID), any()))
+    when(discoveryService.listEligibleProjectRoles(
+        eq(peer),
+        eq(SAMPLE_PROJECT_ID),
+        eq(EnumSet.of(
+          ProjectRole.Status.ELIGIBLE_FOR_JIT,
+          ProjectRole.Status.ELIGIBLE_FOR_MPA))))
       .thenReturn(new Result<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
