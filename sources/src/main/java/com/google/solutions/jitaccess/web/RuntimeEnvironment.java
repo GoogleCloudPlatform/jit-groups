@@ -234,7 +234,7 @@ public class RuntimeEnvironment {
   public UriBuilder createAbsoluteUriBuilder(UriInfo uriInfo) {
     return uriInfo
       .getBaseUriBuilder()
-      .scheme(isRunningOnAppEngine() ? "https" : "http");
+      .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
   }
 
   public String getProjectId() {
