@@ -15,6 +15,12 @@ variable "project_name" {
   default     = "jit-access"
 }
 
+variable "organization_domain" {
+  type        = string
+  description = "Domain name of organization in GCP"
+  default     = "kartverket.no"
+}
+
 variable "dns_name" {
   type        = string
   description = "The FQDN for the JIT-Access portal"
