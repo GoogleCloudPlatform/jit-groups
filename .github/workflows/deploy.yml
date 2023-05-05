@@ -8,6 +8,8 @@ name: Docker
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 env:
@@ -94,7 +96,7 @@ jobs:
     uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.1
     with:
       runner: ubuntu-latest
-      terraform_option_1: -var=image=${{ needs.build-image.outputs.image_url}}
+      terraform_option_1: -var=image=${{ needs.build-image.outputs.image_url }}
       working_directory: terraform
       auth_project_number: "96290054772"
       service_account: jit-access-deploy@jit-access-801d.iam.gserviceaccount.com

@@ -13,9 +13,8 @@ terraform {
 }
 
 data "google_organization" "this" {
-  name = "kartverket.no"
+  domain = var.organization_domain
 }
 
 data "google_project" "this" {
-  name = var.project_name
 }
