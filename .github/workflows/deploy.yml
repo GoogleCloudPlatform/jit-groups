@@ -17,13 +17,15 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  build-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
     permissions:
       # For fetching git repo
       contents: read
       packages: write
+    outputs:
+      image_url: ${{ env.IMAGE_NAME }}@${{ steps.build-docker.outputs.digest }}
 
     steps:
       - name: Checkout repository
@@ -58,3 +60,42 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  pharos-job:
+    name: Run Pharos with Required Permissions
+    needs:
+      - build-image
+    permissions:
+      actions: read
+      packages: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run Pharos"
+        uses: kartverket/pharos@v0.1.0
+        with:
+          image_url: ${{ needs.build-image.outputs.image_url }}
+
+  deploy:
+    name: Deploy JIT-Access to GCP
+    needs:
+      - build-image
+      - pharos-job
+    permissions:
+      # For logging on to GCP
+      id-token: write
+      # For writing comments on PR
+      pull-requests: write
+      # For fetching git repo
+      contents: read
+      # For accessing repository
+      packages: write
+    uses: kartverket/github-workflows/.github/workflows/run-terraform.yml@v4.0.1
+    with:
+      runner: ubuntu-latest
+      terraform_option_1: -var=image=${{ needs.build-image.outputs.image_url}}
+      working_directory: terraform
+      auth_project_number: "96290054772"
+      service_account: jit-access-deploy@jit-access-801d.iam.gserviceaccount.com
+      project_id: jit-access-801d
