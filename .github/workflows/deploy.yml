@@ -25,7 +25,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_url: ${{ env.IMAGE_NAME }}@${{ steps.build-docker.outputs.digest }}
+      image_url: ${{ steps.meta.outputs.tags }}
 
     steps:
       - name: Checkout repository
