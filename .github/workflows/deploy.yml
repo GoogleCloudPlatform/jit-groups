@@ -97,6 +97,8 @@ jobs:
     with:
       runner: ubuntu-latest
       terraform_option_1: -var=image=${{ needs.build-image.outputs.image_url }}
+      terraform_option_2: -var=dns_name=${{ env.DNS_NAME }}
+      terraform_option_3: -var=support_email=${{ env.SUPPORT_EMAIL }}
       working_directory: terraform
       auth_project_number: "96290054772"
       service_account: jit-access-deploy@jit-access-801d.iam.gserviceaccount.com

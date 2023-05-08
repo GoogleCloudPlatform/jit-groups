@@ -24,5 +24,9 @@ variable "organization_domain" {
 variable "dns_name" {
   type        = string
   description = "The FQDN for the JIT-Access portal"
-  default     = "jit-access.skip.kartverket.no"
+}
+
+variable "support_email" {
+  type        = string
+  description = "The email address used for the IAP brand"
 }
