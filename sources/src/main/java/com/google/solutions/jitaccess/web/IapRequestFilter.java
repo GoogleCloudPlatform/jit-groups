@@ -88,6 +88,10 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
     String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
+      this.log
+        .newErrorEntry(EVENT_AUTHENTICATE, "Missing IAP assertion in header, IAP might be disabled")
+        .write();
+
       throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
     }
 
@@ -121,6 +125,10 @@ public class IapRequestFilter implements ContainerRequestFilter {
       };
     }
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
+      this.log
+        .newErrorEntry(EVENT_AUTHENTICATE, "Verifying IAP assertion failed", e)
+        .write();
+
       throw new ForbiddenException("Invalid IAP assertion", e);
     }
   }
