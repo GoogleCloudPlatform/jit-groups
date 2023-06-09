@@ -13,6 +13,7 @@ The build-and-push.sh needs your region and projectID to push the image correctl
 Have added:
 
 - corp proxy
+- corp certificates
 - org policy exceptions
 - artifact registry
 
