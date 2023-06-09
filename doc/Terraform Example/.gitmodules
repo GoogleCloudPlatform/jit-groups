@@ -1,0 +1,4 @@
+[submodule "just-in-time-access/jit-access"]
+	path = just-in-time-access/jit-access
+	url = https://github.com/GoogleCloudPlatform/jit-access.git
+	branch = latest
