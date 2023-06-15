@@ -40,11 +40,11 @@ class JitConstraints {
 
   /** Condition that marks a role binding as eligible for JIT access */
   private static final Pattern JIT_CONDITION_PATTERN = Pattern
-    .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
+    .compile("^\\s*([^|]|\\(.*\\|*.*\\))*\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*([^|]|\\(.*\\|*.*\\))*\\s*$");
 
   /** Condition that marks a role binding as eligible for MPA */
   private static final Pattern MPA_CONDITION_PATTERN = Pattern
-    .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*$");
+    .compile("^\\s*([^|]|\\(.*\\|*.*\\))*\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*([^|]|\\(.*\\|*.*\\))*\\s*$");
 
   private JitConstraints() {
   }
