@@ -84,7 +84,11 @@
       <artifactId>javax.mail</artifactId>
       <version>1.6.2</version>
     </dependency>
-
+    <dependency>
+      <groupId>io.quarkiverse.googlecloudservices</groupId>
+      <artifactId>quarkus-google-cloud-pubsub</artifactId>
+      <version>2.1.0</version>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>

@@ -27,11 +27,9 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
-import com.google.solutions.jitaccess.core.services.ActivationTokenService;
-import com.google.solutions.jitaccess.core.services.NotificationService;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.*;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -49,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * REST API controller.
@@ -74,6 +73,13 @@ public class ApiResource {
 
   @Inject
   LogAdapter logAdapter;
+
+
+  @Inject
+  PubSubService pubSubService;
+
+  @ConfigProperty(name = "gcp.pubsub.topic")
+  String topicName;
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
@@ -190,6 +196,7 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
 
     try {
+      this.pubSubService.publishMessage(projectIdString, topicName, "calling from roles");
       var bindings = this.roleDiscoveryService.listEligibleProjectRoles(
         iapPrincipal.getId(),
         projectId);
@@ -316,6 +323,8 @@ public class ApiResource {
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
+
+
       }
       catch (Exception e) {
         this.logAdapter
