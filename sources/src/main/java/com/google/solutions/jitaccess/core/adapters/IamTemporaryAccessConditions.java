@@ -32,11 +32,11 @@ import java.util.regex.Pattern;
  */
 public class IamTemporaryAccessConditions {
   private static final String CONDITION_TEMPLATE =
-    "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
+    "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\")";
 
   private static final String CONDITION_PATTERN =
     "^\\s*\\(request.time >= timestamp\\(\\\".*\\\"\\) && "
-      + "request.time < timestamp\\(\\\".*\\\"\\)\\)\\s*$";
+      + "request.time < timestamp\\(\\\".*\\\"\\)\\s*([^|]|\\(.*\\|*.*\\))*\\s*\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
@@ -55,14 +55,17 @@ public class IamTemporaryAccessConditions {
       startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
       endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
 
-    assert (isTemporaryAccessCondition(clause));
-
     // Assuming additionalConditions has the format "&& <other-conditions>"
     if ( additionalConditions!=null && !additionalConditions.isEmpty() ) {
 
-      clause += additionalConditions;
+      clause += additionalConditions + ")";
+
+    } else {
+
+      clause += ")";
 
     }
+    assert (isTemporaryAccessCondition(clause));
 
     return clause;
   }
