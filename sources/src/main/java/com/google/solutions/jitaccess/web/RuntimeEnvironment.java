@@ -35,10 +35,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.services.ActivationTokenService;
-import com.google.solutions.jitaccess.core.services.NotificationService;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -287,6 +284,12 @@ public class RuntimeEnvironment {
     return new ActivationTokenService.Options(
       applicationPrincipal,
       effectiveRequestTimeout);
+  }
+
+  @Produces
+  public PubSubService.Options getPubSubServiceOptions() {
+    return new PubSubService.Options(this.configuration.scope.getValue().split("/")[1],
+            this.configuration.topicName.getValue());
   }
 
   @Produces

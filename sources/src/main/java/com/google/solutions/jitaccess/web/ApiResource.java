@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
 import com.google.solutions.jitaccess.core.services.*;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import javax.ws.rs.*;
@@ -47,7 +46,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 
 /**
  * REST API controller.
@@ -78,8 +77,6 @@ public class ApiResource {
   @Inject
   PubSubService pubSubService;
 
-  @ConfigProperty(name = "gcp.pubsub.topic")
-  String topicName;
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
@@ -323,12 +320,14 @@ public class ApiResource {
           .addLabel("justification", request.justification)
           .write();
 
-        this.pubSubService.publishMessage(projectIdString, topicName, String.format(
-                "User %s activated role '%s' on '%s' for themselves",
-                iapPrincipal.getId(),
-                roleBinding.role,
-                roleBinding.fullResourceName));
+        if(!this.pubSubService.getOptions().topicName.equals("DO-NOT-PUBLISH")){
+          this.pubSubService.publishMessage(String.format(
+                  "User %s activated role '%s' on '%s' for themselves",
+                  iapPrincipal.getId(),
+                  roleBinding.role,
+                  roleBinding.fullResourceName));
 
+        }
       }
       catch (Exception e) {
         this.logAdapter
