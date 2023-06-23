@@ -697,12 +697,12 @@ public class ApiResource {
   }
 
   public static class ProjectRolesResponse {
-    public final List<String> warnings;
+    public final Set<String> warnings;
     public final List<ProjectRole> roles;
 
     private ProjectRolesResponse(
       List<ProjectRole> roleBindings,
-      List<String> warnings
+      Set<String> warnings
     ) {
       Preconditions.checkNotNull(roleBindings, "roleBindings");
 

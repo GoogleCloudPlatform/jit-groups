@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.common.base.Preconditions;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Result list of T with an optional set of warnings.
@@ -35,11 +36,11 @@ public class Result<T> {
   private final List<T> items;
 
   /**
-   * Non-fatal issues encountered.
+   * Non-fatal issues encountered. Use a set to avoid duplicates.
    */
-  private final List<String> warnings;
+  private final Set<String> warnings;
 
-  public Result(List<T> roleBindings, List<String> warnings) {
+  public Result(List<T> roleBindings, Set<String> warnings) {
     Preconditions.checkNotNull(roleBindings);
 
     this.items = roleBindings;
@@ -50,7 +51,7 @@ public class Result<T> {
     return this.items;
   }
 
-  public List<String> getWarnings() {
+  public Set<String> getWarnings() {
     return warnings;
   }
 }
