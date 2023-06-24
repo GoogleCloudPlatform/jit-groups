@@ -45,7 +45,7 @@ public class RuntimeConfiguration {
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
 
     this.topicName = new StringSetting(
-            List.of("TOPIC_NAME"), "DO-NOT-PUBLISH");
+            List.of("TOPIC_NAME"), "");
     //
     // Activation settings.
     //

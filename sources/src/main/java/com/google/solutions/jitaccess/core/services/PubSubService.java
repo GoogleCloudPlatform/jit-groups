@@ -2,6 +2,7 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
+import com.google.solutions.jitaccess.core.data.MessageProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Produces;
@@ -27,8 +28,10 @@ public class PubSubService {
     }
 
     @Produces(MediaType.TEXT_PLAIN)
-    public void publishMessage(String data) throws IOException, InterruptedException {
-        this.pubSubAdaptor.publish(options.projectId, options.topicName, data);
+    public void publishMessage(MessageProperty messageProperty) throws IOException, InterruptedException {
+        if(!this.getOptions().topicName.isEmpty()) {
+            this.pubSubAdaptor.publish(options.projectId, options.topicName, messageProperty);
+        }
     }
 
     // -------------------------------------------------------------------------

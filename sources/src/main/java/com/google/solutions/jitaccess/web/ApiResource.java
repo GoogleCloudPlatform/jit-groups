@@ -320,14 +320,19 @@ public class ApiResource {
           .addLabel("justification", request.justification)
           .write();
 
-        if(!this.pubSubService.getOptions().topicName.equals("DO-NOT-PUBLISH")){
-          this.pubSubService.publishMessage(String.format(
-                  "User %s activated role '%s' on '%s' for themselves",
-                  iapPrincipal.getId(),
-                  roleBinding.role,
-                  roleBinding.fullResourceName));
 
-        }
+        var messageProperty = new MessageProperty(request.justification,
+                activation.startTime.atOffset(ZoneOffset.UTC).toString(),
+                activation.endTime.atOffset(ZoneOffset.UTC).toString(),
+                iapPrincipal.getId().toString(),
+                projectId.id,
+                roleBinding.role,
+                MessageProperty.MessageOrigin.APPROVAL
+        );
+
+        this.pubSubService.publishMessage(messageProperty);
+
+
       }
       catch (Exception e) {
         this.logAdapter
@@ -543,6 +548,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
+
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
@@ -570,6 +576,7 @@ public class ApiResource {
         iapPrincipal.getId(),
         createActivationRequestUrl(uriInfo, activationToken)));
 
+
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
@@ -581,6 +588,19 @@ public class ApiResource {
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
+
+
+      var messageProperty = new MessageProperty(activationRequest.justification,
+              activation.startTime.atOffset(ZoneOffset.UTC).toString(),
+              activation.endTime.atOffset(ZoneOffset.UTC).toString(),
+              iapPrincipal.getId().toString(),
+              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              activationRequest.roleBinding.role,
+              MessageProperty.MessageOrigin.APPROVAL
+              );
+
+      this.pubSubService.publishMessage(messageProperty);
+
 
       return new ActivationStatusResponse(
         activationRequest.beneficiary,

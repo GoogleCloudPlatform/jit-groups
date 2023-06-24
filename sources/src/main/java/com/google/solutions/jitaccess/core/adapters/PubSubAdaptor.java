@@ -8,13 +8,15 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import com.google.solutions.jitaccess.core.data.MessageProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.quarkus.arc.ComponentsProvider.LOG;
@@ -23,7 +25,7 @@ import static io.quarkus.arc.ComponentsProvider.LOG;
 @ApplicationScoped
 public class PubSubAdaptor {
 
-    private PubSubAdaptor() {
+    public PubSubAdaptor() {
     }
 
     private Publisher createClient(String projectId, String topicName) throws IOException {
@@ -36,12 +38,22 @@ public class PubSubAdaptor {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public void publish(String projectId, String topicName, String data) throws IOException, InterruptedException {
+    public void publish(String projectId, String topicName, MessageProperty messageProperty) throws IOException, InterruptedException {
 
         var publisher = createClient(projectId, topicName);
 
         try {
-            PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(ByteString.copyFrom(data.getBytes())).build();
+            Map<String, String> messageAttribute = new HashMap<>() {{
+                put("user", messageProperty.user);
+                put("start", messageProperty.start);
+                put("end", messageProperty.end);
+                put("projectId", messageProperty.projectId);
+                put("condition", messageProperty.condition);
+                put("origin", messageProperty.origin.toString());
+            }};
+            PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
+                    .setData(ByteString.copyFrom(messageProperty.data.getBytes()))
+                    .putAllAttributes(messageAttribute).build();
             ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);// Publish the message
             ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {// Wait for message submission and log the result
                 public void onSuccess(String messageId) {
