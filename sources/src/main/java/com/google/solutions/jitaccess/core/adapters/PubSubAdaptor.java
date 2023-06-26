@@ -45,10 +45,10 @@ public class PubSubAdaptor {
         try {
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("user", messageProperty.user);
-                put("start", messageProperty.start);
-                put("end", messageProperty.end);
+                //put("start", messageProperty.start);
+                //put("end", messageProperty.end);
                 put("projectId", messageProperty.projectId);
-                put("condition", messageProperty.condition);
+                put("condition", messageProperty.conditions.toString());
                 put("origin", messageProperty.origin.toString());
             }};
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()

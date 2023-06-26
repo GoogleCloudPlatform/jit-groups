@@ -41,10 +41,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -320,12 +317,14 @@ public class ApiResource {
           .addLabel("justification", request.justification)
           .write();
 
+        Map<String, String> conditions = new HashMap<>();
+        conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
+        conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
         var messageProperty = new MessageProperty(request.justification,
-                activation.startTime.atOffset(ZoneOffset.UTC).toString(),
-                activation.endTime.atOffset(ZoneOffset.UTC).toString(),
                 iapPrincipal.getId().toString(),
                 projectId.id,
+                conditions,
                 roleBinding.role,
                 MessageProperty.MessageOrigin.APPROVAL
         );
@@ -589,12 +588,14 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
 
+      Map<String, String> conditions = new HashMap<>();
+      conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
+      conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
       var messageProperty = new MessageProperty(activationRequest.justification,
-              activation.startTime.atOffset(ZoneOffset.UTC).toString(),
-              activation.endTime.atOffset(ZoneOffset.UTC).toString(),
               iapPrincipal.getId().toString(),
               ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              conditions,
               activationRequest.roleBinding.role,
               MessageProperty.MessageOrigin.APPROVAL
               );

@@ -3,48 +3,58 @@ package com.google.solutions.jitaccess.core.data;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
+import java.util.Map;
+
 public class MessageProperty {
     public final String data;
 
-    public final String start;
-    public final String end;
+//    public final String start;
+//    public final String end;
 
     public final String user;
 
     public final String projectId;
 
-    public final String condition;
+    public final Map<String, String> conditions;
+
+
+    public final String role;
+
     public final MessageOrigin origin;
 
     public MessageProperty(String data,
-                           String start,
-                           String end,
+//                           String start,
+//                           String end,
                            String user,
                            String projectId,
-                           String condition,
+                           Map<String, String> conditions,
+                           String role,
                            MessageOrigin origin
                            ) {
         Preconditions.checkNotNull(data);
-        Preconditions.checkNotNull(start, "start time");
-        Preconditions.checkNotNull(end, "end time");
+//        Preconditions.checkNotNull(start, "start time");
+//        Preconditions.checkNotNull(end, "end time");
         Preconditions.checkNotNull(user, "user");
         Preconditions.checkNotNull(projectId, "project");
-        Preconditions.checkNotNull(condition, "condition");
+        Preconditions.checkNotNull(conditions, "condition");
+        Preconditions.checkNotNull(role, "role");
         Preconditions.checkNotNull(origin);
         this.data = data;
-        this.start = start;
-        this.end = end;
+//        this.start = start;
+//        this.end = end;
         this.user = user;
         this.projectId = projectId;
-        this.condition = condition;
+        this.conditions = conditions;
+//        this.condition.put("start", start);
+        this.role = role;
         this.origin = origin;
 
     }
 
     @Override
     public String toString() {
-        return String.format("data:%s start:%s end:%s user:%s project:%s condition:%s origin:%s",
-                data, start, end, user, projectId, condition, origin);
+        return String.format("data:%s user:%s project:%s condition:%s origin:%s",
+                data, user, projectId, conditions, origin);
     }
 
 
@@ -60,17 +70,15 @@ public class MessageProperty {
 
         var that = (MessageProperty) o;
         return  Objects.equal(data, that.data)
-                && Objects.equal(start, that.start)
-                && Objects.equal(end, that.end)
                 && Objects.equal(user, that.user)
                 && Objects.equal(projectId, that.projectId)
-                && Objects.equal(condition, that.condition)
+                && Objects.equal(conditions, that.conditions)
                 && origin == that.origin;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(data, start, end, user, projectId, condition, origin);
+        return Objects.hashCode(data, user, projectId, conditions, origin);
     }
 
     public enum MessageOrigin {
