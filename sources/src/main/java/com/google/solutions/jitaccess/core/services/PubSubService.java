@@ -8,6 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
 public class PubSubService {
@@ -16,6 +17,7 @@ public class PubSubService {
 
     private final Options options;
 
+    // TODO: where is it set?
     public PubSubService(
             PubSubAdaptor pubSubAdaptor,
             Options options) {
@@ -28,8 +30,8 @@ public class PubSubService {
     }
 
     @Produces(MediaType.TEXT_PLAIN)
-    public void publishMessage(MessageProperty messageProperty) throws IOException, InterruptedException {
-        if(!this.getOptions().topicName.isEmpty()) {
+    public void publishMessage(MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
+        if(this.getOptions().topicName != null && !this.getOptions().topicName.isEmpty()) {
             this.pubSubAdaptor.publish(options.projectId, options.topicName, messageProperty);
         }
     }

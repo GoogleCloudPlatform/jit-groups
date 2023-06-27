@@ -55,6 +55,8 @@ public class IntegrationTestEnvironment {
   public static final UserId TEMPORARY_ACCESS_USER;
   public static final UserId NO_ACCESS_USER;
 
+  public static final String TOPIC_NAME;
+
   static {
     //
     // Open test settings file.
@@ -88,6 +90,8 @@ public class IntegrationTestEnvironment {
       APPLICATION_CREDENTIALS = GoogleCredentials.getApplicationDefault();
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
+
+      TOPIC_NAME = getOptional(settings, "test.topic", "");
     }
     catch (IOException e) {
       throw new RuntimeException("Failed to load test settings", e);
@@ -99,6 +103,14 @@ public class IntegrationTestEnvironment {
     if (value == null || value.isEmpty()) {
       throw new RuntimeException(
         String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
+    }
+
+    return value;
+  }
+  private static String getOptional(Properties properties, String property, String defaultVal) {
+    String value = properties.getProperty(property);
+    if (value == null || value.isEmpty()) {
+      return defaultVal;
     }
 
     return value;

@@ -3,7 +3,10 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
@@ -17,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static io.quarkus.arc.ComponentsProvider.LOG;
@@ -24,12 +28,17 @@ import static io.quarkus.arc.ComponentsProvider.LOG;
 
 @ApplicationScoped
 public class PubSubAdaptor {
-
-    public PubSubAdaptor() {
+    private final GoogleCredentials credentials;
+    public PubSubAdaptor(GoogleCredentials credentials) {
+        Preconditions.checkNotNull(credentials, "credentials");
+        this.credentials = credentials;
     }
 
     private Publisher createClient(String projectId, String topicName) throws IOException {
         try {
+            if(this.credentials != null) {
+                return Publisher.newBuilder(TopicName.of(projectId, topicName)).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
+            }
             return Publisher.newBuilder(TopicName.of(projectId, topicName)).build();
         } catch (IOException e) {
             throw new IOException("Creating a CloudAsset client failed", e);
@@ -38,7 +47,7 @@ public class PubSubAdaptor {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public void publish(String projectId, String topicName, MessageProperty messageProperty) throws IOException, InterruptedException {
+    public String publish(String projectId, String topicName, MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
 
         var publisher = createClient(projectId, topicName);
 
@@ -55,15 +64,9 @@ public class PubSubAdaptor {
                     .setData(ByteString.copyFrom(messageProperty.data.getBytes()))
                     .putAllAttributes(messageAttribute).build();
             ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);// Publish the message
-            ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {// Wait for message submission and log the result
-                public void onSuccess(String messageId) {
-                    LOG.infov("published with message id {0}", messageId);
-                }
+            String messageId = messageIdFuture.get();
 
-                public void onFailure(Throwable t) {
-                    LOG.warnv("failed to publish: {0}", t);
-                }
-            }, MoreExecutors.directExecutor());
+            return messageId;
         } finally {
             publisher.shutdown();
             publisher.awaitTermination(1, TimeUnit.MINUTES);

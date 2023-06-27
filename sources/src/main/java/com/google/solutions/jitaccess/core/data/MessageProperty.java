@@ -98,6 +98,12 @@ public class MessageProperty {
             }
         },
 
+        TEST {
+            public String toString() {
+                return "jit-test";
+            }
+        }
+
     }
 }
 
