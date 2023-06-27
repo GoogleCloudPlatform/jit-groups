@@ -1,13 +1,10 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.core.ApiFuture;
-import com.google.api.core.ApiFutureCallback;
-import com.google.api.core.ApiFutures;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
@@ -22,8 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
-import static io.quarkus.arc.ComponentsProvider.LOG;
 
 
 @ApplicationScoped
@@ -54,8 +49,6 @@ public class PubSubAdaptor {
         try {
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("user", messageProperty.user);
-                //put("start", messageProperty.start);
-                //put("end", messageProperty.end);
                 put("projectId", messageProperty.projectId);
                 put("condition", messageProperty.conditions.toString());
                 put("origin", messageProperty.origin.toString());

@@ -8,9 +8,6 @@ import java.util.Map;
 public class MessageProperty {
     public final String data;
 
-//    public final String start;
-//    public final String end;
-
     public final String user;
 
     public final String projectId;
@@ -23,8 +20,6 @@ public class MessageProperty {
     public final MessageOrigin origin;
 
     public MessageProperty(String data,
-//                           String start,
-//                           String end,
                            String user,
                            String projectId,
                            Map<String, String> conditions,
@@ -32,20 +27,15 @@ public class MessageProperty {
                            MessageOrigin origin
                            ) {
         Preconditions.checkNotNull(data);
-//        Preconditions.checkNotNull(start, "start time");
-//        Preconditions.checkNotNull(end, "end time");
         Preconditions.checkNotNull(user, "user");
         Preconditions.checkNotNull(projectId, "project");
         Preconditions.checkNotNull(conditions, "condition");
         Preconditions.checkNotNull(role, "role");
         Preconditions.checkNotNull(origin);
         this.data = data;
-//        this.start = start;
-//        this.end = end;
         this.user = user;
         this.projectId = projectId;
         this.conditions = conditions;
-//        this.condition.put("start", start);
         this.role = role;
         this.origin = origin;
 
