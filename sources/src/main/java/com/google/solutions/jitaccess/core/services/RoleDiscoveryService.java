@@ -283,7 +283,7 @@ public class RoleDiscoveryService {
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
         .map(e -> e.getCause())
-        .collect(Collectors.toList()));
+        .collect(Collectors.toSet()));
   }
 
   /**

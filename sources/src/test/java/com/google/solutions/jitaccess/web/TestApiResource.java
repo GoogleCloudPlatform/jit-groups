@@ -357,7 +357,7 @@ public class TestApiResource {
         eq(new ProjectId("project-1"))))
       .thenReturn(new Result<>(
         List.of(),
-        List.of("warning")));
+        Set.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
@@ -369,7 +369,7 @@ public class TestApiResource {
     assertEquals(0, body.roles.size());
     assertNotNull(body.warnings);
     assertEquals(1, body.warnings.size());
-    assertEquals("warning", body.warnings.get(0));
+    assertEquals("warning", body.warnings.stream().findFirst().get());
   }
 
   @Test
