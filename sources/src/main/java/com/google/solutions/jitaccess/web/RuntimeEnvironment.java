@@ -330,4 +330,10 @@ public class RuntimeEnvironment {
       return new NotificationService.SilentNotificationService();
     }
   }
+
+  @Produces
+  public ApiResource.Options getApiOptions() {
+    return new ApiResource.Options(
+      this.configuration.maxNumberOfJitRolesPerSelfApproval.getValue());
+  }
 }
