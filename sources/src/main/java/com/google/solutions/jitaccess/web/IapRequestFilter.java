@@ -126,7 +126,13 @@ public class IapRequestFilter implements ContainerRequestFilter {
     }
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       this.log
-        .newErrorEntry(EVENT_AUTHENTICATE, "Verifying IAP assertion failed", e)
+        .newErrorEntry(
+          EVENT_AUTHENTICATE,
+          String.format(
+            "Verifying IAP assertion failed. This might be because the " +
+            "IAP assertion was tampered with, or because it had the wrong audience " +
+            "(expected audience: %s).", expectedAudience),
+          e)
         .write();
 
       throw new ForbiddenException("Invalid IAP assertion", e);
