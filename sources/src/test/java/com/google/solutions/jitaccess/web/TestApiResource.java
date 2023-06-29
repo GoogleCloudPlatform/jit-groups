@@ -56,6 +56,7 @@ public class TestApiResource {
   private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile("pattern");
   private static final int DEFAULT_MIN_NUMBER_OF_REVIEWERS = 1;
   private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
+  private static final int DEFAULT_MAX_NUMBER_OF_ROLES = 3;
   private static final String DEFAULT_HINT = "hint";
   private static final Duration DEFAULT_ACTIVATION_DURATION = Duration.ofMinutes(5);
   private static final ActivationTokenService.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
@@ -66,6 +67,7 @@ public class TestApiResource {
   @BeforeEach
   public void before() {
     this.resource = new ApiResource();
+    this.resource.options = new ApiResource.Options(DEFAULT_MAX_NUMBER_OF_ROLES);
     this.resource.logAdapter = new LogAdapter();
     this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
     this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
@@ -454,6 +456,27 @@ public class TestApiResource {
   }
 
   @Test
+  public void whenRolesExceedsLimit_ThenSelfApproveActivationReturnsError() throws Exception {
+    var request = new ApiResource.SelfActivationRequest();
+
+    request.roles = Stream
+      .generate(() -> "roles/role-x")
+      .limit(DEFAULT_MAX_NUMBER_OF_ROLES + 1)
+      .collect(Collectors.toList());
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+      "/api/projects/project-1/roles/self-activate",
+      request,
+      ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(400, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("exceeds"));
+  }
+
+  @Test
   public void whenJustificationMissing_ThenSelfApproveActivationReturnsError() throws Exception {
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser");
@@ -628,7 +651,7 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body.getMessage());
-    assertTrue(body.getMessage().contains("reviewers are required"));
+    assertTrue(body.getMessage().contains("at least"));
   }
 
   @Test
@@ -654,7 +677,7 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body.getMessage());
-    assertTrue(body.getMessage().contains("reviewers are required"));
+    assertTrue(body.getMessage().contains("at least"));
   }
 
   @Test
