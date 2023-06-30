@@ -9,6 +9,7 @@ import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.gson.Gson;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.GET;
@@ -29,12 +30,12 @@ public class PubSubAdaptor {
         this.credentials = credentials;
     }
 
-    private Publisher createClient(String projectId, String topicName) throws IOException {
+    private Publisher createClient(TopicName topicName) throws IOException {
         try {
             if(this.credentials != null) {
-                return Publisher.newBuilder(TopicName.of(projectId, topicName)).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
+                return Publisher.newBuilder(topicName).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
             }
-            return Publisher.newBuilder(TopicName.of(projectId, topicName)).build();
+            return Publisher.newBuilder(topicName).build();
         } catch (IOException e) {
             throw new IOException("Creating a CloudAsset client failed", e);
         }
@@ -42,16 +43,18 @@ public class PubSubAdaptor {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String publish(String projectId, String topicName, MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
+    public String publish(TopicName topicName, MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
 
-        var publisher = createClient(projectId, topicName);
+        var publisher = createClient(topicName);
 
         try {
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("user", messageProperty.user);
                 put("projectId", messageProperty.projectId);
-                put("condition", messageProperty.conditions.toString());
+                put("condition", new Gson().toJson(messageProperty.conditions));
                 put("origin", messageProperty.origin.toString());
+//                put("role")
+
             }};
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.data.getBytes()))

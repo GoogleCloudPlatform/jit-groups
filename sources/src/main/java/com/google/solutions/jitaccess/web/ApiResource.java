@@ -437,6 +437,8 @@ public class ApiResource {
         activationRequest,
         activationToken.expiryTime,
         createActivationRequestUrl(uriInfo, activationToken.token)));
+      // TODO: add pubsub, only for logging purpose
+
 
       this.logAdapter
         .newInfoEntry(
