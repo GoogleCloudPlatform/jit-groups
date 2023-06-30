@@ -1,6 +1,7 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
+import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 
@@ -31,9 +32,11 @@ public class PubSubService {
 
     @Produces(MediaType.TEXT_PLAIN)
     public void publishMessage(MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
-        if(this.getOptions().topicName != null && !this.getOptions().topicName.isEmpty()) {
-            this.pubSubAdaptor.publish(options.projectId, options.topicName, messageProperty);
+        if(this.getOptions().topicName != null) {
+            this.pubSubAdaptor.publish(options.topicName, messageProperty);
+            // add log not send and sent
         }
+
     }
 
     // -------------------------------------------------------------------------
@@ -46,17 +49,16 @@ public class PubSubService {
 
     public static class Options {
         /**
-         * ProjectId, TopicName, folder/ID, or project/ID
+         * GCP PubSub TopicName
+         * projects/{project}/topics/{topic}
          */
-        public final String projectId;
-        public final String topicName;
+        public final TopicName topicName;
 
         /**
          * Search inherited IAM policies
          */
-        public Options(String projectId, String topicName) {
-            this.projectId = projectId;
-            this.topicName = topicName;
+        public Options(String topicNameRawStr) {
+            this.topicName = TopicName.parse(topicNameRawStr);
         }
     }
 

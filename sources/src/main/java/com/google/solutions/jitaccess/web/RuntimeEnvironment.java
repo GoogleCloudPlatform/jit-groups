@@ -288,8 +288,7 @@ public class RuntimeEnvironment {
 
   @Produces
   public PubSubService.Options getPubSubServiceOptions() {
-    return new PubSubService.Options(this.configuration.scope.getValue().split("/")[1],
-            this.configuration.topicName.getValue());
+    return new PubSubService.Options(this.configuration.topicName.getValue());
   }
 
   @Produces
