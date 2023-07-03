@@ -1,5 +1,6 @@
 package com.google.solutions.jitaccess.core.services;
 
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
 import com.google.solutions.jitaccess.core.data.*;
@@ -16,16 +17,19 @@ public class TestPubSubService {
 
     private static final ProjectId SAMPLE_PROJECT_ID = new ProjectId("project-1");
     private static final String SAMPLE_TOPIC_NAME_RAW = "projects/123/topics/sample-topic";
+
+    private static final Binding SAMPLE_CONDITIONS = new Binding().set("expression", "expression")
+            .set("title", "Activated")
+            .set("description", "description");
     private static final TopicName SAMPLE_TOPIC_NAME = TopicName.parse(SAMPLE_TOPIC_NAME_RAW);
 
     private static final TopicName NULL_TOPIC_NAME = null;
     private static final String SAMPLE_ROLE = "roles/mock.role1";
     private static final MessageProperty SAMPLE_MESSAGE_PROPERTY = new MessageProperty(
-            "",
             SAMPLE_USER.email,
-            SAMPLE_PROJECT_ID.toString(),
-            new HashMap<String, String>() {{}},
+            SAMPLE_CONDITIONS,
             SAMPLE_ROLE,
+            SAMPLE_PROJECT_ID.toString(),
             MessageProperty.MessageOrigin.APPROVAL);
 
 

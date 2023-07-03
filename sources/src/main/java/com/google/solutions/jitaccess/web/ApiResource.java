@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -317,15 +318,29 @@ public class ApiResource {
           .addLabel("justification", request.justification)
           .write();
 
-        Map<String, String> conditions = new HashMap<>();
-        conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
-        conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+//        Map<String, String> conditions = new HashMap<>();
+//        conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
+//        conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
-        var messageProperty = new MessageProperty(request.justification,
+
+        var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+                .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                request.justification);
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
+                .set("description", bindingDescription);
+
+        //JitConstraints.ACTIVATION_CONDITION_TITLE
+
+        var messageProperty = new MessageProperty(
                 iapPrincipal.getId().toString(),
-                projectId.id,
                 conditions,
                 roleBinding.role,
+                projectId.id,
                 MessageProperty.MessageOrigin.APPROVAL
         );
 
@@ -562,6 +577,8 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, e))
         .write();
 
+      // TODO : add activation request failed pubsub message
+
       throw new AccessDeniedException("Accessing the activation request failed");
     }
 
@@ -590,17 +607,36 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
 
-      Map<String, String> conditions = new HashMap<>();
-      conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
-      conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+//      Map<String, String> conditions = new HashMap<>();
+//      conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
+//      conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+//
+//      var messageProperty = new MessageProperty(activationRequest.justification,
+//              iapPrincipal.getId().toString(),
+//              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+//              conditions,
+//              activationRequest.roleBinding.role,
+//              MessageProperty.MessageOrigin.APPROVAL
+//              );
 
-      var messageProperty = new MessageProperty(activationRequest.justification,
+      var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+              .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+
+      var bindingDescription = String.format(
+              "activation-request, justification: %s",
+              activationRequest.justification);
+
+      var conditions = new Binding().set("expression", expression)
+              .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
+              .set("description", bindingDescription);
+
+      var messageProperty = new MessageProperty(
               iapPrincipal.getId().toString(),
-              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
               conditions,
               activationRequest.roleBinding.role,
+              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
               MessageProperty.MessageOrigin.APPROVAL
-              );
+      );
 
       this.pubSubService.publishMessage(messageProperty);
 
@@ -632,6 +668,7 @@ public class ApiResource {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
+        // TODO : add activation request failed pubsub message
         throw new AccessDeniedException("Approving the activation request failed", e);
       }
     }

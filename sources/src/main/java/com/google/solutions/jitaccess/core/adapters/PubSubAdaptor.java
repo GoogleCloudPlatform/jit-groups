@@ -49,15 +49,11 @@ public class PubSubAdaptor {
 
         try {
             Map<String, String> messageAttribute = new HashMap<>() {{
-                put("user", messageProperty.user);
-                put("projectId", messageProperty.projectId);
-                put("condition", new Gson().toJson(messageProperty.conditions));
                 put("origin", messageProperty.origin.toString());
-//                put("role")
 
             }};
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
-                    .setData(ByteString.copyFrom(messageProperty.data.getBytes()))
+                    .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
                     .putAllAttributes(messageAttribute).build();
             ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);// Publish the message
             String messageId = messageIdFuture.get();

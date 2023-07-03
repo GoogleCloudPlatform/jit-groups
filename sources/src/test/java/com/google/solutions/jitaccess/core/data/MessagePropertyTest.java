@@ -1,5 +1,6 @@
 package com.google.solutions.jitaccess.core.data;
 
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -12,38 +13,56 @@ class MessagePropertyTest {
 
     @Test
     void testToString() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
 
-        assertEquals("data:test message user:service-account1@google.com project:project-1 condition:{start=11am} origin:jit-approval", new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
+
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+        assertEquals("{\"data\":{\"role\":\"project/viewer\",\"user\":\"example@example.com\",\"conditions\":" +
+                "{\"expression\":{\"start\":\"11am\",\"end\":\"12pm\"},\"title\":\"Activated\",\"description\":" +
+                "\"Self-approved, justification: test justification\"},\"project_id\":\"project1\"},\"attribute\":" +
+                "\"APPROVAL\"}", new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        ).toString());
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL).toString());
     }
 
     @Test
     void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
 
-        MessageProperty messageProperty1 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
-                "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-                );
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
 
-        MessageProperty messageProperty2 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+
+        MessageProperty messageProperty1 = new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
+
+        MessageProperty messageProperty2 = new MessageProperty(
+                "example@example.com",
+                conditions,
+                "project/viewer",
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
 
         assertEquals(messageProperty1, messageProperty2);
         assertEquals(messageProperty1.hashCode(), messageProperty2.hashCode());
@@ -51,40 +70,54 @@ class MessagePropertyTest {
 
     @Test
     public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
 
-        MessageProperty messageProperty1 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+        MessageProperty messageProperty1 = new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
 
         assertEquals(messageProperty1, messageProperty1);
     }
 
     @Test
     public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
 
-        MessageProperty messageProperty1 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
-                "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
 
-        MessageProperty messageProperty2 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-2",
-                map,
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+        MessageProperty messageProperty1 = new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
+
+        MessageProperty messageProperty2 = new MessageProperty(
+                "example@example.com",
+                conditions,
+                "project/viewer",
+                "project2",
+                MessageProperty.MessageOrigin.APPROVAL);
+
 
         assertNotEquals(messageProperty1, messageProperty2);
         assertNotEquals(messageProperty1.hashCode(), messageProperty2.hashCode());
@@ -93,32 +126,46 @@ class MessagePropertyTest {
 
     @Test
     public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
 
-        MessageProperty messageProperty1 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+        MessageProperty messageProperty1 = new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
 
         assertNotEquals(null, messageProperty1);
     }
 
     @Test
     public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-        Map<String, String> map = new HashMap<>();
-        map.put("start", "11am");
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
 
-        MessageProperty messageProperty1 = new MessageProperty("test message",
-                "service-account1@google.com",
-                "project-1",
-                map,
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
+        MessageProperty messageProperty1 = new MessageProperty(
+                "example@example.com",
+                conditions,
                 "project/viewer",
-                MessageProperty.MessageOrigin.APPROVAL
-        );
+                "project1",
+                MessageProperty.MessageOrigin.APPROVAL);
 
         assertNotEquals("null", messageProperty1);
     }
