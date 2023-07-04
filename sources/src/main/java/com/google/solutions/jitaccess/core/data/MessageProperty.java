@@ -80,6 +80,11 @@ public class MessageProperty {
                 return "jit-approval";
             }
         },
+        BINDING {
+            public String toString() {
+                return "jit-binding";
+            }
+        },
         ERROR {
             public String toString() {
                 return "jit-error";
@@ -90,7 +95,6 @@ public class MessageProperty {
                 return "jit-notification";
             }
         },
-
         TEST {
             public String toString() {
                 return "jit-test";
