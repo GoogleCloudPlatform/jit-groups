@@ -306,23 +306,9 @@ public class ApiResource {
         assert activation != null;
         activations.add(activation);
 
-        this.logAdapter
-          .newInfoEntry(
-            LogEvents.API_ACTIVATE_ROLE,
-            String.format(
-              "User %s activated role '%s' on '%s' for themselves",
-              iapPrincipal.getId(),
-              roleBinding.role,
-              roleBinding.fullResourceName))
-          .addLabels(le -> addLabels(le, activation))
-          .addLabel("justification", request.justification)
-          .write();
-
-//        Map<String, String> conditions = new HashMap<>();
-//        conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
-//        conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
-
-
+        //
+        // Create and send a PubSub message to confirm binding of a self-approved request
+        //
         var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
                 .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
@@ -334,19 +320,30 @@ public class ApiResource {
                 .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
                 .set("description", bindingDescription);
 
-        //JitConstraints.ACTIVATION_CONDITION_TITLE
-
         var messageProperty = new MessageProperty(
                 iapPrincipal.getId().toString(),
                 conditions,
                 roleBinding.role,
                 projectId.id,
-                MessageProperty.MessageOrigin.APPROVAL
+                MessageProperty.MessageOrigin.BINDING
         );
 
         this.pubSubService.publishMessage(messageProperty);
 
-
+        //
+        // Emit logs
+        //
+        this.logAdapter
+          .newInfoEntry(
+            LogEvents.API_ACTIVATE_ROLE,
+            String.format(
+              "User %s activated role '%s' on '%s' for themselves",
+              iapPrincipal.getId(),
+              roleBinding.role,
+              roleBinding.fullResourceName))
+          .addLabels(le -> addLabels(le, activation))
+          .addLabel("justification", request.justification)
+          .write();
       }
       catch (Exception e) {
         this.logAdapter
@@ -448,13 +445,37 @@ public class ApiResource {
       // Create an approval token and pass it to reviewers.
       //
       var activationToken = this.activationTokenService.createToken(activationRequest);
+      var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token);
+
       this.notificationService.sendNotification(new RequestActivationNotification(
         activationRequest,
         activationToken.expiryTime,
-        createActivationRequestUrl(uriInfo, activationToken.token)));
-      // TODO: add pubsub, only for logging purpose
+        activationRequestUrl));
 
+      //
+      // Create and send PubSub message to inform that there is a new MPA approval request
+      // This includes both the details for loging as well as activation URL for the approvers
+      //
+      var conditions = new Binding()
+      .set("activationExpiry", activationToken.expiryTime.toString())
+      .set("activationUrl", activationRequestUrl.toString())
+      .set("description", String.format("Requesting approval, justification: %s", request.justification))
+      .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
+      .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
+      var messageProperty = new MessageProperty(
+              iapPrincipal.getId().toString(),
+              conditions,
+              roleBinding.role,
+              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              MessageProperty.MessageOrigin.APPROVAL
+      );
+
+      this.pubSubService.publishMessage(messageProperty);
+
+      //
+      // Send notifications and logs
+      //
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
@@ -564,7 +585,6 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
@@ -589,11 +609,38 @@ public class ApiResource {
 
       assert activation != null;
 
+      //
+      // Create and send pubsub message to confirm creation of a peer approved binding
+      //
+      var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+              .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+
+      var bindingDescription = String.format(
+              "Approved by %s, justification: %s",
+              iapPrincipal.getId().toString(),
+              activationRequest.justification);
+              
+      var conditions = new Binding().set("expression", expression)
+              .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
+              .set("description", bindingDescription);
+
+      var messageProperty = new MessageProperty(
+              activationRequest.beneficiary.toString(),
+              conditions,
+              activationRequest.roleBinding.role,
+              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              MessageProperty.MessageOrigin.BINDING
+      );
+
+      this.pubSubService.publishMessage(messageProperty);
+
+      //
+      // Send notifications and logs
+      //
       this.notificationService.sendNotification(new ActivationApprovedNotification(
         activationRequest,
         iapPrincipal.getId(),
         createActivationRequestUrl(uriInfo, activationToken)));
-
 
       this.logAdapter
         .newInfoEntry(
@@ -606,40 +653,6 @@ public class ApiResource {
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
-
-//      Map<String, String> conditions = new HashMap<>();
-//      conditions.put("start", activation.startTime.atOffset(ZoneOffset.UTC).toString());
-//      conditions.put("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
-//
-//      var messageProperty = new MessageProperty(activationRequest.justification,
-//              iapPrincipal.getId().toString(),
-//              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
-//              conditions,
-//              activationRequest.roleBinding.role,
-//              MessageProperty.MessageOrigin.APPROVAL
-//              );
-
-      var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
-              .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
-
-      var bindingDescription = String.format(
-              "activation-request, justification: %s",
-              activationRequest.justification);
-
-      var conditions = new Binding().set("expression", expression)
-              .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
-              .set("description", bindingDescription);
-
-      var messageProperty = new MessageProperty(
-              iapPrincipal.getId().toString(),
-              conditions,
-              activationRequest.roleBinding.role,
-              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
-              MessageProperty.MessageOrigin.APPROVAL
-      );
-
-      this.pubSubService.publishMessage(messageProperty);
-
 
       return new ActivationStatusResponse(
         activationRequest.beneficiary,
