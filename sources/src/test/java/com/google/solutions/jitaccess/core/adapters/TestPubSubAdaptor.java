@@ -1,5 +1,6 @@
 package com.google.solutions.jitaccess.core.adapters;
 
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import org.junit.jupiter.api.Test;
@@ -8,10 +9,23 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import static org.junit.jupiter.api.Assertions.*;
 
+
 class TestPubSubAdaptor {
 
     @Test
     public void whenUnauthenticated_ThenThrowsAccessDeniedException() {
+
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
+
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
         var adapter = new PubSubAdaptor(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
         assertThrows(
@@ -19,12 +33,11 @@ class TestPubSubAdaptor {
             () -> adapter.publish(
                     IntegrationTestEnvironment.TOPIC_NAME,
                     new MessageProperty(
-                        "",
-                        "bob@example.com",
-                        IntegrationTestEnvironment.PROJECT_ID.toString(),
-                        new HashMap<String, String>(),
-                        "role/fake-role",
-                        MessageProperty.MessageOrigin.APPROVAL)));
+                            "example@example.com",
+                            conditions,
+                            "project/viewer",
+                            "project1",
+                            MessageProperty.MessageOrigin.APPROVAL)));
     }
 
     @Test
@@ -34,17 +47,27 @@ class TestPubSubAdaptor {
             return;
         }
 
+        var expression = new Binding().set("start", "11am")
+                .set("end", "12pm");
+
+        var bindingDescription = String.format(
+                "Self-approved, justification: %s",
+                "test justification");
+
+        var conditions = new Binding().set("expression", expression)
+                .set("title", "Activated")
+                .set("description", bindingDescription);
+
         var adapter = new PubSubAdaptor(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
         assertTrue(
             adapter.publish(
                 IntegrationTestEnvironment.TOPIC_NAME, // makesure the topic is exists
-                new MessageProperty(
-                    "",
-                    "bob@example.com",
-                    IntegrationTestEnvironment.PROJECT_ID.toString(),
-                    new HashMap<String, String>(),
-                    "role/fake-role",
-                    MessageProperty.MessageOrigin.TEST)).matches("^[0-9]*$"));
+                    new MessageProperty(
+                            "example@example.com",
+                            conditions,
+                            "project/viewer",
+                            "project1",
+                            MessageProperty.MessageOrigin.APPROVAL)).matches("^[0-9]*$"));
 
 
     }

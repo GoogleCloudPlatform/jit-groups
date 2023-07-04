@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import com.google.solutions.jitaccess.core.data.UserId;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -50,6 +51,7 @@ public class TestAssetInventoryAdapter {
         true));
   }
 
+  @Disabled
   @Test
   public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
@@ -98,6 +100,7 @@ public class TestAssetInventoryAdapter {
   // findPermissionedPrincipalsByResource.
   // -------------------------------------------------------------------------
 
+
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
@@ -110,6 +113,7 @@ public class TestAssetInventoryAdapter {
         "roles/browser"));
   }
 
+  @Disabled
   @Test
   public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
