@@ -8,8 +8,9 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
+import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
-import com.google.gson.Gson;
+import com.google.solutions.jitaccess.web.LogEvents;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.GET;
@@ -25,9 +26,13 @@ import java.util.concurrent.TimeUnit;
 @ApplicationScoped
 public class PubSubAdaptor {
     private final GoogleCredentials credentials;
+
+    private LogAdapter logAdapter = new LogAdapter();
+
     public PubSubAdaptor(GoogleCredentials credentials) {
         Preconditions.checkNotNull(credentials, "credentials");
         this.credentials = credentials;
+
     }
 
     private Publisher createClient(TopicName topicName) throws IOException {
@@ -43,14 +48,13 @@ public class PubSubAdaptor {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String publish(TopicName topicName, MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
+    public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
         var publisher = createClient(topicName);
 
         try {
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
-
             }};
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
@@ -59,7 +63,14 @@ public class PubSubAdaptor {
             String messageId = messageIdFuture.get();
 
             return messageId;
-        } finally {
+
+        } catch (InterruptedException | ExecutionException e) {
+            logAdapter.newErrorEntry(LogEvents.PUBLISH_MESSAGE, String.format(
+                    "Publish Message to Topic %s failed: %s", topicName,
+                    Exceptions.getFullMessage(e))).write();
+            throw new ExecutionException("Failed to publish message", e);
+        }
+        finally {
             publisher.shutdown();
             publisher.awaitTermination(1, TimeUnit.MINUTES);
         }

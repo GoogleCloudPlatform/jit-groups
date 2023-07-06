@@ -31,7 +31,7 @@ public class PubSubService {
     }
 
     @Produces(MediaType.TEXT_PLAIN)
-    public void publishMessage(MessageProperty messageProperty) throws IOException, InterruptedException, ExecutionException {
+    public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
         if(this.getOptions().topicName != null) {
             this.pubSubAdaptor.publish(options.topicName, messageProperty);
             // add log not send and sent

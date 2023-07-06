@@ -37,12 +37,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 
@@ -270,7 +272,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
     @Context SecurityContext securityContext
-  ) throws AccessDeniedException {
+  ) throws AccessDeniedException, IOException, ExecutionException, InterruptedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
@@ -320,13 +322,21 @@ public class ApiResource {
                 .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
                 .set("description", bindingDescription);
 
+        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+                .set("conditions", conditions)
+                .set("role", roleBinding.role)
+                .set("project_id", projectId.id);
+
+        //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
+
+
+
         var messageProperty = new MessageProperty(
-                iapPrincipal.getId().toString(),
-                conditions,
-                roleBinding.role,
-                projectId.id,
+                payload,
+        //        jwt.token,
                 MessageProperty.MessageOrigin.BINDING
         );
+
 
         this.pubSubService.publishMessage(messageProperty);
 
@@ -346,6 +356,18 @@ public class ApiResource {
           .write();
       }
       catch (Exception e) {
+        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+                .set("role", roleBinding.role)
+                .set("project_id", projectId.id);
+
+        var messageProperty = new MessageProperty(
+                payload,
+          //      null,
+                MessageProperty.MessageOrigin.ERROR);
+
+        this.pubSubService.publishMessage(messageProperty);
+
+
         this.logAdapter
           .newErrorEntry(
             LogEvents.API_ACTIVATE_ROLE,
@@ -365,6 +387,10 @@ public class ApiResource {
           throw (AccessDeniedException)e.fillInStackTrace();
         }
         else {
+          logAdapter.newErrorEntry(
+                          LogEvents.PUBLISH_MESSAGE,
+                          "Failed to publish message")
+                  .write();
           throw new AccessDeniedException("Activating role failed", e);
         }
       }
@@ -396,7 +422,7 @@ public class ApiResource {
     ActivationRequest request,
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
-  ) throws AccessDeniedException {
+  ) throws AccessDeniedException, IOException, ExecutionException, InterruptedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     assert this.activationTokenService != null;
     assert this.notificationService != null;
@@ -463,11 +489,16 @@ public class ApiResource {
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
+      var jwt = "jwt";
+
+      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+              .set("conditions", conditions)
+              .set("role", activationRequest.roleBinding.role)
+              .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
+
       var messageProperty = new MessageProperty(
-              iapPrincipal.getId().toString(),
-              conditions,
-              roleBinding.role,
-              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              payload,
+      //        jwt,
               MessageProperty.MessageOrigin.APPROVAL
       );
 
@@ -494,6 +525,18 @@ public class ApiResource {
         ProjectRole.Status.ACTIVATION_PENDING);
     }
     catch (Exception e) {
+
+      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+              .set("role", roleBinding.role)
+              .set("project_id", projectId.id);
+
+      var messageProperty = new MessageProperty(
+              payload,
+        //      null,
+              MessageProperty.MessageOrigin.ERROR);
+
+      this.pubSubService.publishMessage(messageProperty);
+
       this.logAdapter
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
@@ -513,6 +556,10 @@ public class ApiResource {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
+        logAdapter.newErrorEntry(
+                        LogEvents.PUBLISH_MESSAGE,
+                        "Failed to publish message")
+                .write();
         throw new AccessDeniedException("Requesting access failed", e);
       }
     }
@@ -585,6 +632,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
+
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
@@ -619,16 +667,21 @@ public class ApiResource {
               "Approved by %s, justification: %s",
               iapPrincipal.getId().toString(),
               activationRequest.justification);
-              
+
       var conditions = new Binding().set("expression", expression)
               .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
               .set("description", bindingDescription);
 
+      var payload = new Binding().set("user", activationRequest.beneficiary.toString())
+              .set("conditions", conditions)
+              .set("role", activationRequest.roleBinding.role)
+              .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
+
+      //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
+
       var messageProperty = new MessageProperty(
-              activationRequest.beneficiary.toString(),
-              conditions,
-              activationRequest.roleBinding.role,
-              ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id,
+              payload,
+            //  jwt.token,
               MessageProperty.MessageOrigin.BINDING
       );
 
@@ -641,6 +694,7 @@ public class ApiResource {
         activationRequest,
         iapPrincipal.getId(),
         createActivationRequestUrl(uriInfo, activationToken)));
+
 
       this.logAdapter
         .newInfoEntry(
