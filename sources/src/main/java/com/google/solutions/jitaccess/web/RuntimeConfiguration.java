@@ -67,8 +67,10 @@ public class RuntimeConfiguration {
     this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
       10);
+    this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
+      List.of("ACTIVATION_REQUEST_MAX_ROLES"),
+      10);
 
-    
     //
     // Backend service id (Cloud Run only).
     //
@@ -138,7 +140,7 @@ public class RuntimeConfiguration {
 
   /**
    * SMTP server for sending notifications.
-    */
+   */
   public final StringSetting smtpHost;
 
   /**
@@ -198,6 +200,11 @@ public class RuntimeConfiguration {
    * Maximum number of reviewers foa an activation request.
    */
   public final IntSetting maxNumberOfReviewersPerActivationRequest;
+
+  /**
+   * Maximum number of (JIT-) eligible roles that can be activated at once.
+   */
+  public final IntSetting maxNumberOfJitRolesPerSelfApproval;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);

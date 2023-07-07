@@ -73,6 +73,9 @@ public class ApiResource {
   @Inject
   LogAdapter logAdapter;
 
+  @Inject
+  Options options;
+
 
   @Inject
   PubSubService pubSubService;
@@ -277,13 +280,21 @@ public class ApiResource {
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
-      "A projectId is required");
+      "You must provide a projectId");
     Preconditions.checkArgument(
-      request != null && request.roles != null && request.roles.size() > 0 && request.roles.size() <= 10,
-      "At least one role is required");
+      request != null && request.roles != null && request.roles.size() > 0,
+      "Specify one or more roles to activate");
     Preconditions.checkArgument(
-      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
-      "A justification must be provided");
+      request != null && request.roles != null && request.roles.size() <= this.options.maxNumberOfJitRolesPerSelfApproval,
+      String.format(
+        "The number of roles exceeds the allowed maximum of %d",
+        this.options.maxNumberOfJitRolesPerSelfApproval));
+    Preconditions.checkArgument(
+      request.justification != null && request.justification.trim().length() > 0,
+      "Provide a justification");
+    Preconditions.checkArgument(
+      request.justification != null && request.justification.length() < 100,
+      "The justification is too long");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
@@ -387,10 +398,6 @@ public class ApiResource {
           throw (AccessDeniedException)e.fillInStackTrace();
         }
         else {
-          logAdapter.newErrorEntry(
-                          LogEvents.PUBLISH_MESSAGE,
-                          "Failed to publish message")
-                  .write();
           throw new AccessDeniedException("Activating role failed", e);
         }
       }
@@ -432,20 +439,23 @@ public class ApiResource {
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
-      "A projectId is required");
+      "You must provide a projectId");
     Preconditions.checkArgument(request != null);
     Preconditions.checkArgument(
       request.role != null && !request.role.isEmpty(),
-      "A role is required");
+      "Specify a role to activate");
     Preconditions.checkArgument(
       request.peers != null && request.peers.size() >= minReviewers,
-      "At least " + minReviewers + " reviewers are required");
+      String.format("You must select at least %d reviewers", minReviewers));
     Preconditions.checkArgument(
       request.peers.size() <= maxReviewers,
-      "The number of reviewers must not exceed " + maxReviewers);
+      String.format("The number of reviewers exceeds the allowed maximum of %d", maxReviewers));
     Preconditions.checkArgument(
-      request.justification != null && request.justification.length() > 0 && request.justification.length() < 100,
-      "A justification must be provided");
+      request.justification != null && request.justification.trim().length() > 0,
+      "Provide a justification");
+    Preconditions.checkArgument(
+      request.justification != null && request.justification.length() < 100,
+      "The justification is too long");
 
     Preconditions.checkState(
       this.notificationService.canSendNotifications() || this.runtimeEnvironment.isDebugModeEnabled(),
@@ -488,8 +498,6 @@ public class ApiResource {
       .set("description", String.format("Requesting approval, justification: %s", request.justification))
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
-
-      var jwt = "jwt";
 
       var payload = new Binding().set("user", iapPrincipal.getId().toString())
               .set("conditions", conditions)
@@ -645,8 +653,6 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, e))
         .write();
 
-      // TODO : add activation request failed pubsub message
-
       throw new AccessDeniedException("Accessing the activation request failed");
     }
 
@@ -695,7 +701,6 @@ public class ApiResource {
         iapPrincipal.getId(),
         createActivationRequestUrl(uriInfo, activationToken)));
 
-
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
@@ -735,7 +740,6 @@ public class ApiResource {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
-        // TODO : add activation request failed pubsub message
         throw new AccessDeniedException("Approving the activation request failed", e);
       }
     }
@@ -836,12 +840,12 @@ public class ApiResource {
   }
 
   public static class ProjectRolesResponse {
-    public final List<String> warnings;
+    public final Set<String> warnings;
     public final List<ProjectRole> roles;
 
     private ProjectRolesResponse(
       List<ProjectRole> roleBindings,
-      List<String> warnings
+      Set<String> warnings
     ) {
       Preconditions.checkNotNull(roleBindings, "roleBindings");
 
@@ -1031,6 +1035,24 @@ public class ApiResource {
     @Override
     public String getTemplateId() {
       return "ActivationApproved";
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Options.
+  // -------------------------------------------------------------------------
+
+  public static class Options {
+    public final int maxNumberOfJitRolesPerSelfApproval;
+
+    public Options(
+      int maxNumberOfJitRolesPerSelfApproval
+    ) {
+      Preconditions.checkArgument(
+        maxNumberOfJitRolesPerSelfApproval > 0,
+        "The maximum number of JIT roles per self-approval must exceed 1");
+
+      this.maxNumberOfJitRolesPerSelfApproval = maxNumberOfJitRolesPerSelfApproval;
     }
   }
 }

@@ -95,7 +95,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             "roles/compute.viewer"), // Different role
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -175,7 +175,7 @@ public class TestRoleActivationService {
             SAMPLE_PROJECT_RESOURCE_1,
             SAMPLE_ROLE),
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -286,7 +286,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)),
-        List.of()));
+        Set.of()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -327,7 +327,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -368,11 +368,11 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
+        Set.of()));
     when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID), any()))
       .thenReturn(new Result<ProjectRole>(
         List.of(),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -419,7 +419,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
+        Set.of()));
     when(discoveryService.listEligibleProjectRoles(
         eq(peer),
         eq(SAMPLE_PROJECT_ID),
@@ -430,7 +430,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -490,13 +490,13 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
+        Set.of()));
     when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID), any()))
       .thenReturn(new Result<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)), // Pretend someone else approved already
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -664,7 +664,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -699,7 +699,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
@@ -734,7 +734,7 @@ public class TestRoleActivationService {
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
-        List.of()));
+        Set.of()));
 
     var service = new RoleActivationService(
       discoveryService,
