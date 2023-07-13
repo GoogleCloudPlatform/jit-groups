@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "maven"
+    directory: "/sources"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "docker"
+    directory: "/sources"
+    schedule:
+      interval: "daily"
