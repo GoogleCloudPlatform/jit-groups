@@ -18,6 +18,8 @@ runs:
         
     - name: Set version
       run: mvn versions:set -DnewVersion=${{ inputs.version }}.$GITHUB_RUN_NUMBER --file ${{ inputs.source-dir }}/pom.xml
+      shell: bash
       
     - name: Build
       run: mvn -P release -B package -Dmaven.test.skip=true --file ${{ inputs.source-dir }}/pom.xml
+      shell: bash
