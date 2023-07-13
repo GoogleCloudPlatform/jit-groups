@@ -17,7 +17,7 @@ runs:
         cache: 'maven'
         
     - name: Set version
-      run: mvn versions:set -DnewVersion=${{ inputs.version }}.$GITHUB_RUN_NUMBER --file ${{ inputs.source-dir }}/pom.xml
+      run: mvn versions:set -DnewVersion=${{ inputs.version }}.${{ github.run_number }} --file ${{ inputs.source-dir }}/pom.xml
       shell: bash
       
     - name: Build
