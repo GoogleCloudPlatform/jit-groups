@@ -91,9 +91,11 @@ public class RoleDiscoveryService {
           .map(res -> new RoleBinding(
             res.getFullResourceName(),
             result.getIamBinding().getRole(),
+            result.getIamBinding().getCondition() != null ?
             JitConstraints.getAdditionalConditions(result.getIamBinding()
                                                          .getCondition()
-                                                         .getExpression())))))
+                                                         .getExpression())
+            : null))))
       .collect(Collectors.toList());
   }
 
