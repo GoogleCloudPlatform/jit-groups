@@ -12,6 +12,7 @@ on:
 jobs:
   analyze:
     name: Analyze
+    if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 360
     permissions:
