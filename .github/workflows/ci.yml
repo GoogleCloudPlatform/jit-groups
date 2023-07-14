@@ -51,7 +51,7 @@ jobs:
       run: mvn -P release -B package -Dmaven.test.skip=true --file $SOURCE_DIR/pom.xml
 
     - name: 'Upload artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: jit-access.jar
         path: sources/target/*.jar
