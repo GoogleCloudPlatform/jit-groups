@@ -496,6 +496,7 @@ public class ApiResource {
       .set("activationExpiry", activationToken.expiryTime.toString())
       .set("activationUrl", activationRequestUrl.toString())
       .set("description", String.format("Requesting approval, justification: %s", request.justification))
+      .set("title", String.format("JIT approval request"))
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
@@ -506,7 +507,6 @@ public class ApiResource {
 
       var messageProperty = new MessageProperty(
               payload,
-      //        jwt,
               MessageProperty.MessageOrigin.APPROVAL
       );
 
@@ -683,11 +683,8 @@ public class ApiResource {
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
 
-      //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
       var messageProperty = new MessageProperty(
               payload,
-            //  jwt.token,
               MessageProperty.MessageOrigin.BINDING
       );
 
