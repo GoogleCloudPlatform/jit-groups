@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
@@ -170,7 +171,7 @@ public class RoleActivationService {
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var activationTime = Instant.now();
+    var activationTime = Instant.now().truncatedTo(ChronoUnit.SECONDS);;
     var expiryTime = activationTime.plus(activationTimeout);
     var bindingDescription = String.format(
       "Self-approved, justification: %s",
@@ -318,7 +319,7 @@ public class RoleActivationService {
     //
     // Issue an activation request.
     //
-    var startTime = Instant.now();
+    var startTime = Instant.now().truncatedTo(ChronoUnit.SECONDS);
     var endTime = startTime.plus(activationTimeout);
 
     return new ActivationRequest(

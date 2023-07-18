@@ -81,6 +81,25 @@ public class TestResourceManagerAdapter {
   }
 
   @Test
+  public void whenRoleNotGrantableOnProject_ThenAddProjectIamBindingThrowsException() {
+    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+
+    String condition =
+      IamTemporaryAccessConditions.createExpression(Instant.now(), Duration.ofMinutes(5));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () ->
+        adapter.addProjectIamBinding(
+          IntegrationTestEnvironment.PROJECT_ID,
+          new Binding()
+            .setMembers(List.of("user:bob@example.com"))
+            .setRole("roles/billing.viewer"),
+          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          REQUEST_REASON));
+  }
+
+  @Test
   public void whenResourceIsProject_ThenAddIamProjectBindingSucceeds() throws Exception {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
