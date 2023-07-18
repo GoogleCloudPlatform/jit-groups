@@ -27,8 +27,18 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.*;
-import com.google.solutions.jitaccess.core.services.*;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.PubSubService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.JitConstraints;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -43,9 +53,12 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -338,13 +351,8 @@ public class ApiResource {
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
 
-        //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
-
-
         var messageProperty = new MessageProperty(
                 payload,
-        //        jwt.token,
                 MessageProperty.MessageOrigin.BINDING
         );
 
@@ -373,11 +381,9 @@ public class ApiResource {
 
         var messageProperty = new MessageProperty(
                 payload,
-          //      null,
                 MessageProperty.MessageOrigin.ERROR);
 
         this.pubSubService.publishMessage(messageProperty);
-
 
         this.logAdapter
           .newErrorEntry(
@@ -540,7 +546,6 @@ public class ApiResource {
 
       var messageProperty = new MessageProperty(
               payload,
-        //      null,
               MessageProperty.MessageOrigin.ERROR);
 
       this.pubSubService.publishMessage(messageProperty);
