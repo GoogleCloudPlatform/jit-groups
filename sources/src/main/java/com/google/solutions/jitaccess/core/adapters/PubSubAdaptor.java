@@ -37,7 +37,7 @@ public class PubSubAdaptor {
 
     private Publisher createClient(TopicName topicName) throws IOException {
         try {
-            if(this.credentials != null) {
+            if (this.credentials != null) {
                 return Publisher.newBuilder(topicName).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
             }
             return Publisher.newBuilder(topicName).build();
@@ -53,9 +53,9 @@ public class PubSubAdaptor {
         var publisher = createClient(topicName);
 
         try {
-            Map<String, String> messageAttribute = new HashMap<>() {{
-                put("origin", messageProperty.origin.toString());
-            }};
+            Map<String, String> messageAttribute = new HashMap<>();
+            messageAttribute.put("origin", messageProperty.origin.toString());
+
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
                     .putAllAttributes(messageAttribute).build();
@@ -69,8 +69,7 @@ public class PubSubAdaptor {
                     "Publish Message to Topic %s failed: %s", topicName,
                     Exceptions.getFullMessage(e))).write();
             throw new ExecutionException("Failed to publish message", e);
-        }
-        finally {
+        } finally {
             publisher.shutdown();
             publisher.awaitTermination(1, TimeUnit.MINUTES);
         }
