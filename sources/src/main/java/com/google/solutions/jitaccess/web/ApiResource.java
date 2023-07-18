@@ -506,7 +506,6 @@ public class ApiResource {
 
       var messageProperty = new MessageProperty(
               payload,
-      //        jwt,
               MessageProperty.MessageOrigin.APPROVAL
       );
 
@@ -683,11 +682,8 @@ public class ApiResource {
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
 
-      //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
       var messageProperty = new MessageProperty(
               payload,
-            //  jwt.token,
               MessageProperty.MessageOrigin.BINDING
       );
 
