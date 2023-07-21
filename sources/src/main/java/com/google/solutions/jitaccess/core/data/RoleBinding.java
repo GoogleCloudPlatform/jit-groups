@@ -25,6 +25,9 @@ import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
+import com.google.solutions.jitaccess.core.adapters.LogAdapter;
+
+
 /**
  * Represents a role that has been granted on a resource.
  */
@@ -34,6 +37,7 @@ public class RoleBinding {
   public final String additionalConditions;
   public final boolean isConditional;
 
+  LogAdapter logAdapter = new LogAdapter();
 
   public RoleBinding(String fullResourceName, String role, String additionalConditions) {
     Preconditions.checkNotNull(fullResourceName);
@@ -43,6 +47,16 @@ public class RoleBinding {
     this.role = role;
     this.additionalConditions = additionalConditions != null? additionalConditions : "";
     this.isConditional = !this.additionalConditions.isEmpty();
+
+    this.logAdapter
+      .newInfoEntry(
+        "test_expression",
+        String.format(
+          "resource: %s\n role: %s \n additionalCondtions: %s",
+          this.fullResourceName,
+          this.role,
+          this.additionalConditions))
+      .write();
 
   }
 
@@ -67,7 +81,7 @@ public class RoleBinding {
 
   @Override
   public String toString() {
-    return String.format("%s:%s", this.fullResourceName, this.role, this.isConditional? "-conditional": "");
+    return String.format("%s:%s%s", this.fullResourceName, this.role, this.isConditional? "-conditional": "");
   }
 
   // -------------------------------------------------------------------------

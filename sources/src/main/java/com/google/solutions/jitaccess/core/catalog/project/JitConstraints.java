@@ -52,6 +52,12 @@ class JitConstraints {
   private static final Pattern ADDITIONAL_CONDITIONS_PATTERN = Pattern
     .compile("\\s*&&[^&]*$");
 
+  /** Temporary condition added after activation */
+  private static final String TEMPORARY_CONDITION_PATTERN = 
+    "^(\\s*\\(request.time >= timestamp\\(.*\\) && request.time < timestamp\\(.*\\)\\){0,1}\\s*)(.*)$";
+
+  private static final Pattern TEMPORARY_CONDITION = Pattern.compile(TEMPORARY_CONDITION_PATTERN);
+
   private JitConstraints() {
   }
 
@@ -107,15 +113,19 @@ class JitConstraints {
   // Get the extra conditions that should be added in the final
   // constraints (when the role is activated using JIT)
   public static String getAdditionalConditions(
-    String conditionExpression
+    String conditionalExpression
   ) {
 
-    Matcher matcher = ADDITIONAL_CONDITIONS_PATTERN.matcher(conditionExpression);
-
-    if (matcher.find()) {
-      return matcher.group();
-    } else {
+    if (conditionalExpression == null)
       return "";
+
+    Matcher additionalConditionsMatcher = TEMPORARY_CONDITION.matcher(conditionalExpression);
+
+    if(additionalConditionsMatcher.find()) {
+      return additionalConditionsMatcher.group(2);
+    } else {
+      additionalConditionsMatcher = ADDITIONAL_CONDITIONS_PATTERN.matcher(conditionalExpression);
+      return additionalConditionsMatcher.find()? additionalConditionsMatcher.group() : "";
     }
   }
 
