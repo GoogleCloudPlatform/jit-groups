@@ -68,6 +68,12 @@ public class ResourceManagerAdapter {
     }
   }
 
+  private static boolean isRoleNotGrantableErrorMessage(String message)
+  {
+    return message != null &&
+      (message.contains("not supported") || message.contains("does not exist"));
+  }
+
   public ResourceManagerAdapter(GoogleCredentials credentials) {
     Preconditions.checkNotNull(credentials, "credentials");
 
@@ -199,8 +205,7 @@ public class ResourceManagerAdapter {
           if (e.getDetails() != null &&
               e.getDetails().getErrors() != null &&
               e.getDetails().getErrors().size() > 0 &&
-              e.getDetails().getErrors().get(0).getMessage() != null &&
-              e.getDetails().getErrors().get(0).getMessage().contains("does not exist in the resource's hierarchy")) {
+              isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
             throw new AccessDeniedException(
               String.format("The role %s cannot be granted on a project", binding.getRole()),
               e);
