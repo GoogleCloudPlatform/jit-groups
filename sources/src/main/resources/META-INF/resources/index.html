@@ -748,7 +748,8 @@
                 // Step: Select project.
                 //
                 const requestPane = gui.requestPane;
-                requestPane.selectedProjectId = localSettings.lastProjectId;
+                requestPane.selectedProjectId = queryParameters.get("projectId") ?? localSettings.lastProjectId;
+
                 requestPane.requestStep.addHandler(async () => {
                     if (!(requestPane.selectedProjectId)) {
                         throw "Select a project";
