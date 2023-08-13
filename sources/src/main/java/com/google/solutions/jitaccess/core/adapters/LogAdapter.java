@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserPrincipal;
 
-import javax.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.RequestScoped;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
