@@ -337,7 +337,8 @@ class DebugModel extends Model {
                 email: "user@example.com"
             },
             defaultActivationTimeout: 60,
-            maxActivationTimeout: 120
+            maxActivationTimeout: 120,
+            applicationVersion: 'debug'
         };
     }
 
