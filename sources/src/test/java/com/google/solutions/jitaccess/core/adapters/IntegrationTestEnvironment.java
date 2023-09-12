@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
+import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.UserId;
 
@@ -54,6 +55,8 @@ public class IntegrationTestEnvironment {
 
   public static final UserId TEMPORARY_ACCESS_USER;
   public static final UserId NO_ACCESS_USER;
+
+  public static final TopicName TOPIC_NAME;
 
   static {
     //
@@ -88,6 +91,8 @@ public class IntegrationTestEnvironment {
       APPLICATION_CREDENTIALS = GoogleCredentials.getApplicationDefault();
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
+
+      TOPIC_NAME = TopicName.parse(getOptional(settings, "test.topic", ""));
     }
     catch (IOException e) {
       throw new RuntimeException("Failed to load test settings", e);
@@ -99,6 +104,14 @@ public class IntegrationTestEnvironment {
     if (value == null || value.isEmpty()) {
       throw new RuntimeException(
         String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
+    }
+
+    return value;
+  }
+  private static String getOptional(Properties properties, String property, String defaultVal) {
+    String value = properties.getProperty(property);
+    if (value == null || value.isEmpty()) {
+      return defaultVal;
     }
 
     return value;

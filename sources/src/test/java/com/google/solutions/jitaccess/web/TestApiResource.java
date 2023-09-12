@@ -24,10 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.*;
 import com.google.solutions.jitaccess.core.services.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,6 +71,7 @@ public class TestApiResource {
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.notificationService = Mockito.mock(NotificationService.class);
+    this.resource.pubSubService = Mockito.mock(PubSubService.class);
 
     when(this.resource.notificationService.canSendNotifications()).thenReturn(true);
     when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
@@ -1076,6 +1074,7 @@ public class TestApiResource {
         new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
         request.startTime,
         request.endTime));
+    doNothing().when(this.resource.pubSubService).publishMessage(any(MessageProperty.class));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post(
