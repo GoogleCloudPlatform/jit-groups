@@ -75,6 +75,8 @@ public class PubSubAdaptor {
         var publisher = createClient(topicName);
 
         try {
+            // TODO: add message signature as attribute of message to verify authenticity
+
             // Create a Pub/Sub message.
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
@@ -99,6 +101,4 @@ public class PubSubAdaptor {
             publisher.awaitTermination(1, TimeUnit.MINUTES);
         }
     }
-
-
 }
