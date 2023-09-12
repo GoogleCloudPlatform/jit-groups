@@ -28,8 +28,18 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.*;
-import com.google.solutions.jitaccess.core.services.*;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.PubSubService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.JitConstraints;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -49,7 +59,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+
 import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
 
 /**
  * REST API controller.
@@ -341,13 +353,8 @@ public class ApiResource {
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
 
-        //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
-
-
         var messageProperty = new MessageProperty(
                 payload,
-        //        jwt.token,
                 MessageProperty.MessageOrigin.BINDING
         );
 
@@ -376,11 +383,9 @@ public class ApiResource {
 
         var messageProperty = new MessageProperty(
                 payload,
-          //      null,
                 MessageProperty.MessageOrigin.ERROR);
 
         this.pubSubService.publishMessage(messageProperty);
-
 
         this.logAdapter
           .newErrorEntry(
@@ -499,6 +504,7 @@ public class ApiResource {
       .set("activationExpiry", activationToken.expiryTime.toString())
       .set("activationUrl", activationRequestUrl.toString())
       .set("description", String.format("Requesting approval, justification: %s", request.justification))
+      .set("title", String.format("JIT approval request"))
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
@@ -509,7 +515,6 @@ public class ApiResource {
 
       var messageProperty = new MessageProperty(
               payload,
-      //        jwt,
               MessageProperty.MessageOrigin.APPROVAL
       );
 
@@ -543,7 +548,6 @@ public class ApiResource {
 
       var messageProperty = new MessageProperty(
               payload,
-        //      null,
               MessageProperty.MessageOrigin.ERROR);
 
       this.pubSubService.publishMessage(messageProperty);
@@ -686,11 +690,8 @@ public class ApiResource {
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
 
-      //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
       var messageProperty = new MessageProperty(
               payload,
-            //  jwt.token,
               MessageProperty.MessageOrigin.BINDING
       );
 

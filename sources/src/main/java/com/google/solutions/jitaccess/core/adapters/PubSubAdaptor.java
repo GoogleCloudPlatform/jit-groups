@@ -79,6 +79,7 @@ public class PubSubAdaptor {
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
             }};
+
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
                     .putAllAttributes(messageAttribute).build();
