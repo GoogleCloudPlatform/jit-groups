@@ -71,16 +71,19 @@ public class PubSubAdaptor {
     @Produces(MediaType.TEXT_PLAIN)
     public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
+        // Create a Pub/Sub publisher client.
         var publisher = createClient(topicName);
 
         try {
+            // Create a Pub/Sub message.
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
             }};
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
                     .putAllAttributes(messageAttribute).build();
-            ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);// Publish the message
+            // Publish the message
+            ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
             String messageId = messageIdFuture.get();
 
             return messageId;
