@@ -21,18 +21,25 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.*;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.PubSubService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.JitConstraints;
+import com.google.api.client.json.GenericJson;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -41,7 +48,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,6 +59,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+
 import java.util.stream.Collectors;
 
 /**
@@ -330,29 +337,24 @@ public class ApiResource {
         //
         // Create and send a PubSub message to confirm binding of a self-approved request
         //
-        var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+        var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
                 .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
         var bindingDescription = String.format(
                 "Self-approved, justification: %s",
                 request.justification);
 
-        var conditions = new Binding().set("expression", expression)
+        var conditions = new GenericJson().set("expression", expression)
                 .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
                 .set("description", bindingDescription);
 
-        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+        var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
                 .set("conditions", conditions)
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
 
-        //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
-
-
         var messageProperty = new MessageProperty(
                 payload,
-        //        jwt.token,
                 MessageProperty.MessageOrigin.BINDING
         );
 
@@ -375,17 +377,15 @@ public class ApiResource {
           .write();
       }
       catch (Exception e) {
-        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+        var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
 
         var messageProperty = new MessageProperty(
                 payload,
-          //      null,
                 MessageProperty.MessageOrigin.ERROR);
 
         this.pubSubService.publishMessage(messageProperty);
-
 
         this.logAdapter
           .newErrorEntry(
@@ -500,21 +500,21 @@ public class ApiResource {
       // Create and send PubSub message to inform that there is a new MPA approval request
       // This includes both the details for loging as well as activation URL for the approvers
       //
-      var conditions = new Binding()
+      var conditions = new GenericJson()
       .set("activationExpiry", activationToken.expiryTime.toString())
       .set("activationUrl", activationRequestUrl.toString())
       .set("description", String.format("Requesting approval, justification: %s", request.justification))
+      .set("title", String.format("JIT approval request"))
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
-      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+      var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
               .set("conditions", conditions)
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
 
       var messageProperty = new MessageProperty(
               payload,
-      //        jwt,
               MessageProperty.MessageOrigin.APPROVAL
       );
 
@@ -542,13 +542,12 @@ public class ApiResource {
     }
     catch (Exception e) {
 
-      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+      var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
               .set("role", roleBinding.role)
               .set("project_id", projectId.id);
 
       var messageProperty = new MessageProperty(
               payload,
-        //      null,
               MessageProperty.MessageOrigin.ERROR);
 
       this.pubSubService.publishMessage(messageProperty);
@@ -648,7 +647,6 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
@@ -674,7 +672,7 @@ public class ApiResource {
       //
       // Create and send pubsub message to confirm creation of a peer approved binding
       //
-      var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+      var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
               .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
       var bindingDescription = String.format(
@@ -682,20 +680,17 @@ public class ApiResource {
               iapPrincipal.getId().toString(),
               activationRequest.justification);
 
-      var conditions = new Binding().set("expression", expression)
+      var conditions = new GenericJson().set("expression", expression)
               .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
               .set("description", bindingDescription);
 
-      var payload = new Binding().set("user", activationRequest.beneficiary.toString())
+      var payload = new GenericJson().set("user", activationRequest.beneficiary.toString())
               .set("conditions", conditions)
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
 
-      //var jwt = activationTokenService.createToken(payload, activation.endTime.atOffset(ZoneOffset.UTC).toInstant());
-
       var messageProperty = new MessageProperty(
               payload,
-            //  jwt.token,
               MessageProperty.MessageOrigin.BINDING
       );
 
