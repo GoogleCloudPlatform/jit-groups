@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
+import com.google.api.client.json.GenericJson;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import org.junit.jupiter.api.Test;
 
@@ -39,12 +40,12 @@ class TestPubSubAdaptor {
     @Test
     public void whenUnauthenticated_ThenThrowsAccessDeniedException() {
 
-        var expression = new Binding().set("start", "11am")
+        var expression = new GenericJson().set("start", "11am")
                 .set("end", "12pm");
         var bindingDescription = String.format(
                 "Self-approved, justification: %s",
                 "test justification");
-        var condition = new Binding().set("expression", expression)
+        var condition = new GenericJson().set("expression", expression)
                 .set("title", "Activated").set("description", bindingDescription);
 
 
@@ -72,12 +73,12 @@ class TestPubSubAdaptor {
             return;
         }
 
-        var expression = new Binding().set("start", "11am")
+        var expression = new GenericJson().set("start", "11am")
                 .set("end", "12pm");
         var bindingDescription = String.format(
                 "Self-approved, justification: %s",
                 "test justification");
-        var condition = new Binding().set("expression", expression)
+        var condition = new GenericJson().set("expression", expression)
                 .set("title", "Activated").set("description", bindingDescription);
 
 
