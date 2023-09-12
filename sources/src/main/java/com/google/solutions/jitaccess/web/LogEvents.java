@@ -28,7 +28,6 @@ public class LogEvents {
   public static final String API_REQUEST_ROLE = "api.requestRole";
   public static final String API_GET_REQUEST = "api.getActivationRequest";
   public static final String RUNTIME_STARTUP = "runtime.startup";
-
   public static final String PUBLISH_MESSAGE = "pubsub.publish";
 
   private LogEvents() {

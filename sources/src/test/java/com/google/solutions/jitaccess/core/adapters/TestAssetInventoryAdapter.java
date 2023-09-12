@@ -41,13 +41,13 @@ public class TestAssetInventoryAdapter {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
-            NotAuthenticatedException.class,
-            () -> adapter.findAccessibleResourcesByUser(
-                    "projects/0",
-                    new UserId("", "bob@example.com"),
-                    Optional.empty(),
-                    Optional.empty(),
-                    true));
+      NotAuthenticatedException.class,
+      () -> adapter.findAccessibleResourcesByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        Optional.empty(),
+        Optional.empty(),
+        true));
   }
 
   @Test
@@ -55,13 +55,13 @@ public class TestAssetInventoryAdapter {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
-            AccessDeniedException.class,
-            () -> adapter.findAccessibleResourcesByUser(
-                    "projects/0",
-                    new UserId("", "bob@example.com"),
-                    Optional.empty(),
-                    Optional.empty(),
-                    true));
+      AccessDeniedException.class,
+      () -> adapter.findAccessibleResourcesByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        Optional.empty(),
+        Optional.empty(),
+        true));
   }
 
   @Test
@@ -69,11 +69,11 @@ public class TestAssetInventoryAdapter {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     var result = adapter.findAccessibleResourcesByUser(
-            "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-            new UserId("", "bob@example.com"),
-            Optional.of("invalid.invalid.invalid"),
-            Optional.empty(),
-            true);
+      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+      new UserId("", "bob@example.com"),
+      Optional.of("invalid.invalid.invalid"),
+      Optional.empty(),
+      true);
 
     assertNotNull(result);
     assertNull(result.getAnalysisResults());
@@ -84,11 +84,11 @@ public class TestAssetInventoryAdapter {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
     var result = adapter.findAccessibleResourcesByUser(
-            "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-            new UserId("", "bob@example.com"),
-            Optional.empty(),
-            Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
-            true);
+      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+      new UserId("", "bob@example.com"),
+      Optional.empty(),
+      Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
+      true);
 
     assertNotNull(result);
     assertNull(result.getAnalysisResults());
@@ -98,17 +98,16 @@ public class TestAssetInventoryAdapter {
   // findPermissionedPrincipalsByResource.
   // -------------------------------------------------------------------------
 
-
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
     assertThrows(
-            NotAuthenticatedException.class,
-            () -> adapter.findPermissionedPrincipalsByResource(
-                    "projects/0",
-                    "//cloudresourcemanager.googleapis.com/projects/132",
-                    "roles/browser"));
+      NotAuthenticatedException.class,
+      () -> adapter.findPermissionedPrincipalsByResource(
+        "projects/0",
+        "//cloudresourcemanager.googleapis.com/projects/132",
+        "roles/browser"));
   }
 
   @Test
@@ -116,10 +115,10 @@ public class TestAssetInventoryAdapter {
     var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
 
     assertThrows(
-            AccessDeniedException.class,
-            () -> adapter.findPermissionedPrincipalsByResource(
-                    "projects/0",
-                    "//cloudresourcemanager.googleapis.com/projects/132",
-                    "roles/browser"));
+      AccessDeniedException.class,
+      () -> adapter.findPermissionedPrincipalsByResource(
+        "projects/0",
+        "//cloudresourcemanager.googleapis.com/projects/132",
+        "roles/browser"));
   }
 }
