@@ -29,7 +29,10 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
 import com.google.solutions.jitaccess.core.data.*;
-import com.google.solutions.jitaccess.core.services.*;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -38,6 +41,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -144,6 +148,7 @@ public class ApiResource {
     return new PolicyResponse(
       options.justificationHint,
       iapPrincipal.getId(),
+      ApplicationVersion.VERSION_STRING,
       (int)options.maxActivationTimeout.toMinutes(),
       Math.min(60, (int)options.maxActivationTimeout.toMinutes()));
   }
@@ -811,12 +816,14 @@ public class ApiResource {
   public static class PolicyResponse {
     public final String justificationHint;
     public final UserId signedInUser;
+    public String applicationVersion;
     public final int defaultActivationTimeout; // in minutes.
     public final int maxActivationTimeout;     // in minutes.
 
     private PolicyResponse(
       String justificationHint,
       UserId signedInUser,
+      String applicationVersion,
       int maxActivationTimeoutInMinutes,
       int defaultActivationTimeoutInMinutes
     ) {
@@ -828,6 +835,7 @@ public class ApiResource {
 
       this.justificationHint = justificationHint;
       this.signedInUser = signedInUser;
+      this.applicationVersion = applicationVersion;
       this.defaultActivationTimeout = defaultActivationTimeoutInMinutes;
       this.maxActivationTimeout = maxActivationTimeoutInMinutes;
     }
