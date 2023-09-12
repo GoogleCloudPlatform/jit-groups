@@ -647,7 +647,6 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-
     RoleActivationService.ActivationRequest activationRequest;
     try {
       activationRequest = this.activationTokenService.verifyToken(activationToken);
