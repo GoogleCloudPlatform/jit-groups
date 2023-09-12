@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
@@ -32,7 +32,7 @@ public class PubSubService {
 
     @Produces(MediaType.TEXT_PLAIN)
     public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
-        if(this.getOptions().topicName != null) {
+        if (this.getOptions().topicName != null) {
             this.pubSubAdaptor.publish(options.topicName, messageProperty);
             // add log not send and sent
         }

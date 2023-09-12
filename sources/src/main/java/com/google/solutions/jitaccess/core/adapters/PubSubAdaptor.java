@@ -11,11 +11,11 @@ import com.google.pubsub.v1.TopicName;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import com.google.solutions.jitaccess.web.LogEvents;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class PubSubAdaptor {
 
     private Publisher createClient(TopicName topicName) throws IOException {
         try {
-            if(this.credentials != null) {
+            if (this.credentials != null) {
                 return Publisher.newBuilder(topicName).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
             }
             return Publisher.newBuilder(topicName).build();
@@ -69,8 +69,7 @@ public class PubSubAdaptor {
                     "Publish Message to Topic %s failed: %s", topicName,
                     Exceptions.getFullMessage(e))).write();
             throw new ExecutionException("Failed to publish message", e);
-        }
-        finally {
+        } finally {
             publisher.shutdown();
             publisher.awaitTermination(1, TimeUnit.MINUTES);
         }
