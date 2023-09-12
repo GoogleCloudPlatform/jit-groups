@@ -25,11 +25,11 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.data.UserId;
 
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import jakarta.mail.*;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
@@ -110,7 +110,7 @@ public class SmtpAdapter {
       message.addHeader("Precedence", "bulk");
 
       if (flags.contains(Flags.REPLY)) {
-        message.setFlag(javax.mail.Flags.Flag.ANSWERED, true);
+        message.setFlag(jakarta.mail.Flags.Flag.ANSWERED, true);
         message.setSubject("Re: " + subject);
       }
       else {

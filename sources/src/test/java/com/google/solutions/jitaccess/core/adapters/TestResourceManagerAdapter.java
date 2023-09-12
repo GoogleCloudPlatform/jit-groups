@@ -84,9 +84,6 @@ public class TestResourceManagerAdapter {
   public void whenRoleNotGrantableOnProject_ThenAddProjectIamBindingThrowsException() {
     var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
-    String condition =
-      IamTemporaryAccessConditions.createExpression(Instant.now(), Duration.ofMinutes(5));
-
     assertThrows(
       AccessDeniedException.class,
       () ->

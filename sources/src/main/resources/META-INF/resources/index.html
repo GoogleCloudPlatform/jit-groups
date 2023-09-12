@@ -371,7 +371,7 @@
         <footer class="mdl-mini-footer">
             <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
             &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access</a></div>
+            <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access <span id="application-version"></span></a></div>
         </footer>
         <div id="toast" class="mdl-snackbar mdl-js-snackbar">
             <div class="mdl-snackbar__text">Toast!</div>
@@ -748,7 +748,8 @@
                 // Step: Select project.
                 //
                 const requestPane = gui.requestPane;
-                requestPane.selectedProjectId = localSettings.lastProjectId;
+                requestPane.selectedProjectId = queryParameters.get("projectId") ?? localSettings.lastProjectId;
+
                 requestPane.requestStep.addHandler(async () => {
                     if (!(requestPane.selectedProjectId)) {
                         throw "Select a project";
@@ -934,6 +935,7 @@
                 }
 
                 $("#signed-in-user").text(backend.policy.signedInUser.email)
+                $("#application-version").text(backend.policy.applicationVersion)
             }
             catch (error) {
                 gui.showToast(error, true);
