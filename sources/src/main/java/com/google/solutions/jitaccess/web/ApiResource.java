@@ -21,11 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
@@ -41,6 +39,7 @@ import com.google.solutions.jitaccess.core.services.PubSubService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.services.JitConstraints;
+import com.google.api.client.json.GenericJson;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -62,7 +61,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import java.util.stream.Collectors;
-import java.util.concurrent.ExecutionException;
 
 /**
  * REST API controller.
@@ -339,18 +337,18 @@ public class ApiResource {
         //
         // Create and send a PubSub message to confirm binding of a self-approved request
         //
-        var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+        var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
                 .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
         var bindingDescription = String.format(
                 "Self-approved, justification: %s",
                 request.justification);
 
-        var conditions = new Binding().set("expression", expression)
+        var conditions = new GenericJson().set("expression", expression)
                 .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
                 .set("description", bindingDescription);
 
-        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+        var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
                 .set("conditions", conditions)
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
@@ -379,7 +377,7 @@ public class ApiResource {
           .write();
       }
       catch (Exception e) {
-        var payload = new Binding().set("user", iapPrincipal.getId().toString())
+        var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
                 .set("role", roleBinding.role)
                 .set("project_id", projectId.id);
 
@@ -502,7 +500,7 @@ public class ApiResource {
       // Create and send PubSub message to inform that there is a new MPA approval request
       // This includes both the details for loging as well as activation URL for the approvers
       //
-      var conditions = new Binding()
+      var conditions = new GenericJson()
       .set("activationExpiry", activationToken.expiryTime.toString())
       .set("activationUrl", activationRequestUrl.toString())
       .set("description", String.format("Requesting approval, justification: %s", request.justification))
@@ -510,7 +508,7 @@ public class ApiResource {
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
-      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+      var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
               .set("conditions", conditions)
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
@@ -544,7 +542,7 @@ public class ApiResource {
     }
     catch (Exception e) {
 
-      var payload = new Binding().set("user", iapPrincipal.getId().toString())
+      var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
               .set("role", roleBinding.role)
               .set("project_id", projectId.id);
 
@@ -675,7 +673,7 @@ public class ApiResource {
       //
       // Create and send pubsub message to confirm creation of a peer approved binding
       //
-      var expression = new Binding().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+      var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
               .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
 
       var bindingDescription = String.format(
@@ -683,11 +681,11 @@ public class ApiResource {
               iapPrincipal.getId().toString(),
               activationRequest.justification);
 
-      var conditions = new Binding().set("expression", expression)
+      var conditions = new GenericJson().set("expression", expression)
               .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
               .set("description", bindingDescription);
 
-      var payload = new Binding().set("user", activationRequest.beneficiary.toString())
+      var payload = new GenericJson().set("user", activationRequest.beneficiary.toString())
               .set("conditions", conditions)
               .set("role", activationRequest.roleBinding.role)
               .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);

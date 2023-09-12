@@ -18,7 +18,6 @@ public class PubSubService {
 
     private final Options options;
 
-    // TODO: where is it set?
     public PubSubService(
             PubSubAdaptor pubSubAdaptor,
             Options options) {
