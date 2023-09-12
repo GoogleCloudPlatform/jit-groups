@@ -1,3 +1,24 @@
+//
+// Copyright 2023 Google LLC
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.core.ApiFuture;
@@ -42,7 +63,7 @@ public class PubSubAdaptor {
             }
             return Publisher.newBuilder(topicName).build();
         } catch (IOException e) {
-            throw new IOException("Creating a CloudAsset client failed", e);
+            throw new IOException("Creating a PubSub Publisher client failed", e);
         }
     }
 
@@ -50,16 +71,22 @@ public class PubSubAdaptor {
     @Produces(MediaType.TEXT_PLAIN)
     public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
+        // Create a Pub/Sub publisher client.
         var publisher = createClient(topicName);
 
         try {
+            // TODO: add message signature as attribute of message to verify authenticity
+
+            // Create a Pub/Sub message.
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
             }};
+
             PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
                     .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
                     .putAllAttributes(messageAttribute).build();
-            ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);// Publish the message
+            // Publish the message
+            ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
             String messageId = messageIdFuture.get();
 
             return messageId;
@@ -74,6 +101,4 @@ public class PubSubAdaptor {
             publisher.awaitTermination(1, TimeUnit.MINUTES);
         }
     }
-
-
 }
