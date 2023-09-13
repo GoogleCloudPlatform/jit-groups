@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.pubsub.v1.TopicName;
-import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
+import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -57,7 +57,7 @@ public class TestPubSubService {
 
 //    @Test
 //    public void whenTopicNameNull_ThenDoNothing() throws Exception{
-//        var pubsubAdapter = Mockito.mock(PubSubAdaptor.class);
+//        var pubsubAdapter = Mockito.mock(PubSubAdapter.class);
 //
 //        // method will not be executed
 //
@@ -73,7 +73,7 @@ public class TestPubSubService {
 //
 //    @Test
 //    public void whenValidTopicName_ThenPublishMessage() throws Exception{
-//        var pubsubAdapter = Mockito.mock(PubSubAdaptor.class);
+//        var pubsubAdapter = Mockito.mock(PubSubAdapter.class);
 //
 //        var service = new PubSubService(
 //                pubsubAdapter,

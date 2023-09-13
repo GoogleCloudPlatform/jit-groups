@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-class TestPubSubAdaptor {
+class TestPubSubAdapter {
 
 
     @Test
@@ -55,7 +55,7 @@ class TestPubSubAdaptor {
                 .set("conditions", condition);
 
 
-        var adapter = new PubSubAdaptor(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+        var adapter = new PubSubAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
         assertThrows(
                 ExecutionException.class,
@@ -87,7 +87,7 @@ class TestPubSubAdaptor {
                 .setMembers(List.of("example@example.com"))
                 .set("conditions", condition);
 
-        var adapter = new PubSubAdaptor(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+        var adapter = new PubSubAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
         assertTrue(
                 adapter.publish(
