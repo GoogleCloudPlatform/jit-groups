@@ -67,8 +67,6 @@ public class PubSubAdapter {
         }
     }
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
     public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
         // Create a Pub/Sub publisher client.
