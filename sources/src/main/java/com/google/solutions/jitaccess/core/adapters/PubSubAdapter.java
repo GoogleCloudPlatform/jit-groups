@@ -96,7 +96,7 @@ public class PubSubAdapter {
             throw new ExecutionException("Failed to publish message", e);
         } finally {
             publisher.shutdown();
-            publisher.awaitTermination(1, TimeUnit.MINUTES);
+            publisher.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 }
