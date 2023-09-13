@@ -337,27 +337,20 @@ public class ApiResource {
         //
         // Create and send a PubSub message to confirm binding of a self-approved request
         //
-        var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
-                .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
-
-        var bindingDescription = String.format(
-                "Self-approved, justification: %s",
-                request.justification);
-
-        var conditions = new GenericJson().set("expression", expression)
-                .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
-                .set("description", bindingDescription);
-
-        var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
-                .set("conditions", conditions)
-                .set("role", roleBinding.role)
-                .set("project_id", projectId.id);
-
-        var messageProperty = new MessageProperty(
-                payload,
-                MessageProperty.MessageOrigin.BINDING
-        );
-
+        var conditions = new GenericJson()
+          .set("expression", new GenericJson()
+            .set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+            .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString()))
+          .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
+          .set("description", String.format("Self-approved, justification: %s", request.justification));
+      
+        var payload = new GenericJson()
+        .set("user", iapPrincipal.getId().toString())
+        .set("role", roleBinding.role)
+        .set("project_id", projectId.id)
+        .set("conditions", conditions);
+    
+        var messageProperty = new MessageProperty(payload, MessageProperty.MessageOrigin.BINDING);
 
         this.pubSubService.publishMessage(messageProperty);
 
@@ -500,23 +493,24 @@ public class ApiResource {
       // Create and send PubSub message to inform that there is a new MPA approval request
       // This includes both the details for loging as well as activation URL for the approvers
       //
-      var conditions = new GenericJson()
+      var approvals = new GenericJson()
       .set("activationExpiry", activationToken.expiryTime.toString())
       .set("activationUrl", activationRequestUrl.toString())
-      .set("description", String.format("Requesting approval, justification: %s", request.justification))
-      .set("title", String.format("JIT approval request"))
       .set("duration", Duration.ofMinutes(request.activationTimeout).toString())
       .set("requestPeers", request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()));
 
-      var payload = new GenericJson().set("user", iapPrincipal.getId().toString())
-              .set("conditions", conditions)
-              .set("role", activationRequest.roleBinding.role)
-              .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
+      var conditions = new GenericJson()
+      .set("description", String.format("Requesting approval, justification: %s", request.justification))
+      .set("title", "JIT approval request");
 
-      var messageProperty = new MessageProperty(
-              payload,
-              MessageProperty.MessageOrigin.APPROVAL
-      );
+      var payload = new GenericJson()
+      .set("user", iapPrincipal.getId().toString())
+      .set("role", activationRequest.roleBinding.role)
+      .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id)
+      .set("conditions", conditions)
+      .set("approvals", approvals);
+
+      var messageProperty = new MessageProperty(payload,MessageProperty.MessageOrigin.APPROVAL);
 
       this.pubSubService.publishMessage(messageProperty);
 
@@ -672,27 +666,20 @@ public class ApiResource {
       //
       // Create and send pubsub message to confirm creation of a peer approved binding
       //
-      var expression = new GenericJson().set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
-              .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString());
+      var conditions = new GenericJson()
+        .set("expression", new GenericJson()
+          .set("start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
+          .set("end", activation.endTime.atOffset(ZoneOffset.UTC).toString()))
+        .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .set("description", String.format("Approved by %s, justification: %s",iapPrincipal.getId().toString(),activationRequest.justification));
+      
+      var payload = new GenericJson()
+      .set("user", activationRequest.beneficiary.toString())
+      .set("role", activationRequest.roleBinding.role)
+      .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id)
+      .set("conditions", conditions);
 
-      var bindingDescription = String.format(
-              "Approved by %s, justification: %s",
-              iapPrincipal.getId().toString(),
-              activationRequest.justification);
-
-      var conditions = new GenericJson().set("expression", expression)
-              .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
-              .set("description", bindingDescription);
-
-      var payload = new GenericJson().set("user", activationRequest.beneficiary.toString())
-              .set("conditions", conditions)
-              .set("role", activationRequest.roleBinding.role)
-              .set("project_id", ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName).id);
-
-      var messageProperty = new MessageProperty(
-              payload,
-              MessageProperty.MessageOrigin.BINDING
-      );
+      var messageProperty = new MessageProperty(payload, MessageProperty.MessageOrigin.BINDING);
 
       this.pubSubService.publishMessage(messageProperty);
 
