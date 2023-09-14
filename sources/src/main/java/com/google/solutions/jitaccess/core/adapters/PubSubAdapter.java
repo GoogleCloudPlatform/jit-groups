@@ -45,12 +45,12 @@ import java.util.concurrent.TimeUnit;
 
 
 @ApplicationScoped
-public class PubSubAdaptor {
+public class PubSubAdapter {
     private final GoogleCredentials credentials;
 
     private LogAdapter logAdapter = new LogAdapter();
 
-    public PubSubAdaptor(GoogleCredentials credentials) {
+    public PubSubAdapter(GoogleCredentials credentials) {
         Preconditions.checkNotNull(credentials, "credentials");
         this.credentials = credentials;
 
@@ -67,8 +67,6 @@ public class PubSubAdaptor {
         }
     }
 
-    @GET
-    @Produces(MediaType.TEXT_PLAIN)
     public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
         // Create a Pub/Sub publisher client.
@@ -98,7 +96,7 @@ public class PubSubAdaptor {
             throw new ExecutionException("Failed to publish message", e);
         } finally {
             publisher.shutdown();
-            publisher.awaitTermination(1, TimeUnit.MINUTES);
+            publisher.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 }

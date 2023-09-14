@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.pubsub.v1.TopicName;
-import com.google.solutions.jitaccess.core.adapters.PubSubAdaptor;
+import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Produces;
@@ -35,28 +35,25 @@ import java.util.concurrent.ExecutionException;
 @ApplicationScoped
 public class PubSubService {
 
-    private final PubSubAdaptor pubSubAdaptor;
+    private final PubSubAdapter pubSubAdapter;
 
     private final Options options;
 
     public PubSubService(
-            PubSubAdaptor pubSubAdaptor,
+            PubSubAdapter pubSubAdapter,
             Options options) {
-        Preconditions.checkNotNull(pubSubAdaptor, "pubSubAdaptor");
+        Preconditions.checkNotNull(pubSubAdapter, "pubSubAdapter");
         Preconditions.checkNotNull(options, "options");
 
-        this.pubSubAdaptor = pubSubAdaptor;
+        this.pubSubAdapter = pubSubAdapter;
         this.options = options;
 
     }
 
-    @Produces(MediaType.TEXT_PLAIN)
     public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
         if (this.getOptions().topicName != null) {
-            this.pubSubAdaptor.publish(options.topicName, messageProperty);
-            // add log not send and sent
+            this.pubSubAdapter.publish(options.topicName, messageProperty);
         }
-
     }
 
     // -------------------------------------------------------------------------
