@@ -25,6 +25,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.adapters.SlackAdapter;
+import com.google.solutions.jitaccess.core.adapters.SlackAdapter.SlackException;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
@@ -88,6 +90,45 @@ public abstract class NotificationService {
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public static class SlackNotificationService extends NotificationService {
+
+    private final SlackAdapter slackAdapter;
+
+    private final Options options;
+
+    public SlackNotificationService(SlackAdapter slackAdapter, Options options) {
+      Preconditions.checkNotNull(slackAdapter);
+      Preconditions.checkNotNull(options);
+      this.slackAdapter = slackAdapter;
+      this.options = options;
+    }
+
+    @Override
+    public void sendNotification(Notification notification) throws NotificationException {
+      try {
+        Preconditions.checkNotNull(notification, "notification");
+        var slackBlocksTemplate = loadResource(
+            String.format("notifications/%s-slack.json", notification.getTemplateId()));
+        if (slackBlocksTemplate == null) {
+          return;
+        }
+        var formattedMessage = new NotificationTemplate(
+            slackBlocksTemplate,
+            this.options.timeZone,
+            HtmlEscapers.htmlEscaper())
+            .format(notification);
+        slackAdapter.sendSlackMessage(notification.toRecipients, formattedMessage);
+      } catch (SlackException e) {
+        throw new NotificationException("The notification could not be sent", e);
+      }
+    }
+
+    @Override
+    public boolean canSendNotifications() {
+      return true;
+    }
+  }
 
   /**
    * Concrete class that delivers notifications over SMTP.

@@ -1,0 +1,17 @@
+[
+    {
+        "type": "header",
+        "text": {
+            "type": "plain_text",
+            "text": "Access granted",
+            "emoji": false
+        }
+    },
+    {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "{{APPROVER}} approved request to access the Google Cloud project {{PROJECT_ID}}.\n\n*Request details*\n- Project:\t\t{{PROJECT_ID}}\n- Role:\t\t     {{ROLE}}\n- Start Time:   {{START_TIME}}\n- End Time:\t {{END_TIME}}\n- Justification {{JUSTIFICATION}}"
+        }
+    }
+]

@@ -34,12 +34,15 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
+import com.google.solutions.jitaccess.core.adapters.SlackAdapter.SlackException;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.NotificationService.Options;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
+import com.slack.api.Slack;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.ws.rs.core.UriBuilder;
@@ -294,6 +297,16 @@ public class RuntimeEnvironment {
   public NotificationService getNotificationService(
     SecretManagerAdapter secretManagerAdapter
   ) {
+    if (this.configuration.isSlackTokenConfigured()) {
+      SlackAdapter.Options slackOptions = new SlackAdapter.Options(this.configuration.slackToken.getValue());
+      NotificationService.Options notificationOptions = new Options(this.configuration.timeZoneForNotifications.getValue());
+      try {
+        return new NotificationService.SlackNotificationService(new SlackAdapter(secretManagerAdapter,
+            Slack.getInstance(), slackOptions), notificationOptions);
+      } catch (SlackException e) {
+        throw new RuntimeException("Cannot instantiate SlackNotificationService", e);
+      }
+    }
     //
     // Configure SMTP if possible, and fall back to a fail-safe
     // configuration if the configuration is incomplete.

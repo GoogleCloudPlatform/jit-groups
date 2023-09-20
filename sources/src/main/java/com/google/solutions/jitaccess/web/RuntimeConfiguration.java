@@ -91,6 +91,11 @@ public class RuntimeConfiguration {
     this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
     this.smtpSecret = new StringSetting(List.of("SMTP_SECRET"), null);
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
+
+    //
+    // Slack Settings
+    //
+    this.slackToken = new StringSetting(List.of("SLACK_TOKEN"), null);
   }
 
   // -------------------------------------------------------------------------
@@ -197,6 +202,12 @@ public class RuntimeConfiguration {
    */
   public final IntSetting maxNumberOfJitRolesPerSelfApproval;
 
+  /**
+   * Path to a SecretManager secret that contains the Slack Token password.
+   * The path must be in the format projects/x/secrets/y/versions/z.
+   */
+  public final StringSetting slackToken;
+
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
     return requiredSettings.stream().allMatch(s -> s.isValid());
@@ -205,6 +216,10 @@ public class RuntimeConfiguration {
   public boolean isSmtpAuthenticationConfigured() {
     return this.smtpUsername.isValid() &&
       (this.smtpPassword.isValid() || this.smtpSecret.isValid());
+  }
+
+  public boolean isSlackTokenConfigured() {
+    return this.slackToken.isValid();
   }
 
   public Map<String, String> getSmtpExtraOptionsMap() {

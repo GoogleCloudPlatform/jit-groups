@@ -84,6 +84,11 @@
       <artifactId>jakarta.mail</artifactId>
       <version>2.0.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.slack.api</groupId>
+      <artifactId>slack-api-client</artifactId>
+      <version>1.32.0</version>
+    </dependency>
 
     <!-- Test dependencies -->
     <dependency>

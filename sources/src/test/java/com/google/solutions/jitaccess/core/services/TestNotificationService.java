@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.services;
 
+import com.google.solutions.jitaccess.core.adapters.SlackAdapter;
 import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,7 @@ public class TestNotificationService {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
+  public void email_whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpAdapter.class);
     var service = new NotificationService.MailNotificationService(
       mailAdapter,
@@ -88,25 +89,63 @@ public class TestNotificationService {
   }
 
   @Test
-  public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
+  public void email_whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpAdapter.class);
     var service = new NotificationService.MailNotificationService(
-      mailAdapter,
-      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
+        mailAdapter,
+        new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      to,
-      "Test email",
-      new HashMap<String, Object>(),
-      "RequestActivation"));
+        to,
+        "Test email",
+        new HashMap<String, Object>(),
+        "RequestActivation"));
 
     verify(mailAdapter, times(1)).sendMail(
-      eq(List.of(to)),
-      eq(List.of()),
-      eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(SmtpAdapter.Flags.NONE)));
+        eq(List.of(to)),
+        eq(List.of()),
+        eq("Test email"),
+        anyString(),
+        eq(EnumSet.of(SmtpAdapter.Flags.NONE)));
+  }
+
+  @Test
+  public void slack_whenTemplateNotFound_ThenSendNotificationDoesNotSendSlackMessage() throws Exception {
+    var slackAdapter = Mockito.mock(SlackAdapter.class);
+    var service = new NotificationService.SlackNotificationService(
+        slackAdapter,
+        new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
+
+    var to = new UserId("user@example.com");
+    service.sendNotification(new TestNotification(
+        to,
+        "Test email",
+        new HashMap<>(),
+        "unknown-templateid"));
+
+    verify(slackAdapter, times(0)).sendSlackMessage(
+        eq(List.of(to)),
+        eq("Test email"));
+  }
+
+  @Test
+  public void slack_whenTemplateFound_ThenSendNotificationSendsSlackMesasge() throws Exception {
+    var slackAdapter = Mockito.mock(SlackAdapter.class);
+    var service = new NotificationService.SlackNotificationService(
+        slackAdapter,
+        new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
+
+    var to = new UserId("user@example.com");
+    service.sendNotification(new TestNotification(
+        to,
+        "Test email",
+        new HashMap<>(),
+        "RequestActivation"));
+
+    verify(slackAdapter, times(1)).sendSlackMessage(
+        eq(List.of(to)),
+        anyString());
   }
 
   // -------------------------------------------------------------------------

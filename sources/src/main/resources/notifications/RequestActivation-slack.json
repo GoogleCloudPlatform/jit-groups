@@ -1,0 +1,45 @@
+﻿[
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "Access request",
+      "emoji": false
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "{{BENEFICIARY}} requests your approval to access the Google Cloud project _{{PROJECT_ID}}_.\n\n*Request details*\n- User:\t\t\t{{BENEFICIARY}}\n- Project:\t\t{{PROJECT_ID}}\n- Role:\t\t     {{ROLE}}\n- Start Time:   {{START_TIME}}\n- End Time:\t {{END_TIME}}\n- Justification {{JUSTIFICATION}}"
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "View Request"
+    },
+    "accessory": {
+      "type": "button",
+      "text": {
+        "type": "plain_text",
+        "text": "View Request",
+        "emoji": true
+      },
+      "value": "approve",
+      "url": "{{ACTION_URL}}",
+      "action_id": "button-action",
+      "style": "primary"
+    }
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "plain_text",
+      "text": "This request automatically expires on {{REQUEST_EXPIRY_TIME}}",
+      "emoji": true
+    }
+  }
+]
+
