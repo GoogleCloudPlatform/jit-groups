@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.services;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
@@ -91,6 +92,9 @@ public class RoleActivationService {
     // NB. It doesn't matter whether the user has already
     // activated the role.
     //
+    //logging.newInfoEntry(LogEvents.API_ACTIVATE_ROLE, String.format("Checking %s, %s, $%s", user.email, roleBinding.role, activationType.toString()));
+    System.out.println(String.format("Checking %s, %s, %s", user.email, roleBinding.role, activationType.toString()));
+    System.out.println(String.format("Default Approver list %s", new Gson().toJson(this.options.defaultApproverList)));
     if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
         ProjectId.fromFullResourceName(roleBinding.fullResourceName),
@@ -102,13 +106,17 @@ public class RoleActivationService {
       .filter(pr -> pr.roleBinding.equals(roleBinding))
       .filter(pr -> canActivateProjectRole(pr, activationType))
       .findAny()
-      .isEmpty()) {
+      .isEmpty() && !this.options.defaultApproverList.contains(user.email)) {
+      //logging.newErrorEntry(LogEvents.API_ACTIVATE_ROLE, String.format("Failed for &s", user.email));
+      System.err.println("did not activate");
       throw new AccessDeniedException(
         String.format(
           "The user %s is not allowed to activate the role %s",
           user,
           roleBinding.role));
     }
+    //logging.newInfoEntry(LogEvents.API_ACTIVATE_ROLE, String.format("can active role %s, %s, $%s", user.email, roleBinding.role, activationType));
+    System.err.println("activated");
   }
 
   public RoleActivationService(
@@ -494,12 +502,16 @@ public class RoleActivationService {
     public final int minNumberOfReviewersPerActivationRequest;
     public final int maxNumberOfReviewersPerActivationRequest;
 
+    private final List<String> defaultApproverList;
+
     public Options(
       String justificationHint,
       Pattern justificationPattern,
       Duration maxActivationTimeout,
       int minNumberOfReviewersPerActivationRequest,
-      int maxNumberOfReviewersPerActivationRequest)
+      int maxNumberOfReviewersPerActivationRequest,
+        List<String> defaultApproverList
+        )
     {
       Preconditions.checkArgument(
         maxActivationTimeout.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
@@ -516,6 +528,7 @@ public class RoleActivationService {
       this.justificationPattern = justificationPattern;
       this.minNumberOfReviewersPerActivationRequest = minNumberOfReviewersPerActivationRequest;
       this.maxNumberOfReviewersPerActivationRequest = maxNumberOfReviewersPerActivationRequest;
+      this.defaultApproverList = defaultApproverList;
     }
   }
 }

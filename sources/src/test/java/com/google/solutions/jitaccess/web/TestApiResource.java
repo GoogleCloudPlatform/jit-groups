@@ -29,6 +29,8 @@ import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.services.*;
+import java.util.Collection;
+import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -104,7 +106,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,
+        Collections.emptyList()));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
       .get("/api/policy", ApiResource.PolicyResponse.class);
@@ -124,7 +127,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS
+          ,Collections.emptyList()));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
       .get("/api/policy", ApiResource.PolicyResponse.class);
@@ -588,7 +592,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,
+        Collections.emptyList()));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
       "/api/projects/%20/roles/request",
@@ -610,7 +615,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,
+        Collections.emptyList()));
 
     var request = new ApiResource.ActivationRequest();
     request.peers = List.of(SAMPLE_USER.email);
@@ -636,7 +642,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,
+          Collections.emptyList()));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -662,7 +669,7 @@ public class TestApiResource {
             DEFAULT_JUSTIFICATION_PATTERN,
             DEFAULT_ACTIVATION_DURATION,
             2,
-            DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+            DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -688,7 +695,7 @@ public class TestApiResource {
             DEFAULT_JUSTIFICATION_PATTERN,
             DEFAULT_ACTIVATION_DURATION,
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-            DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+            DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -716,7 +723,7 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     var request = new ApiResource.ActivationRequest();
     request.peers = List.of(SAMPLE_USER.email);
@@ -742,7 +749,7 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     this.resource.notificationService = Mockito.mock(NotificationService.class);
     when(this.resource.notificationService.canSendNotifications()).thenReturn(false);
@@ -772,7 +779,7 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     when(this.resource.roleActivationService
       .createActivationRequestForPeer(
@@ -807,7 +814,7 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,Collections.emptyList()));
 
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
@@ -854,7 +861,8 @@ public class TestApiResource {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS,
+        Collections.emptyList()));
 
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 

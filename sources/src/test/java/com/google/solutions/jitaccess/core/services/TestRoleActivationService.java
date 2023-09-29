@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -69,7 +70,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.activateProjectRoleForSelf(
@@ -105,7 +106,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForSelf(
@@ -127,7 +128,7 @@ public class TestRoleActivationService {
         Pattern.compile("^\\d+$"),
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForSelf(
@@ -149,7 +150,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         Duration.ofMinutes(120),
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.activateProjectRoleForSelf(
@@ -185,7 +186,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var roleBinding = new RoleBinding(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -228,7 +229,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -255,7 +256,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -307,7 +308,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.activateProjectRoleForPeer(caller, request));
@@ -337,7 +338,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -382,7 +383,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
       RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
@@ -440,7 +441,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
@@ -476,6 +477,80 @@ public class TestRoleActivationService {
   }
 
   @Test
+  public void whenPeerAndDefaultApproverEligible_ThenActivateProjectRoleAddsBinding() throws Exception {
+    var caller = SAMPLE_USER;
+    var peer = SAMPLE_USER_2;
+    var roleBinding = new RoleBinding(
+        SAMPLE_PROJECT_RESOURCE_1,
+        SAMPLE_ROLE);
+
+    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var discoveryService = Mockito.mock(RoleDiscoveryService.class);
+    when(discoveryService.listEligibleProjectRoles(
+        eq(caller),
+        eq(SAMPLE_PROJECT_ID),
+        eq(EnumSet.of(
+            ProjectRole.Status.ELIGIBLE_FOR_JIT,
+            ProjectRole.Status.ELIGIBLE_FOR_MPA))))
+        .thenReturn(new Result<ProjectRole>(
+            List.of(new ProjectRole(
+                roleBinding,
+                ProjectRole.Status.ELIGIBLE_FOR_MPA)),
+            Set.of()));
+    when(discoveryService.listEligibleProjectRoles(
+        eq(peer),
+        eq(SAMPLE_PROJECT_ID),
+        eq(EnumSet.of(
+            ProjectRole.Status.ELIGIBLE_FOR_JIT,
+            ProjectRole.Status.ELIGIBLE_FOR_MPA))))
+        .thenReturn(new Result<ProjectRole>(
+            Collections.emptyList(),
+            Set.of()));
+
+    var service = new RoleActivationService(
+        discoveryService,
+        resourceAdapter,
+        new RoleActivationService.Options(
+            "hint",
+            DEFAULT_JUSTIFICATION_PATTERN,
+            DEFAULT_ACTIVATION_TIMEOUT,
+            DEFAULT_MIN_NUMBER_OF_REVIEWERS,
+            DEFAULT_MAX_NUMBER_OF_REVIEWERS, List.of(peer.email)));
+
+    var issuedAt = 1000L;
+    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
+        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+        peer,
+        Set.of(caller),
+        new RoleBinding(
+            SAMPLE_PROJECT_RESOURCE_1,
+            SAMPLE_ROLE),
+        "justification",
+        Instant.ofEpochSecond(issuedAt),
+        Instant.ofEpochSecond(issuedAt).plusSeconds(60));
+
+    var activation = service.activateProjectRoleForPeer(caller, request);
+
+    assertNotNull(activation);
+    assertEquals(request.id, activation.id);
+    assertEquals(ProjectRole.Status.ACTIVATED, activation.projectRole.status);
+    assertEquals(roleBinding, activation.projectRole.roleBinding);
+    assertEquals(request.startTime, activation.startTime);
+    assertEquals(request.endTime, activation.endTime);
+
+    verify(resourceAdapter)
+        .addProjectIamBinding(
+            eq(SAMPLE_PROJECT_ID),
+            argThat(b -> b.getRole().equals(SAMPLE_ROLE)
+                && b.getCondition().getExpression().contains("request.time < timestamp")
+                && b.getCondition().getDescription().contains("justification")),
+            eq(EnumSet.of(
+                ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+                ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS)),
+            eq("justification"));
+  }
+
+  @Test
   public void whenRoleAlreadyActivated_ThenActivateProjectRoleAddsBinding() throws Exception {
     var caller = SAMPLE_USER;
     var peer = SAMPLE_USER_2;
@@ -506,7 +581,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
@@ -545,7 +620,7 @@ public class TestRoleActivationService {
           DEFAULT_JUSTIFICATION_PATTERN,
           DEFAULT_ACTIVATION_TIMEOUT,
           3,
-          DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+          DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
         () -> service.createActivationRequestForPeer(
@@ -568,7 +643,7 @@ public class TestRoleActivationService {
             DEFAULT_JUSTIFICATION_PATTERN,
             DEFAULT_ACTIVATION_TIMEOUT,
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-            2));
+            2, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
         () -> service.createActivationRequestForPeer(
@@ -591,7 +666,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.createActivationRequestForPeer(
@@ -614,7 +689,7 @@ public class TestRoleActivationService {
         Pattern.compile("^\\d+$"),
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -637,7 +712,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         Duration.ofMinutes(60),
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(IllegalArgumentException.class,
       () -> service.createActivationRequestForPeer(
@@ -674,7 +749,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -709,7 +784,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     assertThrows(AccessDeniedException.class,
       () -> service.createActivationRequestForPeer(
@@ -744,7 +819,7 @@ public class TestRoleActivationService {
         DEFAULT_JUSTIFICATION_PATTERN,
         DEFAULT_ACTIVATION_TIMEOUT,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS, Collections.emptyList()));
 
     var request = service.createActivationRequestForPeer(
       caller,

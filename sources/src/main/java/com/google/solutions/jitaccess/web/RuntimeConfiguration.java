@@ -21,10 +21,12 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.gson.Gson;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,9 @@ public class RuntimeConfiguration {
     this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
+    this.defaultApproverList = new ListSetting<>(
+        List.of("DEFAULT_APPROVER_LIST"), Collections.emptyList());
+
 
     //
     // Backend service id (Cloud Run only).
@@ -203,6 +208,12 @@ public class RuntimeConfiguration {
   public final IntSetting maxNumberOfJitRolesPerSelfApproval;
 
   /**
+   * Default approver list. All members of this list will be an automatic approver
+   */
+  public final ListSetting<String> defaultApproverList;
+
+
+  /**
    * Path to a SecretManager secret that contains the Slack Token password.
    * The path must be in the format projects/x/secrets/y/versions/z.
    */
@@ -280,6 +291,8 @@ public class RuntimeConfiguration {
         return false;
       }
     }
+
+
   }
 
   public class StringSetting extends Setting<String> {
@@ -334,6 +347,18 @@ public class RuntimeConfiguration {
     @Override
     protected ZoneId parse(String value) {
       return ZoneId.of(value);
+    }
+  }
+
+  public class ListSetting<E> extends Setting<List<E>> {
+
+    public ListSetting(Collection<String> keys, List<E> defaultValue) {
+      super(keys, defaultValue);
+    }
+
+    @Override
+    protected List<E> parse(String value) {
+      return new Gson().fromJson(value, List.class);
     }
   }
 }

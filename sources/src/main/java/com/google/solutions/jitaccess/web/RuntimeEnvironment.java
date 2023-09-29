@@ -50,6 +50,9 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -66,6 +69,8 @@ public class RuntimeEnvironment {
   private final String projectNumber;
   private final UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
+
+  private final List<String> defaultAppovers;
 
   /**
    * Configuration, based on app.yaml environment variables.
@@ -124,6 +129,18 @@ public class RuntimeEnvironment {
           "The SMTP configuration is incomplete")
         .write();
     }
+
+    List<String> approvers = new ArrayList<>();
+    for (String approver : this.configuration.defaultApproverList.getValue()) {
+      if (approver.startsWith("user:")) {
+        approvers.add(approver.substring("user:".length()));
+      } else if (approver.startsWith("group:")) {
+        // Not implemented
+      } else {
+        throw new RuntimeException(String.format("Invalid DEFAULT_APPROVER_LIST item %s", approver));
+      }
+    }
+    defaultAppovers = Collections.unmodifiableList(approvers);
 
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
       //
@@ -263,7 +280,7 @@ public class RuntimeEnvironment {
 
   @Produces
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(this.configuration.scope.getValue());
+    return new RoleDiscoveryService.Options(this.configuration.scope.getValue(), defaultAppovers);
   }
 
   @Produces
@@ -273,7 +290,8 @@ public class RuntimeEnvironment {
       Pattern.compile(this.configuration.justificationPattern.getValue()),
       this.configuration.activationTimeout.getValue(),
       this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
-      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
+      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue(),
+      defaultAppovers);
   }
 
   @Produces

@@ -311,7 +311,7 @@ public class RoleDiscoveryService {
       .filter(pr -> pr.roleBinding.equals(roleBinding))
       .filter(pr -> pr.status == ProjectRole.Status.ELIGIBLE_FOR_MPA)
       .findAny()
-      .isEmpty()) {
+      .isEmpty() && !options.defaultApproverList.contains(callerUserId.email)) {
       throw new AccessDeniedException(
         String.format("The user %s is not eligible to request approval for this role", callerUserId));
     }
@@ -324,22 +324,30 @@ public class RoleDiscoveryService {
       roleBinding.fullResourceName,
       roleBinding.role);
 
-    return Stream.ofNullable(analysisResult.getAnalysisResults())
-      .flatMap(Collection::stream)
+    Set<UserId> eligibleUsers = Stream.ofNullable(analysisResult.getAnalysisResults())
+        .flatMap(Collection::stream)
 
-      // Narrow down to IAM bindings with an MPA constraint.
-      .filter(result -> result.getIamBinding() != null &&
-        JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
+        // Narrow down to IAM bindings with an MPA constraint.
+        .filter(result -> result.getIamBinding() != null &&
+            JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
 
-      // Collect identities (users and group members)
-      .filter(result -> result.getIdentityList() != null)
-      .flatMap(result -> result.getIdentityList().getIdentities().stream()
-        .filter(id -> id.getName().startsWith("user:"))
-        .map(id -> new UserId(id.getName().substring("user:".length()))))
+        // Collect identities (users and group members)
+        .filter(result -> result.getIdentityList() != null)
+        .flatMap(result -> result.getIdentityList().getIdentities().stream()
+            .filter(id -> id.getName().startsWith("user:"))
+            .map(id -> new UserId(id.getName().substring("user:".length()))))
 
-      // Remove the caller.
-      .filter(user -> !user.equals(callerUserId))
-      .collect(Collectors.toSet());
+        // Remove the caller.
+        .filter(user -> !user.equals(callerUserId))
+        .collect(Collectors.toSet());
+
+    // Add default approver list
+    eligibleUsers.addAll(options.defaultApproverList.stream()
+        .map(i -> new UserId(i))
+        // Remove the caller
+        .filter(user -> !user.equals(callerUserId))
+        .collect(Collectors.toList()));
+    return eligibleUsers;
   }
 
   // -------------------------------------------------------------------------
@@ -352,11 +360,15 @@ public class RoleDiscoveryService {
      */
     public final String scope;
 
+    public final List<String> defaultApproverList;
+
     /**
      * Search inherited IAM policies
      */
-    public Options(String scope) {
+    public Options(String scope, List<String> defaultApproverList) {
       this.scope = scope;
+      this.defaultApproverList = defaultApproverList;
+
     }
   }
 }
