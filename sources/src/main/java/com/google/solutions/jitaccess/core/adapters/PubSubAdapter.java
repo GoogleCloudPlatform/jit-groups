@@ -21,24 +21,30 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.core.ApiFuture;
-import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+
+import com.google.api.services.pubsub.model.PublishResponse;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.pubsub.v1.Publisher;
+
+
+import com.google.api.services.pubsub.Pubsub;
+import com.google.api.services.pubsub.model.PubsubMessage;
+import com.google.api.services.pubsub.model.PublishRequest;
+
 import com.google.common.base.Preconditions;
-import com.google.protobuf.ByteString;
-import com.google.pubsub.v1.PubsubMessage;
-import com.google.pubsub.v1.TopicName;
+import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import com.google.solutions.jitaccess.web.LogEvents;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.core.MediaType;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -56,47 +62,49 @@ public class PubSubAdapter {
 
     }
 
-    private Publisher createClient(TopicName topicName) throws IOException {
+    private Pubsub createClient( ) throws IOException {
         try {
-            if (this.credentials != null) {
-                return Publisher.newBuilder(topicName).setCredentialsProvider(FixedCredentialsProvider.create(credentials)).build();
-            }
-            return Publisher.newBuilder(topicName).build();
-        } catch (IOException e) {
-            throw new IOException("Creating a PubSub Publisher client failed", e);
+
+            return new Pubsub.Builder(
+                    HttpTransport.newTransport(),
+                    new GsonFactory(),
+                    new HttpCredentialsAdapter(this.credentials)).setApplicationName(ApplicationVersion.USER_AGENT).build();
+        }
+        catch (GeneralSecurityException e) {
+            throw new IOException("Creating a ResourceManager client failed", e);
         }
     }
 
-    public String publish(TopicName topicName, MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
+    public String publish(String topicName, MessageProperty messageProperty) throws IOException, ExecutionException {
 
         // Create a Pub/Sub publisher client.
-        var publisher = createClient(topicName);
+        var pubsub = createClient();
 
+        // Publish the message
         try {
-            // TODO: add message signature as attribute of message to verify authenticity
-
             // Create a Pub/Sub message.
+            PubsubMessage pubsubMessage = new PubsubMessage().encodeData(messageProperty.getData().getBytes("UTF-8"));
+
+            // Create a publish request
+            PublishRequest publishRequest = new PublishRequest();
+            publishRequest.setMessages(Arrays.asList(pubsubMessage));
+
             Map<String, String> messageAttribute = new HashMap<>() {{
                 put("origin", messageProperty.origin.toString());
             }};
+            pubsubMessage.setAttributes(messageAttribute);
+            PublishResponse res = pubsub.projects().topics().publish(topicName, publishRequest).execute();
+            if (res.getMessageIds().size() < 1){
+                throw new ExecutionException("Failed to publish message", new Throwable("emtpy response"));
+            }
+            String msgID = res.getMessageIds().get(0);
+            return msgID;
 
-            PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
-                    .setData(ByteString.copyFrom(messageProperty.getData().getBytes()))
-                    .putAllAttributes(messageAttribute).build();
-            // Publish the message
-            ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-            String messageId = messageIdFuture.get();
-
-            return messageId;
-
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (ExecutionException | IllegalArgumentException |GoogleJsonResponseException e) {
             logAdapter.newErrorEntry(LogEvents.PUBLISH_MESSAGE, String.format(
                     "Publish Message to Topic %s failed: %s", topicName,
                     Exceptions.getFullMessage(e))).write();
             throw new ExecutionException("Failed to publish message", e);
-        } finally {
-            publisher.shutdown();
-            publisher.awaitTermination(5, TimeUnit.SECONDS);
         }
     }
 }

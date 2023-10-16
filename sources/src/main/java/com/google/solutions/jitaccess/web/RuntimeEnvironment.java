@@ -65,6 +65,7 @@ public class RuntimeEnvironment {
    * Configuration, based on app.yaml environment variables.
    */
   private final RuntimeConfiguration configuration = new RuntimeConfiguration(System::getenv);
+  private final Pattern TOPIC_PATTERN = Pattern.compile("^projects/[^/]+/topics/[^/]+$");
 
   // -------------------------------------------------------------------------
   // Private helpers.
@@ -287,8 +288,17 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public PubSubService.Options getPubSubServiceOptions() {
-    return new PubSubService.Options(this.configuration.topicName.getValue());
+  @ApplicationScoped
+  public PubSubService getPubsubService(
+        PubSubAdapter pubSubAdapter
+  ) {
+    String topicName = this.configuration.topicName.getValue();
+
+    if(topicName != null && TOPIC_PATTERN.matcher(topicName).matches()){
+      return new PubSubService.GCPPubSubService(pubSubAdapter, new PubSubService.GCPPubSubService.Options(topicName));
+    }
+
+    return new PubSubService.SilentPubSubService();
   }
 
   @Produces
