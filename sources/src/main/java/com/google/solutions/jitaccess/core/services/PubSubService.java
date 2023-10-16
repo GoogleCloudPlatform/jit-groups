@@ -33,50 +33,63 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
-public class PubSubService {
+public abstract class PubSubService {
+    public abstract void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException;
 
-    private final PubSubAdapter pubSubAdapter;
-
-    private final Options options;
-
-    public PubSubService(
-            PubSubAdapter pubSubAdapter,
-            Options options) {
-        Preconditions.checkNotNull(pubSubAdapter, "pubSubAdapter");
-        Preconditions.checkNotNull(options, "options");
-
-        this.pubSubAdapter = pubSubAdapter;
-        this.options = options;
-
-    }
-
-    public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
-        if (this.getOptions().topicName != null) {
-            this.pubSubAdapter.publish(options.topicName, messageProperty);
-        }
-    }
 
     // -------------------------------------------------------------------------
     // Inner classes.
     // -------------------------------------------------------------------------
 
-    public Options getOptions() {
-        return options;
+    public static class GCPPubSubService extends PubSubService {
+        private final PubSubAdapter pubSubAdapter;
+
+        private final Options options;
+        public GCPPubSubService(
+                PubSubAdapter pubSubAdapter,
+                Options options) {
+            Preconditions.checkNotNull(pubSubAdapter, "pubSubAdapter");
+            Preconditions.checkNotNull(options, "options");
+
+            this.pubSubAdapter = pubSubAdapter;
+            this.options = options;
+
+        }
+
+        @Override
+        public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
+            if (this.getOptions().topicName != null) {
+                this.pubSubAdapter.publish(options.topicName, messageProperty);
+            }
+        }
+
+        public Options getOptions() {
+            return options;
+        }
+
+        public static class Options {
+            /**
+             * GCP PubSub TopicName
+             * projects/{project}/topics/{topic}
+             */
+            public final String topicName;
+
+            /**
+             * Search inherited IAM policies
+             */
+            public Options(String topicNameRawStr) {
+                this.topicName = topicNameRawStr;
+            }
+        }
+
     }
 
-    public static class Options {
-        /**
-         * GCP PubSub TopicName
-         * projects/{project}/topics/{topic}
-         */
-        public final String topicName;
+    public static class SilentPubSubService extends PubSubService {
+        public void publishMessage(MessageProperty messageProperty) throws InterruptedException, IOException, ExecutionException {
 
-        /**
-         * Search inherited IAM policies
-         */
-        public Options(String topicNameRawStr) {
-            this.topicName = topicNameRawStr;
         }
     }
 
 }
+
+

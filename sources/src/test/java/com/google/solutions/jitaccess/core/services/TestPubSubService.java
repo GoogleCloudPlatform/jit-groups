@@ -68,9 +68,9 @@ public class TestPubSubService {
 
         // method will not be executed
 
-        var service = new PubSubService(
+        var service = new PubSubService.GCPPubSubService(
                 pubsubAdapter,
-                new PubSubService.Options(""));
+                new PubSubService.GCPPubSubService.Options(""));
         service.publishMessage(SAMPLE_MESSAGE_PROPERTY);
 
         Mockito.verify(pubsubAdapter, times(0)).publish(
@@ -82,9 +82,9 @@ public class TestPubSubService {
     public void whenValidTopicName_ThenPublishMessage() throws Exception{
         var pubsubAdapter = Mockito.mock(PubSubAdapter.class);
 
-        var service = new PubSubService(
+        var service = new PubSubService.GCPPubSubService(
                 pubsubAdapter,
-                new PubSubService.Options(SAMPLE_TOPIC_NAME_RAW));
+                new PubSubService.GCPPubSubService.Options(SAMPLE_TOPIC_NAME_RAW));
         service.publishMessage(SAMPLE_MESSAGE_PROPERTY);
 
         Mockito.verify(pubsubAdapter, times(1)).publish(
