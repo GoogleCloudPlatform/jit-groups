@@ -71,6 +71,11 @@
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-pubsub</artifactId>
+      <version>v1-rev20230830-2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-iamcredentials</artifactId>
       <version>v1-rev20211203-2.0.0</version>
     </dependency>
@@ -89,11 +94,11 @@
       <artifactId>jakarta.mail</artifactId>
       <version>2.0.1</version>
     </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.googlecloudservices</groupId>
-      <artifactId>quarkus-google-cloud-pubsub</artifactId>
-      <version>1.4.0</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>io.quarkiverse.googlecloudservices</groupId>-->
+<!--      <artifactId>quarkus-google-cloud-pubsub</artifactId>-->
+<!--      <version>1.4.0</version>-->
+<!--    </dependency>-->
 
     <!-- Test dependencies -->
     <dependency>

@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
-import com.google.pubsub.v1.TopicName;
+import com.google.api.services.pubsub.model.Topic;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -69,13 +69,13 @@ public class PubSubService {
          * GCP PubSub TopicName
          * projects/{project}/topics/{topic}
          */
-        public final TopicName topicName;
+        public final String topicName;
 
         /**
          * Search inherited IAM policies
          */
         public Options(String topicNameRawStr) {
-            this.topicName = TopicName.parse(topicNameRawStr);
+            this.topicName = topicNameRawStr;
         }
     }
 
