@@ -322,10 +322,11 @@ public class ApiResource {
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s activated role '%s' on '%s' for themselves",
+              "User %s activated role '%s' on '%s' for themselves for '%d' minutes",
               iapPrincipal.getId(),
               roleBinding.role,
-              roleBinding.fullResourceName))
+              roleBinding.fullResourceName,
+              Duration.ofMinutes(request.activationTimeout)))
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
@@ -335,10 +336,11 @@ public class ApiResource {
           .newErrorEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s failed to activate role '%s' on '%s' for themselves: %s",
+              "User %s failed to activate role '%s' on '%s' for themselves for '%d' minutes: %s",
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
+              Duration.ofMinutes(request.activationTimeout),
               Exceptions.getFullMessage(e)))
           .addLabels(le -> addLabels(le, projectId))
           .addLabels(le -> addLabels(le, roleBinding))
