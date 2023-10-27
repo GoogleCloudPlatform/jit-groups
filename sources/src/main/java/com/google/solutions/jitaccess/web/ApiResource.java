@@ -325,7 +325,7 @@ public class ApiResource {
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s activated role '%s' on '%s' for themselves for '%d' minutes",
+              "User %s activated role '%s' on '%s' for themselves for %d minutes",
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
@@ -339,7 +339,7 @@ public class ApiResource {
           .newErrorEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s failed to activate role '%s' on '%s' for themselves for '%d' minutes: %s",
+              "User %s failed to activate role '%s' on '%s' for themselves for %d minutes: %s",
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
