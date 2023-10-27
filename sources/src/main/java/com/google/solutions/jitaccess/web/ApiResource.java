@@ -306,6 +306,9 @@ public class ApiResource {
       .map(r -> new RoleBinding(projectId.getFullResourceName(), r))
       .collect(Collectors.toSet());
 
+    // Get the requested role binding duration in minutes
+    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
+
     var activations = new ArrayList<RoleActivationService.Activation>();
     for (var roleBinding : roleBindings) {
       try {
@@ -326,7 +329,7 @@ public class ApiResource {
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
-              Duration.ofMinutes(request.activationTimeout)))
+              requestedRoleBindingDuration))
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
@@ -340,7 +343,7 @@ public class ApiResource {
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
-              Duration.ofMinutes(request.activationTimeout),
+              requestedRoleBindingDuration,
               Exceptions.getFullMessage(e)))
           .addLabels(le -> addLabels(le, projectId))
           .addLabels(le -> addLabels(le, roleBinding))
@@ -419,6 +422,9 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
 
+    // Get the requested role binding duration in minutes
+    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
+
     try
     {
       //
@@ -444,10 +450,12 @@ public class ApiResource {
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s requested role '%s' on '%s'",
+            "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.getId(),
             roleBinding.role,
-            roleBinding.fullResourceName))
+            roleBinding.fullResourceName,
+            requestedRoleBindingDuration
+            ))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -462,10 +470,11 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s failed to request role '%s' on '%s': %s",
+            "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.getId(),
             roleBinding.role,
             roleBinding.fullResourceName,
+            requestedRoleBindingDuration,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, roleBinding))
