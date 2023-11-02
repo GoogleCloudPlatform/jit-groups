@@ -23,14 +23,16 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.api.client.json.GenericJson;
 
-import com.google.api.client.json.GenericJson;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 
+import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import static org.mockito.Mockito.*;
@@ -48,19 +50,30 @@ public class TestPubSubService {
 
     private static final String NULL_TOPIC_NAME = null;
     private static final String SAMPLE_ROLE = "roles/mock.role1";
+
+    private static final Instant CURR_TIME = Instant.now();
+    private static final Instant END_TIME = CURR_TIME.plus(2, ChronoUnit.HOURS);
+
     private static final GenericJson conditions = new GenericJson()
-            .set("title", JitConstraints.ACTIVATION_CONDITION_TITLE)
-            .set("description", "desc");
+            .set("expression", new GenericJson().set("start", CURR_TIME.atOffset(ZoneOffset.UTC).toString())
+                    .set("end", END_TIME.atOffset(ZoneOffset.UTC).toString()))
+            .set("title", "JIT access activation")
+            .set("description", "Approved by "+SAMPLE_USER.email+", justification: justification");
+
     private static final GenericJson payload = new GenericJson()
-            .set("user", SAMPLE_USER.email)
+            .set("user", SAMPLE_USER.toString())
             .set("role", SAMPLE_ROLE)
             .set("project_id", SAMPLE_PROJECT_ID.id)
             .set("conditions", conditions);
     private static final MessageProperty SAMPLE_MESSAGE_PROPERTY = new MessageProperty(
             payload,
             MessageProperty.MessageOrigin.BINDING);
-
-
+    private static final PubSubService.BindingPubSubMessage SAMPLE_BINDING_PUBSUB = new PubSubService.BindingPubSubMessage(
+            SAMPLE_USER, new RoleBinding("//cloudresourcemanager.googleapis.com/projects/"+SAMPLE_PROJECT_ID.id, SAMPLE_ROLE),
+            SAMPLE_ROLE,
+            CURR_TIME,
+            END_TIME, "justification"
+        );
 
     @Test
     public void whenTopicNameNull_ThenDoNothing() throws Exception{
@@ -71,7 +84,7 @@ public class TestPubSubService {
         var service = new PubSubService.GCPPubSubService(
                 pubsubAdapter,
                 new PubSubService.GCPPubSubService.Options(""));
-        service.publishMessage(SAMPLE_MESSAGE_PROPERTY);
+        service.publishMessage(SAMPLE_BINDING_PUBSUB);
 
         Mockito.verify(pubsubAdapter, times(0)).publish(
                 NULL_TOPIC_NAME, SAMPLE_MESSAGE_PROPERTY);
@@ -85,7 +98,7 @@ public class TestPubSubService {
         var service = new PubSubService.GCPPubSubService(
                 pubsubAdapter,
                 new PubSubService.GCPPubSubService.Options(SAMPLE_TOPIC_NAME_RAW));
-        service.publishMessage(SAMPLE_MESSAGE_PROPERTY);
+        service.publishMessage(SAMPLE_BINDING_PUBSUB);
 
         Mockito.verify(pubsubAdapter, times(1)).publish(
                 SAMPLE_TOPIC_NAME, SAMPLE_MESSAGE_PROPERTY);

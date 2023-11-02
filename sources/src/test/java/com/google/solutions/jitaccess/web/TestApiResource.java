@@ -1084,7 +1084,7 @@ public class TestApiResource {
         new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
         request.startTime,
         request.endTime));
-    doNothing().when(this.resource.pubSubService).publishMessage(any(MessageProperty.class));
+    doNothing().when(this.resource.pubSubService).publishMessage(any(PubSubService.PubSubMessageBase.class));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post(
