@@ -67,7 +67,7 @@
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudasset</artifactId>
-      <version>v1-rev20231013-2.0.0</version>
+      <version>v1-rev20231103-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
