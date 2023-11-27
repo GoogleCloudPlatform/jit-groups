@@ -1107,7 +1107,7 @@ public class TestRoleDiscoveryService {
     var service = new RoleDiscoveryService(
             assetAdapter,
             resourceManagerAdapter,
-            new RoleDiscoveryService.Options("organizations/0", null));
+            new RoleDiscoveryService.Options("organizations/0", "folder/0"));
 
     var projectIds = service.listAvailableProjects(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -1126,7 +1126,7 @@ public class TestRoleDiscoveryService {
     var service = new RoleDiscoveryService(
             assetAdapter,
             resourceManagerAdapter,
-            new RoleDiscoveryService.Options("organizations/0", null));
+            new RoleDiscoveryService.Options("organizations/0", "folder/0"));
 
     var projectIds = service.listAvailableProjects(SAMPLE_USER);
     assertNotNull(projectIds);

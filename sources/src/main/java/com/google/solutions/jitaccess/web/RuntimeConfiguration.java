@@ -202,6 +202,9 @@ public class RuntimeConfiguration {
 
   /**
    * List all available projects in the UI instead of using Asset Inventory.
+   * The format is the same as Google Resource Manager API requires for parent parameter.
+   * - folders/{folder_id}
+   * - organizations/{organization_id}
    */
   public final StringSetting listAllAvailableProjectsIn;
 
