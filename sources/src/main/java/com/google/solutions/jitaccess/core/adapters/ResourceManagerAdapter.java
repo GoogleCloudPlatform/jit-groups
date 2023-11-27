@@ -248,6 +248,28 @@ public class ResourceManagerAdapter {
     }
   }
 
+  public List<ProjectId> listProjects(String parent) throws NotAuthenticatedException, IOException {
+    try {
+      var response = createClient()
+        .projects()
+        .list()
+        .setParent(parent)
+        .execute();
+
+      return response.getProjects() != null
+        ? response.getProjects().stream().map(p -> new ProjectId(p.getProjectId())).collect(Collectors.toList())
+        : List.of();
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
   //---------------------------------------------------------------------
   // Inner classes.
   //---------------------------------------------------------------------

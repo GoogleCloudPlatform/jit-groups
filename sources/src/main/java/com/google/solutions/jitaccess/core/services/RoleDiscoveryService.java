@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.AssetInventoryAdapter;
+import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
@@ -46,15 +47,20 @@ import java.util.stream.Stream;
 public class RoleDiscoveryService {
   private final AssetInventoryAdapter assetInventoryAdapter;
 
+  private final ResourceManagerAdapter resourceManagerAdapter;
+
   private final Options options;
 
   public RoleDiscoveryService(
     AssetInventoryAdapter assetInventoryAdapter,
+    ResourceManagerAdapter resourceManagerAdapter,
     Options configuration) {
     Preconditions.checkNotNull(assetInventoryAdapter, "assetInventoryAdapter");
+    Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.assetInventoryAdapter = assetInventoryAdapter;
+    this.resourceManagerAdapter = resourceManagerAdapter;
     this.options = configuration;
   }
 
@@ -108,43 +114,51 @@ public class RoleDiscoveryService {
   public Set<ProjectId> listAvailableProjects(
     UserId user
   ) throws AccessException, IOException {
-    //
-    // NB. To reliably find projects, we have to let the Asset API consider
-    // inherited role bindings by using the "expand resources" flag. This
-    // flag causes the API to return *all* resources for which an IAM binding
-    // applies.
-    //
-    // The risk here is that the list of resources grows so large that we're hitting
-    // the limits of the API, in which case it starts truncating results. To
-    // mitigate this risk, filter on a permission that:
-    //
-    // - only applies to projects, and has no meaning on descendent resources
-    // - represents the lowest level of access to a project.
-    //
-    var analysisResult = this.assetInventoryAdapter.findAccessibleResourcesByUser(
-      this.options.scope,
-      user,
-      Optional.of("resourcemanager.projects.get"),
-      Optional.empty(),
-      true);
+    if(this.options.listAllAvailableProjectsIn == null) {
+      //
+      // NB. To reliably find projects, we have to let the Asset API consider
+      // inherited role bindings by using the "expand resources" flag. This
+      // flag causes the API to return *all* resources for which an IAM binding
+      // applies.
+      //
+      // The risk here is that the list of resources grows so large that we're hitting
+      // the limits of the API, in which case it starts truncating results. To
+      // mitigate this risk, filter on a permission that:
+      //
+      // - only applies to projects, and has no meaning on descendent resources
+      // - represents the lowest level of access to a project.
+      //
+      var analysisResult = this.assetInventoryAdapter.findAccessibleResourcesByUser(
+        this.options.scope,
+        user,
+        Optional.of("resourcemanager.projects.get"),
+        Optional.empty(),
+        true);
 
-    //
-    // Consider permanent and eligible bindings.
-    //
-    var roleBindings = findRoleBindings(
-      analysisResult,
-      condition -> condition == null ||
-        JitConstraints.isJitAccessConstraint(condition) ||
-        JitConstraints.isMultiPartyApprovalConstraint(condition),
-      evalResult -> evalResult == null ||
-        "TRUE".equalsIgnoreCase(evalResult) ||
-        "CONDITIONAL".equalsIgnoreCase(evalResult));
+      //
+      // Consider permanent and eligible bindings.
+      //
+      var roleBindings = findRoleBindings(
+        analysisResult,
+        condition -> condition == null ||
+          JitConstraints.isJitAccessConstraint(condition) ||
+          JitConstraints.isMultiPartyApprovalConstraint(condition),
+        evalResult -> evalResult == null ||
+          "TRUE".equalsIgnoreCase(evalResult) ||
+          "CONDITIONAL".equalsIgnoreCase(evalResult));
 
-    return roleBindings
-      .stream()
-      .map(b -> ProjectId.fromFullResourceName(b.fullResourceName))
-      .collect(Collectors.toSet());
+      return roleBindings
+        .stream()
+        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName))
+        .collect(Collectors.toSet());
+      }
+    else {
+      // Used as fallback if listAllAvailableProjects is set to true and Asset API is not working fast enough.
+      return new HashSet<>(resourceManagerAdapter.listProjects(this.options.listAllAvailableProjectsIn));
+    }
   }
+
+
 
   /**
    * List eligible role bindings for the given user.
@@ -353,10 +367,23 @@ public class RoleDiscoveryService {
     public final String scope;
 
     /**
+     * In some cases listing all available projects is not working fast enough and times out,
+     * so we use this method as fallback.
+     * The format is the same as Google Resource Manager API requires for parent parameter.
+     * - folders/{folder_id}
+     * - organizations/{organization_id}
+     * (https://cloud.google.com/resource-manager/reference/rest/v3/projects/list#query-parameters)
+     */
+    public final String listAllAvailableProjectsIn;
+
+    /**
      * Search inherited IAM policies
      */
-    public Options(String scope) {
+    public Options(String scope, String listAllAvailableProjectsIn) {
       this.scope = scope;
+      this.listAllAvailableProjectsIn = listAllAvailableProjectsIn;
     }
+
+
   }
 }

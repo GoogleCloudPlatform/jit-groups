@@ -68,6 +68,9 @@ public class RuntimeConfiguration {
     this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
+    this.listAllAvailableProjectsIn = new StringSetting(
+      List.of("LIST_ALL_AVAILABLE_PROJECTS_IN"),
+      null);
 
     //
     // Backend service id (Cloud Run only).
@@ -196,6 +199,11 @@ public class RuntimeConfiguration {
    * Maximum number of (JIT-) eligible roles that can be activated at once.
    */
   public final IntSetting maxNumberOfJitRolesPerSelfApproval;
+
+  /**
+   * List all available projects in the UI instead of using Asset Inventory.
+   */
+  public final StringSetting listAllAvailableProjectsIn;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
