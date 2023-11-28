@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.services.MailNotificationService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import org.junit.jupiter.api.Test;
 
@@ -100,7 +101,7 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(Map.of());
 
     assertEquals(
-      NotificationService.Options.DEFAULT_TIMEZONE,
+      MailNotificationService.Options.DEFAULT_TIMEZONE,
       configuration.timeZoneForNotifications.getValue());
   }
 
@@ -120,7 +121,7 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(settings);
 
     assertNotEquals(
-      NotificationService.Options.DEFAULT_TIMEZONE,
+      MailNotificationService.Options.DEFAULT_TIMEZONE,
       configuration.timeZoneForNotifications.getValue());
   }
 
