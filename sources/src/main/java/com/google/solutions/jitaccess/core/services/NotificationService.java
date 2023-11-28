@@ -23,9 +23,6 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
-import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -33,11 +30,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,101 +46,10 @@ public abstract class NotificationService {
 
   public abstract boolean canSendNotifications();
 
-  /**
-   * Load a resource from a JAR resource.
-   * @return null if not found.
-   */
-  public static String loadResource(String resourceName) throws NotificationException{
-    try (var stream = NotificationService.class
-      .getClassLoader()
-      .getResourceAsStream(resourceName)) {
-
-      if (stream == null) {
-        return null;
-      }
-
-      var content = stream.readAllBytes();
-      if (content.length > 3 &&
-        content[0] == (byte)0xEF &&
-        content[1] == (byte)0xBB &&
-        content[2] == (byte)0xBF) {
-
-        //
-        // Strip UTF-8 BOM.
-        //
-        return new String(content, 3, content.length - 3);
-      }
-      else {
-        return new String(content);
-      }
-    }
-    catch (IOException e) {
-      throw new NotificationException(
-        String.format("Reading the template %s from the JAR file failed", resourceName), e);
-    }
-  }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
-
-  /**
-   * Concrete class that delivers notifications over SMTP.
-   */
-  public static class MailNotificationService extends NotificationService {
-    private final Options options;
-    private final SmtpAdapter smtpAdapter;
-
-    public MailNotificationService(
-        SmtpAdapter smtpAdapter,
-        Options options
-    ) {
-      Preconditions.checkNotNull(smtpAdapter);
-      Preconditions.checkNotNull(options);
-
-      this.smtpAdapter = smtpAdapter;
-      this.options = options;
-    }
-
-    @Override
-    public boolean canSendNotifications() {
-      return true;
-    }
-
-    @Override
-    public void sendNotification(Notification notification) throws NotificationException {
-      Preconditions.checkNotNull(notification, "notification");
-
-      var htmlTemplate = loadResource(
-        String.format("notifications/%s.html", notification.getTemplateId()));
-      if (htmlTemplate == null) {
-        //
-        // Unknown kind of notification, ignore.
-        //
-        return;
-      }
-
-      var formattedMessage = new NotificationTemplate(
-          htmlTemplate,
-          this.options.timeZone,
-          HtmlEscapers.htmlEscaper())
-        .format(notification);
-
-      try {
-        this.smtpAdapter.sendMail(
-          notification.toRecipients,
-          notification.ccRecipients,
-          notification.subject,
-          formattedMessage,
-          notification.isReply()
-            ? EnumSet.of(SmtpAdapter.Flags.REPLY)
-            : EnumSet.of(SmtpAdapter.Flags.NONE));
-      }
-      catch (SmtpAdapter.MailException | AccessException | IOException e) {
-        throw new NotificationException("The notification could not be sent", e);
-      }
-    }
-  }
 
   /**
    * Concrete class that prints notifications to STDOUT. Useful for local development only.
@@ -178,6 +82,18 @@ public abstract class NotificationService {
 
     protected boolean isReply() {
       return false;
+    }
+
+    public Collection<UserId> getToRecipients() {
+      return toRecipients;
+    }
+
+    public Collection<UserId> getCcRecipients() {
+      return ccRecipients;
+    }
+
+    public String getSubject() {
+      return subject;
     }
 
     public abstract String getTemplateId();
@@ -262,17 +178,6 @@ public abstract class NotificationService {
       }
 
       return message;
-    }
-  }
-
-  public static class Options {
-    public static final ZoneId DEFAULT_TIMEZONE = ZoneOffset.UTC;
-
-    private final ZoneId timeZone;
-
-    public Options(ZoneId timeZone) {
-      Preconditions.checkNotNull(timeZone);
-      this.timeZone = timeZone;
     }
   }
 

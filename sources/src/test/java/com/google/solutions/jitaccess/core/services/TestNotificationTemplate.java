@@ -80,7 +80,7 @@ public class TestNotificationTemplate {
         .stream()
         .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
         .collect(Collectors.joining()),
-      NotificationService.Options.DEFAULT_TIMEZONE,
+      MailNotificationService.Options.DEFAULT_TIMEZONE,
       HtmlEscapers.htmlEscaper());
 
     assertEquals(
