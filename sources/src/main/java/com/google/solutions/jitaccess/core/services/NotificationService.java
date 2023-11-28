@@ -22,16 +22,10 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.common.base.Preconditions;
-import com.google.common.escape.Escaper;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.io.IOException;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,7 +90,10 @@ public abstract class NotificationService {
       return subject;
     }
 
-    public abstract String getTemplateId();
+    /**
+     * @return string identifying the type of notification.
+     */
+    public abstract String getType();
 
     protected Notification(
       Collection<UserId> toRecipients,
@@ -123,61 +120,6 @@ public abstract class NotificationService {
           .stream()
           .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
           .collect(Collectors.joining("\n", "", "")));
-    }
-  }
-
-  /**
-   * Template for turning a notification object into some textual representation.
-   */
-  public static class NotificationTemplate {
-    private final String template;
-    private final Escaper escaper;
-    private final ZoneId timezoneId;
-
-    public NotificationTemplate(
-      String template,
-      ZoneId timezoneId,
-      Escaper escaper
-    ) {
-      Preconditions.checkNotNull(template, "template");
-      Preconditions.checkNotNull(timezoneId, "timezoneId");
-      Preconditions.checkNotNull(escaper, "escaper");
-
-      this.template = template;
-      this.timezoneId = timezoneId;
-      this.escaper = escaper;
-    }
-
-    public String format(NotificationService.Notification notification) {
-      Preconditions.checkNotNull(notification, "notification");
-
-      //
-      // Replace all {{PROPERTY}} placeholders in the template.
-      //
-
-      var message = this.template;
-      for (var property : notification.properties.entrySet()) {
-        String propertyValue;
-        if (property.getValue() instanceof Instant) {
-          //
-          // Apply time zone and convert to string.
-          //
-          propertyValue = OffsetDateTime
-            .ofInstant((Instant)property.getValue(), this.timezoneId)
-            .truncatedTo(ChronoUnit.SECONDS)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
-        }
-        else {
-          //
-          // Convert to a safe string.
-          //
-          propertyValue = escaper.escape(property.getValue().toString());
-        }
-
-        message = message.replace("{{" + property.getKey() + "}}", propertyValue);
-      }
-
-      return message;
     }
   }
 

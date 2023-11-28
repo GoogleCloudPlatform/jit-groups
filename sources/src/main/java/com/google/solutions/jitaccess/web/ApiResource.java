@@ -894,7 +894,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return "RequestActivation";
     }
   }
@@ -932,7 +932,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return "ActivationApproved";
     }
   }

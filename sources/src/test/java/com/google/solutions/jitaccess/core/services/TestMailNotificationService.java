@@ -56,7 +56,7 @@ public class TestMailNotificationService {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return this.templateId;
     }
   }
