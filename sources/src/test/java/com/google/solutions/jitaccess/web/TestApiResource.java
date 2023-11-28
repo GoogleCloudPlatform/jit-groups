@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.services.*;
+import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -63,6 +64,7 @@ public class TestApiResource {
     new ActivationTokenService.TokenWithExpiry(SAMPLE_TOKEN, Instant.now().plusSeconds(10));
 
   private ApiResource resource;
+  private NotificationService notificationService;
 
   @BeforeEach
   public void before() {
@@ -73,9 +75,14 @@ public class TestApiResource {
     this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
-    this.resource.notificationService = Mockito.mock(NotificationService.class);
 
-    when(this.resource.notificationService.canSendNotifications()).thenReturn(true);
+    this.notificationService = Mockito.mock(NotificationService.class);
+    when(this.notificationService.canSendNotifications()).thenReturn(true);
+
+    this.resource.notificationServices = Mockito.mock(Instance.class);
+    when(this.resource.notificationServices.stream()).thenReturn(List.of(notificationService).stream());
+    when(this.resource.notificationServices.iterator()).thenReturn(List.of(notificationService).iterator());
+
     when(this.resource.runtimeEnvironment.createAbsoluteUriBuilder(any(UriInfo.class)))
       .thenReturn(UriBuilder.fromUri("https://localhost/"));
   }
@@ -744,8 +751,7 @@ public class TestApiResource {
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    this.resource.notificationService = Mockito.mock(NotificationService.class);
-    when(this.resource.notificationService.canSendNotifications()).thenReturn(false);
+    when(this.notificationService.canSendNotifications()).thenReturn(false);
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -842,7 +848,7 @@ public class TestApiResource {
       ApiResource.ActivationStatusResponse.class);
     assertEquals(200, response.getStatus());
 
-    verify(this.resource.notificationService, times(1))
+    verify(this.notificationService, times(1))
       .sendNotification(argThat(n -> n instanceof ApiResource.RequestActivationNotification));
   }
 
@@ -1084,7 +1090,7 @@ public class TestApiResource {
 
     assertEquals(200, response.getStatus());
 
-    verify(this.resource.notificationService, times(1))
+    verify(this.notificationService, times(1))
       .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
   }
 

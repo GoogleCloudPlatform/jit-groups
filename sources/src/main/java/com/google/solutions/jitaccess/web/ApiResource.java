@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -68,7 +69,7 @@ public class ApiResource {
   ActivationTokenService activationTokenService;
 
   @Inject
-  NotificationService notificationService;
+  Instance<NotificationService> notificationServices;
 
   @Inject
   RuntimeEnvironment runtimeEnvironment;
@@ -389,7 +390,7 @@ public class ApiResource {
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     assert this.activationTokenService != null;
-    assert this.notificationService != null;
+    assert this.notificationServices != null;
 
     var minReviewers = this.roleActivationService.getOptions().minNumberOfReviewersPerActivationRequest;
     var maxReviewers = this.roleActivationService.getOptions().maxNumberOfReviewersPerActivationRequest;
@@ -414,8 +415,14 @@ public class ApiResource {
       request.justification != null && request.justification.length() < 100,
       "The justification is too long");
 
+    //
+    // For MPA to work, we need at least one functional notification service.
+    //
     Preconditions.checkState(
-      this.notificationService.canSendNotifications() || this.runtimeEnvironment.isDebugModeEnabled(),
+      this.notificationServices
+        .stream()
+        .anyMatch(s -> s.canSendNotifications()) ||
+        this.runtimeEnvironment.isDebugModeEnabled(),
       "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
@@ -441,10 +448,13 @@ public class ApiResource {
       // Create an approval token and pass it to reviewers.
       //
       var activationToken = this.activationTokenService.createToken(activationRequest);
-      this.notificationService.sendNotification(new RequestActivationNotification(
-        activationRequest,
-        activationToken.expiryTime,
-        createActivationRequestUrl(uriInfo, activationToken.token)));
+
+      for (var service : this.notificationServices) {
+        service.sendNotification(new RequestActivationNotification(
+          activationRequest,
+          activationToken.expiryTime,
+          createActivationRequestUrl(uriInfo, activationToken.token)));
+      }
 
       this.logAdapter
         .newInfoEntry(
@@ -549,7 +559,7 @@ public class ApiResource {
   ) throws AccessException {
     assert this.activationTokenService != null;
     assert this.roleActivationService != null;
-    assert this.notificationService != null;
+    assert this.notificationServices != null;
 
     Preconditions.checkArgument(
       obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
@@ -580,10 +590,12 @@ public class ApiResource {
 
       assert activation != null;
 
-      this.notificationService.sendNotification(new ActivationApprovedNotification(
-        activationRequest,
-        iapPrincipal.getId(),
-        createActivationRequestUrl(uriInfo, activationToken)));
+      for (var service : this.notificationServices) {
+        service.sendNotification(new ActivationApprovedNotification(
+          activationRequest,
+          iapPrincipal.getId(),
+          createActivationRequestUrl(uriInfo, activationToken)));
+      }
 
       this.logAdapter
         .newInfoEntry(
