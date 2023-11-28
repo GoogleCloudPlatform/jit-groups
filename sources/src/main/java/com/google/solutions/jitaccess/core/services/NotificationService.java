@@ -25,14 +25,20 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
-
+import java.io.IOException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service for notifying users about activation requests..
+ * Service for notifying users about activation requests.
  */
 @ApplicationScoped
 public abstract class NotificationService {

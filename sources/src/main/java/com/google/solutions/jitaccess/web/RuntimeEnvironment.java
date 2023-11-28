@@ -32,6 +32,7 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.data.UserId;
@@ -288,6 +289,27 @@ public class RuntimeEnvironment {
     return new ActivationTokenService.Options(
       applicationPrincipal,
       effectiveRequestTimeout);
+  }
+
+  @Produces
+  @ApplicationScoped
+  public EventService getEventService(
+    PubSubAdapter pubSubAdapter
+  ) {
+    var topicName = this.configuration.topicName.getValue();
+    if (Strings.isNullOrEmpty(topicName)) {
+      return new EventService.SilentEventService();
+    }
+    else {
+      var topicResourceName = String.format(
+        "projects/%s/topics/%s",
+        this.projectId,
+        topicName);
+
+      return new EventService.PubSubEventService(
+        pubSubAdapter,
+        new EventService.PubSubEventService.Options(topicResourceName));
+    }
   }
 
   @Produces

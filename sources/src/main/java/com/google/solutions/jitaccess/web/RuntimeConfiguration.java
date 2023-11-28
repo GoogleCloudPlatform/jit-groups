@@ -46,6 +46,11 @@ public class RuntimeConfiguration {
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
 
     //
+    // Event publishing settings.
+    //
+    this.topicName = new StringSetting(List.of("EVENT_TOPIC"), null);
+
+    //
     // Activation settings.
     //
     this.activationTimeout = new DurationSetting(
@@ -124,6 +129,13 @@ public class RuntimeConfiguration {
    * access for.
    */
   public final StringSetting scope;
+
+  /**
+   * Topic (within the resource hierarchy) that binding information will
+   * publish to.
+   */
+  public final StringSetting topicName;
+
 
   /**
    * Duration for which an activated role remains activated.

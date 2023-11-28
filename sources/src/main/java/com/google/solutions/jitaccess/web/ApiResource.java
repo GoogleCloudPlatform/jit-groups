@@ -27,14 +27,20 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.*;
+import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.data.ProjectRole;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.RoleBinding;
+import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.EventService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -50,6 +56,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +86,9 @@ public class ApiResource {
 
   @Inject
   Options options;
+
+  @Inject
+  EventService eventService;
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
@@ -322,6 +332,9 @@ public class ApiResource {
         assert activation != null;
         activations.add(activation);
 
+        //
+        // Emit event and emit event.
+        //
         this.logAdapter
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
@@ -334,6 +347,15 @@ public class ApiResource {
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
+
+        this.eventService.publish(
+          new EventService.RoleActivatedEvent(
+            iapPrincipal.getId(),
+            roleBinding,
+            projectId,
+            activation.startTime,
+            activation.endTime,
+            request.justification));
       }
       catch (Exception e) {
         this.logAdapter
@@ -456,6 +478,8 @@ public class ApiResource {
           createActivationRequestUrl(uriInfo, activationToken.token)));
       }
 
+      var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token);
+
       this.logAdapter
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
@@ -469,6 +493,17 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
+
+      this.eventService.publish(
+        new EventService.RequestApprovedEvent(
+          iapPrincipal.getId(),
+          activationRequest.roleBinding,
+          ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName),
+          activationToken.expiryTime,
+          activationRequestUrl.toString(),
+          activationRequest.justification,
+          request.activationTimeout,
+          request.peers));
 
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
@@ -608,6 +643,14 @@ public class ApiResource {
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
+
+      this.eventService.publish(new EventService.RoleActivatedEvent(
+        activationRequest.beneficiary,
+        activationRequest.roleBinding,
+        ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName),
+        activation.startTime,
+        activation.endTime,
+        activationRequest.justification));
 
       return new ActivationStatusResponse(
         activationRequest.beneficiary,

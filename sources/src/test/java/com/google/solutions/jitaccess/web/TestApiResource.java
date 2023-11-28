@@ -24,12 +24,18 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.services.*;
 import jakarta.enterprise.inject.Instance;
+import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.services.RoleActivationService;
+import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.services.EventService;
+import com.google.solutions.jitaccess.core.services.Result;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -1082,6 +1088,7 @@ public class TestApiResource {
         new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
         request.startTime,
         request.endTime));
+    doNothing().when(this.resource.eventService).publish(any(EventService.EventBase.class));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post(
