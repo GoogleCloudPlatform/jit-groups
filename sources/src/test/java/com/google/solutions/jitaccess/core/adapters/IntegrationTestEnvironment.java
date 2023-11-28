@@ -87,7 +87,10 @@ public class IntegrationTestEnvironment {
         "temporary-access",
         String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
-      APPLICATION_CREDENTIALS = GoogleCredentials.getApplicationDefault();
+      APPLICATION_CREDENTIALS = GoogleCredentials
+        .getApplicationDefault()
+        .createWithQuotaProject(PROJECT_ID.id);
+
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
 

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestNotificationTemplate {
+public class TestMessageTemplate {
   private static class TestNotification extends NotificationService.Notification {
     private final String templateId;
 
@@ -53,7 +53,7 @@ public class TestNotificationTemplate {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return this.templateId;
     }
   }
@@ -74,13 +74,13 @@ public class TestNotificationTemplate {
       properties,
       "ignored-templateid");
 
-    var template = new NotificationService.NotificationTemplate(
+    var template = new MailNotificationService.MessageTemplate(
       notification.properties
         .entrySet()
         .stream()
         .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
         .collect(Collectors.joining()),
-      NotificationService.Options.DEFAULT_TIMEZONE,
+      MailNotificationService.Options.DEFAULT_TIMEZONE,
       HtmlEscapers.htmlEscaper());
 
     assertEquals(
@@ -99,7 +99,7 @@ public class TestNotificationTemplate {
       properties,
       "ignored-templateid");
 
-    var template = new NotificationService.NotificationTemplate(
+    var template = new MailNotificationService.MessageTemplate(
       notification.properties
         .entrySet()
         .stream()

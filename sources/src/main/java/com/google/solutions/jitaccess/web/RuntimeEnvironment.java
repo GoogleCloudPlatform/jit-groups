@@ -303,7 +303,7 @@ public class RuntimeEnvironment {
 
   @Produces
   @ApplicationScoped
-  public NotificationService getNotificationService(
+  public NotificationService getEmailNotificationService(
     SecretManagerAdapter secretManagerAdapter
   ) {
     //
@@ -334,9 +334,9 @@ public class RuntimeEnvironment {
           this.configuration.smtpPassword.getValue());
       }
 
-      return new NotificationService.MailNotificationService(
+      return new MailNotificationService(
         new SmtpAdapter(secretManagerAdapter, options),
-        new NotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
+        new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {
       return new NotificationService.SilentNotificationService();
