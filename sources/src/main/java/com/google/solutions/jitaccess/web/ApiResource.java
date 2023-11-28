@@ -329,7 +329,10 @@ public class ApiResource {
         activations.add(activation);
 
         for (var service : this.notificationServices) {
-          //TODO: send notification
+          service.sendNotification(new ActivationSelfApprovedNotification(
+            activation,
+            iapPrincipal.getId(),
+            request.justification));
         }
 
         this.logAdapter
@@ -876,7 +879,8 @@ public class ApiResource {
   // -------------------------------------------------------------------------
 
   /**
-   * Email to reviewers, requesting their approval.
+   * Notification indicating that a multi-party approval request has been made
+   * and is pending approval.
    */
   public class RequestActivationNotification extends NotificationService.Notification
   {
@@ -912,7 +916,7 @@ public class ApiResource {
   }
 
   /**
-   * Email to the beneficiary, confirming an approval.
+   * Notification indicating that a multi-party approval was granted.
    */
   public class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
@@ -947,6 +951,42 @@ public class ApiResource {
     @Override
     public String getType() {
       return "ActivationApproved";
+    }
+  }
+
+  /**
+   * Notification indicating that a self-approval was performed.
+   */
+  public class ActivationSelfApprovedNotification extends NotificationService.Notification {
+    protected ActivationSelfApprovedNotification(
+      RoleActivationService.Activation activation,
+      UserId beneficiary,
+      String justification)
+    {
+      super(
+        List.of(beneficiary),
+        List.of(),
+        String.format(
+          "Activated role '%s' on '%s'",
+          activation.projectRole.roleBinding,
+          activation.projectRole.getProjectId()));
+
+      this.properties.put("BENEFICIARY", beneficiary);
+      this.properties.put("PROJECT_ID", activation.projectRole.getProjectId());
+      this.properties.put("ROLE", activation.projectRole.roleBinding.role);
+      this.properties.put("START_TIME", activation.startTime);
+      this.properties.put("END_TIME", activation.endTime);
+      this.properties.put("JUSTIFICATION", justification);
+    }
+
+    @Override
+    protected boolean isReply() {
+      return true;
+    }
+
+    @Override
+    public String getType() {
+      return "ActivationSelfApproved";
     }
   }
 
