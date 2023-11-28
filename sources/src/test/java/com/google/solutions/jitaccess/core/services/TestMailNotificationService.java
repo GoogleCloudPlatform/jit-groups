@@ -37,7 +37,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class TestNotificationService {
+public class TestMailNotificationService {
   private static class TestNotification extends NotificationService.Notification {
     private final String templateId;
 
@@ -56,7 +56,7 @@ public class TestNotificationService {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return this.templateId;
     }
   }
@@ -68,9 +68,9 @@ public class TestNotificationService {
   @Test
   public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpAdapter.class);
-    var service = new NotificationService.MailNotificationService(
+    var service = new MailNotificationService(
       mailAdapter,
-      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
+      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
@@ -90,9 +90,9 @@ public class TestNotificationService {
   @Test
   public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpAdapter.class);
-    var service = new NotificationService.MailNotificationService(
+    var service = new MailNotificationService(
       mailAdapter,
-      new NotificationService.Options(NotificationService.Options.DEFAULT_TIMEZONE));
+      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
@@ -116,7 +116,6 @@ public class TestNotificationService {
   @Test
   public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception
   {
-    assertNull(NotificationService.loadResource("doesnotexist"));
+    assertNull(MailNotificationService.loadResource("doesnotexist"));
   }
-
 }

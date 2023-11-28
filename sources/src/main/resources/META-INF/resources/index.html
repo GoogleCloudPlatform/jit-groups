@@ -656,6 +656,11 @@
                     else {
                         $("#request-status-pane-title").text("Access granted");
                         $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
+                        if (activationStatus.items && activationStatus.items.length > 0) {
+                            $("#request-status-pane-consolebutton").attr("href", function(index, attr) {
+                                return `${attr}?project=${activationStatus.items[0].projectId}`
+                            })
+                        }
                         $("#request-status-pane-consolebutton").show();
                     }
                 }

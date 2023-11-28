@@ -40,6 +40,7 @@ import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
 
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -77,7 +78,7 @@ public class ApiResource {
   ActivationTokenService activationTokenService;
 
   @Inject
-  NotificationService notificationService;
+  Instance<NotificationService> notificationServices;
 
   @Inject
   RuntimeEnvironment runtimeEnvironment;
@@ -288,7 +289,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     SelfActivationRequest request,
     @Context SecurityContext securityContext
-  ) throws AccessDeniedException, IOException, ExecutionException, InterruptedException {
+  ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
 
     Preconditions.checkArgument(
@@ -320,6 +321,9 @@ public class ApiResource {
       .map(r -> new RoleBinding(projectId.getFullResourceName(), r))
       .collect(Collectors.toSet());
 
+    // Get the requested role binding duration in minutes
+    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
+
     var activations = new ArrayList<RoleActivationService.Activation>();
     for (var roleBinding : roleBindings) {
       try {
@@ -348,10 +352,11 @@ public class ApiResource {
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s activated role '%s' on '%s' for themselves",
+              "User %s activated role '%s' on '%s' for themselves for %d minutes",
               iapPrincipal.getId(),
               roleBinding.role,
-              roleBinding.fullResourceName))
+              roleBinding.fullResourceName,
+              requestedRoleBindingDuration))
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
@@ -370,10 +375,11 @@ public class ApiResource {
           .newErrorEntry(
             LogEvents.API_ACTIVATE_ROLE,
             String.format(
-              "User %s failed to activate role '%s' on '%s' for themselves: %s",
+              "User %s failed to activate role '%s' on '%s' for themselves for %d minutes: %s",
               iapPrincipal.getId(),
               roleBinding.role,
               roleBinding.fullResourceName,
+              requestedRoleBindingDuration,
               Exceptions.getFullMessage(e)))
           .addLabels(le -> addLabels(le, projectId))
           .addLabels(le -> addLabels(le, roleBinding))
@@ -416,10 +422,10 @@ public class ApiResource {
     ActivationRequest request,
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
-  ) throws AccessDeniedException, IOException, ExecutionException, InterruptedException {
+  ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
     assert this.activationTokenService != null;
-    assert this.notificationService != null;
+    assert this.notificationServices != null;
 
     var minReviewers = this.roleActivationService.getOptions().minNumberOfReviewersPerActivationRequest;
     var maxReviewers = this.roleActivationService.getOptions().maxNumberOfReviewersPerActivationRequest;
@@ -444,13 +450,22 @@ public class ApiResource {
       request.justification != null && request.justification.length() < 100,
       "The justification is too long");
 
+    //
+    // For MPA to work, we need at least one functional notification service.
+    //
     Preconditions.checkState(
-      this.notificationService.canSendNotifications() || this.runtimeEnvironment.isDebugModeEnabled(),
+      this.notificationServices
+        .stream()
+        .anyMatch(s -> s.canSendNotifications()) ||
+        this.runtimeEnvironment.isDebugModeEnabled(),
       "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
+
+    // Get the requested role binding duration in minutes
+    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
 
     try
     {
@@ -470,10 +485,11 @@ public class ApiResource {
       var activationToken = this.activationTokenService.createToken(activationRequest);
       var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token);
 
-      this.notificationService.sendNotification(new RequestActivationNotification(
-        activationRequest,
-        activationToken.expiryTime,
-        activationRequestUrl));
+      for (var service : this.notificationServices) {
+        service.sendNotification(new RequestActivationNotification(
+          activationRequest,
+          activationToken.expiryTime, activationRequestUrl));
+      }
 
       this.pubSubService.publishMessage(new PubSubService.ApprovalPubSubMessage(
               iapPrincipal.getId(),
@@ -493,10 +509,12 @@ public class ApiResource {
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s requested role '%s' on '%s'",
+            "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.getId(),
             roleBinding.role,
-            roleBinding.fullResourceName))
+            roleBinding.fullResourceName,
+            requestedRoleBindingDuration
+            ))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -520,10 +538,11 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s failed to request role '%s' on '%s': %s",
+            "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.getId(),
             roleBinding.role,
             roleBinding.fullResourceName,
+            requestedRoleBindingDuration,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, roleBinding))
@@ -602,7 +621,7 @@ public class ApiResource {
   ) throws AccessException {
     assert this.activationTokenService != null;
     assert this.roleActivationService != null;
-    assert this.notificationService != null;
+    assert this.notificationServices != null;
 
     Preconditions.checkArgument(
       obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
@@ -633,6 +652,12 @@ public class ApiResource {
 
       assert activation != null;
 
+      for (var service : this.notificationServices) {
+        service.sendNotification(new ActivationApprovedNotification(
+          activationRequest,
+          iapPrincipal.getId(),
+          createActivationRequestUrl(uriInfo, activationToken)));
+      }
       this.pubSubService.publishMessage(new PubSubService.BindingPubSubMessage(
               activationRequest.beneficiary,
               activationRequest.roleBinding,
@@ -641,14 +666,6 @@ public class ApiResource {
               activation.endTime,
               activationRequest.justification
       ));
-
-      //
-      // Send notifications and logs
-      //
-      this.notificationService.sendNotification(new ActivationApprovedNotification(
-        activationRequest,
-        iapPrincipal.getId(),
-        createActivationRequestUrl(uriInfo, activationToken)));
 
       this.logAdapter
         .newInfoEntry(
@@ -947,7 +964,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return "RequestActivation";
     }
   }
@@ -985,7 +1002,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getTemplateId() {
+    public String getType() {
       return "ActivationApproved";
     }
   }
