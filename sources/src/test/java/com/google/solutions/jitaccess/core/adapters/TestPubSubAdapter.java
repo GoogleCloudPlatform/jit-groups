@@ -29,6 +29,8 @@ import com.google.solutions.jitaccess.core.data.Topic;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestPubSubAdapter {
@@ -63,7 +65,7 @@ public class TestPubSubAdapter {
 
     var messageId = adapter.publish(
       IntegrationTestEnvironment.PUBSUB_TOPIC,
-      new PubsubMessage());
+      new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(messageId);
   }

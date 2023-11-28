@@ -305,7 +305,7 @@ public class RuntimeEnvironment {
           new Topic(this.projectId, this.configuration.topicName.getValue())));
     }
     else {
-      return new NotificationService.SilentNotificationService();
+      return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }
   }
 
@@ -347,7 +347,7 @@ public class RuntimeEnvironment {
         new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {
-      return new NotificationService.SilentNotificationService();
+      return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }
   }
 

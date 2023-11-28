@@ -25,13 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.io.IOException;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +48,12 @@ public abstract class NotificationService {
    * Concrete class that prints notifications to STDOUT. Useful for local development only.
    */
   public static class SilentNotificationService extends NotificationService {
+    private final boolean printToConsole;
+
+    public SilentNotificationService(boolean printToConsole) {
+      this.printToConsole = printToConsole;
+    }
+
     @Override
     public boolean canSendNotifications() {
       return false;
@@ -62,10 +61,12 @@ public abstract class NotificationService {
 
     @Override
     public void sendNotification(Notification notification) throws NotificationException {
-      //
-      // Print it so that we can see the message during development.
-      //
-      System.out.println(notification); // TODO: make conditional
+      if (this.printToConsole) {
+        //
+        // Print it so that we can see the message during development.
+        //
+        System.out.println(notification);
+      }
     }
   }
 

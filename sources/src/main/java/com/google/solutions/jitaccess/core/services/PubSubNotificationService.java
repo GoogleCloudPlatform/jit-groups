@@ -9,18 +9,15 @@ import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.Topic;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 /**
  * Concrete class that delivers notifications over Pub/Sub.
  */
-public class PubSubNotificationService extends NotificationService {//TODO: Test
+public class PubSubNotificationService extends NotificationService {
   private final PubSubAdapter adapter;
   private final Options options;
 
@@ -78,7 +75,7 @@ public class PubSubNotificationService extends NotificationService {//TODO: Test
 
     try {
       var message = new PubsubMessage()
-        .encodeData(payloadAsJson.getBytes("UTF-8"));
+        .encodeData(payloadAsJson.getBytes(StandardCharsets.UTF_8));
 
       this.adapter.publish(options.topic, message);
     } catch (AccessException | IOException e){
