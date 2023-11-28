@@ -65,7 +65,7 @@ public abstract class NotificationService {
       //
       // Print it so that we can see the message during development.
       //
-      System.out.println(notification);
+      System.out.println(notification); // TODO: make conditional
     }
   }
 

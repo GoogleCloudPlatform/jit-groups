@@ -1,12 +1,26 @@
 package com.google.solutions.jitaccess.core.services;
 
+import com.google.api.client.json.GenericJson;
+import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
+import com.google.solutions.jitaccess.core.data.Topic;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 /**
  * Concrete class that delivers notifications over Pub/Sub.
  */
-public class PubSubNotificationService extends NotificationService {
+public class PubSubNotificationService extends NotificationService {//TODO: Test
   private final PubSubAdapter adapter;
   private final Options options;
 
@@ -16,7 +30,7 @@ public class PubSubNotificationService extends NotificationService {
   ) {
     Preconditions.checkNotNull(adapter, "adapter");
     Preconditions.checkNotNull(options, "options");
-    Preconditions.checkNotNull(options.topicResourceName, "options");
+    Preconditions.checkNotNull(options.topic, "options");
 
     this.adapter = adapter;
     this.options = options;
@@ -33,7 +47,43 @@ public class PubSubNotificationService extends NotificationService {
 
   @Override
   public void sendNotification(Notification notification) throws NotificationException {
-    // TODO: format & publish Pub/Sub message.
+    var attributes = new GenericJson();
+    for (var property : notification.properties.entrySet())
+    {
+      Object propertyValue;
+      if (property.getValue() instanceof Instant) {
+        //
+        // Serialize ISO-8601 representation instead of individual
+        // object fields.
+        //
+        propertyValue = ((Instant)property.getValue()).toString();
+      }
+      else if (property.getValue() instanceof Collection<?>) {
+        propertyValue = ((Collection<?>)property.getValue()).stream()
+          .map(i -> i.toString())
+          .collect(Collectors.toList());
+      }
+      else {
+        propertyValue = property.getValue().toString();
+      }
+
+      attributes.set(property.getKey().toLowerCase(), propertyValue);
+    }
+
+    var payload = new GenericJson()
+      .set("type", notification.getType())
+      .set("attributes", attributes);
+
+    var payloadAsJson = new Gson().toJson(payload);
+
+    try {
+      var message = new PubsubMessage()
+        .encodeData(payloadAsJson.getBytes("UTF-8"));
+
+      this.adapter.publish(options.topic, message);
+    } catch (AccessException | IOException e){
+      throw new NotificationException("Publishing event to Pub/Sub failed", e);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -43,7 +93,6 @@ public class PubSubNotificationService extends NotificationService {
   /**
    * @param topicResourceName PubSub topic in format projects/{project}/topics/{topic}
    */
-  public record Options(String topicResourceName) {
+  public record Options(Topic topic) {
   }
-
 }

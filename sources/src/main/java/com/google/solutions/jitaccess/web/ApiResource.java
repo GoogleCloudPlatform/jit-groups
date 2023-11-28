@@ -328,9 +328,10 @@ public class ApiResource {
         assert activation != null;
         activations.add(activation);
 
-        //
-        // Emit event and emit event.
-        //
+        for (var service : this.notificationServices) {
+          //TODO: send notification
+        }
+
         this.logAdapter
           .newInfoEntry(
             LogEvents.API_ACTIVATE_ROLE,
@@ -459,13 +460,12 @@ public class ApiResource {
       var activationToken = this.activationTokenService.createToken(activationRequest);
 
       for (var service : this.notificationServices) {
+        var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token);
         service.sendNotification(new RequestActivationNotification(
           activationRequest,
           activationToken.expiryTime,
-          createActivationRequestUrl(uriInfo, activationToken.token)));
+          activationRequestUrl));
       }
-
-      var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token);
 
       this.logAdapter
         .newInfoEntry(
@@ -893,8 +893,9 @@ public class ApiResource {
           request.beneficiary,
           ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
 
-      this.properties.put("BENEFICIARY", request.beneficiary.email);
-      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
+      this.properties.put("BENEFICIARY", request.beneficiary);
+      this.properties.put("REVIEWERS", request.reviewers);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName));
       this.properties.put("ROLE", request.roleBinding.role);
       this.properties.put("START_TIME", request.startTime);
       this.properties.put("END_TIME", request.endTime);
@@ -928,8 +929,9 @@ public class ApiResource {
           ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
 
       this.properties.put("APPROVER", approver.email);
-      this.properties.put("BENEFICIARY", request.beneficiary.email);
-      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id);
+      this.properties.put("BENEFICIARY", request.beneficiary);
+      this.properties.put("REVIEWERS", request.reviewers);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName));
       this.properties.put("ROLE", request.roleBinding.role);
       this.properties.put("START_TIME", request.startTime);
       this.properties.put("END_TIME", request.endTime);

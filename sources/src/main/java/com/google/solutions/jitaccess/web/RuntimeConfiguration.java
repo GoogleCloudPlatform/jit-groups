@@ -46,11 +46,6 @@ public class RuntimeConfiguration {
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
 
     //
-    // Event publishing settings.
-    //
-    this.topicName = new StringSetting(List.of("EVENT_TOPIC"), null);
-
-    //
     // Activation settings.
     //
     this.activationTimeout = new DurationSetting(
@@ -89,6 +84,7 @@ public class RuntimeConfiguration {
     // Notification settings.
     //
     this.timeZoneForNotifications = new ZoneIdSetting(List.of("NOTIFICATION_TIMEZONE"));
+    this.topicName = new StringSetting(List.of("NOTIFICATION_TOPIC"), null);
 
     //
     // SMTP settings.

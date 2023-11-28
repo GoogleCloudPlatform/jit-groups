@@ -35,6 +35,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
+import com.google.solutions.jitaccess.core.data.Topic;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.services.*;
 
@@ -56,6 +57,7 @@ import java.util.stream.Stream;
 public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
+  private static final String CONFIG_PROJECT = "jitaccess.project";
 
   private final String projectId;
   private final String projectNumber;
@@ -157,7 +159,7 @@ public class RuntimeEnvironment {
       //
       // Initialize using development settings and credential.
       //
-      this.projectId = "dev";
+      this.projectId = System.getProperty(CONFIG_PROJECT, "dev");
       this.projectNumber = "0";
 
       try {
@@ -293,22 +295,17 @@ public class RuntimeEnvironment {
 
   @Produces
   @ApplicationScoped
-  public PubSubNotificationService getPubSubNotificationService(
+  public NotificationService getPubSubNotificationService(
     PubSubAdapter pubSubAdapter
   ) {
-    var topicName = this.configuration.topicName.getValue();
-    if (Strings.isNullOrEmpty(topicName)) {
-      return null;
-    }
-    else {
-      var topicResourceName = String.format(
-        "projects/%s/topics/%s",
-        this.projectId,
-        topicName);
-
+    if (this.configuration.topicName.isValid()) {
       return new PubSubNotificationService(
         pubSubAdapter,
-        new PubSubNotificationService.Options(topicResourceName));
+        new PubSubNotificationService.Options(
+          new Topic(this.projectId, this.configuration.topicName.getValue())));
+    }
+    else {
+      return new NotificationService.SilentNotificationService();
     }
   }
 

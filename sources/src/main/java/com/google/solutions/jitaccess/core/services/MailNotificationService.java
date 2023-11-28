@@ -34,7 +34,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Concrete class that delivers notifications over SMTP.
@@ -175,6 +178,11 @@ public class MailNotificationService extends NotificationService {
             .ofInstant((Instant) property.getValue(), this.timezoneId)
             .truncatedTo(ChronoUnit.SECONDS)
             .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        }
+        else if (property.getValue() instanceof Collection<?>) {
+          propertyValue = ((Collection<?>)property.getValue()).stream()
+            .map(i -> i.toString())
+            .collect(Collectors.joining(", "));
         }
         else {
           //
