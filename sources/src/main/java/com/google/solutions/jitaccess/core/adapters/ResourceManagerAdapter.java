@@ -34,10 +34,7 @@ import com.google.solutions.jitaccess.core.data.ProjectId;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -49,6 +46,8 @@ import java.util.stream.Collectors;
 public class ResourceManagerAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
+
+  private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
   private final GoogleCredentials credentials;
 
@@ -248,17 +247,42 @@ public class ResourceManagerAdapter {
     }
   }
 
-  public List<ProjectId> listProjects(String parent) throws NotAuthenticatedException, IOException {
+  public List<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
     try {
-      var response = createClient()
-        .projects()
-        .list()
-        .setParent(parent)
-        .execute();
+      var client = createClient();
 
-      return response.getProjects() != null
-        ? response.getProjects().stream().map(p -> new ProjectId(p.getProjectId())).collect(Collectors.toList())
-        : List.of();
+      var response = client
+              .projects()
+              .search()
+              .setQuery(query)
+              .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
+              .execute();
+
+      ArrayList<Project> allProjects = new ArrayList<>();
+      if(response.getProjects() != null) {
+        allProjects.addAll(response.getProjects());
+      }
+
+      while(response.getNextPageToken() != null
+              && !response.getNextPageToken().isEmpty()
+              && response.getProjects() !=null
+              && response.getProjects().size() >= SEARCH_PROJECTS_PAGE_SIZE) {
+        response = client
+          .projects()
+          .search()
+          .setQuery(query)
+          .setPageToken(response.getNextPageToken())
+          .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
+          .execute();
+
+        if(response.getProjects() != null) {
+          allProjects.addAll(response.getProjects());
+        }
+      }
+
+      return allProjects.stream()
+        .map(p -> new ProjectId(p.getProjectId()))
+        .collect(Collectors.toList());
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {

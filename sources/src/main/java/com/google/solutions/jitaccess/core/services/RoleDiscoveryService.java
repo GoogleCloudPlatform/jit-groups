@@ -114,7 +114,7 @@ public class RoleDiscoveryService {
   public Set<ProjectId> listAvailableProjects(
     UserId user
   ) throws AccessException, IOException {
-    if(this.options.listAllAvailableProjectsIn == null) {
+    if(this.options.searchAllAvailableProjects == null) {
       //
       // NB. To reliably find projects, we have to let the Asset API consider
       // inherited role bindings by using the "expand resources" flag. This
@@ -153,8 +153,8 @@ public class RoleDiscoveryService {
         .collect(Collectors.toSet());
       }
     else {
-      // Used as fallback if listAllAvailableProjects is set to true and Asset API is not working fast enough.
-      return new HashSet<>(resourceManagerAdapter.listProjects(this.options.listAllAvailableProjectsIn));
+      // Used as alternative option if searchAllAvailableProjects is set and the main approach with Asset API is not working fast enough.
+      return new HashSet<>(resourceManagerAdapter.searchProjectIds(this.options.searchAllAvailableProjects));
     }
   }
 
@@ -368,20 +368,20 @@ public class RoleDiscoveryService {
 
     /**
      * In some cases listing all available projects is not working fast enough and times out,
-     * so we use this method as fallback.
-     * The format is the same as Google Resource Manager API requires for parent parameter.
-     * - folders/{folder_id}
-     * - organizations/{organization_id}
-     * (https://cloud.google.com/resource-manager/reference/rest/v3/projects/list#query-parameters)
+     * so this method is available as alternative.
+     * The format is the same as Google Resource Manager API requires for the query parameter, for example:
+     * - parent:folders/{folder_id}
+     * - parent:organizations/{organization_id}
+     * (https://cloud.google.com/resource-manager/reference/rest/v3/projects/search#query-parameters)
      */
-    public final String listAllAvailableProjectsIn;
+    public final String searchAllAvailableProjects;
 
     /**
      * Search inherited IAM policies
      */
-    public Options(String scope, String listAllAvailableProjectsIn) {
+    public Options(String scope, String searchAllAvailableProjects) {
       this.scope = scope;
-      this.listAllAvailableProjectsIn = listAllAvailableProjectsIn;
+      this.searchAllAvailableProjects = searchAllAvailableProjects;
     }
 
 

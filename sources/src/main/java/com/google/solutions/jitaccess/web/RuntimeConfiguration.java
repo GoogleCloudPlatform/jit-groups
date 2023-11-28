@@ -68,8 +68,8 @@ public class RuntimeConfiguration {
     this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
-    this.listAllAvailableProjectsIn = new StringSetting(
-      List.of("LIST_ALL_AVAILABLE_PROJECTS_IN"),
+    this.searchAllAvailableProjects = new StringSetting(
+      List.of("SEARCH_ALL_AVAILABLE_PROJECTS"),
       null);
 
     //
@@ -201,12 +201,13 @@ public class RuntimeConfiguration {
   public final IntSetting maxNumberOfJitRolesPerSelfApproval;
 
   /**
-   * List all available projects in the UI instead of using Asset Inventory.
-   * The format is the same as Google Resource Manager API requires for parent parameter.
-   * - folders/{folder_id}
-   * - organizations/{organization_id}
+   * In some cases listing all available projects is not working fast enough and times out,
+   * so this method is available as alternative.
+   * The format is the same as Google Resource Manager API requires for the query parameter, for example:
+   * - parent:folders/{folder_id}
+   * - parent:organizations/{organization_id}
    */
-  public final StringSetting listAllAvailableProjectsIn;
+  public final StringSetting searchAllAvailableProjects;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);

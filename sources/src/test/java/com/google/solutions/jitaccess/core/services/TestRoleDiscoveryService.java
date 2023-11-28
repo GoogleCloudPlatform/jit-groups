@@ -1101,13 +1101,13 @@ public class TestRoleDiscoveryService {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
 
-    when(resourceManagerAdapter.listProjects(anyString()))
+    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
             .thenReturn(List.of());
 
     var service = new RoleDiscoveryService(
             assetAdapter,
             resourceManagerAdapter,
-            new RoleDiscoveryService.Options("organizations/0", "folder/0"));
+            new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
 
     var projectIds = service.listAvailableProjects(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -1120,13 +1120,13 @@ public class TestRoleDiscoveryService {
     var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
     var expectedProjectIds = List.of(new ProjectId("project-1"), new ProjectId("project-2"));
 
-    when(resourceManagerAdapter.listProjects(anyString()))
+    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
             .thenReturn(expectedProjectIds);
 
     var service = new RoleDiscoveryService(
             assetAdapter,
             resourceManagerAdapter,
-            new RoleDiscoveryService.Options("organizations/0", "folder/0"));
+            new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
 
     var projectIds = service.listAvailableProjects(SAMPLE_USER);
     assertNotNull(projectIds);
