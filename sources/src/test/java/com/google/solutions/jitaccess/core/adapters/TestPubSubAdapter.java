@@ -21,73 +21,50 @@
 
 package com.google.solutions.jitaccess.core.adapters;
 
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
-import com.google.api.client.json.GenericJson;
+import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.data.Topic;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestPubSubAdapter {
-    @Test
-    public void whenUnauthenticated_ThenPublishThrowsException() {
-        var expression = new GenericJson().set("start", "11am")
-            .set("end", "12pm");
-        var bindingDescription = String.format(
-            "Self-approved, justification: %s",
-            "test justification");
-        var condition = new GenericJson().set("expression", expression)
-            .set("title", "Activated").set("description", bindingDescription);
+  @Test
+  public void whenUnauthenticated_ThenPublishThrowsException() {
+    var adapter = new PubSubAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
 
-        var binding = new Binding().setRole("project/viewer")
-            .set("project_id", "project1")
-            .setMembers(List.of("example@example.com"))
-            .set("conditions", condition);
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> adapter.publish(
+        new Topic(IntegrationTestEnvironment.PROJECT_ID.id, "topic-1"),
+        new PubsubMessage()));
+  }
 
-        var adapter = new PubSubAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+  @Test
+  public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
+    var adapter = new PubSubAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    assertThrows(
+      AccessDeniedException.class,
+      () -> adapter.publish(
+        new Topic(IntegrationTestEnvironment.PROJECT_ID.id, "topic-1"),
+        new PubsubMessage()));
+  }
 
-        assertThrows(
-            IOException.class,
-            () -> adapter.publish(
-                IntegrationTestEnvironment.TOPIC_NAME,
-                new MessageProperty(
-                    binding,
-                    MessageProperty.MessageOrigin.REQUEST_APPROVED)));
-    }
+  @Test
+  public void whenAuthenticated_ThenPublishSucceeds() throws Exception {
+    // if project id configured but no topic name, just skip the test
+    Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
+    Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
 
-    @Test
-    public void whenAuthenticated_ThenPublishSucceeds() throws IOException {
-        // if project id configured but no topic name, just skip the test
-        Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
-        Assumptions.assumeTrue(!Strings.isNullOrEmpty(IntegrationTestEnvironment.TOPIC_NAME));
+    var adapter = new PubSubAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
 
-        var expression = new GenericJson().set("start", "11am")
-            .set("end", "12pm");
-        var bindingDescription = String.format(
-            "Self-approved, justification: %s",
-            "test justification");
-        var condition = new GenericJson()
-            .set("expression", expression)
-            .set("title", "Activated").set("description", bindingDescription);
+    var messageId = adapter.publish(
+      IntegrationTestEnvironment.PUBSUB_TOPIC,
+      new PubsubMessage());
 
-        var binding = new Binding().setRole("project/viewer")
-            .set("project_id", "project1")
-            .setMembers(List.of("example@example.com"))
-            .set("conditions", condition);
-
-        var adapter = new PubSubAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
-
-        assertTrue(
-            adapter.publish(
-                IntegrationTestEnvironment.TOPIC_NAME,
-                new MessageProperty(
-                    binding,
-                    MessageProperty.MessageOrigin.REQUEST_APPROVED)).matches("^[0-9]*$"));
-    }
+    assertNotNull(messageId);
+  }
 }

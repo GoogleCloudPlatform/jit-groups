@@ -293,12 +293,12 @@ public class RuntimeEnvironment {
 
   @Produces
   @ApplicationScoped
-  public EventService getEventService(
+  public PubSubNotificationService getPubSubNotificationService(
     PubSubAdapter pubSubAdapter
   ) {
     var topicName = this.configuration.topicName.getValue();
     if (Strings.isNullOrEmpty(topicName)) {
-      return new EventService.SilentEventService();
+      return null;
     }
     else {
       var topicResourceName = String.format(
@@ -306,9 +306,9 @@ public class RuntimeEnvironment {
         this.projectId,
         topicName);
 
-      return new EventService.PubSubEventService(
+      return new PubSubNotificationService(
         pubSubAdapter,
-        new EventService.PubSubEventService.Options(topicResourceName));
+        new PubSubNotificationService.Options(topicResourceName));
     }
   }
 

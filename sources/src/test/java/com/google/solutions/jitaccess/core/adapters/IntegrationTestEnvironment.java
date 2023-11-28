@@ -24,7 +24,9 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
+import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.data.ProjectId;
+import com.google.solutions.jitaccess.core.data.Topic;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.io.File;
@@ -55,7 +57,7 @@ public class IntegrationTestEnvironment {
   public static final UserId TEMPORARY_ACCESS_USER;
   public static final UserId NO_ACCESS_USER;
 
-  public static final String TOPIC_NAME;
+  public static final Topic PUBSUB_TOPIC;
 
   static {
     //
@@ -94,7 +96,13 @@ public class IntegrationTestEnvironment {
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
 
-      TOPIC_NAME = getOptional(settings, "test.topic", "");
+      var topicName = getOptional(settings, "test.topic", "");
+      if (!Strings.isNullOrEmpty(topicName)) {
+        PUBSUB_TOPIC = new Topic(PROJECT_ID.id, topicName);
+      }
+      else {
+        PUBSUB_TOPIC = null;
+      }
     }
     catch (IOException e) {
       throw new RuntimeException("Failed to load test settings", e);

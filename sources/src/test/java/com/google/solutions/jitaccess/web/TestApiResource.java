@@ -33,7 +33,6 @@ import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.services.EventService;
 import com.google.solutions.jitaccess.core.services.Result;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -1088,7 +1087,6 @@ public class TestApiResource {
         new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
         request.startTime,
         request.endTime));
-    doNothing().when(this.resource.eventService).publish(any(EventService.EventBase.class));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post(

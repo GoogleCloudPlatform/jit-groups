@@ -34,7 +34,6 @@ import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserPrincipal;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
 import com.google.solutions.jitaccess.core.services.NotificationService;
-import com.google.solutions.jitaccess.core.services.EventService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 
@@ -86,9 +85,6 @@ public class ApiResource {
 
   @Inject
   Options options;
-
-  @Inject
-  EventService eventService;
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
@@ -347,15 +343,6 @@ public class ApiResource {
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
           .write();
-
-        this.eventService.publish(
-          new EventService.RoleActivatedEvent(
-            iapPrincipal.getId(),
-            roleBinding,
-            projectId,
-            activation.startTime,
-            activation.endTime,
-            request.justification));
       }
       catch (Exception e) {
         this.logAdapter
@@ -493,17 +480,6 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
-
-      this.eventService.publish(
-        new EventService.RequestApprovedEvent(
-          iapPrincipal.getId(),
-          activationRequest.roleBinding,
-          ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName),
-          activationToken.expiryTime,
-          activationRequestUrl.toString(),
-          activationRequest.justification,
-          request.activationTimeout,
-          request.peers));
 
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
@@ -643,14 +619,6 @@ public class ApiResource {
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
-
-      this.eventService.publish(new EventService.RoleActivatedEvent(
-        activationRequest.beneficiary,
-        activationRequest.roleBinding,
-        ProjectId.fromFullResourceName(activationRequest.roleBinding.fullResourceName),
-        activation.startTime,
-        activation.endTime,
-        activationRequest.justification));
 
       return new ActivationStatusResponse(
         activationRequest.beneficiary,

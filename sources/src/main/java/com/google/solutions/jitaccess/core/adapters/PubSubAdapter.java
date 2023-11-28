@@ -29,8 +29,11 @@ import com.google.api.services.pubsub.Pubsub;
 import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.api.services.pubsub.model.PublishRequest;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.data.MessageProperty;
+import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.data.Topic;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -61,37 +64,42 @@ public class PubSubAdapter {
   }
 
   public String publish(
-    String topicName,
-    MessageProperty messageProperty
-  ) throws IOException {
+    Topic topic,
+    PubsubMessage message
+  ) throws AccessException, IOException {
     var client = createClient();
 
     try {
-      var message = new PubsubMessage()
-        .encodeData(messageProperty.getData().getBytes("UTF-8"));
-
       var request = new PublishRequest();
       request.setMessages(Arrays.asList(message));
-
-      var messageAttributes = new HashMap<String, String>();
-      messageAttributes.put("origin", messageProperty.origin.toString());
-      message.setAttributes(messageAttributes);
 
       var result = client
         .projects()
         .topics()
-        .publish(topicName, request)
+        .publish(topic.getFullResourceName(), request)
         .execute();
       if (result.getMessageIds().size() < 1){
         throw new IOException(
-          String.format("Publishing message to topic %s returned empty response", topicName));
+          String.format("Publishing message to topic %s returned empty response", topic));
       }
 
       return result.getMessageIds().get(0);
-    } catch (IllegalArgumentException | GoogleJsonResponseException e) {
-      throw new IOException(
-        String.format("Publishing message to topic %s failed", topicName),
-        e);
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+        case 404:
+          throw new AccessDeniedException(
+            String.format(
+              "Pub/Sub topic '%s' cannot be accessed or does not exist: %s",
+              topic,
+              e.getMessage()),
+            e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
     }
   }
 }
