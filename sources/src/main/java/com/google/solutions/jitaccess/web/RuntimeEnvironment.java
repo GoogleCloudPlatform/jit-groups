@@ -262,8 +262,8 @@ public class RuntimeEnvironment {
   public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
     return new RoleDiscoveryService.Options(
             this.configuration.scope.getValue(),
-            this.configuration.searchAllAvailableProjects.isValid() ?
-                this.configuration.searchAllAvailableProjects.getValue() : null
+            this.configuration.availableProjectsQuery.isValid() ?
+                this.configuration.availableProjectsQuery.getValue() : null
     );
   }
 

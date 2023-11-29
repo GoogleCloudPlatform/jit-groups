@@ -68,8 +68,8 @@ public class RuntimeConfiguration {
     this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
-    this.searchAllAvailableProjects = new StringSetting(
-      List.of("SEARCH_ALL_AVAILABLE_PROJECTS"),
+    this.availableProjectsQuery = new StringSetting(
+      List.of("AVAILABLE_PROJECTS_QUERY"),
       null);
 
     //
@@ -207,7 +207,7 @@ public class RuntimeConfiguration {
    * - parent:folders/{folder_id}
    * - parent:organizations/{organization_id}
    */
-  public final StringSetting searchAllAvailableProjects;
+  public final StringSetting availableProjectsQuery;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);

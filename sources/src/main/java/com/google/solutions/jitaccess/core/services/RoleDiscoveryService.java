@@ -114,7 +114,7 @@ public class RoleDiscoveryService {
   public Set<ProjectId> listAvailableProjects(
     UserId user
   ) throws AccessException, IOException {
-    if(this.options.searchAllAvailableProjects == null) {
+    if(this.options.availableProjectsQuery == null) {
       //
       // NB. To reliably find projects, we have to let the Asset API consider
       // inherited role bindings by using the "expand resources" flag. This
@@ -153,8 +153,8 @@ public class RoleDiscoveryService {
         .collect(Collectors.toSet());
       }
     else {
-      // Used as alternative option if searchAllAvailableProjects is set and the main approach with Asset API is not working fast enough.
-      return new HashSet<>(resourceManagerAdapter.searchProjectIds(this.options.searchAllAvailableProjects));
+      // Used as alternative option if availableProjectsQuery is set and the main approach with Asset API is not working fast enough.
+      return new HashSet<>(resourceManagerAdapter.searchProjectIds(this.options.availableProjectsQuery));
     }
   }
 
@@ -374,14 +374,14 @@ public class RoleDiscoveryService {
      * - parent:organizations/{organization_id}
      * (https://cloud.google.com/resource-manager/reference/rest/v3/projects/search#query-parameters)
      */
-    public final String searchAllAvailableProjects;
+    public final String availableProjectsQuery;
 
     /**
      * Search inherited IAM policies
      */
-    public Options(String scope, String searchAllAvailableProjects) {
+    public Options(String scope, String availableProjectsQuery) {
       this.scope = scope;
-      this.searchAllAvailableProjects = searchAllAvailableProjects;
+      this.availableProjectsQuery = availableProjectsQuery;
     }
 
 
