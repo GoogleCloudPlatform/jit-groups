@@ -106,11 +106,11 @@ public class RuntimeConfiguration {
       ChronoUnit.SECONDS,
       Duration.ofSeconds(5));
     this.backendReadTimeout = new DurationSetting(
-      List.of("BACKEND_CONNECT_TIMEOUT"),
+      List.of("BACKEND_READ_TIMEOUT"),
       ChronoUnit.SECONDS,
       Duration.ofSeconds(20));
     this.backendWriteTimeout = new DurationSetting(
-      List.of("BACKEND_CONNECT_TIMEOUT"),
+      List.of("BACKEND_WRITE_TIMEOUT"),
       ChronoUnit.SECONDS,
       Duration.ofSeconds(5));
   }
