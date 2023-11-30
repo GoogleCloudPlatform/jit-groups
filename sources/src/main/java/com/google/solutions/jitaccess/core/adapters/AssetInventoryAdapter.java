@@ -25,7 +25,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
-import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
@@ -48,14 +47,18 @@ import java.util.Optional;
 @ApplicationScoped
 public class AssetInventoryAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private static final int ANALYZE_IAM_POLICY_TIMEOUT_SECS = 30;
-
   private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
-  public AssetInventoryAdapter(GoogleCredentials credentials) {
+  public AssetInventoryAdapter(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  ) {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
 
     this.credentials = credentials;
+    this.httpOptions = httpOptions;
   }
 
   private CloudAsset createClient() throws IOException {
@@ -63,7 +66,7 @@ public class AssetInventoryAdapter {
       return new CloudAsset.Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -101,7 +104,7 @@ public class AssetInventoryAdapter {
         .setAnalysisQueryIdentitySelectorIdentity("user:" + user.email)
         .setAnalysisQueryOptionsExpandResources(expandResources)
         .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
-        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS));
+        .setExecutionTimeout(String.format("%ds", this.httpOptions.readTimeout().toSeconds()));
 
       if (fullResourceName.isPresent()) {
         request.setAnalysisQueryResourceSelectorFullResourceName(fullResourceName.get());
@@ -155,7 +158,7 @@ public class AssetInventoryAdapter {
         .setAnalysisQueryAccessSelectorRoles(List.of(role))
         .setAnalysisQueryConditionContextAccessTime(DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
         .setAnalysisQueryOptionsExpandGroups(true)
-        .setExecutionTimeout(String.format("%ds", ANALYZE_IAM_POLICY_TIMEOUT_SECS))
+        .setExecutionTimeout(String.format("%ds", this.httpOptions.readTimeout().toSeconds()))
         .execute()
         .getMainAnalysis();
     }

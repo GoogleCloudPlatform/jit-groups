@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +50,11 @@ public class RuntimeConfiguration {
     //
     this.activationTimeout = new DurationSetting(
       List.of("ELEVATION_DURATION", "ACTIVATION_TIMEOUT"),
+      ChronoUnit.MINUTES,
       Duration.ofHours(2));
     this.activationRequestTimeout = new DurationSetting(
       List.of("ACTIVATION_REQUEST_TIMEOUT"),
+      ChronoUnit.MINUTES,
       Duration.ofHours(1));
     this.justificationPattern = new StringSetting(
       List.of("JUSTIFICATION_PATTERN"),
@@ -94,6 +97,22 @@ public class RuntimeConfiguration {
     this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
     this.smtpSecret = new StringSetting(List.of("SMTP_SECRET"), null);
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
+
+    //
+    // Backend settings.
+    //
+    this.backendConnectTimeout = new DurationSetting(
+      List.of("BACKEND_CONNECT_TIMEOUT"),
+      ChronoUnit.SECONDS,
+      Duration.ofSeconds(5));
+    this.backendReadTimeout = new DurationSetting(
+      List.of("BACKEND_READ_TIMEOUT"),
+      ChronoUnit.SECONDS,
+      Duration.ofSeconds(20));
+    this.backendWriteTimeout = new DurationSetting(
+      List.of("BACKEND_WRITE_TIMEOUT"),
+      ChronoUnit.SECONDS,
+      Duration.ofSeconds(5));
   }
 
   // -------------------------------------------------------------------------
@@ -209,6 +228,21 @@ public class RuntimeConfiguration {
    */
   public final StringSetting availableProjectsQuery;
 
+  /**
+   * Connect timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendConnectTimeout;
+
+  /**
+   * Read timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendReadTimeout;
+
+  /**
+   * Write timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendWriteTimeout;
+
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
     return requiredSettings.stream().allMatch(s -> s.isValid());
@@ -313,13 +347,15 @@ public class RuntimeConfiguration {
   }
 
   public class DurationSetting extends Setting<Duration> {
-    public DurationSetting(Collection<String> keys, Duration defaultValue) {
+    private final ChronoUnit unit;
+    public DurationSetting(Collection<String> keys, ChronoUnit unit, Duration defaultValue) {
       super(keys, defaultValue);
+      this.unit = unit;
     }
 
     @Override
     protected Duration parse(String value) {
-      return Duration.ofMinutes(Integer.parseInt(value));
+      return Duration.of(Integer.parseInt(value), this.unit);
     }
   }
 

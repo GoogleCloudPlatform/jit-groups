@@ -42,19 +42,25 @@ public class SecretManagerAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
-  public SecretManagerAdapter(GoogleCredentials credentials) {
+  public SecretManagerAdapter(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  ) {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
 
     this.credentials = credentials;
+    this.httpOptions = httpOptions;
   }
 
   private SecretManager createClient() throws IOException {
     try {
       return new SecretManager.Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newTransport(),
+          new GsonFactory(),
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }

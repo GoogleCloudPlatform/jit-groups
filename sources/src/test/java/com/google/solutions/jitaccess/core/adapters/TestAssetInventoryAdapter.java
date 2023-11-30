@@ -26,6 +26,9 @@ import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 
+import java.net.SocketTimeoutException;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +41,9 @@ public class TestAssetInventoryAdapter {
   @Test
 
   public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -52,7 +57,9 @@ public class TestAssetInventoryAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
@@ -65,8 +72,29 @@ public class TestAssetInventoryAdapter {
   }
 
   @Test
+  public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      new HttpTransport.Options(
+        Duration.of(1, ChronoUnit.MILLIS),
+        Duration.of(1, ChronoUnit.MILLIS),
+        Duration.of(1, ChronoUnit.MILLIS)));
+
+    assertThrows(
+      SocketTimeoutException.class,
+      () -> adapter.findAccessibleResourcesByUser(
+        "projects/0",
+        new UserId("", "bob@example.com"),
+        Optional.empty(),
+        Optional.empty(),
+        true));
+  }
+
+  @Test
   public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + IntegrationTestEnvironment.PROJECT_ID,
@@ -81,7 +109,9 @@ public class TestAssetInventoryAdapter {
 
   @Test
   public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + IntegrationTestEnvironment.PROJECT_ID,
@@ -100,7 +130,9 @@ public class TestAssetInventoryAdapter {
 
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -112,7 +144,9 @@ public class TestAssetInventoryAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new AssetInventoryAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,

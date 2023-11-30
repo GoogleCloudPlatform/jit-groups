@@ -97,7 +97,9 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new SecretManagerAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -106,7 +108,9 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new SecretManagerAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
@@ -115,7 +119,9 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenSecretNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new SecretManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
@@ -126,7 +132,9 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenSecretVersionNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new SecretManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
