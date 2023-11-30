@@ -25,7 +25,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.*;
-import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
@@ -50,6 +49,7 @@ public class ResourceManagerAdapter {
   private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
   private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
   private CloudResourceManager createClient() throws IOException
   {
@@ -58,7 +58,7 @@ public class ResourceManagerAdapter {
         .Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -73,10 +73,15 @@ public class ResourceManagerAdapter {
       (message.contains("not supported") || message.contains("does not exist"));
   }
 
-  public ResourceManagerAdapter(GoogleCredentials credentials) {
+  public ResourceManagerAdapter(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  ) {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
 
     this.credentials = credentials;
+    this.httpOptions = httpOptions;
   }
 
   /** Add an IAM binding using the optimistic concurrency control-mechanism. */

@@ -15,7 +15,9 @@ public class TestIamCredentialsAdapter {
 
   @Test
   public void whenUnauthenticated_ThenSignJwtThrowsException() {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new IamCredentialsAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var payload = new JsonWebToken.Payload()
       .setAudience("test");
@@ -27,7 +29,9 @@ public class TestIamCredentialsAdapter {
 
   @Test
   public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
-    var adapter = new IamCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new IamCredentialsAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()

@@ -50,7 +50,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -66,7 +68,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
@@ -82,7 +86,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenRoleNotGrantableOnProject_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
@@ -98,7 +104,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenResourceIsProject_ThenAddIamProjectBindingSucceeds() throws Exception {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     String condition =
       IamTemporaryAccessConditions.createExpression(Instant.now(), Duration.ofMinutes(5));
@@ -115,7 +123,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenPurgeExistingTemporaryBindingsFlagIsOn_ThenExistingTemporaryBindingsAreRemoved() throws Exception {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     // Add an "old" temporary IAM binding.
     adapter.addProjectIamBinding(
@@ -215,7 +225,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException() throws Exception {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var newBinding = new Binding()
       .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
@@ -388,7 +400,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -399,7 +413,9 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenAuthorized_ThenTestIamPermissionsSucceeds() throws Exception {
-    var adapter = new ResourceManagerAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new ResourceManagerAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var heldPermissions = adapter.testIamPermissions(
       IntegrationTestEnvironment.PROJECT_ID,

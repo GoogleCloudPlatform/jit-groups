@@ -22,12 +22,17 @@
 package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.auth.Credentials;
+import com.google.auth.http.HttpCredentialsAdapter;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.time.Duration;
 
 /**
  * Factory for creating transports based on the 'javax.net.ssl.trustStore'
@@ -64,5 +69,37 @@ public class HttpTransport {
       //
       return GoogleNetHttpTransport.newTrustedTransport();
     }
+  }
+
+  public static HttpRequestInitializer newAuthenticatingRequestInitializer(
+    Credentials credentials,
+    Options httpOptions
+  ) {
+    return new HttpCredentialsAdapter(credentials) {
+      @Override
+      public void initialize(HttpRequest request) throws IOException {
+        super.initialize(request);
+
+        if (!httpOptions.readTimeout.isZero()) {
+          request.setReadTimeout((int) httpOptions.readTimeout.toMillis());
+        }
+
+        if (!httpOptions.writeTimeout.isZero()) {
+          request.setWriteTimeout((int) httpOptions.writeTimeout.toMillis());
+        }
+
+        if (!httpOptions.connectTimeout.isZero()) {
+          request.setConnectTimeout((int) httpOptions.connectTimeout.toMillis());
+        }
+      }
+    };
+  }
+
+  public record Options(
+    Duration connectTimeout,
+    Duration readTimeout,
+    Duration writeTimeout
+  ) {
+    public static Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
   }
 }

@@ -26,7 +26,6 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
-import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
@@ -47,6 +46,7 @@ public class IamCredentialsAdapter {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
   private IAMCredentials createClient() throws IOException
   {
@@ -55,7 +55,7 @@ public class IamCredentialsAdapter {
         .Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
@@ -64,9 +64,14 @@ public class IamCredentialsAdapter {
     }
   }
 
-  public IamCredentialsAdapter(GoogleCredentials credentials)  {
+  public IamCredentialsAdapter(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  )  {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
 
+    this.httpOptions = httpOptions;
     this.credentials = credentials;
   }
 
