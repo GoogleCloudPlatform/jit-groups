@@ -68,6 +68,9 @@ public class RuntimeConfiguration {
     this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
+    this.availableProjectsQuery = new StringSetting(
+      List.of("AVAILABLE_PROJECTS_QUERY"),
+      null);
 
     //
     // Backend service id (Cloud Run only).
@@ -196,6 +199,15 @@ public class RuntimeConfiguration {
    * Maximum number of (JIT-) eligible roles that can be activated at once.
    */
   public final IntSetting maxNumberOfJitRolesPerSelfApproval;
+
+  /**
+   * In some cases listing all available projects is not working fast enough and times out,
+   * so this method is available as alternative.
+   * The format is the same as Google Resource Manager API requires for the query parameter, for example:
+   * - parent:folders/{folder_id}
+   * - parent:organizations/{organization_id}
+   */
+  public final StringSetting availableProjectsQuery;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
