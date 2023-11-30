@@ -36,7 +36,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestPubSubAdapter {
   @Test
   public void whenUnauthenticated_ThenPublishThrowsException() {
-    var adapter = new PubSubAdapter(IntegrationTestEnvironment.INVALID_CREDENTIAL);
+    var adapter = new PubSubAdapter(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
@@ -47,7 +49,9 @@ public class TestPubSubAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new PubSubAdapter(IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS);
+    var adapter = new PubSubAdapter(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
     assertThrows(
       AccessDeniedException.class,
       () -> adapter.publish(
@@ -61,7 +65,9 @@ public class TestPubSubAdapter {
     Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
     Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
 
-    var adapter = new PubSubAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS);
+    var adapter = new PubSubAdapter(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
 
     var messageId = adapter.publish(
       IntegrationTestEnvironment.PUBSUB_TOPIC,

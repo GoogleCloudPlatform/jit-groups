@@ -38,23 +38,29 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.HashMap;
 
 @ApplicationScoped
 public class PubSubAdapter {
   private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
-  public PubSubAdapter(GoogleCredentials credentials) {
+  public PubSubAdapter(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions)
+  {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
+
     this.credentials = credentials;
+    this.httpOptions = httpOptions;
   }
 
-  private Pubsub createClient( ) throws IOException {
+  private Pubsub createClient() throws IOException {
     try {
       return new Pubsub.Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
-          new HttpCredentialsAdapter(this.credentials))
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
         .setApplicationName(ApplicationVersion.USER_AGENT)
         .build();
     }
