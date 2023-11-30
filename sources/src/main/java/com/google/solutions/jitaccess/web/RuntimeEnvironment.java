@@ -337,4 +337,12 @@ public class RuntimeEnvironment {
     return new ApiResource.Options(
       this.configuration.maxNumberOfJitRolesPerSelfApproval.getValue());
   }
+
+  @Produces
+  public HttpTransport.Options getHttpTransportOptions() {
+    return new HttpTransport.Options(
+      this.configuration.backendConnectTimeout.getValue(),
+      this.configuration.backendReadTimeout.getValue(),
+      this.configuration.backendWriteTimeout.getValue());
+  }
 }
