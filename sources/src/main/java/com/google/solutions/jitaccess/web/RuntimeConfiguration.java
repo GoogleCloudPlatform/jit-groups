@@ -84,6 +84,7 @@ public class RuntimeConfiguration {
     // Notification settings.
     //
     this.timeZoneForNotifications = new ZoneIdSetting(List.of("NOTIFICATION_TIMEZONE"));
+    this.topicName = new StringSetting(List.of("NOTIFICATION_TOPIC"), null);
 
     //
     // SMTP settings.
@@ -124,6 +125,13 @@ public class RuntimeConfiguration {
    * access for.
    */
   public final StringSetting scope;
+
+  /**
+   * Topic (within the resource hierarchy) that binding information will
+   * publish to.
+   */
+  public final StringSetting topicName;
+
 
   /**
    * Duration for which an activated role remains activated.

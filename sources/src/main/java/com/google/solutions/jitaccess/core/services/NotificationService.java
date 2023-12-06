@@ -25,14 +25,13 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Service for notifying users about activation requests..
+ * Service for notifying users about activation requests.
  */
 @ApplicationScoped
 public abstract class NotificationService {
@@ -49,6 +48,12 @@ public abstract class NotificationService {
    * Concrete class that prints notifications to STDOUT. Useful for local development only.
    */
   public static class SilentNotificationService extends NotificationService {
+    private final boolean printToConsole;
+
+    public SilentNotificationService(boolean printToConsole) {
+      this.printToConsole = printToConsole;
+    }
+
     @Override
     public boolean canSendNotifications() {
       return false;
@@ -56,10 +61,12 @@ public abstract class NotificationService {
 
     @Override
     public void sendNotification(Notification notification) throws NotificationException {
-      //
-      // Print it so that we can see the message during development.
-      //
-      System.out.println(notification);
+      if (this.printToConsole) {
+        //
+        // Print it so that we can see the message during development.
+        //
+        System.out.println(notification);
+      }
     }
   }
 
