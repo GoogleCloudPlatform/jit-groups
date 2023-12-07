@@ -24,6 +24,10 @@ a {
     height: auto;
 }
 
+.mdl-stepper {
+    max-width: 1024px;
+}
+
 .mdl-step__transient {
     height: calc(100% - 32px);
 }
