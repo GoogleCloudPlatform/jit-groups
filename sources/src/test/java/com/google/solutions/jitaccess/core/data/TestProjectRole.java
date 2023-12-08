@@ -23,6 +23,9 @@ package com.google.solutions.jitaccess.core.data;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.TreeSet;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProjectRole {
@@ -132,5 +135,27 @@ public class TestProjectRole {
       ProjectRole.Status.ELIGIBLE_FOR_JIT);
 
     assertFalse(role.equals(null));
+  }
+
+  @Test
+  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
+    var role1 = new ProjectRole(
+            new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "role/sample1"),
+            ProjectRole.Status.ELIGIBLE_FOR_JIT
+    );
+    var role2 = new ProjectRole(
+            new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "role/sample2"),
+            ProjectRole.Status.ELIGIBLE_FOR_JIT
+    );
+    var role3 = new ProjectRole(
+            new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-2", "role/sample1"),
+            ProjectRole.Status.ELIGIBLE_FOR_JIT
+    );
+    var roles = List.of(role3,role1,role2);
+    var sorted = new TreeSet<>(roles);
+    var sortedIter = sorted.iterator();
+    assertEquals(sortedIter.next(), role1);
+    assertEquals(sortedIter.next(), role2);
+    assertEquals(sortedIter.next(), role3);
   }
 }

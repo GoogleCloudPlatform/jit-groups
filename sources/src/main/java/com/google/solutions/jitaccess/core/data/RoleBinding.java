@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -74,6 +75,8 @@ public class RoleBinding implements Comparable<RoleBinding> {
 
   @Override
   public int compareTo(RoleBinding o) {
-    return this.fullResourceName.compareTo(o.fullResourceName);
+    return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
+      .thenComparing(r -> r.role)
+      .compare(this, o);
   }
 }
