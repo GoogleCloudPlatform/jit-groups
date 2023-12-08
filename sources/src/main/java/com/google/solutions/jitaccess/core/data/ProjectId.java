@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * Project ID for a Google Cloud project.
  */
-public class ProjectId {
+public class ProjectId implements Comparable<ProjectId> {
   private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
   public final String id;
@@ -93,5 +93,10 @@ public class ProjectId {
   @Override
   public int hashCode() {
     return Objects.hash(this.id);
+  }
+
+  @Override
+  public int compareTo(ProjectId o) {
+    return this.id.compareTo(o.id);
   }
 }

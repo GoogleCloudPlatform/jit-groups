@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * Represents an eligible role on a project.
  */
-public class ProjectRole {
+public class ProjectRole implements Comparable<ProjectRole> {
   public final RoleBinding roleBinding;
   public final Status status;
 
@@ -74,6 +74,11 @@ public class ProjectRole {
   @Override
   public int hashCode() {
     return Objects.hash(this.roleBinding, this.status);
+  }
+
+  @Override
+  public int compareTo(ProjectRole o) {
+    return this.roleBinding.compareTo(o.roleBinding);
   }
 
   // -------------------------------------------------------------------------

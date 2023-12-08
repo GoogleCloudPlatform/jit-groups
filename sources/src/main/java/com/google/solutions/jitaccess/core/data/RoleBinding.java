@@ -28,7 +28,7 @@ import java.util.Objects;
 /**
  * Represents a role that has been granted on a resource.
  */
-public class RoleBinding {
+public class RoleBinding implements Comparable<RoleBinding> {
   public final String fullResourceName;
   public final String role;
 
@@ -70,5 +70,10 @@ public class RoleBinding {
   @Override
   public int hashCode() {
     return Objects.hash(this.fullResourceName, this.role);
+  }
+
+  @Override
+  public int compareTo(RoleBinding o) {
+    return this.fullResourceName.compareTo(o.fullResourceName);
   }
 }
