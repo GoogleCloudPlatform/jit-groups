@@ -221,7 +221,7 @@ public class RoleDiscoveryService {
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       activatedRoles = Set.of();
@@ -240,7 +240,7 @@ public class RoleDiscoveryService {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       jitEligibleRoles = Set.of();
@@ -259,7 +259,7 @@ public class RoleDiscoveryService {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       mpaEligibleRoles = Set.of();
