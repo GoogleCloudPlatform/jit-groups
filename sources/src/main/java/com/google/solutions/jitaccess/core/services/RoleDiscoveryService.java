@@ -291,7 +291,7 @@ public class RoleDiscoveryService {
     consolidatedRoles.addAll(activatedRoles);
 
     return new Result<>(
-      consolidatedRoles.stream().sorted().collect(Collectors.toList()),
+      consolidatedRoles,
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
         .map(e -> e.getCause())
