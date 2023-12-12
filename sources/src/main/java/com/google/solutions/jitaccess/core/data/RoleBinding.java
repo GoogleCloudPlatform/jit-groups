@@ -23,12 +23,13 @@ package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
  * Represents a role that has been granted on a resource.
  */
-public class RoleBinding {
+public class RoleBinding implements Comparable<RoleBinding> {
   public final String fullResourceName;
   public final String role;
 
@@ -70,5 +71,12 @@ public class RoleBinding {
   @Override
   public int hashCode() {
     return Objects.hash(this.fullResourceName, this.role);
+  }
+
+  @Override
+  public int compareTo(RoleBinding o) {
+    return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
+      .thenComparing(r -> r.role)
+      .compare(this, o);
   }
 }

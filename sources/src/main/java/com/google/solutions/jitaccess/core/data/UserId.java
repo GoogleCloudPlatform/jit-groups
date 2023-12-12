@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
-public class UserId {
+public class UserId implements Comparable<UserId> {
   public final transient String id;
   public final String email;
 
@@ -66,5 +66,10 @@ public class UserId {
   @Override
   public int hashCode() {
     return Objects.hash(email);
+  }
+
+  @Override
+  public int compareTo(UserId o) {
+    return this.email.compareTo(o.email);
   }
 }

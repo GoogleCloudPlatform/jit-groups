@@ -252,7 +252,7 @@ public class ResourceManagerAdapter {
     }
   }
 
-  public List<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
+  public Set<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
 
@@ -287,7 +287,7 @@ public class ResourceManagerAdapter {
 
       return allProjects.stream()
         .map(p -> new ProjectId(p.getProjectId()))
-        .collect(Collectors.toList());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {

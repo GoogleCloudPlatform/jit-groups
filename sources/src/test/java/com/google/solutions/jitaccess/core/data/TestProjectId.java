@@ -23,6 +23,10 @@ package com.google.solutions.jitaccess.core.data;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProjectId {
@@ -103,5 +107,15 @@ public class TestProjectId {
     ProjectId id1 = new ProjectId("project-1");
 
     assertFalse(id1.equals(""));
+  }
+
+  @Test
+  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
+    var projects = List.of(new ProjectId("project-3"),new ProjectId("project-1"), new ProjectId("project-2"));
+    var sortedProjects = new TreeSet<>(projects);
+    var sortedIter = sortedProjects.iterator();
+    assertEquals(sortedIter.next(), new ProjectId("project-1"));
+    assertEquals(sortedIter.next(), new ProjectId("project-2"));
+    assertEquals(sortedIter.next(), new ProjectId("project-3"));
   }
 }

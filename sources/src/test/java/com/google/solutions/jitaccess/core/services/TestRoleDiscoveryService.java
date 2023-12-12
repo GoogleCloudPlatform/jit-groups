@@ -1101,8 +1101,7 @@ public class TestRoleDiscoveryService {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
 
-    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
-            .thenReturn(List.of());
+    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0"))).thenReturn(Set.of());
 
     var service = new RoleDiscoveryService(
             assetAdapter,
@@ -1118,7 +1117,7 @@ public class TestRoleDiscoveryService {
   public void whenResourceManagerReturnsList_ThenListAvailableProjectsReturnsTheSameList() throws Exception {
     var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
-    var expectedProjectIds = List.of(new ProjectId("project-1"), new ProjectId("project-2"));
+    var expectedProjectIds = Set.of(new ProjectId("project-1"), new ProjectId("project-2"));
 
     when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
             .thenReturn(expectedProjectIds);

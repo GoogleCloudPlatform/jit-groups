@@ -150,11 +150,11 @@ public class RoleDiscoveryService {
       return roleBindings
         .stream()
         .map(b -> ProjectId.fromFullResourceName(b.fullResourceName))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
       }
     else {
       // Used as alternative option if availableProjectsQuery is set and the main approach with Asset API is not working fast enough.
-      return new HashSet<>(resourceManagerAdapter.searchProjectIds(this.options.availableProjectsQuery));
+      return resourceManagerAdapter.searchProjectIds(this.options.availableProjectsQuery);
     }
   }
 
@@ -221,7 +221,7 @@ public class RoleDiscoveryService {
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       activatedRoles = Set.of();
@@ -240,7 +240,7 @@ public class RoleDiscoveryService {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       jitEligibleRoles = Set.of();
@@ -259,7 +259,7 @@ public class RoleDiscoveryService {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
       mpaEligibleRoles = Set.of();
@@ -291,9 +291,7 @@ public class RoleDiscoveryService {
     consolidatedRoles.addAll(activatedRoles);
 
     return new Result<>(
-      consolidatedRoles.stream()
-        .sorted(Comparator.comparing(r -> r.roleBinding.fullResourceName))
-        .collect(Collectors.toList()),
+      consolidatedRoles,
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
         .map(e -> e.getCause())
@@ -353,7 +351,7 @@ public class RoleDiscoveryService {
 
       // Remove the caller.
       .filter(user -> !user.equals(callerUserId))
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(TreeSet::new));
   }
 
   // -------------------------------------------------------------------------
