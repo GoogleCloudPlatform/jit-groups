@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.auth;
 
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import java.security.Principal;
 

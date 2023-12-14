@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.auth;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import java.util.Collection;
 import java.util.List;

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,57 +19,42 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.ProjectId;
 
-import java.util.Objects;
+import java.util.Comparator;
 
-public class UserId implements Comparable<UserId> {
-  public final transient String id;
-  public final String email;
+/**
+ * Represents a role that has been granted on a resource.
+ */
+public record RoleBinding (
+  String fullResourceName,
+  String role
+) implements Comparable<RoleBinding> {
 
-  public UserId(String id, String email) {
-    Preconditions.checkNotNull(email, "email");
-
-    this.id = id;
-    this.email = email;
+  public RoleBinding {
+    Preconditions.checkNotNull(fullResourceName, "fullResourceName");
+    Preconditions.checkNotNull(role, "role");
   }
-
-  public UserId(String email) {
-    this(null, email);
+  public RoleBinding(ProjectId project, String role) {
+    this(project.getFullResourceName(), role);
   }
 
   @Override
   public String toString() {
-    return this.email;
+    return String.format("%s:%s", this.fullResourceName, this.role);
   }
 
   // -------------------------------------------------------------------------
-  // Equality.
+  // Comparable.
   // -------------------------------------------------------------------------
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    UserId userId = (UserId) o;
-    return email.equals(userId.email);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(email);
-  }
-
-  @Override
-  public int compareTo(UserId o) {
-    return this.email.compareTo(o.email);
+  public int compareTo(RoleBinding o) {
+    return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
+      .thenComparing(r -> r.role)
+      .compare(this, o);
   }
 }

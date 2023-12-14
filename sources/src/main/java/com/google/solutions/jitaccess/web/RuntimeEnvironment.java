@@ -35,7 +35,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.clients.PubSubTopic;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;

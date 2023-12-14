@@ -19,13 +19,13 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core;
 
+import com.google.solutions.jitaccess.core.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 

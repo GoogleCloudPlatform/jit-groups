@@ -19,8 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core.entitlements;
 
+import com.google.solutions.jitaccess.core.ProjectId;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -69,7 +71,7 @@ public class TestProjectRole {
     var role = new ProjectRole(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
       ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    assertEquals(new ProjectId("project-1"), role.getProjectId());
+    Assertions.assertEquals(new ProjectId("project-1"), role.getProjectId());
   }
 
   // -------------------------------------------------------------------------

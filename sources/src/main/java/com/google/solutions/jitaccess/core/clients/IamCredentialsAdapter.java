@@ -32,7 +32,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;

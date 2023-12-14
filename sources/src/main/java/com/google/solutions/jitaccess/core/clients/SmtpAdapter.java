@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;

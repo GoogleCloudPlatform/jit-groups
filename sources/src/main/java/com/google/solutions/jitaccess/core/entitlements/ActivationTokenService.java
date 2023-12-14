@@ -25,7 +25,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsAdapter;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;

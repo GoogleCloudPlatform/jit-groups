@@ -26,9 +26,8 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsAdapter;
 import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
-import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;

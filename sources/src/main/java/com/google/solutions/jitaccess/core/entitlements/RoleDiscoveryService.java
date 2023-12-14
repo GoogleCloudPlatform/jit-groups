@@ -28,10 +28,8 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryAdapter;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
-import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.data.ProjectRole;
-import com.google.solutions.jitaccess.core.data.RoleBinding;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.UserId;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;

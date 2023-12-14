@@ -19,9 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.ProjectId;
 
 /**
  * Represents an eligible role on a project.

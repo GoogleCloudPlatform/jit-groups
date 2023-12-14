@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.solutions.jitaccess.core.clients.PubSubAdapter;
 import com.google.solutions.jitaccess.core.clients.PubSubTopic;
-import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

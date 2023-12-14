@@ -19,8 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core.entitlements;
 
+import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
