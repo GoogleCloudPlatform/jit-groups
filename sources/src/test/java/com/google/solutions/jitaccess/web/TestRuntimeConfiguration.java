@@ -21,8 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.core.services.MailNotificationService;
-import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;

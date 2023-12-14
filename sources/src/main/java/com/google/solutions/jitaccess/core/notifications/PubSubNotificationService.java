@@ -1,4 +1,4 @@
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.api.client.json.GenericJson;
 import com.google.api.services.pubsub.model.PubsubMessage;

@@ -32,11 +32,13 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.adapters.*;
 import com.google.solutions.jitaccess.core.data.Topic;
 import com.google.solutions.jitaccess.core.data.UserId;
+import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
+import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
 import com.google.solutions.jitaccess.core.services.*;
 
 import jakarta.enterprise.context.ApplicationScoped;

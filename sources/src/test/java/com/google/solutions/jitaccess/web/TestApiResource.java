@@ -30,7 +30,7 @@ import com.google.solutions.jitaccess.core.data.UserId;
 import jakarta.enterprise.inject.Instance;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.services.ActivationTokenService;
-import com.google.solutions.jitaccess.core.services.NotificationService;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.services.RoleActivationService;
 import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.services.Result;

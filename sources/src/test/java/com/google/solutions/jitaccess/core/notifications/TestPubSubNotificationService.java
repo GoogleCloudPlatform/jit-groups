@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.Topic;

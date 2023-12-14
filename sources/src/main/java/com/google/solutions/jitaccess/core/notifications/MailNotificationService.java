@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
@@ -36,7 +36,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
