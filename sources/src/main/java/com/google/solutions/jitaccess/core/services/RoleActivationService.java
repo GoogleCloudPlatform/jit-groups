@@ -74,8 +74,8 @@ public class RoleActivationService {
     ActivationType activationType
   ) {
     switch (activationType) {
-      case JIT: return projectRole.status == ProjectRole.Status.ELIGIBLE_FOR_JIT;
-      case MPA: return projectRole.status == ProjectRole.Status.ELIGIBLE_FOR_MPA;
+      case JIT: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_JIT;
+      case MPA: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_MPA;
       default: return false;
     }
   }
@@ -100,7 +100,7 @@ public class RoleActivationService {
           ProjectRole.Status.ELIGIBLE_FOR_MPA))
       .getItems()
       .stream()
-      .filter(pr -> pr.roleBinding.equals(roleBinding))
+      .filter(pr -> pr.roleBinding().equals(roleBinding))
       .filter(pr -> canActivateProjectRole(pr, activationType))
       .findAny()
       .isEmpty()) {

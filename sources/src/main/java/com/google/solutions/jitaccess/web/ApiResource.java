@@ -667,7 +667,7 @@ public class ApiResource {
       .addLabel("activation_id", activation.id.toString())
       .addLabel("activation_start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("activation_end", activation.endTime.atOffset(ZoneOffset.UTC).toString())
-      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding));
+      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding()));
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -866,8 +866,8 @@ public class ApiResource {
       private ActivationStatus(RoleActivationService.Activation activation) {
         this(
           activation.id,
-          activation.projectRole.roleBinding,
-          activation.projectRole.status,
+          activation.projectRole.roleBinding(),
+          activation.projectRole.status(),
           activation.startTime.getEpochSecond(),
           activation.endTime.getEpochSecond());
       }
@@ -968,12 +968,12 @@ public class ApiResource {
         List.of(),
         String.format(
           "Activated role '%s' on '%s'",
-          activation.projectRole.roleBinding,
+          activation.projectRole.roleBinding(),
           activation.projectRole.getProjectId()));
 
       this.properties.put("BENEFICIARY", beneficiary);
       this.properties.put("PROJECT_ID", activation.projectRole.getProjectId());
-      this.properties.put("ROLE", activation.projectRole.roleBinding.role);
+      this.properties.put("ROLE", activation.projectRole.roleBinding().role);
       this.properties.put("START_TIME", activation.startTime);
       this.properties.put("END_TIME", activation.endTime);
       this.properties.put("JUSTIFICATION", justification);

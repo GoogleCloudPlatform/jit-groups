@@ -361,8 +361,8 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status());
   }
 
   @Test
@@ -409,8 +409,8 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status());
   }
 
   @Test
@@ -450,8 +450,8 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status());
   }
 
   @Test
@@ -498,8 +498,8 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status());
   }
 
   @Test
@@ -548,13 +548,13 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status());
 
     role = roles.getItems().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE_2, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+    assertEquals(SAMPLE_ROLE_2, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status());
   }
 
   @Test
@@ -604,8 +604,8 @@ public class TestRoleDiscoveryService {
     // Only the JIT-eligible binding is retained.
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status());
   }
 
   @Test
@@ -666,8 +666,8 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(SAMPLE_ROLE, role.roleBinding.role);
-    assertEquals(ProjectRole.Status.ACTIVATED, role.status);
+    assertEquals(SAMPLE_ROLE, role.roleBinding().role);
+    assertEquals(ProjectRole.Status.ACTIVATED, role.status());
   }
 
   @Test
@@ -838,7 +838,7 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_JIT, role.status());
   }
 
   @Test
@@ -901,7 +901,7 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status);
+    assertEquals(ProjectRole.Status.ELIGIBLE_FOR_MPA, role.status());
   }
 
   @Test
@@ -964,7 +964,7 @@ public class TestRoleDiscoveryService {
 
     var role = roles.getItems().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, role.getProjectId());
-    assertEquals(ProjectRole.Status.ACTIVATED, role.status);
+    assertEquals(ProjectRole.Status.ACTIVATED, role.status());
   }
 
   // ---------------------------------------------------------------------
