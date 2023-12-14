@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web.auth;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-import com.google.solutions.jitaccess.core.data.DeviceInfo;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 

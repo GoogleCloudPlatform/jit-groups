@@ -22,8 +22,6 @@
 package com.google.solutions.jitaccess.web.auth;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.core.data.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.IapAssertion;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
