@@ -19,35 +19,34 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.adapters;
+package com.google.solutions.jitaccess.core.clients;
 
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.secretmanager.v1.SecretManager;
-import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.api.services.pubsub.Pubsub;
+import com.google.api.services.pubsub.model.PubsubMessage;
+import com.google.api.services.pubsub.model.PublishRequest;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.*;
-
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.ApplicationVersion;
+import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.data.Topic;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 
-/**
- * Adapter for the Secrets Manager API.
- */
 @ApplicationScoped
-public class SecretManagerAdapter {
-  private static final String SECRET_CHARSET = "UTF-8";
-  public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-
+public class PubSubAdapter {
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
-  public SecretManagerAdapter(
+  public PubSubAdapter(
     GoogleCredentials credentials,
-    HttpTransport.Options httpOptions
-  ) {
+    HttpTransport.Options httpOptions)
+  {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -55,9 +54,9 @@ public class SecretManagerAdapter {
     this.httpOptions = httpOptions;
   }
 
-  private SecretManager createClient() throws IOException {
+  private Pubsub createClient() throws IOException {
     try {
-      return new SecretManager.Builder(
+      return new Pubsub.Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
           HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
@@ -65,46 +64,44 @@ public class SecretManagerAdapter {
         .build();
     }
     catch (GeneralSecurityException e) {
-      throw new IOException("Creating a SecretManager client failed", e);
+      throw new IOException("Creating a PubSub client failed", e);
     }
   }
 
-  /**
-   * Access a secret
-   * @param secretPath resource path, in the format projects/x/secrets/y/versions/z
-   */
-  public String accessSecret(
-    String secretPath
+  public String publish(
+    Topic topic,
+    PubsubMessage message
   ) throws AccessException, IOException {
+    var client = createClient();
+
     try {
-      var payload = createClient()
+      var request = new PublishRequest();
+      request.setMessages(Arrays.asList(message));
+
+      var result = client
         .projects()
-        .secrets()
-        .versions()
-        .access(secretPath)
-        .execute()
-        .getPayload();
-
-      if (payload == null) {
-        return null;
+        .topics()
+        .publish(topic.getFullResourceName(), request)
+        .execute();
+      if (result.getMessageIds().size() < 1){
+        throw new IOException(
+          String.format("Publishing message to topic %s returned empty response", topic));
       }
 
-      var payloadData = payload.decodeData();
-      if (payloadData == null) {
-        return null;
-      }
-      else {
-        return new String(payloadData, SECRET_CHARSET);
-      }
+      return result.getMessageIds().get(0);
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
-          throw new AccessDeniedException(String.format("Access to secret '%s' was denied: %s", secretPath, e.getMessage()), e);
         case 404:
-          throw new ResourceNotFoundException(String.format("The secret '%s' does not exist", secretPath), e);
+          throw new AccessDeniedException(
+            String.format(
+              "Pub/Sub topic '%s' cannot be accessed or does not exist: %s",
+              topic,
+              e.getMessage()),
+            e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }

@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.adapters.SmtpAdapter;
+import com.google.solutions.jitaccess.core.clients.SmtpAdapter;
 
 import java.io.IOException;
 import java.time.Instant;

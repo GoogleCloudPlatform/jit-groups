@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.services;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.adapters.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.RoleBinding;

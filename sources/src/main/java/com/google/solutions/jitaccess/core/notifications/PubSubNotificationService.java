@@ -5,7 +5,7 @@ import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.adapters.PubSubAdapter;
+import com.google.solutions.jitaccess.core.clients.PubSubAdapter;
 import com.google.solutions.jitaccess.core.data.Topic;
 
 import java.io.IOException;

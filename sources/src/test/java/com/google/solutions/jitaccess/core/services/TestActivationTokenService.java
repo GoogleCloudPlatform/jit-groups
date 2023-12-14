@@ -23,9 +23,9 @@ package com.google.solutions.jitaccess.core.services;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.adapters.HttpTransport;
-import com.google.solutions.jitaccess.core.adapters.IamCredentialsAdapter;
-import com.google.solutions.jitaccess.core.adapters.IntegrationTestEnvironment;
+import com.google.solutions.jitaccess.core.clients.HttpTransport;
+import com.google.solutions.jitaccess.core.clients.IamCredentialsAdapter;
+import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
