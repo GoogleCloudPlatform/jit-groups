@@ -34,12 +34,12 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.clients.*;
-import com.google.solutions.jitaccess.core.data.Topic;
+import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 import com.google.solutions.jitaccess.core.data.UserId;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
-import com.google.solutions.jitaccess.core.services.*;
+import com.google.solutions.jitaccess.core.entitlements.*;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
@@ -304,7 +304,7 @@ public class RuntimeEnvironment {
       return new PubSubNotificationService(
         pubSubAdapter,
         new PubSubNotificationService.Options(
-          new Topic(this.projectId, this.configuration.topicName.getValue())));
+          new PubSubTopic(this.projectId, this.configuration.topicName.getValue())));
     }
     else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());

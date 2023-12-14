@@ -29,11 +29,11 @@ import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.core.data.UserId;
 import jakarta.enterprise.inject.Instance;
 import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.services.Result;
+import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
+import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.entitlements.Result;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

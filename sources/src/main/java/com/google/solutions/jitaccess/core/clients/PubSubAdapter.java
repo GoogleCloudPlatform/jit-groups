@@ -32,7 +32,6 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.data.Topic;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -69,7 +68,7 @@ public class PubSubAdapter {
   }
 
   public String publish(
-    Topic topic,
+    PubSubTopic topic,
     PubsubMessage message
   ) throws AccessException, IOException {
     var client = createClient();

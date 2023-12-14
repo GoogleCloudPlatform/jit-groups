@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.clients.PubSubAdapter;
-import com.google.solutions.jitaccess.core.data.Topic;
+import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -90,6 +90,6 @@ public class PubSubNotificationService extends NotificationService {
   /**
    * @param topicResourceName PubSub topic in format projects/{project}/topics/{topic}
    */
-  public record Options(Topic topic) {
+  public record Options(PubSubTopic topic) {
   }
 }

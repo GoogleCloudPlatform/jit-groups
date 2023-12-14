@@ -32,10 +32,10 @@ import com.google.solutions.jitaccess.core.data.ProjectRole;
 import com.google.solutions.jitaccess.core.data.ProjectId;
 import com.google.solutions.jitaccess.core.data.RoleBinding;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;
-import com.google.solutions.jitaccess.core.services.ActivationTokenService;
+import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.core.services.RoleActivationService;
-import com.google.solutions.jitaccess.core.services.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
+import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;

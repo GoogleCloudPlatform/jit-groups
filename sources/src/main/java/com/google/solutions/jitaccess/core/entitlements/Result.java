@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.services;
+package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.common.base.Preconditions;
 

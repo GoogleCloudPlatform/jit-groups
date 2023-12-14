@@ -26,7 +26,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.data.ProjectId;
-import com.google.solutions.jitaccess.core.data.Topic;
 import com.google.solutions.jitaccess.core.data.UserId;
 
 import java.io.File;
@@ -57,7 +56,7 @@ public class IntegrationTestEnvironment {
   public static final UserId TEMPORARY_ACCESS_USER;
   public static final UserId NO_ACCESS_USER;
 
-  public static final Topic PUBSUB_TOPIC;
+  public static final PubSubTopic PUBSUB_TOPIC;
 
   static {
     //
@@ -98,7 +97,7 @@ public class IntegrationTestEnvironment {
 
       var topicName = getOptional(settings, "test.topic", "");
       if (!Strings.isNullOrEmpty(topicName)) {
-        PUBSUB_TOPIC = new Topic(PROJECT_ID.id(), topicName);
+        PUBSUB_TOPIC = new PubSubTopic(PROJECT_ID.id(), topicName);
       }
       else {
         PUBSUB_TOPIC = null;

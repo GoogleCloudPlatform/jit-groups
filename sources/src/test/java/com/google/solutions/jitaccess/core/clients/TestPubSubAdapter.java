@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.data.Topic;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +41,7 @@ public class TestPubSubAdapter {
     assertThrows(
       NotAuthenticatedException.class,
       () -> adapter.publish(
-        new Topic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
         new PubsubMessage()));
   }
 
@@ -54,7 +53,7 @@ public class TestPubSubAdapter {
     assertThrows(
       AccessDeniedException.class,
       () -> adapter.publish(
-        new Topic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
         new PubsubMessage()));
   }
 

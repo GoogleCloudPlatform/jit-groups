@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.solutions.jitaccess.core.clients.PubSubAdapter;
-import com.google.solutions.jitaccess.core.data.Topic;
+import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 import com.google.solutions.jitaccess.core.data.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -66,7 +66,7 @@ public class TestPubSubNotificationService {
   @Test
   public void sendNotificationPublishesToPubSub() throws Exception {
     var adapter = Mockito.mock(PubSubAdapter.class);
-    var topic = new Topic("project-1", "topic-1");
+    var topic = new PubSubTopic("project-1", "topic-1");
     var service = new PubSubNotificationService(
       adapter,
       new PubSubNotificationService.Options(topic));

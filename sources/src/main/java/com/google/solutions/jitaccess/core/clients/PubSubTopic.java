@@ -19,13 +19,13 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.data;
+package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
 
-public record Topic(String projectId, String topicName) {
+public record PubSubTopic(String projectId, String topicName) {
 
-  public Topic {
+  public PubSubTopic {
     Preconditions.checkNotNull(projectId, "projectId");
     Preconditions.checkNotNull(topicName, "topicName");
   }
