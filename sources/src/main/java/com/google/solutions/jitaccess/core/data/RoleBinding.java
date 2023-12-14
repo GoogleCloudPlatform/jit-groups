@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core.data;
 
+import com.google.common.base.Preconditions;
+
 import java.util.Comparator;
 
 /**
@@ -30,6 +32,11 @@ public record RoleBinding (
   String fullResourceName,
   String role
 ) implements Comparable<RoleBinding> {
+
+  public RoleBinding {
+    Preconditions.checkNotNull(fullResourceName, "fullResourceName");
+    Preconditions.checkNotNull(role, "role");
+  }
   public RoleBinding(ProjectId project, String role) {
     this(project.getFullResourceName(), role);
   }

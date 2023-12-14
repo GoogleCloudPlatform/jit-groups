@@ -35,7 +35,6 @@ public record ProjectRole(
     Preconditions.checkNotNull(roleBinding);
     Preconditions.checkNotNull(status);
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
-
   }
 
   @Override

@@ -21,7 +21,15 @@
 
 package com.google.solutions.jitaccess.core.data;
 
+import com.google.common.base.Preconditions;
+
 public record Topic(String projectId, String topicName) {
+
+  public Topic {
+    Preconditions.checkNotNull(projectId, "projectId");
+    Preconditions.checkNotNull(topicName, "topicName");
+  }
+
   @Override
   public String toString() {
     return getFullResourceName();
