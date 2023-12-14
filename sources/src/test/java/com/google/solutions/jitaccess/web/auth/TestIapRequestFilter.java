@@ -19,9 +19,11 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.auth;
 
 import com.google.solutions.jitaccess.core.adapters.LogAdapter;
+import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.web.auth.IapRequestFilter;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

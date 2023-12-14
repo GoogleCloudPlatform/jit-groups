@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.adapters;
 
 import com.google.solutions.jitaccess.core.data.DeviceInfo;
 import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.web.auth.UserPrincipal;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

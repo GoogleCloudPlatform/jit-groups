@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.adapters;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.data.UserPrincipal;
+import com.google.solutions.jitaccess.web.auth.UserPrincipal;
 
 import jakarta.enterprise.context.RequestScoped;
 import java.io.IOException;
