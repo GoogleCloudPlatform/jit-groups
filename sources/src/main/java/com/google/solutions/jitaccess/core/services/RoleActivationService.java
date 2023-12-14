@@ -74,8 +74,8 @@ public class RoleActivationService {
     ActivationType activationType
   ) {
     switch (activationType) {
-      case JIT: return projectRole.status == ProjectRole.Status.ELIGIBLE_FOR_JIT;
-      case MPA: return projectRole.status == ProjectRole.Status.ELIGIBLE_FOR_MPA;
+      case JIT: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_JIT;
+      case MPA: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_MPA;
       default: return false;
     }
   }
@@ -94,13 +94,13 @@ public class RoleActivationService {
     //
     if (this.roleDiscoveryService.listEligibleProjectRoles(
         user,
-        ProjectId.fromFullResourceName(roleBinding.fullResourceName),
+        ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
         EnumSet.of(
           ProjectRole.Status.ELIGIBLE_FOR_JIT,
           ProjectRole.Status.ELIGIBLE_FOR_MPA))
       .getItems()
       .stream()
-      .filter(pr -> pr.roleBinding.equals(roleBinding))
+      .filter(pr -> pr.roleBinding().equals(roleBinding))
       .filter(pr -> canActivateProjectRole(pr, activationType))
       .findAny()
       .isEmpty()) {
@@ -108,7 +108,7 @@ public class RoleActivationService {
         String.format(
           "The user %s is not allowed to activate the role %s",
           user,
-          roleBinding.role));
+          roleBinding.role()));
     }
   }
 
@@ -139,7 +139,7 @@ public class RoleActivationService {
     Preconditions.checkNotNull(caller, "caller");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     Preconditions.checkNotNull(justification, "justification");
-    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
     Preconditions.checkArgument(activationTimeout.toMinutes() >= Options.MIN_ACTIVATION_TIMEOUT_MINUTES,
       "The activation timeout is too short");
     Preconditions.checkArgument(activationTimeout.toMinutes() <= this.options.maxActivationTimeout.toMinutes(),
@@ -179,14 +179,14 @@ public class RoleActivationService {
 
     var binding = new Binding()
       .setMembers(List.of("user:" + caller))
-      .setRole(roleBinding.role)
+      .setRole(roleBinding.role())
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(roleBinding.fullResourceName),
+      ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
       binding,
       EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       justification);
@@ -253,7 +253,7 @@ public class RoleActivationService {
 
     var binding = new Binding()
       .setMembers(List.of("user:" + request.beneficiary.email))
-      .setRole(request.roleBinding.role)
+      .setRole(request.roleBinding.role())
       .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setDescription(bindingDescription)
@@ -262,7 +262,7 @@ public class RoleActivationService {
           request.endTime)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
-      ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
+      ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()),
       binding,
       EnumSet.of(
         ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
@@ -291,7 +291,7 @@ public class RoleActivationService {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     Preconditions.checkNotNull(justification, "justification");
 
-    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
     Preconditions.checkArgument(reviewers != null && reviewers.size() >= this.options.minNumberOfReviewersPerActivationRequest,
       "At least " + this.options.minNumberOfReviewersPerActivationRequest + " reviewers must be specified");
     Preconditions.checkArgument(reviewers.size() <= this.options.maxNumberOfReviewersPerActivationRequest,
@@ -478,8 +478,8 @@ public class RoleActivationService {
         .setJwtId(this.id.toString())
         .set("beneficiary", this.beneficiary.email)
         .set("reviewers", this.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
-        .set("resource", this.roleBinding.fullResourceName)
-        .set("role", this.roleBinding.role)
+        .set("resource", this.roleBinding.fullResourceName())
+        .set("role", this.roleBinding.role())
         .set("justification", this.justification)
         .set("start", this.startTime.getEpochSecond())
         .set("end", this.endTime.getEpochSecond());

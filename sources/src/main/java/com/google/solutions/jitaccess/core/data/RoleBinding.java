@@ -24,23 +24,19 @@ package com.google.solutions.jitaccess.core.data;
 import com.google.common.base.Preconditions;
 
 import java.util.Comparator;
-import java.util.Objects;
 
 /**
  * Represents a role that has been granted on a resource.
  */
-public class RoleBinding implements Comparable<RoleBinding> {
-  public final String fullResourceName;
-  public final String role;
+public record RoleBinding (
+  String fullResourceName,
+  String role
+) implements Comparable<RoleBinding> {
 
-  public RoleBinding(String fullResourceName, String role) {
-    Preconditions.checkNotNull(fullResourceName);
-    Preconditions.checkNotNull(role);
-
-    this.fullResourceName = fullResourceName;
-    this.role = role;
+  public RoleBinding {
+    Preconditions.checkNotNull(fullResourceName, "fullResourceName");
+    Preconditions.checkNotNull(role, "role");
   }
-
   public RoleBinding(ProjectId project, String role) {
     this(project.getFullResourceName(), role);
   }
@@ -51,27 +47,8 @@ public class RoleBinding implements Comparable<RoleBinding> {
   }
 
   // -------------------------------------------------------------------------
-  // Equality.
+  // Comparable.
   // -------------------------------------------------------------------------
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    var that = (RoleBinding) o;
-    return this.fullResourceName.equals(that.fullResourceName) && this.role.equals(that.role);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.fullResourceName, this.role);
-  }
 
   @Override
   public int compareTo(RoleBinding o) {

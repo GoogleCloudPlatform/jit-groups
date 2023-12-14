@@ -91,14 +91,14 @@ public class IntegrationTestEnvironment {
 
       APPLICATION_CREDENTIALS = GoogleCredentials
         .getApplicationDefault()
-        .createWithQuotaProject(PROJECT_ID.id);
+        .createWithQuotaProject(PROJECT_ID.id());
 
       NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
 
       var topicName = getOptional(settings, "test.topic", "");
       if (!Strings.isNullOrEmpty(topicName)) {
-        PUBSUB_TOPIC = new Topic(PROJECT_ID.id, topicName);
+        PUBSUB_TOPIC = new Topic(PROJECT_ID.id(), topicName);
       }
       else {
         PUBSUB_TOPIC = null;

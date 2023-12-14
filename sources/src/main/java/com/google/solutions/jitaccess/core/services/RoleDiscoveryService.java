@@ -149,7 +149,7 @@ public class RoleDiscoveryService {
 
       return roleBindings
         .stream()
-        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName))
+        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
         .collect(Collectors.toCollection(TreeSet::new));
       }
     else {
@@ -275,7 +275,7 @@ public class RoleDiscoveryService {
     allEligibleRoles.addAll(jitEligibleRoles);
     allEligibleRoles.addAll(mpaEligibleRoles
       .stream()
-      .filter(r -> !jitEligibleRoles.stream().anyMatch(a -> a.roleBinding.equals(r.roleBinding)))
+      .filter(r -> !jitEligibleRoles.stream().anyMatch(a -> a.roleBinding().equals(r.roleBinding())))
       .collect(Collectors.toList()));
 
     //
@@ -286,7 +286,7 @@ public class RoleDiscoveryService {
     //
     var consolidatedRoles = allEligibleRoles
       .stream()
-      .filter(r -> !activatedRoles.stream().anyMatch(a -> a.roleBinding.equals(r.roleBinding)))
+      .filter(r -> !activatedRoles.stream().anyMatch(a -> a.roleBinding().equals(r.roleBinding())))
       .collect(Collectors.toList());
     consolidatedRoles.addAll(activatedRoles);
 
@@ -308,20 +308,20 @@ public class RoleDiscoveryService {
     Preconditions.checkNotNull(callerUserId, "callerUserId");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName);
+    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
 
     //
     // Check that the (calling) user is really allowed to request approval
     // this role.
     //
-    var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName);
+    var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName());
 
     var eligibleRoles = listEligibleProjectRoles(callerUserId, projectId);
     if (eligibleRoles
       .getItems()
       .stream()
-      .filter(pr -> pr.roleBinding.equals(roleBinding))
-      .filter(pr -> pr.status == ProjectRole.Status.ELIGIBLE_FOR_MPA)
+      .filter(pr -> pr.roleBinding().equals(roleBinding))
+      .filter(pr -> pr.status() == ProjectRole.Status.ELIGIBLE_FOR_MPA)
       .findAny()
       .isEmpty()) {
       throw new AccessDeniedException(
@@ -333,8 +333,8 @@ public class RoleDiscoveryService {
     //
     var analysisResult = this.assetInventoryAdapter.findPermissionedPrincipalsByResource(
       this.options.scope,
-      roleBinding.fullResourceName,
-      roleBinding.role);
+      roleBinding.fullResourceName(),
+      roleBinding.role());
 
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)

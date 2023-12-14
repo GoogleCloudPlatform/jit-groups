@@ -23,21 +23,16 @@ package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Objects;
-
 /**
  * Project ID for a Google Cloud project.
  */
-public class ProjectId implements Comparable<ProjectId> {
+public record ProjectId(String id) implements Comparable<ProjectId> {
   private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
-  public final String id;
-
-  public ProjectId(String id) {
+  public ProjectId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
 
-    this.id = id;
   }
 
   @Override
@@ -73,27 +68,8 @@ public class ProjectId implements Comparable<ProjectId> {
   }
 
   // -------------------------------------------------------------------------
-  // Equality.
+  // Comparable.
   // -------------------------------------------------------------------------
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    ProjectId projectId = (ProjectId) o;
-    return this.id.equals(projectId.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id);
-  }
 
   @Override
   public int compareTo(ProjectId o) {

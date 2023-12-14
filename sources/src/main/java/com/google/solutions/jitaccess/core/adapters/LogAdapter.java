@@ -123,9 +123,9 @@ public class LogAdapter {
       if (principal != null) {
         this.labels.put("user", principal.getId().email);
         this.labels.put("user_id", principal.getId().id);
-        this.labels.put("device_id", principal.getDevice().getDeviceId());
+        this.labels.put("device_id", principal.getDevice().deviceId());
         this.labels.put("device_access_levels",
-          String.join(", ", principal.getDevice().getAccessLevels()));
+          String.join(", ", principal.getDevice().accessLevels()));
       }
     }
 

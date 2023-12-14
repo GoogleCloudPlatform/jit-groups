@@ -271,7 +271,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService
       .listEligibleUsersForProjectRole(
         eq(SAMPLE_USER),
-        argThat(r -> r.role.equals("roles/browser"))))
+        argThat(r -> r.role().equals("roles/browser"))))
       .thenReturn(Set.of());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -289,7 +289,7 @@ public class TestApiResource {
     when(this.resource.roleDiscoveryService
       .listEligibleUsersForProjectRole(
         eq(SAMPLE_USER),
-        argThat(r -> r.role.equals("roles/browser"))))
+        argThat(r -> r.role().equals("roles/browser"))))
       .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -826,7 +826,7 @@ public class TestApiResource {
       .createActivationRequestForPeer(
         eq(SAMPLE_USER),
         eq(Set.of(SAMPLE_USER_2)),
-        argThat(r -> r.role.equals("roles/mock")),
+        argThat(r -> r.role().equals("roles/mock")),
         eq("justification"),
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
@@ -873,7 +873,7 @@ public class TestApiResource {
       .createActivationRequestForPeer(
         eq(SAMPLE_USER),
         eq(Set.of(SAMPLE_USER_2)),
-        argThat(r -> r.role.equals("roles/mock")),
+        argThat(r -> r.role().equals("roles/mock")),
         eq("justification"),
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(

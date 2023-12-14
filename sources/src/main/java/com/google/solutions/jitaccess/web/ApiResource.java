@@ -168,7 +168,7 @@ public class ApiResource {
       var projects = this.roleDiscoveryService.listAvailableProjects(iapPrincipal.getId());
 
       return new ProjectsResponse(projects
-        .stream().map(p -> p.id)
+        .stream().map(p -> p.id())
         .collect(Collectors.toSet()));
     }
     catch (Exception e) {
@@ -341,8 +341,8 @@ public class ApiResource {
             String.format(
               "User %s activated role '%s' on '%s' for themselves for %d minutes",
               iapPrincipal.getId(),
-              roleBinding.role,
-              roleBinding.fullResourceName,
+              roleBinding.role(),
+              roleBinding.fullResourceName(),
               requestedRoleBindingDuration))
           .addLabels(le -> addLabels(le, activation))
           .addLabel("justification", request.justification)
@@ -355,8 +355,8 @@ public class ApiResource {
             String.format(
               "User %s failed to activate role '%s' on '%s' for themselves for %d minutes: %s",
               iapPrincipal.getId(),
-              roleBinding.role,
-              roleBinding.fullResourceName,
+              roleBinding.role(),
+              roleBinding.fullResourceName(),
               requestedRoleBindingDuration,
               Exceptions.getFullMessage(e)))
           .addLabels(le -> addLabels(le, projectId))
@@ -476,8 +476,8 @@ public class ApiResource {
           String.format(
             "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.getId(),
-            roleBinding.role,
-            roleBinding.fullResourceName,
+            roleBinding.role(),
+            roleBinding.fullResourceName(),
             requestedRoleBindingDuration
             ))
         .addLabels(le -> addLabels(le, projectId))
@@ -496,8 +496,8 @@ public class ApiResource {
           String.format(
             "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.getId(),
-            roleBinding.role,
-            roleBinding.fullResourceName,
+            roleBinding.role(),
+            roleBinding.fullResourceName(),
             requestedRoleBindingDuration,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
@@ -617,8 +617,8 @@ public class ApiResource {
           String.format(
             "User %s approved role '%s' on '%s' for %s",
             iapPrincipal.getId(),
-            activationRequest.roleBinding.role,
-            activationRequest.roleBinding.fullResourceName,
+            activationRequest.roleBinding.role(),
+            activationRequest.roleBinding.fullResourceName(),
             activationRequest.beneficiary))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -638,8 +638,8 @@ public class ApiResource {
           String.format(
             "User %s failed to activate role '%s' on '%s' for %s: %s",
             iapPrincipal.getId(),
-            activationRequest.roleBinding.role,
-            activationRequest.roleBinding.fullResourceName,
+            activationRequest.roleBinding.role(),
+            activationRequest.roleBinding.fullResourceName(),
             activationRequest.beneficiary,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -667,7 +667,7 @@ public class ApiResource {
       .addLabel("activation_id", activation.id.toString())
       .addLabel("activation_start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
       .addLabel("activation_end", activation.endTime.atOffset(ZoneOffset.UTC).toString())
-      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding));
+      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding()));
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -692,9 +692,9 @@ public class ApiResource {
     RoleBinding roleBinding
   ) {
     return entry
-      .addLabel("role", roleBinding.role)
-      .addLabel("resource", roleBinding.fullResourceName)
-      .addLabel("project_id", ProjectId.fromFullResourceName(roleBinding.fullResourceName).id);
+      .addLabel("role", roleBinding.role())
+      .addLabel("resource", roleBinding.fullResourceName())
+      .addLabel("project_id", ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id());
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -708,7 +708,7 @@ public class ApiResource {
     LogAdapter.LogEntry entry,
     ProjectId project
   ) {
-    return entry.addLabel("project", project.id);
+    return entry.addLabel("project", project.id());
   }
 
   // -------------------------------------------------------------------------
@@ -856,7 +856,7 @@ public class ApiResource {
         assert startTime < endTime;
 
         this.activationId = activationId.toString();
-        this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName).id;
+        this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id();
         this.roleBinding = roleBinding;
         this.status = status;
         this.startTime = startTime;
@@ -866,8 +866,8 @@ public class ApiResource {
       private ActivationStatus(RoleActivationService.Activation activation) {
         this(
           activation.id,
-          activation.projectRole.roleBinding,
-          activation.projectRole.status,
+          activation.projectRole.roleBinding(),
+          activation.projectRole.status(),
           activation.startTime.getEpochSecond(),
           activation.endTime.getEpochSecond());
       }
@@ -895,12 +895,12 @@ public class ApiResource {
         String.format(
           "%s requests access to project %s",
           request.beneficiary,
-          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
+          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()).id()));
 
       this.properties.put("BENEFICIARY", request.beneficiary);
       this.properties.put("REVIEWERS", request.reviewers);
-      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName));
-      this.properties.put("ROLE", request.roleBinding.role);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()));
+      this.properties.put("ROLE", request.roleBinding.role());
       this.properties.put("START_TIME", request.startTime);
       this.properties.put("END_TIME", request.endTime);
       this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
@@ -930,13 +930,13 @@ public class ApiResource {
         String.format(
           "%s requests access to project %s",
           request.beneficiary,
-          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName).id));
+          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()).id()));
 
       this.properties.put("APPROVER", approver.email);
       this.properties.put("BENEFICIARY", request.beneficiary);
       this.properties.put("REVIEWERS", request.reviewers);
-      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName));
-      this.properties.put("ROLE", request.roleBinding.role);
+      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()));
+      this.properties.put("ROLE", request.roleBinding.role());
       this.properties.put("START_TIME", request.startTime);
       this.properties.put("END_TIME", request.endTime);
       this.properties.put("JUSTIFICATION", request.justification);
@@ -968,12 +968,12 @@ public class ApiResource {
         List.of(),
         String.format(
           "Activated role '%s' on '%s'",
-          activation.projectRole.roleBinding,
+          activation.projectRole.roleBinding(),
           activation.projectRole.getProjectId()));
 
       this.properties.put("BENEFICIARY", beneficiary);
       this.properties.put("PROJECT_ID", activation.projectRole.getProjectId());
-      this.properties.put("ROLE", activation.projectRole.roleBinding.role);
+      this.properties.put("ROLE", activation.projectRole.roleBinding().role());
       this.properties.put("START_TIME", activation.startTime);
       this.properties.put("END_TIME", activation.endTime);
       this.properties.put("JUSTIFICATION", justification);

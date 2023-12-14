@@ -23,22 +23,18 @@ package com.google.solutions.jitaccess.core.data;
 
 import com.google.common.base.Preconditions;
 
-import java.util.Objects;
-
 /**
  * Represents an eligible role on a project.
  */
-public class ProjectRole implements Comparable<ProjectRole> {
-  public final RoleBinding roleBinding;
-  public final Status status;
+public record ProjectRole(
+  RoleBinding roleBinding,
+  ProjectRole.Status status
+) implements Comparable<ProjectRole> {
 
-  public ProjectRole(RoleBinding roleBinding, Status status) {
+  public ProjectRole {
     Preconditions.checkNotNull(roleBinding);
     Preconditions.checkNotNull(status);
-    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
-
-    this.roleBinding = roleBinding;
-    this.status = status;
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
   }
 
   @Override
@@ -50,7 +46,7 @@ public class ProjectRole implements Comparable<ProjectRole> {
    * Return the unqualified project ID.
    */
   public ProjectId getProjectId() {
-    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName);
+    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
   }
 
   // -------------------------------------------------------------------------
@@ -72,11 +68,6 @@ public class ProjectRole implements Comparable<ProjectRole> {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(this.roleBinding, this.status);
-  }
-
-  @Override
   public int compareTo(ProjectRole o) {
     return this.roleBinding.compareTo(o.roleBinding);
   }
@@ -86,16 +77,24 @@ public class ProjectRole implements Comparable<ProjectRole> {
   // -------------------------------------------------------------------------
 
   public enum Status {
-    /** Role binding can be activated using self-approval ("JIT approval") */
+    /**
+     * Role binding can be activated using self-approval ("JIT approval")
+     */
     ELIGIBLE_FOR_JIT,
 
-    /** Role binding can be activated using multi party-approval ("MPA approval") */
+    /**
+     * Role binding can be activated using multi party-approval ("MPA approval")
+     */
     ELIGIBLE_FOR_MPA,
 
-    /** Eligible role binding has been activated */
+    /**
+     * Eligible role binding has been activated
+     */
     ACTIVATED,
 
-    /** Approval pending */
+    /**
+     * Approval pending
+     */
     ACTIVATION_PENDING
   }
 }
