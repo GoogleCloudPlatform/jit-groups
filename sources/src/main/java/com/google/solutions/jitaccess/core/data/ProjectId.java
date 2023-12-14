@@ -68,22 +68,8 @@ public record ProjectId(String id) implements Comparable<ProjectId> {
   }
 
   // -------------------------------------------------------------------------
-  // Equality.
+  // Comparable.
   // -------------------------------------------------------------------------
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    ProjectId projectId = (ProjectId) o;
-    return this.id.equals(projectId.id);
-  }
 
   @Override
   public int compareTo(ProjectId o) {
