@@ -22,21 +22,11 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.Exceptions;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.clients.LogAdapter;
-import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
-import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
+import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
-
+import com.google.solutions.jitaccess.web.auth.UserPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -45,6 +35,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
@@ -54,7 +45,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
 import java.util.stream.Collectors;
 
 /**

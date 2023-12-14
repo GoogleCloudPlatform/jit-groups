@@ -21,18 +21,19 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.auth.oauth2.GoogleCredentials;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.pubsub.Pubsub;
-import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.api.services.pubsub.model.PublishRequest;
+import com.google.api.services.pubsub.model.PubsubMessage;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;

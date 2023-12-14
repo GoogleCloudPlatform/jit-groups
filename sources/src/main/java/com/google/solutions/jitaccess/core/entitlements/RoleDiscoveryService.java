@@ -26,12 +26,12 @@ import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-
+import com.google.solutions.jitaccess.core.clients.AssetInventoryAdapter;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;

@@ -24,12 +24,12 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
-
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;

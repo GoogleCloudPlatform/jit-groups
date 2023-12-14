@@ -23,8 +23,8 @@ package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
-
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

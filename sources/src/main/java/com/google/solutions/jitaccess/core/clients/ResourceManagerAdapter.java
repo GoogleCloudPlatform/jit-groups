@@ -28,9 +28,8 @@ import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.ProjectId;
-
 import jakarta.enterprise.context.ApplicationScoped;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.*;

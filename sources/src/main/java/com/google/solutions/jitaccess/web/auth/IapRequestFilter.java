@@ -23,10 +23,9 @@ package com.google.solutions.jitaccess.web.auth;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.clients.LogAdapter;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.clients.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
-
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -36,6 +35,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
+
 import java.security.Principal;
 
 /**

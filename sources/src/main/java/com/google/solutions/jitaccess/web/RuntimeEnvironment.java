@@ -33,18 +33,19 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.clients.*;
-import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.clients.*;
+import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
+import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
+import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
-import com.google.solutions.jitaccess.core.entitlements.*;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
