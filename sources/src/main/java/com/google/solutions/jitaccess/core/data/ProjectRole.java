@@ -34,7 +34,7 @@ public record ProjectRole(
   public ProjectRole {
     Preconditions.checkNotNull(roleBinding);
     Preconditions.checkNotNull(status);
-    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName));
+    Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
 
   }
 
@@ -47,7 +47,7 @@ public record ProjectRole(
    * Return the unqualified project ID.
    */
   public ProjectId getProjectId() {
-    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName);
+    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
   }
 
   // -------------------------------------------------------------------------
