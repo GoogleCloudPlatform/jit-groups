@@ -43,7 +43,7 @@ public class TestPubSubAdapter {
     assertThrows(
       NotAuthenticatedException.class,
       () -> adapter.publish(
-        new Topic(IntegrationTestEnvironment.PROJECT_ID.id, "topic-1"),
+        new Topic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
         new PubsubMessage()));
   }
 
@@ -55,7 +55,7 @@ public class TestPubSubAdapter {
     assertThrows(
       AccessDeniedException.class,
       () -> adapter.publish(
-        new Topic(IntegrationTestEnvironment.PROJECT_ID.id, "topic-1"),
+        new Topic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
         new PubsubMessage()));
   }
 

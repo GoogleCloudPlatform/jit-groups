@@ -112,7 +112,7 @@ public class ResourceManagerAdapter {
         var policy = service
           .projects()
           .getIamPolicy(
-            String.format("projects/%s", projectId.id),
+            String.format("projects/%s", projectId.id()),
             new GetIamPolicyRequest()
               .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
           .execute();
