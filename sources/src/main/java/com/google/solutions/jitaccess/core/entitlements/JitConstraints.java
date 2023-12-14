@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
  *
  * JIT constraints are IAM conditions that "mark" an IAM binding as (JIT- or MPA-) eligible.
  */
-public class JitConstraints {
+class JitConstraints {
   /** Condition title for activated role bindings */
   public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
