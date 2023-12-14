@@ -24,33 +24,16 @@ package com.google.solutions.jitaccess.core.data;
 import com.google.common.base.Preconditions;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Information about the device of a user.
  */
-public class DeviceInfo {
+public record DeviceInfo(String deviceId, List<String> accessLevels) {
   public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
-  private final String deviceId;
-  private final List<String> accessLevels;
 
-  public DeviceInfo(
-    String deviceId,
-    List<String> accessLevels
-  ) {
+  public DeviceInfo {
     Preconditions.checkNotNull(deviceId, "deviceId");
     Preconditions.checkNotNull(accessLevels, "accessLevels");
-
-    this.deviceId = deviceId;
-    this.accessLevels = accessLevels;
-  }
-
-  public String getDeviceId() {
-    return this.deviceId;
-  }
-
-  public List<String> getAccessLevels() {
-    return accessLevels;
   }
 
   @Override
@@ -68,10 +51,5 @@ public class DeviceInfo {
     }
     var that = (DeviceInfo) o;
     return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(deviceId, accessLevels);
   }
 }

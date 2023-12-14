@@ -69,8 +69,8 @@ public class TestIapAssertion {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
       .set("google", Map.of("device_id", "device-1")));
 
-    assertEquals("device-1", assertion.getDeviceInfo().getDeviceId());
-    assertEquals(List.of(), assertion.getDeviceInfo().getAccessLevels());
+    assertEquals("device-1", assertion.getDeviceInfo().deviceId());
+    assertEquals(List.of(), assertion.getDeviceInfo().accessLevels());
   }
 
   @Test
@@ -80,7 +80,7 @@ public class TestIapAssertion {
         "device_id", "device-1",
         "access_levels", List.of("level-1", "level-2"))));
 
-    assertEquals("device-1", assertion.getDeviceInfo().getDeviceId());
-    assertEquals(List.of("level-1", "level-2"), assertion.getDeviceInfo().getAccessLevels());
+    assertEquals("device-1", assertion.getDeviceInfo().deviceId());
+    assertEquals(List.of("level-1", "level-2"), assertion.getDeviceInfo().accessLevels());
   }
 }
