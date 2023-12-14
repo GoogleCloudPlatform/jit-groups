@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.auth;
 
-import com.google.solutions.jitaccess.core.clients.LogAdapter;
+import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

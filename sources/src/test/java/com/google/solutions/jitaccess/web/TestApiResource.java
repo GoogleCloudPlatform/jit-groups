@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.clients.LogAdapter;
 import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;

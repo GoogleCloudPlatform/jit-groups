@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.clients.LogAdapter;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;

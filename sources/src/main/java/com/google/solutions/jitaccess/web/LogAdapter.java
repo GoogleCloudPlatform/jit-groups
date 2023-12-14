@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.clients;
+package com.google.solutions.jitaccess.web;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
