@@ -26,7 +26,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
-import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class RoleActivationService {
   private final RoleDiscoveryService roleDiscoveryService;
-  private final ResourceManagerAdapter resourceManagerAdapter;
+  private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
   private void checkJustification(String justification) throws AccessDeniedException{
@@ -108,15 +108,15 @@ public class RoleActivationService {
 
   public RoleActivationService(
     RoleDiscoveryService roleDiscoveryService,
-    ResourceManagerAdapter resourceManagerAdapter,
+    ResourceManagerClient resourceManagerClient,
     Options configuration
   ) {
     Preconditions.checkNotNull(roleDiscoveryService, "roleDiscoveryService");
-    Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
+    Preconditions.checkNotNull(resourceManagerClient, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
     this.roleDiscoveryService = roleDiscoveryService;
-    this.resourceManagerAdapter = resourceManagerAdapter;
+    this.resourceManagerClient = resourceManagerClient;
     this.options = configuration;
   }
 
@@ -179,10 +179,10 @@ public class RoleActivationService {
         .setDescription(bindingDescription)
         .setExpression(IamTemporaryAccessConditions.createExpression(activationTime, expiryTime)));
 
-    this.resourceManagerAdapter.addProjectIamBinding(
+    this.resourceManagerClient.addProjectIamBinding(
       ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
       binding,
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       justification);
 
     return new Activation(
@@ -255,12 +255,12 @@ public class RoleActivationService {
           request.startTime,
           request.endTime)));
 
-    this.resourceManagerAdapter.addProjectIamBinding(
+    this.resourceManagerClient.addProjectIamBinding(
       ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()),
       binding,
       EnumSet.of(
-        ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
-        ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+        ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+        ResourceManagerClient.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
       request.justification);
 
     return new Activation(

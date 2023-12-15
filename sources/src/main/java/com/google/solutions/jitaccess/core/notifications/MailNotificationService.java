@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.clients.SmtpAdapter;
+import com.google.solutions.jitaccess.core.clients.SmtpClient;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  */
 public class MailNotificationService extends NotificationService {
   private final Options options;
-  private final SmtpAdapter smtpAdapter;
+  private final SmtpClient smtpClient;
 
   /**
    * Load a resource from a JAR resource.
@@ -80,13 +80,13 @@ public class MailNotificationService extends NotificationService {
   }
 
   public MailNotificationService(
-    SmtpAdapter smtpAdapter,
+    SmtpClient smtpClient,
     Options options
   ) {
-    Preconditions.checkNotNull(smtpAdapter);
+    Preconditions.checkNotNull(smtpClient);
     Preconditions.checkNotNull(options);
 
-    this.smtpAdapter = smtpAdapter;
+    this.smtpClient = smtpClient;
     this.options = options;
   }
 
@@ -119,16 +119,16 @@ public class MailNotificationService extends NotificationService {
       .format(notification);
 
     try {
-      this.smtpAdapter.sendMail(
+      this.smtpClient.sendMail(
         notification.getToRecipients(),
         notification.getCcRecipients(),
         notification.getSubject(),
         formattedMessage,
         notification.isReply()
-          ? EnumSet.of(SmtpAdapter.Flags.REPLY)
-          : EnumSet.of(SmtpAdapter.Flags.NONE));
+          ? EnumSet.of(SmtpClient.Flags.REPLY)
+          : EnumSet.of(SmtpClient.Flags.NONE));
     }
-    catch (SmtpAdapter.MailException | AccessException | IOException e) {
+    catch (SmtpClient.MailException | AccessException | IOException e) {
       throw new NotificationException("The notification could not be sent", e);
     }
   }

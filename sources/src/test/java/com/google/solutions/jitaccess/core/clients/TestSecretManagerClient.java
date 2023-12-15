@@ -39,7 +39,7 @@ import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestSecretManagerAdapter {
+public class TestSecretManagerClient {
   private static final String SECRET_NAME = "testsecret";
   private static final String SECRET_PATH = String.format(
     "projects/%s/secrets/%s",
@@ -97,7 +97,7 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(
+    var adapter = new SecretManagerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -108,7 +108,7 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(
+    var adapter = new SecretManagerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -119,7 +119,7 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenSecretNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(
+    var adapter = new SecretManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -132,7 +132,7 @@ public class TestSecretManagerAdapter {
 
   @Test
   public void whenSecretVersionNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerAdapter(
+    var adapter = new SecretManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 

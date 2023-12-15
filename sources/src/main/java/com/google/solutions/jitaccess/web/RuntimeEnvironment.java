@@ -180,10 +180,10 @@ public class RuntimeEnvironment {
             impersonateServiceAccount,
             null,
             Stream.of(
-                ResourceManagerAdapter.OAUTH_SCOPE,
-                AssetInventoryAdapter.OAUTH_SCOPE,
-                IamCredentialsAdapter.OAUTH_SCOPE,
-                SecretManagerAdapter.OAUTH_SCOPE)
+                ResourceManagerClient.OAUTH_SCOPE,
+                AssetInventoryClient.OAUTH_SCOPE,
+                IamCredentialsClient.OAUTH_SCOPE,
+                SecretManagerClient.OAUTH_SCOPE)
               .distinct()
               .collect(Collectors.toList()),
             0);
@@ -300,11 +300,11 @@ public class RuntimeEnvironment {
   @Produces
   @ApplicationScoped
   public NotificationService getPubSubNotificationService(
-    PubSubAdapter pubSubAdapter
+    PubSubClient pubSubClient
   ) {
     if (this.configuration.topicName.isValid()) {
       return new PubSubNotificationService(
-        pubSubAdapter,
+        pubSubClient,
         new PubSubNotificationService.Options(
           new PubSubTopic(this.projectId, this.configuration.topicName.getValue())));
     }
@@ -316,14 +316,14 @@ public class RuntimeEnvironment {
   @Produces
   @ApplicationScoped
   public NotificationService getEmailNotificationService(
-    SecretManagerAdapter secretManagerAdapter
+    SecretManagerClient secretManagerClient
   ) {
     //
     // Configure SMTP if possible, and fall back to a fail-safe
     // configuration if the configuration is incomplete.
     //
     if (this.configuration.isSmtpConfigured()) {
-      var options = new SmtpAdapter.Options(
+      var options = new SmtpClient.Options(
         this.configuration.smtpHost.getValue(),
         this.configuration.smtpPort.getValue(),
         this.configuration.smtpSenderName.getValue(),
@@ -347,7 +347,7 @@ public class RuntimeEnvironment {
       }
 
       return new MailNotificationService(
-        new SmtpAdapter(secretManagerAdapter, options),
+        new SmtpClient(secretManagerClient, options),
         new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {

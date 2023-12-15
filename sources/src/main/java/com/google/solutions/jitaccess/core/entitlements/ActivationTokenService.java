@@ -25,7 +25,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.clients.IamCredentialsAdapter;
+import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
@@ -49,26 +49,26 @@ import java.time.Instant;
  */
 @ApplicationScoped
 public class ActivationTokenService {
-  private final IamCredentialsAdapter iamCredentialsAdapter;
+  private final IamCredentialsClient iamCredentialsClient;
   private final Options options;
   private final TokenVerifier tokenVerifier;
 
   public ActivationTokenService(
-    IamCredentialsAdapter iamCredentialsAdapter,
+    IamCredentialsClient iamCredentialsClient,
     Options options
   ) {
-    Preconditions.checkNotNull(iamCredentialsAdapter, "iamCredentialsAdapter");
+    Preconditions.checkNotNull(iamCredentialsClient, "iamCredentialsAdapter");
     Preconditions.checkNotNull(options, "options");
 
     this.options = options;
-    this.iamCredentialsAdapter = iamCredentialsAdapter;
+    this.iamCredentialsClient = iamCredentialsClient;
 
     //
     // Create verifier to check signature and obligatory claims.
     //
     this.tokenVerifier = TokenVerifier
       .newBuilder()
-      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(options.serviceAccount))
+      .setCertificatesLocation(IamCredentialsClient.getJwksUrl(options.serviceAccount))
       .setIssuer(options.serviceAccount.email)
       .setAudience(options.serviceAccount.email)
       .build();
@@ -89,7 +89,7 @@ public class ActivationTokenService {
       .setExpirationTimeSeconds(expiryTime.getEpochSecond());
 
     return new TokenWithExpiry(
-      this.iamCredentialsAdapter.signJwt(this.options.serviceAccount, jwtPayload),
+      this.iamCredentialsClient.signJwt(this.options.serviceAccount, jwtPayload),
       expiryTime);
   }
 

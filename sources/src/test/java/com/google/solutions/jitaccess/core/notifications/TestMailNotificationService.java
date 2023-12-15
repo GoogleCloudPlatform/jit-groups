@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
-import com.google.solutions.jitaccess.core.clients.SmtpAdapter;
+import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -67,7 +67,7 @@ public class TestMailNotificationService {
 
   @Test
   public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
-    var mailAdapter = Mockito.mock(SmtpAdapter.class);
+    var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
       mailAdapter,
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
@@ -84,12 +84,12 @@ public class TestMailNotificationService {
       eq(List.of()),
       eq("Test email"),
       anyString(),
-      eq(EnumSet.of(SmtpAdapter.Flags.NONE)));
+      eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
 
   @Test
   public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
-    var mailAdapter = Mockito.mock(SmtpAdapter.class);
+    var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
       mailAdapter,
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
@@ -106,7 +106,7 @@ public class TestMailNotificationService {
       eq(List.of()),
       eq("Test email"),
       anyString(),
-      eq(EnumSet.of(SmtpAdapter.Flags.NONE)));
+      eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
 
   // -------------------------------------------------------------------------

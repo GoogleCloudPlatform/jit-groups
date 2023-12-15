@@ -39,11 +39,11 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
 @ApplicationScoped
-public class PubSubAdapter {
+public class PubSubClient {
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
-  public PubSubAdapter(
+  public PubSubClient(
     GoogleCredentials credentials,
     HttpTransport.Options httpOptions)
   {

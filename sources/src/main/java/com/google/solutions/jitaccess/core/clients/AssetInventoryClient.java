@@ -41,12 +41,12 @@ import java.util.Optional;
  * Adapter for the Asset Inventory API.
  */
 @ApplicationScoped
-public class AssetInventoryAdapter {
+public class AssetInventoryClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
-  public AssetInventoryAdapter(
+  public AssetInventoryClient(
     GoogleCredentials credentials,
     HttpTransport.Options httpOptions
   ) {

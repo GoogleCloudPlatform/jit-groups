@@ -29,7 +29,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-public class TestSmtpAdapter {
+public class TestSmtpClient {
 
   //---------------------------------------------------------------------
   // Options.createAuthenticator.
@@ -37,10 +37,10 @@ public class TestSmtpAdapter {
 
   @Test
   public void whenOptionsContainPassword_ThenCreateAuthenticatorUsesPassword() throws Exception {
-    var options = new SmtpAdapter.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
       .setSmtpCleartextCredentials("user", "password");
 
-    var secretManager = Mockito.mock(SecretManagerAdapter.class);
+    var secretManager = Mockito.mock(SecretManagerClient.class);
 
     var authentication = options.createPasswordAuthentication(secretManager);
     assertEquals("password", authentication.getPassword());
@@ -48,10 +48,10 @@ public class TestSmtpAdapter {
 
   @Test
   public void whenOptionsContainSecretPath_ThenCreateAuthenticatorUsesPasswordFromSecret() throws Exception {
-    var options = new SmtpAdapter.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
       .setSmtpSecretCredentials("user", "path/to/secret");
 
-    var secretManager = Mockito.mock(SecretManagerAdapter.class);
+    var secretManager = Mockito.mock(SecretManagerClient.class);
     when(secretManager.accessSecret("path/to/secret")).thenReturn("password-from-secret");
 
     var authentication = options.createPasswordAuthentication(secretManager);
