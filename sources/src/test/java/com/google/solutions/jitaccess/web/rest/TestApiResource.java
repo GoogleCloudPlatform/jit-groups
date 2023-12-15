@@ -19,13 +19,16 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;

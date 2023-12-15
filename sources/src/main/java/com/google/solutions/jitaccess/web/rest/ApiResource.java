@@ -19,12 +19,16 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
+import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.LogEvents;
+import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.web.TokenObfuscator;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;

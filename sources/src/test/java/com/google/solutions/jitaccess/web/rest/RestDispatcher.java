@@ -19,12 +19,13 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.rest;
 
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.web.auth.DeviceInfo;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.web.rest.ExceptionMappers;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.SynchronousExecutionContext;
 import org.jboss.resteasy.mock.MockDispatcherFactory;

@@ -41,6 +41,7 @@ import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
+import com.google.solutions.jitaccess.web.rest.ApiResource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.ws.rs.core.UriBuilder;
