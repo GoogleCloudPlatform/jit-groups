@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
@@ -56,7 +56,7 @@ public class TestRoleActivationService {
 
   @Test
   public void whenResourceIsNotAProject_ThenActivateProjectRoleForSelfThrowsException() {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
     var service = new RoleActivationService(
@@ -81,7 +81,7 @@ public class TestRoleActivationService {
 
   @Test
   public void whenCallerLacksRoleBinding_ThenActivateProjectRoleForSelfThrowsException() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
     var caller = SAMPLE_USER;
@@ -119,7 +119,7 @@ public class TestRoleActivationService {
   public void whenJustificationDoesNotMatch_ThenActivateProjectRoleForSelfThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
@@ -141,7 +141,7 @@ public class TestRoleActivationService {
   public void whenActivationTimeoutExceedsMax_ThenActivateProjectRoleForSelfThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -161,7 +161,7 @@ public class TestRoleActivationService {
 
   @Test
   public void whenCallerIsJitEligible_ThenActivateProjectRoleForSelfAddsBinding() throws Exception {
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
 
     var caller = SAMPLE_USER;
@@ -208,7 +208,7 @@ public class TestRoleActivationService {
         argThat(b -> b.getRole().equals(SAMPLE_ROLE)
           && b.getCondition().getExpression().contains("request.time < timestamp")
           && b.getCondition().getDescription().contains("justification")),
-        eq(EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
+        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("justification"));
   }
 
@@ -220,7 +220,7 @@ public class TestRoleActivationService {
   public void whenCallerSameAsBeneficiary_ThenActivateProjectRoleForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -247,7 +247,7 @@ public class TestRoleActivationService {
   public void whenCallerNotListedAsReviewer_ThenActivateProjectRoleForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -299,7 +299,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -329,7 +329,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -374,7 +374,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -405,7 +405,7 @@ public class TestRoleActivationService {
       SAMPLE_PROJECT_RESOURCE_1,
       SAMPLE_ROLE);
 
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(
         eq(caller),
@@ -468,8 +468,8 @@ public class TestRoleActivationService {
           && b.getCondition().getExpression().contains("request.time < timestamp")
           && b.getCondition().getDescription().contains("justification")),
         eq(EnumSet.of(
-          ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
-          ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS)),
+          ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+          ResourceManagerClient.IamBindingOptions.FAIL_IF_BINDING_EXISTS)),
         eq("justification"));
   }
 
@@ -481,7 +481,7 @@ public class TestRoleActivationService {
       SAMPLE_PROJECT_RESOURCE_1,
       SAMPLE_ROLE);
 
-    var resourceAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
       .thenReturn(new Result<ProjectRole>(
@@ -537,7 +537,7 @@ public class TestRoleActivationService {
   public void whenNumberOfReviewersTooLow_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
         Mockito.mock(RoleDiscoveryService.class),
-        Mockito.mock(ResourceManagerAdapter.class),
+        Mockito.mock(ResourceManagerClient.class),
         new RoleActivationService.Options(
           "hint",
           DEFAULT_JUSTIFICATION_PATTERN,
@@ -560,7 +560,7 @@ public class TestRoleActivationService {
   public void whenNumberOfReviewersTooHigh_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
         Mockito.mock(RoleDiscoveryService.class),
-        Mockito.mock(ResourceManagerAdapter.class),
+        Mockito.mock(ResourceManagerClient.class),
         new RoleActivationService.Options(
             "hint",
             DEFAULT_JUSTIFICATION_PATTERN,
@@ -583,7 +583,7 @@ public class TestRoleActivationService {
   public void whenReviewerIncludesBeneficiary_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -606,7 +606,7 @@ public class TestRoleActivationService {
   public void whenJustificationDoesNotMatch_ThenCreateActivationRequestForPeerThrowsException() {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         Pattern.compile("^\\d+$"),
@@ -629,7 +629,7 @@ public class TestRoleActivationService {
   public void whenActivationTimeoutExceedsMax_ThenCreateActivationRequestForPeerThrowsException() throws Exception {
     var service = new RoleActivationService(
       Mockito.mock(RoleDiscoveryService.class),
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -666,7 +666,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -701,7 +701,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,
@@ -736,7 +736,7 @@ public class TestRoleActivationService {
 
     var service = new RoleActivationService(
       discoveryService,
-      Mockito.mock(ResourceManagerAdapter.class),
+      Mockito.mock(ResourceManagerClient.class),
       new RoleActivationService.Options(
         "hint",
         DEFAULT_JUSTIFICATION_PATTERN,

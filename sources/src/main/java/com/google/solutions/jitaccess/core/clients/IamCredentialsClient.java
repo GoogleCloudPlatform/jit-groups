@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -23,7 +23,9 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.secretmanager.v1.SecretManager;
+import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.services.iamcredentials.v1.IAMCredentials;
+import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
@@ -33,30 +35,20 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
- * Adapter for the Secrets Manager API.
+ * Adapter for IAM Credentials API
  */
 @ApplicationScoped
-public class SecretManagerAdapter {
-  private static final String SECRET_CHARSET = "UTF-8";
+public class IamCredentialsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
-  public SecretManagerAdapter(
-    GoogleCredentials credentials,
-    HttpTransport.Options httpOptions
-  ) {
-    Preconditions.checkNotNull(credentials, "credentials");
-    Preconditions.checkNotNull(httpOptions, "httpOptions");
-
-    this.credentials = credentials;
-    this.httpOptions = httpOptions;
-  }
-
-  private SecretManager createClient() throws IOException {
+  private IAMCredentials createClient() throws IOException
+  {
     try {
-      return new SecretManager.Builder(
+      return new IAMCredentials
+        .Builder(
           HttpTransport.newTransport(),
           new GsonFactory(),
           HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
@@ -64,49 +56,69 @@ public class SecretManagerAdapter {
         .build();
     }
     catch (GeneralSecurityException e) {
-      throw new IOException("Creating a SecretManager client failed", e);
+      throw new IOException("Creating a IAMCredentials client failed", e);
     }
   }
 
+  public IamCredentialsClient(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  )  {
+    Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
+
+    this.httpOptions = httpOptions;
+    this.credentials = credentials;
+  }
+
   /**
-   * Access a secret
-   * @param secretPath resource path, in the format projects/x/secrets/y/versions/z
+   * Sign a JWT using the Google-managed service account key.
    */
-  public String accessSecret(
-    String secretPath
+  public String signJwt(
+    UserId serviceAccount,
+    JsonWebToken.Payload payload
   ) throws AccessException, IOException {
-    try {
-      var payload = createClient()
+    Preconditions.checkNotNull(serviceAccount, "serviceAccount");
+    Preconditions.checkNotNull(payload, "payload");
+
+    try
+    {
+      if (payload.getFactory() == null) {
+        payload.setFactory(new GsonFactory());
+      }
+
+      var payloadJson = payload.toString();
+      assert (payloadJson.startsWith("{"));
+
+      var request = new SignJwtRequest()
+        .setPayload(payloadJson);
+
+      return createClient()
         .projects()
-        .secrets()
-        .versions()
-        .access(secretPath)
+        .serviceAccounts()
+        .signJwt(
+          String.format("projects/-/serviceAccounts/%s", serviceAccount.email),
+          request)
         .execute()
-        .getPayload();
-
-      if (payload == null) {
-        return null;
-      }
-
-      var payloadData = payload.decodeData();
-      if (payloadData == null) {
-        return null;
-      }
-      else {
-        return new String(payloadData, SECRET_CHARSET);
-      }
+        .getSignedJwt();
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
-          throw new AccessDeniedException(String.format("Access to secret '%s' was denied: %s", secretPath, e.getMessage()), e);
-        case 404:
-          throw new ResourceNotFoundException(String.format("The secret '%s' does not exist", secretPath), e);
+          throw new AccessDeniedException(
+            String.format("Denied access to service account '%s': %s", serviceAccount.email, e.getMessage()), e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
     }
+  }
+
+  /**
+   * Get JWKS location for service account key set.
+   */
+  public static String getJwksUrl(UserId serviceAccount) {
+    return String.format("https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", serviceAccount.email);
   }
 }

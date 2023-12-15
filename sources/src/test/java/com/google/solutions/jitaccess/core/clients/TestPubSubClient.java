@@ -31,10 +31,10 @@ import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestPubSubAdapter {
+public class TestPubSubClient {
   @Test
   public void whenUnauthenticated_ThenPublishThrowsException() {
-    var adapter = new PubSubAdapter(
+    var adapter = new PubSubClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -47,7 +47,7 @@ public class TestPubSubAdapter {
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new PubSubAdapter(
+    var adapter = new PubSubClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     assertThrows(
@@ -63,7 +63,7 @@ public class TestPubSubAdapter {
     Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
     Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
 
-    var adapter = new PubSubAdapter(
+    var adapter = new PubSubClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 

@@ -41,7 +41,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestResourceManagerAdapter {
+public class TestResourceManagerClient {
   private static final String REQUEST_REASON = "testing";
 
   //---------------------------------------------------------------------
@@ -50,7 +50,7 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -62,13 +62,13 @@ public class TestResourceManagerAdapter {
           new Binding()
             .setMembers(List.of("user:bob@example.com"))
             .setRole("roles/resourcemanager.projectIamAdmin"),
-          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
           REQUEST_REASON));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -80,13 +80,13 @@ public class TestResourceManagerAdapter {
           new Binding()
             .setMembers(List.of("user:bob@example.com"))
             .setRole("roles/resourcemanager.projectIamAdmin"),
-          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
           REQUEST_REASON));
   }
 
   @Test
   public void whenRoleNotGrantableOnProject_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -98,13 +98,13 @@ public class TestResourceManagerAdapter {
           new Binding()
             .setMembers(List.of("user:bob@example.com"))
             .setRole("roles/billing.viewer"),
-          EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+          EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
           REQUEST_REASON));
   }
 
   @Test
   public void whenResourceIsProject_ThenAddIamProjectBindingSucceeds() throws Exception {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -117,13 +117,13 @@ public class TestResourceManagerAdapter {
         .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr().setExpression(condition)),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       REQUEST_REASON);
   }
 
   @Test
   public void whenPurgeExistingTemporaryBindingsFlagIsOn_ThenExistingTemporaryBindingsAreRemoved() throws Exception {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -138,7 +138,7 @@ public class TestResourceManagerAdapter {
           .setExpression(IamTemporaryAccessConditions.createExpression(
             Instant.now().minus(Duration.ofDays(1)),
             Duration.ofMinutes(5)))),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
       REQUEST_REASON);
 
     // Add a permanent binding (with some random condition) for the same role.
@@ -150,7 +150,7 @@ public class TestResourceManagerAdapter {
         .setCondition(new Expr()
           .setTitle("permanent binding")
           .setExpression("resource.service == \"storage.googleapis.com\"")),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.NONE),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
       REQUEST_REASON);
 
     var service = new CloudResourceManager.Builder(
@@ -191,7 +191,7 @@ public class TestResourceManagerAdapter {
           .setExpression(
             IamTemporaryAccessConditions.createExpression(
               Instant.now(), Duration.ofMinutes(5)))),
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       REQUEST_REASON);
 
     var newPolicy = service
@@ -225,7 +225,7 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException() throws Exception {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -243,8 +243,8 @@ public class TestResourceManagerAdapter {
       IntegrationTestEnvironment.PROJECT_ID,
       newBinding,
       EnumSet.of(
-        ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
-        ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+        ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+        ResourceManagerClient.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
       "Test");
 
     // Add same binding again -> fails.
@@ -253,15 +253,15 @@ public class TestResourceManagerAdapter {
         IntegrationTestEnvironment.PROJECT_ID,
         newBinding,
         EnumSet.of(
-          ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
-          ResourceManagerAdapter.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+          ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+          ResourceManagerClient.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
         "Test"));
 
     // Add binding again, but without flag -> succeeds
     adapter.addProjectIamBinding(
       IntegrationTestEnvironment.PROJECT_ID,
       newBinding,
-      EnumSet.of(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
       "Test");
   }
 
@@ -279,7 +279,7 @@ public class TestResourceManagerAdapter {
       .setMembers(List.of("bob", "alice"))
       .setRole("role");
 
-    assertTrue(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertTrue(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -292,7 +292,7 @@ public class TestResourceManagerAdapter {
       .setMembers(List.of("alice", "bob"))
       .setRole("role2");
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -305,7 +305,7 @@ public class TestResourceManagerAdapter {
       .setMembers(List.of("alice"))
       .setRole("role");
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -319,7 +319,7 @@ public class TestResourceManagerAdapter {
       .setMembers(List.of("alice"))
       .setRole("role");
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -333,7 +333,7 @@ public class TestResourceManagerAdapter {
       .setMembers(List.of("alice"))
       .setRole("role");
 
-    assertTrue(ResourceManagerAdapter.Bindings.equals(lhs, rhs, false));
+    assertTrue(ResourceManagerClient.Bindings.equals(lhs, rhs, false));
   }
 
   @Test
@@ -352,7 +352,7 @@ public class TestResourceManagerAdapter {
         .setTitle("title")
         .setExpression("expr2"));
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -371,7 +371,7 @@ public class TestResourceManagerAdapter {
         .setTitle("title2")
         .setExpression("expr"));
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   @Test
@@ -391,7 +391,7 @@ public class TestResourceManagerAdapter {
         .setExpression("expr")
         .setDescription("description"));
 
-    assertFalse(ResourceManagerAdapter.Bindings.equals(lhs, rhs, true));
+    assertFalse(ResourceManagerClient.Bindings.equals(lhs, rhs, true));
   }
 
   //---------------------------------------------------------------------
@@ -400,7 +400,7 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -413,7 +413,7 @@ public class TestResourceManagerAdapter {
 
   @Test
   public void whenAuthorized_ThenTestIamPermissionsSucceeds() throws Exception {
-    var adapter = new ResourceManagerAdapter(
+    var adapter = new ResourceManagerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 

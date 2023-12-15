@@ -23,8 +23,8 @@ package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.api.services.cloudasset.v1.model.*;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
@@ -99,8 +99,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisResultEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -124,8 +124,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisResultContainsAcsWithUnrecognizedConditions_ThenListAvailableProjectsReturnsEmptyList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -157,8 +157,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsPermanentBinding_ThenListAvailableProjectsReturnsProjectId()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -188,8 +188,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsEligibleBindings_ThenListAvailableProjectsReturnsProjectIds()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -233,8 +233,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisResultEmpty_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -261,8 +261,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisResultContainsEmptyAcl_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -291,8 +291,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsNoEligibleRoles_ThenListEligibleProjectRolesReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -324,8 +324,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -365,8 +365,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -413,8 +413,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -454,8 +454,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenListEligibleProjectRolesReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -503,8 +503,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -558,8 +558,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenListEligibleProjectRolesReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -608,8 +608,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenAnalysisContainsActivatedBinding_ThenListEligibleProjectRolesReturnsMergedList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var eligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -671,8 +671,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsEligibleBindingWithExtraCondition_ThenBindingIsIgnored()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -708,8 +708,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenAnalysisContainsInheritedEligibleBinding_ThenListEligibleProjectRolesAsyncReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var parentFolderAcl = new GoogleCloudAssetV1AccessControlList()
       .setResources(List.of(new GoogleCloudAssetV1Resource()
@@ -778,8 +778,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenStatusSetToJitOnly_ThenListEligibleProjectRolesOnlyReturnsJitEligibleBindings() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -841,8 +841,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenStatusSetToMpaOnly_ThenListEligibleProjectRolesOnlyReturnsMpaEligibleBindings() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -904,8 +904,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenStatusSetToActivatedOnly_ThenListEligibleProjectRolesOnlyReturnsActivatedBindings() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -971,8 +971,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenRoleIsNotEligible_ThenListEligibleUsersForProjectRoleThrowsException() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -1003,8 +1003,8 @@ public class TestRoleDiscoveryService {
   @Test
   public void whenCallerIsOnlyMpaEligibleUser_ThenListEligibleUsersForProjectRoleReturnsEmptyList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var mpaBindingResult = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -1040,8 +1040,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenMpaEligibleUsersIncludesOtherUser_ThenListEligibleUsersForProjectRoleReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var mpaBindingResult = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_RESOURCE_1,
@@ -1096,8 +1096,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenResourceManagerEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0"))).thenReturn(Set.of());
 
@@ -1113,8 +1113,8 @@ public class TestRoleDiscoveryService {
 
   @Test
   public void whenResourceManagerReturnsList_ThenListAvailableProjectsReturnsTheSameList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryAdapter.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerAdapter.class);
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
     var expectedProjectIds = Set.of(new ProjectId("project-1"), new ProjectId("project-2"));
 
     when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))

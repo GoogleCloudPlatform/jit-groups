@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("SwitchStatementWithTooFewBranches")
 @ApplicationScoped
-public class ResourceManagerAdapter {
+public class ResourceManagerClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
 
@@ -72,7 +72,7 @@ public class ResourceManagerAdapter {
       (message.contains("not supported") || message.contains("does not exist"));
   }
 
-  public ResourceManagerAdapter(
+  public ResourceManagerClient(
     GoogleCredentials credentials,
     HttpTransport.Options httpOptions
   ) {
@@ -87,7 +87,7 @@ public class ResourceManagerAdapter {
   public void addProjectIamBinding(
     ProjectId projectId,
     Binding binding,
-    EnumSet<ResourceManagerAdapter.IamBindingOptions> options,
+    EnumSet<ResourceManagerClient.IamBindingOptions> options,
     String requestReason
   ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(projectId, "projectId");
@@ -132,7 +132,7 @@ public class ResourceManagerAdapter {
           }
         }
 
-        if (options.contains(ResourceManagerAdapter.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)) {
+        if (options.contains(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)) {
           //
           // Remove existing temporary bindings for the same principal and role.
           //

@@ -40,19 +40,19 @@ import java.util.Properties;
 /**
  * Adapter for sending email over SMTP.
  */
-public class SmtpAdapter {
-  private final SecretManagerAdapter secretManagerAdapter;
+public class SmtpClient {
+  private final SecretManagerClient secretManagerClient;
   private final Options options;
 
 
-  public SmtpAdapter(
-    SecretManagerAdapter secretManagerAdapter,
+  public SmtpClient(
+    SecretManagerClient secretManagerClient,
     Options options
   ) {
-    Preconditions.checkNotNull(secretManagerAdapter, "secretManagerAdapter");
+    Preconditions.checkNotNull(secretManagerClient, "secretManagerAdapter");
     Preconditions.checkNotNull(options, "options");
 
-    this.secretManagerAdapter = secretManagerAdapter;
+    this.secretManagerClient = secretManagerClient;
     this.options = options;
   }
 
@@ -70,7 +70,7 @@ public class SmtpAdapter {
 
     PasswordAuthentication authentication;
     try {
-      authentication = this.options.createPasswordAuthentication(this.secretManagerAdapter);
+      authentication = this.options.createPasswordAuthentication(this.secretManagerClient);
     }
     catch (Exception e) {
       throw new MailException("Looking up SMTP credentials failed", e);
@@ -239,7 +239,7 @@ public class SmtpAdapter {
     }
 
     public PasswordAuthentication createPasswordAuthentication(
-      SecretManagerAdapter adapter
+      SecretManagerClient adapter
     ) throws AccessException, IOException {
       //
       // Resolve authenticator on first use. To avoid holding a lock for

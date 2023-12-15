@@ -28,8 +28,8 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryAdapter;
-import com.google.solutions.jitaccess.core.clients.ResourceManagerAdapter;
+import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
@@ -43,22 +43,22 @@ import java.util.stream.Stream;
  */
 @ApplicationScoped
 public class RoleDiscoveryService {
-  private final AssetInventoryAdapter assetInventoryAdapter;
+  private final AssetInventoryClient assetInventoryClient;
 
-  private final ResourceManagerAdapter resourceManagerAdapter;
+  private final ResourceManagerClient resourceManagerClient;
 
   private final Options options;
 
   public RoleDiscoveryService(
-    AssetInventoryAdapter assetInventoryAdapter,
-    ResourceManagerAdapter resourceManagerAdapter,
+    AssetInventoryClient assetInventoryClient,
+    ResourceManagerClient resourceManagerClient,
     Options configuration) {
-    Preconditions.checkNotNull(assetInventoryAdapter, "assetInventoryAdapter");
-    Preconditions.checkNotNull(resourceManagerAdapter, "resourceManagerAdapter");
+    Preconditions.checkNotNull(assetInventoryClient, "assetInventoryAdapter");
+    Preconditions.checkNotNull(resourceManagerClient, "resourceManagerAdapter");
     Preconditions.checkNotNull(configuration, "configuration");
 
-    this.assetInventoryAdapter = assetInventoryAdapter;
-    this.resourceManagerAdapter = resourceManagerAdapter;
+    this.assetInventoryClient = assetInventoryClient;
+    this.resourceManagerClient = resourceManagerClient;
     this.options = configuration;
   }
 
@@ -126,7 +126,7 @@ public class RoleDiscoveryService {
       // - only applies to projects, and has no meaning on descendent resources
       // - represents the lowest level of access to a project.
       //
-      var analysisResult = this.assetInventoryAdapter.findAccessibleResourcesByUser(
+      var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
         this.options.scope,
         user,
         Optional.of("resourcemanager.projects.get"),
@@ -152,7 +152,7 @@ public class RoleDiscoveryService {
       }
     else {
       // Used as alternative option if availableProjectsQuery is set and the main approach with Asset API is not working fast enough.
-      return resourceManagerAdapter.searchProjectIds(this.options.availableProjectsQuery);
+      return resourceManagerClient.searchProjectIds(this.options.availableProjectsQuery);
     }
   }
 
@@ -198,7 +198,7 @@ public class RoleDiscoveryService {
     // admin role.
     //
 
-    var analysisResult = this.assetInventoryAdapter.findAccessibleResourcesByUser(
+    var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
       this.options.scope,
       user,
       Optional.empty(),
@@ -329,7 +329,7 @@ public class RoleDiscoveryService {
     //
     // Find other eligible users.
     //
-    var analysisResult = this.assetInventoryAdapter.findPermissionedPrincipalsByResource(
+    var analysisResult = this.assetInventoryClient.findPermissionedPrincipalsByResource(
       this.options.scope,
       roleBinding.fullResourceName(),
       roleBinding.role());

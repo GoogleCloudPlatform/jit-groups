@@ -5,7 +5,7 @@ import com.google.api.services.pubsub.model.PubsubMessage;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.clients.PubSubAdapter;
+import com.google.solutions.jitaccess.core.clients.PubSubClient;
 import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 
 import java.io.IOException;
@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
  * Concrete class that delivers notifications over Pub/Sub.
  */
 public class PubSubNotificationService extends NotificationService {
-  private final PubSubAdapter adapter;
+  private final PubSubClient adapter;
   private final Options options;
 
   public PubSubNotificationService(
-    PubSubAdapter adapter,
+    PubSubClient adapter,
     Options options
   ) {
     Preconditions.checkNotNull(adapter, "adapter");

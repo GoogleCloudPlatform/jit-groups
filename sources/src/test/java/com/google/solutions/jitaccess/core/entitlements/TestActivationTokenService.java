@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.entitlements;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
-import com.google.solutions.jitaccess.core.clients.IamCredentialsAdapter;
+import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
@@ -47,7 +47,7 @@ public class TestActivationTokenService {
 
   @Test
   public void createTokenAddsObligatoryClaims() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(
+    var credentialsAdapter = new IamCredentialsClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
@@ -73,7 +73,7 @@ public class TestActivationTokenService {
 
     var verifiedPayload = TokenVerifier
       .newBuilder()
-      .setCertificatesLocation(IamCredentialsAdapter.getJwksUrl(serviceAccount))
+      .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
       .setIssuer(serviceAccount.email)
       .setAudience(serviceAccount.email)
       .build()
@@ -95,7 +95,7 @@ public class TestActivationTokenService {
 
   @Test
   public void whenJwtMissesAudienceClaim_ThenVerifyTokenThrowsException() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(
+    var credentialsAdapter = new IamCredentialsClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
@@ -116,7 +116,7 @@ public class TestActivationTokenService {
 
   @Test
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(
+    var credentialsAdapter = new IamCredentialsClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
@@ -137,7 +137,7 @@ public class TestActivationTokenService {
 
   @Test
   public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(
+    var credentialsAdapter = new IamCredentialsClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
@@ -159,7 +159,7 @@ public class TestActivationTokenService {
 
   @Test
   public void whenJwtValid_ThenVerifySucceeds() throws Exception {
-    var credentialsAdapter = new IamCredentialsAdapter(
+    var credentialsAdapter = new IamCredentialsClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
