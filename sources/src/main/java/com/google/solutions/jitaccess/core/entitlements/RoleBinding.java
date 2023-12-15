@@ -38,6 +38,7 @@ public record RoleBinding (
     Preconditions.checkNotNull(fullResourceName, "fullResourceName");
     Preconditions.checkNotNull(role, "role");
   }
+
   public RoleBinding(ProjectId project, String role) {
     this(project.getFullResourceName(), role);
   }

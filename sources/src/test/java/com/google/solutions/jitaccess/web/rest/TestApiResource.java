@@ -35,7 +35,7 @@ import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
 import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.entitlements.Result;
+import com.google.solutions.jitaccess.core.AnnotatedResult;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -371,7 +371,7 @@ public class TestApiResource {
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new Result<>(
+      .thenReturn(new AnnotatedResult<>(
         List.of(),
         Set.of("warning")));
 
@@ -401,7 +401,7 @@ public class TestApiResource {
       .listEligibleProjectRoles(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new Result<>(
+      .thenReturn(new AnnotatedResult<>(
         List.of(role1, role2),
         null));
 

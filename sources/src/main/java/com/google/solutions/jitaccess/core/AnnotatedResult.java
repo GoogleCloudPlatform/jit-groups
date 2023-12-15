@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
 
@@ -29,7 +29,7 @@ import java.util.Set;
 /**
  * Result list of T with an optional set of warnings.
  */
-public class Result<T> {
+public class AnnotatedResult<T> {
   /**
    * List of bindings. Might be incomplete if Warnings is non-empty.
    */
@@ -40,7 +40,7 @@ public class Result<T> {
    */
   private final Set<String> warnings;
 
-  public Result(List<T> roleBindings, Set<String> warnings) {
+  public AnnotatedResult(List<T> roleBindings, Set<String> warnings) {
     Preconditions.checkNotNull(roleBindings);
 
     this.items = roleBindings;

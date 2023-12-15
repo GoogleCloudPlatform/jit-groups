@@ -24,10 +24,7 @@ package com.google.solutions.jitaccess.core.entitlements;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -161,7 +158,7 @@ public class RoleDiscoveryService {
   /**
    * List eligible role bindings for the given user.
    */
-  public Result<ProjectRole> listEligibleProjectRoles(
+  public AnnotatedResult<ProjectRole> listEligibleProjectRoles(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
@@ -177,7 +174,7 @@ public class RoleDiscoveryService {
   /**
    * List eligible role bindings for the given user.
    */
-  public Result<ProjectRole> listEligibleProjectRoles(
+  public AnnotatedResult<ProjectRole> listEligibleProjectRoles(
     UserId user,
     ProjectId projectId,
     EnumSet<ProjectRole.Status> statusesToInclude
@@ -288,7 +285,7 @@ public class RoleDiscoveryService {
       .collect(Collectors.toList());
     consolidatedRoles.addAll(activatedRoles);
 
-    return new Result<>(
+    return new AnnotatedResult<>(
       consolidatedRoles,
       Stream.ofNullable(analysisResult.getNonCriticalErrors())
         .flatMap(Collection::stream)
