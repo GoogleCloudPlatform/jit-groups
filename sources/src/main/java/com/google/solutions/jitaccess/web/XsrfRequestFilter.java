@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-
+import com.google.solutions.jitaccess.web.rest.ExceptionMappers;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.ws.rs.Priorities;

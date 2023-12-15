@@ -22,8 +22,6 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.adapters.LogAdapter;
-
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;

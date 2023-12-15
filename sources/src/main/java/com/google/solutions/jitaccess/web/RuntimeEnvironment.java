@@ -32,17 +32,21 @@ import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.adapters.*;
-import com.google.solutions.jitaccess.core.data.Topic;
-import com.google.solutions.jitaccess.core.data.UserId;
-import com.google.solutions.jitaccess.core.services.*;
-
+import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.clients.*;
+import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
+import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
+import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
+import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
+import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
+import com.google.solutions.jitaccess.web.rest.ApiResource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -302,7 +306,7 @@ public class RuntimeEnvironment {
       return new PubSubNotificationService(
         pubSubAdapter,
         new PubSubNotificationService.Options(
-          new Topic(this.projectId, this.configuration.topicName.getValue())));
+          new PubSubTopic(this.projectId, this.configuration.topicName.getValue())));
     }
     else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());
