@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.core.activation;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.entitlements.EntitlementId;
 
 public abstract class Activator<TEntitlementId extends EntitlementId> {
   private final JustificationPolicy policy;

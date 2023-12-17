@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core.activation;
 
 import java.util.Comparator;
 

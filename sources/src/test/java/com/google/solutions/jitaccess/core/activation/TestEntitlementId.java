@@ -1,5 +1,6 @@
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core.activation;
 
+import com.google.solutions.jitaccess.core.activation.EntitlementId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

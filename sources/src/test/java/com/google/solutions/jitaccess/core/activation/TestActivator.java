@@ -23,9 +23,7 @@ package com.google.solutions.jitaccess.core.activation;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.entitlements.EntitlementId;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.time.Instant;
@@ -73,6 +71,12 @@ public class TestActivator {
 
     protected SampleActivator(JustificationPolicy policy) {
       super(policy);
+    }
+
+    @Override
+    protected void verifyAccessCore(
+      ActivationRequest<SampleEntitlementId> request
+    ) throws AccessException {
     }
 
     @Override

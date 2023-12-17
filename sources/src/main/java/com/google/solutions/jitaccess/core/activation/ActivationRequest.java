@@ -22,9 +22,7 @@
 package com.google.solutions.jitaccess.core.activation;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.entitlements.EntitlementId;
 
 import java.time.Instant;
 import java.util.Collection;
