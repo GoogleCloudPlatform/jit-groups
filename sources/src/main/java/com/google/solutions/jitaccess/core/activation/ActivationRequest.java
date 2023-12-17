@@ -67,21 +67,47 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     this.justification = justification;
   }
 
-  public void apply(
-    JustificationPolicy policy
-  ) throws AccessException
-  {
-    Preconditions.checkNotNull(policy, "policy");
-
-    //
-    // Check that the justification is ok.
-    //
-    policy.checkJustification(this.requestingUser, this.justification);
-
-    applyCore();
+  /**
+   * @return unique ID of the request.
+   */
+  public ActivationId id() {
+    return id;
   }
 
-  protected abstract void applyCore() throws AccessException;
+  /**
+   * @return start time for requested access.
+   */
+  public Instant startTime() {
+    return startTime;
+  }
+
+  /**
+   * @return end time for requested access.
+   */
+  public Instant endTime() {
+    return endTime;
+  }
+
+  /**
+   * @return user that requested access.
+   */
+  public UserId requestingUser() {
+    return requestingUser;
+  }
+
+  /**
+   * @return one or more entitlements.
+   */
+  public Collection<TEntitlementId> entitlements() {
+    return entitlements;
+  }
+
+  /**
+   * @return user-provided justification for the request.
+   */
+  public String justification() {
+    return justification;
+  }
 
   @Override
   public String toString() {

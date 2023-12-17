@@ -25,14 +25,18 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.entitlements.EntitlementId;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
-public class TestActivationRequest {
+public class TestActivator {
   private class SampleEntitlementId extends EntitlementId
   {
     private final String id;
@@ -65,25 +69,42 @@ public class TestActivationRequest {
     }
   }
 
+  private class SampleActivator extends Activator<SampleEntitlementId> {
+
+    protected SampleActivator(JustificationPolicy policy) {
+      super(policy);
+    }
+
+    @Override
+    protected void applyRequestCore(
+      ActivationRequest<SampleEntitlementId> request
+    ) throws AccessException {
+    }
+  }
+
   // -------------------------------------------------------------------------
-  // toString.
+  // activate.
   // -------------------------------------------------------------------------
 
   @Test
-  public void toStringReturnsSummary() {
+  public void whenJustificationPolicyViolated_ThenActivateThrowsException() throws Exception {
+    var user = new UserId("user@example.com");
+
     var request = new SampleActivationRequest(
-      new ActivationId("sample-1"),
-      new UserId("user@example.com"),
-      List.of(
-        new SampleEntitlementId("1"),
-        new SampleEntitlementId("2")),
+      ActivationId.newId(ActivationType.JIT),
+      user,
+      List.of(new SampleEntitlementId("1")),
       "invalid justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
 
-    assertEquals(
-      "[sample-1] entitlements=cat:1,cat:2, duration=1970-01-01T00:00:00Z-1970-01-01T00:00:05Z, " +
-        "justification=invalid justification",
-      request.toString());
+    var policy = Mockito.mock(JustificationPolicy.class);
+    Mockito.doThrow(new InvalidJustificationException("mock"))
+      .when(policy).checkJustification(eq(user), anyString());
+
+    var activator = new SampleActivator(policy);
+    assertThrows(
+      InvalidJustificationException.class,
+      () -> activator.activate(request));
   }
 }
