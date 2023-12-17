@@ -37,13 +37,13 @@ public abstract class ActivationRequest {
   private final ActivationId id;
   private final Instant startTime;
   private final Instant endTime;
-  private final UserId user;
+  private final UserId requestingUser;
   private final Collection<EntitlementId> entitlements;
   private final String justification;
 
   protected ActivationRequest(
     ActivationId id,
-    UserId user,
+    UserId requestingUser,
     Collection<EntitlementId> entitlements,
     String justification,
     Instant startTime,
@@ -51,7 +51,7 @@ public abstract class ActivationRequest {
     ) {
 
     Preconditions.checkNotNull(id, "id");
-    Preconditions.checkNotNull(user, "user");
+    Preconditions.checkNotNull(requestingUser, "user");
     Preconditions.checkNotNull(entitlements, "entitlements");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkNotNull(startTime);
@@ -62,7 +62,7 @@ public abstract class ActivationRequest {
     this.id = id;
     this.startTime = startTime;
     this.endTime = endTime;
-    this.user = user;
+    this.requestingUser = requestingUser;
     this.entitlements = entitlements;
     this.justification = justification;
   }
@@ -76,7 +76,7 @@ public abstract class ActivationRequest {
     //
     // Check that the justification is ok.
     //
-    policy.checkJustification(this.user, this.justification);
+    policy.checkJustification(this.requestingUser, this.justification);
 
     applyCore();
   }
