@@ -36,13 +36,31 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class TestActivationRequest {
+  private class SampleEntitlementId extends EntitlementId
+  {
+    private final String id;
 
-  private class SampleActivationRequest extends ActivationRequest
+    public SampleEntitlementId(String id) {
+      this.id = id;
+    }
+
+    @Override
+    public String catalog() {
+      return "sample";
+    }
+
+    @Override
+    public String id() {
+      return this.id;
+    }
+  }
+
+  private class SampleActivationRequest extends ActivationRequest<SampleEntitlementId>
   {
     public SampleActivationRequest(
       ActivationId id,
       UserId user,
-      Collection<EntitlementId> entitlements,
+      Collection<SampleEntitlementId> entitlements,
       String justification,
       Instant startTime,
       Instant endTime) {
@@ -70,7 +88,7 @@ public class TestActivationRequest {
     var request = new SampleActivationRequest(
       ActivationId.newId(ActivationType.JIT),
       user,
-      List.of(new EntitlementId("cat", "1")),
+      List.of(new SampleEntitlementId("1")),
       "invalid justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -90,8 +108,8 @@ public class TestActivationRequest {
       new ActivationId("sample-1"),
       new UserId("user@example.com"),
       List.of(
-        new EntitlementId("cat", "1"),
-        new EntitlementId("cat", "2")),
+        new SampleEntitlementId("1"),
+        new SampleEntitlementId("2")),
       "invalid justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));

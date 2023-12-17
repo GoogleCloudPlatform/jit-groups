@@ -30,10 +30,11 @@ import java.util.Collection;
 /**
  * Request for "JIT-activating" an entitlement.
  */
-public abstract class JitActivationRequest extends ActivationRequest {
+public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
+  extends ActivationRequest<TEntitlementId> {
   public JitActivationRequest(
     UserId requestingUser,
-    Collection<EntitlementId> entitlements,
+    Collection<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Instant endTime) {

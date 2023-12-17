@@ -33,18 +33,18 @@ import java.util.stream.Collectors;
 /**
  * Request to activate one or more entitlements.
  */
-public abstract class ActivationRequest {
+public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final ActivationId id;
   private final Instant startTime;
   private final Instant endTime;
   private final UserId requestingUser;
-  private final Collection<EntitlementId> entitlements;
+  private final Collection<TEntitlementId> entitlements;
   private final String justification;
 
   protected ActivationRequest(
     ActivationId id,
     UserId requestingUser,
-    Collection<EntitlementId> entitlements,
+    Collection<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Instant endTime

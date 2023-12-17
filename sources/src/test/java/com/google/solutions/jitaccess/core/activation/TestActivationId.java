@@ -64,7 +64,7 @@ public class TestActivationId {
   }
 
   @Test
-  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
+  public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
     ActivationId id1 = new ActivationId("jit-1");
     ActivationId id2 = new ActivationId("jit-2");
 

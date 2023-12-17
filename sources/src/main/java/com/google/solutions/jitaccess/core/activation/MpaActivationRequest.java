@@ -31,12 +31,13 @@ import java.util.Collection;
 /**
  * Request for "MPA-activating" an entitlement.
  */
-public abstract class MpaActivationRequest extends ActivationRequest {
+public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
+  extends ActivationRequest<TEntitlementId> {
   private final Collection<UserId> reviewers;
 
   public MpaActivationRequest(
     UserId requestingUser,
-    Collection<EntitlementId> entitlements,
+    Collection<TEntitlementId> entitlements,
     Collection<UserId> reviewers,
     String justification,
     Instant startTime,
