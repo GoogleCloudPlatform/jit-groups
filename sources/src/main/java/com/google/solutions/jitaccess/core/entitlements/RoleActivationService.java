@@ -25,6 +25,8 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -334,38 +336,6 @@ public class RoleActivationService {
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  public enum ActivationType {
-    /** Just-in-time self-approval */
-    JIT,
-
-    /** Multi-party approval involving a qualified peer */
-    MPA
-  }
-
-  /** Unique ID for an activation */
-  public static class ActivationId {
-    private static final SecureRandom random = new SecureRandom();
-
-    private final String id;
-
-    protected ActivationId(String id) {
-      Preconditions.checkNotNull(id);
-      this.id = id;
-    }
-
-    public static ActivationId newId(ActivationType type) {
-      var id = new byte[12];
-      random.nextBytes(id);
-
-      return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
-    }
-
-    @Override
-    public String toString() {
-      return this.id;
-    }
-  }
-
   /** Represents a successful activation of a project role */
   public static class Activation {
     public final ActivationId id;
@@ -453,7 +423,7 @@ public class RoleActivationService {
     protected static ActivationRequest fromJsonWebTokenPayload(JsonWebToken.Payload payload) {
       //noinspection unchecked
       return new RoleActivationService.ActivationRequest(
-        new RoleActivationService.ActivationId(payload.getJwtId()),
+        new ActivationId(payload.getJwtId()),
         new UserId(payload.get("beneficiary").toString()),
         ((List<String>)payload.get("reviewers"))
           .stream()

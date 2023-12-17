@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
@@ -543,7 +545,7 @@ public class TestApiResource {
         eq("justification"),
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        ActivationId.newId(ActivationType.JIT),
         new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
         Instant.now(),
         Instant.now().plusSeconds(60)));
@@ -832,7 +834,7 @@ public class TestApiResource {
         eq("justification"),
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        ActivationId.newId(ActivationType.JIT),
         SAMPLE_USER,
         Set.of(SAMPLE_USER_2),
         roleBinding,
@@ -879,7 +881,7 @@ public class TestApiResource {
         eq("justification"),
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
+        ActivationId.newId(ActivationType.JIT),
         SAMPLE_USER,
         Set.of(SAMPLE_USER_2),
         roleBinding,
@@ -949,7 +951,7 @@ public class TestApiResource {
   @Test
   public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(new ProjectId("project-1"), "roles/mock"),
@@ -974,7 +976,7 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(new ProjectId("project-1"), "roles/mock"),
@@ -1040,7 +1042,7 @@ public class TestApiResource {
   @Test
   public void whenActivationServiceThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(new ProjectId("project-1"), "roles/mock"),
@@ -1071,7 +1073,7 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(new ProjectId("project-1"), "roles/mock"),
@@ -1104,7 +1106,7 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(new ProjectId("project-1"), "roles/mock"),

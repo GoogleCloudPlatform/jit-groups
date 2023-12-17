@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
+import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
@@ -59,7 +61,7 @@ public class TestActivationTokenService {
 
     var startTime = Instant.now();
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER_1,
       Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
       new RoleBinding(new ProjectId("project-1"), "roles/role-1"),
@@ -170,7 +172,7 @@ public class TestActivationTokenService {
         Duration.ofMinutes(5)));
 
     var inputRequest = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER_1,
       Set.of(SAMPLE_USER_2, SAMPLE_USER_3),
       new RoleBinding(new ProjectId("project-1"), "roles/role-1"),

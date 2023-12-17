@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
@@ -839,7 +840,7 @@ public class ApiResource {
       public final long endTime;
 
       private ActivationStatus(
-        RoleActivationService.ActivationId activationId,
+        ActivationId activationId,
         RoleBinding roleBinding,
         ProjectRole.Status status,
         long startTime,

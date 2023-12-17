@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AnnotatedResult;
+import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
@@ -230,7 +232,7 @@ public class TestRoleActivationService {
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER),
       new RoleBinding(
@@ -257,7 +259,7 @@ public class TestRoleActivationService {
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       SAMPLE_USER,
       Set.of(SAMPLE_USER_2),
       new RoleBinding(
@@ -288,7 +290,7 @@ public class TestRoleActivationService {
         Set.of()));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       peer,
       Set.of(caller),
       new RoleBinding(
@@ -339,7 +341,7 @@ public class TestRoleActivationService {
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       peer,
       Set.of(caller),
       new RoleBinding(
@@ -384,7 +386,7 @@ public class TestRoleActivationService {
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       peer,
       Set.of(caller),
       new RoleBinding(
@@ -443,7 +445,7 @@ public class TestRoleActivationService {
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       peer,
       Set.of(caller),
       new RoleBinding(
@@ -509,7 +511,7 @@ public class TestRoleActivationService {
 
     var issuedAt = 1000L;
     var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
+      ActivationId.newId(ActivationType.MPA),
       peer,
       Set.of(caller),
       new RoleBinding(
@@ -765,13 +767,13 @@ public class TestRoleActivationService {
 
   @Test
   public void whenTypeIsMpa_ThenNewActivationIdUsesPrefix() {
-    var id = RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA);
+    var id = ActivationId.newId(ActivationType.MPA);
     assertTrue(id.toString().startsWith("mpa-"));
   }
 
   @Test
   public void whenTypeIsJit_ThenNewActivationIdUsesPrefix() {
-    var id = RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT);
+    var id = ActivationId.newId(ActivationType.JIT);
     assertTrue(id.toString().startsWith("jit-"));
   }
 }
