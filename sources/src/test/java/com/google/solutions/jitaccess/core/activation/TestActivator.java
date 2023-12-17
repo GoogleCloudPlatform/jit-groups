@@ -76,9 +76,10 @@ public class TestActivator {
     }
 
     @Override
-    protected void applyRequestCore(
+    protected Activation<SampleEntitlementId> applyRequestCore(
       ActivationRequest<SampleEntitlementId> request
     ) throws AccessException {
+      return Mockito.mock(Activation.class);
     }
   }
 

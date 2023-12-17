@@ -80,7 +80,7 @@ public class TestActivationRequest {
       Instant.ofEpochSecond(5));
 
     assertEquals(
-      "[sample-1] entitlements=cat:1,cat:2, duration=1970-01-01T00:00:00Z-1970-01-01T00:00:05Z, " +
+      "[sample-1] entitlements=sample:1,sample:2, duration=1970-01-01T00:00:00Z-1970-01-01T00:00:05Z, " +
         "justification=invalid justification",
       request.toString());
   }

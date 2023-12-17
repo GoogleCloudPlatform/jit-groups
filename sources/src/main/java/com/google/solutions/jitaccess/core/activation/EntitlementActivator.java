@@ -45,7 +45,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   /**
    * Verify and apply a request to activate an entitlement.
    */
-  public void activate(
+  public Activation<TEntitlementId> activate(
     ActivationRequest<TEntitlementId> request
   ) throws AccessException
   {
@@ -64,10 +64,10 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Request is legit, apply it.
     //
-    applyRequestCore(request);
+    return applyRequestCore(request);
   }
 
-  protected abstract void applyRequestCore(
+  protected abstract Activation applyRequestCore(
     ActivationRequest<TEntitlementId> request
   ) throws AccessException;
 }

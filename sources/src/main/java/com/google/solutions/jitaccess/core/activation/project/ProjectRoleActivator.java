@@ -33,10 +33,11 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
    * Verify and apply a request to grant a project role.
    */
   @Override
-  protected void applyRequestCore(
+  protected Activation<ProjectRoleId> applyRequestCore(
     ActivationRequest<ProjectRoleId> request
   ) throws AccessException {
     //TODO: implement
+    throw new RuntimeException("NIY");
   }
 
   // -------------------------------------------------------------------------
@@ -49,7 +50,8 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
       Collection<ProjectRoleId> entitlements,
       String justification,
       Instant startTime,
-      Instant endTime) {
+      Instant endTime
+    ) {
       super(requestingUser, entitlements, justification, startTime, endTime);
     }
   }
@@ -61,8 +63,13 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
       Collection<UserId> reviewers,
       String justification,
       Instant startTime,
-      Instant endTime) {
+      Instant endTime
+    ) {
       super(requestingUser, entitlements, reviewers, justification, startTime, endTime);
+
+      if (entitlements.size() != 1) {
+        throw new IllegalArgumentException("Only one entitlement can be activated at a time");
+      }
     }
   }
 }
