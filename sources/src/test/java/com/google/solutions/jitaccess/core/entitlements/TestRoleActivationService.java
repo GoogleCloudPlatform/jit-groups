@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.entitlements;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AnnotatedResult;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
@@ -87,7 +88,7 @@ public class TestRoleActivationService {
     var caller = SAMPLE_USER;
 
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           new RoleBinding(
             SAMPLE_PROJECT_RESOURCE_1,
@@ -167,7 +168,7 @@ public class TestRoleActivationService {
     var caller = SAMPLE_USER;
 
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           new RoleBinding(
             SAMPLE_PROJECT_RESOURCE_1,
@@ -280,7 +281,7 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)),
@@ -321,7 +322,7 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
@@ -362,13 +363,13 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
         Set.of()));
     when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(),
         Set.of()));
 
@@ -413,7 +414,7 @@ public class TestRoleActivationService {
         eq(EnumSet.of(
           ProjectRole.Status.ELIGIBLE_FOR_JIT,
           ProjectRole.Status.ELIGIBLE_FOR_MPA))))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
@@ -424,7 +425,7 @@ public class TestRoleActivationService {
         eq(EnumSet.of(
           ProjectRole.Status.ELIGIBLE_FOR_JIT,
           ProjectRole.Status.ELIGIBLE_FOR_MPA))))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
@@ -484,13 +485,13 @@ public class TestRoleActivationService {
     var resourceAdapter = Mockito.mock(ResourceManagerClient.class);
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
         Set.of()));
     when(discoveryService.listEligibleProjectRoles(eq(peer), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)), // Pretend someone else approved already
@@ -658,7 +659,7 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ACTIVATED)),
@@ -693,7 +694,7 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_JIT)),
@@ -728,7 +729,7 @@ public class TestRoleActivationService {
 
     var discoveryService = Mockito.mock(RoleDiscoveryService.class);
     when(discoveryService.listEligibleProjectRoles(eq(caller), eq(SAMPLE_PROJECT_ID), any()))
-      .thenReturn(new Result<ProjectRole>(
+      .thenReturn(new AnnotatedResult<ProjectRole>(
         List.of(new ProjectRole(
           roleBinding,
           ProjectRole.Status.ELIGIBLE_FOR_MPA)),
