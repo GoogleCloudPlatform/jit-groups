@@ -1,7 +1,8 @@
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.activation.EntitlementId;
+import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 
 public class ProjectRoleId extends EntitlementId {
   static final String CATALOG = "iam";

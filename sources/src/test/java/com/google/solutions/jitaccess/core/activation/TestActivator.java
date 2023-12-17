@@ -35,25 +35,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
 public class TestActivator {
-  private class SampleEntitlementId extends EntitlementId
-  {
-    private final String id;
-
-    public SampleEntitlementId(String id) {
-      this.id = id;
-    }
-
-    @Override
-    public String catalog() {
-      return "sample";
-    }
-
-    @Override
-    public String id() {
-      return this.id;
-    }
-  }
-
   private class SampleActivationRequest extends ActivationRequest<SampleEntitlementId>
   {
     public SampleActivationRequest(

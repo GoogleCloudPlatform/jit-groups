@@ -1,6 +1,5 @@
 package com.google.solutions.jitaccess.core.activation;
 
-import com.google.solutions.jitaccess.core.activation.EntitlementId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -10,27 +9,6 @@ import java.util.TreeSet;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestEntitlementId {
-  private class SampleEntitlementId extends EntitlementId
-  {
-    private final String catalog;
-    private final String id;
-
-    public SampleEntitlementId(String catalog, String id) {
-      this.catalog = catalog;
-      this.id = id;
-    }
-
-    @Override
-    public String catalog() {
-      return this.catalog;
-    }
-
-    @Override
-    public String id() {
-      return this.id;
-    }
-  }
-
   // -------------------------------------------------------------------------
   // hashCode.
   // -------------------------------------------------------------------------

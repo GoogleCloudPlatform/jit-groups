@@ -6,7 +6,6 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.entitlements.ProjectRoleId;
 
 import java.time.Instant;
 import java.util.Collection;
