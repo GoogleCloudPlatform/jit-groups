@@ -24,12 +24,21 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 
-public abstract class Activator<TEntitlementId extends EntitlementId> {
+/**
+ * Activates entitlements, for example by modifying IAM policies.
+ */
+public abstract class EntitlementActivator<TEntitlementId extends EntitlementId> {
   private final JustificationPolicy policy;
+  private final EntitlementCatalog<TEntitlementId> catalog;
 
-  protected Activator(JustificationPolicy policy) {
+  protected EntitlementActivator(
+    EntitlementCatalog<TEntitlementId> catalog,
+    JustificationPolicy policy
+  ) {
+    Preconditions.checkNotNull(catalog, "catalog");
     Preconditions.checkNotNull(policy, "policy");
 
+    this.catalog = catalog;
     this.policy = policy;
   }
 
@@ -50,17 +59,13 @@ public abstract class Activator<TEntitlementId extends EntitlementId> {
     //
     // Check that the user is allowed to request this access.
     //
-    verifyAccessCore(request);
+    this.catalog.verifyAccess(request);
 
     //
     // Request is legit, apply it.
     //
     applyRequestCore(request);
   }
-
-  protected abstract void verifyAccessCore(
-    ActivationRequest<TEntitlementId> request
-  ) throws AccessException;
 
   protected abstract void applyRequestCore(
     ActivationRequest<TEntitlementId> request

@@ -67,16 +67,12 @@ public class TestActivator {
     }
   }
 
-  private class SampleActivator extends Activator<SampleEntitlementId> {
-
-    protected SampleActivator(JustificationPolicy policy) {
-      super(policy);
-    }
-
-    @Override
-    protected void verifyAccessCore(
-      ActivationRequest<SampleEntitlementId> request
-    ) throws AccessException {
+  private class SampleActivator extends EntitlementActivator<SampleEntitlementId> {
+    protected SampleActivator(
+      EntitlementCatalog<SampleEntitlementId> catalog,
+      JustificationPolicy policy
+    ) {
+      super(catalog, policy);
     }
 
     @Override
@@ -106,7 +102,9 @@ public class TestActivator {
     Mockito.doThrow(new InvalidJustificationException("mock"))
       .when(policy).checkJustification(eq(user), anyString());
 
-    var activator = new SampleActivator(policy);
+    var activator = new SampleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      policy);
     assertThrows(
       InvalidJustificationException.class,
       () -> activator.activate(request));

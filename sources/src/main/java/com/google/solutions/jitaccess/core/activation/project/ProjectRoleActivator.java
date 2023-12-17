@@ -14,25 +14,19 @@ import java.util.Collection;
 /**
  * Activator for project roles.
  */
-public class ProjectRoleActivator extends Activator<ProjectRoleId> {
+public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   private final ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
+    EntitlementCatalog<ProjectRoleId> catalog,
     ResourceManagerClient resourceManagerClient,
     JustificationPolicy policy
   ) {
-    super(policy);
+    super(catalog, policy);
 
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
 
     this.resourceManagerClient = resourceManagerClient;
-  }
-
-  @Override
-  protected void verifyAccessCore(
-    ActivationRequest<ProjectRoleId> request
-  ) throws AccessException {
-    //TODO: implement
   }
 
   /**
