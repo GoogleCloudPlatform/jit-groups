@@ -46,4 +46,9 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
       startTime,
       duration);
   }
+
+  @Override
+  public final ActivationType type() {
+    return ActivationType.JIT;
+  }
 }

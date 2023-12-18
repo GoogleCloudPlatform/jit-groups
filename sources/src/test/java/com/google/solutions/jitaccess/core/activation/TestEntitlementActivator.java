@@ -70,7 +70,7 @@ public class TestEntitlementActivator {
   // -------------------------------------------------------------------------
 
   @Test
-  public void createJitRequestDoesNotCheckAccess() throws AccessException {
+  public void createJitRequestDoesNotCheckAccess() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
 
     var activator = new SampleActivator(
@@ -97,7 +97,7 @@ public class TestEntitlementActivator {
   // -------------------------------------------------------------------------
 
   @Test
-  public void  whenUserNotAllowedToRequest_ThenCreateMpaRequestThrowsException() throws AccessException {
+  public void  whenUserNotAllowedToRequest_ThenCreateMpaRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
 
     Mockito.doThrow(new AccessDeniedException("mock"))

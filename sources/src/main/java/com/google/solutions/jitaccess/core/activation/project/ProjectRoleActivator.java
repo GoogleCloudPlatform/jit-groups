@@ -40,18 +40,6 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
     this.resourceManagerClient = resourceManagerClient;
   }
 
-  private static ProjectId getCommonProjectId(ActivationRequest<ProjectRoleId> request) {
-    var projects = request.entitlements().stream()
-      .map(e -> e.roleBinding().fullResourceName())
-      .collect(Collectors.toSet());
-
-    if (projects.size() != 1) {
-      throw new IllegalArgumentException("Entitlements must be part of the same project");
-    }
-
-    return ProjectId.fromFullResourceName(projects.stream().findFirst().get());
-  }
-
   private void provisionTemporaryBinding(
     String bindingDescription,
     ProjectId projectId,
@@ -104,7 +92,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
 
     provisionTemporaryBinding(
       bindingDescription,
-      getCommonProjectId(request),
+      ProjectActivationRequest.projectId(request),
       request.requestingUser(),
       request.entitlements()
         .stream()
@@ -135,7 +123,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
 
     provisionTemporaryBinding(
       bindingDescription,
-      getCommonProjectId(request),
+      ProjectActivationRequest.projectId(request),
       request.requestingUser(),
       request.entitlements()
         .stream()

@@ -59,4 +59,9 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
   public Collection<UserId> reviewers() {
     return this.reviewers;
   }
+
+  @Override
+  public final ActivationType type() {
+    return ActivationType.MPA;
+  }
 }

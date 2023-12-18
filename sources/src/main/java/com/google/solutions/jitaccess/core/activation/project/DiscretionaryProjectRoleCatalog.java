@@ -2,10 +2,7 @@ package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AnnotatedResult;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.activation.ActivationRequest;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
@@ -15,13 +12,18 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * Policy Analyzer-based catalog for project-level role bindings that
- * have been granted in a discretionary way by a project owner or admin.
+ * Catalog that uses the Policy Analyzer to find "discretionary" entitlements.
+ *
+ * Entitlements as used by this class are role bindings that:
+ *
+ *  1. are annotated with a special IAM condition
+ *  2. have been granted by a project owner or admin (which makes
+ *     them discretionary).
+ *
  */
 @ApplicationScoped
 public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
@@ -43,13 +45,68 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     this.options = options;
   }
 
+  private void validateRequest(ActivationRequest<ProjectRoleId> request) { // TODO: test
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(
+      request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no shorter than %s",
+        this.options.minActivationDuration()));
+    Preconditions.checkArgument(
+      request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no longer than %s",
+        this.options.maxActivationDuration));
 
-  private void verifyAccess(
+    if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
+      Preconditions.checkArgument(
+        mpaRequest.reviewers() != null &&
+          mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
+        String.format(
+          "At least %d reviewers must be specified",
+          this.options.minNumberOfReviewersPerActivationRequest ));
+      Preconditions.checkArgument(
+        mpaRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+        String.format(
+          "The number of reviewers must not exceed %s",
+          this.options.maxNumberOfReviewersPerActivationRequest));
+    }
+  }
+
+  private void verifyUserCanActivateEntitlements( // TODO: test
     UserId user,
-    Collection<ProjectRoleId> entitlements,
-    EnumSet<ActivationType> typesToInclude
-  ) throws AccessException {
-    throw new RuntimeException("NIY");
+    ProjectId projectId,
+    ActivationType activationType,
+    Collection<ProjectRoleId> entitlements
+  ) throws AccessException, IOException {
+    //
+    // Check if the given role is among the roles that the
+    // user is eligible to JIT-/MPA-activate.
+    //
+    // NB. It doesn't matter whether the user has already
+    // activated the role.
+    //
+    var userEntitlements = this.policyAnalyzer
+      .listEligibleProjectRoles(
+        user,
+        projectId,
+        EnumSet.of(Entitlement.Status.AVAILABLE))
+      .getItems()
+      .stream()
+      .filter(ent -> ent.activationType() == activationType)
+      .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
+
+    for (var requestedEntitlement : entitlements) {
+      var grantedEntitlement = userEntitlements.get(requestedEntitlement);
+      if (grantedEntitlement == null) {
+        throw new AccessDeniedException(
+          String.format(
+            "The user %s is not allowed to activate %s using %s",
+            user,
+            requestedEntitlement.id(),
+            activationType));
+      }
+    }
   }
 
   //---------------------------------------------------------------------------
@@ -88,61 +145,61 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     return this.policyAnalyzer.listEligibleProjectRoles(
       user,
       projectId,
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE),
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 
   @Override
-  public Set<UserId> listReviewers( //TODO: test
-    UserId requestingUser,
-    ProjectRoleId entitlement
+  public SortedSet<UserId> listReviewers( //TODO: test, sorted
+                                          UserId requestingUser,
+                                          ProjectRoleId entitlement
   ) throws AccessException, IOException {
-    return this.policyAnalyzer.listEligibleUsersForProjectRole(
-      requestingUser,
-      entitlement.roleBinding());
+    return this.policyAnalyzer
+      .listEligibleUsersForProjectRole(
+        entitlement.roleBinding(),
+        ActivationType.MPA)
+      .stream()
+      .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
+      .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Override
   public void canRequest(
     ActivationRequest<ProjectRoleId> request
-  ) throws AccessException { // TODO: test
+  ) throws AccessException, IOException { // TODO: test
 
-    Preconditions.checkNotNull(request, "request");
-    Preconditions.checkArgument(
-      request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
-      String.format(
-        "The activation duration must be no shorter than %s",
-        this.options.minActivationDuration()));
-    Preconditions.checkArgument(
-      request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
-      String.format(
-        "The activation duration must be no longer than %s",
-        this.options.maxActivationDuration));
+    validateRequest(request);
 
-    if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
-      Preconditions.checkArgument(
-        mpaRequest.reviewers() != null &&
-          mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
-        String.format(
-          "At least %d reviewers must be specified",
-          this.options.minNumberOfReviewersPerActivationRequest ));
-      Preconditions.checkArgument(
-        mpaRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
-        String.format(
-          "The number of reviewers must not exceed %s",
-          this.options.maxNumberOfReviewersPerActivationRequest));
-    }
-
-    throw new RuntimeException("NIY");
+    //
+    // Check if the requesting user is allowed to activate this
+    // entitlement.
+    //
+    verifyUserCanActivateEntitlements(
+      request.requestingUser(),
+      ProjectActivationRequest.projectId(request),
+      request.type(),
+      request.entitlements());
   }
 
   @Override
   public void canApprove(
     UserId approvingUser,
     MpaActivationRequest<ProjectRoleId> request
-  ) throws AccessException {
-    throw new RuntimeException("NIY");
+  ) throws AccessException, IOException { // TODO: test
 
+    validateRequest(request);
+
+    //
+    // Check if the approving user (!) is allowed to activate this
+    // entitlement.
+    //
+    // NB. The base class already checked that the requesting user
+    // is allowed.
+    //
+    verifyUserCanActivateEntitlements(
+      approvingUser,
+      ProjectActivationRequest.projectId(request),
+      request.type(),
+      request.entitlements());
   }
 
   // -------------------------------------------------------------------------

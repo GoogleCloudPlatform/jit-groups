@@ -86,7 +86,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     String justification,
     Instant startTime,
     Duration duration
-  ) throws AccessException {
+  ) throws AccessException, IOException {
 
     Preconditions.checkArgument(
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),

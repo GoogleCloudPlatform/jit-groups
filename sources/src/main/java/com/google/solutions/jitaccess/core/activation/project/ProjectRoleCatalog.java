@@ -10,6 +10,7 @@ import com.google.solutions.jitaccess.core.activation.EntitlementCatalog;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
+import java.util.SortedSet;
 
 /**
  * Catalog for project-level role bindings.
@@ -33,7 +34,7 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
   /**
    * List available reviewers for (MPA-) activating an entitlement.
    */
-  public abstract Set<UserId> listReviewers(
+  public abstract SortedSet<UserId> listReviewers(
     UserId requestingUser,
     ProjectRoleId entitlement
   ) throws AccessException, IOException;

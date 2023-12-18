@@ -30,11 +30,10 @@ public class PolicyAnalyzer {
   /**
    * List entitlements for the given user.
    */
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(
+  public AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(//TODO: rename to searchAnnotatedRoleBindings
     UserId user,
     ProjectId projectId,
-    EnumSet<Entitlement.Status> statusesToInclude,
-    EnumSet<ActivationType> typesToInclude
+    EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
@@ -46,12 +45,11 @@ public class PolicyAnalyzer {
   /**
     * List users that can approve the activation of an eligible role binding.
     */
-  public Set<UserId> listEligibleUsersForProjectRole(
-    UserId requestingUserId,
-    RoleBinding roleBinding
+  public Set<UserId> listEligibleUsersForProjectRole(//TODO: searchEntitlementHolders
+    RoleBinding roleBinding,
+    ActivationType activationType
   ) throws AccessException, IOException {
 
-    Preconditions.checkNotNull(requestingUserId, "requestingUserId");
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
     throw new RuntimeException("NIY");

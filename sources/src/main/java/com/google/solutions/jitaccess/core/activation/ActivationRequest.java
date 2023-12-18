@@ -122,6 +122,8 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     return this.justification;
   }
 
+  public abstract ActivationType type();
+
   @Override
   public String toString() {
     return String.format(

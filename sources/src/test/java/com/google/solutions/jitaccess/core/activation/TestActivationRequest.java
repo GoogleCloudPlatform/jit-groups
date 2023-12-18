@@ -63,6 +63,11 @@ public class TestActivationRequest {
       Duration duration) {
       super(id, user, entitlements, justification, startTime, duration);
     }
+
+    @Override
+    public ActivationType type() {
+      return ActivationType.JIT;
+    }
   }
 
   // -------------------------------------------------------------------------

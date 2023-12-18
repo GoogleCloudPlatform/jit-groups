@@ -3,6 +3,7 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 
@@ -15,7 +16,7 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
    */
   void canRequest(
     ActivationRequest<TEntitlementId> request
-  ) throws AccessException;
+  ) throws AccessException, IOException;
 
   /**
    * Verify if a user is allowed to approve a given request.
@@ -23,5 +24,5 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
   void canApprove(
     UserId approvingUser,
     MpaActivationRequest<TEntitlementId> request
-  ) throws AccessException;
+  ) throws AccessException, IOException;
 }
