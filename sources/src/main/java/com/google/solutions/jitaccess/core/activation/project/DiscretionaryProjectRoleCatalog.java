@@ -1,6 +1,7 @@
 package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AnnotatedResult;
 import com.google.solutions.jitaccess.core.ProjectId;
@@ -9,7 +10,6 @@ import com.google.solutions.jitaccess.core.activation.ActivationRequest;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.MpaActivationRequest;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * Policy Analyzer-based catalog for project-level role bindings that
@@ -24,35 +25,24 @@ import java.util.EnumSet;
  */
 @ApplicationScoped
 public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
-  private final AssetInventoryClient assetInventoryClient;
+  private final PolicyAnalyzer policyAnalyzer;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
   public DiscretionaryProjectRoleCatalog(
-    AssetInventoryClient assetInventoryClient,
+    PolicyAnalyzer policyAnalyzer,
     ResourceManagerClient resourceManagerClient,
     Options options
   ) {
-    Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
+    Preconditions.checkNotNull(policyAnalyzer, "assetInventoryClient");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     Preconditions.checkNotNull(options, "options");
 
-    this.assetInventoryClient = assetInventoryClient;
+    this.policyAnalyzer = policyAnalyzer;
     this.resourceManagerClient = resourceManagerClient;
     this.options = options;
   }
 
-  private AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(
-    UserId user,
-    ProjectId projectId,
-    EnumSet<Entitlement.Status> statusesToInclude,
-    EnumSet<ActivationType> typesToInclude
-  ) throws AccessException, IOException {
-    Preconditions.checkNotNull(user, "user");
-    Preconditions.checkNotNull(projectId, "projectId");
-
-    throw new RuntimeException("NIY");
-  }
 
   private void verifyAccess(
     UserId user,
@@ -67,18 +57,35 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   //---------------------------------------------------------------------------
 
   @Override
-  public AnnotatedResult<ProjectId> listProjects(
+  public Collection<ProjectId> listProjects(
     UserId user
   ) throws AccessException, IOException {
-    throw new RuntimeException("NIY");
+    if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) { //TODO: test
+      //
+      // Analyze policies to find projects that the user has
+      // any entitlements for. This method is slow, but accurate.
+      //
+      return this.policyAnalyzer.listAvailableProjects(user);
+    }
+    else {
+      //
+      // List all projects that the application's service account
+      // can enumerate. This method is fast, but almost certainly
+      // returns some projects that the user doesn't have any
+      // entitlements for. Depending on the nature of the projects,
+      // this might be acceptable or considered information disclosure.
+      //
+      return this.resourceManagerClient.searchProjectIds(
+        this.options.availableProjectsQuery);
+    }
   }
 
   @Override
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements(
+  public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements( //TODO: test
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
-    return listEligibleProjectRoles(
+    return this.policyAnalyzer.listEligibleProjectRoles(
       user,
       projectId,
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE),
@@ -86,11 +93,13 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public AnnotatedResult<UserId> listReviewers(
+  public Set<UserId> listReviewers( //TODO: test
     UserId requestingUser,
     ProjectRoleId entitlement
-  ) {
-    throw new RuntimeException("NIY");
+  ) throws AccessException, IOException {
+    return this.policyAnalyzer.listEligibleUsersForProjectRole(
+      requestingUser,
+      entitlement.roleBinding());
   }
 
   @Override
@@ -99,10 +108,6 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   ) throws AccessException { // TODO: test
 
     Preconditions.checkNotNull(request, "request");
-
-    Preconditions.checkArgument(
-      !request.duration().isZero() &&! request.duration().isNegative(),
-      "The duration must be positive");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
       String.format(

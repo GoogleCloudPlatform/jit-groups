@@ -57,8 +57,13 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     Preconditions.checkNotNull(startTime);
     Preconditions.checkNotNull(startTime);
 
-    Preconditions.checkArgument(!entitlements.isEmpty());
-    Preconditions.checkArgument(!duration.isNegative());
+    Preconditions.checkArgument(
+      !entitlements.isEmpty(),
+      "At least one entitlement must be specified");
+
+    Preconditions.checkArgument(
+      !duration.isZero() &&! duration.isNegative(),
+      "The duration must be positive");
 
     this.id = id;
     this.startTime = startTime;
