@@ -50,6 +50,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -166,7 +167,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -180,7 +181,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -194,8 +195,8 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
-      .thenReturn(Set.of());
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
+      .thenReturn(new TreeSet<>());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -209,8 +210,8 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
-      .thenReturn(Set.of(new ProjectId("project-1"), new ProjectId("project-2")));
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
+      .thenReturn(new TreeSet<>(Set.of(new ProjectId("project-1"), new ProjectId("project-2"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -320,7 +321,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)

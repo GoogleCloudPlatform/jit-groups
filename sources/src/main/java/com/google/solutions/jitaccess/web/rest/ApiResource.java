@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
@@ -57,6 +58,9 @@ import java.util.stream.Collectors;
 @Dependent
 @Path("/api/")
 public class ApiResource {
+
+  @Inject
+  IamPolicyCatalog iamPolicyCatalog;
 
   @Inject
   RoleDiscoveryService roleDiscoveryService;
@@ -158,7 +162,7 @@ public class ApiResource {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var projects = this.roleDiscoveryService.listAvailableProjects(iapPrincipal.getId());
+      var projects = this.iamPolicyCatalog.listProjects(iapPrincipal.getId());
 
       return new ProjectsResponse(projects
         .stream().map(p -> p.id())

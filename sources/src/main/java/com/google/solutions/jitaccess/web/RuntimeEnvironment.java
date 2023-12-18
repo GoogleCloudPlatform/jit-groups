@@ -34,6 +34,9 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.activation.RegexJustificationPolicy;
+import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.activation.project.PolicyAnalyzer;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
@@ -367,5 +370,29 @@ public class RuntimeEnvironment {
       this.configuration.backendConnectTimeout.getValue(),
       this.configuration.backendReadTimeout.getValue(),
       this.configuration.backendWriteTimeout.getValue());
+  }
+
+  @Produces
+  public RegexJustificationPolicy.Options getRegexJustificationPolicyOptions() {
+    return new RegexJustificationPolicy.Options(
+      this.configuration.justificationHint.getValue(),
+      Pattern.compile(this.configuration.justificationPattern.getValue()));
+  }
+
+  @Produces
+  public PolicyAnalyzer.Options getPolicyAnalyzerOptions() {
+    return new PolicyAnalyzer.Options(
+      this.configuration.scope.getValue());
+  }
+
+  @Produces
+  public IamPolicyCatalog.Options getIamPolicyCatalogOptions() {
+    return new IamPolicyCatalog.Options(
+      this.configuration.availableProjectsQuery.isValid()
+        ? this.configuration.availableProjectsQuery.getValue()
+        : null,
+      this.configuration.activationTimeout.getValue(),
+      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
+      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
 }

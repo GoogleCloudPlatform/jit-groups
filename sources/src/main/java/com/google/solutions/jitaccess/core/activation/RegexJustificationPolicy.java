@@ -24,12 +24,14 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.UserId;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.regex.Pattern;
 
 /**
  * Policy that checks justifications against a Regex pattern.
  */
+@ApplicationScoped
 public class RegexJustificationPolicy implements JustificationPolicy {
   private final Options options;
 

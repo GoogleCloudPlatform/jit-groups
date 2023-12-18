@@ -16,23 +16,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Catalog that uses the Policy Analyzer to find "discretionary" entitlements.
+ * Catalog that uses the Policy Analyzer API to find entitlements
+ * based on IAM Allow-policies.
  *
  * Entitlements as used by this class are role bindings that:
- *
- *  1. are annotated with a special IAM condition
- *     (making the binding" eligible")
- *  2. have been granted by a project owner or admin
- *     (making the entitlement "discretionary").
- *
+ * are annotated with a special IAM condition (making the binding
+ * "eligible").
  */
 @ApplicationScoped
-public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
+public class IamPolicyCatalog extends ProjectRoleCatalog {
   private final PolicyAnalyzer policyAnalyzer;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
-  public DiscretionaryProjectRoleCatalog(
+  public IamPolicyCatalog(
     PolicyAnalyzer policyAnalyzer,
     ResourceManagerClient resourceManagerClient,
     Options options
@@ -123,7 +120,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.policyAnalyzer.listAvailableProjects(user);
+      return this.policyAnalyzer.findProjectsWithRoleBindings(user);
     }
     else {
       //
@@ -218,7 +215,6 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
    * @param maxActivationDuration maximum duration for an activation
    */
   public record Options(
-    String scope,
     String availableProjectsQuery,
     Duration maxActivationDuration,
     int minNumberOfReviewersPerActivationRequest,
@@ -227,7 +223,6 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
 
     public Options {
-      Preconditions.checkNotNull(scope, "scope");
       Preconditions.checkNotNull(maxActivationDuration, "maxActivationDuration");
 
       Preconditions.checkArgument(!maxActivationDuration.isNegative());

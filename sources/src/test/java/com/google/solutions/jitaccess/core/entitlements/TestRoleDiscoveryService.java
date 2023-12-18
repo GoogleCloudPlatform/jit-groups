@@ -92,140 +92,140 @@ public class TestRoleDiscoveryService {
           new GoogleCloudAssetV1Identity().setName("serviceAccount:ignoreme@x.iam.gserviceaccount.com"),
           new GoogleCloudAssetV1Identity().setName("group:ignoreme@example.com"))));
   }
-
-  // ---------------------------------------------------------------------
-  // listAvailableProjects.
-  // ---------------------------------------------------------------------
-
-  @Test
-  public void whenAnalysisResultEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-
-    when(assetAdapter
-      .findAccessibleResourcesByUser(
-        anyString(),
-        eq(SAMPLE_USER),
-        eq(Optional.of("resourcemanager.projects.get")),
-        eq(Optional.empty()),
-        eq(true)))
-      .thenReturn(new IamPolicyAnalysis());
-
-    var service = new RoleDiscoveryService(
-      assetAdapter,
-      resourceManagerAdapter,
-      new RoleDiscoveryService.Options("organizations/0", null));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(0, projectIds.size());
-  }
-
-  @Test
-  public void whenAnalysisResultContainsAcsWithUnrecognizedConditions_ThenListAvailableProjectsReturnsEmptyList()
-    throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-
-    when(assetAdapter
-      .findAccessibleResourcesByUser(
-        anyString(),
-        eq(SAMPLE_USER),
-        eq(Optional.of("resourcemanager.projects.get")),
-        eq(Optional.empty()),
-        eq(true)))
-      .thenReturn(new IamPolicyAnalysis()
-        .setAnalysisResults(List.of(
-          createConditionalIamPolicyAnalysisResult(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE,
-            SAMPLE_USER,
-            "a==b",
-            "unrecognized condition",
-            "TRUE"))));
-
-    var service = new RoleDiscoveryService(
-      assetAdapter,
-      resourceManagerAdapter,
-      new RoleDiscoveryService.Options("organizations/0", null));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(0, projectIds.size());
-  }
-
-  @Test
-  public void whenAnalysisContainsPermanentBinding_ThenListAvailableProjectsReturnsProjectId()
-    throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-
-    when(assetAdapter
-      .findAccessibleResourcesByUser(
-        anyString(),
-        eq(SAMPLE_USER),
-        eq(Optional.of("resourcemanager.projects.get")),
-        eq(Optional.empty()),
-        eq(true)))
-      .thenReturn(new IamPolicyAnalysis()
-        .setAnalysisResults(List.of(
-          createIamPolicyAnalysisResult(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE,
-            SAMPLE_USER))));
-
-    var service = new RoleDiscoveryService(
-      assetAdapter,
-      resourceManagerAdapter,
-      new RoleDiscoveryService.Options("organizations/0", null));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(1, projectIds.size());
-    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_1));
-  }
-
-  @Test
-  public void whenAnalysisContainsEligibleBindings_ThenListAvailableProjectsReturnsProjectIds()
-    throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-
-    when(assetAdapter
-      .findAccessibleResourcesByUser(
-        anyString(),
-        eq(SAMPLE_USER),
-        eq(Optional.of("resourcemanager.projects.get")),
-        eq(Optional.empty()),
-        eq(true)))
-      .thenReturn(new IamPolicyAnalysis()
-        .setAnalysisResults(List.of(
-          createConditionalIamPolicyAnalysisResult(
-            SAMPLE_PROJECT_RESOURCE_1,
-            SAMPLE_ROLE,
-            SAMPLE_USER,
-            JIT_CONDITION,
-            "eligible binding",
-            "CONDITIONAL"),
-          createConditionalIamPolicyAnalysisResult(
-            SAMPLE_PROJECT_RESOURCE_2,
-            SAMPLE_ROLE,
-            SAMPLE_USER,
-            MPA_CONDITION,
-            "eligible binding",
-            "CONDITIONAL"))));
-
-    var service = new RoleDiscoveryService(
-      assetAdapter,
-      resourceManagerAdapter,
-      new RoleDiscoveryService.Options("organizations/0", null));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(2, projectIds.size());
-    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_1));
-    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_2));
-  }
+//
+//  // ---------------------------------------------------------------------
+//  // listAvailableProjects.
+//  // ---------------------------------------------------------------------
+//
+//  @Test
+//  public void whenAnalysisResultEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//
+//    when(assetAdapter
+//      .findAccessibleResourcesByUser(
+//        anyString(),
+//        eq(SAMPLE_USER),
+//        eq(Optional.of("resourcemanager.projects.get")),
+//        eq(Optional.empty()),
+//        eq(true)))
+//      .thenReturn(new IamPolicyAnalysis());
+//
+//    var service = new RoleDiscoveryService(
+//      assetAdapter,
+//      resourceManagerAdapter,
+//      new RoleDiscoveryService.Options("organizations/0", null));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(0, projectIds.size());
+//  }
+//
+//  @Test
+//  public void whenAnalysisResultContainsAcsWithUnrecognizedConditions_ThenListAvailableProjectsReturnsEmptyList()
+//    throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//
+//    when(assetAdapter
+//      .findAccessibleResourcesByUser(
+//        anyString(),
+//        eq(SAMPLE_USER),
+//        eq(Optional.of("resourcemanager.projects.get")),
+//        eq(Optional.empty()),
+//        eq(true)))
+//      .thenReturn(new IamPolicyAnalysis()
+//        .setAnalysisResults(List.of(
+//          createConditionalIamPolicyAnalysisResult(
+//            SAMPLE_PROJECT_RESOURCE_1,
+//            SAMPLE_ROLE,
+//            SAMPLE_USER,
+//            "a==b",
+//            "unrecognized condition",
+//            "TRUE"))));
+//
+//    var service = new RoleDiscoveryService(
+//      assetAdapter,
+//      resourceManagerAdapter,
+//      new RoleDiscoveryService.Options("organizations/0", null));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(0, projectIds.size());
+//  }
+//
+//  @Test
+//  public void whenAnalysisContainsPermanentBinding_ThenListAvailableProjectsReturnsProjectId()
+//    throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//
+//    when(assetAdapter
+//      .findAccessibleResourcesByUser(
+//        anyString(),
+//        eq(SAMPLE_USER),
+//        eq(Optional.of("resourcemanager.projects.get")),
+//        eq(Optional.empty()),
+//        eq(true)))
+//      .thenReturn(new IamPolicyAnalysis()
+//        .setAnalysisResults(List.of(
+//          createIamPolicyAnalysisResult(
+//            SAMPLE_PROJECT_RESOURCE_1,
+//            SAMPLE_ROLE,
+//            SAMPLE_USER))));
+//
+//    var service = new RoleDiscoveryService(
+//      assetAdapter,
+//      resourceManagerAdapter,
+//      new RoleDiscoveryService.Options("organizations/0", null));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(1, projectIds.size());
+//    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_1));
+//  }
+//
+//  @Test
+//  public void whenAnalysisContainsEligibleBindings_ThenListAvailableProjectsReturnsProjectIds()
+//    throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//
+//    when(assetAdapter
+//      .findAccessibleResourcesByUser(
+//        anyString(),
+//        eq(SAMPLE_USER),
+//        eq(Optional.of("resourcemanager.projects.get")),
+//        eq(Optional.empty()),
+//        eq(true)))
+//      .thenReturn(new IamPolicyAnalysis()
+//        .setAnalysisResults(List.of(
+//          createConditionalIamPolicyAnalysisResult(
+//            SAMPLE_PROJECT_RESOURCE_1,
+//            SAMPLE_ROLE,
+//            SAMPLE_USER,
+//            JIT_CONDITION,
+//            "eligible binding",
+//            "CONDITIONAL"),
+//          createConditionalIamPolicyAnalysisResult(
+//            SAMPLE_PROJECT_RESOURCE_2,
+//            SAMPLE_ROLE,
+//            SAMPLE_USER,
+//            MPA_CONDITION,
+//            "eligible binding",
+//            "CONDITIONAL"))));
+//
+//    var service = new RoleDiscoveryService(
+//      assetAdapter,
+//      resourceManagerAdapter,
+//      new RoleDiscoveryService.Options("organizations/0", null));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(2, projectIds.size());
+//    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_1));
+//    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_2));
+//  }
 
   // ---------------------------------------------------------------------
   // listEligibleProjectRoles.
@@ -1094,43 +1094,43 @@ public class TestRoleDiscoveryService {
     assertEquals(SAMPLE_USER_2, approvers.stream().findFirst().get());
   }
 
-  @Test
-  public void whenResourceManagerEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-
-    when(resourceManagerAdapter
-      .searchProjectIds(eq("parent:folder/0")))
-      .thenReturn(new TreeSet<>());
-
-    var service = new RoleDiscoveryService(
-            assetAdapter,
-            resourceManagerAdapter,
-            new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(0, projectIds.size());
-  }
-
-  @Test
-  public void whenResourceManagerReturnsList_ThenListAvailableProjectsReturnsTheSameList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
-    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
-    var expectedProjectIds = new TreeSet<>(
-      List.of(new ProjectId("project-1"), new ProjectId("project-2")));
-
-    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
-      .thenReturn(expectedProjectIds);
-
-    var service = new RoleDiscoveryService(
-      assetAdapter,
-      resourceManagerAdapter,
-      new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
-
-    var projectIds = service.listAvailableProjects(SAMPLE_USER);
-    assertNotNull(projectIds);
-    assertEquals(expectedProjectIds.size(), projectIds.size());
-    assertIterableEquals(new HashSet(expectedProjectIds), new HashSet(projectIds));
-  }
+//  @Test
+//  public void whenResourceManagerEmpty_ThenListAvailableProjectsReturnsEmptyList() throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//
+//    when(resourceManagerAdapter
+//      .searchProjectIds(eq("parent:folder/0")))
+//      .thenReturn(new TreeSet<>());
+//
+//    var service = new RoleDiscoveryService(
+//            assetAdapter,
+//            resourceManagerAdapter,
+//            new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(0, projectIds.size());
+//  }
+//
+//  @Test
+//  public void whenResourceManagerReturnsList_ThenListAvailableProjectsReturnsTheSameList() throws Exception {
+//    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+//    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+//    var expectedProjectIds = new TreeSet<>(
+//      List.of(new ProjectId("project-1"), new ProjectId("project-2")));
+//
+//    when(resourceManagerAdapter.searchProjectIds(eq("parent:folder/0")))
+//      .thenReturn(expectedProjectIds);
+//
+//    var service = new RoleDiscoveryService(
+//      assetAdapter,
+//      resourceManagerAdapter,
+//      new RoleDiscoveryService.Options("organizations/0", "parent:folder/0"));
+//
+//    var projectIds = service.listAvailableProjects(SAMPLE_USER);
+//    assertNotNull(projectIds);
+//    assertEquals(expectedProjectIds.size(), projectIds.size());
+//    assertIterableEquals(new HashSet(expectedProjectIds), new HashSet(projectIds));
+//  }
 }

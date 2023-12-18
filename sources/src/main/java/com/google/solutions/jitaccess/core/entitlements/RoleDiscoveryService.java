@@ -103,55 +103,55 @@ public class RoleDiscoveryService {
     return options;
   }
 
-  /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
-   */
-  public Set<ProjectId> listAvailableProjects(
-    UserId user
-  ) throws AccessException, IOException {
-    if(this.options.availableProjectsQuery == null) {
-      //
-      // NB. To reliably find projects, we have to let the Asset API consider
-      // inherited role bindings by using the "expand resources" flag. This
-      // flag causes the API to return *all* resources for which an IAM binding
-      // applies.
-      //
-      // The risk here is that the list of resources grows so large that we're hitting
-      // the limits of the API, in which case it starts truncating results. To
-      // mitigate this risk, filter on a permission that:
-      //
-      // - only applies to projects, and has no meaning on descendent resources
-      // - represents the lowest level of access to a project.
-      //
-      var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
-        this.options.scope,
-        user,
-        Optional.of("resourcemanager.projects.get"),
-        Optional.empty(),
-        true);
-
-      //
-      // Consider permanent and eligible bindings.
-      //
-      var roleBindings = findRoleBindings(
-        analysisResult,
-        condition -> condition == null ||
-          JitConstraints.isJitAccessConstraint(condition) ||
-          JitConstraints.isMultiPartyApprovalConstraint(condition),
-        evalResult -> evalResult == null ||
-          "TRUE".equalsIgnoreCase(evalResult) ||
-          "CONDITIONAL".equalsIgnoreCase(evalResult));
-
-      return roleBindings
-        .stream()
-        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
-        .collect(Collectors.toCollection(TreeSet::new));
-      }
-    else {
-      // Used as alternative option if availableProjectsQuery is set and the main approach with Asset API is not working fast enough.
-      return resourceManagerClient.searchProjectIds(this.options.availableProjectsQuery);
-    }
-  }
+//  /**
+//   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
+//   */
+//  public Set<ProjectId> listAvailableProjects(
+//    UserId user
+//  ) throws AccessException, IOException {
+//    if(this.options.availableProjectsQuery == null) {
+//      //
+//      // NB. To reliably find projects, we have to let the Asset API consider
+//      // inherited role bindings by using the "expand resources" flag. This
+//      // flag causes the API to return *all* resources for which an IAM binding
+//      // applies.
+//      //
+//      // The risk here is that the list of resources grows so large that we're hitting
+//      // the limits of the API, in which case it starts truncating results. To
+//      // mitigate this risk, filter on a permission that:
+//      //
+//      // - only applies to projects, and has no meaning on descendent resources
+//      // - represents the lowest level of access to a project.
+//      //
+//      var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
+//        this.options.scope,
+//        user,
+//        Optional.of("resourcemanager.projects.get"),
+//        Optional.empty(),
+//        true);
+//
+//      //
+//      // Consider permanent and eligible bindings.
+//      //
+//      var roleBindings = findRoleBindings(
+//        analysisResult,
+//        condition -> condition == null ||
+//          JitConstraints.isJitAccessConstraint(condition) ||
+//          JitConstraints.isMultiPartyApprovalConstraint(condition),
+//        evalResult -> evalResult == null ||
+//          "TRUE".equalsIgnoreCase(evalResult) ||
+//          "CONDITIONAL".equalsIgnoreCase(evalResult));
+//
+//      return roleBindings
+//        .stream()
+//        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
+//        .collect(Collectors.toCollection(TreeSet::new));
+//      }
+//    else {
+//      // Used as alternative option if availableProjectsQuery is set and the main approach with Asset API is not working fast enough.
+//      return resourceManagerClient.searchProjectIds(this.options.availableProjectsQuery);
+//    }
+//  }
 
 
 
