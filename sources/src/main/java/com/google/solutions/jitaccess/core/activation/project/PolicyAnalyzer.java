@@ -12,13 +12,14 @@ import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.SortedSet;
 
 public class PolicyAnalyzer {
 
   /**
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
-  public Set<ProjectId> listAvailableProjects(
+  public SortedSet<ProjectId> listAvailableProjects( // TODO: findProjectsWithRoleBindings
     UserId user
   ) throws AccessException, IOException {
 
@@ -30,7 +31,7 @@ public class PolicyAnalyzer {
   /**
    * List entitlements for the given user.
    */
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(//TODO: rename to searchAnnotatedRoleBindings
+  public AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(//TODO: rename to findEligibleRoleBindings
     UserId user,
     ProjectId projectId,
     EnumSet<Entitlement.Status> statusesToInclude
@@ -45,7 +46,7 @@ public class PolicyAnalyzer {
   /**
     * List users that can approve the activation of an eligible role binding.
     */
-  public Set<UserId> listEligibleUsersForProjectRole(//TODO: searchEntitlementHolders
+  public Set<UserId> listEligibleUsersForProjectRole(//TODO: findUsersEligibleForRoleBinding
     RoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {

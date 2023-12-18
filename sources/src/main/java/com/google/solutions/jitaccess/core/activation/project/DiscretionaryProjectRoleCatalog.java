@@ -21,8 +21,9 @@ import java.util.stream.Collectors;
  * Entitlements as used by this class are role bindings that:
  *
  *  1. are annotated with a special IAM condition
- *  2. have been granted by a project owner or admin (which makes
- *     them discretionary).
+ *     (making the binding" eligible")
+ *  2. have been granted by a project owner or admin
+ *     (making the entitlement "discretionary").
  *
  */
 @ApplicationScoped
@@ -80,8 +81,8 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     Collection<ProjectRoleId> entitlements
   ) throws AccessException, IOException {
     //
-    // Check if the given role is among the roles that the
-    // user is eligible to JIT-/MPA-activate.
+    // Verify that the user has eligible role bindings
+    // for all entitlements.
     //
     // NB. It doesn't matter whether the user has already
     // activated the role.
@@ -114,13 +115,13 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   //---------------------------------------------------------------------------
 
   @Override
-  public Collection<ProjectId> listProjects(
+  public SortedSet<ProjectId> listProjects(
     UserId user
   ) throws AccessException, IOException {
-    if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) { //TODO: test
+    if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) { // TODO: test
       //
-      // Analyze policies to find projects that the user has
-      // any entitlements for. This method is slow, but accurate.
+      // Find projects for which the user has any role bindings (eligible
+      // or regular bindings). This method is slow, but accurate.
       //
       return this.policyAnalyzer.listAvailableProjects(user);
     }
@@ -138,7 +139,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements( //TODO: test
+  public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements( //TODO: test, order
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
@@ -149,9 +150,9 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public SortedSet<UserId> listReviewers( //TODO: test, sorted
-                                          UserId requestingUser,
-                                          ProjectRoleId entitlement
+  public SortedSet<UserId> listReviewers( //TODO: test, order
+    UserId requestingUser,
+    ProjectRoleId entitlement
   ) throws AccessException, IOException {
     return this.policyAnalyzer
       .listEligibleUsersForProjectRole(

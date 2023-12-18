@@ -251,7 +251,7 @@ public class ResourceManagerClient {
     }
   }
 
-  public Set<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
+  public SortedSet<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
 

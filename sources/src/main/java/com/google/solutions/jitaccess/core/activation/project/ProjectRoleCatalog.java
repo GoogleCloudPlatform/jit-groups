@@ -19,7 +19,7 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
   /**
    * List projects that the user has any entitlements for.
    */
-  public abstract Collection<ProjectId> listProjects(
+  public abstract SortedSet<ProjectId> listProjects(
     UserId user
   ) throws AccessException, IOException;
 
