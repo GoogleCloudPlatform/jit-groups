@@ -26,18 +26,14 @@ import com.google.common.base.Preconditions;
 import java.util.Comparator;
 
 /**
- * An entitlement that a user could activate, or has activated already.
- *
- * @param id
- * @param name
- * @param requirement
- * @param status
- * @param <TEntitlementId>
+ * Represents an entitlement. An entitlement is dormant unless the user
+ * activates it, and it automatically becomes inactive again after a certain
+ * period of time has elapsed.
  */
 public record Entitlement<TEntitlementId extends EntitlementId> (
   TEntitlementId id,
   String name,
-  Requirement requirement,
+  ActivationType activationType,
   Status status
 ) implements Comparable<Entitlement<TEntitlementId>> {
   public Entitlement {
@@ -61,18 +57,6 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   //---------------------------------------------------------------------------
   // Inner classes.
   //---------------------------------------------------------------------------
-
-  public enum Requirement {
-    /**
-     * Available for self-activation.
-     */
-    JIT,
-
-    /**
-     * Requires approval from another party.
-     */
-    MPA
-  }
 
   public enum Status {
     /**

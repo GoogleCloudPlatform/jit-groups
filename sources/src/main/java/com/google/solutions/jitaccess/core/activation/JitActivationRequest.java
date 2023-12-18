@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Set;
 
 /**

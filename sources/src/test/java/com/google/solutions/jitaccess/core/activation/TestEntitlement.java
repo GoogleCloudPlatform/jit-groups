@@ -40,7 +40,7 @@ public class TestEntitlement {
     var ent = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("1"),
       "Sample entitlement",
-      Entitlement.Requirement.JIT,
+      ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
     assertEquals("Sample entitlement", ent.toString());
@@ -55,23 +55,23 @@ public class TestEntitlement {
     var availableA = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("A"),
       "Entitlement A",
-      Entitlement.Requirement.JIT,
+      ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
     var activeA = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("A"),
       "Entitlement A",
-      Entitlement.Requirement.JIT,
+      ActivationType.JIT,
       Entitlement.Status.ACTIVE);
     var pendingA = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("A"),
       "Entitlement A",
-      Entitlement.Requirement.JIT,
+      ActivationType.JIT,
       Entitlement.Status.ACTIVATION_PENDING);
 
     var availableB = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("B"),
       "Entitlement B",
-      Entitlement.Requirement.JIT,
+      ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
     var entitlements = List.of(

@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Request to activate one or more entitlements.
+ * Represents a request for activating one or more entitlements.
  */
 public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final ActivationId id;

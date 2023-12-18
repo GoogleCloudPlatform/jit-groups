@@ -27,7 +27,6 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Set;
 
 /**

@@ -5,7 +5,8 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AnnotatedResult;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.activation.*;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
+import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
@@ -43,7 +44,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     UserId user,
     ProjectId projectId,
     EnumSet<Entitlement.Status> statusesToInclude,
-    EnumSet<Entitlement.Requirement> requirementsToInclude
+    EnumSet<ActivationType> typesToInclude
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(projectId, "projectId");
@@ -54,7 +55,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   private void verifyAccess(
     UserId user,
     Collection<ProjectRoleId> entitlements,
-    Entitlement.Requirement requirement
+    EnumSet<ActivationType> typesToInclude
   ) throws AccessException {
     throw new RuntimeException("NIY");
   }
@@ -79,7 +80,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
       user,
       projectId,
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE),
-      EnumSet.of(Entitlement.Requirement.JIT, Entitlement.Requirement.MPA));
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
   }
 
   @Override
