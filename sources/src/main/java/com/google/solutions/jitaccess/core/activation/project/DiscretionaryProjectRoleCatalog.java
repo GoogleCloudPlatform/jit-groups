@@ -98,6 +98,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     Duration duration
   ) throws AccessException {
 
+    //TODO: verify min/max reviewers
     Preconditions.checkNotNull(requestingUser, "requestingUser");
     Preconditions.checkNotNull(entitlements, "entitlements");
     Preconditions.checkNotNull(duration, "duration");
@@ -111,7 +112,7 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     }
 
     if (duration.toSeconds() > this.options.maxActivationDuration().toSeconds()) {
-      throw new IllegalArgumentException("Duration exceeds maximum permissable duration");
+      throw new IllegalArgumentException("Duration exceeds maximum permissible duration");
     }
 
     throw new RuntimeException("NIY");
@@ -144,14 +145,26 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   public record Options(
     String scope,
     String availableProjectsQuery,
-    Duration maxActivationDuration
+    Duration maxActivationDuration,
+    int minNumberOfReviewersPerActivationRequest,
+    int maxNumberOfReviewersPerActivationRequest
   ) {
     static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
 
     public Options {
       Preconditions.checkNotNull(scope, "scope");
       Preconditions.checkNotNull(maxActivationDuration, "maxActivationDuration");
+
       Preconditions.checkArgument(!maxActivationDuration.isNegative());
+      Preconditions.checkArgument(
+        maxActivationDuration.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
+        "Activation timeout must be at least 5 minutes");
+      Preconditions.checkArgument(
+        minNumberOfReviewersPerActivationRequest > 0,
+        "The minimum number of reviewers cannot be 0");
+      Preconditions.checkArgument(
+        minNumberOfReviewersPerActivationRequest <= maxNumberOfReviewersPerActivationRequest,
+        "The minimum number of reviewers must not exceed the maximum");
     }
 
     public Duration minActivationDuration() {

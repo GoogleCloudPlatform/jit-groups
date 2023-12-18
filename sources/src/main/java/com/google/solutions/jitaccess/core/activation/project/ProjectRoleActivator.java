@@ -27,21 +27,17 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   private final ResourceManagerClient resourceManagerClient;
-  private final Options options;
 
   public ProjectRoleActivator(
     EntitlementCatalog<ProjectRoleId> catalog,
     ResourceManagerClient resourceManagerClient,
-    JustificationPolicy policy,
-    Options options
+    JustificationPolicy policy
   ) {
     super(catalog, policy);
 
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
-    Preconditions.checkNotNull(options, "options");
 
     this.resourceManagerClient = resourceManagerClient;
-    this.options = options;
   }
 
   private static ProjectId getCommonProjectId(ActivationRequest<ProjectRoleId> request) {
@@ -53,8 +49,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
       throw new IllegalArgumentException("Entitlements must be part of the same project");
     }
 
-    var projectId = ProjectId.fromFullResourceName(projects.stream().findFirst().get());
-    return projectId;
+    return ProjectId.fromFullResourceName(projects.stream().findFirst().get());
   }
 
   private void provisionTemporaryBinding(
@@ -148,29 +143,5 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
-  }
-
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
-
-  public record Options (
-   Duration maxActivationTimeout,
-   int minNumberOfReviewersPerActivationRequest,
-   int maxNumberOfReviewersPerActivationRequest
-  ) {
-    static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
-
-    public Options {
-      Preconditions.checkArgument(
-        maxActivationTimeout.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
-        "Activation timeout must be at least 5 minutes");
-      Preconditions.checkArgument(
-        minNumberOfReviewersPerActivationRequest > 0,
-        "The minimum number of reviewers cannot be 0");
-      Preconditions.checkArgument(
-        minNumberOfReviewersPerActivationRequest <= maxNumberOfReviewersPerActivationRequest,
-        "The minimum number of reviewers must not exceed the maximum");
-    }
   }
 }

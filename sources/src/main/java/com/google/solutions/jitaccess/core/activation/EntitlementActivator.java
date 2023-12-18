@@ -67,7 +67,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // NB. There's no need to verify access at this stage yet.
     //
-    return new JitRequest(
+    return new JitRequest<>(
       requestingUser,
       entitlements,
       justification,
@@ -97,7 +97,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     this.catalog.canRequest(requestingUser, entitlements, duration);
 
-    return new MpaRequest(
+    return new MpaRequest<>(
       requestingUser,
       entitlements,
       reviewers,
@@ -133,7 +133,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     provisionAccess(request);
 
-    return new Activation<TEntitlementId>(
+    return new Activation<>(
       request.id(),
       request.entitlements(),
       request.startTime(),
@@ -183,7 +183,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     provisionAccess(approvingUser, request);
 
-    return new Activation<TEntitlementId>(
+    return new Activation<>(
       request.id(),
       request.entitlements(),
       request.startTime(),
