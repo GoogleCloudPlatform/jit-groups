@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final ActivationId id;
   private final Instant startTime;
-  private final Instant endTime;
+  private final Duration duration;
   private final UserId requestingUser;
   private final Set<TEntitlementId> entitlements;
   private final String justification;
@@ -46,7 +47,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
-    Instant endTime
+    Duration duration
     ) {
 
     Preconditions.checkNotNull(id, "id");
@@ -54,13 +55,14 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     Preconditions.checkNotNull(entitlements, "entitlements");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkNotNull(startTime);
-    Preconditions.checkNotNull(endTime);
+    Preconditions.checkNotNull(startTime);
 
     Preconditions.checkArgument(!entitlements.isEmpty());
+    Preconditions.checkArgument(!duration.isNegative());
 
     this.id = id;
     this.startTime = startTime;
-    this.endTime = endTime;
+    this.duration = duration;
     this.requestingUser = requestingUser;
     this.entitlements = entitlements;
     this.justification = justification;
@@ -70,52 +72,59 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
    * @return unique ID of the request.
    */
   public ActivationId id() {
-    return id;
+    return this.id;
   }
 
   /**
    * @return start time for requested access.
    */
   public Instant startTime() {
-    return startTime;
+    return this.startTime;
+  }
+
+  /**
+   * @return duration of requested activation.
+   */
+  public Duration duration() {
+    return this.duration;
   }
 
   /**
    * @return end time for requested access.
    */
   public Instant endTime() {
-    return endTime;
+    return this.startTime.plus(this.duration);
   }
 
   /**
    * @return user that requested access.
    */
   public UserId requestingUser() {
-    return requestingUser;
+    return this.requestingUser;
   }
 
   /**
    * @return one or more entitlements.
    */
   public Collection<TEntitlementId> entitlements() {
-    return entitlements;
+    return this.entitlements;
   }
 
   /**
    * @return user-provided justification for the request.
    */
   public String justification() {
-    return justification;
+    return this.justification;
   }
 
   @Override
   public String toString() {
     return String.format(
-      "[%s] entitlements=%s, duration=%s-%s, justification=%s",
+      "[%s] entitlements=%s, startTime=%s, duration=%s, justification=%s",
       this.id,
       this.entitlements.stream().map(e -> e.toString()).collect(Collectors.joining(",")),
       this.startTime,
-      this.endTime,
+      this.duration,
       this.justification);
   }
 }

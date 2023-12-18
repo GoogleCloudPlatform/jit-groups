@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.activation;
 
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
@@ -36,13 +37,13 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
-    Instant endTime) {
+    Duration duration) {
     super(
       ActivationId.newId(ActivationType.JIT),
       requestingUser,
       entitlements,
       justification,
       startTime,
-      endTime);
+      duration);
   }
 }

@@ -23,10 +23,13 @@ package com.google.solutions.jitaccess.core.activation;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -49,10 +52,16 @@ public class TestEntitlementActivator {
     }
 
     @Override
-    protected Activation<SampleEntitlementId> provisionAccess(
-      ActivationRequest<SampleEntitlementId> request
-    ) throws AccessException {
-      return Mockito.mock(Activation.class);
+    protected void provisionAccess(
+      JitActivationRequest<SampleEntitlementId> request
+    ) throws AccessException, AlreadyExistsException, IOException {
+    }
+
+    @Override
+    protected void provisionAccess(
+      UserId approvingUser,
+      MpaActivationRequest<SampleEntitlementId> request
+    ) throws AccessException, AlreadyExistsException, IOException {
     }
   }
 
@@ -73,14 +82,14 @@ public class TestEntitlementActivator {
       SAMPLE_REQUESTING_USER,
       entitlements,
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertNotNull(request);
     assertEquals(SAMPLE_REQUESTING_USER, request.requestingUser());
     assertIterableEquals(entitlements, request.entitlements());
 
-    verify(catalog, times(0)).canRequest(eq(SAMPLE_REQUESTING_USER), any());
+    verify(catalog, times(0)).canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
   }
 
   // -------------------------------------------------------------------------
@@ -93,7 +102,7 @@ public class TestEntitlementActivator {
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any());
+      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
 
     var activator = new SampleActivator(
       catalog,
@@ -106,8 +115,8 @@ public class TestEntitlementActivator {
         Set.of(new SampleEntitlementId("cat", "1")),
         Set.of(SAMPLE_APPROVING_USER),
         "justification",
-        Instant.ofEpochSecond(0),
-        Instant.ofEpochSecond(5)));
+        Instant.now(),
+        Duration.ofMinutes(5)));
   }
 
   // -------------------------------------------------------------------------
@@ -130,8 +139,8 @@ public class TestEntitlementActivator {
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertThrows(
       InvalidJustificationException.class,
@@ -144,7 +153,7 @@ public class TestEntitlementActivator {
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any());
+      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
 
     var activator = new SampleActivator(
       catalog,
@@ -154,8 +163,8 @@ public class TestEntitlementActivator {
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertThrows(
       AccessDeniedException.class,
@@ -177,8 +186,8 @@ public class TestEntitlementActivator {
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -196,8 +205,8 @@ public class TestEntitlementActivator {
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertThrows(
       AccessDeniedException.class,
@@ -221,8 +230,8 @@ public class TestEntitlementActivator {
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     assertThrows(
       InvalidJustificationException.class,
@@ -241,12 +250,12 @@ public class TestEntitlementActivator {
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any());
+      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
 
     assertThrows(
       AccessDeniedException.class,
@@ -265,8 +274,8 @@ public class TestEntitlementActivator {
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Instant.now(),
+      Duration.ofMinutes(5));
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)

@@ -9,10 +9,10 @@ import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.EnumSet;
 
@@ -24,12 +24,12 @@ import java.util.EnumSet;
 public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   private final AssetInventoryClient assetInventoryClient;
   private final ResourceManagerClient resourceManagerClient;
-  private final RoleDiscoveryService.Options options;
+  private final Options options;
 
   public DiscretionaryProjectRoleCatalog(
     AssetInventoryClient assetInventoryClient,
     ResourceManagerClient resourceManagerClient,
-    RoleDiscoveryService.Options options
+    Options options
   ) {
     Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
@@ -94,8 +94,26 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   @Override
   public void canRequest(
     UserId requestingUser,
-    Collection<ProjectRoleId> entitlements
+    Collection<ProjectRoleId> entitlements,
+    Duration duration
   ) throws AccessException {
+
+    Preconditions.checkNotNull(requestingUser, "requestingUser");
+    Preconditions.checkNotNull(entitlements, "entitlements");
+    Preconditions.checkNotNull(duration, "duration");
+
+    if (duration.isZero() || duration.isNegative()) {
+      throw new IllegalArgumentException("Duration must be positive");
+    }
+
+    if (duration.toSeconds() < this.options.minActivationDuration().toSeconds()) {
+      throw new IllegalArgumentException("Duration is too short");
+    }
+
+    if (duration.toSeconds() > this.options.maxActivationDuration().toSeconds()) {
+      throw new IllegalArgumentException("Duration exceeds maximum permissable duration");
+    }
+
     throw new RuntimeException("NIY");
 
   }
@@ -121,13 +139,23 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
    * @param scope organization/ID, folder/ID, or project/ID.
    * @param availableProjectsQuery optional, search query, for example:
    *      - parent:folders/{folder_id}
+   * @param maxActivationDuration maximum duration for an activation
    */
   public record Options(
     String scope,
-    String availableProjectsQuery
+    String availableProjectsQuery,
+    Duration maxActivationDuration
   ) {
+    static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
+
     public Options {
       Preconditions.checkNotNull(scope, "scope");
+      Preconditions.checkNotNull(maxActivationDuration, "maxActivationDuration");
+      Preconditions.checkArgument(!maxActivationDuration.isNegative());
+    }
+
+    public Duration minActivationDuration() {
+      return Duration.ofMinutes(MIN_ACTIVATION_TIMEOUT_MINUTES);
     }
   }
 }

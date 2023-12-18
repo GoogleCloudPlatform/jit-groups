@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Set;
@@ -41,14 +42,14 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
     Set<UserId> reviewers,
     String justification,
     Instant startTime,
-    Instant endTime) {
+    Duration duration) {
     super(
       ActivationId.newId(ActivationType.MPA),
       requestingUser,
       entitlements,
       justification,
       startTime,
-      endTime);
+      duration);
 
     Preconditions.checkNotNull(reviewers, "reviewers");
     Preconditions.checkArgument(!reviewers.isEmpty());

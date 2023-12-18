@@ -3,6 +3,7 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.time.Duration;
 import java.util.Collection;
 
 /**
@@ -14,7 +15,8 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
    */
   void canRequest(
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements
+    Collection<TEntitlementId> entitlements,
+    Duration duration
   ) throws AccessException;
 
   /**

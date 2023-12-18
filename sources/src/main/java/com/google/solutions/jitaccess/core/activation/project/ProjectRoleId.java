@@ -14,6 +14,10 @@ public class ProjectRoleId extends EntitlementId {
     this.roleBinding = roleBinding;
   }
 
+  public RoleBinding roleBinding() {
+    return this.roleBinding;
+  }
+
   @Override
   public String catalog() {
     return CATALOG;

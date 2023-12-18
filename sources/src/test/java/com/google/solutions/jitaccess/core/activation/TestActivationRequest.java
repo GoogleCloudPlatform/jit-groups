@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.solutions.jitaccess.core.UserId;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -59,8 +60,8 @@ public class TestActivationRequest {
       Set<SampleEntitlementId> entitlements,
       String justification,
       Instant startTime,
-      Instant endTime) {
-      super(id, user, entitlements, justification, startTime, endTime);
+      Duration duration) {
+      super(id, user, entitlements, justification, startTime, duration);
     }
   }
 
@@ -74,15 +75,14 @@ public class TestActivationRequest {
       new ActivationId("sample-1"),
       new UserId("user@example.com"),
       Set.of(
-        new SampleEntitlementId("1"),
-        new SampleEntitlementId("2")),
-      "invalid justification",
+        new SampleEntitlementId("1")),
+      "some justification",
       Instant.ofEpochSecond(0),
-      Instant.ofEpochSecond(5));
+      Duration.ofMinutes(5));
 
     assertEquals(
-      "[sample-1] entitlements=sample:1,sample:2, duration=1970-01-01T00:00:00Z-1970-01-01T00:00:05Z, " +
-        "justification=invalid justification",
+      "[sample-1] entitlements=sample:1, startTime=1970-01-01T00:00:00Z, " +
+        "duration=PT5M, justification=some justification",
       request.toString());
   }
 }

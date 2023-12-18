@@ -24,8 +24,11 @@ package com.google.solutions.jitaccess.core.activation;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.UserId;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
@@ -55,8 +58,12 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
-    Instant endTime
+    Duration duration
   ) {
+    Preconditions.checkArgument(
+      startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
+      "Start time must not be in the past");
+
     //
     // NB. There's no need to verify access at this stage yet.
     //
@@ -65,7 +72,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       entitlements,
       justification,
       startTime,
-      endTime);
+      duration);
   }
 
   /**
@@ -78,14 +85,17 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     Set<UserId> reviewers,
     String justification,
     Instant startTime,
-    Instant endTime
+    Duration duration
   ) throws AccessException {
 
+    Preconditions.checkArgument(
+      startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
+      "Start time must not be in the past");
     //
     // Pre-verify access to avoid sending an MPA requests for which
     // the access check will fail later.
     //
-    this.catalog.canRequest(requestingUser, entitlements);
+    this.catalog.canRequest(requestingUser, entitlements, duration);
 
     return new MpaRequest(
       requestingUser,
@@ -93,7 +103,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       reviewers,
       justification,
       startTime,
-      endTime);
+      duration);
   }
 
   /**
@@ -101,7 +111,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    */
   public final Activation<TEntitlementId> activate(
     JitActivationRequest<TEntitlementId> request
-  ) throws AccessException
+  ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
 
@@ -113,12 +123,21 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to activate this entitlement.
     //
-    this.catalog.canRequest(request.requestingUser(), request.entitlements());
+    this.catalog.canRequest(
+      request.requestingUser(),
+      request.entitlements(),
+      request.duration());
 
     //
     // Request is legit, apply it.
     //
-    return provisionAccess(request);
+    provisionAccess(request);
+
+    return new Activation<TEntitlementId>(
+      request.id(),
+      request.entitlements(),
+      request.startTime(),
+      request.endTime());
   }
 
   /**
@@ -127,7 +146,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   public final Activation<TEntitlementId> approve(
     UserId approvingUser,
     MpaActivationRequest<TEntitlementId> request
-  ) throws AccessException
+  ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
 
@@ -149,7 +168,10 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to request this entitlement.
     //
-    this.catalog.canRequest(request.requestingUser(), request.entitlements());
+    this.catalog.canRequest(
+      request.requestingUser(),
+      request.entitlements(),
+      request.duration());
 
     //
     // Check that the approving user is (still) allowed to approve this entitlement.
@@ -159,15 +181,30 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Request is legit, apply it.
     //
-    return provisionAccess(request);
+    provisionAccess(approvingUser, request);
+
+    return new Activation<TEntitlementId>(
+      request.id(),
+      request.entitlements(),
+      request.startTime(),
+      request.endTime());
   }
 
   /**
-   * Apply a request to grant a project role.
+   * Apply a request.
    */
-  protected abstract Activation provisionAccess(
-    ActivationRequest<TEntitlementId> request
-  ) throws AccessException;
+  protected abstract void provisionAccess(
+    JitActivationRequest<TEntitlementId> request
+  ) throws AccessException, AlreadyExistsException, IOException;
+
+
+  /**
+   * Apply a request.
+   */
+  protected abstract void provisionAccess(
+    UserId approvingUser,
+    MpaActivationRequest<TEntitlementId> request
+  ) throws AccessException, AlreadyExistsException, IOException;
 
   // -------------------------------------------------------------------------
   // Inner classes.
@@ -180,9 +217,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       Set<TEntitlementId> entitlements,
       String justification,
       Instant startTime,
-      Instant endTime
+      Duration duration
     ) {
-      super(requestingUser, entitlements, justification, startTime, endTime);
+      super(requestingUser, entitlements, justification, startTime, duration);
     }
   }
 
@@ -194,9 +231,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       Set<UserId> reviewers,
       String justification,
       Instant startTime,
-      Instant endTime
+      Duration duration
     ) {
-      super(requestingUser, entitlements, reviewers, justification, startTime, endTime);
+      super(requestingUser, entitlements, reviewers, justification, startTime, duration);
 
       if (entitlements.size() != 1) {
         throw new IllegalArgumentException("Only one entitlement can be activated at a time");
