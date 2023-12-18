@@ -71,18 +71,6 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public void verifyAccess(
-    ActivationRequest<ProjectRoleId> request
-  ) throws AccessException {
-    verifyAccess(
-      request.requestingUser(),
-      request.entitlements(),
-      request instanceof MpaActivationRequest<ProjectRoleId>
-        ? Entitlement.Requirement.MPA
-        : Entitlement.Requirement.JIT);
-  }
-
-  @Override
   public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements(
     UserId user,
     ProjectId projectId
@@ -100,6 +88,24 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
     ProjectRoleId entitlement
   ) {
     throw new RuntimeException("NIY");
+  }
+
+  @Override
+  public void canRequest(
+    UserId requestingUser,
+    Collection<ProjectRoleId> entitlements
+  ) throws AccessException {
+    throw new RuntimeException("NIY");
+
+  }
+
+  @Override
+  public void canApprove(
+    UserId approvingUser,
+    Collection<ProjectRoleId> entitlements
+  ) throws AccessException {
+    throw new RuntimeException("NIY");
+
   }
 
   // -------------------------------------------------------------------------

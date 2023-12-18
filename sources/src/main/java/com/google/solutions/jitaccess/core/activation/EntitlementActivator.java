@@ -22,7 +22,12 @@
 package com.google.solutions.jitaccess.core.activation;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.UserId;
+
+import java.time.Instant;
+import java.util.Collection;
 
 /**
  * Activates entitlements, for example by modifying IAM policies.
@@ -43,10 +48,59 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   }
 
   /**
-   * Verify and apply a request to activate an entitlement.
+   * Create a new request to activate an entitlement that permits self-approval.
    */
-  public Activation<TEntitlementId> activate(
-    ActivationRequest<TEntitlementId> request
+  public final JitActivationRequest<TEntitlementId> createJitRequest(
+    UserId requestingUser,
+    Collection<TEntitlementId> entitlements,
+    String justification,
+    Instant startTime,
+    Instant endTime
+  ) {
+    //
+    // NB. There's no need to verify access at this stage yet.
+    //
+    return new JitRequest(
+      requestingUser,
+      entitlements,
+      justification,
+      startTime,
+      endTime);
+  }
+
+  /**
+   * Create a new request to activate an entitlement that requires
+   * multi-party approval.
+   */
+  public MpaActivationRequest<TEntitlementId> createMpaRequest(
+    UserId requestingUser,
+    Collection<TEntitlementId> entitlements,
+    Collection<UserId> reviewers,
+    String justification,
+    Instant startTime,
+    Instant endTime
+  ) throws AccessException {
+
+    //
+    // Pre-verify access to avoid sending an MPA requests for which
+    // the access check will fail later.
+    //
+    this.catalog.canRequest(requestingUser, entitlements);
+
+    return new MpaRequest(
+      requestingUser,
+      entitlements,
+      reviewers,
+      justification,
+      startTime,
+      endTime);
+  }
+
+  /**
+   * Activate an entitlement that permits self-approval.
+   */
+  public final Activation<TEntitlementId> activate(
+    JitActivationRequest<TEntitlementId> request
   ) throws AccessException
   {
     Preconditions.checkNotNull(policy, "policy");
@@ -57,17 +111,96 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     policy.checkJustification(request.requestingUser(), request.justification());
 
     //
-    // Check that the user is allowed to request this access.
+    // Check that the user is (still) allowed to activate this entitlement.
     //
-    this.catalog.verifyAccess(request);
+    this.catalog.canRequest(request.requestingUser(), request.entitlements());
 
     //
     // Request is legit, apply it.
     //
-    return applyRequestCore(request);
+    return provisionAccess(request);
   }
 
-  protected abstract Activation applyRequestCore(
+  /**
+   * Approve another user's request.
+   */
+  public final Activation<TEntitlementId> approve(
+    UserId approvingUser,
+    MpaActivationRequest<TEntitlementId> request
+  ) throws AccessException
+  {
+    Preconditions.checkNotNull(policy, "policy");
+
+    if (approvingUser.equals(request.requestingUser())) {
+      throw new IllegalArgumentException(
+        "MPA activation requires the caller and beneficiary to be the different");
+    }
+
+    if (!request.reviewers().contains(approvingUser)) {
+      throw new AccessDeniedException(
+        String.format("The request does not permit approval by %s", approvingUser));
+    }
+
+    //
+    // Check that the justification is ok.
+    //
+    policy.checkJustification(request.requestingUser(), request.justification());
+
+    //
+    // Check that the user is (still) allowed to activate this entitlement.
+    //
+    this.catalog.canRequest(request.requestingUser(), request.entitlements());
+
+    //
+    // Check that the approving user is(still) allowed to approve this entitlement.
+    //
+    this.catalog.canApprove(approvingUser, request.entitlements());
+
+    //
+    // Request is legit, apply it.
+    //
+    return provisionAccess(request);
+  }
+
+  /**
+   * Apply a request to grant a project role.
+   */
+  protected abstract Activation provisionAccess(
     ActivationRequest<TEntitlementId> request
   ) throws AccessException;
+
+  // -------------------------------------------------------------------------
+  // Inner classes.
+  // -------------------------------------------------------------------------
+
+  private static class JitRequest<TEntitlementId extends  EntitlementId>
+    extends JitActivationRequest<TEntitlementId> {
+    public JitRequest(
+      UserId requestingUser,
+      Collection<TEntitlementId> entitlements,
+      String justification,
+      Instant startTime,
+      Instant endTime
+    ) {
+      super(requestingUser, entitlements, justification, startTime, endTime);
+    }
+  }
+
+  private static class MpaRequest<TEntitlementId extends EntitlementId>
+    extends MpaActivationRequest<TEntitlementId> {
+    public MpaRequest(
+      UserId requestingUser,
+      Collection<TEntitlementId> entitlements,
+      Collection<UserId> reviewers,
+      String justification,
+      Instant startTime,
+      Instant endTime
+    ) {
+      super(requestingUser, entitlements, reviewers, justification, startTime, endTime);
+
+      if (entitlements.size() != 1) {
+        throw new IllegalArgumentException("Only one entitlement can be activated at a time");
+      }
+    }
+  }
 }

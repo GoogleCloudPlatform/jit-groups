@@ -31,7 +31,7 @@ import java.util.Collection;
  */
 public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
-  public JitActivationRequest(
+  protected JitActivationRequest(
     UserId requestingUser,
     Collection<TEntitlementId> entitlements,
     String justification,

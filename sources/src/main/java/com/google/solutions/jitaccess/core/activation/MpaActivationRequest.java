@@ -34,7 +34,7 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
   private final Collection<UserId> reviewers;
 
-  public MpaActivationRequest(
+  protected MpaActivationRequest(
     UserId requestingUser,
     Collection<TEntitlementId> entitlements,
     Collection<UserId> reviewers,

@@ -3,14 +3,11 @@ package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Collection;
 
 /**
  * Activator for project roles.
@@ -35,48 +32,16 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
     this.options = options;
   }
 
-  /**
-   * Verify and apply a request to grant a project role.
-   */
+  // -------------------------------------------------------------------------
+  // Overrides.
+  // -------------------------------------------------------------------------
+
   @Override
-  protected Activation<ProjectRoleId> applyRequestCore(
+  protected Activation<ProjectRoleId> provisionAccess(
     ActivationRequest<ProjectRoleId> request
   ) throws AccessException {
     //TODO: implement
     throw new RuntimeException("NIY");
-  }
-
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
-
-  static class JitRequest extends JitActivationRequest<ProjectRoleId> {
-    public JitRequest(
-      UserId requestingUser,
-      Collection<ProjectRoleId> entitlements,
-      String justification,
-      Instant startTime,
-      Instant endTime
-    ) {
-      super(requestingUser, entitlements, justification, startTime, endTime);
-    }
-  }
-
-  static class MpaRequest extends MpaActivationRequest<ProjectRoleId> {
-    public MpaRequest(
-      UserId requestingUser,
-      Collection<ProjectRoleId> entitlements,
-      Collection<UserId> reviewers,
-      String justification,
-      Instant startTime,
-      Instant endTime
-    ) {
-      super(requestingUser, entitlements, reviewers, justification, startTime, endTime);
-
-      if (entitlements.size() != 1) {
-        throw new IllegalArgumentException("Only one entitlement can be activated at a time");
-      }
-    }
   }
 
   // -------------------------------------------------------------------------
