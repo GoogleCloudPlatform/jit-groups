@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -23,35 +23,18 @@ package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 
 /**
- * Result list of T with an optional set of warnings.
+ * @param items collection of items
+ * @param warnings warnings encountered
  */
-public class AnnotatedResult<T> { // TODO: delete
-  /**
-   * List of bindings. Might be incomplete if Warnings is non-empty.
-   */
-  private final List<T> items;
-
-  /**
-   * Non-fatal issues encountered. Use a set to avoid duplicates.
-   */
-  private final Set<String> warnings;
-
-  public AnnotatedResult(List<T> roleBindings, Set<String> warnings) {
-    Preconditions.checkNotNull(roleBindings);
-
-    this.items = roleBindings;
-    this.warnings = warnings;
-  }
-
-  public List<T> getItems() {
-    return this.items;
-  }
-
-  public Set<String> getWarnings() {
-    return warnings;
+public record Annotated<TColl extends Collection<?>>(
+  TColl items,
+  Set<String> warnings
+) {
+  public Annotated {
+    Preconditions.checkNotNull(items, "items");
   }
 }

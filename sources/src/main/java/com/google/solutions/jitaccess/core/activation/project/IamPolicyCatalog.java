@@ -89,7 +89,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
         user,
         projectId,
         EnumSet.of(Entitlement.Status.AVAILABLE))
-      .getItems()
+      .items()
       .stream()
       .filter(ent -> ent.activationType() == activationType)
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
@@ -136,7 +136,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEntitlements( //TODO: test, order
+  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEntitlements( //TODO: test, order
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {

@@ -24,10 +24,7 @@ package com.google.solutions.jitaccess.core.activation.project;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AnnotatedResult;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
@@ -147,7 +144,7 @@ public class PolicyAnalyzer {
   /**
    * List entitlements for the given user.
    */
-  public AnnotatedResult<Entitlement<ProjectRoleId>> listEligibleProjectRoles(//TODO: rename to findEligibleRoleBindings
+  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEligibleProjectRoles(//TODO: rename to findEligibleRoleBindings
     UserId user,
     ProjectId projectId,
     EnumSet<Entitlement.Status> statusesToInclude
