@@ -27,12 +27,12 @@ import com.google.solutions.jitaccess.core.ProjectId;
 /**
  * Represents an eligible role on a project.
  */
-public record ProjectRole(
+public record ProjectRole_(
   RoleBinding roleBinding,
-  ProjectRole.Status status
-) implements Comparable<ProjectRole> {
+  ProjectRole_.Status status
+) implements Comparable<ProjectRole_> {
 
-  public ProjectRole {
+  public ProjectRole_ {
     Preconditions.checkNotNull(roleBinding);
     Preconditions.checkNotNull(status);
     Preconditions.checkArgument(ProjectId.isProjectFullResourceName(roleBinding.fullResourceName()));
@@ -64,12 +64,12 @@ public record ProjectRole(
       return false;
     }
 
-    var that = (ProjectRole) o;
+    var that = (ProjectRole_) o;
     return this.roleBinding.equals(that.roleBinding) && this.status.equals(that.status);
   }
 
   @Override
-  public int compareTo(ProjectRole o) {
+  public int compareTo(ProjectRole_ o) {
     return this.roleBinding.compareTo(o.roleBinding);
   }
 

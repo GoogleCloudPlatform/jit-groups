@@ -32,11 +32,9 @@ import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -66,12 +64,12 @@ public class RoleActivationService {
   }
 
   private static boolean canActivateProjectRole(
-    ProjectRole projectRole,
+    ProjectRole_ projectRole,
     ActivationType activationType
   ) {
     switch (activationType) {
-      case JIT: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_JIT;
-      case MPA: return projectRole.status() == ProjectRole.Status.ELIGIBLE_FOR_MPA;
+      case JIT: return projectRole.status() == ProjectRole_.Status.ELIGIBLE_FOR_JIT;
+      case MPA: return projectRole.status() == ProjectRole_.Status.ELIGIBLE_FOR_MPA;
       default: return false;
     }
   }
@@ -92,8 +90,8 @@ public class RoleActivationService {
         user,
         ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
         EnumSet.of(
-          ProjectRole.Status.ELIGIBLE_FOR_JIT,
-          ProjectRole.Status.ELIGIBLE_FOR_MPA))
+          ProjectRole_.Status.ELIGIBLE_FOR_JIT,
+          ProjectRole_.Status.ELIGIBLE_FOR_MPA))
       .getItems()
       .stream()
       .filter(pr -> pr.roleBinding().equals(roleBinding))
@@ -189,7 +187,7 @@ public class RoleActivationService {
 
     return new Activation(
       ActivationId.newId(ActivationType.JIT),
-      new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+      new ProjectRole_(roleBinding, ProjectRole_.Status.ACTIVATED),
       activationTime,
       expiryTime);
   }
@@ -267,7 +265,7 @@ public class RoleActivationService {
 
     return new Activation(
       request.id,
-      new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+      new ProjectRole_(request.roleBinding, ProjectRole_.Status.ACTIVATED),
       request.startTime,
       request.endTime);
   }
@@ -339,13 +337,13 @@ public class RoleActivationService {
   /** Represents a successful activation of a project role */
   public static class Activation {
     public final ActivationId id;
-    public final ProjectRole projectRole;
+    public final ProjectRole_ projectRole;
     public final Instant startTime;
     public final Instant endTime;
 
     private Activation(
       ActivationId id,
-      ProjectRole projectRole,
+      ProjectRole_ projectRole,
       Instant startTime,
       Instant endTime
     ) {
@@ -362,7 +360,7 @@ public class RoleActivationService {
 
     public static Activation createForTestingOnly(
       ActivationId id,
-      ProjectRole projectRole,
+      ProjectRole_ projectRole,
       Instant startTime,
       Instant endTime
     ) {

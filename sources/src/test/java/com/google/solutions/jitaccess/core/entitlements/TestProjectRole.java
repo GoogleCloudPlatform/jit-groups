@@ -42,9 +42,9 @@ public class TestProjectRole {
   public void whenResourceIsNotAProject_ThenConstructorThrowsException() {
     assertThrows(
       IllegalArgumentException.class,
-      () -> new ProjectRole(
+      () -> new ProjectRole_(
         new RoleBinding("//cloudresourcemanager.googleapis.com/folders/folder-1", "role/sample"),
-        ProjectRole.Status.ELIGIBLE_FOR_JIT));
+        ProjectRole_.Status.ELIGIBLE_FOR_JIT));
 
   }
 
@@ -54,9 +54,9 @@ public class TestProjectRole {
 
   @Test
   public void toStringReturnsId() {
-    var role = new ProjectRole(
+    var role = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
     assertEquals(
       "//cloudresourcemanager.googleapis.com/projects/project-1:role/sample (ELIGIBLE_FOR_JIT)",
       role.toString());
@@ -68,9 +68,9 @@ public class TestProjectRole {
 
   @Test
   public void getProjectIdReturnsUnqualifiedProjectId() {
-    var role = new ProjectRole(
+    var role = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
     Assertions.assertEquals(new ProjectId("project-1"), role.getProjectId());
   }
 
@@ -80,12 +80,12 @@ public class TestProjectRole {
 
   @Test
   public void whenValueIsEquivalent_ThenEqualsReturnsTrue() {
-    var role1 = new ProjectRole(
+    var role1 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = new ProjectRole(
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
+    var role2 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
 
     assertTrue(role1.equals(role2));
     assertTrue(role1.equals((Object) role2));
@@ -95,9 +95,9 @@ public class TestProjectRole {
 
   @Test
   public void whenObjectsAreSame_ThenEqualsReturnsTrue() {
-    var role1 = new ProjectRole(
+    var role1 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
 
     assertTrue(role1.equals(role1));
     assertTrue(role1.equals((Object) role1));
@@ -106,12 +106,12 @@ public class TestProjectRole {
 
   @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
-    var role1 = new ProjectRole(
+    var role1 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/one"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = new ProjectRole(
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
+    var role2 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/two"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
 
     assertFalse(role1.equals(role2));
     assertFalse(role1.equals((Object) role2));
@@ -119,12 +119,12 @@ public class TestProjectRole {
 
   @Test
   public void whenStatusesDiffer_ThenEqualsReturnsFalse() {
-    var role1 = new ProjectRole(
+    var role1 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = new ProjectRole(
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
+    var role2 = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ACTIVATED);
+      ProjectRole_.Status.ACTIVATED);
 
     assertFalse(role1.equals(role2));
     assertFalse(role1.equals((Object) role2));
@@ -132,26 +132,26 @@ public class TestProjectRole {
 
   @Test
   public void equalsNullIsFalse() {
-    var role = new ProjectRole(
+    var role = new ProjectRole_(
       new RoleBinding(SAMPLE_PROJECT_FULLRESOURCENAME, "role/sample"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+      ProjectRole_.Status.ELIGIBLE_FOR_JIT);
 
     assertFalse(role.equals(null));
   }
 
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-    var role1 = new ProjectRole(
+    var role1 = new ProjectRole_(
             new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "role/sample1"),
-            ProjectRole.Status.ELIGIBLE_FOR_JIT
+            ProjectRole_.Status.ELIGIBLE_FOR_JIT
     );
-    var role2 = new ProjectRole(
+    var role2 = new ProjectRole_(
             new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-1", "role/sample2"),
-            ProjectRole.Status.ELIGIBLE_FOR_JIT
+            ProjectRole_.Status.ELIGIBLE_FOR_JIT
     );
-    var role3 = new ProjectRole(
+    var role3 = new ProjectRole_(
             new RoleBinding("//cloudresourcemanager.googleapis.com/projects/project-2", "role/sample1"),
-            ProjectRole.Status.ELIGIBLE_FOR_JIT
+            ProjectRole_.Status.ELIGIBLE_FOR_JIT
     );
     var roles = List.of(role3,role1,role2);
     var sorted = new TreeSet<>(roles);

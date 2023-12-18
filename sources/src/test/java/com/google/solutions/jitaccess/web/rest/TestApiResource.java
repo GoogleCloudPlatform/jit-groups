@@ -22,23 +22,22 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
+import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
-import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
+import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
+import com.google.solutions.jitaccess.core.entitlements.ProjectRole_;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
-import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
 import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.AnnotatedResult;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -337,9 +336,9 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenThrow(new AccessDeniedException("mock"));
@@ -354,9 +353,9 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsIOException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogThrowsIOException_ThenListRolesReturnsError() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenThrow(new IOException("mock"));
@@ -371,13 +370,13 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new AnnotatedResult<>(
-        List.of(),
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of()),
         Set.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -394,21 +393,25 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsRoles_ThenListRolesReturnsList() throws Exception {
-    var role1 = new ProjectRole(
-      new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = new ProjectRole(
-      new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+  public void whenCatalogReturnsRoles_ThenListRolesReturnsList() throws Exception {
+    var role1 = new Entitlement<ProjectRoleId>(
+      new ProjectRoleId(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
+      "ent-1",
+      ActivationType.JIT,
+      Entitlement.Status.AVAILABLE);
+    var role2 = new Entitlement<ProjectRoleId>(
+      new ProjectRoleId(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
+      "ent-2",
+      ActivationType.JIT,
+      Entitlement.Status.AVAILABLE);
 
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new AnnotatedResult<>(
-        List.of(role1, role2),
-        null));
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of(role1, role2)),
+        Set.of()));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
@@ -418,9 +421,9 @@ public class TestApiResource {
     var body = response.getBody();
     assertNotNull(body.roles);
     assertEquals(2, body.roles.size());
-    assertEquals(role1, body.roles.get(0));
-    assertEquals(role2, body.roles.get(1));
-    assertNull(body.warnings);
+    assertEquals(role1.id().roleBinding(), body.roles.get(0).roleBinding);
+    assertEquals(role2.id().roleBinding(), body.roles.get(1).roleBinding);
+    assertTrue(body.warnings.isEmpty());
   }
 
   // -------------------------------------------------------------------------
@@ -549,7 +552,7 @@ public class TestApiResource {
         eq(Duration.ofMinutes(5))))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         ActivationId.newId(ActivationType.JIT),
-        new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
+        new ProjectRole_(roleBinding, ProjectRole_.Status.ACTIVATED),
         Instant.now(),
         Instant.now().plusSeconds(60)));
 
@@ -575,7 +578,7 @@ public class TestApiResource {
     assertEquals(1, body.items.size());
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals(roleBinding, body.items.get(0).roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATED, body.items.get(0).status);
+    assertEquals(ProjectRole_.Status.ACTIVATED, body.items.get(0).status);
     assertNotNull(body.items.get(0).activationId);
   }
 
@@ -916,7 +919,7 @@ public class TestApiResource {
     assertEquals(1, body.items.size());
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals(roleBinding, body.items.get(0).roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATION_PENDING, body.items.get(0).status);
+    assertEquals(ProjectRole_.Status.ACTIVATION_PENDING, body.items.get(0).status);
     assertNotNull(body.items.get(0).activationId);
   }
   
@@ -1091,7 +1094,7 @@ public class TestApiResource {
         eq(request)))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         request.id,
-        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        new ProjectRole_(request.roleBinding, ProjectRole_.Status.ACTIVATED),
         request.startTime,
         request.endTime));
 
@@ -1124,7 +1127,7 @@ public class TestApiResource {
         eq(request)))
       .thenReturn(RoleActivationService.Activation.createForTestingOnly(
         request.id,
-        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
+        new ProjectRole_(request.roleBinding, ProjectRole_.Status.ACTIVATED),
         request.startTime,
         request.endTime));
 

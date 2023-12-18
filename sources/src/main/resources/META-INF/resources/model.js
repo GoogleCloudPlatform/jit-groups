@@ -354,7 +354,8 @@ class DebugModel extends Model {
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
-            const statuses = ["ACTIVATED", "ELIGIBLE_FOR_JIT", "ELIGIBLE_FOR_MPA"]
+            const activationTypes = ["JIT", "MPA", "NONE"];
+            const statuses = ["ACTIVE", "AVAILABLE"];
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
                 roles: Array.from({ length: setting }, (e, i) => ({
@@ -362,6 +363,7 @@ class DebugModel extends Model {
                         id: "//project-1:roles/simulated-role-" + i,
                         role: "roles/simulated-role-" + i
                     },
+                    activationType: activationTypes[i % activationTypes.length],
                     status: statuses[i % statuses.length]
                 }))
             });

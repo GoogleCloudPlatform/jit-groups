@@ -24,6 +24,8 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.activation.ActivationId;
+import com.google.solutions.jitaccess.core.activation.ActivationType;
+import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -199,13 +201,16 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
 
     try {
-      var bindings = this.roleDiscoveryService.listEligibleProjectRoles(
+      var entitlements = this.iamPolicyCatalog.listEntitlements(
         iapPrincipal.getId(),
         projectId);
 
       return new ProjectRolesResponse(
-        bindings.getItems(),
-        bindings.getWarnings());
+        entitlements.items()
+          .stream()
+          .map(ent -> new ProjectRole(ent.id().roleBinding(), ent.activationType(), ent.status()))
+          .collect(Collectors.toList()),
+        entitlements.warnings());
     }
     catch (Exception e) {
       this.logAdapter
@@ -484,7 +489,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
-        ProjectRole.Status.ACTIVATION_PENDING);
+        ProjectRole_.Status.ACTIVATION_PENDING);
     }
     catch (Exception e) {
       this.logAdapter
@@ -542,7 +547,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
-        ProjectRole.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
+        ProjectRole_.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
     }
     catch (Exception e) {
       this.logAdapter
@@ -754,13 +759,31 @@ public class ApiResource {
     public final List<ProjectRole> roles;
 
     private ProjectRolesResponse(
-      List<ProjectRole> roleBindings,
+      List<ProjectRole> roles,
       Set<String> warnings
     ) {
-      Preconditions.checkNotNull(roleBindings, "roleBindings");
+      Preconditions.checkNotNull(roles, "roles");
 
       this.warnings = warnings;
-      this.roles = roleBindings;
+      this.roles = roles;
+    }
+  }
+
+  public static class ProjectRole {
+    public final RoleBinding roleBinding;
+    public final ActivationType activationType;
+    public final Entitlement.Status status;
+
+    public ProjectRole(
+      RoleBinding roleBinding,
+      ActivationType activationType,
+      Entitlement.Status status) {
+
+      Preconditions.checkNotNull(roleBinding, "roleBinding");
+
+      this.roleBinding = roleBinding;
+      this.activationType = activationType;
+      this.status = status;
     }
   }
 
@@ -819,7 +842,7 @@ public class ApiResource {
     private ActivationStatusResponse(
       UserId caller,
       RoleActivationService.ActivationRequest request,
-      ProjectRole.Status status
+      ProjectRole_.Status status
     ) {
       this(
         request.beneficiary,
@@ -839,14 +862,14 @@ public class ApiResource {
       public final String activationId;
       public final String projectId;
       public final RoleBinding roleBinding;
-      public final ProjectRole.Status status;
+      public final ProjectRole_.Status status;
       public final long startTime;
       public final long endTime;
 
       private ActivationStatus(
         ActivationId activationId,
         RoleBinding roleBinding,
-        ProjectRole.Status status,
+        ProjectRole_.Status status,
         long startTime,
         long endTime
       ) {

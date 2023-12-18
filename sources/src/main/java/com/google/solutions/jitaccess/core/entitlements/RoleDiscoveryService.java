@@ -158,7 +158,7 @@ public class RoleDiscoveryService {
   /**
    * List eligible role bindings for the given user.
    */
-  public AnnotatedResult<ProjectRole> listEligibleProjectRoles(
+  private AnnotatedResult<ProjectRole_> listEligibleProjectRoles(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
@@ -166,18 +166,18 @@ public class RoleDiscoveryService {
       user,
       projectId,
       EnumSet.of(
-        ProjectRole.Status.ACTIVATED,
-        ProjectRole.Status.ELIGIBLE_FOR_JIT,
-        ProjectRole.Status.ELIGIBLE_FOR_MPA));
+        ProjectRole_.Status.ACTIVATED,
+        ProjectRole_.Status.ELIGIBLE_FOR_JIT,
+        ProjectRole_.Status.ELIGIBLE_FOR_MPA));
   }
 
   /**
    * List eligible role bindings for the given user.
    */
-  public AnnotatedResult<ProjectRole> listEligibleProjectRoles(
+  public AnnotatedResult<ProjectRole_> listEligibleProjectRoles(
     UserId user,
     ProjectId projectId,
-    EnumSet<ProjectRole.Status> statusesToInclude
+    EnumSet<ProjectRole_.Status> statusesToInclude
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(projectId, "projectId");
@@ -208,14 +208,14 @@ public class RoleDiscoveryService {
     // the condition evaluates to true (indicating it's still
     // valid).
     //
-    Set<ProjectRole> activatedRoles;
-    if (statusesToInclude.contains(ProjectRole.Status.ACTIVATED)) {
+    Set<ProjectRole_> activatedRoles;
+    if (statusesToInclude.contains(ProjectRole_.Status.ACTIVATED)) {
       activatedRoles = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isActivated(condition),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
         .stream()
-        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ACTIVATED))
+        .map(binding -> new ProjectRole_(binding, ProjectRole_.Status.ACTIVATED))
         .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
@@ -227,14 +227,14 @@ public class RoleDiscoveryService {
     // conditional and have a special condition that serves
     // as marker.
     //
-    Set<ProjectRole> jitEligibleRoles;
-    if (statusesToInclude.contains(ProjectRole.Status.ELIGIBLE_FOR_JIT)) {
+    Set<ProjectRole_> jitEligibleRoles;
+    if (statusesToInclude.contains(ProjectRole_.Status.ELIGIBLE_FOR_JIT)) {
       jitEligibleRoles = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isJitAccessConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_JIT))
+        .map(binding -> new ProjectRole_(binding, ProjectRole_.Status.ELIGIBLE_FOR_JIT))
         .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
@@ -246,14 +246,14 @@ public class RoleDiscoveryService {
     // conditional and have a special condition that serves
     // as marker.
     //
-    Set<ProjectRole> mpaEligibleRoles;
-    if (statusesToInclude.contains(ProjectRole.Status.ELIGIBLE_FOR_MPA)) {
+    Set<ProjectRole_> mpaEligibleRoles;
+    if (statusesToInclude.contains(ProjectRole_.Status.ELIGIBLE_FOR_MPA)) {
       mpaEligibleRoles = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(binding -> new ProjectRole(binding, ProjectRole.Status.ELIGIBLE_FOR_MPA))
+        .map(binding -> new ProjectRole_(binding, ProjectRole_.Status.ELIGIBLE_FOR_MPA))
         .collect(Collectors.toCollection(TreeSet::new));
     }
     else {
@@ -266,7 +266,7 @@ public class RoleDiscoveryService {
     //
     // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
     //
-    var allEligibleRoles = new ArrayList<ProjectRole>();
+    var allEligibleRoles = new ArrayList<ProjectRole_>();
     allEligibleRoles.addAll(jitEligibleRoles);
     allEligibleRoles.addAll(mpaEligibleRoles
       .stream()
@@ -316,7 +316,7 @@ public class RoleDiscoveryService {
       .getItems()
       .stream()
       .filter(pr -> pr.roleBinding().equals(roleBinding))
-      .filter(pr -> pr.status() == ProjectRole.Status.ELIGIBLE_FOR_MPA)
+      .filter(pr -> pr.status() == ProjectRole_.Status.ELIGIBLE_FOR_MPA)
       .findAny()
       .isEmpty()) {
       throw new AccessDeniedException(
