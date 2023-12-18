@@ -91,19 +91,22 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     Preconditions.checkArgument(
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
       "Start time must not be in the past");
-    //
-    // Pre-verify access to avoid sending an MPA requests for which
-    // the access check will fail later.
-    //
-    this.catalog.canRequest(requestingUser, entitlements, duration);
 
-    return new MpaRequest<>(
+    var request = new MpaRequest<>(
       requestingUser,
       entitlements,
       reviewers,
       justification,
       startTime,
       duration);
+
+    //
+    // Pre-verify access to avoid sending an MPA requests for which
+    // the access check will fail later.
+    //
+    this.catalog.canRequest(request);
+
+    return request;
   }
 
   /**
@@ -123,10 +126,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to activate this entitlement.
     //
-    this.catalog.canRequest(
-      request.requestingUser(),
-      request.entitlements(),
-      request.duration());
+    this.catalog.canRequest(request);
 
     //
     // Request is legit, apply it.
@@ -168,15 +168,12 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to request this entitlement.
     //
-    this.catalog.canRequest(
-      request.requestingUser(),
-      request.entitlements(),
-      request.duration());
+    this.catalog.canRequest(request);
 
     //
     // Check that the approving user is (still) allowed to approve this entitlement.
     //
-    this.catalog.canApprove(approvingUser, request.entitlements());
+    this.catalog.canApprove(approvingUser, request);
 
     //
     // Request is legit, apply it.

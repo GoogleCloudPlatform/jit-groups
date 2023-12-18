@@ -89,7 +89,7 @@ public class TestEntitlementActivator {
     assertEquals(SAMPLE_REQUESTING_USER, request.requestingUser());
     assertIterableEquals(entitlements, request.entitlements());
 
-    verify(catalog, times(0)).canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
+    verify(catalog, times(0)).canRequest(request);
   }
 
   // -------------------------------------------------------------------------
@@ -102,7 +102,7 @@ public class TestEntitlementActivator {
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
+      .canRequest(any());
 
     var activator = new SampleActivator(
       catalog,
@@ -153,7 +153,7 @@ public class TestEntitlementActivator {
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
+      .canRequest(any());
 
     var activator = new SampleActivator(
       catalog,
@@ -255,7 +255,7 @@ public class TestEntitlementActivator {
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .canRequest(eq(SAMPLE_REQUESTING_USER), any(), any());
+      .canRequest(any());
 
     assertThrows(
       AccessDeniedException.class,

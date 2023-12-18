@@ -11,20 +11,17 @@ import java.util.Collection;
  */
 public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
   /**
-   * Verify that a user is allowed to request the given set of entitlements.
+   * Verify if a user is allowed to make the given request.
    */
   void canRequest(
-    UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
-    Duration duration
+    ActivationRequest<TEntitlementId> request
   ) throws AccessException;
 
   /**
-   * Verify that a user is allowed to approve requests for the given
-   * set of entitlements.
+   * Verify if a user is allowed to approve a given request.
    */
   void canApprove(
     UserId approvingUser,
-    Collection<TEntitlementId> entitlements
+    MpaActivationRequest<TEntitlementId> request
   ) throws AccessException;
 }

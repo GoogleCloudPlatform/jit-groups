@@ -5,8 +5,10 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AnnotatedResult;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.activation.ActivationRequest;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
+import com.google.solutions.jitaccess.core.activation.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -93,36 +95,46 @@ public class DiscretionaryProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public void canRequest(
-    UserId requestingUser,
-    Collection<ProjectRoleId> entitlements,
-    Duration duration
-  ) throws AccessException {
+    ActivationRequest<ProjectRoleId> request
+  ) throws AccessException { // TODO: test
 
-    //TODO: verify min/max reviewers
-    Preconditions.checkNotNull(requestingUser, "requestingUser");
-    Preconditions.checkNotNull(entitlements, "entitlements");
-    Preconditions.checkNotNull(duration, "duration");
+    Preconditions.checkNotNull(request, "request");
 
-    if (duration.isZero() || duration.isNegative()) {
-      throw new IllegalArgumentException("Duration must be positive");
-    }
+    Preconditions.checkArgument(
+      !request.duration().isZero() &&! request.duration().isNegative(),
+      "The duration must be positive");
+    Preconditions.checkArgument(
+      request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no shorter than %s",
+        this.options.minActivationDuration()));
+    Preconditions.checkArgument(
+      request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no longer than %s",
+        this.options.maxActivationDuration));
 
-    if (duration.toSeconds() < this.options.minActivationDuration().toSeconds()) {
-      throw new IllegalArgumentException("Duration is too short");
-    }
-
-    if (duration.toSeconds() > this.options.maxActivationDuration().toSeconds()) {
-      throw new IllegalArgumentException("Duration exceeds maximum permissible duration");
+    if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
+      Preconditions.checkArgument(
+        mpaRequest.reviewers() != null &&
+          mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
+        String.format(
+          "At least %d reviewers must be specified",
+          this.options.minNumberOfReviewersPerActivationRequest ));
+      Preconditions.checkArgument(
+        mpaRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+        String.format(
+          "The number of reviewers must not exceed %s",
+          this.options.maxNumberOfReviewersPerActivationRequest));
     }
 
     throw new RuntimeException("NIY");
-
   }
 
   @Override
   public void canApprove(
     UserId approvingUser,
-    Collection<ProjectRoleId> entitlements
+    MpaActivationRequest<ProjectRoleId> request
   ) throws AccessException {
     throw new RuntimeException("NIY");
 
