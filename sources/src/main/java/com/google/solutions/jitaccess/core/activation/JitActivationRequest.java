@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Request for "JIT-activating" an entitlement.
@@ -33,7 +34,7 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
   protected JitActivationRequest(
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
+    Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Instant endTime) {

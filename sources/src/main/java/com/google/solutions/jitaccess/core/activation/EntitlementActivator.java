@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Activates entitlements, for example by modifying IAM policies.
@@ -52,7 +53,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    */
   public final JitActivationRequest<TEntitlementId> createJitRequest(
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
+    Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Instant endTime
@@ -74,8 +75,8 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    */
   public MpaActivationRequest<TEntitlementId> createMpaRequest(
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
-    Collection<UserId> reviewers,
+    Set<TEntitlementId> entitlements,
+    Set<UserId> reviewers,
     String justification,
     Instant startTime,
     Instant endTime
@@ -147,12 +148,12 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     policy.checkJustification(request.requestingUser(), request.justification());
 
     //
-    // Check that the user is (still) allowed to activate this entitlement.
+    // Check that the user is (still) allowed to request this entitlement.
     //
     this.catalog.canRequest(request.requestingUser(), request.entitlements());
 
     //
-    // Check that the approving user is(still) allowed to approve this entitlement.
+    // Check that the approving user is (still) allowed to approve this entitlement.
     //
     this.catalog.canApprove(approvingUser, request.entitlements());
 
@@ -177,7 +178,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     extends JitActivationRequest<TEntitlementId> {
     public JitRequest(
       UserId requestingUser,
-      Collection<TEntitlementId> entitlements,
+      Set<TEntitlementId> entitlements,
       String justification,
       Instant startTime,
       Instant endTime
@@ -190,8 +191,8 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     extends MpaActivationRequest<TEntitlementId> {
     public MpaRequest(
       UserId requestingUser,
-      Collection<TEntitlementId> entitlements,
-      Collection<UserId> reviewers,
+      Set<TEntitlementId> entitlements,
+      Set<UserId> reviewers,
       String justification,
       Instant startTime,
       Instant endTime

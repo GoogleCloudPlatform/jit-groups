@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Request for "MPA-activating" an entitlement.
@@ -36,8 +37,8 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
 
   protected MpaActivationRequest(
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
-    Collection<UserId> reviewers,
+    Set<TEntitlementId> entitlements,
+    Set<UserId> reviewers,
     String justification,
     Instant startTime,
     Instant endTime) {

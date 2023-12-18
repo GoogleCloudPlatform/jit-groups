@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,7 +56,7 @@ public class TestActivationRequest {
     public SampleActivationRequest(
       ActivationId id,
       UserId user,
-      Collection<SampleEntitlementId> entitlements,
+      Set<SampleEntitlementId> entitlements,
       String justification,
       Instant startTime,
       Instant endTime) {
@@ -72,7 +73,7 @@ public class TestActivationRequest {
     var request = new SampleActivationRequest(
       new ActivationId("sample-1"),
       new UserId("user@example.com"),
-      List.of(
+      Set.of(
         new SampleEntitlementId("1"),
         new SampleEntitlementId("2")),
       "invalid justification",

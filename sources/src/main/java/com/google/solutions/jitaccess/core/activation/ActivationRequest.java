@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -36,13 +37,13 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final Instant startTime;
   private final Instant endTime;
   private final UserId requestingUser;
-  private final Collection<TEntitlementId> entitlements;
+  private final Set<TEntitlementId> entitlements;
   private final String justification;
 
   protected ActivationRequest(
     ActivationId id,
     UserId requestingUser,
-    Collection<TEntitlementId> entitlements,
+    Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Instant endTime

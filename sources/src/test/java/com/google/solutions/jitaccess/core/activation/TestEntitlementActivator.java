@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -67,7 +68,7 @@ public class TestEntitlementActivator {
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
-    var entitlements = List.of(new SampleEntitlementId("cat", "1"));
+    var entitlements = Set.of(new SampleEntitlementId("cat", "1"));
     var request = activator.createJitRequest(
       SAMPLE_REQUESTING_USER,
       entitlements,
@@ -102,8 +103,8 @@ public class TestEntitlementActivator {
       AccessDeniedException.class,
       () -> activator.createMpaRequest(
         SAMPLE_REQUESTING_USER,
-        List.of(new SampleEntitlementId("cat", "1")),
-        List.of(SAMPLE_APPROVING_USER),
+        Set.of(new SampleEntitlementId("cat", "1")),
+        Set.of(SAMPLE_APPROVING_USER),
         "justification",
         Instant.ofEpochSecond(0),
         Instant.ofEpochSecond(5)));
@@ -127,7 +128,7 @@ public class TestEntitlementActivator {
 
     var request = activator.createJitRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
+      Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -151,7 +152,7 @@ public class TestEntitlementActivator {
 
     var request = activator.createJitRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
+      Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -173,8 +174,8 @@ public class TestEntitlementActivator {
 
     var request = activator.createMpaRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
-      List.of(SAMPLE_APPROVING_USER),
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -192,8 +193,8 @@ public class TestEntitlementActivator {
 
     var request = activator.createMpaRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
-      List.of(SAMPLE_APPROVING_USER),
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -217,8 +218,8 @@ public class TestEntitlementActivator {
 
     var request = activator.createMpaRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
-      List.of(SAMPLE_APPROVING_USER),
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -237,8 +238,8 @@ public class TestEntitlementActivator {
 
     var request = activator.createMpaRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
-      List.of(SAMPLE_APPROVING_USER),
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
@@ -261,8 +262,8 @@ public class TestEntitlementActivator {
 
     var request = activator.createMpaRequest(
       SAMPLE_REQUESTING_USER,
-      List.of(new SampleEntitlementId("cat", "1")),
-      List.of(SAMPLE_APPROVING_USER),
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.ofEpochSecond(0),
       Instant.ofEpochSecond(5));
