@@ -36,5 +36,6 @@ public record Annotated<TColl extends Collection<?>>(
 ) {
   public Annotated {
     Preconditions.checkNotNull(items, "items");
+    Preconditions.checkNotNull(warnings, "warnings");
   }
 }

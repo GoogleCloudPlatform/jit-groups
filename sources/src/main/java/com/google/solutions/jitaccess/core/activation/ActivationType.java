@@ -1,9 +1,12 @@
 package com.google.solutions.jitaccess.core.activation;
 
 public enum ActivationType {
-  /** Just-in-time self-approval */
+  /** Entitlement can be activated using self-approval */
   JIT,
 
-  /** Multi-party approval involving a qualified peer */
-  MPA
+  /** Entitlement can be activated using multi-party approval.  */
+  MPA,
+
+  /** Entitlement can no longer be activated. */
+  NONE
 }

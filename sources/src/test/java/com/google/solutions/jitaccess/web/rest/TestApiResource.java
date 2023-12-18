@@ -25,6 +25,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
+import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
@@ -85,6 +86,7 @@ public class TestApiResource {
     this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
+    this.resource.iamPolicyCatalog = Mockito.mock(IamPolicyCatalog.class);
 
     this.notificationService = Mockito.mock(NotificationService.class);
     when(this.notificationService.canSendNotifications()).thenReturn(true);

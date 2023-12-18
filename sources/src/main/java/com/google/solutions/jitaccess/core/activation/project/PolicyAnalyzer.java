@@ -97,7 +97,7 @@ public class PolicyAnalyzer {
   /**
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
-  public SortedSet<ProjectId> findProjectsWithRoleBindings(
+  public SortedSet<ProjectId> findProjectsWithEntitlements(
     UserId user
   ) throws AccessException, IOException {
 
@@ -144,7 +144,7 @@ public class PolicyAnalyzer {
   /**
    * List entitlements for the given user.
    */
-  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEligibleProjectRoles(//TODO: rename to findEligibleRoleBindings
+  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> findEntitlements(
     UserId user,
     ProjectId projectId,
     EnumSet<Entitlement.Status> statusesToInclude
@@ -153,7 +153,132 @@ public class PolicyAnalyzer {
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(projectId, "projectId");
 
-    throw new RuntimeException("NIY");
+    //
+    // Use Asset API to search for resources that the user could
+    // access if they satisfied the eligibility condition.
+    //
+    // NB. The existence of an eligibility condition alone isn't
+    // sufficient - it needs to be on a binding that applies to the
+    // user.
+    //
+    // NB. The Asset API considers group membership if the caller
+    // (i.e., the app's service account) has the 'Groups Reader'
+    // admin role.
+    //
+
+    var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
+      this.options.scope,
+      user,
+      Optional.empty(),
+      Optional.of(projectId.getFullResourceName()),
+      false);
+
+    var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
+      .flatMap(Collection::stream)
+      .map(e -> e.getCause())
+      .collect(Collectors.toSet());
+
+    var allAvailable = new TreeSet<Entitlement<ProjectRoleId>>();
+    if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
+
+      //
+      // Find all JIT-eligible role bindings. The bindings are
+      // conditional and have a special condition that serves
+      // as marker.
+      //
+      Set<Entitlement<ProjectRoleId>> jitEligible = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isJitAccessConstraint(condition),
+        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+        .stream()
+        .map(binding -> new Entitlement<ProjectRoleId>(
+          new ProjectRoleId(binding),
+          binding.role(),
+          ActivationType.JIT,
+          Entitlement.Status.AVAILABLE))
+        .collect(Collectors.toSet());
+
+      //
+      // Find all MPA-eligible role bindings. The bindings are
+      // conditional and have a special condition that serves
+      // as marker.
+      //
+      Set<Entitlement<ProjectRoleId>> mpaEligible = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+        .stream()
+        .map(binding -> new Entitlement<ProjectRoleId>(
+          new ProjectRoleId(binding),
+          binding.role(),
+          ActivationType.MPA,
+          Entitlement.Status.AVAILABLE))
+        .collect(Collectors.toSet());
+
+      //
+      // Determine effective set of eligible roles. If a role is both JIT- and
+      // MPA-eligible, only retain the JIT-eligible one.
+      //
+      // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
+      //
+      allAvailable.addAll(jitEligible);
+      allAvailable.addAll(mpaEligible
+        .stream()
+        .filter(r -> !jitEligible.stream().anyMatch(a -> a.id().equals(r.id())))
+        .collect(Collectors.toList()));
+    }
+
+    var allActive = new TreeSet<Entitlement<ProjectRoleId>>();
+    if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
+      //
+      // Find role bindings which have already been activated.
+      // These bindings have a time condition that we created, and
+      // the condition evaluates to true (indicating it's still
+      // valid).
+      //
+
+      for (var activeBinding : findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isActivated(condition),
+        evalResult -> "TRUE".equalsIgnoreCase(evalResult))) {
+        //
+        // Find the corresponding eligible binding to determine
+        // whether this is JIT or MPA-eligible.
+        //
+        var correspondingEligibleBinding = allAvailable
+          .stream()
+          .filter(ent -> ent.id().roleBinding().equals(activeBinding))
+          .findFirst();
+        if (correspondingEligibleBinding.isPresent()) {
+          allActive.add(new Entitlement<>(
+            new ProjectRoleId(activeBinding),
+            activeBinding.role(),
+            correspondingEligibleBinding.get().activationType(),
+            Entitlement.Status.ACTIVE));
+        }
+        else {
+          //
+          // Active, but no longer eligible.
+          //
+          allActive.add(new Entitlement<>(
+            new ProjectRoleId(activeBinding),
+            activeBinding.role(),
+            ActivationType.NONE,
+            Entitlement.Status.ACTIVE));
+        }
+      }
+    }
+
+    //
+    // Replace roles that have been activated already.
+    //
+    var availableAndActive = allAvailable
+      .stream()
+      .filter(r -> !allActive.stream().anyMatch(a -> a.id().equals(r.id())))
+      .collect(Collectors.toCollection(TreeSet::new));
+    availableAndActive.addAll(allActive);
+
+    return new Annotated<>(availableAndActive, warnings);
   }
 
   /**

@@ -85,7 +85,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     // activated the role.
     //
     var userEntitlements = this.policyAnalyzer
-      .listEligibleProjectRoles(
+      .findEntitlements(
         user,
         projectId,
         EnumSet.of(Entitlement.Status.AVAILABLE))
@@ -120,7 +120,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.policyAnalyzer.findProjectsWithRoleBindings(user);
+      return this.policyAnalyzer.findProjectsWithEntitlements(user);
     }
     else {
       //
@@ -136,11 +136,11 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEntitlements( //TODO: test, order
+  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEntitlements(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
-    return this.policyAnalyzer.listEligibleProjectRoles(
+    return this.policyAnalyzer.findEntitlements(
       user,
       projectId,
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
