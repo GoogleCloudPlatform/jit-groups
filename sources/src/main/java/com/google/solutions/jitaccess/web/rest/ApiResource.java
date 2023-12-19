@@ -23,9 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.activation.ActivationId;
-import com.google.solutions.jitaccess.core.activation.ActivationType;
-import com.google.solutions.jitaccess.core.activation.Entitlement;
+import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
@@ -51,10 +49,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -328,7 +323,6 @@ public class ApiResource {
 
       assert activation != null;
 
-      // TODO: notify
       // for (var service : this.notificationServices) {
       //   service.sendNotification(new ActivationSelfApprovedNotification(
       //     activation,
@@ -340,15 +334,15 @@ public class ApiResource {
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s activated roles %s on '%s' for themselves for %d minutes",
+            "User %s activated roles %s on '%s' for themselves for %d minutes", // TODO: check format
             iapPrincipal.getId(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
               .collect(Collectors.joining(", ")),
             projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
-        //TODO: .addLabels(le -> addLabels(le, activation))
-        .addLabel("justification", request.justification)
+        .addLabels(le -> addLabels(le, activationRequest))
+        .addLabels(le -> addLabels(le, activation))
         .write();
 
       return new ActivationStatusResponse(
@@ -373,7 +367,7 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
+            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s", // TODO: check format
             iapPrincipal.getId(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
@@ -382,9 +376,8 @@ public class ApiResource {
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
-        //TODO: .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, activationRequest))
         .addLabels(le -> addLabels(le, e))
-        .addLabel("justification", request.justification)
         .write();
 
       if (e instanceof AccessDeniedException) {
@@ -670,16 +663,38 @@ public class ApiResource {
 
   private static LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    RoleActivationService.Activation activation
+    Activation activation
   ) {
     return entry
-      .addLabel("activation_id", activation.id.toString())
-      .addLabel("activation_start", activation.startTime.atOffset(ZoneOffset.UTC).toString())
-      .addLabel("activation_end", activation.endTime.atOffset(ZoneOffset.UTC).toString())
-      .addLabels(e -> addLabels(e, activation.projectRole.roleBinding()));
+      .addLabel("activation_id", activation.id().toString())
+      .addLabel("activation_start", activation.startTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabel("activation_end", activation.endTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabels(e -> addLabels(e, activation.entitlements()));
   }
 
-  private static LogAdapter.LogEntry addLabels(
+  private static <T extends  EntitlementId> LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    com.google.solutions.jitaccess.core.activation.ActivationRequest<T> request
+  ) {
+    entry
+      .addLabel("activation_id", request.id().toString())
+      .addLabel("activation_start", request.startTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabel("activation_end", request.endTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabel("justification", request.justification())
+      .addLabels(e -> addLabels(e, request.entitlements()));
+
+    if (request instanceof MpaActivationRequest<T> mpaRequest) {
+      entry.addLabel("reviewers", mpaRequest
+        .reviewers()
+        .stream()
+        .map(u -> u.email)
+        .collect(Collectors.joining(", ")));
+    }
+
+    return entry;
+  }
+
+  private static LogAdapter.LogEntry addLabels( // TODO: delete
     LogAdapter.LogEntry entry,
     RoleActivationService.ActivationRequest request
   ) {
@@ -704,6 +719,15 @@ public class ApiResource {
       .addLabel("role", roleBinding.role())
       .addLabel("resource", roleBinding.fullResourceName())
       .addLabel("project_id", ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id());
+  }
+
+  private static LogAdapter.LogEntry addLabels(
+    LogAdapter.LogEntry entry,
+    Collection<? extends EntitlementId> entitlements
+  ) {
+    return entry.addLabel(
+      "entitlements",
+      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining()));
   }
 
   private static LogAdapter.LogEntry addLabels(
