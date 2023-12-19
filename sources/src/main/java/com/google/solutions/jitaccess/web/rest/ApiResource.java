@@ -78,6 +78,9 @@ public class ApiResource {
   RuntimeEnvironment runtimeEnvironment;
 
   @Inject
+  JustificationPolicy justificationPolicy;
+
+  @Inject
   LogAdapter logAdapter;
 
   @Inject
@@ -139,13 +142,13 @@ public class ApiResource {
   ) {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    var options = this.roleActivationService.getOptions();
+    var options = this.iamPolicyCatalog.options();
     return new PolicyResponse(
-      options.justificationHint,
+      justificationPolicy.hint(),
       iapPrincipal.getId(),
       ApplicationVersion.VERSION_STRING,
-      (int)options.maxActivationTimeout.toMinutes(),
-      Math.min(60, (int)options.maxActivationTimeout.toMinutes()));
+      (int)options.maxActivationDuration().toMinutes(),
+      Math.min(60, (int)options.maxActivationDuration().toMinutes()));
   }
 
   /**

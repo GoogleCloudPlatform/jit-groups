@@ -107,6 +107,10 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     }
   }
 
+  public Options options() {
+    return this.options;
+  }
+
   //---------------------------------------------------------------------------
   // Overrides.
   //---------------------------------------------------------------------------

@@ -53,6 +53,11 @@ public class RegexJustificationPolicy implements JustificationPolicy {
     }
   }
 
+  @Override
+  public String hint() {
+    return this.options.justificationHint();
+  }
+
   public record Options(
     String justificationHint,
     Pattern justificationPattern

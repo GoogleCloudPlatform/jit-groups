@@ -34,4 +34,9 @@ public interface JustificationPolicy {
     UserId user,
     String justification
   ) throws InvalidJustificationException;
+
+  /**
+   * @return hint indicating what kind of justification is expected.
+   */
+  String hint();
 }

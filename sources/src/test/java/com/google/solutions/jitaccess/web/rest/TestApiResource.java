@@ -86,6 +86,7 @@ public class TestApiResource {
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.iamPolicyCatalog = Mockito.mock(IamPolicyCatalog.class);
     this.resource.projectRoleActivator = Mockito.mock(ProjectRoleActivator.class);
+    this.resource.justificationPolicy = Mockito.mock(JustificationPolicy.class);
 
     this.notificationService = Mockito.mock(NotificationService.class);
     when(this.notificationService.canSendNotifications()).thenReturn(true);
@@ -116,10 +117,11 @@ public class TestApiResource {
 
   @Test
   public void getPolicyReturnsJustificationHint() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.justificationPolicy.hint())
+      .thenReturn(DEFAULT_HINT);
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -136,10 +138,11 @@ public class TestApiResource {
 
   @Test
   public void getPolicyReturnsSignedInUser() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.justificationPolicy.hint())
+      .thenReturn(DEFAULT_HINT);
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
