@@ -1,12 +1,13 @@
 package com.google.solutions.jitaccess.core.activation.project;
 
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.Annotated;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.EntitlementCatalog;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Set;
 import java.util.SortedSet;
 
 /**

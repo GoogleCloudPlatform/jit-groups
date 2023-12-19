@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.api.services.cloudasset.v1.model.*;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
@@ -31,14 +30,12 @@ import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.JitConstraints;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;

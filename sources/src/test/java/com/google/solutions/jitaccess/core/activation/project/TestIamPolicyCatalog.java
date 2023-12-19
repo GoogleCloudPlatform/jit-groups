@@ -21,14 +21,15 @@
 
 package com.google.solutions.jitaccess.core.activation.project;
 
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.Annotated;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 import org.mockito.Mockito;
 
 import java.time.Duration;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 

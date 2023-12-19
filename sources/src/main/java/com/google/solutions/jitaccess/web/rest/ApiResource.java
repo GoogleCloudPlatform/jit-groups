@@ -443,7 +443,9 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
 
-    // Get the requested role binding duration in minutes
+    //
+    // Get the requested role binding duration in minutes.
+    //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
 
     try
@@ -459,8 +461,21 @@ public class ApiResource {
         Duration.ofMinutes(request.activationTimeout));
 
       //
-      // Create an approval token and pass it to reviewers.
+      // Create an activation token and pass it to reviewers.
       //
+      // An activation token is a signed activation request that is passed to reviewers.
+      // It contains all information necessary to review (and approve) the activation
+      // request.
+      //
+      // We must ensure that the information that reviewers see (and base their approval
+      // on) is authentic. Therefore, activation tokens are signed, using the service account
+      // as signing authority.
+      //
+      // Although activation tokens are JWTs, and might look like credentials, they aren't
+      // credentials: They don't grant access to any information, and possession alone is
+      // insufficient to approve an activation request.
+      //
+
       var activationToken = this.activationTokenService.createToken(activationRequest);
 
       for (var service : this.notificationServices) {

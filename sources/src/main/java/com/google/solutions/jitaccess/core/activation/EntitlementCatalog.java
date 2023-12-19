@@ -4,8 +4,6 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Collection;
 
 /**
  * A catalog of entitlement that can be browsed by the user.

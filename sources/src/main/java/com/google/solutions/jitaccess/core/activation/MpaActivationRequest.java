@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.activation;
 
-import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
 

@@ -12,9 +12,7 @@ import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.JitConstraints;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
 import java.io.IOException;

@@ -31,12 +31,12 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class TestEntitlementActivator {
   private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
