@@ -23,10 +23,12 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.activation.Activation;
 import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.entitlements.ProjectRole_;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
@@ -41,6 +43,7 @@ import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import jakarta.ws.rs.core.UriBuilder;
@@ -85,6 +88,7 @@ public class TestApiResource {
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.iamPolicyCatalog = Mockito.mock(IamPolicyCatalog.class);
+    this.resource.projectRoleActivator = Mockito.mock(ProjectRoleActivator.class);
 
     this.notificationService = Mockito.mock(NotificationService.class);
     when(this.notificationService.canSendNotifications()).thenReturn(true);
@@ -515,13 +519,12 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenActivationServiceThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService
-      .activateProjectRoleForSelf(
-        eq(SAMPLE_USER),
-        any(RoleBinding.class),
-        anyString(),
-        any(Duration.class)))
+  public void whenActivatorThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
+    when(this.resource.projectRoleActivator
+      .createJitRequest(any(), any(), any(), any(), any()))
+      .thenCallRealMethod();
+    when(this.resource.projectRoleActivator
+      .activate(any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.SelfActivationRequest();
@@ -543,17 +546,17 @@ public class TestApiResource {
   public void whenRolesContainDuplicates_ThenSelfApproveActivationSucceedsAndIgnoresDuplicates() throws Exception {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
-    when(this.resource.roleActivationService
-      .activateProjectRoleForSelf(
-        eq(SAMPLE_USER),
-        eq(roleBinding),
-        eq("justification"),
-        eq(Duration.ofMinutes(5))))
-      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
+    when(this.resource.projectRoleActivator
+      .createJitRequest(any(), any(), any(), any(), any()))
+      .thenCallRealMethod();
+    when(this.resource.projectRoleActivator
+      .activate(argThat(r -> r.entitlements().size() == 1)))
+      .thenReturn(new Activation<>(
         ActivationId.newId(ActivationType.JIT),
-        new ProjectRole_(roleBinding, ProjectRole_.Status.ACTIVATED),
+        List.of(new ProjectRoleId(roleBinding)),
         Instant.now(),
-        Instant.now().plusSeconds(60)));
+        Instant.now().plusSeconds(60)
+      ));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
@@ -577,7 +580,7 @@ public class TestApiResource {
     assertEquals(1, body.items.size());
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals(roleBinding, body.items.get(0).roleBinding);
-    assertEquals(ProjectRole_.Status.ACTIVATED, body.items.get(0).status);
+    assertEquals(Entitlement.Status.ACTIVE, body.items.get(0).status);
     assertNotNull(body.items.get(0).activationId);
   }
 

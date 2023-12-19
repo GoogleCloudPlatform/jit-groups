@@ -5,7 +5,7 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.activation.EntitlementId;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 
-public class ProjectRoleId extends EntitlementId {
+public class ProjectRoleId extends EntitlementId { //TODO: Merge with role binding
   static final String CATALOG = "iam";
 
   private final RoleBinding roleBinding;

@@ -946,7 +946,7 @@ public class TestPolicyAnalyzer {
 
     assertEquals(2, approvers.size());
     assertIterableEquals(
-      Set.of(SAMPLE_APPROVING_USER_1, SAMPLE_APPROVING_USER_2),
+      List.of(SAMPLE_APPROVING_USER_1, SAMPLE_APPROVING_USER_2),
       approvers);
   }
 }

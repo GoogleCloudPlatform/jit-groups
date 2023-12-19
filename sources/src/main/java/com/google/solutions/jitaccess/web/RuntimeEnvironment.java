@@ -34,9 +34,11 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.activation.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.activation.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.activation.project.PolicyAnalyzer;
+import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
@@ -395,4 +397,15 @@ public class RuntimeEnvironment {
       this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
       this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
+//
+//  @Produces
+//  public EntitlementCatalog<ProjectRoleId> getCatalog(
+//    PolicyAnalyzer policyAnalyzer,
+//    ResourceManagerClient resourceManagerClient
+//  ) {
+//    return new IamPolicyCatalog(
+//      policyAnalyzer,
+//      resourceManagerClient,
+//      getIamPolicyCatalogOptions());
+//  }
 }

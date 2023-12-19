@@ -12,6 +12,7 @@ import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.JitConstraints;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Dependent;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Activator for project roles.
  */
-@ApplicationScoped
+@Dependent
 public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   private final ResourceManagerClient resourceManagerClient;
 
@@ -80,7 +81,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   // -------------------------------------------------------------------------
 
   @Override
-  protected void provisionAccess(//TODO:test
+  protected void provisionAccess(
     JitActivationRequest<ProjectRoleId> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
@@ -103,7 +104,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   }
 
   @Override
-  protected void provisionAccess(//TODO:test
+  protected void provisionAccess(
     UserId approvingUser,
     MpaActivationRequest<ProjectRoleId> request
   ) throws AccessException, AlreadyExistsException, IOException {

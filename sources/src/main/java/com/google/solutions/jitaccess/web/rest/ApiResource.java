@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -49,6 +50,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -67,6 +69,9 @@ public class ApiResource {
 
   @Inject
   RoleActivationService roleActivationService;
+
+  @Inject
+  ProjectRoleActivator projectRoleActivator;
 
   @Inject
   ActivationTokenService activationTokenService;
@@ -305,87 +310,90 @@ public class ApiResource {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
 
-    //
-    // NB. The input list of roles might contain duplicates, therefore reduce to a set.
-    //
-    var roleBindings = request.roles
-      .stream()
-      .map(r -> new RoleBinding(projectId.getFullResourceName(), r))
-      .collect(Collectors.toSet());
-
     // Get the requested role binding duration in minutes
-    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout).toMinutes();
+    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
 
-    var activations = new ArrayList<RoleActivationService.Activation>();
-    for (var roleBinding : roleBindings) {
-      try {
-        var activation = this.roleActivationService.activateProjectRoleForSelf(
-          iapPrincipal.getId(),
-          roleBinding,
-          request.justification,
-          Duration.ofMinutes(request.activationTimeout));
+    var activationRequest = this.projectRoleActivator.createJitRequest(
+      iapPrincipal.getId(),
+      request.roles
+        .stream()
+        .map(r -> new ProjectRoleId(new RoleBinding(projectId.getFullResourceName(), r)))
+        .collect(Collectors.toSet()),
+      request.justification,
+      Instant.now().truncatedTo(ChronoUnit.SECONDS),
+      requestedRoleBindingDuration);
 
-        assert activation != null;
-        activations.add(activation);
+    try {
+      var activation = this.projectRoleActivator.activate(activationRequest);
 
-        for (var service : this.notificationServices) {
-          service.sendNotification(new ActivationSelfApprovedNotification(
-            activation,
+      assert activation != null;
+
+      // TODO: notify
+      // for (var service : this.notificationServices) {
+      //   service.sendNotification(new ActivationSelfApprovedNotification(
+      //     activation,
+      //     iapPrincipal.getId(),
+      //     request.justification));
+      // }
+
+      this.logAdapter
+        .newInfoEntry(
+          LogEvents.API_ACTIVATE_ROLE,
+          String.format(
+            "User %s activated roles %s on '%s' for themselves for %d minutes",
             iapPrincipal.getId(),
-            request.justification));
-        }
+            activationRequest.entitlements().stream()
+              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+              .collect(Collectors.joining(", ")),
+            projectId.getFullResourceName(),
+            requestedRoleBindingDuration.toMinutes()))
+        //TODO: .addLabels(le -> addLabels(le, activation))
+        .addLabel("justification", request.justification)
+        .write();
 
-        this.logAdapter
-          .newInfoEntry(
-            LogEvents.API_ACTIVATE_ROLE,
-            String.format(
-              "User %s activated role '%s' on '%s' for themselves for %d minutes",
-              iapPrincipal.getId(),
-              roleBinding.role(),
-              roleBinding.fullResourceName(),
-              requestedRoleBindingDuration))
-          .addLabels(le -> addLabels(le, activation))
-          .addLabel("justification", request.justification)
-          .write();
+      return new ActivationStatusResponse(
+        iapPrincipal.getId(),
+        Set.of(),
+        true,
+        false,
+        request.justification,
+        activation
+          .entitlements()
+          .stream()
+          .map(ent -> new ActivationStatusResponse.ActivationStatus(
+            activation.id(),
+            ent.roleBinding(),
+            Entitlement.Status.ACTIVE,
+            activation.startTime(),
+            activation.endTime()))
+          .collect(Collectors.toList()));
+    }
+    catch (Exception e) {
+      this.logAdapter
+        .newErrorEntry(
+          LogEvents.API_ACTIVATE_ROLE,
+          String.format(
+            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
+            iapPrincipal.getId(),
+            activationRequest.entitlements().stream()
+              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+              .collect(Collectors.joining(", ")),
+            projectId.getFullResourceName(),
+            requestedRoleBindingDuration.toMinutes(),
+            Exceptions.getFullMessage(e)))
+        .addLabels(le -> addLabels(le, projectId))
+        //TODO: .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, e))
+        .addLabel("justification", request.justification)
+        .write();
+
+      if (e instanceof AccessDeniedException) {
+        throw (AccessDeniedException)e.fillInStackTrace();
       }
-      catch (Exception e) {
-        this.logAdapter
-          .newErrorEntry(
-            LogEvents.API_ACTIVATE_ROLE,
-            String.format(
-              "User %s failed to activate role '%s' on '%s' for themselves for %d minutes: %s",
-              iapPrincipal.getId(),
-              roleBinding.role(),
-              roleBinding.fullResourceName(),
-              requestedRoleBindingDuration,
-              Exceptions.getFullMessage(e)))
-          .addLabels(le -> addLabels(le, projectId))
-          .addLabels(le -> addLabels(le, roleBinding))
-          .addLabels(le -> addLabels(le, e))
-          .addLabel("justification", request.justification)
-          .write();
-
-        if (e instanceof AccessDeniedException) {
-          throw (AccessDeniedException)e.fillInStackTrace();
-        }
-        else {
-          throw new AccessDeniedException("Activating role failed", e);
-        }
+      else {
+        throw new AccessDeniedException("Activating role failed", e);
       }
     }
-
-    assert activations.size() == roleBindings.size();
-
-    return new ActivationStatusResponse(
-      iapPrincipal.getId(),
-      Set.of(),
-      true,
-      false,
-      request.justification,
-      activations
-        .stream()
-        .map(a -> new ActivationStatusResponse.ActivationStatus(a))
-        .collect(Collectors.toList()));
   }
 
   /**
@@ -487,7 +495,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
-        ProjectRole_.Status.ACTIVATION_PENDING);
+        Entitlement.Status.ACTIVATION_PENDING);
     }
     catch (Exception e) {
       this.logAdapter
@@ -545,7 +553,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.getId(),
         activationRequest,
-        ProjectRole_.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
+        Entitlement.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
     }
     catch (Exception e) {
       this.logAdapter
@@ -623,13 +631,14 @@ public class ApiResource {
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
 
-      return new ActivationStatusResponse(
-        activationRequest.beneficiary,
-        activationRequest.reviewers,
-        activationRequest.beneficiary.equals(iapPrincipal.getId()),
-        activationRequest.reviewers.contains(iapPrincipal.getId()),
-        activationRequest.justification,
-        List.of(new ActivationStatusResponse.ActivationStatus(activation)));
+      throw new RuntimeException("NIY");
+      //return new ActivationStatusResponse(
+      //  activationRequest.beneficiary,
+      //  activationRequest.reviewers,
+      //  activationRequest.beneficiary.equals(iapPrincipal.getId()),
+      //  activationRequest.reviewers.contains(iapPrincipal.getId()),
+      //  activationRequest.justification,
+      //  List.of(new ActivationStatusResponse.ActivationStatus(...)));
     }
     catch (Exception e) {
       this.logAdapter
@@ -840,7 +849,7 @@ public class ApiResource {
     private ActivationStatusResponse(
       UserId caller,
       RoleActivationService.ActivationRequest request,
-      ProjectRole_.Status status
+      Entitlement.Status status
     ) {
       this(
         request.beneficiary,
@@ -852,42 +861,33 @@ public class ApiResource {
           request.id,
           request.roleBinding,
           status,
-          request.startTime.getEpochSecond(),
-          request.endTime.getEpochSecond())));
+          request.startTime,
+          request.endTime)));
     }
 
     public static class ActivationStatus {
       public final String activationId;
       public final String projectId;
       public final RoleBinding roleBinding;
-      public final ProjectRole_.Status status;
+      public final Entitlement.Status status;
       public final long startTime;
       public final long endTime;
 
       private ActivationStatus(
         ActivationId activationId,
         RoleBinding roleBinding,
-        ProjectRole_.Status status,
-        long startTime,
-        long endTime
+        Entitlement.Status status,
+        Instant startTime,
+        Instant endTime
       ) {
-        assert startTime < endTime;
+        assert endTime.isAfter(startTime);
 
         this.activationId = activationId.toString();
         this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id();
         this.roleBinding = roleBinding;
         this.status = status;
-        this.startTime = startTime;
-        this.endTime = endTime;
-      }
-
-      private ActivationStatus(RoleActivationService.Activation activation) {
-        this(
-          activation.id,
-          activation.projectRole.roleBinding(),
-          activation.projectRole.status(),
-          activation.startTime.getEpochSecond(),
-          activation.endTime.getEpochSecond());
+        this.startTime = startTime.getEpochSecond();
+        this.endTime = endTime.getEpochSecond();
       }
     }
   }
