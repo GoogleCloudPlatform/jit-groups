@@ -48,13 +48,13 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
       String.format(
-        "The activation duration must be no shorter than %s",
-        this.options.minActivationDuration()));
+        "The activation duration must be no shorter than %d minutes",
+        this.options.minActivationDuration().toMinutes()));
     Preconditions.checkArgument(
       request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
       String.format(
-        "The activation duration must be no longer than %s",
-        this.options.maxActivationDuration));
+        "The activation duration must be no longer than %d minutes",
+        this.options.maxActivationDuration().toMinutes()));
 
     if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
       Preconditions.checkArgument(
