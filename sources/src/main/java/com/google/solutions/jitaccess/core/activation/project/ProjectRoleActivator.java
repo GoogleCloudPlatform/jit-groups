@@ -1,6 +1,7 @@
 
 package com.google.solutions.jitaccess.core.activation.project;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
@@ -11,6 +12,8 @@ import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.JitConstraints;
+import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
+import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Dependent;
 
@@ -132,5 +135,56 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
+  }
+
+  @Override
+  public JsonWebTokenConverter<MpaActivationRequest<ProjectRoleId>> createTokenConverter() {//TODO: test
+    return new JsonWebTokenConverter<>() {
+      @Override
+      public JsonWebToken.Payload convert(MpaActivationRequest<ProjectRoleId> request) {
+        var roleBindings = request.entitlements()
+          .stream()
+          .map(ent -> ent.roleBinding())
+          .collect(Collectors.toList());
+
+        if (roleBindings.size() != 1) {
+          throw new IllegalArgumentException("Request must have exactly one entitlement");
+        }
+
+        var roleBinding = roleBindings.get(0);
+
+        return new JsonWebToken.Payload()
+          .setJwtId(request.id().toString())
+          .set("beneficiary", request.requestingUser().email)
+          .set("reviewers", request.reviewers().stream().map(id -> id.email).collect(Collectors.toList()))
+          .set("resource", roleBinding.fullResourceName())
+          .set("role", roleBinding.role())
+          .set("justification", request.justification())
+          .set("start", request.startTime().getEpochSecond())
+          .set("end", request.endTime().getEpochSecond());
+      }
+
+      @Override
+      public MpaActivationRequest<ProjectRoleId> convert(JsonWebToken.Payload payload) {
+        var roleBinding = new RoleBinding(
+          payload.get("resource").toString(),
+          payload.get("role").toString());
+
+        var startTime = ((Number)payload.get("start")).longValue();
+        var endTime = ((Number)payload.get("end")).longValue();
+
+        return new MpaRequest<>(
+          new ActivationId(payload.getJwtId()),
+          new UserId(payload.get("beneficiary").toString()),
+          Set.of(new ProjectRoleId(roleBinding)),
+          ((List<String>)payload.get("reviewers"))
+            .stream()
+            .map(email -> new UserId(email))
+            .collect(Collectors.toSet()),
+          payload.get("justification").toString(),
+          Instant.ofEpochSecond(startTime),
+          Duration.ofSeconds(endTime - startTime));
+      }
+    };
   }
 }

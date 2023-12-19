@@ -63,6 +63,11 @@ public class TestEntitlementActivator {
       MpaActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
     }
+
+    @Override
+    public JsonWebTokenConverter<MpaActivationRequest<SampleEntitlementId>> createTokenConverter() {
+      return null;
+    }
   }
 
   // -------------------------------------------------------------------------

@@ -57,7 +57,7 @@ public class ActivationTokenService {
     IamCredentialsClient iamCredentialsClient,
     Options options
   ) {
-    Preconditions.checkNotNull(iamCredentialsClient, "iamCredentialsAdapter");
+    Preconditions.checkNotNull(iamCredentialsClient, "iamCredentialsClient");
     Preconditions.checkNotNull(options, "options");
 
     this.options = options;

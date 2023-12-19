@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.activation;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
 
@@ -37,6 +38,7 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
   private final Collection<UserId> reviewers;
 
   protected MpaActivationRequest(
+    ActivationId id,
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
     Set<UserId> reviewers,
@@ -44,7 +46,7 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
     Instant startTime,
     Duration duration) {
     super(
-      ActivationId.newId(ActivationType.MPA),
+      id,
       requestingUser,
       entitlements,
       justification,

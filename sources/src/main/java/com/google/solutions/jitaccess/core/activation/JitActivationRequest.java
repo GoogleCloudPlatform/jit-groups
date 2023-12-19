@@ -33,13 +33,14 @@ import java.util.Set;
 public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
   protected JitActivationRequest(
+    ActivationId id,
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
     Duration duration) {
     super(
-      ActivationId.newId(ActivationType.JIT),
+      id,
       requestingUser,
       entitlements,
       justification,

@@ -68,6 +68,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     // NB. There's no need to verify access at this stage yet.
     //
     return new JitRequest<>(
+      ActivationId.newId(ActivationType.JIT),
       requestingUser,
       entitlements,
       justification,
@@ -93,6 +94,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       "Start time must not be in the past");
 
     var request = new MpaRequest<>(
+      ActivationId.newId(ActivationType.MPA),
       requestingUser,
       entitlements,
       reviewers,
@@ -195,26 +197,34 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
+  /**
+   * Create a converter for turning MPA requests into JWTs, and
+   * vice versa.
+   */
+  public abstract JsonWebTokenConverter<MpaActivationRequest<TEntitlementId>> createTokenConverter();
+
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  private static class JitRequest<TEntitlementId extends  EntitlementId>
+  protected static class JitRequest<TEntitlementId extends  EntitlementId>
     extends JitActivationRequest<TEntitlementId> {
     public JitRequest(
+      ActivationId id,
       UserId requestingUser,
       Set<TEntitlementId> entitlements,
       String justification,
       Instant startTime,
       Duration duration
     ) {
-      super(requestingUser, entitlements, justification, startTime, duration);
+      super(id, requestingUser, entitlements, justification, startTime, duration);
     }
   }
 
-  private static class MpaRequest<TEntitlementId extends EntitlementId>
+  protected static class MpaRequest<TEntitlementId extends EntitlementId>
     extends MpaActivationRequest<TEntitlementId> {
     public MpaRequest(
+      ActivationId id,
       UserId requestingUser,
       Set<TEntitlementId> entitlements,
       Set<UserId> reviewers,
@@ -222,7 +232,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       Instant startTime,
       Duration duration
     ) {
-      super(requestingUser, entitlements, reviewers, justification, startTime, duration);
+      super(id, requestingUser, entitlements, reviewers, justification, startTime, duration);
 
       if (entitlements.size() != 1) {
         throw new IllegalArgumentException("Only one entitlement can be activated at a time");
