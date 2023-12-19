@@ -716,7 +716,7 @@ public class ApiResource {
   ) {
     return entry.addLabel(
       "entitlements",
-      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining()));
+      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining(", ")));
   }
 
   private static LogAdapter.LogEntry addLabels(
