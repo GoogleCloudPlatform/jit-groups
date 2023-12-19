@@ -136,7 +136,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleId> {
   }
 
   @Override
-  public JsonWebTokenConverter<MpaActivationRequest<ProjectRoleId>> createTokenConverter() {//TODO: test
+  public JsonWebTokenConverter<MpaActivationRequest<ProjectRoleId>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
       public JsonWebToken.Payload convert(MpaActivationRequest<ProjectRoleId> request) {

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.activation.project;
 
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.EntitlementCatalog;
@@ -32,13 +33,13 @@ import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -123,5 +124,40 @@ public class TestProjectRoleActivator {
             b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Approved by approver@example.com, justification: justification"));
+  }
+
+  // -------------------------------------------------------------------------
+  // createTokenConverter.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void createTokenConverter() throws Exception {
+    var activator = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class));
+
+    var inputRequest = activator.createMpaRequest(
+      SAMPLE_REQUESTING_USER,
+      Set.of(new ProjectRoleId(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      Instant.now(),
+      Duration.ofMinutes(5));
+
+    var payload = activator
+      .createTokenConverter()
+      .convert(inputRequest);
+
+    var outputRequest = activator
+      .createTokenConverter()
+      .convert(payload);
+
+    assertEquals(inputRequest.requestingUser(), outputRequest.requestingUser());
+    assertIterableEquals(inputRequest.reviewers(), outputRequest.reviewers());
+    assertIterableEquals(inputRequest.entitlements(), outputRequest.entitlements());
+    assertEquals(inputRequest.justification(), outputRequest.justification());
+    assertEquals(inputRequest.startTime().getEpochSecond(), outputRequest.startTime().getEpochSecond());
+    assertEquals(inputRequest.endTime().getEpochSecond(), outputRequest.endTime().getEpochSecond());
   }
 }
