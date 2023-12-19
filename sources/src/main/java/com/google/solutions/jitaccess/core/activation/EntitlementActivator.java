@@ -207,7 +207,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  protected static class JitRequest<TEntitlementId extends  EntitlementId>
+  protected static class JitRequest<TEntitlementId extends EntitlementId>
     extends JitActivationRequest<TEntitlementId> {
     public JitRequest(
       ActivationId id,
