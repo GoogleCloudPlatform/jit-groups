@@ -34,15 +34,11 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.activation.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.activation.RegexJustificationPolicy;
+import com.google.solutions.jitaccess.core.activation.TokenSigner;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.activation.project.PolicyAnalyzer;
-import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.clients.*;
-import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
@@ -268,17 +264,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RoleActivationService.Options getRoleActivationServiceOptions() {
-    return new RoleActivationService.Options(
-      this.configuration.justificationHint.getValue(),
-      Pattern.compile(this.configuration.justificationPattern.getValue()),
-      this.configuration.activationTimeout.getValue(),
-      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
-      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
-  }
-
-  @Produces
-  public ActivationTokenService.Options getTokenServiceOptions() {
+  public TokenSigner.Options getTokenServiceOptions() {
     //
     // NB. The clock for activations "starts ticking" when the activation was
     // requested. The time allotted for reviewers to approve the request
@@ -288,7 +274,7 @@ public class RuntimeEnvironment {
       this.configuration.activationRequestTimeout.getValue().getSeconds(),
       this.configuration.activationTimeout.getValue().getSeconds()));
 
-    return new ActivationTokenService.Options(
+    return new TokenSigner.Options(
       applicationPrincipal,
       effectiveRequestTimeout);
   }
