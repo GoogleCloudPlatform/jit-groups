@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.core.ProjectId;
 /**
  * Represents an eligible role on a project.
  */
-public record ProjectRole_(
+public record ProjectRole_( // TODO: delete
   RoleBinding roleBinding,
   ProjectRole_.Status status
 ) implements Comparable<ProjectRole_> {

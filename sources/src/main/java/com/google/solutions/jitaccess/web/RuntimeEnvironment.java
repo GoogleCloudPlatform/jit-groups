@@ -268,15 +268,6 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(
-            this.configuration.scope.getValue(),
-            this.configuration.availableProjectsQuery.isValid() ?
-                this.configuration.availableProjectsQuery.getValue() : null
-    );
-  }
-
-  @Produces
   public RoleActivationService.Options getRoleActivationServiceOptions() {
     return new RoleActivationService.Options(
       this.configuration.justificationHint.getValue(),
