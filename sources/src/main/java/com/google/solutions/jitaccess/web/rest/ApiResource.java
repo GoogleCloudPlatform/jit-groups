@@ -165,7 +165,7 @@ public class ApiResource {
       var projects = this.iamPolicyCatalog.listProjects(iapPrincipal.getId());
 
       return new ProjectsResponse(projects
-        .stream().map(p -> p.id())
+        .stream().map(ProjectId::id)
         .collect(Collectors.toSet()));
     }
     catch (Exception e) {
@@ -323,12 +323,9 @@ public class ApiResource {
 
       assert activation != null;
 
-      // for (var service : this.notificationServices) {
-      //   service.sendNotification(new ActivationSelfApprovedNotification(
-      //     activation,
-      //     iapPrincipal.getId(),
-      //     request.justification));
-      // }
+      for (var service : this.notificationServices) {
+        service.sendNotification(new ActivationSelfApprovedNotification(projectId, activation));
+      }
 
       this.logAdapter
         .newInfoEntry(
@@ -990,24 +987,36 @@ public class ApiResource {
    */
   public class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
-      RoleActivationService.Activation activation,
-      UserId beneficiary,
-      String justification)
+      ProjectId projectId,
+      Activation<ProjectRoleId> activation)
     {
       super(
-        List.of(beneficiary),
+        List.of(activation.request().requestingUser()),
         List.of(),
         String.format(
-          "Activated role '%s' on '%s'",
-          activation.projectRole.roleBinding(),
-          activation.projectRole.getProjectId()));
+          "Activated roles %s on '%s'",
+          activation.request().entitlements().stream()
+            .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+            .collect(Collectors.joining(", ")),
+          projectId));
 
-      this.properties.put("BENEFICIARY", beneficiary);
-      this.properties.put("PROJECT_ID", activation.projectRole.getProjectId());
-      this.properties.put("ROLE", activation.projectRole.roleBinding().role());
-      this.properties.put("START_TIME", activation.startTime);
-      this.properties.put("END_TIME", activation.endTime);
-      this.properties.put("JUSTIFICATION", justification);
+      this.properties.put("BENEFICIARY", activation.request().requestingUser());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", activation.request() // For compatibility only
+        .entitlements()
+        .stream()
+        .findFirst()
+        .get()
+        .roleBinding()
+        .role());
+      this.properties.put("ROLES", activation.request()
+        .entitlements()
+        .stream()
+        .map(ent -> ent.roleBinding().role())
+        .collect(Collectors.joining(", ")));
+      this.properties.put("START_TIME", activation.request().startTime());
+      this.properties.put("END_TIME", activation.request().endTime());
+      this.properties.put("JUSTIFICATION", activation.request().justification());
     }
 
     @Override
