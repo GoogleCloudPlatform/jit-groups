@@ -133,11 +133,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     provisionAccess(request);
 
-    return new Activation<>(
-      request.id(),
-      request.entitlements(),
-      request.startTime(),
-      request.endTime());
+    return new Activation<>(request);
   }
 
   /**
@@ -180,11 +176,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     provisionAccess(approvingUser, request);
 
-    return new Activation<>(
-      request.id(),
-      request.entitlements(),
-      request.startTime(),
-      request.endTime());
+    return new Activation<>(request);
   }
 
   /**

@@ -23,10 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.activation.Activation;
-import com.google.solutions.jitaccess.core.activation.ActivationId;
-import com.google.solutions.jitaccess.core.activation.ActivationType;
-import com.google.solutions.jitaccess.core.activation.Entitlement;
+import com.google.solutions.jitaccess.core.activation.*;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
@@ -551,12 +548,7 @@ public class TestApiResource {
       .thenCallRealMethod();
     when(this.resource.projectRoleActivator
       .activate(argThat(r -> r.entitlements().size() == 1)))
-      .thenReturn(new Activation<>(
-        ActivationId.newId(ActivationType.JIT),
-        List.of(new ProjectRoleId(roleBinding)),
-        Instant.now(),
-        Instant.now().plusSeconds(60)
-      ));
+      .then(r -> new Activation<>((ActivationRequest<ProjectRoleId>) r.getArguments()[0]));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");

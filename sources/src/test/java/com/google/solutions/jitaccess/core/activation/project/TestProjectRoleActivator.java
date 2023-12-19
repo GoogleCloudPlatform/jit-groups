@@ -75,9 +75,7 @@ public class TestProjectRoleActivator {
     var activation = activator.activate(request);
 
     assertNotNull(activation);
-    assertEquals(request.startTime(), activation.startTime());
-    assertEquals(request.endTime(), activation.endTime());
-    assertEquals(2, activation.entitlements().size());
+    assertSame(request, activation.request());
 
     verify(resourceManagerClient, times(2))
       .addProjectIamBinding(
@@ -114,9 +112,7 @@ public class TestProjectRoleActivator {
       request);
 
     assertNotNull(activation);
-    assertEquals(request.startTime(), activation.startTime());
-    assertEquals(request.endTime(), activation.endTime());
-    assertEquals(1, activation.entitlements().size());
+    assertSame(request, activation.request());
 
     verify(resourceManagerClient, times(1))
       .addProjectIamBinding(

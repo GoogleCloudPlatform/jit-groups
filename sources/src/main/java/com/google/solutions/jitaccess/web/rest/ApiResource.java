@@ -342,7 +342,6 @@ public class ApiResource {
             projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, activationRequest))
-        .addLabels(le -> addLabels(le, activation))
         .write();
 
       return new ActivationStatusResponse(
@@ -352,14 +351,15 @@ public class ApiResource {
         false,
         request.justification,
         activation
+          .request()
           .entitlements()
           .stream()
           .map(ent -> new ActivationStatusResponse.ActivationStatus(
-            activation.id(),
+            activationRequest.id(),
             ent.roleBinding(),
             Entitlement.Status.ACTIVE,
-            activation.startTime(),
-            activation.endTime()))
+            activationRequest.startTime(),
+            activationRequest.endTime()))
           .collect(Collectors.toList()));
     }
     catch (Exception e) {
@@ -660,17 +660,6 @@ public class ApiResource {
   // -------------------------------------------------------------------------
   // Logging helper methods.
   // -------------------------------------------------------------------------
-
-  private static LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    Activation activation
-  ) {
-    return entry
-      .addLabel("activation_id", activation.id().toString())
-      .addLabel("activation_start", activation.startTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabel("activation_end", activation.endTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabels(e -> addLabels(e, activation.entitlements()));
-  }
 
   private static <T extends  EntitlementId> LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,

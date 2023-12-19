@@ -23,25 +23,14 @@ package com.google.solutions.jitaccess.core.activation;
 
 import com.google.common.base.Preconditions;
 
-import java.time.Instant;
-import java.util.Collection;
-
 /**
  * Represents a successful activation of one or more entitlements.
  */
 public record Activation<TEntitlementId extends EntitlementId>(
-  ActivationId id,
-  Collection<TEntitlementId> entitlements,
-  Instant startTime,
-  Instant endTime
+  ActivationRequest<TEntitlementId> request
 ) {
   public Activation {
-
-    Preconditions.checkNotNull(id, "id");
-    Preconditions.checkNotNull(entitlements, "entitlements");
-    Preconditions.checkNotNull(startTime);
-    Preconditions.checkNotNull(endTime);
-
-    Preconditions.checkArgument(!entitlements.isEmpty());
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(!request.entitlements().isEmpty());
   }
 }
