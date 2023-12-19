@@ -28,20 +28,15 @@ import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.entitlements.ProjectRole_;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
-import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import jakarta.ws.rs.core.UriBuilder;
@@ -922,66 +917,78 @@ public class TestApiResource {
     assertNotNull(body.getMessage());
   }
 
-  //TODO
-//  @Test
-//  public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
-//    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-//      ActivationId.newId(ActivationType.MPA),
-//      SAMPLE_USER,
-//      Set.of(SAMPLE_USER_2),
-//      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-//      "a justification",
-//      Instant.now(),
-//      Instant.now().plusSeconds(60));
-//
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenReturn(request);
-//
-//    var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
-//      .get(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ExceptionMappers.ErrorEntity.class);
-//
-//    assertEquals(403, response.getStatus());
-//
-//    var body = response.getBody();
-//    assertNotNull(body.getMessage());
-//  }
-//
-//  @Test
-//  public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
-//    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-//      ActivationId.newId(ActivationType.MPA),
-//      SAMPLE_USER,
-//      Set.of(SAMPLE_USER_2),
-//      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-//      "a justification",
-//      Instant.now(),
-//      Instant.now().plusSeconds(60));
-//
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenReturn(request);
-//
-//    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-//      .get(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ApiResource.ActivationStatusResponse.class);
-//
-//    assertEquals(200, response.getStatus());
-//
-//    var body = response.getBody();
-//    assertEquals(request.beneficiary, body.beneficiary);
-//    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
-//    assertTrue(body.isBeneficiary);
-//    assertFalse(body.isReviewer);
-//    assertEquals(request.justification, body.justification);
-//    assertEquals(1, body.items.size());
-//    assertEquals(request.id.toString(), body.items.get(0).activationId);
-//    assertEquals("project-1", body.items.get(0).projectId);
-//    assertEquals("ACTIVATION_PENDING", body.items.get(0).status.name());
-//    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
-//    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
-//  }
+
+  @Test
+  public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleId(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleId(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .get(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertEquals(request.requestingUser(), body.beneficiary);
+    assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
+    assertTrue(body.isBeneficiary);
+    assertFalse(body.isReviewer);
+    assertEquals(request.justification(), body.justification);
+    assertEquals(1, body.items.size());
+    assertEquals(request.id().toString(), body.items.get(0).activationId);
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals("ACTIVATION_PENDING", body.items.get(0).status.name());
+    assertEquals(request.startTime().getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime()  .getEpochSecond(), body.items.get(0).endTime);
+  }
 
   // -------------------------------------------------------------------------
   // approveActivationRequest.
@@ -998,127 +1005,144 @@ public class TestApiResource {
     assertNotNull(body.getMessage());
   }
 
-  //TODO
-//  @Test
-//  public void whenTokenInvalid_ThenApproveActivationRequestReturnsError() throws Exception {
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenThrow(new TokenVerifier.VerificationException("mock"));
-//
-//    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-//      .post(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ExceptionMappers.ErrorEntity.class);
-//
-//    assertEquals(403, response.getStatus());
-//
-//    var body = response.getBody();
-//    assertNotNull(body.getMessage());
-//  }
-//
-//  @Test
-//  public void whenActivationServiceThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
-//    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-//      ActivationId.newId(ActivationType.MPA),
-//      SAMPLE_USER,
-//      Set.of(SAMPLE_USER_2),
-//      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-//      "a justification",
-//      Instant.now(),
-//      Instant.now().plusSeconds(60));
-//
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenReturn(request);
-//    when(this.resource.roleActivationService
-//      .activateProjectRoleForPeer(
-//        eq(SAMPLE_USER),
-//        eq(request)))
-//      .thenThrow(new AccessDeniedException("mock"));
-//
-//    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-//      .post(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ExceptionMappers.ErrorEntity.class);
-//
-//    assertEquals(403, response.getStatus());
-//
-//    var body = response.getBody();
-//    assertNotNull(body.getMessage());
-//    assertTrue(body.getMessage().contains("mock"));
-//  }
-//
-//  @Test
-//  public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
-//    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-//      ActivationId.newId(ActivationType.MPA),
-//      SAMPLE_USER,
-//      Set.of(SAMPLE_USER_2),
-//      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-//      "a justification",
-//      Instant.now(),
-//      Instant.now().plusSeconds(60));
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenReturn(request);
-//    when(this.resource.roleActivationService
-//      .activateProjectRoleForPeer(
-//        eq(SAMPLE_USER),
-//        eq(request)))
-//      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-//        request.id,
-//        new ProjectRole_(request.roleBinding, ProjectRole_.Status.ACTIVATED),
-//        request.startTime,
-//        request.endTime));
-//
-//    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-//      .post(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ApiResource.ActivationStatusResponse.class);
-//
-//    assertEquals(200, response.getStatus());
-//
-//    verify(this.notificationService, times(1))
-//      .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
-//  }
-//
-//  @Test
-//  public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
-//    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-//      ActivationId.newId(ActivationType.MPA),
-//      SAMPLE_USER,
-//      Set.of(SAMPLE_USER_2),
-//      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-//      "a justification",
-//      Instant.now(),
-//      Instant.now().plusSeconds(60));
-//    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
-//      .thenReturn(request);
-//    when(this.resource.roleActivationService
-//      .activateProjectRoleForPeer(
-//        eq(SAMPLE_USER_2),
-//        eq(request)))
-//      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-//        request.id,
-//        new ProjectRole_(request.roleBinding, ProjectRole_.Status.ACTIVATED),
-//        request.startTime,
-//        request.endTime));
-//
-//    var response = new RestDispatcher<>(this.resource, SAMPLE_USER_2)
-//      .post(
-//        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
-//        ApiResource.ActivationStatusResponse.class);
-//
-//    assertEquals(200, response.getStatus());
-//
-//    var body = response.getBody();
-//    assertEquals(request.beneficiary, body.beneficiary);
-//    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
-//    assertFalse(body.isBeneficiary);
-//    assertTrue(body.isReviewer);
-//    assertEquals(request.justification, body.justification);
-//    assertEquals(1, body.items.size());
-//    assertEquals(request.id.toString(), body.items.get(0).activationId);
-//    assertEquals("project-1", body.items.get(0).projectId);
-//    assertEquals("ACTIVATED", body.items.get(0).status.name());
-//    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
-//    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
-//  }
+  @Test
+  public void whenTokenInvalid_ThenApproveActivationRequestReturnsError() throws Exception {
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenThrow(new TokenVerifier.VerificationException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+  }
+
+  @Test
+  public void whenActivatorThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleId(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    when(this.resource.projectRoleActivator
+      .approve(
+        eq(SAMPLE_USER),
+        eq(request)))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ExceptionMappers.ErrorEntity.class);
+
+    assertEquals(403, response.getStatus());
+
+    var body = response.getBody();
+    assertNotNull(body.getMessage());
+    assertTrue(body.getMessage().contains("mock"));
+  }
+
+  @Test
+  public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleId(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    when(this.resource.projectRoleActivator
+      .approve(
+        eq(SAMPLE_USER),
+        eq(request)))
+      .thenReturn(new Activation<>(request));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    verify(this.notificationService, times(1))
+      .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
+  }
+
+  @Test
+  public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleId(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
+      .thenReturn(request);
+
+    when(this.resource.projectRoleActivator
+      .approve(
+        eq(SAMPLE_USER_2),
+        eq(request)))
+      .thenReturn(new Activation<>(request));
+
+    var response = new RestDispatcher<>(this.resource, SAMPLE_USER_2)
+      .post(
+        "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
+        ApiResource.ActivationStatusResponse.class);
+
+    assertEquals(200, response.getStatus());
+
+    var body = response.getBody();
+    assertEquals(request.requestingUser(), body.beneficiary);
+    assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
+    assertFalse(body.isBeneficiary);
+    assertTrue(body.isReviewer);
+    assertEquals(request.justification(), body.justification);
+    assertEquals(1, body.items.size());
+    assertEquals(request.id().toString(), body.items.get(0).activationId);
+    assertEquals("project-1", body.items.get(0).projectId);
+    assertEquals("ACTIVE", body.items.get(0).status.name());
+    assertEquals(request.startTime().getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime().getEpochSecond(), body.items.get(0).endTime);
+  }
 }

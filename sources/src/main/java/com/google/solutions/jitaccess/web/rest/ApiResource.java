@@ -642,6 +642,14 @@ public class ApiResource {
       throw new AccessDeniedException("Accessing the activation request failed");
     }
 
+    assert activationRequest.entitlements().size() == 1;
+    var roleBinding = activationRequest
+      .entitlements()
+      .stream()
+      .findFirst()
+      .get()
+      .roleBinding();
+
     try {
       var activation = this.projectRoleActivator.approve(
         iapPrincipal.getId(),
@@ -649,15 +657,17 @@ public class ApiResource {
 
       assert activation != null;
 
+
       //
-      //TODO: Notify listeners.
+      // Notify listeners.
       //
-      //for (var service : this.notificationServices) {
-      //  service.sendNotification(new ActivationApprovedNotification(
-      //    activationRequest,
-      //    iapPrincipal.getId(),
-      //    createActivationRequestUrl(uriInfo, activationToken)));
-      //}
+      for (var service : this.notificationServices) {
+        service.sendNotification(new ActivationApprovedNotification(
+          ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
+          activation,
+          iapPrincipal.getId(),
+          createActivationRequestUrl(uriInfo, activationToken)));
+      }
 
       //
       // Leave an audit trail.
@@ -668,8 +678,8 @@ public class ApiResource {
           String.format(
             "User %s approved role '%s' on '%s' for %s",
             iapPrincipal.getId(),
-            activationRequest.entitlements().stream().findFirst().get().roleBinding().role(),
-            activationRequest.entitlements().stream().findFirst().get().roleBinding().fullResourceName(),
+            roleBinding.role(),
+            roleBinding.fullResourceName(),
             activationRequest.requestingUser()))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -686,8 +696,8 @@ public class ApiResource {
           String.format(
             "User %s failed to activate role '%s' on '%s' for %s: %s",
             iapPrincipal.getId(),
-            activationRequest.entitlements().stream().findFirst().get().roleBinding().role(),
-            activationRequest.entitlements().stream().findFirst().get().roleBinding().fullResourceName(),
+            roleBinding.role(),
+            roleBinding.fullResourceName(),
             activationRequest.requestingUser(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -948,6 +958,8 @@ public class ApiResource {
           request.requestingUser(),
           projectId.id()));
 
+      assert request.entitlements().size() == 1;
+
       this.properties.put("BENEFICIARY", request.requestingUser());
       this.properties.put("REVIEWERS", request.reviewers());
       this.properties.put("PROJECT_ID", projectId);
@@ -977,26 +989,36 @@ public class ApiResource {
    */
   public class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
-      RoleActivationService.ActivationRequest request,
+      ProjectId projectId,
+      Activation<ProjectRoleId> activation,
       UserId approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
-        List.of(request.beneficiary),
-        request.reviewers, // Move reviewers to CC.
+        List.of(activation.request().requestingUser()),
+        ((MpaActivationRequest<ProjectRoleId>)activation.request()).reviewers(), // Move reviewers to CC.
         String.format(
           "%s requests access to project %s",
-          request.beneficiary,
-          ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()).id()));
+          activation.request().requestingUser(),
+          projectId));
+
+      var request = (MpaActivationRequest<ProjectRoleId>)activation.request();
+      assert request.entitlements().size() == 1;
 
       this.properties.put("APPROVER", approver.email);
-      this.properties.put("BENEFICIARY", request.beneficiary);
-      this.properties.put("REVIEWERS", request.reviewers);
-      this.properties.put("PROJECT_ID", ProjectId.fromFullResourceName(request.roleBinding.fullResourceName()));
-      this.properties.put("ROLE", request.roleBinding.role());
-      this.properties.put("START_TIME", request.startTime);
-      this.properties.put("END_TIME", request.endTime);
-      this.properties.put("JUSTIFICATION", request.justification);
+      this.properties.put("BENEFICIARY", request.requestingUser());
+      this.properties.put("REVIEWERS", request.reviewers());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", activation.request()
+        .entitlements()
+        .stream()
+        .findFirst()
+        .get()
+        .roleBinding()
+        .role());
+      this.properties.put("START_TIME", request.startTime());
+      this.properties.put("END_TIME", request.endTime());
+      this.properties.put("JUSTIFICATION", request.justification());
       this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
     }
 
@@ -1063,17 +1085,11 @@ public class ApiResource {
   // Options.
   // -------------------------------------------------------------------------
 
-  public static class Options {
-    public final int maxNumberOfJitRolesPerSelfApproval;
-
-    public Options(
-      int maxNumberOfJitRolesPerSelfApproval
-    ) {
+  public record Options(int maxNumberOfJitRolesPerSelfApproval) {
+    public Options {
       Preconditions.checkArgument(
         maxNumberOfJitRolesPerSelfApproval > 0,
         "The maximum number of JIT roles per self-approval must exceed 1");
-
-      this.maxNumberOfJitRolesPerSelfApproval = maxNumberOfJitRolesPerSelfApproval;
     }
   }
 }
