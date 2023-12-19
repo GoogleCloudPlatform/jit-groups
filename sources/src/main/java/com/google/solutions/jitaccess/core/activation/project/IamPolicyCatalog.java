@@ -151,10 +151,21 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     UserId requestingUser,
     ProjectRoleId entitlement
   ) throws AccessException, IOException {
+
+    //
+    // Check that the requesting user is allowed to request approval,
+    // and isn't just trying to do enumeration.
+    //
+
+    verifyUserCanActivateEntitlements(
+      requestingUser,
+      entitlement.projectId(),
+      ActivationType.MPA,
+      List.of(entitlement));
+
     return this.policyAnalyzer
-      .listEligibleUsersForProjectRole(
-        entitlement.roleBinding(),
-        ActivationType.MPA)
+      .findApproversForEntitlement(
+        entitlement.roleBinding())
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));

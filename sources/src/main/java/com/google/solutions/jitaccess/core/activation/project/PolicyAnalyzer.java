@@ -284,17 +284,33 @@ public class PolicyAnalyzer {
   /**
     * List users that can approve the activation of an eligible role binding.
     */
-  public Set<UserId> listEligibleUsersForProjectRole(//TODO: findUsersEligibleForRoleBinding
-    RoleBinding roleBinding,
-    ActivationType activationType
+  public Set<UserId> findApproversForEntitlement(
+    RoleBinding roleBinding
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
+    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
 
-    throw new RuntimeException("NIY");
+    var analysisResult = this.assetInventoryClient.findPermissionedPrincipalsByResource(
+      this.options.scope,
+      roleBinding.fullResourceName(),
+      roleBinding.role());
+
+    return Stream.ofNullable(analysisResult.getAnalysisResults())
+      .flatMap(Collection::stream)
+
+      // Narrow down to IAM bindings with an MPA constraint.
+      .filter(result -> result.getIamBinding() != null &&
+        JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
+
+      // Collect identities (users and group members)
+      .filter(result -> result.getIdentityList() != null)
+      .flatMap(result -> result.getIdentityList().getIdentities().stream()
+        .filter(id -> id.getName().startsWith("user:"))
+        .map(id -> new UserId(id.getName().substring("user:".length()))))
+
+      .collect(Collectors.toCollection(TreeSet::new));
   }
-
-
 
   // -------------------------------------------------------------------------
   // Inner classes.

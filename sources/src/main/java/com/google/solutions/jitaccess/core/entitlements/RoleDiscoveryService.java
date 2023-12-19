@@ -296,58 +296,58 @@ public class RoleDiscoveryService {
   /**
    * List users that can approve the activation of an eligible role binding.
    */
-  public Set<UserId> listEligibleUsersForProjectRole(
-    UserId callerUserId,
-    RoleBinding roleBinding
-  ) throws AccessException, IOException {
-    Preconditions.checkNotNull(callerUserId, "callerUserId");
-    Preconditions.checkNotNull(roleBinding, "roleBinding");
-
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
-
-    //
-    // Check that the (calling) user is really allowed to request approval
-    // this role.
-    //
-    var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName());
-
-    var eligibleRoles = listEligibleProjectRoles(callerUserId, projectId);
-    if (eligibleRoles
-      .getItems()
-      .stream()
-      .filter(pr -> pr.roleBinding().equals(roleBinding))
-      .filter(pr -> pr.status() == ProjectRole_.Status.ELIGIBLE_FOR_MPA)
-      .findAny()
-      .isEmpty()) {
-      throw new AccessDeniedException(
-        String.format("The user %s is not eligible to request approval for this role", callerUserId));
-    }
-
-    //
-    // Find other eligible users.
-    //
-    var analysisResult = this.assetInventoryClient.findPermissionedPrincipalsByResource(
-      this.options.scope,
-      roleBinding.fullResourceName(),
-      roleBinding.role());
-
-    return Stream.ofNullable(analysisResult.getAnalysisResults())
-      .flatMap(Collection::stream)
-
-      // Narrow down to IAM bindings with an MPA constraint.
-      .filter(result -> result.getIamBinding() != null &&
-        JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
-
-      // Collect identities (users and group members)
-      .filter(result -> result.getIdentityList() != null)
-      .flatMap(result -> result.getIdentityList().getIdentities().stream()
-        .filter(id -> id.getName().startsWith("user:"))
-        .map(id -> new UserId(id.getName().substring("user:".length()))))
-
-      // Remove the caller.
-      .filter(user -> !user.equals(callerUserId))
-      .collect(Collectors.toCollection(TreeSet::new));
-  }
+//  public Set<UserId> listEligibleUsersForProjectRole(
+//    UserId callerUserId,
+//    RoleBinding roleBinding
+//  ) throws AccessException, IOException {
+//    Preconditions.checkNotNull(callerUserId, "callerUserId");
+//    Preconditions.checkNotNull(roleBinding, "roleBinding");
+//
+//    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+//
+//    //
+//    // Check that the (calling) user is really allowed to request approval
+//    // this role.
+//    //
+//    var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName());
+//
+//    var eligibleRoles = listEligibleProjectRoles(callerUserId, projectId);
+//    if (eligibleRoles
+//      .getItems()
+//      .stream()
+//      .filter(pr -> pr.roleBinding().equals(roleBinding))
+//      .filter(pr -> pr.status() == ProjectRole_.Status.ELIGIBLE_FOR_MPA)
+//      .findAny()
+//      .isEmpty()) {
+//      throw new AccessDeniedException(
+//        String.format("The user %s is not eligible to request approval for this role", callerUserId));
+//    }
+//
+//    //
+//    // Find other eligible users.
+//    //
+//    var analysisResult = this.assetInventoryClient.findPermissionedPrincipalsByResource(
+//      this.options.scope,
+//      roleBinding.fullResourceName(),
+//      roleBinding.role());
+//
+//    return Stream.ofNullable(analysisResult.getAnalysisResults())
+//      .flatMap(Collection::stream)
+//
+//      // Narrow down to IAM bindings with an MPA constraint.
+//      .filter(result -> result.getIamBinding() != null &&
+//        JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
+//
+//      // Collect identities (users and group members)
+//      .filter(result -> result.getIdentityList() != null)
+//      .flatMap(result -> result.getIdentityList().getIdentities().stream()
+//        .filter(id -> id.getName().startsWith("user:"))
+//        .map(id -> new UserId(id.getName().substring("user:".length()))))
+//
+//      // Remove the caller.
+//      .filter(user -> !user.equals(callerUserId))
+//      .collect(Collectors.toCollection(TreeSet::new));
+//  }
 
   // -------------------------------------------------------------------------
   // Inner classes.

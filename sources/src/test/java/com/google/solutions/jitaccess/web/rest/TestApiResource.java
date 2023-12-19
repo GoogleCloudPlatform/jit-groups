@@ -246,7 +246,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.iamPolicyCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -260,7 +260,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.iamPolicyCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -274,11 +274,11 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleUsersForProjectRole(
+    when(this.resource.iamPolicyCatalog
+      .listReviewers(
         eq(SAMPLE_USER),
-        argThat(r -> r.role().equals("roles/browser"))))
-      .thenReturn(Set.of());
+        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+      .thenReturn(new TreeSet());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
@@ -292,11 +292,11 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleUsersForProjectRole(
+    when(this.resource.iamPolicyCatalog
+      .listReviewers(
         eq(SAMPLE_USER),
-        argThat(r -> r.role().equals("roles/browser"))))
-      .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));
+        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+      .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);

@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.core.activation.ActivationId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
 import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.entitlements.*;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
@@ -250,9 +251,9 @@ public class ApiResource {
     var roleBinding = new RoleBinding(projectId, role);
 
     try {
-      var peers = this.roleDiscoveryService.listEligibleUsersForProjectRole(
+      var peers = this.iamPolicyCatalog.listReviewers(
         iapPrincipal.getId(),
-        roleBinding);
+        new ProjectRoleId(roleBinding));
 
       assert !peers.contains(iapPrincipal.getId());
 

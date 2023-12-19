@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.activation.project;
 
 import com.google.api.services.cloudasset.v1.model.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
@@ -30,12 +31,14 @@ import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.JitConstraints;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
+import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -44,6 +47,8 @@ import static org.mockito.Mockito.when;
 
 public class TestPolicyAnalyzer {
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
+  private static final UserId SAMPLE_APPROVING_USER_1 = new UserId("approver-1", "approver-1@example.com");
+  private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2", "approver-2@example.com");
   private static final ProjectId SAMPLE_PROJECT_ID_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_ID_2 = new ProjectId("project-2");
   private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
@@ -855,5 +860,93 @@ public class TestPolicyAnalyzer {
     var entitlement = entitlements.items().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
+  }
+
+
+  // ---------------------------------------------------------------------
+  // findApproversForEntitlement.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenAllUsersJitEligible_ThenFindApproversForEntitlementReturnsEmptyList()
+    throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+
+    var mpaBindingResult = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis().setAnalysisResults(List.of(mpaBindingResult)));
+    when(assetAdapter.findPermissionedPrincipalsByResource(anyString(), anyString(), anyString()))
+      .thenReturn(new IamPolicyAnalysis().setAnalysisResults(List.of(mpaBindingResult)));
+
+    var service = new PolicyAnalyzer(
+      assetAdapter,
+      new PolicyAnalyzer.Options("organizations/0"));
+
+    var approvers = service.findApproversForEntitlement(
+      new RoleBinding(
+        SAMPLE_PROJECT_ID_1,
+        SAMPLE_ROLE_1));
+
+    assertTrue(approvers.isEmpty());
+  }
+
+  @Test
+  public void whenUsersMpaEligible_ThenFindApproversForEntitlementReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
+
+    var jitBindingResult = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_USER,
+      JIT_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+    var mpaBindingResult1 = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_APPROVING_USER_1,
+      MPA_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+    var mpaBindingResult2 = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_APPROVING_USER_2,
+      MPA_CONDITION,
+      "eligible binding",
+      "CONDITIONAL");
+
+    when(assetAdapter.findPermissionedPrincipalsByResource(anyString(), anyString(), anyString()))
+      .thenReturn(new IamPolicyAnalysis().setAnalysisResults(List.of(
+        jitBindingResult,
+        mpaBindingResult1,
+        mpaBindingResult2)));
+
+    var service = new PolicyAnalyzer(
+      assetAdapter,
+      new PolicyAnalyzer.Options("organizations/0"));
+
+    var approvers = service.findApproversForEntitlement(
+      new RoleBinding(
+        SAMPLE_PROJECT_ID_1,
+        SAMPLE_ROLE_1));
+
+    assertEquals(2, approvers.size());
+    assertIterableEquals(
+      Set.of(SAMPLE_APPROVING_USER_1, SAMPLE_APPROVING_USER_2),
+      approvers);
   }
 }
