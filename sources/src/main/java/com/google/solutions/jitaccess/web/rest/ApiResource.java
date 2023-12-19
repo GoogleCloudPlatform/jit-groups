@@ -66,9 +66,6 @@ public class ApiResource {
   IamPolicyCatalog iamPolicyCatalog;
 
   @Inject
-  RoleDiscoveryService roleDiscoveryService;
-
-  @Inject
   RoleActivationService roleActivationService;
 
   @Inject
@@ -160,7 +157,7 @@ public class ApiResource {
   public ProjectsResponse listProjects(
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.iamPolicyCatalog, "iamPolicyCatalog");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
@@ -192,7 +189,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.iamPolicyCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -237,7 +234,7 @@ public class ApiResource {
     @QueryParam("role") String role,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.iamPolicyCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -285,7 +282,7 @@ public class ApiResource {
     SelfActivationRequest request,
     @Context SecurityContext securityContext
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.iamPolicyCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -404,7 +401,7 @@ public class ApiResource {
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
+    Preconditions.checkNotNull(this.iamPolicyCatalog, "iamPolicyCatalog");
     assert this.activationTokenService != null;
     assert this.notificationServices != null;
 

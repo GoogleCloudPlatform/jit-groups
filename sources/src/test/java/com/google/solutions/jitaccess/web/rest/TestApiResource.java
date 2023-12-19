@@ -82,7 +82,6 @@ public class TestApiResource {
     this.resource.options = new ApiResource.Options(DEFAULT_MAX_NUMBER_OF_ROLES);
     this.resource.logAdapter = new LogAdapter();
     this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
-    this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
     this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
     this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
     this.resource.iamPolicyCatalog = Mockito.mock(IamPolicyCatalog.class);
