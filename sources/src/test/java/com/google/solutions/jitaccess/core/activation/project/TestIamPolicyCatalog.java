@@ -21,22 +21,19 @@
 
 package com.google.solutions.jitaccess.core.activation.project;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.Annotated;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.activation.ActivationRequest;
 import com.google.solutions.jitaccess.core.activation.ActivationType;
 import com.google.solutions.jitaccess.core.activation.Entitlement;
+import com.google.solutions.jitaccess.core.activation.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.time.Duration;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,6 +46,259 @@ public class TestIamPolicyCatalog {
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE = "roles/resourcemanager.role1";
 
+  //---------------------------------------------------------------------------
+  // validateRequest.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenDurationExceedsMax_ThenValidateRequestThrowsException() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        1,
+        2
+      ));
+
+      var request = Mockito.mock(ActivationRequest.class);
+      when (request.duration()).thenReturn(catalog.options().maxActivationDuration().plusMinutes(1));
+
+      assertThrows(
+        IllegalArgumentException.class,
+        () -> catalog.validateRequest(request));
+  }
+
+  @Test
+  public void whenDurationBelowMin_ThenValidateRequestThrowsException() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        1,
+        2
+      ));
+
+    var request = Mockito.mock(ActivationRequest.class);
+    when (request.duration()).thenReturn(catalog.options().minActivationDuration().minusMinutes(1));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> catalog.validateRequest(request));
+  }
+
+  @Test
+  public void whenReviewersMissing_ThenValidateRequestThrowsException() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        1,
+        2
+      ));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.reviewers()).thenReturn(null);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> catalog.validateRequest(request));
+  }
+
+  @Test
+  public void whenNumberOfReviewersExceedsMax_ThenValidateRequestThrowsException() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        1,
+        2
+      ));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.reviewers()).thenReturn(Set.of(
+      new UserId("user-1@example.com"),
+      new UserId("user-2@example.com"),
+      new UserId("user-3@example.com")));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> catalog.validateRequest(request));
+  }
+
+  @Test
+  public void whenNumberOfReviewersBelowMin_ThenValidateRequestThrowsException() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        2,
+        2
+      ));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.reviewers()).thenReturn(Set.of(
+      new UserId("user-1@example.com")));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> catalog.validateRequest(request));
+  }
+
+  @Test
+  public void whenNumberOfReviewersOk_ThenValidateRequestReturns() throws Exception {
+    var catalog = new IamPolicyCatalog(
+      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(
+        null,
+        Duration.ofMinutes(30),
+        1,
+        2
+      ));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.reviewers()).thenReturn(Set.of(
+      new UserId("user-1@example.com")));
+
+    catalog.validateRequest(request);
+  }
+
+  //---------------------------------------------------------------------------
+  // verifyUserCanActivateEntitlements.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenEntitlementNotFound_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+
+    var catalog = new IamPolicyCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_REQUESTING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
+      .thenReturn(new Annotated<>(new TreeSet<>(), Set.of()));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> catalog.verifyUserCanActivateEntitlements(
+        SAMPLE_REQUESTING_USER,
+        SAMPLE_PROJECT,
+        ActivationType.JIT,
+        List.of(new ProjectRoleId(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)))));
+  }
+
+  @Test
+  public void whenActivationTypeMismatches_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+
+    var catalog = new IamPolicyCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    var mpaEntitlement = new Entitlement<>(
+      new ProjectRoleId(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      "-",
+      ActivationType.MPA,
+      Entitlement.Status.AVAILABLE);
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_REQUESTING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of(mpaEntitlement)),
+        Set.of()));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> catalog.verifyUserCanActivateEntitlements(
+        SAMPLE_REQUESTING_USER,
+        SAMPLE_PROJECT,
+        ActivationType.JIT,
+        List.of(mpaEntitlement.id())));
+  }
+
+  //---------------------------------------------------------------------------
+  // listReviewers.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenUserNotAllowedToActivateEntitlement_ThenListReviewersThrowsException() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+
+    var catalog = new IamPolicyCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_REQUESTING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
+      .thenReturn(new Annotated<>(new TreeSet<>(), Set.of()));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> catalog.listReviewers(
+        SAMPLE_REQUESTING_USER,
+        new ProjectRoleId(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
+  }
+
+  @Test
+  public void whenUserAllowedToActivateEntitlement_ThenListReviewersExcludesUser() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+
+    var catalog = new IamPolicyCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    var mpaEntitlement = new Entitlement<>(
+      new ProjectRoleId(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      "-",
+      ActivationType.MPA,
+      Entitlement.Status.AVAILABLE);
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_REQUESTING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of(mpaEntitlement)),
+        Set.of()));
+
+    when(policyAnalyzer
+      .findApproversForEntitlement(
+        eq(mpaEntitlement.id().roleBinding())))
+      .thenReturn(Set.of(SAMPLE_REQUESTING_USER, SAMPLE_APPROVIING_USER));
+
+    var reviewers = catalog.listReviewers(SAMPLE_REQUESTING_USER, mpaEntitlement.id());
+    assertIterableEquals(Set.of(SAMPLE_APPROVIING_USER), reviewers);
+  }
+  
   //---------------------------------------------------------------------------
   // listProjects.
   //---------------------------------------------------------------------------

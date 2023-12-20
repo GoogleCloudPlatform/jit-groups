@@ -43,7 +43,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     this.options = options;
   }
 
-  private void validateRequest(ActivationRequest<ProjectRoleId> request) { // TODO: test
+  void validateRequest(ActivationRequest<ProjectRoleId> request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -71,7 +71,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     }
   }
 
-  private void verifyUserCanActivateEntitlements( // TODO: test
+  void verifyUserCanActivateEntitlements(
     UserId user,
     ProjectId projectId,
     ActivationType activationType,
@@ -119,7 +119,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   public SortedSet<ProjectId> listProjects(
     UserId user
   ) throws AccessException, IOException {
-    if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) { // TODO: test
+    if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
@@ -151,7 +151,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public SortedSet<UserId> listReviewers( //TODO: test, order
+  public SortedSet<UserId> listReviewers(
     UserId requestingUser,
     ProjectRoleId entitlement
   ) throws AccessException, IOException {
@@ -168,8 +168,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
       List.of(entitlement));
 
     return this.policyAnalyzer
-      .findApproversForEntitlement(
-        entitlement.roleBinding())
+      .findApproversForEntitlement(entitlement.roleBinding())
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
