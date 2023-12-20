@@ -158,7 +158,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
         var roleBindings = request.entitlements()
           .stream()
           .map(ent -> ent.roleBinding())
-          .collect(Collectors.toList());
+          .toList();
 
         if (roleBindings.size() != 1) {
           throw new IllegalArgumentException("Request must have exactly one entitlement");

@@ -27,18 +27,18 @@ public class Exceptions {
   public static String getFullMessage(Throwable e) {
     var buffer = new StringBuilder();
 
-    for (var exception = e; e != null; e = e.getCause()) {
+    for (var cause = e; e != null; e = e.getCause()) {
       if (buffer.length() > 0) {
         buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
+        buffer.append(cause.getClass().getSimpleName());
 
-        if (e.getMessage() != null) {
+        if (cause.getMessage() != null) {
           buffer.append(": ");
-          buffer.append(e.getMessage());
+          buffer.append(cause.getMessage());
         }
       }
       else {
-        buffer.append(e.getMessage());
+        buffer.append(cause.getMessage());
       }
     }
 

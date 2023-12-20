@@ -118,7 +118,7 @@ public class PolicyAnalyzer {
     // the limits of the API, in which case it starts truncating results. To
     // mitigate this risk, filter on a permission that:
     //
-    // - only applies to projects, and has no meaning on descendent resources
+    // - only applies to projects, and has no meaning on descendant resources
     // - represents the lowest level of access to a project.
     //
     var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(

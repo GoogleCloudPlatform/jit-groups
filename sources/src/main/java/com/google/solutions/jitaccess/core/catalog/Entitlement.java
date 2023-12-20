@@ -43,7 +43,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
 
   @Override
   public String toString() {
-    return this.name.toString();
+    return this.name;
   }
 
   @Override

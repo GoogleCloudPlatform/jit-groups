@@ -151,7 +151,7 @@ public class ResourceManagerClient {
           var nonObsoleteBindings =
             policy.getBindings().stream()
               .filter(isObsolete.negate())
-              .collect(Collectors.toList());
+              .toList();
 
           policy.getBindings().clear();
           policy.getBindings().addAll(nonObsoleteBindings);
