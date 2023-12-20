@@ -30,7 +30,7 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.RoleBinding;
+import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import jakarta.enterprise.context.ApplicationScoped;
 
