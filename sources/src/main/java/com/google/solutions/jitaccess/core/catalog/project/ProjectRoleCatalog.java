@@ -34,7 +34,7 @@ import java.util.SortedSet;
 /**
  * Catalog for project-level role bindings.
  */
-public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRoleId> {
+public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBinding> {
   /**
    * List projects that the user has any entitlements for.
    */
@@ -45,7 +45,7 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
   /**
    * List available entitlements.
    */
-  public abstract Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEntitlements(
+  public abstract Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> listEntitlements(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException;
@@ -55,6 +55,6 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
    */
   public abstract SortedSet<UserId> listReviewers(
     UserId requestingUser,
-    ProjectRoleId entitlement
+    ProjectRoleBinding entitlement
   ) throws AccessException, IOException;
 }

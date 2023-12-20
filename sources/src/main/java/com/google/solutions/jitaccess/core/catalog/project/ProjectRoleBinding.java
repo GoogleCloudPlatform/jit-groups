@@ -26,13 +26,16 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 
-public class ProjectRoleId extends EntitlementId {
+public class ProjectRoleBinding extends EntitlementId {
   static final String CATALOG = "iam";
 
   private final RoleBinding roleBinding;
 
-  public ProjectRoleId(RoleBinding roleBinding) {
+  public ProjectRoleBinding(RoleBinding roleBinding) {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
+
+    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+
     this.roleBinding = roleBinding;
   }
 

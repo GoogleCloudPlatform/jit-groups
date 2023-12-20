@@ -64,7 +64,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     this.options = options;
   }
 
-  void validateRequest(ActivationRequest<ProjectRoleId> request) {
+  void validateRequest(ActivationRequest<ProjectRoleBinding> request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -77,7 +77,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
         "The activation duration must be no longer than %d minutes",
         this.options.maxActivationDuration().toMinutes()));
 
-    if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
+    if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
       Preconditions.checkArgument(
         mpaRequest.reviewers() != null &&
           mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
@@ -96,7 +96,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     UserId user,
     ProjectId projectId,
     ActivationType activationType,
-    Collection<ProjectRoleId> entitlements
+    Collection<ProjectRoleBinding> entitlements
   ) throws AccessException, IOException {
     //
     // Verify that the user has eligible role bindings
@@ -161,7 +161,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> listEntitlements(
+  public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> listEntitlements(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
@@ -174,7 +174,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   @Override
   public SortedSet<UserId> listReviewers(
     UserId requestingUser,
-    ProjectRoleId entitlement
+    ProjectRoleBinding entitlement
   ) throws AccessException, IOException {
 
     //
@@ -197,7 +197,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
 
   @Override
   public void verifyUserCanRequest(
-    ActivationRequest<ProjectRoleId> request
+    ActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);
@@ -216,7 +216,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   @Override
   public void verifyUserCanApprove(
     UserId approvingUser,
-    MpaActivationRequest<ProjectRoleId> request
+    MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);

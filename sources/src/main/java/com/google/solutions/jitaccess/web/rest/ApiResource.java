@@ -26,7 +26,7 @@ import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleId;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
@@ -253,7 +253,7 @@ public class ApiResource {
     try {
       var peers = this.iamPolicyCatalog.listReviewers(
         iapPrincipal.getId(),
-        new ProjectRoleId(roleBinding));
+        new ProjectRoleBinding(roleBinding));
 
       assert !peers.contains(iapPrincipal.getId());
 
@@ -316,7 +316,7 @@ public class ApiResource {
       iapPrincipal.getId(),
       request.roles
         .stream()
-        .map(r -> new ProjectRoleId(new RoleBinding(projectId.getFullResourceName(), r)))
+        .map(r -> new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), r)))
         .collect(Collectors.toSet()),
       request.justification,
       Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -444,12 +444,12 @@ public class ApiResource {
     // Create an MPA activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    MpaActivationRequest<ProjectRoleId> activationRequest;
+    MpaActivationRequest<ProjectRoleBinding> activationRequest;
 
     try {
       activationRequest = this.projectRoleActivator.createMpaRequest(
         iapPrincipal.getId(),
-        Set.of(new ProjectRoleId(roleBinding)),
+        Set.of(new ProjectRoleBinding(roleBinding)),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -627,7 +627,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    MpaActivationRequest<ProjectRoleId> activationRequest;
+    MpaActivationRequest<ProjectRoleBinding> activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
         this.projectRoleActivator.createTokenConverter(),
@@ -880,7 +880,7 @@ public class ApiResource {
 
     private ActivationStatusResponse(
       UserId caller,
-      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleId> request,
+      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request,
       Entitlement.Status status
     ) {
       Preconditions.checkNotNull(request);
@@ -899,7 +899,7 @@ public class ApiResource {
           request.endTime()))
         .collect(Collectors.toList());
 
-      if (request instanceof MpaActivationRequest<ProjectRoleId> mpaRequest) {
+      if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
         this.reviewers = mpaRequest.reviewers();
         this.isReviewer = mpaRequest.reviewers().contains(caller);
       }
@@ -948,7 +948,7 @@ public class ApiResource {
   {
     protected RequestActivationNotification(
       ProjectId projectId,
-      MpaActivationRequest<ProjectRoleId> request,
+      MpaActivationRequest<ProjectRoleBinding> request,
       Instant requestExpiryTime,
       URL activationRequestUrl) throws MalformedURLException
     {
@@ -992,19 +992,19 @@ public class ApiResource {
   public class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
       ProjectId projectId,
-      Activation<ProjectRoleId> activation,
+      Activation<ProjectRoleBinding> activation,
       UserId approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
         List.of(activation.request().requestingUser()),
-        ((MpaActivationRequest<ProjectRoleId>)activation.request()).reviewers(), // Move reviewers to CC.
+        ((MpaActivationRequest<ProjectRoleBinding>)activation.request()).reviewers(), // Move reviewers to CC.
         String.format(
           "%s requests access to project %s",
           activation.request().requestingUser(),
           projectId));
 
-      var request = (MpaActivationRequest<ProjectRoleId>)activation.request();
+      var request = (MpaActivationRequest<ProjectRoleBinding>)activation.request();
       assert request.entitlements().size() == 1;
 
       this.properties.put("APPROVER", approver.email);
@@ -1041,7 +1041,7 @@ public class ApiResource {
   public class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
-      Activation<ProjectRoleId> activation)
+      Activation<ProjectRoleBinding> activation)
     {
       super(
         List.of(activation.request().requestingUser()),

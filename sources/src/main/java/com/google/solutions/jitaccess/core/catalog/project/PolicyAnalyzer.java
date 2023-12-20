@@ -149,7 +149,7 @@ public class PolicyAnalyzer {
   /**
    * List entitlements for the given user.
    */
-  public Annotated<SortedSet<Entitlement<ProjectRoleId>>> findEntitlements(
+  public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
     UserId user,
     ProjectId projectId,
     EnumSet<Entitlement.Status> statusesToInclude
@@ -183,7 +183,7 @@ public class PolicyAnalyzer {
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    var allAvailable = new TreeSet<Entitlement<ProjectRoleId>>();
+    var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
 
       //
@@ -191,13 +191,13 @@ public class PolicyAnalyzer {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleId>> jitEligible = findRoleBindings(
+      Set<Entitlement<ProjectRoleBinding>> jitEligible = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isJitAccessConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(binding -> new Entitlement<ProjectRoleId>(
-          new ProjectRoleId(binding),
+        .map(binding -> new Entitlement<ProjectRoleBinding>(
+          new ProjectRoleBinding(binding),
           binding.role(),
           ActivationType.JIT,
           Entitlement.Status.AVAILABLE))
@@ -208,13 +208,13 @@ public class PolicyAnalyzer {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleId>> mpaEligible = findRoleBindings(
+      Set<Entitlement<ProjectRoleBinding>> mpaEligible = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(binding -> new Entitlement<ProjectRoleId>(
-          new ProjectRoleId(binding),
+        .map(binding -> new Entitlement<ProjectRoleBinding>(
+          new ProjectRoleBinding(binding),
           binding.role(),
           ActivationType.MPA,
           Entitlement.Status.AVAILABLE))
@@ -233,7 +233,7 @@ public class PolicyAnalyzer {
         .collect(Collectors.toList()));
     }
 
-    var allActive = new TreeSet<Entitlement<ProjectRoleId>>();
+    var allActive = new TreeSet<Entitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -256,7 +256,7 @@ public class PolicyAnalyzer {
           .findFirst();
         if (correspondingEligibleBinding.isPresent()) {
           allActive.add(new Entitlement<>(
-            new ProjectRoleId(activeBinding),
+            new ProjectRoleBinding(activeBinding),
             activeBinding.role(),
             correspondingEligibleBinding.get().activationType(),
             Entitlement.Status.ACTIVE));
@@ -266,7 +266,7 @@ public class PolicyAnalyzer {
           // Active, but no longer eligible.
           //
           allActive.add(new Entitlement<>(
-            new ProjectRoleId(activeBinding),
+            new ProjectRoleBinding(activeBinding),
             activeBinding.role(),
             ActivationType.NONE,
             Entitlement.Status.ACTIVE));
