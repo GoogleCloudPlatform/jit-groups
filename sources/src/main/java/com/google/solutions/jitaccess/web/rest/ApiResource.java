@@ -344,7 +344,7 @@ public class ApiResource {
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s activated roles %s on '%s' for themselves for %d minutes", // TODO: check format
+            "User %s activated roles %s on '%s' for themselves for %d minutes",
             iapPrincipal.getId(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
@@ -364,7 +364,7 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s", // TODO: check format
+            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
             iapPrincipal.getId(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
