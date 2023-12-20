@@ -1055,14 +1055,7 @@ public class ApiResource {
 
       this.properties.put("BENEFICIARY", activation.request().requestingUser());
       this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", activation.request() // For compatibility only
-        .entitlements()
-        .stream()
-        .findFirst()
-        .get()
-        .roleBinding()
-        .role());
-      this.properties.put("ROLES", activation.request()
+      this.properties.put("ROLE", activation.request()
         .entitlements()
         .stream()
         .map(ent -> ent.roleBinding().role())
