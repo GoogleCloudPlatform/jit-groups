@@ -175,9 +175,9 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public void canRequest(
+  public void verifyUserCanRequest(
     ActivationRequest<ProjectRoleId> request
-  ) throws AccessException, IOException { // TODO: test
+  ) throws AccessException, IOException {
 
     validateRequest(request);
 
@@ -193,10 +193,10 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public void canApprove(
+  public void verifyUserCanApprove(
     UserId approvingUser,
     MpaActivationRequest<ProjectRoleId> request
-  ) throws AccessException, IOException { // TODO: test
+  ) throws AccessException, IOException {
 
     validateRequest(request);
 

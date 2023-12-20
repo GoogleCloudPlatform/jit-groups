@@ -12,14 +12,14 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
   /**
    * Verify if a user is allowed to make the given request.
    */
-  void canRequest(
+  void verifyUserCanRequest(
     ActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 
   /**
    * Verify if a user is allowed to approve a given request.
    */
-  void canApprove(
+  void verifyUserCanApprove(
     UserId approvingUser,
     MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;

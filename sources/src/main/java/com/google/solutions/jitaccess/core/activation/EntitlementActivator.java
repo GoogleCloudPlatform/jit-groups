@@ -106,7 +106,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     // Pre-verify access to avoid sending an MPA requests for which
     // the access check will fail later.
     //
-    this.catalog.canRequest(request);
+    this.catalog.verifyUserCanRequest(request);
 
     return request;
   }
@@ -128,7 +128,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to activate this entitlement.
     //
-    this.catalog.canRequest(request);
+    this.catalog.verifyUserCanRequest(request);
 
     //
     // Request is legit, apply it.
@@ -166,12 +166,12 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // Check that the user is (still) allowed to request this entitlement.
     //
-    this.catalog.canRequest(request);
+    this.catalog.verifyUserCanRequest(request);
 
     //
     // Check that the approving user is (still) allowed to approve this entitlement.
     //
-    this.catalog.canApprove(approvingUser, request);
+    this.catalog.verifyUserCanApprove(approvingUser, request);
 
     //
     // Request is legit, apply it.
