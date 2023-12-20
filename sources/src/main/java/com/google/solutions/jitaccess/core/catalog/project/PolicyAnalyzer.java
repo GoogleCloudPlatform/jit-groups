@@ -30,7 +30,6 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.JitConstraints;
 import com.google.solutions.jitaccess.core.catalog.RoleBinding;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -41,6 +40,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Helper class for performing Policy Analyzer searches.
+ */
 @ApplicationScoped
 public class PolicyAnalyzer {
   private final Options options;

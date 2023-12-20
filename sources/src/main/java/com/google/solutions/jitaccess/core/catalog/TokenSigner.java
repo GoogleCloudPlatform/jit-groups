@@ -33,8 +33,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Signs JWTs using a service account's Google-managed service account
- * ket.
+ * Signs JWTs using a service account's Google-managed service account key.
  */
 @ApplicationScoped
 public class TokenSigner {

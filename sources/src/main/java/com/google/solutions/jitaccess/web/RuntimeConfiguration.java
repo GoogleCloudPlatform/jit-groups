@@ -68,7 +68,7 @@ public class RuntimeConfiguration {
     this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
       10);
-    this.maxNumberOfJitRolesPerSelfApproval = new IntSetting(
+    this.maxNumberOfEntitlementsPerSelfApproval = new IntSetting(
       List.of("ACTIVATION_REQUEST_MAX_ROLES"),
       10);
     this.availableProjectsQuery = new StringSetting(
@@ -223,9 +223,9 @@ public class RuntimeConfiguration {
   public final IntSetting maxNumberOfReviewersPerActivationRequest;
 
   /**
-   * Maximum number of (JIT-) eligible roles that can be activated at once.
+   * Maximum number of (JIT-) entitlements that can be activated at once.
    */
-  public final IntSetting maxNumberOfJitRolesPerSelfApproval;
+  public final IntSetting maxNumberOfEntitlementsPerSelfApproval;
 
   /**
    * In some cases listing all available projects is not working fast enough and times out,

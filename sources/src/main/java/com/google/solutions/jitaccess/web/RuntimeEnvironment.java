@@ -340,7 +340,7 @@ public class RuntimeEnvironment {
   @Produces
   public ApiResource.Options getApiOptions() {
     return new ApiResource.Options(
-      this.configuration.maxNumberOfJitRolesPerSelfApproval.getValue());
+      this.configuration.maxNumberOfEntitlementsPerSelfApproval.getValue());
   }
 
   @Produces

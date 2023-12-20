@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
-import com.google.solutions.jitaccess.core.catalog.JitConstraints;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.RoleBinding;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
