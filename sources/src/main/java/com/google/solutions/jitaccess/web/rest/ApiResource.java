@@ -23,11 +23,10 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.activation.*;
-import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
-import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
-import com.google.solutions.jitaccess.core.entitlements.*;
+import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
@@ -719,7 +718,7 @@ public class ApiResource {
 
   private static <T extends  EntitlementId> LogAdapter.LogEntry addLabels(
     LogAdapter.LogEntry entry,
-    com.google.solutions.jitaccess.core.activation.ActivationRequest<T> request
+    com.google.solutions.jitaccess.core.catalog.ActivationRequest<T> request
   ) {
     entry
       .addLabel("activation_id", request.id().toString())
@@ -878,7 +877,7 @@ public class ApiResource {
 
     private ActivationStatusResponse(
       UserId caller,
-      com.google.solutions.jitaccess.core.activation.ActivationRequest<ProjectRoleId> request,
+      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleId> request,
       Entitlement.Status status
     ) {
       Preconditions.checkNotNull(request);

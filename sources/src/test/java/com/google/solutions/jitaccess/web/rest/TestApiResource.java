@@ -23,12 +23,12 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.activation.*;
-import com.google.solutions.jitaccess.core.activation.project.IamPolicyCatalog;
-import com.google.solutions.jitaccess.core.activation.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.activation.project.ProjectRoleId;
+import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
+import com.google.solutions.jitaccess.core.catalog.RoleBinding;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
