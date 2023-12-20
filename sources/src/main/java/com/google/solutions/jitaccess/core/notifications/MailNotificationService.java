@@ -128,7 +128,7 @@ public class MailNotificationService extends NotificationService {
           ? EnumSet.of(SmtpClient.Flags.REPLY)
           : EnumSet.of(SmtpClient.Flags.NONE));
     }
-    catch (SmtpClient.MailException | AccessException | IOException e) {
+    catch (SmtpClient.MailException e) {
       throw new NotificationException("The notification could not be sent", e);
     }
   }
