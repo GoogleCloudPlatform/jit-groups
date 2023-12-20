@@ -21,8 +21,8 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
-import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

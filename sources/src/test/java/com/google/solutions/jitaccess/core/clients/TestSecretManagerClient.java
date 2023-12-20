@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestSecretManagerClient {
   private static final String SECRET_NAME = "testsecret";

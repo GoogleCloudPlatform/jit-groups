@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core;
 
-import com.google.solutions.jitaccess.core.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

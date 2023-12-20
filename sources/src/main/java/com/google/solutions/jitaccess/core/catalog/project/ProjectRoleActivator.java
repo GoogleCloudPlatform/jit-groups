@@ -31,8 +31,6 @@ import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.catalog.JitConstraints;
-import com.google.solutions.jitaccess.core.catalog.RoleBinding;
 import jakarta.enterprise.context.Dependent;
 
 import java.io.IOException;

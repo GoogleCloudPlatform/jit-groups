@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
-import com.google.solutions.jitaccess.core.catalog.JitConstraints;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

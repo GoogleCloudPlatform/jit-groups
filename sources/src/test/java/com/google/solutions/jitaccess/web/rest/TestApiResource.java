@@ -22,25 +22,26 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.Annotated;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleId;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.core.catalog.RoleBinding;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
-import com.google.solutions.jitaccess.core.notifications.NotificationService;
-
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
