@@ -19,10 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.ProjectId;
 
 import java.util.Comparator;
 

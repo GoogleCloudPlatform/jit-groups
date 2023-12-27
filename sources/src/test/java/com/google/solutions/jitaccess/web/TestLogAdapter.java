@@ -21,9 +21,8 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.web.auth.DeviceInfo;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;
 import org.junit.jupiter.api.Test;
 

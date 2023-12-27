@@ -60,7 +60,7 @@ public abstract class NotificationService {
     }
 
     @Override
-    public void sendNotification(Notification notification) throws NotificationException {
+    public void sendNotification(Notification notification) {
       if (this.printToConsole) {
         //
         // Print it so that we can see the message during development.

@@ -22,10 +22,11 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.gson.Gson;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.web.auth.DeviceInfo;
 import com.google.solutions.jitaccess.web.auth.UserPrincipal;
-import com.google.solutions.jitaccess.web.rest.ExceptionMappers;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.SynchronousExecutionContext;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
@@ -33,8 +34,6 @@ import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.mock.MockHttpResponse;
 import org.jboss.resteasy.spi.Dispatcher;
 
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.SecurityContext;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.Principal;

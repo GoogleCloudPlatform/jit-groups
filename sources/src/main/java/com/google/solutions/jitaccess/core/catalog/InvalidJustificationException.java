@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,39 +19,12 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 
-import java.util.List;
-import java.util.Set;
-
-/**
- * Result list of T with an optional set of warnings.
- */
-public class AnnotatedResult<T> {
-  /**
-   * List of bindings. Might be incomplete if Warnings is non-empty.
-   */
-  private final List<T> items;
-
-  /**
-   * Non-fatal issues encountered. Use a set to avoid duplicates.
-   */
-  private final Set<String> warnings;
-
-  public AnnotatedResult(List<T> roleBindings, Set<String> warnings) {
-    Preconditions.checkNotNull(roleBindings);
-
-    this.items = roleBindings;
-    this.warnings = warnings;
-  }
-
-  public List<T> getItems() {
-    return this.items;
-  }
-
-  public Set<String> getWarnings() {
-    return warnings;
+public class InvalidJustificationException extends AccessDeniedException {
+  public InvalidJustificationException(String message) {
+    super(message);
   }
 }

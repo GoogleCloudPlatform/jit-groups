@@ -19,9 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.solutions.jitaccess.core.catalog.project.JitConstraints;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

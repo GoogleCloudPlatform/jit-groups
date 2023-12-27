@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,29 +19,18 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
-public class Exceptions {
-  private Exceptions() {}
+import com.google.common.base.Preconditions;
 
-  public static String getFullMessage(Throwable e) {
-    var buffer = new StringBuilder();
-
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
-
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
-
-    return buffer.toString();
+/**
+ * Represents a successful activation of one or more entitlements.
+ */
+public record Activation<TEntitlementId extends EntitlementId>(
+  ActivationRequest<TEntitlementId> request
+) {
+  public Activation {
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(!request.entitlements().isEmpty());
   }
 }

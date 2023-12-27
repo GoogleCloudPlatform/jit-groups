@@ -151,7 +151,7 @@ public class ResourceManagerClient {
           var nonObsoleteBindings =
             policy.getBindings().stream()
               .filter(isObsolete.negate())
-              .collect(Collectors.toList());
+              .toList();
 
           policy.getBindings().clear();
           policy.getBindings().addAll(nonObsoleteBindings);
@@ -251,7 +251,7 @@ public class ResourceManagerClient {
     }
   }
 
-  public Set<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
+  public SortedSet<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
 

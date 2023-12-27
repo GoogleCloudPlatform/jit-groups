@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,29 +19,29 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
-public class Exceptions {
-  private Exceptions() {}
+import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.UserId;
 
-  public static String getFullMessage(Throwable e) {
-    var buffer = new StringBuilder();
+import java.io.IOException;
 
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
+/**
+ * A catalog of entitlement that can be browsed by the user.
+ */
+public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
+  /**
+   * Verify if a user is allowed to make the given request.
+   */
+  void verifyUserCanRequest(
+    ActivationRequest<TEntitlementId> request
+  ) throws AccessException, IOException;
 
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
-
-    return buffer.toString();
-  }
+  /**
+   * Verify if a user is allowed to approve a given request.
+   */
+  void verifyUserCanApprove(
+    UserId approvingUser,
+    MpaActivationRequest<TEntitlementId> request
+  ) throws AccessException, IOException;
 }

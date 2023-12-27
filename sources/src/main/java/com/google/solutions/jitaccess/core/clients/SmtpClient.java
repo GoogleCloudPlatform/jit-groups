@@ -130,7 +130,7 @@ public class SmtpClient {
     String subject,
     String htmlContent,
     EnumSet<Flags> flags
-  ) throws MailException, AccessException, IOException {
+  ) throws MailException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");
     Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");

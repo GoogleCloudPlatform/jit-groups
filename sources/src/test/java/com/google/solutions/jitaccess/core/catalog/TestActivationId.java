@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,13 +19,29 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestUserId {
+public class TestActivationId {
+
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void toStringReturnsId() {
+    var id = new ActivationId("jit-123");
+    assertEquals("jit-123", id.toString());
+  }
+
+  @Test
+  public void toStringContainsTypePrefix() {
+    var id = ActivationId.newId(ActivationType.MPA);
+    assertTrue(id.toString().startsWith("mpa-"));
+  }
 
   // -------------------------------------------------------------------------
   // Equality.
@@ -33,8 +49,8 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    ActivationId id1 = new ActivationId("jit-1");
+    ActivationId id2 = new ActivationId("jit-1");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -42,15 +58,15 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    ActivationId id1 = new ActivationId("jit-1");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
-  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("alice", "alice@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+  public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
+    ActivationId id1 = new ActivationId("jit-1");
+    ActivationId id2 = new ActivationId("jit-2");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -58,14 +74,14 @@ public class TestUserId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    ActivationId id1 = new ActivationId("jit-1");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    ActivationId id1 = new ActivationId("jit-1");
 
     assertFalse(id1.equals(""));
   }

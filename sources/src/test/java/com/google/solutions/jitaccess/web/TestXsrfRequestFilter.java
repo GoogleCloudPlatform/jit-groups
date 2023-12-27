@@ -21,10 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
+import jakarta.ws.rs.container.ContainerRequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import jakarta.ws.rs.container.ContainerRequestContext;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;

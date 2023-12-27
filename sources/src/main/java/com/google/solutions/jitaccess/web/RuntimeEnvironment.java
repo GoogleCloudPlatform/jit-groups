@@ -34,10 +34,11 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
+import com.google.solutions.jitaccess.core.catalog.TokenSigner;
+import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzer;
 import com.google.solutions.jitaccess.core.clients.*;
-import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
@@ -263,26 +264,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RoleDiscoveryService.Options getRoleDiscoveryServiceOptions() {
-    return new RoleDiscoveryService.Options(
-            this.configuration.scope.getValue(),
-            this.configuration.availableProjectsQuery.isValid() ?
-                this.configuration.availableProjectsQuery.getValue() : null
-    );
-  }
-
-  @Produces
-  public RoleActivationService.Options getRoleActivationServiceOptions() {
-    return new RoleActivationService.Options(
-      this.configuration.justificationHint.getValue(),
-      Pattern.compile(this.configuration.justificationPattern.getValue()),
-      this.configuration.activationTimeout.getValue(),
-      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
-      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
-  }
-
-  @Produces
-  public ActivationTokenService.Options getTokenServiceOptions() {
+  public TokenSigner.Options getTokenServiceOptions() {
     //
     // NB. The clock for activations "starts ticking" when the activation was
     // requested. The time allotted for reviewers to approve the request
@@ -292,7 +274,7 @@ public class RuntimeEnvironment {
       this.configuration.activationRequestTimeout.getValue().getSeconds(),
       this.configuration.activationTimeout.getValue().getSeconds()));
 
-    return new ActivationTokenService.Options(
+    return new TokenSigner.Options(
       applicationPrincipal,
       effectiveRequestTimeout);
   }
@@ -358,7 +340,7 @@ public class RuntimeEnvironment {
   @Produces
   public ApiResource.Options getApiOptions() {
     return new ApiResource.Options(
-      this.configuration.maxNumberOfJitRolesPerSelfApproval.getValue());
+      this.configuration.maxNumberOfEntitlementsPerSelfApproval.getValue());
   }
 
   @Produces
@@ -368,4 +350,39 @@ public class RuntimeEnvironment {
       this.configuration.backendReadTimeout.getValue(),
       this.configuration.backendWriteTimeout.getValue());
   }
+
+  @Produces
+  public RegexJustificationPolicy.Options getRegexJustificationPolicyOptions() {
+    return new RegexJustificationPolicy.Options(
+      this.configuration.justificationHint.getValue(),
+      Pattern.compile(this.configuration.justificationPattern.getValue()));
+  }
+
+  @Produces
+  public PolicyAnalyzer.Options getPolicyAnalyzerOptions() {
+    return new PolicyAnalyzer.Options(
+      this.configuration.scope.getValue());
+  }
+
+  @Produces
+  public IamPolicyCatalog.Options getIamPolicyCatalogOptions() {
+    return new IamPolicyCatalog.Options(
+      this.configuration.availableProjectsQuery.isValid()
+        ? this.configuration.availableProjectsQuery.getValue()
+        : null,
+      this.configuration.activationTimeout.getValue(),
+      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
+      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
+  }
+//
+//  @Produces
+//  public EntitlementCatalog<ProjectRoleId> getCatalog(
+//    PolicyAnalyzer policyAnalyzer,
+//    ResourceManagerClient resourceManagerClient
+//  ) {
+//    return new IamPolicyCatalog(
+//      policyAnalyzer,
+//      resourceManagerClient,
+//      getIamPolicyCatalogOptions());
+//  }
 }

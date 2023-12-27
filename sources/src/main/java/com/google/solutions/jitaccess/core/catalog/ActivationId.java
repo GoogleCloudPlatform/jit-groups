@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,29 +19,32 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
-public class Exceptions {
-  private Exceptions() {}
+import com.google.common.base.Preconditions;
 
-  public static String getFullMessage(Throwable e) {
-    var buffer = new StringBuilder();
+import java.security.SecureRandom;
+import java.util.Base64;
 
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
+/**
+ * Unique ID of an activation.
+ */
+public record ActivationId(String id) {
+  public ActivationId {
+    Preconditions.checkNotNull(id);
+  }
 
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
+  private static final SecureRandom random = new SecureRandom();
 
-    return buffer.toString();
+  public static ActivationId newId(ActivationType type) {
+    var id = new byte[12];
+    random.nextBytes(id);
+
+    return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
+  }
+
+  @Override
+  public String toString() {
+    return this.id;
   }
 }

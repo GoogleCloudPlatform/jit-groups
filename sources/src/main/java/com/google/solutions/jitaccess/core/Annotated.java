@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,27 +21,21 @@
 
 package com.google.solutions.jitaccess.core;
 
-public class Exceptions {
-  private Exceptions() {}
+import com.google.common.base.Preconditions;
 
-  public static String getFullMessage(Throwable e) {
-    var buffer = new StringBuilder();
+import java.util.Collection;
+import java.util.Set;
 
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
-
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
-
-    return buffer.toString();
+/**
+ * @param items collection of items
+ * @param warnings warnings encountered
+ */
+public record Annotated<TColl extends Collection<?>>(
+  TColl items,
+  Set<String> warnings
+) {
+  public Annotated {
+    Preconditions.checkNotNull(items, "items");
+    Preconditions.checkNotNull(warnings, "warnings");
   }
 }

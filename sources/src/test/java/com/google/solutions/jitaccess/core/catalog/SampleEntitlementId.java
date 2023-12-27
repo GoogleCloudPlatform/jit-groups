@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,29 +19,29 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
-public class Exceptions {
-  private Exceptions() {}
+class SampleEntitlementId extends EntitlementId
+{
+  private final String catalog;
+  private final String id;
 
-  public static String getFullMessage(Throwable e) {
-    var buffer = new StringBuilder();
+  public SampleEntitlementId(String catalog, String id) {
+    this.catalog = catalog;
+    this.id = id;
+  }
 
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
+  public SampleEntitlementId(String id) {
+    this("sample", id);
+  }
 
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
+  @Override
+  public String catalog() {
+    return this.catalog;
+  }
 
-    return buffer.toString();
+  @Override
+  public String id() {
+    return this.id;
   }
 }

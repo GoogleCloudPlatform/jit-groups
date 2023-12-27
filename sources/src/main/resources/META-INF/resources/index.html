@@ -95,6 +95,7 @@
                                                 </label>
                                             </th>
                                             <th class="mdl-data-table__cell--non-numeric">Role</th>
+                                            <th class="mdl-data-table__cell--non-numeric">Requirements</th>
                                             <th class="mdl-data-table__cell--non-numeric">Status</th>
                                         </tr>
                                     </thead>
@@ -513,11 +514,16 @@
                 this.id = id;
 
                 this.statusCaptions = {
-                    "ACTIVATED": "Active",
-                    "ACTIVATION_PENDING": "Waiting for approval",
-                    "ELIGIBLE_FOR_JIT": "Activation required",
-                    "ELIGIBLE_FOR_MPA": "Peer approval required",
+                    "ACTIVE": "Active",
+                    "AVAILABLE": "Available",
+                    "ACTIVATION_PENDING": "Waiting for approval"
                 };
+
+                this.activationTypeCaptions = {
+                    "JIT": "-",
+                    "MPA": "Peer approval required",
+                    "NONE": "Unavailable",
+                }
             }
 
             /**
@@ -586,10 +592,11 @@
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
-                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
+                            { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
                         ],
                         true,
-                        item.status !== "ACTIVATED");
+                        item.status !== "ACTIVE");
                 });
             }
 
@@ -692,7 +699,7 @@
                         [
                             { text: item.projectId },
                             { text: item.roleBinding.role },
-                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVATED" ? "activated" : null }
+                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
                         ],
                         false);
                 });
@@ -790,7 +797,7 @@
                         throw "Select one or more roles to actviate";
                     }
 
-                    if (selectedRoles.some(i => i.status === "ELIGIBLE_FOR_MPA")) {
+                    if (selectedRoles.some(i => i.activationType === "MPA")) {
                         //
                         // Multi-party approval: Request and list peers available for this project and role.
                         //

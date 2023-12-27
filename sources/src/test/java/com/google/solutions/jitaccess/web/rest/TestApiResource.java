@@ -22,32 +22,29 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.entitlements.ProjectRole;
-import com.google.solutions.jitaccess.core.entitlements.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
+import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.entitlements.ActivationTokenService;
-import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleActivationService;
-import com.google.solutions.jitaccess.core.entitlements.RoleDiscoveryService;
-import com.google.solutions.jitaccess.core.AnnotatedResult;
-
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import jakarta.ws.rs.core.UriBuilder;
-import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,8 +64,11 @@ public class TestApiResource {
   private static final int DEFAULT_MAX_NUMBER_OF_ROLES = 3;
   private static final String DEFAULT_HINT = "hint";
   private static final Duration DEFAULT_ACTIVATION_DURATION = Duration.ofMinutes(5);
-  private static final ActivationTokenService.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
-    new ActivationTokenService.TokenWithExpiry(SAMPLE_TOKEN, Instant.now().plusSeconds(10));
+  private static final TokenSigner.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
+    new TokenSigner.TokenWithExpiry(
+      SAMPLE_TOKEN,
+      Instant.now(),
+      Instant.now().plusSeconds(10));
 
   private ApiResource resource;
   private NotificationService notificationService;
@@ -79,9 +79,10 @@ public class TestApiResource {
     this.resource.options = new ApiResource.Options(DEFAULT_MAX_NUMBER_OF_ROLES);
     this.resource.logAdapter = new LogAdapter();
     this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
-    this.resource.roleDiscoveryService = Mockito.mock(RoleDiscoveryService.class);
-    this.resource.roleActivationService = Mockito.mock(RoleActivationService.class);
-    this.resource.activationTokenService = Mockito.mock(ActivationTokenService.class);
+    this.resource.iamPolicyCatalog = Mockito.mock(IamPolicyCatalog.class);
+    this.resource.projectRoleActivator = Mockito.mock(ProjectRoleActivator.class);
+    this.resource.justificationPolicy = Mockito.mock(JustificationPolicy.class);
+    this.resource.tokenSigner = Mockito.mock(TokenSigner.class);
 
     this.notificationService = Mockito.mock(NotificationService.class);
     when(this.notificationService.canSendNotifications()).thenReturn(true);
@@ -112,10 +113,11 @@ public class TestApiResource {
 
   @Test
   public void getPolicyReturnsJustificationHint() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.justificationPolicy.hint())
+      .thenReturn(DEFAULT_HINT);
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -132,10 +134,11 @@ public class TestApiResource {
 
   @Test
   public void getPolicyReturnsSignedInUser() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.justificationPolicy.hint())
+      .thenReturn(DEFAULT_HINT);
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -164,7 +167,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -178,7 +181,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -192,8 +195,8 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
-      .thenReturn(Set.of());
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
+      .thenReturn(new TreeSet<>());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -207,8 +210,8 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
-      .thenReturn(Set.of(new ProjectId("project-1"), new ProjectId("project-2")));
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
+      .thenReturn(new TreeSet<>(Set.of(new ProjectId("project-1"), new ProjectId("project-2"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -242,7 +245,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.iamPolicyCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -256,7 +259,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listEligibleUsersForProjectRole(eq(SAMPLE_USER), any(RoleBinding.class)))
+    when(this.resource.iamPolicyCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -270,11 +273,11 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleUsersForProjectRole(
+    when(this.resource.iamPolicyCatalog
+      .listReviewers(
         eq(SAMPLE_USER),
-        argThat(r -> r.role().equals("roles/browser"))))
-      .thenReturn(Set.of());
+        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+      .thenReturn(new TreeSet());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
@@ -288,11 +291,11 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleUsersForProjectRole(
+    when(this.resource.iamPolicyCatalog
+      .listReviewers(
         eq(SAMPLE_USER),
-        argThat(r -> r.role().equals("roles/browser"))))
-      .thenReturn(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com")));
+        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+      .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
@@ -318,7 +321,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService.listAvailableProjects(eq(SAMPLE_USER)))
+    when(this.resource.iamPolicyCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -332,9 +335,9 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenThrow(new AccessDeniedException("mock"));
@@ -349,9 +352,9 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryThrowsIOException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogThrowsIOException_ThenListRolesReturnsError() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
       .thenThrow(new IOException("mock"));
@@ -366,13 +369,13 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+  public void whenCatalogReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new AnnotatedResult<>(
-        List.of(),
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of()),
         Set.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -389,21 +392,25 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenRoleDiscoveryReturnsRoles_ThenListRolesReturnsList() throws Exception {
-    var role1 = new ProjectRole(
-      new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
-    var role2 = new ProjectRole(
-      new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor"),
-      ProjectRole.Status.ELIGIBLE_FOR_JIT);
+  public void whenCatalogReturnsRoles_ThenListRolesReturnsList() throws Exception {
+    var role1 = new Entitlement<ProjectRoleBinding>(
+      new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
+      "ent-1",
+      ActivationType.JIT,
+      Entitlement.Status.AVAILABLE);
+    var role2 = new Entitlement<ProjectRoleBinding>(
+      new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
+      "ent-2",
+      ActivationType.JIT,
+      Entitlement.Status.AVAILABLE);
 
-    when(this.resource.roleDiscoveryService
-      .listEligibleProjectRoles(
+    when(this.resource.iamPolicyCatalog
+      .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new AnnotatedResult<>(
-        List.of(role1, role2),
-        null));
+      .thenReturn(new Annotated<>(
+        new TreeSet<>(Set.of(role1, role2)),
+        Set.of()));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/roles", ApiResource.ProjectRolesResponse.class);
@@ -413,9 +420,9 @@ public class TestApiResource {
     var body = response.getBody();
     assertNotNull(body.roles);
     assertEquals(2, body.roles.size());
-    assertEquals(role1, body.roles.get(0));
-    assertEquals(role2, body.roles.get(1));
-    assertNull(body.warnings);
+    assertEquals(role1.id().roleBinding(), body.roles.get(0).roleBinding);
+    assertEquals(role2.id().roleBinding(), body.roles.get(1).roleBinding);
+    assertTrue(body.warnings.isEmpty());
   }
 
   // -------------------------------------------------------------------------
@@ -508,13 +515,12 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenActivationServiceThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService
-      .activateProjectRoleForSelf(
-        eq(SAMPLE_USER),
-        any(RoleBinding.class),
-        anyString(),
-        any(Duration.class)))
+  public void whenActivatorThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
+    when(this.resource.projectRoleActivator
+      .createJitRequest(any(), any(), any(), any(), any()))
+      .thenCallRealMethod();
+    when(this.resource.projectRoleActivator
+      .activate(any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.SelfActivationRequest();
@@ -536,17 +542,12 @@ public class TestApiResource {
   public void whenRolesContainDuplicates_ThenSelfApproveActivationSucceedsAndIgnoresDuplicates() throws Exception {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
-    when(this.resource.roleActivationService
-      .activateProjectRoleForSelf(
-        eq(SAMPLE_USER),
-        eq(roleBinding),
-        eq("justification"),
-        eq(Duration.ofMinutes(5))))
-      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
-        new ProjectRole(roleBinding, ProjectRole.Status.ACTIVATED),
-        Instant.now(),
-        Instant.now().plusSeconds(60)));
+    when(this.resource.projectRoleActivator
+      .createJitRequest(any(), any(), any(), any(), any()))
+      .thenCallRealMethod();
+    when(this.resource.projectRoleActivator
+      .activate(argThat(r -> r.entitlements().size() == 1)))
+      .then(r -> new Activation<>((ActivationRequest<ProjectRoleBinding>) r.getArguments()[0]));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
@@ -570,7 +571,7 @@ public class TestApiResource {
     assertEquals(1, body.items.size());
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals(roleBinding, body.items.get(0).roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATED, body.items.get(0).status);
+    assertEquals(Entitlement.Status.ACTIVE, body.items.get(0).status);
     assertNotNull(body.items.get(0).activationId);
   }
 
@@ -596,10 +597,9 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsNull_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -618,10 +618,9 @@ public class TestApiResource {
 
   @Test
   public void whenRoleEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -644,10 +643,9 @@ public class TestApiResource {
 
   @Test
   public void whenPeersEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -670,13 +668,12 @@ public class TestApiResource {
 
   @Test
   public void whenTooFewPeersSelected_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-        .thenReturn(new RoleActivationService.Options(
-            DEFAULT_HINT,
-            DEFAULT_JUSTIFICATION_PATTERN,
-            DEFAULT_ACTIVATION_DURATION,
-            2,
-            DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
+        DEFAULT_ACTIVATION_DURATION,
+        2,
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -696,13 +693,12 @@ public class TestApiResource {
 
   @Test
   public void whenTooManyPeersSelected_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-        .thenReturn(new RoleActivationService.Options(
-            DEFAULT_HINT,
-            DEFAULT_JUSTIFICATION_PATTERN,
-            DEFAULT_ACTIVATION_DURATION,
-            DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-            DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
+        DEFAULT_ACTIVATION_DURATION,
+        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
+        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     var request = new ApiResource.ActivationRequest();
     request.role = "roles/mock";
@@ -724,10 +720,9 @@ public class TestApiResource {
 
   @Test
   public void whenJustificationEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -750,10 +745,9 @@ public class TestApiResource {
 
   @Test
   public void whenNotificationsNotConfigured_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
@@ -778,22 +772,22 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenActivationServiceThrowsException_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+  public void whenActivatorThrowsException_ThenRequestActivationReturnsError() throws Exception {
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    when(this.resource.roleActivationService
-      .createActivationRequestForPeer(
+    when(this.resource.projectRoleActivator
+      .createMpaRequest(
         eq(SAMPLE_USER),
-        anySet(),
-        any(RoleBinding.class),
-        anyString(),
-        any(Duration.class)))
+        any(),
+        any(),
+        any(),
+        any(),
+        any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.ActivationRequest();
@@ -814,33 +808,20 @@ public class TestApiResource {
 
   @Test
   public void whenRequestValid_ThenRequestActivationSendsNotification() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+    this.resource.projectRoleActivator = new ProjectRoleActivator(
+      this.resource.iamPolicyCatalog,
+      Mockito.mock(ResourceManagerClient.class),
+      this.resource.justificationPolicy);
 
-    when(this.resource.roleActivationService
-      .createActivationRequestForPeer(
-        eq(SAMPLE_USER),
-        eq(Set.of(SAMPLE_USER_2)),
-        argThat(r -> r.role().equals("roles/mock")),
-        eq("justification"),
-        eq(Duration.ofMinutes(5))))
-      .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
-        SAMPLE_USER,
-        Set.of(SAMPLE_USER_2),
-        roleBinding,
-        "justification",
-        Instant.now(),
-        Instant.now().plusSeconds(60)));
-    when(this.resource.activationTokenService
-      .createToken(any(RoleActivationService.ActivationRequest.class)))
+    when(this.resource.tokenSigner
+      .sign(any(), any()))
       .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
     var request = new ApiResource.ActivationRequest();
@@ -861,37 +842,25 @@ public class TestApiResource {
 
   @Test
   public void whenRequestValid_ThenRequestActivationReturnsSuccessResponse() throws Exception {
-    when(this.resource.roleActivationService.getOptions())
-      .thenReturn(new RoleActivationService.Options(
-        DEFAULT_HINT,
-        DEFAULT_JUSTIFICATION_PATTERN,
+    when(this.resource.iamPolicyCatalog.options())
+      .thenReturn(new IamPolicyCatalog.Options(
+        null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+    this.resource.projectRoleActivator = new ProjectRoleActivator(
+      this.resource.iamPolicyCatalog,
+      Mockito.mock(ResourceManagerClient.class),
+      this.resource.justificationPolicy);
 
-    when(this.resource.roleActivationService
-      .createActivationRequestForPeer(
-        eq(SAMPLE_USER),
-        eq(Set.of(SAMPLE_USER_2)),
-        argThat(r -> r.role().equals("roles/mock")),
-        eq("justification"),
-        eq(Duration.ofMinutes(5))))
-      .thenReturn(RoleActivationService.ActivationRequest.createForTestingOnly(
-        RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.JIT),
-        SAMPLE_USER,
-        Set.of(SAMPLE_USER_2),
-        roleBinding,
-        "justification",
-        Instant.now(),
-        Instant.now().plusSeconds(60)));
-    when(this.resource.activationTokenService
-      .createToken(any(RoleActivationService.ActivationRequest.class)))
+    when(this.resource.tokenSigner
+      .sign(any(), any()))
       .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
+    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
     var request = new ApiResource.ActivationRequest();
-    request.role = "roles/mock";
+    request.role = roleBinding.role();
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
     request.activationTimeout = 5;
@@ -903,7 +872,7 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertEquals(SAMPLE_USER, body.beneficiary);
-    assertEquals(Set.of(SAMPLE_USER_2), body.reviewers);
+    assertIterableEquals(Set.of(SAMPLE_USER_2), body.reviewers);
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
     assertEquals("justification", body.justification);
@@ -911,7 +880,7 @@ public class TestApiResource {
     assertEquals(1, body.items.size());
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals(roleBinding, body.items.get(0).roleBinding);
-    assertEquals(ProjectRole.Status.ACTIVATION_PENDING, body.items.get(0).status);
+    assertEquals(Entitlement.Status.ACTIVATION_PENDING, body.items.get(0).status);
     assertNotNull(body.items.get(0).activationId);
   }
   
@@ -932,7 +901,7 @@ public class TestApiResource {
 
   @Test
   public void whenTokenInvalid_ThenGetActivationRequestReturnsError() throws Exception {
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    when(this.resource.tokenSigner.verify(any(), eq(SAMPLE_TOKEN)))
       .thenThrow(new TokenVerifier.VerificationException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -946,18 +915,25 @@ public class TestApiResource {
     assertNotNull(body.getMessage());
   }
 
+
   @Test
   public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-      "a justification",
-      Instant.now(),
-      Instant.now().plusSeconds(60));
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenReturn(request);
 
     var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
@@ -973,16 +949,22 @@ public class TestApiResource {
 
   @Test
   public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-      "a justification",
-      Instant.now(),
-      Instant.now().plusSeconds(60));
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenReturn(request);
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -993,17 +975,17 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(request.beneficiary, body.beneficiary);
-    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
+    assertEquals(request.requestingUser(), body.beneficiary);
+    assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
-    assertEquals(request.justification, body.justification);
+    assertEquals(request.justification(), body.justification);
     assertEquals(1, body.items.size());
-    assertEquals(request.id.toString(), body.items.get(0).activationId);
+    assertEquals(request.id().toString(), body.items.get(0).activationId);
     assertEquals("project-1", body.items.get(0).projectId);
     assertEquals("ACTIVATION_PENDING", body.items.get(0).status.name());
-    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
-    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
+    assertEquals(request.startTime().getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime()  .getEpochSecond(), body.items.get(0).endTime);
   }
 
   // -------------------------------------------------------------------------
@@ -1023,7 +1005,10 @@ public class TestApiResource {
 
   @Test
   public void whenTokenInvalid_ThenApproveActivationRequestReturnsError() throws Exception {
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenThrow(new TokenVerifier.VerificationException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -1038,20 +1023,27 @@ public class TestApiResource {
   }
 
   @Test
-  public void whenActivationServiceThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-      "a justification",
-      Instant.now(),
-      Instant.now().plusSeconds(60));
+  public void whenActivatorThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
 
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenReturn(request);
-    when(this.resource.roleActivationService
-      .activateProjectRoleForPeer(
+
+    when(this.resource.projectRoleActivator
+      .approve(
         eq(SAMPLE_USER),
         eq(request)))
       .thenThrow(new AccessDeniedException("mock"));
@@ -1070,25 +1062,29 @@ public class TestApiResource {
 
   @Test
   public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-      "a justification",
-      Instant.now(),
-      Instant.now().plusSeconds(60));
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenReturn(request);
-    when(this.resource.roleActivationService
-      .activateProjectRoleForPeer(
+
+    when(this.resource.projectRoleActivator
+      .approve(
         eq(SAMPLE_USER),
         eq(request)))
-      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-        request.id,
-        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
-        request.startTime,
-        request.endTime));
+      .thenReturn(new Activation<>(request));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .post(
@@ -1103,25 +1099,29 @@ public class TestApiResource {
 
   @Test
   public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
-    var request = RoleActivationService.ActivationRequest.createForTestingOnly(
-      RoleActivationService.ActivationId.newId(RoleActivationService.ActivationType.MPA),
-      SAMPLE_USER,
-      Set.of(SAMPLE_USER_2),
-      new RoleBinding(new ProjectId("project-1"), "roles/mock"),
-      "a justification",
-      Instant.now(),
-      Instant.now().plusSeconds(60));
-    when(this.resource.activationTokenService.verifyToken(eq(SAMPLE_TOKEN)))
+    var request = new ProjectRoleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(ResourceManagerClient.class),
+      Mockito.mock(JustificationPolicy.class))
+      .createMpaRequest(
+        SAMPLE_USER,
+        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(SAMPLE_USER_2),
+        "a justification",
+        Instant.now(),
+        Duration.ofSeconds(60));
+
+    when(this.resource.tokenSigner
+      .verify(
+        any(),
+        eq(SAMPLE_TOKEN)))
       .thenReturn(request);
-    when(this.resource.roleActivationService
-      .activateProjectRoleForPeer(
+
+    when(this.resource.projectRoleActivator
+      .approve(
         eq(SAMPLE_USER_2),
         eq(request)))
-      .thenReturn(RoleActivationService.Activation.createForTestingOnly(
-        request.id,
-        new ProjectRole(request.roleBinding, ProjectRole.Status.ACTIVATED),
-        request.startTime,
-        request.endTime));
+      .thenReturn(new Activation<>(request));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER_2)
       .post(
@@ -1131,16 +1131,16 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(request.beneficiary, body.beneficiary);
-    assertEquals(Set.of(SAMPLE_USER_2), request.reviewers);
+    assertEquals(request.requestingUser(), body.beneficiary);
+    assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
     assertFalse(body.isBeneficiary);
     assertTrue(body.isReviewer);
-    assertEquals(request.justification, body.justification);
+    assertEquals(request.justification(), body.justification);
     assertEquals(1, body.items.size());
-    assertEquals(request.id.toString(), body.items.get(0).activationId);
+    assertEquals(request.id().toString(), body.items.get(0).activationId);
     assertEquals("project-1", body.items.get(0).projectId);
-    assertEquals("ACTIVATED", body.items.get(0).status.name());
-    assertEquals(request.startTime.getEpochSecond(), body.items.get(0).startTime);
-    assertEquals(request.endTime.getEpochSecond(), body.items.get(0).endTime);
+    assertEquals("ACTIVE", body.items.get(0).status.name());
+    assertEquals(request.startTime().getEpochSecond(), body.items.get(0).startTime);
+    assertEquals(request.endTime().getEpochSecond(), body.items.get(0).endTime);
   }
 }

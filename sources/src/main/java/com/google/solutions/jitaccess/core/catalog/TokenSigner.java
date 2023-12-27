@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.entitlements;
+package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
@@ -33,33 +33,18 @@ import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Creates and verifies activation tokens.
- *
- * An activation token is a signed activation request that is passed to reviewers.
- * It contains all information necessary to review (and approve) the activation
- * request.
- *
- * We must ensure that the information that reviewers see (and base their approval
- * on) is authentic. Therefore, activation tokens are signed, using the service account
- * as signing authority.
- *
- * Although activation tokens are JWTs, and might look like credentials, they aren't
- * credentials: They don't grant access to any information, and are insufficient to
- * approve an activation request.
+ * Signs JWTs using a service account's Google-managed service account key.
  */
 @ApplicationScoped
-public class ActivationTokenService {
+public class TokenSigner {
   private final IamCredentialsClient iamCredentialsClient;
   private final Options options;
   private final TokenVerifier tokenVerifier;
 
-  public ActivationTokenService(
+  public TokenSigner(
     IamCredentialsClient iamCredentialsClient,
     Options options
   ) {
-    Preconditions.checkNotNull(iamCredentialsClient, "iamCredentialsAdapter");
-    Preconditions.checkNotNull(options, "options");
-
     this.options = options;
     this.iamCredentialsClient = iamCredentialsClient;
 
@@ -74,28 +59,43 @@ public class ActivationTokenService {
       .build();
   }
 
-  public TokenWithExpiry createToken(RoleActivationService.ActivationRequest request) throws AccessException, IOException {
-    Preconditions.checkNotNull(request, "request");
-    Preconditions.checkArgument(request.startTime.isBefore(Instant.now().plusSeconds(10)));
-    Preconditions.checkArgument(request.startTime.isAfter(Instant.now().minusSeconds(10)));
+  /**
+   * Create a signed JWT for a given payload.
+   */
+  public <T> TokenWithExpiry sign(
+    JsonWebTokenConverter<T> converter,
+    T payload
+  ) throws AccessException, IOException {
+
+    Preconditions.checkNotNull(converter, "converter");
+    Preconditions.checkNotNull(payload, "payload");
 
     //
     // Add obligatory claims.
     //
-    var expiryTime = request.startTime.plus(this.options.tokenValidity);
-    var jwtPayload = request.toJsonWebTokenPayload()
+    var issueTime = Instant.now();
+    var expiryTime = issueTime.plus(this.options.tokenValidity);
+    var jwtPayload =  converter.convert(payload)
       .setAudience(this.options.serviceAccount.email)
       .setIssuer(this.options.serviceAccount.email)
+      .setIssuedAtTimeSeconds(issueTime.getEpochSecond())
       .setExpirationTimeSeconds(expiryTime.getEpochSecond());
 
     return new TokenWithExpiry(
       this.iamCredentialsClient.signJwt(this.options.serviceAccount, jwtPayload),
+      issueTime,
       expiryTime);
   }
 
-  public RoleActivationService.ActivationRequest verifyToken(
+  /**
+   * Decode and verify a JWT.
+   */
+  public <T> T verify(
+    JsonWebTokenConverter<T> converter,
     String token
   ) throws TokenVerifier.VerificationException {
+
+    Preconditions.checkNotNull(converter, "converter");
     Preconditions.checkNotNull(token, "token");
 
     //
@@ -110,34 +110,28 @@ public class ActivationTokenService {
       throw new TokenVerifier.VerificationException("The token uses the wrong algorithm");
     }
 
-    return RoleActivationService.ActivationRequest.fromJsonWebTokenPayload(decodedToken.getPayload());
-  }
-
-  public Options getOptions() {
-    return options;
+    return converter.convert(decodedToken.getPayload());
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  public static class TokenWithExpiry {
-    public final String token;
-    public final Instant expiryTime;
-
-    public TokenWithExpiry(String token, Instant expiryTime) {
-      this.token = token;
-      this.expiryTime = expiryTime;
+  public record TokenWithExpiry(
+    String token,
+    Instant issueTime,
+    Instant expiryTime) {
+    public TokenWithExpiry {
+      Preconditions.checkNotNull(token, "token");
+      Preconditions.checkArgument(expiryTime.isAfter(issueTime));
+      Preconditions.checkArgument(expiryTime.isAfter(Instant.now()));
     }
   }
 
-  public static class Options {
-    public final UserId serviceAccount;
-    public final Duration tokenValidity;
-
-    public Options(UserId serviceAccount, Duration tokenValidity) {
-      this.serviceAccount = serviceAccount;
-      this.tokenValidity = tokenValidity;
+  public record Options(UserId serviceAccount, Duration tokenValidity) {
+    public Options {
+      Preconditions.checkNotNull(serviceAccount);
+      Preconditions.checkArgument(!tokenValidity.isNegative());
     }
   }
 }
