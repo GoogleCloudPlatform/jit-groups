@@ -612,23 +612,49 @@ public class TestPolicyAnalyzer {
       assetAdapter,
       new PolicyAnalyzer.Options("organizations/0"));
 
-    var entitlements = service.findEntitlements(
+    // All types -> only the JIT-eligible binding is retained.
+    var allEntitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
       EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
-    assertNotNull(entitlements.warnings());
-    assertEquals(0, entitlements.warnings().size());
+    assertNotNull(allEntitlements.warnings());
+    assertEquals(0, allEntitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(allEntitlements.items());
+    assertEquals(1, allEntitlements.items().size());
 
-    // Only the JIT-eligible binding is retained.
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = allEntitlements.items().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    // JIT only -> MPA binding is ignored.
+    var jitEntitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    assertEquals(1, jitEntitlements.items().size());
+    entitlement = jitEntitlements.items().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    // MPA only -> JIT binding is ignored.
+    var mpaEntitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.MPA),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    assertEquals(1, mpaEntitlements.items().size());
+    entitlement = mpaEntitlements.items().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(ActivationType.MPA, entitlement.activationType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
   }
 
