@@ -192,6 +192,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.JIT)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(new TreeSet<>(), Set.of()));
 
@@ -223,9 +224,10 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.JIT)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
-        new TreeSet<>(Set.of(mpaEntitlement)),
+        new TreeSet<>(Set.of()),
         Set.of()));
 
     assertThrows(
@@ -254,6 +256,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(new TreeSet<>(), Set.of()));
 
@@ -283,6 +286,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of(mpaEntitlement)),
@@ -320,9 +324,10 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
-        new TreeSet<>(Set.of(jitEntitlement)),
+        new TreeSet<>(Set.of()),
         Set.of()));
 
     var request = Mockito.mock(JitActivationRequest.class);
@@ -355,6 +360,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.JIT)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of(jitEntitlement)),
@@ -392,6 +398,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_APPROVIING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of()),
@@ -428,6 +435,7 @@ public class TestIamPolicyCatalog {
       .findEntitlements(
         eq(SAMPLE_APPROVIING_USER),
         eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of(mpaEntitlement)),
@@ -513,6 +521,7 @@ public class TestIamPolicyCatalog {
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
+      eq(EnumSet.of(ActivationType.JIT, ActivationType.MPA)),
       any()))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of()),
@@ -534,6 +543,7 @@ public class TestIamPolicyCatalog {
     verify(policyAnalyzer, times(1)).findEntitlements(
       SAMPLE_REQUESTING_USER,
       SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 
@@ -547,6 +557,7 @@ public class TestIamPolicyCatalog {
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
+      eq(EnumSet.of(ActivationType.MPA)),
       any()))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of()),
@@ -574,12 +585,13 @@ public class TestIamPolicyCatalog {
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
+      eq(EnumSet.of(ActivationType.MPA)),
       any()))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of(new Entitlement<>(
-          role,
+          new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/different-role")),
           "-",
-          ActivationType.JIT,
+          ActivationType.MPA,
           Entitlement.Status.AVAILABLE))),
         Set.of()));
 
@@ -605,6 +617,7 @@ public class TestIamPolicyCatalog {
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
+      eq(EnumSet.of(ActivationType.MPA)),
       any()))
       .thenReturn(new Annotated<>(
         new TreeSet<>(Set.of(new Entitlement<>(

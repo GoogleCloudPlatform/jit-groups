@@ -109,11 +109,14 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
       .findEntitlements(
         user,
         projectId,
+        EnumSet.of(activationType),
         EnumSet.of(Entitlement.Status.AVAILABLE))
       .items()
       .stream()
-      .filter(ent -> ent.activationType() == activationType)
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
+
+    assert userEntitlements.values().stream().allMatch(e -> e.activationType() == activationType);
+    assert userEntitlements.values().stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
 
     for (var requestedEntitlement : entitlements) {
       var grantedEntitlement = userEntitlements.get(requestedEntitlement);
@@ -168,6 +171,7 @@ public class IamPolicyCatalog extends ProjectRoleCatalog {
     return this.policyAnalyzer.findEntitlements(
       user,
       projectId,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 

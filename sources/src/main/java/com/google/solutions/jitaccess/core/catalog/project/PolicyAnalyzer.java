@@ -152,6 +152,7 @@ public class PolicyAnalyzer {
   public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
     UserId user,
     ProjectId projectId,
+    EnumSet<ActivationType> typesToInclude,
     EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
@@ -191,34 +192,46 @@ public class PolicyAnalyzer {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> jitEligible = findRoleBindings(
-        analysisResult,
-        condition -> JitConstraints.isJitAccessConstraint(condition),
-        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
-        .stream()
-        .map(binding -> new Entitlement<ProjectRoleBinding>(
-          new ProjectRoleBinding(binding),
-          binding.role(),
-          ActivationType.JIT,
-          Entitlement.Status.AVAILABLE))
-        .collect(Collectors.toSet());
+      Set<Entitlement<ProjectRoleBinding>> jitEligible;
+      if (typesToInclude.contains(ActivationType.JIT)) {
+        jitEligible = findRoleBindings(
+          analysisResult,
+          condition -> JitConstraints.isJitAccessConstraint(condition),
+          evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+          .stream()
+          .map(binding -> new Entitlement<ProjectRoleBinding>(
+            new ProjectRoleBinding(binding),
+            binding.role(),
+            ActivationType.JIT,
+            Entitlement.Status.AVAILABLE))
+          .collect(Collectors.toSet());
+      }
+      else {
+        jitEligible = Set.of();
+      }
 
       //
       // Find all MPA-eligible role bindings. The bindings are
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> mpaEligible = findRoleBindings(
-        analysisResult,
-        condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
-        evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
-        .stream()
-        .map(binding -> new Entitlement<ProjectRoleBinding>(
-          new ProjectRoleBinding(binding),
-          binding.role(),
-          ActivationType.MPA,
-          Entitlement.Status.AVAILABLE))
-        .collect(Collectors.toSet());
+      Set<Entitlement<ProjectRoleBinding>> mpaEligible;
+      if (typesToInclude.contains(ActivationType.MPA)) {
+        mpaEligible = findRoleBindings(
+          analysisResult,
+          condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+          evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
+          .stream()
+          .map(binding -> new Entitlement<ProjectRoleBinding>(
+            new ProjectRoleBinding(binding),
+            binding.role(),
+            ActivationType.MPA,
+            Entitlement.Status.AVAILABLE))
+          .collect(Collectors.toSet());
+      }
+      else {
+        mpaEligible = Set.of();
+      }
 
       //
       // Determine effective set of eligible roles. If a role is both JIT- and
