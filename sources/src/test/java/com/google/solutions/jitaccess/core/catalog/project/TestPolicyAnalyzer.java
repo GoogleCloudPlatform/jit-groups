@@ -248,6 +248,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -279,6 +280,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -313,6 +315,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -350,6 +353,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -401,6 +405,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -445,6 +450,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -496,6 +502,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -549,6 +556,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -607,6 +615,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -672,6 +681,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -716,6 +726,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -772,6 +783,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -845,6 +857,7 @@ public class TestPolicyAnalyzer {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
