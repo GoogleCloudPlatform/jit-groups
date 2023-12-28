@@ -424,4 +424,42 @@ public class TestResourceManagerClient {
     assertNotNull(heldPermissions);
     assertEquals(1, heldPermissions.size());
   }
+
+  //---------------------------------------------------------------------
+  // getAncestry.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenGetAncestryThrowsException() {
+    var adapter = new ResourceManagerClient(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID));
+  }
+
+  @Test
+  public void whenCallerLacksPermission_ThenGetAncestryThrowsException() {
+    var adapter = new ResourceManagerClient(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID));
+  }
+
+  @Test
+  public void whenAuthorized_ThenGetAncestrySucceeds() throws Exception {
+    var adapter = new ResourceManagerClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var ancestry = adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID);
+
+    assertTrue(ancestry.size() > 1);
+    assertEquals(IntegrationTestEnvironment.PROJECT_ID, ancestry.stream().findFirst().get());
+  }
 }
