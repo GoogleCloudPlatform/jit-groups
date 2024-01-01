@@ -85,6 +85,11 @@
       <version>v1-rev20230804-2.0.0</version>
     </dependency>
     <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-admin-directory</artifactId>
+      <version>directory_v1-rev118-1.25.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.10.1</version>

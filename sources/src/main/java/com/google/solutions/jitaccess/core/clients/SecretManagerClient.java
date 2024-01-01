@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 
 /**
- * Adapter for the Secrets Manager API.
+ * Client for the Secrets Manager API.
  */
 @ApplicationScoped
 public class SecretManagerClient {
@@ -101,9 +101,11 @@ public class SecretManagerClient {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
-          throw new AccessDeniedException(String.format("Access to secret '%s' was denied: %s", secretPath, e.getMessage()), e);
+          throw new AccessDeniedException(
+            String.format("Access to secret '%s' was denied", secretPath), e);
         case 404:
-          throw new ResourceNotFoundException(String.format("The secret '%s' does not exist", secretPath), e);
+          throw new ResourceNotFoundException(
+            String.format("The secret '%s' does not exist", secretPath), e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
