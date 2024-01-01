@@ -46,20 +46,20 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
-  private final PolicyAnalyzer policyAnalyzer;
+  private final PolicyAnalyzerSearcher searcher;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
   public PolicyAnalyzerCatalog(
-    PolicyAnalyzer policyAnalyzer,
+    PolicyAnalyzerSearcher searcher,
     ResourceManagerClient resourceManagerClient,
     Options options
   ) {
-    Preconditions.checkNotNull(policyAnalyzer, "assetInventoryClient");
+    Preconditions.checkNotNull(searcher, "assetInventoryClient");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     Preconditions.checkNotNull(options, "options");
 
-    this.policyAnalyzer = policyAnalyzer;
+    this.searcher = searcher;
     this.resourceManagerClient = resourceManagerClient;
     this.options = options;
   }
@@ -105,7 +105,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
     // NB. It doesn't matter whether the user has already
     // activated the role.
     //
-    var userEntitlements = this.policyAnalyzer
+    var userEntitlements = this.searcher
       .findEntitlements(
         user,
         projectId,
@@ -148,7 +148,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.policyAnalyzer.findProjectsWithEntitlements(user);
+      return this.searcher.findProjectsWithEntitlements(user);
     }
     else {
       //
@@ -168,7 +168,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
-    return this.policyAnalyzer.findEntitlements(
+    return this.searcher.findEntitlements(
       user,
       projectId,
       EnumSet.of(ActivationType.JIT, ActivationType.MPA),
@@ -192,7 +192,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
       ActivationType.MPA,
       List.of(entitlement));
 
-    return this.policyAnalyzer
+    return this.searcher
       .findApproversForEntitlement(entitlement.roleBinding())
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user

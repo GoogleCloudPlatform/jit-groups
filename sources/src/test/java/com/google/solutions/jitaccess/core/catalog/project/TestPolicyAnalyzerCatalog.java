@@ -51,7 +51,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenDurationExceedsMax_ThenValidateRequestThrowsException() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -71,7 +71,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenDurationBelowMin_ThenValidateRequestThrowsException() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -91,7 +91,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenReviewersMissing_ThenValidateRequestThrowsException() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -112,7 +112,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenNumberOfReviewersExceedsMax_ThenValidateRequestThrowsException() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -136,7 +136,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenNumberOfReviewersBelowMin_ThenValidateRequestThrowsException() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -158,7 +158,7 @@ public class TestPolicyAnalyzerCatalog {
   @Test
   public void whenNumberOfReviewersOk_ThenValidateRequestReturns() throws Exception {
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       Mockito.mock(ResourceManagerClient.class),
       new PolicyAnalyzerCatalog.Options(
         null,
@@ -181,7 +181,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenEntitlementNotFound_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -207,7 +207,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenActivationTypeMismatches_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -245,7 +245,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserNotAllowedToActivateEntitlement_ThenListReviewersThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -269,7 +269,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserAllowedToActivateEntitlement_ThenListReviewersExcludesUser() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -307,7 +307,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserNotAllowedToActivate_ThenVerifyUserCanRequestThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -343,7 +343,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserAllowedToActivate_ThenVerifyUserCanRequestReturns() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -381,7 +381,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserNotAllowedToActivate_ThenVerifyUserCanApproveThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -418,7 +418,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserAllowedToActivate_ThenVerifyUserCanApproveReturns() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
 
     var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
@@ -465,7 +465,7 @@ public class TestPolicyAnalyzerCatalog {
         new ProjectId("project-1"))));
 
     var catalog = new PolicyAnalyzerCatalog(
-      Mockito.mock(PolicyAnalyzer.class),
+      Mockito.mock(PolicyAnalyzerSearcher.class),
       resourceManager,
       new PolicyAnalyzerCatalog.Options(
         "query",
@@ -485,7 +485,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenProjectQueryNotProvided_thenListProjectsPerformsPolicySearch() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
     when(policyAnalyzer.findProjectsWithEntitlements(eq(SAMPLE_REQUESTING_USER)))
       .thenReturn(new TreeSet<>(Set.of(
         new ProjectId("project-2"),
@@ -517,7 +517,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void listEntitlementsReturnsAvailableAndActiveEntitlements() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
@@ -553,7 +553,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserNotAllowedToActivateRole_ThenListReviewersThrowsException() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
@@ -580,7 +580,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserAllowedToActivateRoleWithoutMpa_ThenListReviewersReturnsList() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
     var role = new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
@@ -612,7 +612,7 @@ public class TestPolicyAnalyzerCatalog {
 
   @Test
   public void whenUserAllowedToActivateRole_ThenListReviewersReturnsList() throws Exception {
-    var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerSearcher.class);
     var role = new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
