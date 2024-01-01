@@ -21,11 +21,89 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.cloudasset.v1.CloudAsset;
+import com.google.api.services.cloudasset.v1.model.PolicyInfo;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.List;
 
 /**
  * Adapter for the Asset Inventory API.
  */
 @ApplicationScoped
 public class AssetInventoryClient {
+  public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+  private final GoogleCredentials credentials;
+  protected final HttpTransport.Options httpOptions;
+
+  public AssetInventoryClient(
+    GoogleCredentials credentials,
+    HttpTransport.Options httpOptions
+  ) {
+    Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
+
+    this.credentials = credentials;
+    this.httpOptions = httpOptions;
+  }
+
+  protected CloudAsset createClient() throws IOException {
+    try {
+      return new CloudAsset.Builder(
+        HttpTransport.newTransport(),
+        new GsonFactory(),
+        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
+        .setApplicationName(ApplicationVersion.USER_AGENT)
+        .build();
+    }
+    catch (GeneralSecurityException e) {
+      throw new IOException("Creating a CloudAsset client failed", e);
+    }
+  }
+
+  /**
+   * Get effective set of IAM policies for a project.
+   */
+  public List<PolicyInfo> getEffectiveIamPolicies(
+    String scope,
+    ProjectId projectId
+  ) throws AccessException, IOException {
+    Preconditions.checkNotNull(scope, "scope");
+    Preconditions.checkNotNull(projectId, "projectId");
+
+    try
+    {
+      var results = createClient()
+        .effectiveIamPolicies()
+        .batchGet(scope)
+        .setNames(List.of(projectId.getFullResourceName()))
+        .execute()
+        .getPolicyResults();
+
+      return results.isEmpty()
+        ? List.of()
+        : results.get(0).getPolicies();
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(
+            String.format("Denied access to scope '%s'", scope), e);
+        case 404:
+          throw new ResourceNotFoundException(
+            String.format("The project '%s' does not exist", projectId), e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
 }

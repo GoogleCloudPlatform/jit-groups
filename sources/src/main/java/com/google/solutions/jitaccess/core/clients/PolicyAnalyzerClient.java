@@ -22,8 +22,6 @@
 package com.google.solutions.jitaccess.core.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
@@ -31,7 +29,6 @@ import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -40,38 +37,16 @@ import java.util.Optional;
 /**
  * Adapter for the Policy Analyzer API.
  *
- * NB. This API is subject to quotas that depend on the presence of
- * an SCC subscription.
+ * NB. This subset of the Asset Inventory API is subject to quotas that
+ * depend on the presence of an SCC subscription.
  */
 @ApplicationScoped
-public class PolicyAnalyzerClient {
-  public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
-
+public class PolicyAnalyzerClient extends AssetInventoryClient {
   public PolicyAnalyzerClient(
     GoogleCredentials credentials,
     HttpTransport.Options httpOptions
   ) {
-    Preconditions.checkNotNull(credentials, "credentials");
-    Preconditions.checkNotNull(httpOptions, "httpOptions");
-
-    this.credentials = credentials;
-    this.httpOptions = httpOptions;
-  }
-
-  private CloudAsset createClient() throws IOException {
-    try {
-      return new CloudAsset.Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a CloudAsset client failed", e);
-    }
+    super(credentials, httpOptions);
   }
 
   /**
@@ -127,7 +102,7 @@ public class PolicyAnalyzerClient {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
-          throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
+          throw new AccessDeniedException(String.format("Denied access to scope '%s'", scope), e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }

@@ -183,6 +183,7 @@ public class RuntimeEnvironment {
             Stream.of(
                 ResourceManagerClient.OAUTH_SCOPE,
                 PolicyAnalyzerClient.OAUTH_SCOPE,
+                AssetInventoryClient.OAUTH_SCOPE,
                 IamCredentialsClient.OAUTH_SCOPE,
                 SecretManagerClient.OAUTH_SCOPE,
                 DirectoryGroupsClient.OAUTH_SCOPE)

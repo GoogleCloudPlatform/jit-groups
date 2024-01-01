@@ -39,7 +39,6 @@ public class TestPolicyAnalyzerClient {
   // -------------------------------------------------------------------------
 
   @Test
-
   public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
