@@ -27,6 +27,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -40,7 +41,7 @@ import java.util.Optional;
  * NB. This subset of the Asset Inventory API is subject to quotas that
  * depend on the presence of an SCC subscription.
  */
-@ApplicationScoped
+@Singleton
 public class PolicyAnalyzerClient extends AssetInventoryClient {
   public PolicyAnalyzerClient(
     GoogleCredentials credentials,

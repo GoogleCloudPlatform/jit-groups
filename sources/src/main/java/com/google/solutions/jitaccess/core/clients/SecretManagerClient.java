@@ -28,6 +28,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -35,7 +36,7 @@ import java.security.GeneralSecurityException;
 /**
  * Client for the Secrets Manager API.
  */
-@ApplicationScoped
+@Singleton
 public class SecretManagerClient {
   private static final String SECRET_CHARSET = "UTF-8";
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";

@@ -25,13 +25,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.UserId;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.util.regex.Pattern;
 
 /**
  * Policy that checks justifications against a Regex pattern.
  */
-@ApplicationScoped
+@Singleton
 public class RegexJustificationPolicy implements JustificationPolicy {
   private final Options options;
 
