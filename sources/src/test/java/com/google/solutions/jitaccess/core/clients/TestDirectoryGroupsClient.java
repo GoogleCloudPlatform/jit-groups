@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestDirectoryClient {
+public class TestDirectoryGroupsClient {
 
   //---------------------------------------------------------------------
   // listDirectGroupMemberships.
@@ -35,7 +35,7 @@ public class TestDirectoryClient {
 
   @Test
   public void whenUnauthenticated_ThenListDirectGroupMembershipsThrowsException() {
-    var adapter = new DirectoryClient(
+    var adapter = new DirectoryGroupsClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -46,7 +46,7 @@ public class TestDirectoryClient {
 
   @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembershipsThrowsException() {
-    var adapter = new DirectoryClient(
+    var adapter = new DirectoryGroupsClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 

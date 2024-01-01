@@ -28,7 +28,6 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.Key;
-import com.google.api.services.admin.directory.Directory;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -44,11 +43,12 @@ import java.util.Collection;
  * Client for the Directory API.
  */
 @ApplicationScoped
-public class DirectoryClient {
+public class DirectoryGroupsClient {
+  public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/admin.directory.group.readonly";
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
-  public DirectoryClient(
+  public DirectoryGroupsClient(
     GoogleCredentials credentials,
     HttpTransport.Options httpOptions
   ) {

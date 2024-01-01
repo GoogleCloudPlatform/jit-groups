@@ -184,7 +184,8 @@ public class RuntimeEnvironment {
                 ResourceManagerClient.OAUTH_SCOPE,
                 AssetInventoryClient.OAUTH_SCOPE,
                 IamCredentialsClient.OAUTH_SCOPE,
-                SecretManagerClient.OAUTH_SCOPE)
+                SecretManagerClient.OAUTH_SCOPE,
+                DirectoryGroupsClient.OAUTH_SCOPE)
               .distinct()
               .collect(Collectors.toList()),
             0);
