@@ -45,6 +45,7 @@ import com.google.solutions.jitaccess.core.notifications.PubSubNotificationServi
 import com.google.solutions.jitaccess.web.rest.ApiResource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
+import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 
@@ -58,7 +59,7 @@ import java.util.stream.Stream;
 /**
  * Provides access to runtime configuration (AppEngine, local). To be injected using CDI.
  */
-@ApplicationScoped
+@Singleton
 public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
@@ -182,6 +183,7 @@ public class RuntimeEnvironment {
             null,
             Stream.of(
                 ResourceManagerClient.OAUTH_SCOPE,
+                PolicyAnalyzerClient.OAUTH_SCOPE,
                 AssetInventoryClient.OAUTH_SCOPE,
                 IamCredentialsClient.OAUTH_SCOPE,
                 SecretManagerClient.OAUTH_SCOPE,
@@ -281,7 +283,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  @ApplicationScoped
+  @Singleton
   public NotificationService getPubSubNotificationService(
     PubSubClient pubSubClient
   ) {
@@ -297,7 +299,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  @ApplicationScoped
+  @Singleton
   public NotificationService getEmailNotificationService(
     SecretManagerClient secretManagerClient
   ) {

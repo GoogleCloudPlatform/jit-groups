@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -42,8 +43,7 @@ import java.util.stream.Collectors;
 /**
  * Adapter for Resource Manager API.
  */
-@SuppressWarnings("SwitchStatementWithTooFewBranches")
-@ApplicationScoped
+@Singleton
 public class ResourceManagerClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;

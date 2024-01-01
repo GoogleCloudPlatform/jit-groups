@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
+import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -101,7 +101,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisResultEmpty_ThenFindProjectsWithEntitlementsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -124,7 +124,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisResultContainsAcsWithUnrecognizedConditions_ThenFindProjectsWithEntitlementsReturnsEmptyList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
@@ -156,7 +156,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsPermanentBinding_ThenFindProjectsWithEntitlementsReturnsProjectId()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
@@ -186,7 +186,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsEligibleBindings_ThenFindProjectsWithEntitlementsReturnsProjectIds()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     when(assetAdapter
@@ -230,7 +230,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisResultEmpty_ThenFindEntitlementsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -260,7 +260,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisResultContainsEmptyAcl_ThenFindEntitlementsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -292,7 +292,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsNoEligibleRoles_ThenFindEntitlementsReturnsEmptyList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -327,7 +327,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsJitEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -372,7 +372,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsDuplicateJitEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -424,7 +424,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsMpaEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -469,7 +469,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -522,7 +522,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenFindEntitlementsReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
@@ -581,7 +581,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenFindEntitlementsReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
@@ -660,7 +660,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenAnalysisContainsActivatedBinding_ThenFindEntitlementsReturnsMergedList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var eligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
@@ -726,7 +726,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsEligibleBindingWithExtraCondition_ThenBindingIsIgnored()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
       .findAccessibleResourcesByUser(
@@ -765,7 +765,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAnalysisContainsInheritedEligibleBinding_ThenFindEntitlementsReturnsList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var parentFolderAcl = new GoogleCloudAssetV1AccessControlList()
       .setResources(List.of(new GoogleCloudAssetV1Resource()
@@ -837,7 +837,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenStatusSetToActiveOnly_ThenFindEntitlementsOnlyReturnsActivatedBindings() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
@@ -905,7 +905,7 @@ public class TestPolicyAnalyzer {
   @Test
   public void whenAllUsersJitEligible_ThenFindApproversForEntitlementReturnsEmptyList()
     throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var mpaBindingResult = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
@@ -939,7 +939,7 @@ public class TestPolicyAnalyzer {
 
   @Test
   public void whenUsersMpaEligible_ThenFindApproversForEntitlementReturnsList() throws Exception {
-    var assetAdapter = Mockito.mock(AssetInventoryClient.class);
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
     var resourceManagerAdapter = Mockito.mock(ResourceManagerClient.class);
 
     var jitBindingResult = createConditionalIamPolicyAnalysisResult(

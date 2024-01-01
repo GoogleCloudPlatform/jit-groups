@@ -33,12 +33,13 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
-@ApplicationScoped
+@Singleton
 public class PubSubClient {
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;

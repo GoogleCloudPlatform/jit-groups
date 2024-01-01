@@ -31,8 +31,9 @@ import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
+import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,19 +44,19 @@ import java.util.stream.Stream;
 /**
  * Helper class for performing Policy Analyzer searches.
  */
-@ApplicationScoped
+@Singleton
 public class PolicyAnalyzer {
   private final Options options;
-  private final AssetInventoryClient assetInventoryClient;
+  private final PolicyAnalyzerClient policyAnalyzerClient;
 
   public PolicyAnalyzer(
-    AssetInventoryClient assetInventoryClient,
+    PolicyAnalyzerClient policyAnalyzerClient,
     Options options
   ) {
-    Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
+    Preconditions.checkNotNull(policyAnalyzerClient, "assetInventoryClient");
     Preconditions.checkNotNull(options, "options");
 
-    this.assetInventoryClient = assetInventoryClient;
+    this.policyAnalyzerClient = policyAnalyzerClient;
     this.options = options;
   }
 
@@ -121,7 +122,7 @@ public class PolicyAnalyzer {
     // - only applies to projects, and has no meaning on descendant resources
     // - represents the lowest level of access to a project.
     //
-    var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
+    var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
       this.options.scope,
       user,
       Optional.of("resourcemanager.projects.get"),
@@ -172,7 +173,7 @@ public class PolicyAnalyzer {
     // admin role.
     //
 
-    var analysisResult = this.assetInventoryClient.findAccessibleResourcesByUser(
+    var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
       this.options.scope,
       user,
       Optional.empty(),
@@ -309,7 +310,7 @@ public class PolicyAnalyzer {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
 
-    var analysisResult = this.assetInventoryClient.findPermissionedPrincipalsByResource(
+    var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
       this.options.scope,
       roleBinding.fullResourceName(),
       roleBinding.role());

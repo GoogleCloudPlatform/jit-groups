@@ -34,6 +34,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -42,7 +43,7 @@ import java.util.Collection;
 /**
  * Client for the Directory API.
  */
-@ApplicationScoped
+@Singleton
 public class DirectoryGroupsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/admin.directory.group.readonly";
   private final GoogleCredentials credentials;

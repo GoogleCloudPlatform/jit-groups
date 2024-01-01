@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.notifications;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserId;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * Service for notifying users about activation requests.
  */
-@ApplicationScoped
+@Singleton
 public abstract class NotificationService {
   public abstract void sendNotification(Notification notification) throws NotificationException;
 

@@ -30,6 +30,7 @@ import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-@ApplicationScoped
+@Singleton
 public class IamPolicyCatalog extends ProjectRoleCatalog {
   private final PolicyAnalyzer policyAnalyzer;
   private final ResourceManagerClient resourceManagerClient;

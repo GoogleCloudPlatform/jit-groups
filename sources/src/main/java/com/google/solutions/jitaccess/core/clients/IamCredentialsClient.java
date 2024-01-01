@@ -30,6 +30,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -37,7 +38,7 @@ import java.security.GeneralSecurityException;
 /**
  * Adapter for IAM Credentials API
  */
-@ApplicationScoped
+@Singleton
 public class IamCredentialsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -23,136 +23,55 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
-
-import java.net.SocketTimeoutException;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAssetInventoryClient {
+  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
+
   // -------------------------------------------------------------------------
-  // findAccessibleResourcesByUser.
+  // getEffectiveIamPolicies.
   // -------------------------------------------------------------------------
 
   @Test
-
-  public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
+  public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
+      () -> adapter.getEffectiveIamPolicies(
+        "folders/0",
+        SAMPLE_PROJECT));
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
+  public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
+      () -> adapter.getEffectiveIamPolicies(
+        "folders/0",
+        SAMPLE_PROJECT));
   }
 
   @Test
-  public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      new HttpTransport.Options(
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS)));
-
-    assertThrows(
-      SocketTimeoutException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
-  }
-
-  @Test
-  public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryClient(
+  public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
-    var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
-      Optional.of("invalid.invalid.invalid"),
-      Optional.empty(),
-      true);
-
-    assertNotNull(result);
-    assertNull(result.getAnalysisResults());
-  }
-
-  @Test
-  public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
-
-    var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
-      Optional.empty(),
-      Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
-      true);
-
-    assertNotNull(result);
-    assertNull(result.getAnalysisResults());
-  }
-
-  // -------------------------------------------------------------------------
-  // findPermissionedPrincipalsByResource.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
-
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
-  }
-
-  @Test
-  public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
-
-    assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
+      ResourceNotFoundException.class,
+      () -> adapter.getEffectiveIamPolicies(
+        "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+        new ProjectId("0")));
   }
 }
