@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class TestIamPolicyCatalog {
+public class TestPolicyAnalyzerCatalog {
 
   private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
   private static final UserId SAMPLE_APPROVIING_USER = new UserId("approver@example.com");
@@ -50,10 +50,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenDurationExceedsMax_ThenValidateRequestThrowsException() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         1,
@@ -70,10 +70,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenDurationBelowMin_ThenValidateRequestThrowsException() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         1,
@@ -90,10 +90,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenReviewersMissing_ThenValidateRequestThrowsException() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         1,
@@ -111,10 +111,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenNumberOfReviewersExceedsMax_ThenValidateRequestThrowsException() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         1,
@@ -135,10 +135,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenNumberOfReviewersBelowMin_ThenValidateRequestThrowsException() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         2,
@@ -157,10 +157,10 @@ public class TestIamPolicyCatalog {
 
   @Test
   public void whenNumberOfReviewersOk_ThenValidateRequestReturns() throws Exception {
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(30),
         1,
@@ -183,10 +183,10 @@ public class TestIamPolicyCatalog {
   public void whenEntitlementNotFound_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     when(policyAnalyzer
       .findEntitlements(
@@ -209,10 +209,10 @@ public class TestIamPolicyCatalog {
   public void whenActivationTypeMismatches_ThenVerifyUserCanActivateEntitlementsThrowsException() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -247,10 +247,10 @@ public class TestIamPolicyCatalog {
   public void whenUserNotAllowedToActivateEntitlement_ThenListReviewersThrowsException() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     when(policyAnalyzer
       .findEntitlements(
@@ -271,10 +271,10 @@ public class TestIamPolicyCatalog {
   public void whenUserAllowedToActivateEntitlement_ThenListReviewersExcludesUser() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -309,10 +309,10 @@ public class TestIamPolicyCatalog {
   public void whenUserNotAllowedToActivate_ThenVerifyUserCanRequestThrowsException() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var jitEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -345,10 +345,10 @@ public class TestIamPolicyCatalog {
   public void whenUserAllowedToActivate_ThenVerifyUserCanRequestReturns() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var jitEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -383,10 +383,10 @@ public class TestIamPolicyCatalog {
   public void whenUserNotAllowedToActivate_ThenVerifyUserCanApproveThrowsException() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -420,10 +420,10 @@ public class TestIamPolicyCatalog {
   public void whenUserAllowedToActivate_ThenVerifyUserCanApproveReturns() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzer.class);
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+      new PolicyAnalyzerCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
@@ -464,10 +464,10 @@ public class TestIamPolicyCatalog {
         new ProjectId("project-3"),
         new ProjectId("project-1"))));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       Mockito.mock(PolicyAnalyzer.class),
       resourceManager,
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         "query",
         Duration.ofMinutes(5),
         1,
@@ -492,10 +492,10 @@ public class TestIamPolicyCatalog {
         new ProjectId("project-3"),
         new ProjectId("project-1"))));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         "",
         Duration.ofMinutes(5),
         1,
@@ -527,10 +527,10 @@ public class TestIamPolicyCatalog {
         new TreeSet<>(Set.of()),
         Set.of()));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(5),
         1,
@@ -563,10 +563,10 @@ public class TestIamPolicyCatalog {
         new TreeSet<>(Set.of()),
         Set.of()));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(5),
         1,
@@ -595,10 +595,10 @@ public class TestIamPolicyCatalog {
           Entitlement.Status.AVAILABLE))),
         Set.of()));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(5),
         1,
@@ -629,10 +629,10 @@ public class TestIamPolicyCatalog {
     when(policyAnalyzer.findApproversForEntitlement(eq(role.roleBinding())))
         .thenReturn(Set.of(SAMPLE_APPROVIING_USER, SAMPLE_REQUESTING_USER));
 
-    var catalog = new IamPolicyCatalog(
+    var catalog = new PolicyAnalyzerCatalog(
       policyAnalyzer,
       Mockito.mock(ResourceManagerClient.class),
-      new IamPolicyCatalog.Options(
+      new PolicyAnalyzerCatalog.Options(
         null,
         Duration.ofMinutes(5),
         1,

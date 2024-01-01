@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;
@@ -46,12 +45,12 @@ import java.util.stream.Collectors;
  * "eligible").
  */
 @Singleton
-public class IamPolicyCatalog extends ProjectRoleCatalog {
+public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
   private final PolicyAnalyzer policyAnalyzer;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
-  public IamPolicyCatalog(
+  public PolicyAnalyzerCatalog(
     PolicyAnalyzer policyAnalyzer,
     ResourceManagerClient resourceManagerClient,
     Options options

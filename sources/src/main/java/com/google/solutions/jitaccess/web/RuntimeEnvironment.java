@@ -36,14 +36,13 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
-import com.google.solutions.jitaccess.core.catalog.project.IamPolicyCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzer;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
 import com.google.solutions.jitaccess.web.rest.ApiResource;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.UriBuilder;
@@ -368,8 +367,8 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public IamPolicyCatalog.Options getIamPolicyCatalogOptions() {
-    return new IamPolicyCatalog.Options(
+  public PolicyAnalyzerCatalog.Options getIamPolicyCatalogOptions() {
+    return new PolicyAnalyzerCatalog.Options(
       this.configuration.availableProjectsQuery.isValid()
         ? this.configuration.availableProjectsQuery.getValue()
         : null,
