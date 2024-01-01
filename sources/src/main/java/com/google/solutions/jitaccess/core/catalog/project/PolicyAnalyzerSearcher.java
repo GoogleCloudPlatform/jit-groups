@@ -32,7 +32,6 @@ import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;
@@ -45,11 +44,11 @@ import java.util.stream.Stream;
  * Helper class for performing Policy Analyzer searches.
  */
 @Singleton
-public class PolicyAnalyzer {
+public class PolicyAnalyzerSearcher {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;
 
-  public PolicyAnalyzer(
+  public PolicyAnalyzerSearcher(
     PolicyAnalyzerClient policyAnalyzerClient,
     Options options
   ) {
