@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -24,12 +24,10 @@ package com.google.solutions.jitaccess.core;
 import com.google.common.base.Preconditions;
 
 /**
- * ID of a Google Cloud project.
+ * ID of a Google Cloud organization.
  */
-public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId {
-  private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
-
-  public ProjectId {
+public record OrganizationId(String id) implements Comparable<OrganizationId>, ResourceId {
+  public OrganizationId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
     assert !id.contains("/");
@@ -41,38 +39,11 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
   }
 
   // -------------------------------------------------------------------------
-  // Full resource name conversion.
-  // -------------------------------------------------------------------------
-
-  /**
-   * Return a full resource name as used by the Asset API.
-   */
-  public String getFullResourceName() {
-    return PROJECT_RESOURCE_NAME_PREFIX + this.id;
-  }
-
-  /**
-   * Parse a full resource name (as used by the Asset API).
-   */
-  public static ProjectId fromFullResourceName(String fullResourceName) {
-    return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
-  }
-
-  /**
-   * Check if a full resource name identifies a project and can be used for
-   * a ProjectRole.
-   */
-  public static boolean isProjectFullResourceName(String fullResourceName) {
-    return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
-      && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
-  }
-
-  // -------------------------------------------------------------------------
   // Comparable.
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(ProjectId o) {
+  public int compareTo(OrganizationId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -82,11 +53,11 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
 
   @Override
   public String type() {
-    return "project";
+    return "organization";
   }
 
   @Override
   public String path() {
-    return String.format("projects/%s", this.id);
+    return String.format("organizations/%s", this.id);
   }
 }

@@ -22,8 +22,11 @@
 package com.google.solutions.jitaccess.core.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.json.GenericJson;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.client.util.Key;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
+import com.google.api.services.cloudresourcemanager.v3.CloudResourceManagerRequest;
 import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
@@ -83,7 +86,9 @@ public class ResourceManagerClient {
     this.httpOptions = httpOptions;
   }
 
-  /** Add an IAM binding using the optimistic concurrency control-mechanism. */
+  /**
+   * Add an IAM binding using the optimistic concurrency control-mechanism.
+   */
   public void addProjectIamBinding(
     ProjectId projectId,
     Binding binding,
@@ -223,6 +228,9 @@ public class ResourceManagerClient {
     }
   }
 
+  /**
+   * Test whether certain permissions have been granted on the project.
+   */
   public List<String> testIamPermissions(
     ProjectId projectId,
     List<String> permissions
@@ -251,7 +259,12 @@ public class ResourceManagerClient {
     }
   }
 
-  public SortedSet<ProjectId> searchProjectIds(String query) throws NotAuthenticatedException, IOException {
+  /**
+   * Search for projects.
+   */
+  public SortedSet<ProjectId> searchProjectIds(
+    String query
+  ) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
 
@@ -292,6 +305,48 @@ public class ResourceManagerClient {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Get the ancestry of a project.
+   *
+   * @return list of ancestors, starting with the project itself.
+   */
+  public Collection<ResourceId> getAncestry(
+    ProjectId projectId
+  ) throws AccessException, IOException {
+    try {
+      var response = new GetAncestry(createClient(), projectId.id(), new GetAncestryRequest()).execute();
+      return response.ancestor
+        .stream()
+        .map(a -> {
+          switch (a.resourceId.type) {
+            case "organization":
+              return (ResourceId)new OrganizationId(a.resourceId.id);
+
+            case "folder":
+              return new FolderId(a.resourceId.id);
+
+            case "project":
+              return new ProjectId(a.resourceId.id);
+
+            default:
+              throw new IllegalArgumentException(
+                String.format("Unknown resource type: %s", a.resourceId.type));
+          }
+        })
+        .collect(Collectors.toList());
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
@@ -347,5 +402,262 @@ public class ResourceManagerClient {
 
     /** Throw an AlreadyExistsException if an equivalent binding for the same principal and role exists */
     FAIL_IF_BINDING_EXISTS
+  }
+
+  //---------------------------------------------------------------------------
+  // Request classes for APIs only available in v1.
+  //---------------------------------------------------------------------------
+
+  /**
+   * Gets a list of ancestors in the resource hierarchy for the Project identified by the specified
+   * `project_id` (for example, `my-project-123`). The caller must have read permissions for this
+   * Project.
+   */
+  private static class GetAncestry extends CloudResourceManagerRequest<GetAncestryResponse> {
+
+    private static final String REST_PATH = "v1/projects/{projectId}:getAncestry";
+
+    /**
+     * Gets a list of ancestors in the resource hierarchy for the Project identified by the specified
+     * `project_id` (for example, `my-project-123`). The caller must have read permissions for this
+     * Project.
+     */
+    protected GetAncestry(
+      CloudResourceManager client,
+      String projectId,
+      GetAncestryRequest content
+    ) {
+      super(client, "POST", REST_PATH, content, GetAncestryResponse.class);
+      this.projectId = Preconditions.checkNotNull(projectId, "Required parameter projectId must be specified.");
+    }
+
+    @Override
+    public GetAncestry set$Xgafv(String $Xgafv) {
+      return (GetAncestry) super.set$Xgafv($Xgafv);
+    }
+
+    @Override
+    public GetAncestry setAccessToken(String accessToken) {
+      return (GetAncestry) super.setAccessToken(accessToken);
+    }
+
+    @Override
+    public GetAncestry setAlt(String alt) {
+      return (GetAncestry) super.setAlt(alt);
+    }
+
+    @Override
+    public GetAncestry setCallback(String callback) {
+      return (GetAncestry) super.setCallback(callback);
+    }
+
+    @Override
+    public GetAncestry setFields(String fields) {
+      return (GetAncestry) super.setFields(fields);
+    }
+
+    @Override
+    public GetAncestry setKey(String key) {
+      return (GetAncestry) super.setKey(key);
+    }
+
+    @Override
+    public GetAncestry setOauthToken(String oauthToken) {
+      return (GetAncestry) super.setOauthToken(oauthToken);
+    }
+
+    @Override
+    public GetAncestry setPrettyPrint(Boolean prettyPrint) {
+      return (GetAncestry) super.setPrettyPrint(prettyPrint);
+    }
+
+    @Override
+    public GetAncestry setQuotaUser(String quotaUser) {
+      return (GetAncestry) super.setQuotaUser(quotaUser);
+    }
+
+    @Override
+    public GetAncestry setUploadType(String uploadType) {
+      return (GetAncestry) super.setUploadType(uploadType);
+    }
+
+    @Override
+    public GetAncestry setUploadProtocol(String uploadProtocol) {
+      return (GetAncestry) super.setUploadProtocol(uploadProtocol);
+    }
+
+    /** Required. The Project ID (for example, `my-project-123`). */
+    @Key
+    private String projectId;
+
+    /** Required. The Project ID (for example, `my-project-123`).
+     */
+    public String getProjectId() {
+      return projectId;
+    }
+
+    /** Required. The Project ID (for example, `my-project-123`). */
+    public GetAncestry setProjectId(String projectId) {
+      this.projectId = projectId;
+      return this;
+    }
+
+    @Override
+    public GetAncestry set(String parameterName, Object value) {
+      return (GetAncestry) super.set(parameterName, value);
+    }
+  }
+
+  /**
+   * The request sent to the GetAncestry method.
+   */
+  private final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
+  }
+
+  /**
+   * Response from the projects.getAncestry method.
+   */
+  public static final class GetAncestryResponse extends GenericJson {
+    /**
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * The value may be {@code null}.
+     */
+    @Key
+    private java.util.List<Ancestor> ancestor;
+
+    /**
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * @return value or {@code null} for none
+     */
+    public java.util.List<Ancestor> getAncestor() {
+      return ancestor;
+    }
+
+    /**
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * @param ancestor ancestor or {@code null} for none
+     */
+    public GetAncestryResponse setAncestor(java.util.List<Ancestor> ancestor) {
+      this.ancestor = ancestor;
+      return this;
+    }
+
+    @Override
+    public GetAncestryResponse set(String fieldName, Object value) {
+      return (GetAncestryResponse) super.set(fieldName, value);
+    }
+
+    @Override
+    public GetAncestryResponse clone() {
+      return (GetAncestryResponse) super.clone();
+    }
+  }
+
+  /**
+   * Identifying information for a single ancestor of a project.
+   */
+  public static final class Ancestor extends com.google.api.client.json.GenericJson {
+    /**
+     * Resource id of the ancestor.
+     * The value may be {@code null}.
+     */
+    @Key
+    private AncestryResourceId resourceId;
+
+    /**
+     * Resource id of the ancestor.
+     * @return value or {@code null} for none
+     */
+    public AncestryResourceId getResourceId() {
+      return resourceId;
+    }
+
+    /**
+     * Resource id of the ancestor.
+     * @param resourceId resourceId or {@code null} for none
+     */
+    public Ancestor setResourceId(AncestryResourceId resourceId) {
+      this.resourceId = resourceId;
+      return this;
+    }
+
+    @Override
+    public Ancestor set(String fieldName, Object value) {
+      return (Ancestor) super.set(fieldName, value);
+    }
+
+    @Override
+    public Ancestor clone() {
+      return (Ancestor) super.clone();
+    }
+  }
+
+  /**
+   * A container to reference an id for any resource type.
+   */
+  public static final class AncestryResourceId extends com.google.api.client.json.GenericJson {
+    /**
+     * The type-specific id. This should correspond to the id used in the type-specific API's.
+     * The value may be {@code null}.
+     */
+    @Key
+    private String id;
+
+    /**
+     * The resource type this id is for. At present, the valid types are: "organization", "folder",
+     * and "project".
+     * The value may be {@code null}.
+     */
+    @Key
+    private String type;
+
+    /**
+     * The type-specific id. This should correspond to the id used in the type-specific API's.
+     * @return value or {@code null} for none
+     */
+    public String getId() {
+      return id;
+    }
+
+    /**
+     * The type-specific id. This should correspond to the id used in the type-specific API's.
+     * @param id id or {@code null} for none
+     */
+    public AncestryResourceId setId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    /**
+     * The resource type this id is for. At present, the valid types are: "organization", "folder",
+     * and "project".
+     * @return value or {@code null} for none
+     */
+    public String getType() {
+      return type;
+    }
+
+    /**
+     * The resource type this id is for. At present, the valid types are: "organization", "folder",
+     * and "project".
+     * @param type type or {@code null} for none
+     */
+    public AncestryResourceId setType(String type) {
+      this.type = type;
+      return this;
+    }
+
+    @Override
+    public AncestryResourceId set(String fieldName, Object value) {
+      return (AncestryResourceId) super.set(fieldName, value);
+    }
+
+    @Override
+    public AncestryResourceId clone() {
+      return (AncestryResourceId) super.clone();
+    }
   }
 }
