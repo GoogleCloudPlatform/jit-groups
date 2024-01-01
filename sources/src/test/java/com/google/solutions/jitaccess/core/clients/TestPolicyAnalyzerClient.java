@@ -33,7 +33,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestAssetInventoryClient {
+public class TestPolicyAnalyzerClient {
   // -------------------------------------------------------------------------
   // findAccessibleResourcesByUser.
   // -------------------------------------------------------------------------
@@ -41,7 +41,7 @@ public class TestAssetInventoryClient {
   @Test
 
   public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -57,7 +57,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -73,7 +73,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       new HttpTransport.Options(
         Duration.of(1, ChronoUnit.MILLIS),
@@ -92,7 +92,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -109,7 +109,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
@@ -130,7 +130,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
@@ -144,7 +144,7 @@ public class TestAssetInventoryClient {
 
   @Test
   public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new AssetInventoryClient(
+    var adapter = new PolicyAnalyzerClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
