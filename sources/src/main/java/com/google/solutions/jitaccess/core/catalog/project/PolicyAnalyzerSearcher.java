@@ -44,7 +44,7 @@ import java.util.stream.Stream;
  * Helper class for performing Policy Analyzer searches.
  */
 @Singleton
-public class PolicyAnalyzerSearcher {
+public class PolicyAnalyzerSearcher implements PolicySearcher {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;
 
@@ -59,7 +59,7 @@ public class PolicyAnalyzerSearcher {
     this.options = options;
   }
 
-  private static List<RoleBinding> findRoleBindings(
+  static List<RoleBinding> findRoleBindings(
     IamPolicyAnalysis analysisResult,
     Predicate<Expr> conditionPredicate,
     Predicate<String> conditionEvaluationPredicate
@@ -99,9 +99,7 @@ public class PolicyAnalyzerSearcher {
   // Publics.
   //---------------------------------------------------------------------------
 
-  /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
-   */
+  @Override
   public SortedSet<ProjectId> findProjectsWithEntitlements(
     UserId user
   ) throws AccessException, IOException {
@@ -146,9 +144,7 @@ public class PolicyAnalyzerSearcher {
       .collect(Collectors.toCollection(TreeSet::new));
   }
 
-  /**
-   * List entitlements for the given user.
-   */
+  @Override
   public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
     UserId user,
     ProjectId projectId,
@@ -299,9 +295,7 @@ public class PolicyAnalyzerSearcher {
     return new Annotated<>(availableAndActive, warnings);
   }
 
-  /**
-    * List users that can approve the activation of an eligible role binding.
-    */
+  @Override
   public Set<UserId> findApproversForEntitlement(
     RoleBinding roleBinding
   ) throws AccessException, IOException {

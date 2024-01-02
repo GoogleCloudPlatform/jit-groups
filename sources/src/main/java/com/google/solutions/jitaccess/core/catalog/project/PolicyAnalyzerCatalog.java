@@ -46,12 +46,12 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
-  private final PolicyAnalyzerSearcher searcher;
+  private final PolicySearcher searcher;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
   public PolicyAnalyzerCatalog(
-    PolicyAnalyzerSearcher searcher,
+    PolicySearcher searcher,
     ResourceManagerClient resourceManagerClient,
     Options options
   ) {
@@ -248,7 +248,6 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
    * search instead of Policy Analyzer query to list projects. This is faster,
    * but results in non-personalized results.
    *
-   * @param scope organization/ID, folder/ID, or project/ID.
    * @param availableProjectsQuery optional, search query, for example:
    *      - parent:folders/{folder_id}
    * @param maxActivationDuration maximum duration for an activation
