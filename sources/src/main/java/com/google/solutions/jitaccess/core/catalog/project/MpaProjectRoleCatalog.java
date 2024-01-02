@@ -37,8 +37,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Catalog that allows JIT and MPA-based activations of
- * project role-based entitlements.
+ * Catalog that implements JIT and peer-approval based
+ * MPA activation for project role-based entitlements.
  */
 @Singleton
 public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
@@ -188,8 +188,13 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
       ActivationType.MPA,
       List.of(entitlement));
 
+    //
+    // All users that hold the same entitlement can
+    // act as reviewers, except for the requesting user
+    // themselves.
+    //
     return this.repository
-      .findApproversForEntitlement(entitlement.roleBinding())
+      .findEntitlementHolders(entitlement)
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));

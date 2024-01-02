@@ -41,7 +41,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-public class TestPolicyAnalyzerSearcher {
+public class TestPolicyAnalyzerRepository {
   private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
   private static final UserId SAMPLE_APPROVING_USER_1 = new UserId("approver-1", "approver-1@example.com");
   private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2", "approver-2@example.com");
@@ -897,9 +897,8 @@ public class TestPolicyAnalyzerSearcher {
     assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
   }
 
-
   // ---------------------------------------------------------------------
-  // findApproversForEntitlement.
+  // findEntitlementHolders.
   // ---------------------------------------------------------------------
 
   @Test
@@ -929,10 +928,10 @@ public class TestPolicyAnalyzerSearcher {
       assetAdapter,
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
-    var approvers = service.findApproversForEntitlement(
-      new RoleBinding(
+    var approvers = service.findEntitlementHolders(
+      new ProjectRoleBinding(new RoleBinding(
         SAMPLE_PROJECT_ID_1,
-        SAMPLE_ROLE_1));
+        SAMPLE_ROLE_1)));
 
     assertTrue(approvers.isEmpty());
   }
@@ -974,10 +973,10 @@ public class TestPolicyAnalyzerSearcher {
       assetAdapter,
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
-    var approvers = service.findApproversForEntitlement(
-      new RoleBinding(
+    var approvers = service.findEntitlementHolders(
+      new ProjectRoleBinding(new RoleBinding(
         SAMPLE_PROJECT_ID_1,
-        SAMPLE_ROLE_1));
+        SAMPLE_ROLE_1)));
 
     assertEquals(2, approvers.size());
     assertIterableEquals(

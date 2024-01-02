@@ -300,17 +300,17 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public Set<UserId> findApproversForEntitlement(
-    RoleBinding roleBinding
+  public Set<UserId> findEntitlementHolders(
+    ProjectRoleBinding roleBinding
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+    assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
 
     var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
       this.options.scope,
-      roleBinding.fullResourceName(),
-      roleBinding.role());
+      roleBinding.roleBinding().fullResourceName(),
+      roleBinding.roleBinding().role());
 
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)

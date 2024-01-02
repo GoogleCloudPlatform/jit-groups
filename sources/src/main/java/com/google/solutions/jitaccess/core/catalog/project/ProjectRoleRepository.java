@@ -30,9 +30,9 @@ public interface ProjectRoleRepository {
   ) throws AccessException, IOException;
 
   /**
-   * List users that can approve the activation of an eligible role binding.
+   * List users that hold an eligible role binding.
    */
-  Set<UserId> findApproversForEntitlement(
-    RoleBinding roleBinding
+  Set<UserId> findEntitlementHolders(
+    ProjectRoleBinding roleBinding
   ) throws AccessException, IOException;
 }
