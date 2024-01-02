@@ -22,11 +22,10 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.Annotated;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
+import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -45,7 +44,7 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
   /**
    * List available entitlements.
    */
-  public abstract Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> listEntitlements(
+  public abstract EntitlementSet<ProjectRoleBinding> listEntitlements(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException;

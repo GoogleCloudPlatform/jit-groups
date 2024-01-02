@@ -25,12 +25,12 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.Annotated;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.RoleBinding;
+import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import jakarta.inject.Singleton;
 
@@ -149,7 +149,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
+  public EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
     EnumSet<ActivationType> typesToInclude,
@@ -178,11 +178,6 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       Optional.empty(),
       Optional.of(projectId.getFullResourceName()),
       false);
-
-    var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
-      .flatMap(Collection::stream)
-      .map(e -> e.getCause())
-      .collect(Collectors.toSet());
 
     var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
@@ -237,8 +232,6 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       // Determine effective set of eligible roles. If a role is both JIT- and
       // MPA-eligible, only retain the JIT-eligible one.
       //
-      // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
-      //
       allAvailable.addAll(jitEligible);
       allAvailable.addAll(mpaEligible
         .stream()
@@ -246,7 +239,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .collect(Collectors.toList()));
     }
 
-    var allActive = new TreeSet<Entitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ProjectRoleBinding>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -255,48 +248,23 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       // valid).
       //
 
-      for (var activeBinding : findRoleBindings(
+      var activeBindings = findRoleBindings(
         analysisResult,
         condition -> JitConstraints.isActivated(condition),
-        evalResult -> "TRUE".equalsIgnoreCase(evalResult))) {
-        //
-        // Find the corresponding eligible binding to determine
-        // whether this is JIT or MPA-eligible.
-        //
-        var correspondingEligibleBinding = allAvailable
-          .stream()
-          .filter(ent -> ent.id().roleBinding().equals(activeBinding))
-          .findFirst();
-        if (correspondingEligibleBinding.isPresent()) {
-          allActive.add(new Entitlement<>(
-            new ProjectRoleBinding(activeBinding),
-            activeBinding.role(),
-            correspondingEligibleBinding.get().activationType(),
-            Entitlement.Status.ACTIVE));
-        }
-        else {
-          //
-          // Active, but no longer eligible.
-          //
-          allActive.add(new Entitlement<>(
-            new ProjectRoleBinding(activeBinding),
-            activeBinding.role(),
-            ActivationType.NONE,
-            Entitlement.Status.ACTIVE));
-        }
-      }
+        evalResult -> "TRUE".equalsIgnoreCase(evalResult));
+
+      allActive.addAll(activeBindings
+        .stream()
+        .map(b -> new ProjectRoleBinding(b))
+        .collect(Collectors.toSet()));
     }
 
-    //
-    // Replace roles that have been activated already.
-    //
-    var availableAndActive = allAvailable
-      .stream()
-      .filter(r -> !allActive.stream().anyMatch(a -> a.id().equals(r.id())))
-      .collect(Collectors.toCollection(TreeSet::new));
-    availableAndActive.addAll(allActive);
+    var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
+      .flatMap(Collection::stream)
+      .map(e -> e.getCause())
+      .collect(Collectors.toSet());
 
-    return new Annotated<>(availableAndActive, warnings);
+    return new EntitlementSet<>(allAvailable, allActive, warnings);
   }
 
   @Override

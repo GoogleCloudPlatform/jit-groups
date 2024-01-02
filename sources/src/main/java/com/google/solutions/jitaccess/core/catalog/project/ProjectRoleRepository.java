@@ -3,6 +3,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 
 import java.io.IOException;
 import java.util.*;
@@ -22,7 +23,7 @@ public interface ProjectRoleRepository {
   /**
    * List entitlements for the given user.
    */
-  Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
+  EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
     EnumSet<ActivationType> typesToInclude,
