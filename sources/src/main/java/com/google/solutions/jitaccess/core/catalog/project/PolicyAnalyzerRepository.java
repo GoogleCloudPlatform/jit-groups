@@ -237,8 +237,6 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       // Determine effective set of eligible roles. If a role is both JIT- and
       // MPA-eligible, only retain the JIT-eligible one.
       //
-      // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
-      //
       allAvailable.addAll(jitEligible);
       allAvailable.addAll(mpaEligible
         .stream()
