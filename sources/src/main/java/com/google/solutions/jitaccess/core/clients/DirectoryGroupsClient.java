@@ -137,8 +137,8 @@ public class DirectoryGroupsClient {
 
       return result.getMembers()
         .stream()
-        .filter(member -> member.getType().equals("USER"))
-        .filter(member -> member.getStatus().equals("ACTIVE"))
+        .filter(member -> "USER".equals(member.getType()))
+        .filter(member -> "ACTIVE".equals(member.getStatus()))
         .collect(Collectors.toList());
     }
     catch (GoogleJsonResponseException e) {

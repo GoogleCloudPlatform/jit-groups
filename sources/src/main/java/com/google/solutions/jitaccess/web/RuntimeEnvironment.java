@@ -36,8 +36,7 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
-import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerRepository;
+import com.google.solutions.jitaccess.core.catalog.project.*;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -51,6 +50,7 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -376,15 +376,25 @@ public class RuntimeEnvironment {
       this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
       this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
-//
-//  @Produces
-//  public EntitlementCatalog<ProjectRoleId> getCatalog(
-//    PolicyAnalyzer policyAnalyzer,
-//    ResourceManagerClient resourceManagerClient
-//  ) {
-//    return new IamPolicyCatalog(
-//      policyAnalyzer,
-//      resourceManagerClient,
-//      getIamPolicyCatalogOptions());
-//  }
+
+  @Produces
+  public DirectoryGroupsClient.Options getDirectoryGroupsClientOptions() {
+    return new DirectoryGroupsClient.Options(
+      this.configuration.customerId.getValue());
+  }
+
+  @Produces
+  @Singleton
+  public ProjectRoleRepository getProjectRoleRepository(
+    Executor executor,
+    DirectoryGroupsClient groupsClient,
+    AssetInventoryClient assetInventoryClient
+  ) {
+    //TODO: decide which cat to load, and set available project query!
+    return new AssetInventoryRepository(
+      executor,
+      groupsClient,
+      assetInventoryClient,
+      new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
+  }
 }

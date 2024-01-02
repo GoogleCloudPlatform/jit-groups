@@ -1,6 +1,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.admin.directory.model.Group;
+import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
@@ -26,7 +27,6 @@ import java.util.stream.Collectors;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-@Singleton
 public class AssetInventoryRepository implements ProjectRoleRepository { //TODO: test
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
@@ -190,10 +190,10 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
 
       //TODO: consider expired!
-      allActive.addAll(allBindings.stream()
-        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
-        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-        .collect(Collectors.toList()));
+      //allActive.addAll(allBindings.stream()
+      //  .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+      //  .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+      //  .collect(Collectors.toList()));
     }
 
     return new EntitlementSet<>(allAvailable, allActive, Set.of());
@@ -230,16 +230,26 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     //
     // Resolve groups.
     //
-    var listMembersFutures = principals.stream()
+    List<CompletableFuture<Collection<Member>>> listMembersFutures = principals.stream()
       .filter(p -> p.startsWith(GROUP_PREFIX))
       .map(p -> p.substring(GROUP_PREFIX.length()))
       .distinct()
       .map(groupEmail -> ThrowingCompletableFuture.submit(
-        () -> this.groupsClient.listDirectGroupMembers(groupEmail), // TODO: could fail for external group, or if deleted, ignore then
+        () -> {
+          try {
+            return this.groupsClient.listDirectGroupMembers(groupEmail);
+          }
+          catch (AccessDeniedException e) {
+            //
+            // Access might be denied if this is an external group,
+            // but this is okay.
+            //
+            // TODO: return warning
+            return List.<Member>of();
+          }
+        },
         this.executor))
       .collect(Collectors.toList());
-
-    awaitAndRethrow(CompletableFuture.allOf((CompletableFuture<?>) listMembersFutures));
 
     var allMembers = new HashSet<>(allUserMembers);
 

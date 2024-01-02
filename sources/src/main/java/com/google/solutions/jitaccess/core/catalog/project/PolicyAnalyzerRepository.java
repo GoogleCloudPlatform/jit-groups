@@ -47,7 +47,6 @@ import java.util.stream.Stream;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-@Singleton
 public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;

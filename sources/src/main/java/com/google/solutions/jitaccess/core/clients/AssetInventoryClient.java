@@ -38,7 +38,6 @@ import java.util.List;
 /**
  * Adapter for the Asset Inventory API.
  */
-@Singleton
 public class AssetInventoryClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private final GoogleCredentials credentials;

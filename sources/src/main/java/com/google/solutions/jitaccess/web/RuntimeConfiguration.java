@@ -44,6 +44,9 @@ public class RuntimeConfiguration {
     this.scope = new StringSetting(
       List.of("RESOURCE_SCOPE"),
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
+    this.customerId = new StringSetting(
+      List.of("CUSTOMER_ID"), // TODO: Use different env var name? RESOURCE_ACCOUNT_ID?
+      null);
 
     //
     // Activation settings.
@@ -250,6 +253,11 @@ public class RuntimeConfiguration {
    * Write timeout for HTTP requests to backends.
    */
   public final DurationSetting backendWriteTimeout;
+
+  /**
+   * Cloud Identity/Workspace customer ID.
+   */
+  public final StringSetting customerId;
 
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
