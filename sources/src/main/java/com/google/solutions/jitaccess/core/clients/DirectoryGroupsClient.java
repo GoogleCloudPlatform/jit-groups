@@ -84,7 +84,7 @@ public class DirectoryGroupsClient {
       return new ListGroups(createClient())
         .setUserKey(user.email)
         .execute()
-        .getGroups();
+        .getGroups(); // TODO: null or empty?
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
@@ -99,6 +99,15 @@ public class DirectoryGroupsClient {
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
     }
+  }
+
+  /**
+   * List users that are a direct member of the given group.
+   */
+  public Collection<UserId> listDirectGroupMembers(
+    String groupEmail
+  ) throws AccessException, IOException {
+    throw new RuntimeException("NIY");
   }
 
   //---------------------------------------------------------------------------

@@ -100,7 +100,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   //---------------------------------------------------------------------------
-  // Publics.
+  // ProjectRoleRepository.
   //---------------------------------------------------------------------------
 
   @Override
