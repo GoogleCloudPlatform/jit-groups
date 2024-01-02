@@ -6,6 +6,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import jakarta.inject.Singleton;
@@ -120,7 +121,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
   }
 
   @Override
-  public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
+  public EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
     EnumSet<ActivationType> typesToInclude,
@@ -178,8 +179,6 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
       // Determine effective set of eligible roles. If a role is both JIT- and
       // MPA-eligible, only retain the JIT-eligible one.
       //
-      // Use a list so that JIT-eligible roles go first, followed by MPA-eligible ones.
-      //
       allAvailable.addAll(jitEligible);
       allAvailable.addAll(mpaEligible
         .stream()
@@ -187,56 +186,17 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
         .collect(Collectors.toList()));
     }
 
-    var allActive = new TreeSet<Entitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ProjectRoleBinding>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-      //
-      // Find role bindings which have already been activated.
-      // These bindings have a time condition that we created, and
-      // the condition evaluates to true (indicating it's still
-      // valid).
-      //
-      for (var activeBinding : allBindings.stream()
-        .filter(binding -> JitConstraints.isActivated(binding.getCondition())) //TODO: consider expired!
-        .map(binding -> new RoleBinding(projectId, binding.getRole()))
-        .collect(Collectors.toList())) {
-        //
-        // Find the corresponding eligible binding to determine
-        // whether this is JIT or MPA-eligible.
-        //
-        var correspondingEligibleBinding = allAvailable
-          .stream()
-          .filter(ent -> ent.id().roleBinding().equals(activeBinding))
-          .findFirst();
-        if (correspondingEligibleBinding.isPresent()) {
-          allActive.add(new Entitlement<>(
-            new ProjectRoleBinding(activeBinding),
-            activeBinding.role(),
-            correspondingEligibleBinding.get().activationType(),
-            Entitlement.Status.ACTIVE));
-        }
-        else {
-          //
-          // Active, but no longer eligible.
-          //
-          allActive.add(new Entitlement<>(
-            new ProjectRoleBinding(activeBinding),
-            activeBinding.role(),
-            ActivationType.NONE,
-            Entitlement.Status.ACTIVE));
-        }
-      }
+
+      //TODO: consider expired!
+      allActive.addAll(allBindings.stream()
+        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+        .collect(Collectors.toList()));
     }
 
-    //
-    // Replace roles that have been activated already.
-    //
-    var availableAndActive = allAvailable
-      .stream()
-      .filter(r -> !allActive.stream().anyMatch(a -> a.id().equals(r.id())))
-      .collect(Collectors.toCollection(TreeSet::new));
-    availableAndActive.addAll(allActive);
-
-    return new Annotated<>(availableAndActive, Set.of());
+    return new EntitlementSet<>(allAvailable, allActive, Set.of());
   }
 
   @Override
