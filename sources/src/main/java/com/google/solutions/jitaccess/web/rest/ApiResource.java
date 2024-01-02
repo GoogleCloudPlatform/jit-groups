@@ -207,7 +207,7 @@ public class ApiResource {
         projectId);
 
       return new ProjectRolesResponse(
-        entitlements.items()
+        entitlements.allEntitlements()
           .stream()
           .map(ent -> new ProjectRole(ent.id().roleBinding(), ent.activationType(), ent.status()))
           .collect(Collectors.toList()),

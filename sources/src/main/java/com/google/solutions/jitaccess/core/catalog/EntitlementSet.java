@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public record EntitlementSet<TId extends EntitlementId>(
   Set<Entitlement<TId>> availableEntitlements,
   Set<TId> activeEntitlementIds,
-  List<String> warnings
+  Set<String> warnings
 ) {
   public EntitlementSet {
     Preconditions.checkNotNull(availableEntitlements, "availableEntitlements");
@@ -98,5 +98,9 @@ public record EntitlementSet<TId extends EntitlementId>(
     }
 
     return consolidatedSet;
+  }
+
+  public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
+    return new EntitlementSet<TId>(new TreeSet<>(), Set.of(), Set.of());
   }
 }

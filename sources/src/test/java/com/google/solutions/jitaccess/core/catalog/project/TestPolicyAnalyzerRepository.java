@@ -254,8 +254,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(0, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(0, entitlements.allEntitlements().size());
   }
 
   @Test
@@ -286,8 +286,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(0, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(0, entitlements.allEntitlements().size());
   }
 
   @Test
@@ -321,8 +321,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(0, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(0, entitlements.allEntitlements().size());
   }
 
   @Test
@@ -359,10 +359,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, entitlement.name());
@@ -411,10 +411,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, entitlement.name());
@@ -456,10 +456,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, entitlement.name());
@@ -508,10 +508,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, entitlement.name());
@@ -562,16 +562,16 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(2, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(2, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.JIT, entitlement.activationType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
 
-    entitlement = entitlements.items().stream().skip(1).findFirst().get();
+    entitlement = entitlements.allEntitlements().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_2, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.MPA, entitlement.activationType());
@@ -622,10 +622,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(allEntitlements.warnings());
     assertEquals(0, allEntitlements.warnings().size());
 
-    assertNotNull(allEntitlements.items());
-    assertEquals(1, allEntitlements.items().size());
+    assertNotNull(allEntitlements.allEntitlements());
+    assertEquals(1, allEntitlements.allEntitlements().size());
 
-    var entitlement = allEntitlements.items().stream().findFirst().get();
+    var entitlement = allEntitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -637,8 +637,8 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1,
       EnumSet.of(ActivationType.JIT),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    assertEquals(1, jitEntitlements.items().size());
-    entitlement = jitEntitlements.items().stream().findFirst().get();
+    assertEquals(1, jitEntitlements.allEntitlements().size());
+    entitlement = jitEntitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -650,8 +650,8 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1,
       EnumSet.of(ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    assertEquals(1, mpaEntitlements.items().size());
-    entitlement = mpaEntitlements.items().stream().findFirst().get();
+    assertEquals(1, mpaEntitlements.allEntitlements().size());
+    entitlement = mpaEntitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.MPA, entitlement.activationType());
@@ -713,10 +713,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -758,8 +758,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(0, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(0, entitlements.allEntitlements().size());
   }
 
   @Test
@@ -815,10 +815,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(2, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(2, entitlements.allEntitlements().size());
 
-    var first = entitlements.items().first();
+    var first = entitlements.allEntitlements().first();
     assertEquals(
       new RoleBinding(SAMPLE_PROJECT_ID_1, SAMPLE_ROLE_1),
       first.id().roleBinding());
@@ -826,7 +826,7 @@ public class TestPolicyAnalyzerRepository {
       ActivationType.JIT,
       first.activationType());
 
-    var second = entitlements.items().last();
+    var second = entitlements.allEntitlements().last();
     assertEquals(
       new RoleBinding(SAMPLE_PROJECT_ID_2, SAMPLE_ROLE_1),
       second.id().roleBinding());
@@ -889,10 +889,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.items());
-    assertEquals(1, entitlements.items().size());
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
 
-    var entitlement = entitlements.items().stream().findFirst().get();
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
   }

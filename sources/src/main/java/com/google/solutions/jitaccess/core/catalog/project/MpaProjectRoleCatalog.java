@@ -24,10 +24,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
 
@@ -107,7 +104,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         projectId,
         EnumSet.of(activationType),
         EnumSet.of(Entitlement.Status.AVAILABLE))
-      .items()
+      .availableEntitlements()
       .stream()
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
 
@@ -160,7 +157,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> listEntitlements(
+  public EntitlementSet<ProjectRoleBinding> listEntitlements(
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {

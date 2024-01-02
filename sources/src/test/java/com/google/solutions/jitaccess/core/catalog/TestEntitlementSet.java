@@ -67,7 +67,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(),
-      List.of());
+      Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertEquals(Set.of(), set.activeEntitlementIds());
@@ -90,7 +90,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(available1.id()),
-      List.of());
+      Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertEquals(Set.of(available1.id()), set.activeEntitlementIds());
@@ -120,7 +120,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(available1.id(), available2.id()),
-      List.of());
+      Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertEquals(Set.of(available1.id(), available2.id()), set.activeEntitlementIds());
@@ -154,7 +154,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(new StringId("unavailable-1")),
-      List.of());
+      Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertIterableEquals(List.of(
