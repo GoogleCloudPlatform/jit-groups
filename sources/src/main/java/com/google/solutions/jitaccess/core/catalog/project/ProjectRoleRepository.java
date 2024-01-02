@@ -7,7 +7,10 @@ import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import java.io.IOException;
 import java.util.*;
 
-public interface PolicySearcher {
+/**
+ * Repository for ProjectRoleBinding-based entitlements.
+ */
+public interface ProjectRoleRepository {
 
   /**
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.

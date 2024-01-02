@@ -41,14 +41,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Helper class for performing Policy Analyzer searches.
+ * Repository that uses the Policy Analyzer API to find entitlements.
+ *
+ * Entitlements as used by this class are role bindings that:
+ * are annotated with a special IAM condition (making the binding
+ * "eligible").
  */
 @Singleton
-public class PolicyAnalyzerSearcher implements PolicySearcher {
+public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;
 
-  public PolicyAnalyzerSearcher(
+  public PolicyAnalyzerRepository(
     PolicyAnalyzerClient policyAnalyzerClient,
     Options options
   ) {

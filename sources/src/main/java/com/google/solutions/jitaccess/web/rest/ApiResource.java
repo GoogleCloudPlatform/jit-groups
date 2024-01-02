@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -63,7 +63,7 @@ import java.util.stream.Collectors;
 public class ApiResource {
 
   @Inject
-  PolicyAnalyzerCatalog policyAnalyzerCatalog;
+  MpaProjectRoleCatalog mpaCatalog;
 
   @Inject
   ProjectRoleActivator projectRoleActivator;
@@ -142,7 +142,7 @@ public class ApiResource {
   ) {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    var options = this.policyAnalyzerCatalog.options();
+    var options = this.mpaCatalog.options();
     return new PolicyResponse(
       justificationPolicy.hint(),
       iapPrincipal.getId(),
@@ -160,12 +160,12 @@ public class ApiResource {
   public ProjectsResponse listProjects(
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.policyAnalyzerCatalog, "iamPolicyCatalog");
+    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var projects = this.policyAnalyzerCatalog.listProjects(iapPrincipal.getId());
+      var projects = this.mpaCatalog.listProjects(iapPrincipal.getId());
 
       return new ProjectsResponse(projects
         .stream().map(ProjectId::id)
@@ -192,7 +192,7 @@ public class ApiResource {
     @PathParam("projectId") String projectIdString,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.policyAnalyzerCatalog, "iamPolicyCatalog");
+    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -202,7 +202,7 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
 
     try {
-      var entitlements = this.policyAnalyzerCatalog.listEntitlements(
+      var entitlements = this.mpaCatalog.listEntitlements(
         iapPrincipal.getId(),
         projectId);
 
@@ -237,7 +237,7 @@ public class ApiResource {
     @QueryParam("role") String role,
     @Context SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.policyAnalyzerCatalog, "iamPolicyCatalog");
+    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -251,7 +251,7 @@ public class ApiResource {
     var roleBinding = new RoleBinding(projectId, role);
 
     try {
-      var peers = this.policyAnalyzerCatalog.listReviewers(
+      var peers = this.mpaCatalog.listReviewers(
         iapPrincipal.getId(),
         new ProjectRoleBinding(roleBinding));
 
@@ -285,7 +285,7 @@ public class ApiResource {
     SelfActivationRequest request,
     @Context SecurityContext securityContext
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.policyAnalyzerCatalog, "iamPolicyCatalog");
+    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -399,12 +399,12 @@ public class ApiResource {
     @Context SecurityContext securityContext,
     @Context UriInfo uriInfo
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.policyAnalyzerCatalog, "iamPolicyCatalog");
+    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
     assert this.tokenSigner != null;
     assert this.notificationServices != null;
 
-    var minReviewers = this.policyAnalyzerCatalog.options().minNumberOfReviewersPerActivationRequest();
-    var maxReviewers = this.policyAnalyzerCatalog.options().maxNumberOfReviewersPerActivationRequest();
+    var minReviewers = this.mpaCatalog.options().minNumberOfReviewersPerActivationRequest();
+    var maxReviewers = this.mpaCatalog.options().maxNumberOfReviewersPerActivationRequest();
 
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
@@ -617,7 +617,7 @@ public class ApiResource {
     @Context UriInfo uriInfo
   ) throws AccessException {
     assert this.tokenSigner != null;
-    assert this.policyAnalyzerCatalog != null;
+    assert this.mpaCatalog != null;
     assert this.notificationServices != null;
 
     Preconditions.checkArgument(

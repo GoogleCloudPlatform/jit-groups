@@ -112,9 +112,9 @@ public class TestPolicyAnalyzerSearcher {
         eq(true)))
       .thenReturn(new IamPolicyAnalysis());
 
-    var analyzer = new PolicyAnalyzerSearcher(
+    var analyzer = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var projectIds = analyzer.findProjectsWithEntitlements(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -144,9 +144,9 @@ public class TestPolicyAnalyzerSearcher {
             "unrecognized condition",
             "TRUE"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var projectIds = service.findProjectsWithEntitlements(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -173,9 +173,9 @@ public class TestPolicyAnalyzerSearcher {
             SAMPLE_ROLE_1,
             SAMPLE_USER))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var projectIds = service.findProjectsWithEntitlements(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -213,9 +213,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var projectIds = service.findProjectsWithEntitlements(SAMPLE_USER);
     assertNotNull(projectIds);
@@ -241,9 +241,9 @@ public class TestPolicyAnalyzerSearcher {
         eq(false)))
       .thenReturn(new IamPolicyAnalysis());
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -273,9 +273,9 @@ public class TestPolicyAnalyzerSearcher {
         .setAnalysisResults(List.of(
           new IamPolicyAnalysisResult().setAttachedResourceFullName(SAMPLE_PROJECT_ID_1.getFullResourceName()))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -308,9 +308,9 @@ public class TestPolicyAnalyzerSearcher {
             SAMPLE_ROLE_1,
             SAMPLE_USER))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -346,9 +346,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -398,9 +398,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding #2",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -443,9 +443,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -495,9 +495,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding # 2",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -549,9 +549,9 @@ public class TestPolicyAnalyzerSearcher {
       .thenReturn(new IamPolicyAnalysis()
         .setAnalysisResults(List.of(jitEligibleBinding, mpaEligibleBinding)));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -608,9 +608,9 @@ public class TestPolicyAnalyzerSearcher {
       .thenReturn(new IamPolicyAnalysis()
         .setAnalysisResults(List.of(jitEligibleBinding, mpaEligibleBinding)));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     // All types -> only the JIT-eligible binding is retained.
     var allEntitlements = service.findEntitlements(
@@ -700,9 +700,9 @@ public class TestPolicyAnalyzerSearcher {
           activatedExpiredBinding
         )));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -745,9 +745,9 @@ public class TestPolicyAnalyzerSearcher {
             "eligible binding with extra junk",
             "CONDITIONAL"))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -802,9 +802,9 @@ public class TestPolicyAnalyzerSearcher {
             .setRole(SAMPLE_ROLE_1)
             .setCondition(new Expr().setExpression(JIT_CONDITION))))));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -876,9 +876,9 @@ public class TestPolicyAnalyzerSearcher {
           mpaEligibleBinding,
           activatedBinding)));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
@@ -925,9 +925,9 @@ public class TestPolicyAnalyzerSearcher {
     when(assetAdapter.findPermissionedPrincipalsByResource(anyString(), anyString(), anyString()))
       .thenReturn(new IamPolicyAnalysis().setAnalysisResults(List.of(mpaBindingResult)));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var approvers = service.findApproversForEntitlement(
       new RoleBinding(
@@ -970,9 +970,9 @@ public class TestPolicyAnalyzerSearcher {
         mpaBindingResult1,
         mpaBindingResult2)));
 
-    var service = new PolicyAnalyzerSearcher(
+    var service = new PolicyAnalyzerRepository(
       assetAdapter,
-      new PolicyAnalyzerSearcher.Options("organizations/0"));
+      new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var approvers = service.findApproversForEntitlement(
       new RoleBinding(

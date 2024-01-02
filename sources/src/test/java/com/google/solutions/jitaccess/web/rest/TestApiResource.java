@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
@@ -79,7 +79,7 @@ public class TestApiResource {
     this.resource.options = new ApiResource.Options(DEFAULT_MAX_NUMBER_OF_ROLES);
     this.resource.logAdapter = new LogAdapter();
     this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
-    this.resource.policyAnalyzerCatalog = Mockito.mock(PolicyAnalyzerCatalog.class);
+    this.resource.mpaCatalog = Mockito.mock(MpaProjectRoleCatalog.class);
     this.resource.projectRoleActivator = Mockito.mock(ProjectRoleActivator.class);
     this.resource.justificationPolicy = Mockito.mock(JustificationPolicy.class);
     this.resource.tokenSigner = Mockito.mock(TokenSigner.class);
@@ -115,8 +115,8 @@ public class TestApiResource {
   public void getPolicyReturnsJustificationHint() throws Exception {
     when(this.resource.justificationPolicy.hint())
       .thenReturn(DEFAULT_HINT);
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -136,8 +136,8 @@ public class TestApiResource {
   public void getPolicyReturnsSignedInUser() throws Exception {
     when(this.resource.justificationPolicy.hint())
       .thenReturn(DEFAULT_HINT);
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -167,7 +167,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -181,7 +181,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -195,7 +195,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
       .thenReturn(new TreeSet<>());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -210,7 +210,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
       .thenReturn(new TreeSet<>(Set.of(new ProjectId("project-1"), new ProjectId("project-2"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -245,7 +245,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listReviewers(eq(SAMPLE_USER), any()))
+    when(this.resource.mpaCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -259,7 +259,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listReviewers(eq(SAMPLE_USER), any()))
+    when(this.resource.mpaCatalog.listReviewers(eq(SAMPLE_USER), any()))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -273,7 +273,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listReviewers(
         eq(SAMPLE_USER),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
@@ -291,7 +291,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listReviewers(
         eq(SAMPLE_USER),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
@@ -321,7 +321,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -336,7 +336,7 @@ public class TestApiResource {
 
   @Test
   public void whenCatalogThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
@@ -353,7 +353,7 @@ public class TestApiResource {
 
   @Test
   public void whenCatalogThrowsIOException_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
@@ -370,7 +370,7 @@ public class TestApiResource {
 
   @Test
   public void whenCatalogReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
@@ -404,7 +404,7 @@ public class TestApiResource {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    when(this.resource.policyAnalyzerCatalog
+    when(this.resource.mpaCatalog
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
@@ -597,8 +597,8 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsNull_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -618,8 +618,8 @@ public class TestApiResource {
 
   @Test
   public void whenRoleEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -643,8 +643,8 @@ public class TestApiResource {
 
   @Test
   public void whenPeersEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -668,8 +668,8 @@ public class TestApiResource {
 
   @Test
   public void whenTooFewPeersSelected_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         2,
@@ -693,8 +693,8 @@ public class TestApiResource {
 
   @Test
   public void whenTooManyPeersSelected_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -720,8 +720,8 @@ public class TestApiResource {
 
   @Test
   public void whenJustificationEmpty_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -745,8 +745,8 @@ public class TestApiResource {
 
   @Test
   public void whenNotificationsNotConfigured_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -773,8 +773,8 @@ public class TestApiResource {
 
   @Test
   public void whenActivatorThrowsException_ThenRequestActivationReturnsError() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
@@ -808,15 +808,15 @@ public class TestApiResource {
 
   @Test
   public void whenRequestValid_ThenRequestActivationSendsNotification() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     this.resource.projectRoleActivator = new ProjectRoleActivator(
-      this.resource.policyAnalyzerCatalog,
+      this.resource.mpaCatalog,
       Mockito.mock(ResourceManagerClient.class),
       this.resource.justificationPolicy);
 
@@ -842,15 +842,15 @@ public class TestApiResource {
 
   @Test
   public void whenRequestValid_ThenRequestActivationReturnsSuccessResponse() throws Exception {
-    when(this.resource.policyAnalyzerCatalog.options())
-      .thenReturn(new PolicyAnalyzerCatalog.Options(
+    when(this.resource.mpaCatalog.options())
+      .thenReturn(new MpaProjectRoleCatalog.Options(
         null,
         DEFAULT_ACTIVATION_DURATION,
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     this.resource.projectRoleActivator = new ProjectRoleActivator(
-      this.resource.policyAnalyzerCatalog,
+      this.resource.mpaCatalog,
       Mockito.mock(ResourceManagerClient.class),
       this.resource.justificationPolicy);
 
