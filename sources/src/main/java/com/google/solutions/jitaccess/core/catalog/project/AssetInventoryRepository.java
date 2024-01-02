@@ -284,7 +284,11 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     var allMembers = new HashSet<>(allUserMembers);
 
     for (var listMembersFuture : listMembersFutures) {
-      allMembers.addAll(awaitAndRethrow(listMembersFuture));
+      var members = awaitAndRethrow(listMembersFuture)
+        .stream()
+        .map(m -> new UserId(m.getEmail()))
+        .collect(Collectors.toList());
+      allMembers.addAll(members);
     }
 
     return allMembers;

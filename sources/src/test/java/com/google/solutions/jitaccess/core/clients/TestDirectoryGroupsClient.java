@@ -23,12 +23,16 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.ResourceNotFoundException;
+import com.google.solutions.jitaccess.core.UserId;
+import io.vertx.ext.auth.User;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestDirectoryGroupsClient {
-
+  private final String INVALID_CUSTOMER_ID = "Cinvalid";
   //---------------------------------------------------------------------
   // listDirectGroupMemberships.
   //---------------------------------------------------------------------
@@ -37,6 +41,7 @@ public class TestDirectoryGroupsClient {
   public void whenUnauthenticated_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
       IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -45,13 +50,66 @@ public class TestDirectoryGroupsClient {
   }
 
   @Test
+  public void whenUserFromUnknownDomain_ThenListDirectGroupMembershipsThrowsException() {
+    var adapter = new DirectoryGroupsClient(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+  }
+
+  @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
       IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+  }
+
+  //---------------------------------------------------------------------
+  // listDirectGroupMembers.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenListDirectGroupMembersThrowsException() {
+    var adapter = new DirectoryGroupsClient(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> adapter.listDirectGroupMembers("group@example.com"));
+  }
+
+  @Test
+  public void whenCallerLacksPermission_ThenListDirectGroupMembersThrowsException() {
+    var adapter = new DirectoryGroupsClient(
+      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+      () -> adapter.listDirectGroupMembers("group@example.com"));
+  }
+
+  @Test
+  public void whenGroupDoesNotExist_ThenListDirectGroupMembersThrowsException() {
+    var adapter = new DirectoryGroupsClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> adapter.listDirectGroupMembers("unknown-groupkey"));
   }
 }
