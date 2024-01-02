@@ -37,29 +37,25 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Catalog that uses the Policy Analyzer API to find entitlements
- * based on IAM Allow-policies.
- *
- * Entitlements as used by this class are role bindings that:
- * are annotated with a special IAM condition (making the binding
- * "eligible").
+ * Catalog that implements JIT and peer-approval based
+ * MPA activation for project role-based entitlements.
  */
 @Singleton
-public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
-  private final PolicyAnalyzerSearcher searcher;
+public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
+  private final ProjectRoleRepository repository;
   private final ResourceManagerClient resourceManagerClient;
   private final Options options;
 
-  public PolicyAnalyzerCatalog(
-    PolicyAnalyzerSearcher searcher,
+  public MpaProjectRoleCatalog(
+    ProjectRoleRepository repository,
     ResourceManagerClient resourceManagerClient,
     Options options
   ) {
-    Preconditions.checkNotNull(searcher, "assetInventoryClient");
+    Preconditions.checkNotNull(repository, "repository");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     Preconditions.checkNotNull(options, "options");
 
-    this.searcher = searcher;
+    this.repository = repository;
     this.resourceManagerClient = resourceManagerClient;
     this.options = options;
   }
@@ -105,7 +101,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
     // NB. It doesn't matter whether the user has already
     // activated the role.
     //
-    var userEntitlements = this.searcher
+    var userEntitlements = this.repository
       .findEntitlements(
         user,
         projectId,
@@ -148,7 +144,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.searcher.findProjectsWithEntitlements(user);
+      return this.repository.findProjectsWithEntitlements(user);
     }
     else {
       //
@@ -168,7 +164,7 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
     UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
-    return this.searcher.findEntitlements(
+    return this.repository.findEntitlements(
       user,
       projectId,
       EnumSet.of(ActivationType.JIT, ActivationType.MPA),
@@ -192,8 +188,13 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
       ActivationType.MPA,
       List.of(entitlement));
 
-    return this.searcher
-      .findApproversForEntitlement(entitlement.roleBinding())
+    //
+    // All users that hold the same entitlement can
+    // act as reviewers, except for the requesting user
+    // themselves.
+    //
+    return this.repository
+      .findEntitlementHolders(entitlement)
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
@@ -248,7 +249,6 @@ public class PolicyAnalyzerCatalog extends ProjectRoleCatalog {
    * search instead of Policy Analyzer query to list projects. This is faster,
    * but results in non-personalized results.
    *
-   * @param scope organization/ID, folder/ID, or project/ID.
    * @param availableProjectsQuery optional, search query, for example:
    *      - parent:folders/{folder_id}
    * @param maxActivationDuration maximum duration for an activation

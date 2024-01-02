@@ -36,8 +36,8 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerCatalog;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerSearcher;
+import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerRepository;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -361,14 +361,14 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public PolicyAnalyzerSearcher.Options getPolicyAnalyzerOptions() {
-    return new PolicyAnalyzerSearcher.Options(
+  public PolicyAnalyzerRepository.Options getPolicyAnalyzerOptions() {
+    return new PolicyAnalyzerRepository.Options(
       this.configuration.scope.getValue());
   }
 
   @Produces
-  public PolicyAnalyzerCatalog.Options getIamPolicyCatalogOptions() {
-    return new PolicyAnalyzerCatalog.Options(
+  public MpaProjectRoleCatalog.Options getIamPolicyCatalogOptions() {
+    return new MpaProjectRoleCatalog.Options(
       this.configuration.availableProjectsQuery.isValid()
         ? this.configuration.availableProjectsQuery.getValue()
         : null,

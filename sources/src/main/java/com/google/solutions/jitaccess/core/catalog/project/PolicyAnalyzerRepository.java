@@ -41,14 +41,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Helper class for performing Policy Analyzer searches.
+ * Repository that uses the Policy Analyzer API to find entitlements.
+ *
+ * Entitlements as used by this class are role bindings that:
+ * are annotated with a special IAM condition (making the binding
+ * "eligible").
  */
 @Singleton
-public class PolicyAnalyzerSearcher {
+public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;
 
-  public PolicyAnalyzerSearcher(
+  public PolicyAnalyzerRepository(
     PolicyAnalyzerClient policyAnalyzerClient,
     Options options
   ) {
@@ -59,7 +63,7 @@ public class PolicyAnalyzerSearcher {
     this.options = options;
   }
 
-  private static List<RoleBinding> findRoleBindings(
+  static List<RoleBinding> findRoleBindings(
     IamPolicyAnalysis analysisResult,
     Predicate<Expr> conditionPredicate,
     Predicate<String> conditionEvaluationPredicate
@@ -99,9 +103,7 @@ public class PolicyAnalyzerSearcher {
   // Publics.
   //---------------------------------------------------------------------------
 
-  /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
-   */
+  @Override
   public SortedSet<ProjectId> findProjectsWithEntitlements(
     UserId user
   ) throws AccessException, IOException {
@@ -146,9 +148,7 @@ public class PolicyAnalyzerSearcher {
       .collect(Collectors.toCollection(TreeSet::new));
   }
 
-  /**
-   * List entitlements for the given user.
-   */
+  @Override
   public Annotated<SortedSet<Entitlement<ProjectRoleBinding>>> findEntitlements(
     UserId user,
     ProjectId projectId,
@@ -299,20 +299,18 @@ public class PolicyAnalyzerSearcher {
     return new Annotated<>(availableAndActive, warnings);
   }
 
-  /**
-    * List users that can approve the activation of an eligible role binding.
-    */
-  public Set<UserId> findApproversForEntitlement(
-    RoleBinding roleBinding
+  @Override
+  public Set<UserId> findEntitlementHolders(
+    ProjectRoleBinding roleBinding
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+    assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
 
     var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
       this.options.scope,
-      roleBinding.fullResourceName(),
-      roleBinding.role());
+      roleBinding.roleBinding().fullResourceName(),
+      roleBinding.roleBinding().role());
 
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
