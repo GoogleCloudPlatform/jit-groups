@@ -276,7 +276,6 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
             // Access might be denied if this is an external group,
             // but this is okay.
             //
-            // TODO: return warning
             return List.<Member>of();
           }
         },

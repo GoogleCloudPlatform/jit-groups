@@ -31,7 +31,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class RuntimeConfiguration {
+class RuntimeConfiguration {
+  enum Catalog {
+    /**
+     * Use Policy Analyzer API. Requires a SCC subscription.
+     */
+    POLICYANALYZER,
+
+    /**
+     * Use Asset Inventory API.
+     */
+    ASSETINVENTORY
+  }
+
   private final Function<String, String> readSetting;
 
   public RuntimeConfiguration(Map<String, String> settings) {
@@ -45,8 +57,12 @@ public class RuntimeConfiguration {
       List.of("RESOURCE_SCOPE"),
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
     this.customerId = new StringSetting(
-      List.of("CUSTOMER_ID"), // TODO: Use different env var name? RESOURCE_ACCOUNT_ID?
+      List.of("RESOURCE_CUSTOMER_ID"),
       null);
+    this.catalog = new EnumSetting<Catalog>(
+      Catalog.class,
+      List.of("RESOURCE_CATALOG"),
+      Catalog.POLICYANALYZER);
 
     //
     // Activation settings.
@@ -76,7 +92,9 @@ public class RuntimeConfiguration {
       10);
     this.availableProjectsQuery = new StringSetting(
       List.of("AVAILABLE_PROJECTS_QUERY"),
-      null);
+      this.catalog.getValue() == Catalog.ASSETINVENTORY
+        ? "state:ACTIVE"
+        : null);
 
     //
     // Backend service id (Cloud Run only).
@@ -128,6 +146,16 @@ public class RuntimeConfiguration {
    * access for.
    */
   public final StringSetting scope;
+
+  /**
+   * Cloud Identity/Workspace customer ID.
+   */
+  public final StringSetting customerId;
+
+  /**
+   * Catalog implementation to use.
+   */
+  public final EnumSetting<Catalog> catalog;
 
   /**
    * Topic (within the resource hierarchy) that binding information will
@@ -254,11 +282,6 @@ public class RuntimeConfiguration {
    */
   public final DurationSetting backendWriteTimeout;
 
-  /**
-   * Cloud Identity/Workspace customer ID.
-   */
-  public final StringSetting customerId;
-
   public boolean isSmtpConfigured() {
     var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
     return requiredSettings.stream().allMatch(s -> s.isValid());
@@ -383,6 +406,24 @@ public class RuntimeConfiguration {
     @Override
     protected ZoneId parse(String value) {
       return ZoneId.of(value);
+    }
+  }
+
+  public class EnumSetting<E extends Enum<E>> extends Setting<E> {
+    private final Class<E> enumClass;
+
+    public EnumSetting(
+      Class<E> enumClass,
+      Collection<String> keys,
+      E defaultValue
+    ) {
+      super(keys, defaultValue);
+      this.enumClass = enumClass;
+    }
+
+    @Override
+    protected E parse(String value) {
+      return E.valueOf(this.enumClass, value.trim().toUpperCase());
     }
   }
 }

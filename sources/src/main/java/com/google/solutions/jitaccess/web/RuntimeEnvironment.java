@@ -28,6 +28,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
+import com.google.api.services.cloudasset.v1.model.Asset;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
@@ -45,6 +46,7 @@ import com.google.solutions.jitaccess.core.notifications.MailNotificationService
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
 import com.google.solutions.jitaccess.web.rest.ApiResource;
+import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.UriBuilder;
@@ -147,11 +149,12 @@ public class RuntimeEnvironment {
         logAdapter
           .newInfoEntry(
             LogEvents.RUNTIME_STARTUP,
-            String.format("Running in project %s (%s) as %s, version %s",
+            String.format("Running in project %s (%s) as %s, version %s, using %s catalog",
               this.projectId,
               this.projectNumber,
               this.applicationPrincipal,
-              ApplicationVersion.VERSION_STRING))
+              ApplicationVersion.VERSION_STRING,
+              this.configuration.catalog.getValue()))
           .write();
       }
       catch (IOException e) {
@@ -364,12 +367,6 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public PolicyAnalyzerRepository.Options getPolicyAnalyzerOptions() {
-    return new PolicyAnalyzerRepository.Options(
-      this.configuration.scope.getValue());
-  }
-
-  @Produces
   public MpaProjectRoleCatalog.Options getIamPolicyCatalogOptions() {
     return new MpaProjectRoleCatalog.Options(
       this.configuration.availableProjectsQuery.isValid()
@@ -390,14 +387,22 @@ public class RuntimeEnvironment {
   @Singleton
   public ProjectRoleRepository getProjectRoleRepository(
     Executor executor,
-    DirectoryGroupsClient groupsClient,
-    AssetInventoryClient assetInventoryClient
+    Instance<DirectoryGroupsClient> groupsClient,
+    PolicyAnalyzerClient policyAnalyzerClient
   ) {
-    //TODO: decide which cat to load, and set available project query!
-    return new AssetInventoryRepository(
-      executor,
-      groupsClient,
-      assetInventoryClient,
-      new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
+    switch (this.configuration.catalog.getValue()) {
+      case ASSETINVENTORY:
+        return new AssetInventoryRepository(
+          executor,
+          groupsClient.get(),
+          (AssetInventoryClient)policyAnalyzerClient,
+          new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
+
+      case POLICYANALYZER:
+      default:
+        return new PolicyAnalyzerRepository(
+          policyAnalyzerClient,
+          new PolicyAnalyzerRepository.Options(this.configuration.scope.getValue()));
+    }
   }
 }

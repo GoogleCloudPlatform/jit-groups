@@ -59,6 +59,34 @@ public class TestRuntimeConfiguration {
   }
 
   // -------------------------------------------------------------------------
+  // Catalog settings.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenNotSet_ThenCatalogIsPolicyAnalzer() {
+    var configuration = new RuntimeConfiguration(Map.of());
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.POLICYANALYZER,
+      configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+  }
+
+  @Test
+  public void whenSet_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " AssetInventory ");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.ASSETINVENTORY,
+      configuration.catalog.getValue());
+    assertTrue(configuration.availableProjectsQuery.isValid());
+    assertEquals(
+      "state:ACTIVE",
+      configuration.availableProjectsQuery.getValue());
+  }
+
+  // -------------------------------------------------------------------------
   // Activation settings.
   // -------------------------------------------------------------------------
 
