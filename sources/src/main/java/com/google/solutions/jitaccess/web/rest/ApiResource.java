@@ -49,10 +49,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -174,8 +171,9 @@ public class ApiResource {
         .write();
 
       return new ProjectsResponse(projects
-        .stream().map(ProjectId::id)
-        .collect(Collectors.toSet()));
+        .stream()
+        .map(ProjectId::id)
+        .collect(Collectors.toCollection(TreeSet::new)));
     }
     catch (Exception e) {
       this.logAdapter
@@ -815,7 +813,7 @@ public class ApiResource {
   public static class ProjectsResponse {
     public final Set<String> projects;
 
-    private ProjectsResponse(Set<String> projects) {
+    private ProjectsResponse(SortedSet<String> projects) {
       Preconditions.checkNotNull(projects, "projects");
       this.projects = projects;
     }

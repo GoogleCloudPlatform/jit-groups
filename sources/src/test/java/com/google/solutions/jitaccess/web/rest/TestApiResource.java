@@ -214,7 +214,10 @@ public class TestApiResource {
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
     when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
-      .thenReturn(new TreeSet<>(Set.of(new ProjectId("project-1"), new ProjectId("project-2"))));
+      .thenReturn(new TreeSet<>(Set.of(
+        new ProjectId("project-1"),
+        new ProjectId("project-2"),
+        new ProjectId("project-3"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -223,7 +226,12 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body.projects);
-    assertEquals(2, body.projects.size());
+    assertIterableEquals(
+      List.of(
+        "project-1",
+        "project-2",
+        "project-3"),
+      body.projects);
   }
 
   // -------------------------------------------------------------------------
