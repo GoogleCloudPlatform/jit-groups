@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * Repository that uses the Asset Inventory API (without its
  * Policy Analyzer subset) to find entitlements.
  *
- * Entitlements as used by this class are role bindings that:
+ * Entitlements as used by this class are role bindings that
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */

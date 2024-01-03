@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 /**
  * Repository that uses the Policy Analyzer API to find entitlements.
  *
- * Entitlements as used by this class are role bindings that:
+ * Entitlements as used by this class are role bindings that
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */

@@ -111,7 +111,11 @@ public class DirectoryGroupsClient {
         case 400:
         case 404:
           throw new ResourceNotFoundException(
-            String.format("The user '%s' does not exist or belongs to an unknown domain", user), e);
+            String.format(
+              "The customer ID %s is invalid, the user '%s' does not exist, or it belongs to an unknown domain",
+              this.options.customerId,
+              user),
+            e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
