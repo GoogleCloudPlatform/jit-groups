@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;

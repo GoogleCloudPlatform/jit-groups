@@ -28,7 +28,6 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.Key;
-import com.google.api.services.admin.directory.Directory;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
 import com.google.api.services.admin.directory.model.Member;
@@ -36,7 +35,6 @@ import com.google.api.services.admin.directory.model.Members;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;

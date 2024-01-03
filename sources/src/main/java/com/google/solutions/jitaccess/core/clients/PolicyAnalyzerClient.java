@@ -25,8 +25,10 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.*;
-import jakarta.enterprise.context.ApplicationScoped;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.UserId;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;

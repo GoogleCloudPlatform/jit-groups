@@ -32,7 +32,6 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;

@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 
-import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;

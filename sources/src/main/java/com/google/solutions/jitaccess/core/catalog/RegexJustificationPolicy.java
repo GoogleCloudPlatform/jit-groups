@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.UserId;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.util.regex.Pattern;

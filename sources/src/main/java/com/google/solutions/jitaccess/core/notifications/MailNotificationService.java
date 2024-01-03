@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.notifications;
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 
 import java.io.IOException;
