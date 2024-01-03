@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.admin.directory.model.Group;
+import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.Policy;
@@ -427,6 +428,55 @@ public class TestAssetInventoryRepository {
     var repository = new AssetInventoryRepository(
       new SynchronousExecutor(),
       Mockito.mock(DirectoryGroupsClient.class),
+      caiClient,
+      new AssetInventoryRepository.Options("organization/0"));
+
+    var holders = repository.findEntitlementHolders(
+      new ProjectRoleBinding(role));
+
+    assertNotNull(holders);
+    assertEquals(
+      Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+      holders);
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainsGroups_ThenFindEntitlementHoldersReturnsList() throws Exception {
+    var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+
+    var groupBinding = new Binding()
+      .setRole(role.role())
+      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setMembers(List.of("group:group@example.com"));
+    var unavailableGroupBinding = new Binding()
+      .setRole(role.role())
+      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setMembers(List.of("group:unavailable-group@example.com"));
+
+    var groupsClient = Mockito.mock(DirectoryGroupsClient.class);
+    when(groupsClient
+      .listDirectGroupMembers(eq("group@example.com")))
+      .thenReturn(List.of(
+        new Member().setEmail("user-1@example.com"),
+        new Member().setEmail("user-2@example.com")));
+    when(groupsClient
+      .listDirectGroupMembers(eq("unavailable-group@example.com")))
+      .thenThrow(new AccessDeniedException("mock"));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+      .getEffectiveIamPolicies(
+        eq("organization/0"),
+        eq(SAMPLE_PROJECT)))
+      .thenReturn(List.of(
+        new PolicyInfo()
+          .setAttachedResource(SAMPLE_PROJECT.path())
+          .setPolicy(new Policy()
+            .setBindings(List.of(groupBinding, unavailableGroupBinding)))));
+
+    var repository = new AssetInventoryRepository(
+      new SynchronousExecutor(),
+      groupsClient,
       caiClient,
       new AssetInventoryRepository.Options("organization/0"));
 
