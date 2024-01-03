@@ -24,11 +24,8 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import com.google.solutions.jitaccess.core.ResourceNotFoundException;
-import com.google.solutions.jitaccess.core.UserId;
-import io.vertx.ext.auth.User;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestDirectoryGroupsClient {

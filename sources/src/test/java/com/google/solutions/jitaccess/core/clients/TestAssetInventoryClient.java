@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestAssetInventoryClient {
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");

@@ -30,18 +30,15 @@ import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
-import io.quarkus.test.Mock;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
