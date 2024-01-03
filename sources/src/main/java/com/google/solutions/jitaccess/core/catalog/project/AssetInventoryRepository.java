@@ -10,7 +10,6 @@ import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,7 +33,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
   private final Options options;
   private final Executor executor;
   private final DirectoryGroupsClient groupsClient;
-  private final AssetInventoryClient assetInventoryClient; //TODO: use 1-min cache
+  private final AssetInventoryClient assetInventoryClient;
 
   public AssetInventoryRepository(
     Executor executor,
@@ -53,7 +52,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     this.options = options;
   }
 
-  <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
+  static <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
     try {
       return future.get();
     }
@@ -70,9 +69,9 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     }
   }
 
-  Collection<Binding> findAllBindings(
-    ProjectId projectId,
-    UserId user
+  List<Binding> findProjectBindings(
+    UserId user,
+    ProjectId projectId
   ) throws AccessException, IOException {
     //
     // Lookup in parallel:
@@ -91,10 +90,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
         projectId),
       this.executor);
 
-    awaitAndRethrow(CompletableFuture.allOf(listMembershipsFuture, effectivePoliciesFuture));
-
     var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
-    return awaitAndRethrow(effectivePoliciesFuture)
+    var allBindings = awaitAndRethrow(effectivePoliciesFuture)
       .stream()
 
       // All bindings, across all resources in the ancestry.
@@ -103,6 +100,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
       // Only bindings that apply to the user.
       .filter(binding -> principalSetForUser.isMember(binding))
       .collect(Collectors.toList());
+    return allBindings;
   }
 
   //---------------------------------------------------------------------------
@@ -128,7 +126,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
     EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
-    var allBindings = findAllBindings(projectId, user);
+    List<Binding> allBindings = findProjectBindings(user, projectId);
 
     var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
@@ -143,12 +141,12 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
         jitEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
           .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<ProjectRoleBinding>(
+          .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
             ActivationType.JIT,
             Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toCollection(TreeSet::new));
+          .collect(Collectors.toSet());
       }
       else {
         jitEligible = Set.of();
@@ -164,12 +162,12 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
         mpaEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
           .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<ProjectRoleBinding>(
+          .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
             ActivationType.MPA,
             Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toCollection(TreeSet::new));
+          .collect(Collectors.toSet());
       }
       else {
         mpaEligible = Set.of();
@@ -216,6 +214,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
 
       // Only consider requested role.
       .filter(binding -> binding.getRole().equals(roleBinding.roleBinding().role()))
+
+      // TODO: filter MPA!!!
 
       .flatMap(binding -> binding.getMembers().stream())
       .collect(Collectors.toSet());
