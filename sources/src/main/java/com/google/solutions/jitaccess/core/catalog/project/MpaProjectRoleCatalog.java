@@ -191,7 +191,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     // themselves.
     //
     return this.repository
-      .findEntitlementHolders(entitlement)
+      .findEntitlementHolders(entitlement, ActivationType.MPA)
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));

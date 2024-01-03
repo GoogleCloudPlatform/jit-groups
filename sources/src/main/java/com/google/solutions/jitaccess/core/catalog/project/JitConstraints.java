@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
 
 import java.util.regex.Pattern;
 
@@ -71,6 +72,17 @@ class JitConstraints {
   /** Check if the IAM condition is an MPA constraint */
   public static boolean isMultiPartyApprovalConstraint(Expr iamCondition) {
     return isConstraint(iamCondition, MPA_CONDITION_PATTERN);
+  }
+
+  /** Check if the IAM condition is a JIT- or MPA constraint */
+  public static boolean isApprovalConstraint(
+    Expr iamCondition,
+    ActivationType activationType) {
+    switch (activationType) {
+      case JIT: return isJitAccessConstraint(iamCondition);
+      case MPA: return isMultiPartyApprovalConstraint(iamCondition);
+      default: throw new IllegalArgumentException();
+    }
   }
 
   /** Check if the IAM condition indicates an activated role binding */

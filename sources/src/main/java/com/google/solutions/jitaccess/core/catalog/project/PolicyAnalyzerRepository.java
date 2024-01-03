@@ -269,7 +269,8 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
   @Override
   public Set<UserId> findEntitlementHolders(
-    ProjectRoleBinding roleBinding
+    ProjectRoleBinding roleBinding,
+    ActivationType activationType
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
@@ -285,7 +286,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       // Narrow down to IAM bindings with an MPA constraint.
       .filter(result -> result.getIamBinding() != null &&
-        JitConstraints.isMultiPartyApprovalConstraint(result.getIamBinding().getCondition()))
+        JitConstraints.isApprovalConstraint(result.getIamBinding().getCondition(), activationType))
 
       // Collect identities (users and group members)
       .filter(result -> result.getIdentityList() != null)

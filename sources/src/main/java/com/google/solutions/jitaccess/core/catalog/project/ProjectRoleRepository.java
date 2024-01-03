@@ -34,6 +34,7 @@ public interface ProjectRoleRepository {
    * List users that hold an eligible role binding.
    */
   Set<UserId> findEntitlementHolders(
-    ProjectRoleBinding roleBinding
+    ProjectRoleBinding roleBinding,
+    ActivationType activationType
   ) throws AccessException, IOException;
 }

@@ -929,9 +929,8 @@ public class TestPolicyAnalyzerRepository {
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var approvers = service.findEntitlementHolders(
-      new ProjectRoleBinding(new RoleBinding(
-        SAMPLE_PROJECT_ID_1,
-        SAMPLE_ROLE_1)));
+      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT_ID_1, SAMPLE_ROLE_1)),
+      ActivationType.MPA);
 
     assertTrue(approvers.isEmpty());
   }
@@ -974,9 +973,8 @@ public class TestPolicyAnalyzerRepository {
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
     var approvers = service.findEntitlementHolders(
-      new ProjectRoleBinding(new RoleBinding(
-        SAMPLE_PROJECT_ID_1,
-        SAMPLE_ROLE_1)));
+      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT_ID_1, SAMPLE_ROLE_1)),
+      ActivationType.MPA);
 
     assertEquals(2, approvers.size());
     assertIterableEquals(
