@@ -293,7 +293,8 @@ public class TestMpaProjectRoleCatalog {
 
     when(policyAnalyzer
       .findEntitlementHolders(
-        eq(mpaEntitlement.id())))
+        eq(mpaEntitlement.id()),
+        eq(ActivationType.MPA)))
       .thenReturn(Set.of(SAMPLE_REQUESTING_USER, SAMPLE_APPROVIING_USER));
 
     var reviewers = catalog.listReviewers(SAMPLE_REQUESTING_USER, mpaEntitlement.id());
@@ -621,8 +622,11 @@ public class TestMpaProjectRoleCatalog {
           Entitlement.Status.AVAILABLE))),
         Set.of(),
         Set.of()));
-    when(policyAnalyzer.findEntitlementHolders(eq(role)))
-        .thenReturn(Set.of(SAMPLE_APPROVIING_USER, SAMPLE_REQUESTING_USER));
+    when(policyAnalyzer
+      .findEntitlementHolders(
+        eq(role),
+        eq(ActivationType.MPA)))
+      .thenReturn(Set.of(SAMPLE_APPROVIING_USER, SAMPLE_REQUESTING_USER));
 
     var catalog = new MpaProjectRoleCatalog(
       policyAnalyzer,
