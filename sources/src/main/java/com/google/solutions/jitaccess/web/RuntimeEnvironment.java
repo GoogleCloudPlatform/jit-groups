@@ -69,15 +69,6 @@ public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
   private static final String CONFIG_PROJECT = "jitaccess.project";
-  private static final List<String> REQUIRED_SCOPES = Stream.of(
-      ResourceManagerClient.OAUTH_SCOPE,
-      PolicyAnalyzerClient.OAUTH_SCOPE,
-      AssetInventoryClient.OAUTH_SCOPE,
-      IamCredentialsClient.OAUTH_SCOPE,
-      SecretManagerClient.OAUTH_SCOPE,
-      DirectoryGroupsClient.OAUTH_SCOPE)
-    .distinct()
-    .collect(Collectors.toList());
 
   private final String projectId;
   private final String projectNumber;
@@ -153,20 +144,27 @@ public class RuntimeEnvironment {
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
-        var defaultCredentials = GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserId(((ComputeEngineCredentials)defaultCredentials).getAccount());
+        var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
+        this.applicationPrincipal = new UserId(defaultCredentials.getAccount());
 
-        //
-        // Use the application default credentials (ADC) to impersonate a
-        // service account. This step is necessary to ensure we have a
-        // credential for the right set of scopes.
-        //
-        this.applicationCredentials = ImpersonatedCredentials.create(
-          defaultCredentials,
-          this.applicationPrincipal.email,
-          null,
-          REQUIRED_SCOPES,
-          0);
+        if (defaultCredentials.getScopes().containsAll(this.configuration.getRequiredOauthScopes())) {
+          //
+          // Default credential has all the right scopes, use it as-is.
+          //
+          this.applicationCredentials = defaultCredentials;
+        }
+        else {
+          //
+          // Extend the set of scopes to include required non-cloud APIs by
+          // letting the service account impersonate itself.
+          //
+          this.applicationCredentials = ImpersonatedCredentials.create(
+            defaultCredentials,
+            this.applicationPrincipal.email,
+            null,
+            this.configuration.getRequiredOauthScopes().stream().toList(),
+            0);
+        }
 
         logAdapter
           .newInfoEntry(
@@ -210,7 +208,7 @@ public class RuntimeEnvironment {
             defaultCredentials,
             impersonateServiceAccount,
             null,
-            REQUIRED_SCOPES,
+            this.configuration.getRequiredOauthScopes().stream().toList(),
             0);
 
           //

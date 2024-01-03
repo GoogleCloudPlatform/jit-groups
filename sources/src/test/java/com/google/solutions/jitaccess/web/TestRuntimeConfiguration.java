@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import org.junit.jupiter.api.Test;
 
@@ -73,7 +74,19 @@ public class TestRuntimeConfiguration {
   }
 
   @Test
-  public void whenSet_ThenCatalogReturnsSetting() {
+  public void whenUsingPolicyAnalyzerCatalog_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " PolicyAnalyzer ");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.POLICYANALYZER,
+      configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+    assertFalse(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
+  }
+
+  @Test
+  public void whenUsingAssetInventoryCatalog_ThenCatalogReturnsSetting() {
     var settings = Map.of("RESOURCE_CATALOG", " AssetInventory ");
     var configuration = new RuntimeConfiguration(settings);
 
@@ -84,6 +97,7 @@ public class TestRuntimeConfiguration {
     assertEquals(
       "state:ACTIVE",
       configuration.availableProjectsQuery.getValue());
+    assertTrue(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
   }
 
   // -------------------------------------------------------------------------

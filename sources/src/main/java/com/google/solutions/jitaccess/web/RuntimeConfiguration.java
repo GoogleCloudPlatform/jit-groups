@@ -21,15 +21,16 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.clients.*;
+
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class RuntimeConfiguration {
   enum Catalog {
@@ -305,6 +306,22 @@ class RuntimeConfiguration {
     }
 
     return map;
+  }
+
+  public Set<String> getRequiredOauthScopes() {
+    var scopes = new HashSet<String>();
+
+    scopes.add(ResourceManagerClient.OAUTH_SCOPE);
+    scopes.add(PolicyAnalyzerClient.OAUTH_SCOPE);
+    scopes.add(AssetInventoryClient.OAUTH_SCOPE);
+    scopes.add(IamCredentialsClient.OAUTH_SCOPE);
+    scopes.add(SecretManagerClient.OAUTH_SCOPE);
+
+    if (this.catalog.getValue() == RuntimeConfiguration.Catalog.ASSETINVENTORY) {
+      scopes.add(DirectoryGroupsClient.OAUTH_SCOPE);
+    }
+
+    return scopes;
   }
 
   // -------------------------------------------------------------------------
