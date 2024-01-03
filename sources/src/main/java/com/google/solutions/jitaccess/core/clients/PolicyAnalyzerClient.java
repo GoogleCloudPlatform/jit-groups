@@ -25,10 +25,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;
@@ -106,6 +103,12 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(String.format("Denied access to scope '%s'", scope), e);
+        case 429:
+          throw new QuotaExceededException(
+            "Exceeded quota for AnalyzeIamPolicy API requests. Consider increasing the request " +
+              "quota in the application project or reconfigure the application to use the " +
+              "AssetInventory catalog instead.",
+            e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
@@ -145,6 +148,12 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(String.format("Denied access to scope '%s': %s", scope, e.getMessage()), e);
+        case 429:
+          throw new QuotaExceededException(
+            "Exceeded quota for AnalyzeIamPolicy API requests. Consider increasing the request " +
+              "quota in the application project or reconfigure the application to use the " +
+              "AssetInventory catalog instead.",
+            e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }

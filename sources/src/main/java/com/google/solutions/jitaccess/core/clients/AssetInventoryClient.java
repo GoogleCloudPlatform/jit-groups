@@ -99,6 +99,11 @@ public class AssetInventoryClient {
         case 404:
           throw new ResourceNotFoundException(
             String.format("The project '%s' does not exist", projectId), e);
+        case 429:
+          throw new QuotaExceededException(
+            "Exceeded quota for BatchGetEffectiveIamPolicies API requests. Consider increasing the request " +
+              "quota in the application project.",
+            e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }

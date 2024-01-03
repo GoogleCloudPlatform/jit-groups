@@ -112,7 +112,7 @@ public class DirectoryGroupsClient {
         case 404:
           throw new ResourceNotFoundException(
             String.format(
-              "The customer ID %s is invalid, the user '%s' does not exist, or it belongs to an unknown domain",
+              "The customer ID '%s' is invalid, the user '%s' does not exist, or it belongs to an unknown domain",
               this.options.customerId,
               user),
             e);
