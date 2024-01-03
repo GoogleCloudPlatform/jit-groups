@@ -10,8 +10,10 @@ import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
+import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -186,12 +188,17 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
     var allActive = new HashSet<ProjectRoleBinding>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
+      allActive.addAll(allBindings.stream()
+        // Only temporary access bindings.
+        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
 
-      //TODO: consider expired!
-      //allActive.addAll(allBindings.stream()
-      //  .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
-      //  .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-      //  .collect(Collectors.toList()));
+        // Only bindings that are still valid.
+        .filter(binding -> IamTemporaryAccessConditions.evaluate(
+          binding.getCondition().getExpression(),
+          Instant.now()))
+
+        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+        .collect(Collectors.toList()));
     }
 
     return new EntitlementSet<>(allAvailable, allActive, Set.of());

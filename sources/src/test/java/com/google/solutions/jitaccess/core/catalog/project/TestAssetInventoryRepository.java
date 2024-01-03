@@ -33,11 +33,15 @@ import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
+import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import io.quarkus.test.Mock;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -359,7 +363,89 @@ public class TestAssetInventoryRepository {
     }
   }
 
-  //TODO: test active bindings
+  @Test
+  public void whenEffectiveIamPoliciesContainsExpiredActivation_ThenFindEntitlementsReturnsList() throws Exception {
+    var jitBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(JIT_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var expiredActivationForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr()
+        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setExpression(IamTemporaryAccessConditions.createExpression(
+          Instant.now().minus(2, ChronoUnit.HOURS),
+          Instant.now().minus(1, ChronoUnit.HOURS))))
+      .setMembers(List.of("user:" + SAMPLE_USER.email));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+      .getEffectiveIamPolicies(
+        eq("organization/0"),
+        eq(SAMPLE_PROJECT)))
+      .thenReturn(List.of(
+        new PolicyInfo()
+          .setAttachedResource(SAMPLE_PROJECT.path())
+          .setPolicy(new Policy()
+            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+
+    var repository = new AssetInventoryRepository(
+      new SynchronousExecutor(),
+      Mockito.mock(DirectoryGroupsClient.class),
+      caiClient,
+      new AssetInventoryRepository.Options("organization/0"));
+
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    var entitlement = entitlements.allEntitlements().first();
+    assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainsActivation_ThenFindEntitlementsReturnsList() throws Exception {
+    var jitBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(JIT_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var expiredActivationForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr()
+        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setExpression(IamTemporaryAccessConditions.createExpression(
+          Instant.now().minus(1, ChronoUnit.HOURS),
+          Instant.now().plus(1, ChronoUnit.HOURS))))
+      .setMembers(List.of("user:" + SAMPLE_USER.email));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+      .getEffectiveIamPolicies(
+        eq("organization/0"),
+        eq(SAMPLE_PROJECT)))
+      .thenReturn(List.of(
+        new PolicyInfo()
+          .setAttachedResource(SAMPLE_PROJECT.path())
+          .setPolicy(new Policy()
+            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+
+    var repository = new AssetInventoryRepository(
+      new SynchronousExecutor(),
+      Mockito.mock(DirectoryGroupsClient.class),
+      caiClient,
+      new AssetInventoryRepository.Options("organization/0"));
+
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    var entitlement = entitlements.allEntitlements().first();
+    assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
+  }
 
   //---------------------------------------------------------------------------
   // findEntitlementHolders.

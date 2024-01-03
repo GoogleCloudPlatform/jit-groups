@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.clients;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAmount;
 import java.util.regex.Pattern;
 
@@ -35,14 +36,17 @@ public class IamTemporaryAccessConditions {
     "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
   private static final String CONDITION_PATTERN =
-    "^\\s*\\(request.time >= timestamp\\(\\\".*\\\"\\) && "
-      + "request.time < timestamp\\(\\\".*\\\"\\)\\)\\s*$";
+    "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
+      + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
   private IamTemporaryAccessConditions() {
   }
 
+  /**
+   * Check if the expression is a temporary access IAM condition.
+   */
   public static boolean isTemporaryAccessCondition(String expression) {
     return expression != null && CONDITION.matcher(expression).matches();
   }
@@ -65,5 +69,29 @@ public class IamTemporaryAccessConditions {
     TemporalAmount duration
   ) {
     return createExpression(startTime, startTime.plus(duration));
+  }
+
+  /**
+   * Evaluate a temporary access IAM condition.
+   *
+   * Note: This method only evaluates conditions created by the same
+   * class, it's not suitable for other IAM conditions.
+   */
+  public static boolean evaluate(String expression, Instant currentTime) {
+    var matcher = CONDITION.matcher(expression);
+    if (matcher.find()) {
+      try {
+        var startTime = Instant.parse(matcher.group(1));
+        var endTime = Instant.parse(matcher.group(2));
+
+        return !currentTime.isBefore(startTime) && currentTime.isBefore(endTime);
+      }
+      catch (DateTimeParseException e) {
+        return false;
+      }
+    }
+    else {
+      return false;
+    }
   }
 }
