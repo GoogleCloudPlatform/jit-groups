@@ -167,6 +167,12 @@ public class ApiResource {
     try {
       var projects = this.mpaCatalog.listProjects(iapPrincipal.getId());
 
+      this.logAdapter
+        .newInfoEntry(
+          LogEvents.API_LIST_PROJECTS,
+          String.format("Found %d available projects", projects.size()))
+        .write();
+
       return new ProjectsResponse(projects
         .stream().map(ProjectId::id)
         .collect(Collectors.toSet()));
@@ -174,7 +180,7 @@ public class ApiResource {
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_ROLES,
+          LogEvents.API_LIST_PROJECTS,
           String.format("Listing available projects failed: %s", Exceptions.getFullMessage(e)))
         .write();
 
