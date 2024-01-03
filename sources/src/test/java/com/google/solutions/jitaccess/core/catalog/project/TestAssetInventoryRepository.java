@@ -372,8 +372,8 @@ public class TestAssetInventoryRepository {
       .setCondition(new Expr().setExpression(MPA_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
     var otherBinding2 = new Binding()
-      .setRole("roles/other-2")
-      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setRole("roles/role-1")
+      .setCondition(new Expr().setExpression(JIT_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -394,7 +394,8 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")));
+      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
+      ActivationType.MPA);
 
     assertNotNull(holders);
     assertTrue(holders.isEmpty());
@@ -422,7 +423,7 @@ public class TestAssetInventoryRepository {
           .setPolicy(new Policy()
             .setBindings(List.of(new Binding()
               .setRole(role.role())
-              .setCondition(new Expr().setExpression(MPA_CONDITION)) //TODO: vary condition
+              .setCondition(new Expr().setExpression(MPA_CONDITION))
               .setMembers(List.of("user:user-2@example.com")))))));
 
     var repository = new AssetInventoryRepository(
@@ -432,7 +433,8 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role));
+      new ProjectRoleBinding(role),
+      ActivationType.MPA);
 
     assertNotNull(holders);
     assertEquals(
@@ -481,7 +483,8 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role));
+      new ProjectRoleBinding(role),
+      ActivationType.MPA);
 
     assertNotNull(holders);
     assertEquals(

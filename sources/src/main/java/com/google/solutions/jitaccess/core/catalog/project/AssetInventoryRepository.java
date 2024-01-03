@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class AssetInventoryRepository implements ProjectRoleRepository { //TODO: test
+public class AssetInventoryRepository implements ProjectRoleRepository {
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
 
@@ -199,7 +199,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
 
   @Override
   public Set<UserId> findEntitlementHolders(
-    ProjectRoleBinding roleBinding
+    ProjectRoleBinding roleBinding,
+    ActivationType activationType
   ) throws AccessException, IOException {
 
     var policies = this.assetInventoryClient.getEffectiveIamPolicies(
@@ -215,7 +216,10 @@ public class AssetInventoryRepository implements ProjectRoleRepository { //TODO:
       // Only consider requested role.
       .filter(binding -> binding.getRole().equals(roleBinding.roleBinding().role()))
 
-      // TODO: filter MPA!!!
+      // Only consider eligible bindings.
+      .filter(binding -> JitConstraints.isApprovalConstraint(
+        binding.getCondition(),
+        activationType))
 
       .flatMap(binding -> binding.getMembers().stream())
       .collect(Collectors.toSet());
