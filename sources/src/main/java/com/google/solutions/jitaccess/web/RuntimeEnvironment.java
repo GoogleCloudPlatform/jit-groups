@@ -55,6 +55,7 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,6 +69,15 @@ public class RuntimeEnvironment {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
   private static final String CONFIG_PROJECT = "jitaccess.project";
+  private static final List<String> REQUIRED_SCOPES = Stream.of(
+      ResourceManagerClient.OAUTH_SCOPE,
+      PolicyAnalyzerClient.OAUTH_SCOPE,
+      AssetInventoryClient.OAUTH_SCOPE,
+      IamCredentialsClient.OAUTH_SCOPE,
+      SecretManagerClient.OAUTH_SCOPE,
+      DirectoryGroupsClient.OAUTH_SCOPE)
+    .distinct()
+    .collect(Collectors.toList());
 
   private final String projectId;
   private final String projectNumber;
@@ -143,8 +153,20 @@ public class RuntimeEnvironment {
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
-        this.applicationCredentials = GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserId(((ComputeEngineCredentials) this.applicationCredentials).getAccount());
+        var defaultCredentials = GoogleCredentials.getApplicationDefault();
+        this.applicationPrincipal = new UserId(((ComputeEngineCredentials)defaultCredentials).getAccount());
+
+        //
+        // Use the application default credentials (ADC) to impersonate a
+        // service account. This step is necessary to ensure we have a
+        // credential for the right set of scopes.
+        //
+        this.applicationCredentials = ImpersonatedCredentials.create(
+          defaultCredentials,
+          this.applicationPrincipal.email,
+          null,
+          REQUIRED_SCOPES,
+          0);
 
         logAdapter
           .newInfoEntry(
@@ -180,21 +202,15 @@ public class RuntimeEnvironment {
         if (impersonateServiceAccount != null && !impersonateServiceAccount.isEmpty()) {
           //
           // Use the application default credentials (ADC) to impersonate a
-          // service account. This can be used when using user credentials as ADC.
+          // service account. This step is necessary to ensure we have a
+          // credential for the right set of scopes, and that we're not running
+          // with end-user credentials.
           //
           this.applicationCredentials = ImpersonatedCredentials.create(
             defaultCredentials,
             impersonateServiceAccount,
             null,
-            Stream.of(
-                ResourceManagerClient.OAUTH_SCOPE,
-                PolicyAnalyzerClient.OAUTH_SCOPE,
-                AssetInventoryClient.OAUTH_SCOPE,
-                IamCredentialsClient.OAUTH_SCOPE,
-                SecretManagerClient.OAUTH_SCOPE,
-                DirectoryGroupsClient.OAUTH_SCOPE)
-              .distinct()
-              .collect(Collectors.toList()),
+            REQUIRED_SCOPES,
             0);
 
           //
