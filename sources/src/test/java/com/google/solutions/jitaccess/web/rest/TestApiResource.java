@@ -22,7 +22,10 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.RoleBinding;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -211,7 +214,10 @@ public class TestApiResource {
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
     when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
-      .thenReturn(new TreeSet<>(Set.of(new ProjectId("project-1"), new ProjectId("project-2"))));
+      .thenReturn(new TreeSet<>(Set.of(
+        new ProjectId("project-1"),
+        new ProjectId("project-2"),
+        new ProjectId("project-3"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects", ApiResource.ProjectsResponse.class);
@@ -220,7 +226,12 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body.projects);
-    assertEquals(2, body.projects.size());
+    assertIterableEquals(
+      List.of(
+        "project-1",
+        "project-2",
+        "project-3"),
+      body.projects);
   }
 
   // -------------------------------------------------------------------------

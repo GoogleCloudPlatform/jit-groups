@@ -26,13 +26,12 @@ import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
-import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.util.*;
@@ -43,11 +42,10 @@ import java.util.stream.Stream;
 /**
  * Repository that uses the Policy Analyzer API to find entitlements.
  *
- * Entitlements as used by this class are role bindings that:
+ * Entitlements as used by this class are role bindings that
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-@Singleton
 public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   private final Options options;
   private final PolicyAnalyzerClient policyAnalyzerClient;
@@ -100,7 +98,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   //---------------------------------------------------------------------------
-  // Publics.
+  // ProjectRoleRepository.
   //---------------------------------------------------------------------------
 
   @Override

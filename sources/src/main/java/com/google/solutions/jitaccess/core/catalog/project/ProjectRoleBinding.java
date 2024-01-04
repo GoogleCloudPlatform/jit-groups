@@ -23,8 +23,8 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import com.google.solutions.jitaccess.core.RoleBinding;
+import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 
 public class ProjectRoleBinding extends EntitlementId {
   static final String CATALOG = "iam";

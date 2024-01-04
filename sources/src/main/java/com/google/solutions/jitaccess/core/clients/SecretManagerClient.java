@@ -27,7 +27,6 @@ import com.google.api.services.secretmanager.v1.SecretManager;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;

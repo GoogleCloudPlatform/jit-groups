@@ -21,17 +21,30 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.clients.*;
+
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class RuntimeConfiguration {
+class RuntimeConfiguration {
+  enum Catalog {
+    /**
+     * Use Policy Analyzer API. Requires a SCC subscription.
+     */
+    POLICYANALYZER,
+
+    /**
+     * Use Asset Inventory API.
+     */
+    ASSETINVENTORY
+  }
+
   private final Function<String, String> readSetting;
 
   public RuntimeConfiguration(Map<String, String> settings) {
@@ -44,6 +57,13 @@ public class RuntimeConfiguration {
     this.scope = new StringSetting(
       List.of("RESOURCE_SCOPE"),
       String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
+    this.customerId = new StringSetting(
+      List.of("RESOURCE_CUSTOMER_ID"),
+      null);
+    this.catalog = new EnumSetting<Catalog>(
+      Catalog.class,
+      List.of("RESOURCE_CATALOG"),
+      Catalog.POLICYANALYZER);
 
     //
     // Activation settings.
@@ -73,7 +93,9 @@ public class RuntimeConfiguration {
       10);
     this.availableProjectsQuery = new StringSetting(
       List.of("AVAILABLE_PROJECTS_QUERY"),
-      null);
+      this.catalog.getValue() == Catalog.ASSETINVENTORY
+        ? "state:ACTIVE"
+        : null);
 
     //
     // Backend service id (Cloud Run only).
@@ -125,6 +147,16 @@ public class RuntimeConfiguration {
    * access for.
    */
   public final StringSetting scope;
+
+  /**
+   * Cloud Identity/Workspace customer ID.
+   */
+  public final StringSetting customerId;
+
+  /**
+   * Catalog implementation to use.
+   */
+  public final EnumSetting<Catalog> catalog;
 
   /**
    * Topic (within the resource hierarchy) that binding information will
@@ -276,6 +308,22 @@ public class RuntimeConfiguration {
     return map;
   }
 
+  public Set<String> getRequiredOauthScopes() {
+    var scopes = new HashSet<String>();
+
+    scopes.add(ResourceManagerClient.OAUTH_SCOPE);
+    scopes.add(PolicyAnalyzerClient.OAUTH_SCOPE);
+    scopes.add(AssetInventoryClient.OAUTH_SCOPE);
+    scopes.add(IamCredentialsClient.OAUTH_SCOPE);
+    scopes.add(SecretManagerClient.OAUTH_SCOPE);
+
+    if (this.catalog.getValue() == RuntimeConfiguration.Catalog.ASSETINVENTORY) {
+      scopes.add(DirectoryGroupsClient.OAUTH_SCOPE);
+    }
+
+    return scopes;
+  }
+
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
@@ -375,6 +423,24 @@ public class RuntimeConfiguration {
     @Override
     protected ZoneId parse(String value) {
       return ZoneId.of(value);
+    }
+  }
+
+  public class EnumSetting<E extends Enum<E>> extends Setting<E> {
+    private final Class<E> enumClass;
+
+    public EnumSetting(
+      Class<E> enumClass,
+      Collection<String> keys,
+      E defaultValue
+    ) {
+      super(keys, defaultValue);
+      this.enumClass = enumClass;
+    }
+
+    @Override
+    protected E parse(String value) {
+      return E.valueOf(this.enumClass, value.trim().toUpperCase());
     }
   }
 }

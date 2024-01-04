@@ -49,10 +49,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -167,14 +164,21 @@ public class ApiResource {
     try {
       var projects = this.mpaCatalog.listProjects(iapPrincipal.getId());
 
+      this.logAdapter
+        .newInfoEntry(
+          LogEvents.API_LIST_PROJECTS,
+          String.format("Found %d available projects", projects.size()))
+        .write();
+
       return new ProjectsResponse(projects
-        .stream().map(ProjectId::id)
-        .collect(Collectors.toSet()));
+        .stream()
+        .map(ProjectId::id)
+        .collect(Collectors.toCollection(TreeSet::new)));
     }
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_ROLES,
+          LogEvents.API_LIST_PROJECTS,
           String.format("Listing available projects failed: %s", Exceptions.getFullMessage(e)))
         .write();
 
@@ -809,7 +813,7 @@ public class ApiResource {
   public static class ProjectsResponse {
     public final Set<String> projects;
 
-    private ProjectsResponse(Set<String> projects) {
+    private ProjectsResponse(SortedSet<String> projects) {
       Preconditions.checkNotNull(projects, "projects");
       this.projects = projects;
     }

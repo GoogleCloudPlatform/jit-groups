@@ -32,8 +32,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 public class IntegrationTestEnvironment {
   private IntegrationTestEnvironment() {
@@ -53,7 +53,14 @@ public class IntegrationTestEnvironment {
   public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
   public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
 
+  /**
+   * Service account that tests can use to grant temporary access to.
+   */
   public static final UserId TEMPORARY_ACCESS_USER;
+
+  /**
+   * Service account that doesn't have access to anything.
+   */
   public static final UserId NO_ACCESS_USER;
 
   public static final PubSubTopic PUBSUB_TOPIC;
@@ -72,28 +79,30 @@ public class IntegrationTestEnvironment {
       Properties settings = new Properties();
       settings.load(in);
 
-      PROJECT_ID = new ProjectId( getMandatory(settings, "test.project"));
+      PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
 
-      //
-      // Service account that doesn't have access to anything.
-      //
       NO_ACCESS_USER = new UserId(
         "no-access",
         String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
 
-      //
-      // Service account that can be granted temporary access.
-      //
       TEMPORARY_ACCESS_USER = new UserId(
         "temporary-access",
         String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
-      APPLICATION_CREDENTIALS = GoogleCredentials
+      var defaultCredentials = GoogleCredentials
         .getApplicationDefault()
         .createWithQuotaProject(PROJECT_ID.id());
 
-      NO_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, NO_ACCESS_USER.email);
-      TEMPORARY_ACCESS_CREDENTIALS = impersonate(APPLICATION_CREDENTIALS, TEMPORARY_ACCESS_USER.email);
+      var serviceAccount = getOptional(settings, "test.impersonateServiceAccount", null);
+      if (!Strings.isNullOrEmpty(serviceAccount)) {
+        APPLICATION_CREDENTIALS = impersonate(defaultCredentials, serviceAccount);
+      }
+      else {
+        APPLICATION_CREDENTIALS = defaultCredentials;
+      }
+
+      NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
+      TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
 
       var topicName = getOptional(settings, "test.topic", "");
       if (!Strings.isNullOrEmpty(topicName)) {
@@ -129,6 +138,13 @@ public class IntegrationTestEnvironment {
 
   private static GoogleCredentials impersonate(GoogleCredentials source, String serviceAccount) {
     return ImpersonatedCredentials.create(
-      source, serviceAccount, null, List.of("https://www.googleapis.com/auth/cloud-platform"), 0);
+      source,
+      serviceAccount,
+      null,
+      Set.of(
+        ResourceManagerClient.OAUTH_SCOPE,
+        DirectoryGroupsClient.OAUTH_SCOPE
+      ).stream().toList(),
+      0);
   }
 }

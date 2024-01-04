@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,17 +19,37 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.core;
 
-public class LogEvents {
-  public static final String API_LIST_PROJECTS = "api.listProjects";
-  public static final String API_LIST_ROLES = "api.listEligibleRoles";
-  public static final String API_LIST_PEERS = "api.listPeers";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
-  public static final String API_REQUEST_ROLE = "api.requestRole";
-  public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String RUNTIME_STARTUP = "runtime.startup";
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
-  private LogEvents() {
+/**
+ * Completable future for a supplier that can throw a checked exception.
+ */
+public class ThrowingCompletableFuture {
+  /**
+   * Function that can throw a checked exception.
+   */
+  @FunctionalInterface
+  public interface ThrowingSupplier<T> {
+    T supply() throws Exception;
+  }
+
+  public static <T> CompletableFuture<T> submit(
+    ThrowingSupplier<T> supplier,
+    Executor executor
+  ) {
+    var future = new CompletableFuture<T>();
+    executor.execute(() -> {
+      try {
+        future.complete(supplier.supply());
+      }
+      catch (Exception e) {
+        future.completeExceptionally(e);
+      }
+    });
+
+    return future;
   }
 }

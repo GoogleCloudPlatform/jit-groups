@@ -30,15 +30,18 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.Key;
 import com.google.api.services.admin.directory.model.Group;
 import com.google.api.services.admin.directory.model.Groups;
+import com.google.api.services.admin.directory.model.Member;
+import com.google.api.services.admin.directory.model.Members;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Singleton;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Client for the Directory API.
@@ -46,17 +49,22 @@ import java.util.Collection;
 @Singleton
 public class DirectoryGroupsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/admin.directory.group.readonly";
+
+  private final Options options;
   private final GoogleCredentials credentials;
   private final HttpTransport.Options httpOptions;
 
   public DirectoryGroupsClient(
     GoogleCredentials credentials,
+    Options options,
     HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(options, "options");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
     this.credentials = credentials;
+    this.options = options;
     this.httpOptions = httpOptions;
   }
 
@@ -81,10 +89,18 @@ public class DirectoryGroupsClient {
     UserId user
   ) throws AccessException, IOException {
     try {
-      return new ListGroups(createClient())
-        .setUserKey(user.email)
-        .execute()
-        .getGroups();
+      //
+      // NB. Using userKey doesn't work for service account,
+      // so we have to use a query.
+      //
+      var result = new ListGroups(createClient())
+        .setCustomer(this.options.customerId)
+        .setQuery(String.format("memberKey=%s", user.email))
+        .execute();
+
+      return result.getGroups() != null
+        ? result.getGroups()
+        : List.of();
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
@@ -93,8 +109,49 @@ public class DirectoryGroupsClient {
         case 403:
           throw new AccessDeniedException("Access to Directory API was denied", e);
         case 400:
+        case 404:
           throw new ResourceNotFoundException(
-            String.format("The user '%s' does not exist", user), e);
+            String.format(
+              "The customer ID '%s' is invalid, the user '%s' does not exist, or it belongs to an unknown domain",
+              this.options.customerId,
+              user),
+            e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
+    }
+  }
+
+  /**
+   * List users that are a direct member of the given group.
+   */
+  public Collection<Member> listDirectGroupMembers(
+    String groupEmail
+  ) throws AccessException, IOException {
+    try {
+      var result = new ListMembers(createClient())
+        .setGroupKey(groupEmail)
+        .execute();
+
+      if (result.getMembers() == null) {
+        return List.of();
+      }
+
+      return result.getMembers()
+        .stream()
+        .filter(member -> "USER".equals(member.getType()))
+        .filter(member -> "ACTIVE".equals(member.getStatus()))
+        .collect(Collectors.toList());
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException("Access to Directory API was denied", e);
+        case 404:
+          throw new ResourceNotFoundException(
+            String.format("The group '%s' does not exist", groupEmail), e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
@@ -102,7 +159,22 @@ public class DirectoryGroupsClient {
   }
 
   //---------------------------------------------------------------------------
-  // Surrogate class for Directory that works with google-api-client 2.0..
+  // Inner classes.
+  //---------------------------------------------------------------------------
+
+  public record Options(
+    String customerId
+  ) {
+    public Options {
+      Preconditions.checkNotNull(customerId, "customerId");
+      Preconditions.checkArgument(
+        customerId.startsWith("C"),
+        "Customer ID must use format Cxxxxxxxx");
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // Surrogate class for Directory that works with google-api-client 2.0.
   //---------------------------------------------------------------------------
 
   private static class Directory2 extends AbstractGoogleJsonClient {
@@ -119,7 +191,7 @@ public class DirectoryGroupsClient {
         super(
           transport,
           jsonFactory,
-          "https://www.googleapis.com/",
+          "https://admin.googleapis.com/",
           "admin/directory/v1/",
           requestInitializer,
           false);
@@ -134,23 +206,57 @@ public class DirectoryGroupsClient {
 
   private static class ListGroups extends AbstractGoogleJsonClientRequest<Groups> {
     @Key
-    private String userKey;
+    private String customer;
+    @Key
+    private String query;
 
-    public ListGroups(AbstractGoogleJsonClient abstractGoogleJsonClient) {
+    public ListGroups(AbstractGoogleJsonClient client) {
       super(
-        abstractGoogleJsonClient,
+        client,
         "GET",
         "groups",
         (Object)null,
         Groups.class);
     }
 
-    public String getUserKey() {
-      return this.userKey;
+    public String getCustomer() {
+      return this.customer;
     }
 
-    public ListGroups setUserKey(String userKey) {
-      this.userKey = userKey;
+    public ListGroups setCustomer(String customerId) {
+      this.customer = customerId;
+      return this;
+    }
+
+    public String getQuery() {
+      return this.query;
+    }
+
+    public ListGroups setQuery(String var1) {
+      this.query = var1;
+      return this;
+    }
+  }
+
+  private static class ListMembers extends AbstractGoogleJsonClientRequest<Members> {
+    @Key
+    private String groupKey;
+
+    public ListMembers(AbstractGoogleJsonClient client) {
+      super(
+        client,
+        "GET",
+        "groups/{groupKey}/members",
+        (Object)null,
+        com.google.api.services.admin.directory.model.Members.class);
+    }
+
+    public String getGroupKey() {
+      return this.groupKey;
+    }
+
+    public ListMembers setGroupKey(String groupKey) {
+      this.groupKey = groupKey;
       return this;
     }
   }

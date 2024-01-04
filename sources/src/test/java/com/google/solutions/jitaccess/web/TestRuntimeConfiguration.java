@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import org.junit.jupiter.api.Test;
 
@@ -56,6 +57,47 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(settings);
 
     assertEquals("folders/123", configuration.scope.getValue());
+  }
+
+  // -------------------------------------------------------------------------
+  // Catalog settings.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenNotSet_ThenCatalogIsPolicyAnalzer() {
+    var configuration = new RuntimeConfiguration(Map.of());
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.POLICYANALYZER,
+      configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+  }
+
+  @Test
+  public void whenUsingPolicyAnalyzerCatalog_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " PolicyAnalyzer ");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.POLICYANALYZER,
+      configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+    assertFalse(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
+  }
+
+  @Test
+  public void whenUsingAssetInventoryCatalog_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " AssetInventory ");
+    var configuration = new RuntimeConfiguration(settings);
+
+    assertEquals(
+      RuntimeConfiguration.Catalog.ASSETINVENTORY,
+      configuration.catalog.getValue());
+    assertTrue(configuration.availableProjectsQuery.isValid());
+    assertEquals(
+      "state:ACTIVE",
+      configuration.availableProjectsQuery.getValue());
+    assertTrue(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
   }
 
   // -------------------------------------------------------------------------
