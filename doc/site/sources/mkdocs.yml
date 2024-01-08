@@ -25,6 +25,7 @@ theme:
   name: material
   custom_dir: overrides
   logo: images/logo.png
+  favicon: images/favicon.ico
   features:
     - navigation.tabs
     - content.code.copy
