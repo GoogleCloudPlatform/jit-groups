@@ -67,12 +67,14 @@ nav:
       - 'Overview': 'index.md'
       - 'Multi-party approval': multi-party-approval.md
       - 'Notifications': pubsub-notifications.md
-    - 'How-to guides':
+    - 'Deploy JIT Access':
       - 'Deploy or upgrade JIT Access': https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project#deploy_just-in-time_access
       - 'Configure multi party approval': configure-multi-party-approval.md
       - 'Configure notifications': configure-pubsub-notifications.md
-      - 'Change catalogs': configure-catalogs.md
+      - 'Configure catalogs': configure-catalogs.md
       - 'Access VPC service perimeters': configure-vpcsc.md
-    - 'Reference':
+    - 'Customize JIT Access':
       - 'Configuration options': configuration-options.md
+    - 'Extend JIT Access':
+      - 'Set up a development environment': development-environment.md
   - GitHub: https://github.com/GoogleCloudPlatform/jit-access
