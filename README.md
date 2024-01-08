@@ -17,7 +17,7 @@ without having to grant them permanent access. This type of just-in-time privile
 * Create an audit trail that indicates why privileges were activated.
 * Conduct audits and reviews for analyzing past activity.
 
-> :memo: **Note:** Just-In-Time Access uses the Policy Analyzer API. Starting January 15, 2024, this API will be subject to [new quota restrictions and might require a Security Command Center subscription](https://cloud.google.com/policy-intelligence/docs/billing-questions#pricing-changes). For further information, see [#193](https://github.com/GoogleCloudPlatform/jit-access/issues/193). 
+> :memo: **Note:** Depending on your configuration, Just-In-Time Access might use the Policy Analyzer API to analyze eligible role bindings. Starting January 15, 2024, this API is subject to [new quota restrictions and might require a Security Command Center subscription](https://cloud.google.com/policy-intelligence/docs/billing-questions#pricing-changes). If you're affected by these changes, consider upgrading to [version 1.6](https://github.com/GoogleCloudPlatform/jit-access/releases/tag/1.6.0) and [switching to the `AssetInventory` catalog](https://googlecloudplatform.github.io/jit-access/configure-catalogs/).
 
 ## Activate roles on demand
 
