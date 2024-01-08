@@ -1,0 +1,78 @@
+#
+# Copyright 2024 Google LLC
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+site_name: Just-In-Time Access
+site_url: https://googlecloudplatform.github.io/jit-access/
+theme:
+  name: material
+  custom_dir: overrides
+  logo: images/logo.png
+  features:
+    - navigation.tabs
+    - content.code.copy
+    - content.code.annotate
+    - navigation.expand
+  palette:
+    primary: #006CBE
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+        info: fontawesome/solid/user-shield
+extra:
+  generator: false
+    
+extra_css:
+  - stylesheets/extra.css
+  
+repo_name: jit-access
+repo_url: https://github.com/GoogleCloudPlatform/jit-access
+copyright: |
+    JIT Access is an open-source project developed and maintained by the Google Cloud Solutions Architects team.<br>
+    Copyright &copy; 2019-2024 Google LLC<br>
+    <a href='https://cloud.google.com/'><img src='https://googlecloudplatform.github.io/jit-access/images/cloud.svg' width='240' height='160'/></a>
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.tabbed:
+      alternate_style: true 
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.details
+nav:
+  - Guides: 
+    - Discover: 
+      - 'Overview': 'index.md'
+      - 'Multi-party approval': multi-party-approval.md
+      - 'Notifications': pubsub-notifications.md
+    - 'How-to guides':
+      - 'Deploy or upgrade JIT Access': https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project#deploy_just-in-time_access
+      - 'Configure multi party approval': configure-multi-party-approval.md
+      - 'Configure notifications': configure-pubsub-notifications.md
+      - 'Change catalogs': configure-catalogs.md
+      - 'Access VPC service perimeters': configure-vpcsc.md
+    - 'Reference':
+      - 'Configuration options': configuration-options.md
+  - GitHub: https://github.com/GoogleCloudPlatform/jit-access
