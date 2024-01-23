@@ -48,6 +48,7 @@ public class IntegrationTestEnvironment {
     };
 
   public static final ProjectId PROJECT_ID;
+  public static final String REGION;
 
   public static final GoogleCredentials APPLICATION_CREDENTIALS;
   public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
@@ -80,6 +81,7 @@ public class IntegrationTestEnvironment {
       settings.load(in);
 
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
+      REGION = getOptional(settings, "test.region", "us-central1");
 
       NO_ACCESS_USER = new UserId(
         "no-access",

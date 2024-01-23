@@ -24,9 +24,10 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.secretmanager.v1.SecretManager;
-import com.google.api.services.secretmanager.v1.model.Automatic;
+import com.google.api.services.secretmanager.v1.model.Replica;
 import com.google.api.services.secretmanager.v1.model.Replication;
 import com.google.api.services.secretmanager.v1.model.Secret;
+import com.google.api.services.secretmanager.v1.model.UserManaged;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -85,7 +87,7 @@ public class TestSecretManagerClient {
       .projects()
       .secrets()
       .create(String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
-        new Secret().setReplication(new Replication().setAutomatic(new Automatic()))
+        new Secret().setReplication(new Replication().setUserManaged(new UserManaged().setReplicas(List.of(new Replica().setLocation(IntegrationTestEnvironment.REGION)))))
       )
       .setSecretId(SECRET_NAME)
       .execute();
