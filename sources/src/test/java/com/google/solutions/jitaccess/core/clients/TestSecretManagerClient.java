@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.secretmanager.v1.SecretManager;
+import com.google.api.services.secretmanager.v1.model.Automatic;
 import com.google.api.services.secretmanager.v1.model.Replica;
 import com.google.api.services.secretmanager.v1.model.Replication;
 import com.google.api.services.secretmanager.v1.model.Secret;
@@ -51,6 +52,8 @@ public class TestSecretManagerClient {
     "%s/versions/latest",
     SECRET_PATH);
   private static final String SECRET_CONTENT = "(secret)";
+  private static final Replication SECRET_REPLICATION = IntegrationTestEnvironment.REGION == null ? new Replication().setAutomatic(new Automatic()) 
+    : new Replication().setUserManaged(new UserManaged().setReplicas(List.of(new Replica().setLocation(IntegrationTestEnvironment.REGION))));
 
   private static SecretManager createClient() throws GeneralSecurityException, IOException {
     return new SecretManager.Builder(
@@ -87,7 +90,7 @@ public class TestSecretManagerClient {
       .projects()
       .secrets()
       .create(String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
-        new Secret().setReplication(new Replication().setUserManaged(new UserManaged().setReplicas(List.of(new Replica().setLocation(IntegrationTestEnvironment.REGION)))))
+        new Secret().setReplication(SECRET_REPLICATION)
       )
       .setSecretId(SECRET_NAME)
       .execute();

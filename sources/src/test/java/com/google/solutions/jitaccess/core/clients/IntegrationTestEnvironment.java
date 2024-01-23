@@ -81,7 +81,7 @@ public class IntegrationTestEnvironment {
       settings.load(in);
 
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
-      REGION = getOptional(settings, "test.region", "us-central1");
+      REGION = getOptional(settings, "test.region", null);
 
       NO_ACCESS_USER = new UserId(
         "no-access",
