@@ -33,7 +33,7 @@ import java.util.Comparator;
 public record Entitlement<TEntitlementId extends EntitlementId> (
   TEntitlementId id,
   String name,
-  ActivationType activationType,
+  EntitlementType entitlementType,
   Status status
 ) implements Comparable<Entitlement<TEntitlementId>> {
   public Entitlement {

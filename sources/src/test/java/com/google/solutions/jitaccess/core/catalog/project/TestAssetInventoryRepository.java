@@ -30,6 +30,7 @@ import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
@@ -312,14 +313,14 @@ public class TestAssetInventoryRepository {
       var entitlements = repository.findEntitlements(
         SAMPLE_USER,
         SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT),
+        EnumSet.of(EntitlementType.JIT),
         EnumSet.of(Entitlement.Status.AVAILABLE));
 
       assertIterableEquals(
         List.of("roles/for-user"),
         entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
       var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(ActivationType.JIT, jitEntitlement.activationType());
+      assertEquals(EntitlementType.JIT, jitEntitlement.entitlementType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
 
@@ -330,14 +331,14 @@ public class TestAssetInventoryRepository {
       var entitlements = repository.findEntitlements(
         SAMPLE_USER,
         SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.MPA),
+        EnumSet.of(EntitlementType.PEER),
         EnumSet.of(Entitlement.Status.AVAILABLE));
 
       assertIterableEquals(
         List.of("roles/for-user"),
         entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
       var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(ActivationType.MPA, jitEntitlement.activationType());
+      assertEquals(EntitlementType.PEER, jitEntitlement.entitlementType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
 
@@ -348,14 +349,14 @@ public class TestAssetInventoryRepository {
       var entitlements = repository.findEntitlements(
         SAMPLE_USER,
         SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
         EnumSet.of(Entitlement.Status.AVAILABLE));
 
       assertIterableEquals(
         List.of("roles/for-user"),
         entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
       var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(ActivationType.JIT, jitEntitlement.activationType());
+      assertEquals(EntitlementType.JIT, jitEntitlement.entitlementType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
   }
@@ -395,10 +396,10 @@ public class TestAssetInventoryRepository {
     var entitlements = repository.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
     var entitlement = entitlements.allEntitlements().first();
-    assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(EntitlementType.JIT, entitlement.entitlementType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
   }
 
@@ -437,10 +438,10 @@ public class TestAssetInventoryRepository {
     var entitlements = repository.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
     var entitlement = entitlements.allEntitlements().first();
-    assertEquals(ActivationType.JIT, entitlement.activationType());
+    assertEquals(EntitlementType.JIT, entitlement.entitlementType());
     assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
   }
 
@@ -478,7 +479,7 @@ public class TestAssetInventoryRepository {
 
     var holders = repository.findEntitlementHolders(
       new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
-      ActivationType.MPA);
+      EntitlementType.PEER);
 
     assertNotNull(holders);
     assertTrue(holders.isEmpty());
@@ -517,7 +518,7 @@ public class TestAssetInventoryRepository {
 
     var holders = repository.findEntitlementHolders(
       new ProjectRoleBinding(role),
-      ActivationType.MPA);
+      EntitlementType.PEER);
 
     assertNotNull(holders);
     assertEquals(
@@ -567,7 +568,7 @@ public class TestAssetInventoryRepository {
 
     var holders = repository.findEntitlementHolders(
       new ProjectRoleBinding(role),
-      ActivationType.MPA);
+      EntitlementType.PEER);
 
     assertNotNull(holders);
     assertEquals(

@@ -31,6 +31,7 @@ import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 
 import java.io.IOException;
@@ -150,7 +151,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   public EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
+    EnumSet<EntitlementType> typesToInclude,
     EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
@@ -181,13 +182,13 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
 
       //
-      // Find all JIT-eligible role bindings. The bindings are
+      // Find all self approval eligible role bindings. The bindings are
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> jitEligible;
-      if (typesToInclude.contains(ActivationType.JIT)) {
-        jitEligible = findRoleBindings(
+      Set<Entitlement<ProjectRoleBinding>> selfApprovalEligible;
+      if (typesToInclude.contains(EntitlementType.JIT)) {
+        selfApprovalEligible = findRoleBindings(
           analysisResult,
           condition -> JitConstraints.isJitAccessConstraint(condition),
           evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
@@ -195,22 +196,22 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
           .map(binding -> new Entitlement<ProjectRoleBinding>(
             new ProjectRoleBinding(binding),
             binding.role(),
-            ActivationType.JIT,
+            EntitlementType.JIT,
             Entitlement.Status.AVAILABLE))
           .collect(Collectors.toSet());
       }
       else {
-        jitEligible = Set.of();
+        selfApprovalEligible = Set.of();
       }
 
       //
-      // Find all MPA-eligible role bindings. The bindings are
+      // Find all peer approval eligible role bindings. The bindings are
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> mpaEligible;
-      if (typesToInclude.contains(ActivationType.MPA)) {
-        mpaEligible = findRoleBindings(
+      Set<Entitlement<ProjectRoleBinding>> peerApprovalEligible;
+      if (typesToInclude.contains(EntitlementType.PEER)) {
+        peerApprovalEligible = findRoleBindings(
           analysisResult,
           condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
           evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
@@ -218,22 +219,22 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
           .map(binding -> new Entitlement<ProjectRoleBinding>(
             new ProjectRoleBinding(binding),
             binding.role(),
-            ActivationType.MPA,
+            EntitlementType.PEER,
             Entitlement.Status.AVAILABLE))
           .collect(Collectors.toSet());
       }
       else {
-        mpaEligible = Set.of();
+        peerApprovalEligible = Set.of();
       }
 
       //
       // Determine effective set of eligible roles. If a role is both JIT- and
-      // MPA-eligible, only retain the JIT-eligible one.
+      // peer approval eligible, only retain the JIT-eligible one.
       //
-      allAvailable.addAll(jitEligible);
-      allAvailable.addAll(mpaEligible
+      allAvailable.addAll(selfApprovalEligible);
+      allAvailable.addAll(peerApprovalEligible
         .stream()
-        .filter(r -> !jitEligible.stream().anyMatch(a -> a.id().equals(r.id())))
+        .filter(r -> !selfApprovalEligible.stream().anyMatch(a -> a.id().equals(r.id())))
         .collect(Collectors.toList()));
     }
 
@@ -268,7 +269,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   @Override
   public Set<UserId> findEntitlementHolders(
     ProjectRoleBinding roleBinding,
-    ActivationType activationType
+    EntitlementType entitlementType
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
@@ -284,7 +285,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       // Narrow down to IAM bindings with an MPA constraint.
       .filter(result -> result.getIamBinding() != null &&
-        JitConstraints.isApprovalConstraint(result.getIamBinding().getCondition(), activationType))
+        JitConstraints.isApprovalConstraint(result.getIamBinding().getCondition(), entitlementType))
 
       // Collect identities (users and group members)
       .filter(result -> result.getIdentityList() != null)

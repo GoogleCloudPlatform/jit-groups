@@ -98,7 +98,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
   @Override
   protected void provisionAccess(
-    JitActivationRequest<ProjectRoleBinding> request
+    SelfApprovalActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -122,7 +122,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
   @Override
   protected void provisionAccess(
     UserId approvingUser,
-    MpaActivationRequest<ProjectRoleBinding> request
+    PeerApprovalActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -151,10 +151,10 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
   }
 
   @Override
-  public JsonWebTokenConverter<MpaActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public JsonWebTokenConverter<PeerApprovalActivationRequest<ProjectRoleBinding>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(MpaActivationRequest<ProjectRoleBinding> request) {
+      public JsonWebToken.Payload convert(PeerApprovalActivationRequest<ProjectRoleBinding> request) {
         var roleBindings = request.entitlements()
           .stream()
           .map(ent -> ent.roleBinding())
@@ -178,7 +178,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
       }
 
       @Override
-      public MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.Payload payload) {
+      public PeerApprovalActivationRequest<ProjectRoleBinding> convert(JsonWebToken.Payload payload) {
         var roleBinding = new RoleBinding(
           payload.get("resource").toString(),
           payload.get("role").toString());
@@ -186,7 +186,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
         var startTime = ((Number)payload.get("start")).longValue();
         var endTime = ((Number)payload.get("end")).longValue();
 
-        return new MpaRequest<>(
+        return new PeerApprovalRequest<>(
           new ActivationId(payload.getJwtId()),
           new UserId(payload.get("beneficiary").toString()),
           Set.of(new ProjectRoleBinding(roleBinding)),

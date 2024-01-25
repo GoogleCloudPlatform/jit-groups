@@ -23,11 +23,14 @@ package com.google.solutions.jitaccess.core.catalog;
 
 public enum ActivationType {
   /** Entitlement can be activated using self-approval */
-  JIT,
+  SELF_APPROVAL,
 
-  /** Entitlement can be activated using multi-party approval.  */
-  MPA,
+  /** Entitlement can be activated using peer approval.  */
+  PEER_APPROVAL,
 
-  /** Entitlement can no longer be activated. */
+  /** Entitlement can be activated using external approval. */
+  EXTERNAL_APPROVAL,
+
+  /** Entitlement can not be activated. */
   NONE
 }

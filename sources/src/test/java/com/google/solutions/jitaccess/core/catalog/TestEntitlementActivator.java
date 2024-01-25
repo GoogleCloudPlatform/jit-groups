@@ -53,19 +53,19 @@ public class TestEntitlementActivator {
 
     @Override
     protected void provisionAccess(
-      JitActivationRequest<SampleEntitlementId> request
+      SelfApprovalActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
     }
 
     @Override
     protected void provisionAccess(
       UserId approvingUser,
-      MpaActivationRequest<SampleEntitlementId> request
+      PeerApprovalActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
     }
 
     @Override
-    public JsonWebTokenConverter<MpaActivationRequest<SampleEntitlementId>> createTokenConverter() {
+    public JsonWebTokenConverter<PeerApprovalActivationRequest<SampleEntitlementId>> createTokenConverter() {
       return null;
     }
   }
@@ -83,7 +83,7 @@ public class TestEntitlementActivator {
       Mockito.mock(JustificationPolicy.class));
 
     var entitlements = Set.of(new SampleEntitlementId("cat", "1"));
-    var request = activator.createJitRequest(
+    var request = activator.createSelfApprovalRequest(
       SAMPLE_REQUESTING_USER,
       entitlements,
       "justification",
@@ -115,7 +115,7 @@ public class TestEntitlementActivator {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.createMpaRequest(
+      () -> activator.createPeerApprovalRequest(
         SAMPLE_REQUESTING_USER,
         Set.of(new SampleEntitlementId("cat", "1")),
         Set.of(SAMPLE_APPROVING_USER),
@@ -140,7 +140,7 @@ public class TestEntitlementActivator {
       Mockito.mock(EntitlementCatalog.class),
       justificationPolicy);
 
-    var request = activator.createJitRequest(
+    var request = activator.createSelfApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
@@ -164,7 +164,7 @@ public class TestEntitlementActivator {
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createJitRequest(
+    var request = activator.createSelfApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
@@ -186,7 +186,7 @@ public class TestEntitlementActivator {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
@@ -205,7 +205,7 @@ public class TestEntitlementActivator {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
@@ -230,7 +230,7 @@ public class TestEntitlementActivator {
       Mockito.mock(EntitlementCatalog.class),
       justificationPolicy);
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
@@ -250,7 +250,7 @@ public class TestEntitlementActivator {
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
@@ -274,7 +274,7 @@ public class TestEntitlementActivator {
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),

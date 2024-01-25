@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 
 import java.util.regex.Pattern;
 
@@ -77,10 +78,10 @@ class JitConstraints {
   /** Check if the IAM condition is a JIT- or MPA constraint */
   public static boolean isApprovalConstraint(
     Expr iamCondition,
-    ActivationType activationType) {
-    switch (activationType) {
+    EntitlementType entitlementType) {
+    switch (entitlementType) {
       case JIT: return isJitAccessConstraint(iamCondition);
-      case MPA: return isMultiPartyApprovalConstraint(iamCondition);
+      case PEER: return isMultiPartyApprovalConstraint(iamCondition);
       default: throw new IllegalArgumentException();
     }
   }

@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
@@ -145,7 +146,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   public EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
+    EnumSet<EntitlementType> typesToInclude,
     EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
@@ -155,55 +156,55 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
 
       //
-      // Find all JIT-eligible role bindings. The bindings are
+      // Find all eligible self approval role bindings. The bindings are
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> jitEligible;
-      if (typesToInclude.contains(ActivationType.JIT)) {
-        jitEligible = allBindings.stream()
+      Set<Entitlement<ProjectRoleBinding>> selfApprovalEligible;
+      if (typesToInclude.contains(EntitlementType.JIT)) {
+        selfApprovalEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
           .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
           .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
-            ActivationType.JIT,
+            EntitlementType.JIT,
             Entitlement.Status.AVAILABLE))
           .collect(Collectors.toSet());
       }
       else {
-        jitEligible = Set.of();
+        selfApprovalEligible = Set.of();
       }
 
       //
-      // Find all MPA-eligible role bindings. The bindings are
+      // Find all eligible peer approval role bindings. The bindings are
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> mpaEligible;
-      if (typesToInclude.contains(ActivationType.MPA)) {
-        mpaEligible = allBindings.stream()
+      Set<Entitlement<ProjectRoleBinding>> peerApprovalEligible;
+      if (typesToInclude.contains(EntitlementType.PEER)) {
+        peerApprovalEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
           .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
           .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
-            ActivationType.MPA,
+            EntitlementType.PEER,
             Entitlement.Status.AVAILABLE))
           .collect(Collectors.toSet());
       }
       else {
-        mpaEligible = Set.of();
+        peerApprovalEligible = Set.of();
       }
 
       //
-      // Determine effective set of eligible roles. If a role is both JIT- and
-      // MPA-eligible, only retain the JIT-eligible one.
+      // Determine effective set of eligible roles. If a role is both self approval and
+      // peer approval eligible, only retain the self approval eligible one.
       //
-      allAvailable.addAll(jitEligible);
-      allAvailable.addAll(mpaEligible
+      allAvailable.addAll(selfApprovalEligible);
+      allAvailable.addAll(peerApprovalEligible
         .stream()
-        .filter(r -> !jitEligible.stream().anyMatch(a -> a.id().equals(r.id())))
+        .filter(r -> !selfApprovalEligible.stream().anyMatch(a -> a.id().equals(r.id())))
         .collect(Collectors.toList()));
     }
 
@@ -228,7 +229,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   @Override
   public Set<UserId> findEntitlementHolders(
     ProjectRoleBinding roleBinding,
-    ActivationType activationType
+    EntitlementType entitlementType
   ) throws AccessException, IOException {
 
     var policies = this.assetInventoryClient.getEffectiveIamPolicies(
@@ -247,7 +248,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       // Only consider eligible bindings.
       .filter(binding -> JitConstraints.isApprovalConstraint(
         binding.getCondition(),
-        activationType))
+        entitlementType))
 
       .flatMap(binding -> binding.getMembers().stream())
       .collect(Collectors.toSet());

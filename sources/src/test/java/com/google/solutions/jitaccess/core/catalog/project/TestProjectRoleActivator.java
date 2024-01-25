@@ -62,7 +62,7 @@ public class TestProjectRoleActivator {
       resourceManagerClient,
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createJitRequest(
+    var request = activator.createSelfApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
@@ -98,7 +98,7 @@ public class TestProjectRoleActivator {
       resourceManagerClient,
       Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createMpaRequest(
+    var request = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),
@@ -134,7 +134,7 @@ public class TestProjectRoleActivator {
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class));
 
-    var inputRequest = activator.createMpaRequest(
+    var inputRequest = activator.createPeerApprovalRequest(
       SAMPLE_REQUESTING_USER,
       Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),

@@ -28,11 +28,11 @@ import java.time.Instant;
 import java.util.Set;
 
 /**
- * Request for "JIT-activating" an entitlement.
+ * Request for activating a self approval entitlement.
  */
-public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
+public abstract class SelfApprovalActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
-  protected JitActivationRequest(
+  protected SelfApprovalActivationRequest(
     ActivationId id,
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
@@ -50,6 +50,6 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
 
   @Override
   public final ActivationType type() {
-    return ActivationType.JIT;
+    return ActivationType.SELF_APPROVAL;
   }
 }

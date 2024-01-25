@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Catalog that implements JIT and peer-approval based
@@ -73,7 +74,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         "The activation duration must be no longer than %d minutes",
         this.options.maxActivationDuration().toMinutes()));
 
-    if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
+    if (request instanceof PeerApprovalActivationRequest<ProjectRoleBinding> mpaRequest) {
       Preconditions.checkArgument(
         mpaRequest.reviewers() != null &&
           mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
@@ -105,13 +106,13 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
       .findEntitlements(
         user,
         projectId,
-        EnumSet.of(activationType),
+        EnumSet.copyOf(Stream.of(EntitlementType.JIT, EntitlementType.PEER).filter(e -> e.activationType == activationType).toList()),
         EnumSet.of(Entitlement.Status.AVAILABLE))
       .availableEntitlements()
       .stream()
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
 
-    assert userEntitlements.values().stream().allMatch(e -> e.activationType() == activationType);
+    assert userEntitlements.values().stream().allMatch(e -> e.entitlementType().activationType == activationType);
     assert userEntitlements.values().stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
 
     for (var requestedEntitlement : entitlements) {
@@ -167,7 +168,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     return this.repository.findEntitlements(
       user,
       projectId,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 
@@ -185,7 +186,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     verifyUserCanActivateEntitlements(
       requestingUser,
       entitlement.projectId(),
-      ActivationType.MPA,
+      ActivationType.PEER_APPROVAL,
       List.of(entitlement));
 
     //
@@ -194,7 +195,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     // themselves.
     //
     return this.repository
-      .findEntitlementHolders(entitlement, ActivationType.MPA)
+      .findEntitlementHolders(entitlement, EntitlementType.PEER)
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
@@ -221,7 +222,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   @Override
   public void verifyUserCanApprove(
     UserId approvingUser,
-    MpaActivationRequest<ProjectRoleBinding> request
+    PeerApprovalActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);

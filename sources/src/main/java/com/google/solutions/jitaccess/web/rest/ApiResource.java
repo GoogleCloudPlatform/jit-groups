@@ -213,7 +213,7 @@ public class ApiResource {
       return new ProjectRolesResponse(
         entitlements.allEntitlements()
           .stream()
-          .map(ent -> new ProjectRole(ent.id().roleBinding(), ent.activationType(), ent.status()))
+          .map(ent -> new ProjectRole(ent.id().roleBinding(), ent.entitlementType(), ent.status()))
           .collect(Collectors.toList()),
         entitlements.warnings());
     }
@@ -313,10 +313,10 @@ public class ApiResource {
     var projectId = new ProjectId(projectIdString);
 
     //
-    // Create a JIT activation request.
+    // Create a self approval activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    var activationRequest = this.projectRoleActivator.createJitRequest(
+    var activationRequest = this.projectRoleActivator.createSelfApprovalRequest(
       iapPrincipal.getId(),
       request.roles
         .stream()
@@ -391,7 +391,7 @@ public class ApiResource {
   }
 
   /**
-   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
+   * Request approval to activate one or more project roles. Only allowed for peer approval eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -448,10 +448,10 @@ public class ApiResource {
     // Create an MPA activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    MpaActivationRequest<ProjectRoleBinding> activationRequest;
+    PeerApprovalActivationRequest<ProjectRoleBinding> activationRequest;
 
     try {
-      activationRequest = this.projectRoleActivator.createMpaRequest(
+      activationRequest = this.projectRoleActivator.createPeerApprovalRequest(
         iapPrincipal.getId(),
         Set.of(new ProjectRoleBinding(roleBinding)),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
@@ -631,7 +631,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    MpaActivationRequest<ProjectRoleBinding> activationRequest;
+    PeerApprovalActivationRequest<ProjectRoleBinding> activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
         this.projectRoleActivator.createTokenConverter(),
@@ -734,7 +734,7 @@ public class ApiResource {
       .addLabel("justification", request.justification())
       .addLabels(e -> addLabels(e, request.entitlements()));
 
-    if (request instanceof MpaActivationRequest<T> mpaRequest) {
+    if (request instanceof PeerApprovalActivationRequest<T> mpaRequest) {
       entry.addLabel("reviewers", mpaRequest
         .reviewers()
         .stream()
@@ -836,18 +836,18 @@ public class ApiResource {
 
   public static class ProjectRole {
     public final RoleBinding roleBinding;
-    public final ActivationType activationType;
+    public final EntitlementType entitlementType;
     public final Entitlement.Status status;
 
     public ProjectRole(
       RoleBinding roleBinding,
-      ActivationType activationType,
+      EntitlementType entitlementType,
       Entitlement.Status status) {
 
       Preconditions.checkNotNull(roleBinding, "roleBinding");
 
       this.roleBinding = roleBinding;
-      this.activationType = activationType;
+      this.entitlementType = entitlementType;
       this.status = status;
     }
   }
@@ -903,7 +903,7 @@ public class ApiResource {
           request.endTime()))
         .collect(Collectors.toList());
 
-      if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
+      if (request instanceof PeerApprovalActivationRequest<ProjectRoleBinding> mpaRequest) {
         this.reviewers = mpaRequest.reviewers();
         this.isReviewer = mpaRequest.reviewers().contains(caller);
       }
@@ -952,7 +952,7 @@ public class ApiResource {
   {
     protected RequestActivationNotification(
       ProjectId projectId,
-      MpaActivationRequest<ProjectRoleBinding> request,
+      PeerApprovalActivationRequest<ProjectRoleBinding> request,
       Instant requestExpiryTime,
       URL activationRequestUrl) throws MalformedURLException
     {
@@ -1002,13 +1002,13 @@ public class ApiResource {
     {
       super(
         List.of(activation.request().requestingUser()),
-        ((MpaActivationRequest<ProjectRoleBinding>)activation.request()).reviewers(), // Move reviewers to CC.
+        ((PeerApprovalActivationRequest<ProjectRoleBinding>)activation.request()).reviewers(), // Move reviewers to CC.
         String.format(
           "%s requests access to project %s",
           activation.request().requestingUser(),
           projectId));
 
-      var request = (MpaActivationRequest<ProjectRoleBinding>)activation.request();
+      var request = (PeerApprovalActivationRequest<ProjectRoleBinding>)activation.request();
       assert request.entitlements().size() == 1;
 
       this.properties.put("APPROVER", approver.email);

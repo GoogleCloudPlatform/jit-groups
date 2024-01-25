@@ -42,6 +42,6 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
    */
   void verifyUserCanApprove(
     UserId approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+    PeerApprovalActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 }

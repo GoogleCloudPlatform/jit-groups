@@ -71,7 +71,7 @@ public record EntitlementSet<TId extends EntitlementId>(
     for (var activeEntitlementId : this.activeEntitlementIds) {
       //
       // Find the corresponding entitlement to determine
-      // whether this is JIT or MPA-eligible.
+      // whether this is eligible.
       //
       var correspondingEntitlement = this.availableEntitlements
         .stream()
@@ -81,7 +81,7 @@ public record EntitlementSet<TId extends EntitlementId>(
         consolidatedSet.add(new Entitlement<>(
           activeEntitlementId,
           correspondingEntitlement.get().name(),
-          correspondingEntitlement.get().activationType(),
+          correspondingEntitlement.get().entitlementType(),
           Entitlement.Status.ACTIVE));
       }
       else {
@@ -91,7 +91,7 @@ public record EntitlementSet<TId extends EntitlementId>(
         consolidatedSet.add(new Entitlement<>(
           activeEntitlementId,
           activeEntitlementId.id(),
-          ActivationType.NONE,
+          EntitlementType.NONE,
           Entitlement.Status.ACTIVE));
       }
     }

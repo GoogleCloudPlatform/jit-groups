@@ -64,7 +64,7 @@ public class TestActivationRequest {
 
     @Override
     public ActivationType type() {
-      return ActivationType.JIT;
+      return ActivationType.SELF_APPROVAL;
     }
   }
 

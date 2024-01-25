@@ -53,7 +53,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   /**
    * Create a new request to activate an entitlement that permits self-approval.
    */
-  public final JitActivationRequest<TEntitlementId> createJitRequest(
+  public final SelfApprovalActivationRequest<TEntitlementId> createSelfApprovalRequest(
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
     String justification,
@@ -67,8 +67,8 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     //
     // NB. There's no need to verify access at this stage yet.
     //
-    return new JitRequest<>(
-      ActivationId.newId(ActivationType.JIT),
+    return new SelfApprovalRequest<>(
+      ActivationId.newId(ActivationType.SELF_APPROVAL),
       requestingUser,
       entitlements,
       justification,
@@ -78,9 +78,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
 
   /**
    * Create a new request to activate an entitlement that requires
-   * multi-party approval.
+   * peer approval.
    */
-  public MpaActivationRequest<TEntitlementId> createMpaRequest(
+  public PeerApprovalActivationRequest<TEntitlementId> createPeerApprovalRequest(
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
     Set<UserId> reviewers,
@@ -93,8 +93,8 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
       "Start time must not be in the past");
 
-    var request = new MpaRequest<>(
-      ActivationId.newId(ActivationType.MPA),
+    var request = new PeerApprovalRequest<>(
+      ActivationId.newId(ActivationType.PEER_APPROVAL),
       requestingUser,
       entitlements,
       reviewers,
@@ -103,7 +103,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       duration);
 
     //
-    // Pre-verify access to avoid sending an MPA requests for which
+    // Pre-verify access to avoid sending an peer requests for which
     // the access check will fail later.
     //
     this.catalog.verifyUserCanRequest(request);
@@ -115,7 +115,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Activate an entitlement that permits self-approval.
    */
   public final Activation<TEntitlementId> activate(
-    JitActivationRequest<TEntitlementId> request
+    SelfApprovalActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
@@ -143,14 +143,14 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    */
   public final Activation<TEntitlementId> approve(
     UserId approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+    PeerApprovalActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
 
     if (approvingUser.equals(request.requestingUser())) {
       throw new IllegalArgumentException(
-        "MPA activation requires the caller and beneficiary to be the different");
+        "Peer approval activation requires the caller and beneficiary to be the different");
     }
 
     if (!request.reviewers().contains(approvingUser)) {
@@ -185,7 +185,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Apply a request.
    */
   protected abstract void provisionAccess(
-    JitActivationRequest<TEntitlementId> request
+    SelfApprovalActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
 
@@ -194,22 +194,22 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    */
   protected abstract void provisionAccess(
     UserId approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+    PeerApprovalActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
   /**
-   * Create a converter for turning MPA requests into JWTs, and
+   * Create a converter for turning Peer approval requests into JWTs, and
    * vice versa.
    */
-  public abstract JsonWebTokenConverter<MpaActivationRequest<TEntitlementId>> createTokenConverter();
+  public abstract JsonWebTokenConverter<PeerApprovalActivationRequest<TEntitlementId>> createTokenConverter();
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  protected static class JitRequest<TEntitlementId extends EntitlementId>
-    extends JitActivationRequest<TEntitlementId> {
-    public JitRequest(
+  protected static class SelfApprovalRequest<TEntitlementId extends EntitlementId>
+    extends SelfApprovalActivationRequest<TEntitlementId> {
+    public SelfApprovalRequest(
       ActivationId id,
       UserId requestingUser,
       Set<TEntitlementId> entitlements,
@@ -221,9 +221,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     }
   }
 
-  protected static class MpaRequest<TEntitlementId extends EntitlementId>
-    extends MpaActivationRequest<TEntitlementId> {
-    public MpaRequest(
+  protected static class PeerApprovalRequest<TEntitlementId extends EntitlementId>
+    extends PeerApprovalActivationRequest<TEntitlementId> {
+    public PeerApprovalRequest(
       ActivationId id,
       UserId requestingUser,
       Set<TEntitlementId> entitlements,

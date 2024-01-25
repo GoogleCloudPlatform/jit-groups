@@ -32,11 +32,11 @@ import java.util.Set;
 /**
  * Request for "MPA-activating" an entitlement.
  */
-public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
+public abstract class PeerApprovalActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
   private final Collection<UserId> reviewers;
 
-  protected MpaActivationRequest(
+  protected PeerApprovalActivationRequest(
     ActivationId id,
     UserId requestingUser,
     Set<TEntitlementId> entitlements,
@@ -63,6 +63,6 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
 
   @Override
   public final ActivationType type() {
-    return ActivationType.MPA;
+    return ActivationType.PEER_APPROVAL;
   }
 }

@@ -3,9 +3,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -18,7 +18,7 @@ import java.util.SortedSet;
 public interface ProjectRoleRepository {
 
   /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
+   * Find projects that a user has standing, JIT-, or peer approval eligible access to.
    */
   SortedSet<ProjectId> findProjectsWithEntitlements(
     UserId user
@@ -30,7 +30,7 @@ public interface ProjectRoleRepository {
   EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserId user,
     ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
+    EnumSet<EntitlementType> typesToInclude,
     EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException;
 
@@ -39,6 +39,6 @@ public interface ProjectRoleRepository {
    */
   Set<UserId> findEntitlementHolders(
     ProjectRoleBinding roleBinding,
-    ActivationType activationType
+    EntitlementType entitlementType
   ) throws AccessException, IOException;
 }

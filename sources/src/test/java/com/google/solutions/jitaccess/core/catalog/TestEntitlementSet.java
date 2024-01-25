@@ -57,12 +57,12 @@ public class TestEntitlementSet {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
     var available2 = new Entitlement<StringId>(
       new StringId("available-2"),
       "available-2",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
 
     var set = new EntitlementSet<StringId>(
@@ -80,12 +80,12 @@ public class TestEntitlementSet {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
     var available2 = new Entitlement<StringId>(
       new StringId("available-2"),
       "available-2",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
 
     var set = new EntitlementSet<StringId>(
@@ -100,7 +100,7 @@ public class TestEntitlementSet {
       new Entitlement<StringId>(
         new StringId("available-1"),
         "available-1",
-        ActivationType.JIT,
+        EntitlementType.JIT,
         Entitlement.Status.ACTIVE)),
       set.allEntitlements());
   }
@@ -110,12 +110,12 @@ public class TestEntitlementSet {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
     var available2 = new Entitlement<StringId>(
       new StringId("available-2"),
       "available-2",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
 
     var set = new EntitlementSet<StringId>(
@@ -129,12 +129,12 @@ public class TestEntitlementSet {
         new Entitlement<StringId>(
           new StringId("available-1"),
           "available-1",
-          ActivationType.JIT,
+          EntitlementType.JIT,
           Entitlement.Status.ACTIVE),
         new Entitlement<StringId>(
           new StringId("available-2"),
           "available-2",
-          ActivationType.JIT,
+          EntitlementType.JIT,
           Entitlement.Status.ACTIVE)),
       set.allEntitlements());
   }
@@ -144,12 +144,12 @@ public class TestEntitlementSet {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
     var available2 = new Entitlement<StringId>(
       new StringId("available-2"),
       "available-2",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
 
     var set = new EntitlementSet<StringId>(
@@ -164,7 +164,7 @@ public class TestEntitlementSet {
         new Entitlement<StringId>(
           new StringId("unavailable-1"),
           "unavailable-1",
-          ActivationType.NONE,
+          EntitlementType.NONE,
           Entitlement.Status.ACTIVE)),
       set.allEntitlements());
   }

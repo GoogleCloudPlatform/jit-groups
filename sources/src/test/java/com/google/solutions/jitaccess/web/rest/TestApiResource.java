@@ -408,12 +408,12 @@ public class TestApiResource {
     var role1 = new Entitlement<ProjectRoleBinding>(
       new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
       "ent-1",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
     var role2 = new Entitlement<ProjectRoleBinding>(
       new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
       "ent-2",
-      ActivationType.JIT,
+      EntitlementType.JIT,
       Entitlement.Status.AVAILABLE);
 
     when(this.resource.mpaCatalog
@@ -530,7 +530,7 @@ public class TestApiResource {
   @Test
   public void whenActivatorThrowsException_ThenSelfApproveActivationReturnsError() throws Exception {
     when(this.resource.projectRoleActivator
-      .createJitRequest(any(), any(), any(), any(), any()))
+      .createSelfApprovalRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
     when(this.resource.projectRoleActivator
       .activate(any()))
@@ -556,7 +556,7 @@ public class TestApiResource {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
     when(this.resource.projectRoleActivator
-      .createJitRequest(any(), any(), any(), any(), any()))
+      .createSelfApprovalRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
     when(this.resource.projectRoleActivator
       .activate(argThat(r -> r.entitlements().size() == 1)))
@@ -794,7 +794,7 @@ public class TestApiResource {
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
     when(this.resource.projectRoleActivator
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         eq(SAMPLE_USER),
         any(),
         any(),
@@ -935,7 +935,7 @@ public class TestApiResource {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         SAMPLE_USER,
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
@@ -966,7 +966,7 @@ public class TestApiResource {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         SAMPLE_USER,
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
@@ -1041,7 +1041,7 @@ public class TestApiResource {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         SAMPLE_USER,
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
@@ -1079,7 +1079,7 @@ public class TestApiResource {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         SAMPLE_USER,
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
@@ -1116,7 +1116,7 @@ public class TestApiResource {
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
-      .createMpaRequest(
+      .createPeerApprovalRequest(
         SAMPLE_USER,
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
