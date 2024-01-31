@@ -60,32 +60,93 @@ public class TestJitConstraints {
   }
 
   // ---------------------------------------------------------------------
-  // isMultiPartyApprovalConstraint.
+  // isPeerApprovalConstraint.
   // ---------------------------------------------------------------------
 
   @Test
-  public void whenConditionHasRedundantWhitespace_ThenIsMultiPartyApprovalConstraintTrue() {
+  public void whenConditionHasRedundantWhitespace_ThenIsPeerApprovalConstraintTrue() {
     var condition = new Expr()
-      .setExpression(" \r\n\t has( { \t\n\r\n }.multiPartyApprovalConstraint \t ) \t \r\n\r");
-    assertTrue(JitConstraints.isMultiPartyApprovalConstraint(condition));
+      .setExpression(" \r\n\t has( { \t\n\r\n }.peerApprovalConstraint \t ) \t \r\n\r");
+    assertTrue(JitConstraints.isPeerApprovalConstraint(condition));
   }
 
   @Test
-  public void whenConditionUsesWrongCase_ThenIsMultiPartyApprovalConstraintReturnsTrue() {
+  public void whenConditionUsesWrongCase_ThenIsPeerApprovalConstraintReturnsTrue() {
     var condition = new Expr()
-      .setExpression("HAS({}.MultipARTYapproVALConstraint)");
-    assertTrue(JitConstraints.isMultiPartyApprovalConstraint(condition));
+      .setExpression("HAS({}.pEErapproVALConstraint)");
+    assertTrue(JitConstraints.isPeerApprovalConstraint(condition));
   }
 
   @Test
-  public void whenConditionIsEmpty_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
-    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(new Expr().setExpression("")));
-    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(null));
+  public void whenConditionIsEmpty_ThenIsPeerApprovalConstraintReturnsFalse() {
+    assertFalse(JitConstraints.isPeerApprovalConstraint(new Expr().setExpression("")));
+    assertFalse(JitConstraints.isPeerApprovalConstraint(null));
   }
 
   @Test
-  public void whenExpressionIsNull_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
+  public void whenExpressionIsNull_ThenIsPeerApprovalConstraintReturnsFalse() {
     var condition = new Expr().setExpression(null);
-    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(condition));
+    assertFalse(JitConstraints.isPeerApprovalConstraint(condition));
+  }
+
+  // ---------------------------------------------------------------------
+  // isExternalApprovalConstraint.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenConditionHasRedundantWhitespace_ThenIsExternalApprovalConstraintTrue() {
+    var condition = new Expr()
+      .setExpression(" \r\n\t has( { \t\n\r\n }.externalApprovalConstraint \t ) \t \r\n\r");
+    assertTrue(JitConstraints.isExternalApprovalConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionUsesWrongCase_ThenIsExternalApprovalConstraintReturnsTrue() {
+    var condition = new Expr()
+      .setExpression("HAS({}.exTErNaLapproVALConstraint)");
+    assertTrue(JitConstraints.isExternalApprovalConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionIsEmpty_ThenIsExternalApprovalConstraintReturnsFalse() {
+    assertFalse(JitConstraints.isExternalApprovalConstraint(new Expr().setExpression("")));
+    assertFalse(JitConstraints.isExternalApprovalConstraint(null));
+  }
+
+  @Test
+  public void whenExpressionIsNull_ThenIsExternalApprovalConstraintReturnsFalse() {
+    var condition = new Expr().setExpression(null);
+    assertFalse(JitConstraints.isExternalApprovalConstraint(condition));
+  }
+
+
+  // ---------------------------------------------------------------------
+  // isReviewerConstraint.
+  // ---------------------------------------------------------------------
+
+  @Test
+  public void whenConditionHasRedundantWhitespace_ThenIsReviewerConstraintTrue() {
+    var condition = new Expr()
+      .setExpression(" \r\n\t has( { \t\n\r\n }.reviewerPrivilege \t ) \t \r\n\r");
+    assertTrue(JitConstraints.isReviewerConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionUsesWrongCase_ThenIsReviewerConstraintReturnsTrue() {
+    var condition = new Expr()
+      .setExpression("HAS({}.reviewERPrivIlege)");
+    assertTrue(JitConstraints.isReviewerConstraint(condition));
+  }
+
+  @Test
+  public void whenConditionIsEmpty_ThenIsReviewerConstraintReturnsFalse() {
+    assertFalse(JitConstraints.isReviewerConstraint(new Expr().setExpression("")));
+    assertFalse(JitConstraints.isReviewerConstraint(null));
+  }
+
+  @Test
+  public void whenExpressionIsNull_ThenIsReviewerConstraintReturnsFalse() {
+    var condition = new Expr().setExpression(null);
+    assertFalse(JitConstraints.isReviewerConstraint(condition));
   }
 }

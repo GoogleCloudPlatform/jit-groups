@@ -40,10 +40,12 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final UserId requestingUser;
   private final Set<TEntitlementId> entitlements;
   private final String justification;
+  private final Collection<UserId> reviewers;
 
   protected ActivationRequest(
     ActivationId id,
     UserId requestingUser,
+    Collection<UserId> reviewers,
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
@@ -53,6 +55,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(requestingUser, "user");
     Preconditions.checkNotNull(entitlements, "entitlements");
+    Preconditions.checkNotNull(reviewers, "reviewers");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkNotNull(startTime);
     Preconditions.checkNotNull(startTime);
@@ -62,6 +65,10 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
       "At least one entitlement must be specified");
 
     Preconditions.checkArgument(
+      !reviewers.isEmpty(),
+      "At least one reviewer must be specified");
+
+    Preconditions.checkArgument(
       !duration.isZero() &&! duration.isNegative(),
       "The duration must be positive");
 
@@ -69,6 +76,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     this.startTime = startTime;
     this.duration = duration;
     this.requestingUser = requestingUser;
+    this.reviewers = reviewers;
     this.entitlements = entitlements;
     this.justification = justification;
   }
@@ -106,6 +114,13 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
    */
   public UserId requestingUser() {
     return this.requestingUser;
+  }
+
+  /**
+   * @return users that can review request.
+   */
+  public Collection<UserId> reviewers() {
+    return this.reviewers;
   }
 
   /**

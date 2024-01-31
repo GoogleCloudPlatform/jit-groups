@@ -103,7 +103,42 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
       duration);
 
     //
-    // Pre-verify access to avoid sending an peer requests for which
+    // Pre-verify access to avoid sending a peer approval requests for which
+    // the access check will fail later.
+    //
+    this.catalog.verifyUserCanRequest(request);
+
+    return request;
+  }
+
+    /**
+   * Create a new request to activate an entitlement that requires
+   * external approval.
+   */
+  public ExternalApprovalActivationRequest<TEntitlementId> createExternalApprovalRequest(
+    UserId requestingUser,
+    Set<TEntitlementId> entitlements,
+    Set<UserId> reviewers,
+    String justification,
+    Instant startTime,
+    Duration duration
+  ) throws AccessException, IOException {
+
+    Preconditions.checkArgument(
+      startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
+      "Start time must not be in the past");
+
+    var request = new ExternalApprovalRequest<>(
+      ActivationId.newId(ActivationType.EXTERNAL_APPROVAL),
+      requestingUser,
+      entitlements,
+      reviewers,
+      justification,
+      startTime,
+      duration);
+
+    //
+    // Pre-verify access to avoid sending an external approval requests for which
     // the access check will fail later.
     //
     this.catalog.verifyUserCanRequest(request);
@@ -112,46 +147,14 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   }
 
   /**
-   * Activate an entitlement that permits self-approval.
-   */
-  public final Activation<TEntitlementId> activate(
-    SelfApprovalActivationRequest<TEntitlementId> request
-  ) throws AccessException, AlreadyExistsException, IOException
-  {
-    Preconditions.checkNotNull(policy, "policy");
-
-    //
-    // Check that the justification is ok.
-    //
-    policy.checkJustification(request.requestingUser(), request.justification());
-
-    //
-    // Check that the user is (still) allowed to activate this entitlement.
-    //
-    this.catalog.verifyUserCanRequest(request);
-
-    //
-    // Request is legit, apply it.
-    //
-    provisionAccess(request);
-
-    return new Activation<>(request);
-  }
-
-  /**
    * Approve another user's request.
    */
   public final Activation<TEntitlementId> approve(
     UserId approvingUser,
-    PeerApprovalActivationRequest<TEntitlementId> request
+    ActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
-
-    if (approvingUser.equals(request.requestingUser())) {
-      throw new IllegalArgumentException(
-        "Peer approval activation requires the caller and beneficiary to be the different");
-    }
 
     if (!request.reviewers().contains(approvingUser)) {
       throw new AccessDeniedException(
@@ -185,23 +188,15 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Apply a request.
    */
   protected abstract void provisionAccess(
-    SelfApprovalActivationRequest<TEntitlementId> request
-  ) throws AccessException, AlreadyExistsException, IOException;
-
-
-  /**
-   * Apply a request.
-   */
-  protected abstract void provisionAccess(
     UserId approvingUser,
-    PeerApprovalActivationRequest<TEntitlementId> request
+    ActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
   /**
    * Create a converter for turning Peer approval requests into JWTs, and
    * vice versa.
    */
-  public abstract JsonWebTokenConverter<PeerApprovalActivationRequest<TEntitlementId>> createTokenConverter();
+  public abstract JsonWebTokenConverter<ActivationRequest<TEntitlementId>> createTokenConverter();
 
   // -------------------------------------------------------------------------
   // Inner classes.
@@ -224,6 +219,25 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   protected static class PeerApprovalRequest<TEntitlementId extends EntitlementId>
     extends PeerApprovalActivationRequest<TEntitlementId> {
     public PeerApprovalRequest(
+      ActivationId id,
+      UserId requestingUser,
+      Set<TEntitlementId> entitlements,
+      Set<UserId> reviewers,
+      String justification,
+      Instant startTime,
+      Duration duration
+    ) {
+      super(id, requestingUser, entitlements, reviewers, justification, startTime, duration);
+
+      if (entitlements.size() != 1) {
+        throw new IllegalArgumentException("Only one entitlement can be activated at a time");
+      }
+    }
+  }
+
+  protected static class ExternalApprovalRequest<TEntitlementId extends EntitlementId>
+    extends ExternalApprovalActivationRequest<TEntitlementId> {
+    public ExternalApprovalRequest(
       ActivationId id,
       UserId requestingUser,
       Set<TEntitlementId> entitlements,

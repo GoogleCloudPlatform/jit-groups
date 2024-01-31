@@ -34,7 +34,6 @@ import java.util.Set;
  */
 public abstract class PeerApprovalActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
-  private final Collection<UserId> reviewers;
 
   protected PeerApprovalActivationRequest(
     ActivationId id,
@@ -47,18 +46,11 @@ public abstract class PeerApprovalActivationRequest<TEntitlementId extends Entit
     super(
       id,
       requestingUser,
+      reviewers,
       entitlements,
       justification,
       startTime,
       duration);
-
-    Preconditions.checkNotNull(reviewers, "reviewers");
-    Preconditions.checkArgument(!reviewers.isEmpty());
-    this.reviewers = reviewers;
-  }
-
-  public Collection<UserId> reviewers() {
-    return this.reviewers;
   }
 
   @Override

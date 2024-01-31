@@ -40,9 +40,17 @@ class JitConstraints {
   private static final Pattern JIT_CONDITION_PATTERN = Pattern
     .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
-  /** Condition that marks a role binding as eligible for MPA */
-  private static final Pattern MPA_CONDITION_PATTERN = Pattern
-    .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*$");
+  /** Condition that marks a role binding as eligible for peer approval */
+  private static final Pattern PEER_CONDITION_PATTERN = Pattern
+    .compile("^\\s*has\\(\\s*\\{\\s*\\}.peerapprovalconstraint\\s*\\)\\s*$");
+
+  /** Condition that marks a role binding as eligible for requester */
+    private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
+    .compile("^\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint\\s*\\)\\s*$");
+  
+  /** Condition that marks a role binding as eligible for reviewer */
+    private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
+    .compile("^\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege\\s*\\)\\s*$");
 
   private JitConstraints() {
   }
@@ -70,18 +78,30 @@ class JitConstraints {
     return isConstraint(iamCondition, JIT_CONDITION_PATTERN);
   }
 
-  /** Check if the IAM condition is an MPA constraint */
-  public static boolean isMultiPartyApprovalConstraint(Expr iamCondition) {
-    return isConstraint(iamCondition, MPA_CONDITION_PATTERN);
+  /** Check if the IAM condition is a peer approval constraint */
+  public static boolean isPeerApprovalConstraint(Expr iamCondition) {
+    return isConstraint(iamCondition, PEER_CONDITION_PATTERN);
   }
 
-  /** Check if the IAM condition is a JIT- or MPA constraint */
+  /** Check if the IAM condition is an external approval constraint */
+  public static boolean isExternalApprovalConstraint(Expr iamCondition) {
+    return isConstraint(iamCondition, REQUESTER_CONDITION_PATTERN);
+  }
+
+  /** Check if the IAM condition is a reviewer privilege */
+  public static boolean isReviewerConstraint(Expr iamCondition) {
+    return isConstraint(iamCondition, REVIEWER_CONDITION_PATTERN);
+  }
+
+  /** Check if the IAM condition is a valid constraint or privilege. */
   public static boolean isApprovalConstraint(
     Expr iamCondition,
     EntitlementType entitlementType) {
     switch (entitlementType) {
       case JIT: return isJitAccessConstraint(iamCondition);
-      case PEER: return isMultiPartyApprovalConstraint(iamCondition);
+      case PEER: return isPeerApprovalConstraint(iamCondition);
+      case REQUESTER: return isExternalApprovalConstraint(iamCondition);
+      case REVIEWER: return isReviewerConstraint(iamCondition);
       default: throw new IllegalArgumentException();
     }
   }

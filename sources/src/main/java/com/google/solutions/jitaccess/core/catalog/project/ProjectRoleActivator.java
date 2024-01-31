@@ -98,31 +98,8 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
   @Override
   protected void provisionAccess(
-    SelfApprovalActivationRequest<ProjectRoleBinding> request
-  ) throws AccessException, AlreadyExistsException, IOException {
-
-    Preconditions.checkNotNull(request, "request");
-
-    var bindingDescription = String.format(
-      "Self-approved, justification: %s",
-      request.justification());
-
-    provisionTemporaryBinding(
-      bindingDescription,
-      ProjectActivationRequest.projectId(request),
-      request.requestingUser(),
-      request.entitlements()
-        .stream()
-        .map(e -> e.roleBinding().role())
-        .collect(Collectors.toSet()),
-      request.startTime(),
-      request.duration());
-  }
-
-  @Override
-  protected void provisionAccess(
     UserId approvingUser,
-    PeerApprovalActivationRequest<ProjectRoleBinding> request
+    ActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -151,10 +128,10 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
   }
 
   @Override
-  public JsonWebTokenConverter<PeerApprovalActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public JsonWebTokenConverter<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(PeerApprovalActivationRequest<ProjectRoleBinding> request) {
+      public JsonWebToken.Payload convert(com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request) {
         var roleBindings = request.entitlements()
           .stream()
           .map(ent -> ent.roleBinding())
@@ -178,7 +155,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
       }
 
       @Override
-      public PeerApprovalActivationRequest<ProjectRoleBinding> convert(JsonWebToken.Payload payload) {
+      public com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> convert(JsonWebToken.Payload payload) {
         var roleBinding = new RoleBinding(
           payload.get("resource").toString(),
           payload.get("role").toString());

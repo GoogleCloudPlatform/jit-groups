@@ -48,10 +48,15 @@ public class TestPolicyAnalyzerRepository {
   private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2", "approver-2@example.com");
   private static final ProjectId SAMPLE_PROJECT_ID_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_ID_2 = new ProjectId("project-2");
+  private static final ProjectId SAMPLE_PROJECT_ID_3 = new ProjectId("project-3");
   private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
   private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
+  private static final String SAMPLE_ROLE_3 = "roles/resourcemanager.role3";
+  private static final String SAMPLE_ROLE_4 = "roles/resourcemanager.role4";
   private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
-  private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
+  private static final String PEER_CONDITION = "has({}.peerApprovalConstraint)";
+  private static final String REQUESTER_CONDITION = "has({}.externalApprovalConstraint)";
+  private static final String REVIEWER_CONDITION = "has({}.reviewerPrivilege)";
 
   private static IamPolicyAnalysisResult createIamPolicyAnalysisResult(
     String resource,
@@ -210,7 +215,21 @@ public class TestPolicyAnalyzerRepository {
             SAMPLE_PROJECT_ID_2.getFullResourceName(),
             SAMPLE_ROLE_1,
             SAMPLE_USER,
-            MPA_CONDITION,
+            PEER_CONDITION,
+            "eligible binding",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_3.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REQUESTER_CONDITION,
+            "eligible binding",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_3.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REVIEWER_CONDITION,
             "eligible binding",
             "CONDITIONAL"))));
 
@@ -220,9 +239,10 @@ public class TestPolicyAnalyzerRepository {
 
     var projectIds = service.findProjectsWithEntitlements(SAMPLE_USER);
     assertNotNull(projectIds);
-    assertEquals(2, projectIds.size());
+    assertEquals(3, projectIds.size());
     assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_1));
     assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_2));
+    assertTrue(projectIds.contains(SAMPLE_PROJECT_ID_3));
   }
 
   // ---------------------------------------------------------------------
@@ -249,7 +269,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -281,7 +301,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -316,7 +336,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -354,7 +374,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -406,7 +426,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -424,7 +444,7 @@ public class TestPolicyAnalyzerRepository {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+  public void whenAnalysisContainsPeerApprovalEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
@@ -440,7 +460,7 @@ public class TestPolicyAnalyzerRepository {
             SAMPLE_PROJECT_ID_1.getFullResourceName(),
             SAMPLE_ROLE_1,
             SAMPLE_USER,
-            MPA_CONDITION,
+            PEER_CONDITION,
             "eligible binding",
             "CONDITIONAL"))));
 
@@ -451,7 +471,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -469,7 +489,7 @@ public class TestPolicyAnalyzerRepository {
   }
 
   @Test
-  public void whenAnalysisContainsDuplicateMpaEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+  public void whenAnalysisContainsDuplicatePeerApprovalEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     when(assetAdapter
@@ -485,14 +505,14 @@ public class TestPolicyAnalyzerRepository {
             SAMPLE_PROJECT_ID_1.getFullResourceName(),
             SAMPLE_ROLE_1,
             SAMPLE_USER,
-            MPA_CONDITION,
+            PEER_CONDITION,
             "eligible binding # 1",
             "CONDITIONAL"),
           createConditionalIamPolicyAnalysisResult(
             SAMPLE_PROJECT_ID_1.getFullResourceName(),
             SAMPLE_ROLE_1,
             SAMPLE_USER,
-            MPA_CONDITION,
+            PEER_CONDITION,
             "eligible binding # 2",
             "CONDITIONAL"))));
 
@@ -503,7 +523,7 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
@@ -521,7 +541,201 @@ public class TestPolicyAnalyzerRepository {
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForDifferentRoles_ThenFindEntitlementsReturnsList()
+  public void whenAnalysisContainsExternalApprovalEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REQUESTER_CONDITION,
+            "eligible binding",
+            "CONDITIONAL"))));
+
+    var service = new PolicyAnalyzerRepository(
+      assetAdapter,
+      new PolicyAnalyzerRepository.Options("organizations/0"));
+
+    var entitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+
+    assertNotNull(entitlements.warnings());
+    assertEquals(0, entitlements.warnings().size());
+
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
+
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(SAMPLE_ROLE_1, entitlement.name());
+    assertEquals(EntitlementType.REQUESTER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+  }
+
+  @Test
+  public void whenAnalysisContainsDuplicateExternalApprovalEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REQUESTER_CONDITION,
+            "eligible binding # 1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REQUESTER_CONDITION,
+            "eligible binding # 2",
+            "CONDITIONAL"))));
+
+    var service = new PolicyAnalyzerRepository(
+      assetAdapter,
+      new PolicyAnalyzerRepository.Options("organizations/0"));
+
+    var entitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+
+    assertNotNull(entitlements.warnings());
+    assertEquals(0, entitlements.warnings().size());
+
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
+
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(SAMPLE_ROLE_1, entitlement.name());
+    assertEquals(EntitlementType.REQUESTER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+  }
+
+  @Test
+  public void whenAnalysisContainsReviewerEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REVIEWER_CONDITION,
+            "eligible binding",
+            "CONDITIONAL"))));
+
+    var service = new PolicyAnalyzerRepository(
+      assetAdapter,
+      new PolicyAnalyzerRepository.Options("organizations/0"));
+
+    var entitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+
+    assertNotNull(entitlements.warnings());
+    assertEquals(0, entitlements.warnings().size());
+
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
+
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(SAMPLE_ROLE_1, entitlement.name());
+    assertEquals(EntitlementType.REVIEWER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+  }
+
+  @Test
+  public void whenAnalysisContainsDuplicateReviewerEligibleBinding_ThenFindEntitlementsReturnsList() throws Exception {
+    var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
+
+    when(assetAdapter
+      .findAccessibleResourcesByUser(
+        anyString(),
+        eq(SAMPLE_USER),
+        eq(Optional.empty()),
+        eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
+        eq(false)))
+      .thenReturn(new IamPolicyAnalysis()
+        .setAnalysisResults(List.of(
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REVIEWER_CONDITION,
+            "eligible binding # 1",
+            "CONDITIONAL"),
+          createConditionalIamPolicyAnalysisResult(
+            SAMPLE_PROJECT_ID_1.getFullResourceName(),
+            SAMPLE_ROLE_1,
+            SAMPLE_USER,
+            REVIEWER_CONDITION,
+            "eligible binding # 2",
+            "CONDITIONAL"))));
+
+    var service = new PolicyAnalyzerRepository(
+      assetAdapter,
+      new PolicyAnalyzerRepository.Options("organizations/0"));
+
+    var entitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+
+    assertNotNull(entitlements.warnings());
+    assertEquals(0, entitlements.warnings().size());
+
+    assertNotNull(entitlements.allEntitlements());
+    assertEquals(1, entitlements.allEntitlements().size());
+
+    var entitlement = entitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(SAMPLE_ROLE_1, entitlement.name());
+    assertEquals(EntitlementType.REVIEWER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+  }
+
+  @Test
+  public void whenAnalysisContainsMultipleEligibleBindingForDifferentRoles_ThenFindEntitlementsReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
@@ -533,12 +747,28 @@ public class TestPolicyAnalyzerRepository {
       "JIT-eligible binding",
       "CONDITIONAL");
 
-    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+    var peerApprovalEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_2,
       SAMPLE_USER,
-      MPA_CONDITION,
+      PEER_CONDITION,
       "Peer approval eligible binding",
+      "CONDITIONAL");
+
+    var externalApprovalEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_3,
+      SAMPLE_USER,
+      REQUESTER_CONDITION,
+      "External approval eligible binding",
+      "CONDITIONAL");
+
+    var reviewerEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_4,
+      SAMPLE_USER,
+      REVIEWER_CONDITION,
+      "Reviewer eligible binding",
       "CONDITIONAL");
 
     when(assetAdapter.findAccessibleResourcesByUser(
@@ -548,7 +778,7 @@ public class TestPolicyAnalyzerRepository {
       eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
       eq(false)))
       .thenReturn(new IamPolicyAnalysis()
-        .setAnalysisResults(List.of(jitEligibleBinding, mpaEligibleBinding)));
+        .setAnalysisResults(List.of(jitEligibleBinding, peerApprovalEligibleBinding, externalApprovalEligibleBinding, reviewerEligibleBinding)));
 
     var service = new PolicyAnalyzerRepository(
       assetAdapter,
@@ -557,14 +787,14 @@ public class TestPolicyAnalyzerRepository {
     var entitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(entitlements.warnings());
     assertEquals(0, entitlements.warnings().size());
 
     assertNotNull(entitlements.allEntitlements());
-    assertEquals(2, entitlements.allEntitlements().size());
+    assertEquals(4, entitlements.allEntitlements().size());
 
     var entitlement = entitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
@@ -577,10 +807,22 @@ public class TestPolicyAnalyzerRepository {
     assertEquals(SAMPLE_ROLE_2, entitlement.id().roleBinding().role());
     assertEquals(EntitlementType.PEER, entitlement.entitlementType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    entitlement = entitlements.allEntitlements().stream().skip(2).findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_3, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REQUESTER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    entitlement = entitlements.allEntitlements().stream().skip(3).findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_4, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REVIEWER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
   }
 
   @Test
-  public void whenAnalysisContainsMpaEligibleBindingAndJitEligibleBindingForSameRole_ThenFindEntitlementsReturnsList()
+  public void whenAnalysisContainsMultipleBindingsForSameRole_ThenFindEntitlementsReturnsList()
     throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
@@ -592,12 +834,28 @@ public class TestPolicyAnalyzerRepository {
       "JIT-eligible binding",
       "CONDITIONAL");
 
-    var mpaEligibleBinding = createConditionalIamPolicyAnalysisResult(
+    var peerApprovalEligibleBinding = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_USER,
-      MPA_CONDITION,
+      PEER_CONDITION,
       "Peer approval eligible binding",
+      "CONDITIONAL");
+    
+    var externalApprovalEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_USER,
+      REQUESTER_CONDITION,
+      "External approval eligible binding",
+      "CONDITIONAL");
+
+    var reviewerEligibleBinding = createConditionalIamPolicyAnalysisResult(
+      SAMPLE_PROJECT_ID_1.getFullResourceName(),
+      SAMPLE_ROLE_1,
+      SAMPLE_USER,
+      REVIEWER_CONDITION,
+      "Reviewer eligible binding",
       "CONDITIONAL");
 
     when(assetAdapter.findAccessibleResourcesByUser(
@@ -607,24 +865,24 @@ public class TestPolicyAnalyzerRepository {
       eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
       eq(false)))
       .thenReturn(new IamPolicyAnalysis()
-        .setAnalysisResults(List.of(jitEligibleBinding, mpaEligibleBinding)));
+        .setAnalysisResults(List.of(jitEligibleBinding, peerApprovalEligibleBinding, externalApprovalEligibleBinding, reviewerEligibleBinding)));
 
     var service = new PolicyAnalyzerRepository(
       assetAdapter,
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
-    // All types -> only the JIT-eligible binding is retained.
+    // All types -> all retained.
     var allEntitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
     assertNotNull(allEntitlements.warnings());
     assertEquals(0, allEntitlements.warnings().size());
 
     assertNotNull(allEntitlements.allEntitlements());
-    assertEquals(1, allEntitlements.allEntitlements().size());
+    assertEquals(4, allEntitlements.allEntitlements().size());
 
     var entitlement = allEntitlements.allEntitlements().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
@@ -632,7 +890,25 @@ public class TestPolicyAnalyzerRepository {
     assertEquals(EntitlementType.JIT, entitlement.entitlementType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
 
-    // JIT only -> Peer binding is ignored.
+    entitlement = allEntitlements.allEntitlements().stream().skip(1).findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.PEER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    entitlement = allEntitlements.allEntitlements().stream().skip(2).findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REQUESTER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    entitlement = allEntitlements.allEntitlements().stream().skip(3).findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REVIEWER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    // JIT only -> Other bindings are ignored.
     var jitEntitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
@@ -645,7 +921,7 @@ public class TestPolicyAnalyzerRepository {
     assertEquals(EntitlementType.JIT, entitlement.entitlementType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
 
-    // Peer only -> JIT binding is ignored.
+    // Peer only -> Other bindings are ignored.
     var peerEntitlements = service.findEntitlements(
       SAMPLE_USER,
       SAMPLE_PROJECT_ID_1,
@@ -656,6 +932,32 @@ public class TestPolicyAnalyzerRepository {
     assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
     assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
     assertEquals(EntitlementType.PEER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    // External only -> Other bindings are ignored.
+    var externalEntitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.REQUESTER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    assertEquals(1, peerEntitlements.allEntitlements().size());
+    entitlement = externalEntitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REQUESTER, entitlement.entitlementType());
+    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+    // Reviewer only -> Other bindings are ignored.
+    var reviewerEntitlements = service.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT_ID_1,
+      EnumSet.of(EntitlementType.REVIEWER),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    assertEquals(1, peerEntitlements.allEntitlements().size());
+    entitlement = reviewerEntitlements.allEntitlements().stream().findFirst().get();
+    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
+    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
+    assertEquals(EntitlementType.REVIEWER, entitlement.entitlementType());
     assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
   }
 
@@ -852,7 +1154,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_2,
       SAMPLE_USER,
-      MPA_CONDITION,
+      PEER_CONDITION,
       "Peer approval eligible binding",
       "CONDITIONAL");
 
@@ -952,14 +1254,14 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_APPROVING_USER_1,
-      MPA_CONDITION,
+      PEER_CONDITION,
       "eligible binding",
       "CONDITIONAL");
     var mpaBindingResult2 = createConditionalIamPolicyAnalysisResult(
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_APPROVING_USER_2,
-      MPA_CONDITION,
+      PEER_CONDITION,
       "eligible binding",
       "CONDITIONAL");
 

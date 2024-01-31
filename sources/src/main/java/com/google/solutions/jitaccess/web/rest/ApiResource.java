@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.Entitlement.Status;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
@@ -231,14 +232,15 @@ public class ApiResource {
   }
 
   /**
-   * List peers that are qualified to approve the activation of a role.
+   * List reviewers that are qualified to approve the activation of a role.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/peers")
-  public ProjectRolePeersResponse listPeers(
+  @Path("projects/{projectId}/reviewers")
+  public ProjectRoleReviewersResponse listReviewers(
     @PathParam("projectId") String projectIdString,
     @QueryParam("role") String role,
+    @QueryParam("entitlementType") String entitlementType,
     @Context SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
@@ -249,31 +251,55 @@ public class ApiResource {
     Preconditions.checkArgument(
       role != null && !role.trim().isEmpty(),
       "A role is required");
+    Preconditions.checkArgument(
+      entitlementType != null && !entitlementType.trim().isEmpty(),
+      "An activationType is required");
+    Preconditions.checkArgument(
+      List.of("PEER", "REQUESTER").contains(entitlementType), 
+      "Invalid activationType. Must be either PEER or REQUESTER.");
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, role);
 
+    var type = EntitlementType.NONE;
+    switch (entitlementType) {
+      case "PEER":
+        type = EntitlementType.PEER;
+        break;
+      case "REQUESTER":
+        type = EntitlementType.REQUESTER;
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid activationType.");
+    }
+
+    var entitlement = new Entitlement<>(
+      new ProjectRoleBinding(roleBinding), 
+      roleBinding.role(), 
+      type, 
+      Status.AVAILABLE);
+
     try {
-      var peers = this.mpaCatalog.listReviewers(
+      var reviewers = this.mpaCatalog.listReviewers(
         iapPrincipal.getId(),
-        new ProjectRoleBinding(roleBinding));
+        entitlement);
 
-      assert !peers.contains(iapPrincipal.getId());
+      assert !reviewers.contains(iapPrincipal.getId());
 
-      return new ProjectRolePeersResponse(peers);
+      return new ProjectRoleReviewersResponse(reviewers);
     }
     catch (Exception e) {
       this.logAdapter
         .newErrorEntry(
-          LogEvents.API_LIST_PEERS,
-          String.format("Listing peers failed: %s", Exceptions.getFullMessage(e)))
+          LogEvents.API_LIST_REVIEWERS,
+          String.format("Listing reviewers failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
         .addLabels(le -> addLabels(le, roleBinding))
         .addLabels(le -> addLabels(le, projectId))
         .write();
 
-      throw new AccessDeniedException("Listing peers failed, see logs for details");
+      throw new AccessDeniedException("Listing reviewers failed, see logs for details");
     }
   }
 
@@ -330,7 +356,7 @@ public class ApiResource {
       //
       // Activate the request.
       //
-      var activation = this.projectRoleActivator.activate(activationRequest);
+      var activation = this.projectRoleActivator.approve(activationRequest.requestingUser(), activationRequest);
 
       assert activation != null;
 
@@ -391,7 +417,7 @@ public class ApiResource {
   }
 
   /**
-   * Request approval to activate one or more project roles. Only allowed for peer approval eligible roles.
+   * Request approval to activate one or more project roles. Only allowed for peer approval and external approval eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -418,10 +444,10 @@ public class ApiResource {
       request.role != null && !request.role.isEmpty(),
       "Specify a role to activate");
     Preconditions.checkArgument(
-      request.peers != null && request.peers.size() >= minReviewers,
+      request.reviewers != null && request.reviewers.size() >= minReviewers,
       String.format("You must select at least %d reviewers", minReviewers));
     Preconditions.checkArgument(
-      request.peers.size() <= maxReviewers,
+      request.reviewers.size() <= maxReviewers,
       String.format("The number of reviewers exceeds the allowed maximum of %d", maxReviewers));
     Preconditions.checkArgument(
       request.justification != null && request.justification.trim().length() > 0,
@@ -429,6 +455,12 @@ public class ApiResource {
     Preconditions.checkArgument(
       request.justification != null && request.justification.length() < 100,
       "The justification is too long");
+    Preconditions.checkArgument(
+      request.activationType != null, 
+      "Activation type must be included.");
+    Preconditions.checkArgument(
+      List.of(ActivationType.PEER_APPROVAL, ActivationType.EXTERNAL_APPROVAL).contains(request.activationType), 
+      "Activation type must be either PEER_APPROVAL or EXTERNAL_APPROVAl.");
 
     //
     // For MPA to work, we need at least one functional notification service.
@@ -448,16 +480,32 @@ public class ApiResource {
     // Create an MPA activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    PeerApprovalActivationRequest<ProjectRoleBinding> activationRequest;
 
+    com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> activationRequest;
     try {
-      activationRequest = this.projectRoleActivator.createPeerApprovalRequest(
-        iapPrincipal.getId(),
-        Set.of(new ProjectRoleBinding(roleBinding)),
-        request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
-        request.justification,
-        Instant.now().truncatedTo(ChronoUnit.SECONDS),
-        requestedRoleBindingDuration);
+      switch (request.activationType) {
+        case PEER_APPROVAL:
+          activationRequest = this.projectRoleActivator.createPeerApprovalRequest(
+            iapPrincipal.getId(),
+            Set.of(new ProjectRoleBinding(roleBinding)),
+            request.reviewers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
+            request.justification,
+            Instant.now().truncatedTo(ChronoUnit.SECONDS),
+            requestedRoleBindingDuration);
+          break;
+        case EXTERNAL_APPROVAL:
+          activationRequest = this.projectRoleActivator.createExternalApprovalRequest(
+            iapPrincipal.getId(),
+            Set.of(new ProjectRoleBinding(roleBinding)),
+            request.reviewers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
+            request.justification,
+            Instant.now().truncatedTo(ChronoUnit.SECONDS),
+            requestedRoleBindingDuration);
+          break;
+        default:
+          throw new IllegalArgumentException("Unsupported activation type.");
+      }
+
     }
     catch (AccessException | IOException e) {
       this.logAdapter
@@ -609,7 +657,7 @@ public class ApiResource {
   }
 
   /**
-   * Approve an activation request from a peer.
+   * Approve an activation request.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -631,7 +679,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    PeerApprovalActivationRequest<ProjectRoleBinding> activationRequest;
+    com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
         this.projectRoleActivator.createTokenConverter(),
@@ -852,12 +900,12 @@ public class ApiResource {
     }
   }
 
-  public static class ProjectRolePeersResponse {
-    public final Set<UserId> peers;
+  public static class ProjectRoleReviewersResponse {
+    public final Set<UserId> reviewers;
 
-    private ProjectRolePeersResponse(Set<UserId> peers) {
-      Preconditions.checkNotNull(peers);
-      this.peers = peers;
+    private ProjectRoleReviewersResponse(Set<UserId> reviewers) {
+      Preconditions.checkNotNull(reviewers);
+      this.reviewers = reviewers;
     }
   }
 
@@ -870,8 +918,9 @@ public class ApiResource {
   public static class ActivationRequest {
     public String role;
     public String justification;
-    public List<String> peers;
+    public List<String> reviewers;
     public int activationTimeout; // in minutes.
+    public ActivationType activationType;
   }
 
   public static class ActivationStatusResponse {
@@ -952,7 +1001,7 @@ public class ApiResource {
   {
     protected RequestActivationNotification(
       ProjectId projectId,
-      PeerApprovalActivationRequest<ProjectRoleBinding> request,
+      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request,
       Instant requestExpiryTime,
       URL activationRequestUrl) throws MalformedURLException
     {

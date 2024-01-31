@@ -71,7 +71,7 @@ public class TestProjectRoleActivator {
       Instant.now(),
       Duration.ofMinutes(5));
 
-    var activation = activator.activate(request);
+    var activation = activator.approve(SAMPLE_REQUESTING_USER, request);
 
     assertNotNull(activation);
     assertSame(request, activation.request());
@@ -83,7 +83,7 @@ public class TestProjectRoleActivator {
             IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
             b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
-        eq("Self-approved, justification: justification"));
+        eq("Approved by user@example.com, justification: justification"));
   }
 
   // -------------------------------------------------------------------------

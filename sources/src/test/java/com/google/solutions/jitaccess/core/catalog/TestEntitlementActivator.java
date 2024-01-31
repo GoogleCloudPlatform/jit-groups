@@ -53,29 +53,23 @@ public class TestEntitlementActivator {
 
     @Override
     protected void provisionAccess(
-      SelfApprovalActivationRequest<SampleEntitlementId> request
-    ) throws AccessException, AlreadyExistsException, IOException {
-    }
-
-    @Override
-    protected void provisionAccess(
       UserId approvingUser,
-      PeerApprovalActivationRequest<SampleEntitlementId> request
+      ActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
     }
 
     @Override
-    public JsonWebTokenConverter<PeerApprovalActivationRequest<SampleEntitlementId>> createTokenConverter() {
+    public JsonWebTokenConverter<ActivationRequest<SampleEntitlementId>> createTokenConverter() {
       return null;
     }
   }
 
   // -------------------------------------------------------------------------
-  // createJitRequest.
+  // createSelfApprovalRequest.
   // -------------------------------------------------------------------------
 
   @Test
-  public void createJitRequestDoesNotCheckAccess() throws Exception {
+  public void createSelfApprovalRequestDoesNotCheckAccess() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
 
     var activator = new SampleActivator(
@@ -98,11 +92,11 @@ public class TestEntitlementActivator {
   }
 
   // -------------------------------------------------------------------------
-  // createMpaRequest.
+  // createPeerApprovalRequest.
   // -------------------------------------------------------------------------
 
   @Test
-  public void  whenUserNotAllowedToRequest_ThenCreateMpaRequestThrowsException() throws Exception {
+  public void  whenUserNotAllowedToRequest_ThenCreatePeerApprovalRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
 
     Mockito.doThrow(new AccessDeniedException("mock"))
@@ -124,12 +118,85 @@ public class TestEntitlementActivator {
         Duration.ofMinutes(5)));
   }
 
+  @Test
+  public void  whenMultipleEntitlementsRequest_ThenCreatePeerApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(EntitlementCatalog.class);
+
+    Mockito.doNothing()
+      .when(catalog)
+      .verifyUserCanRequest(any());
+
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> activator.createPeerApprovalRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(new SampleEntitlementId("cat", "1"), new SampleEntitlementId("cat", "2")),
+        Set.of(SAMPLE_APPROVING_USER),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+  }
+
   // -------------------------------------------------------------------------
-  // activate (JIT).
+  // createExternalApprovalRequest.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenJustificationInvalid_ThenActivateJitRequestThrowsException() throws Exception {
+  public void  whenUserNotAllowedToRequest_ThenCreateExternalApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(EntitlementCatalog.class);
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+      .when(catalog)
+      .verifyUserCanRequest(any());
+
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> activator.createExternalApprovalRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(new SampleEntitlementId("cat", "1")),
+        Set.of(SAMPLE_APPROVING_USER),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+  }
+
+  @Test
+  public void  whenMultipleEntitlementsRequest_ThenCreateExternalApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(EntitlementCatalog.class);
+
+    Mockito.doNothing()
+      .when(catalog)
+      .verifyUserCanRequest(any());
+
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> activator.createExternalApprovalRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(new SampleEntitlementId("cat", "1"), new SampleEntitlementId("cat", "2")),
+        Set.of(SAMPLE_APPROVING_USER),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+  }
+
+  // -------------------------------------------------------------------------
+  // approve (self approval).
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenJustificationInvalid_ThenApproveSelfApprovalRequestThrowsException() throws Exception {
     var justificationPolicy = Mockito.mock(JustificationPolicy.class);
 
     Mockito.doThrow(new InvalidJustificationException("mock"))
@@ -149,11 +216,11 @@ public class TestEntitlementActivator {
 
     assertThrows(
       InvalidJustificationException.class,
-      () -> activator.activate(request));
+      () -> activator.approve(SAMPLE_REQUESTING_USER, request));
   }
 
   @Test
-  public void whenUserNotAllowedToRequest_ThenActivateJitRequestThrowsException() throws Exception {
+  public void whenUserNotAllowedToRequest_ThenApproveSelfApprovalRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
 
     Mockito.doThrow(new AccessDeniedException("mock"))
@@ -173,34 +240,15 @@ public class TestEntitlementActivator {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.activate(request));
-  }
-
-  // -------------------------------------------------------------------------
-  // approve (MPA).
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void whenApprovingUserSameAsRequestingUser_ThenApproveMpaRequestThrowsException() throws Exception {
-    var activator = new SampleActivator(
-      Mockito.mock(EntitlementCatalog.class),
-      Mockito.mock(JustificationPolicy.class));
-
-    var request = activator.createPeerApprovalRequest(
-      SAMPLE_REQUESTING_USER,
-      Set.of(new SampleEntitlementId("cat", "1")),
-      Set.of(SAMPLE_APPROVING_USER),
-      "justification",
-      Instant.now(),
-      Duration.ofMinutes(5));
-
-    assertThrows(
-      IllegalArgumentException.class,
       () -> activator.approve(SAMPLE_REQUESTING_USER, request));
   }
 
+  // -------------------------------------------------------------------------
+  // approve (peer approval).
+  // -------------------------------------------------------------------------
+
   @Test
-  public void whenApprovingUserUnknown_ThenApproveMpaRequestThrowsException() throws Exception {
+  public void whenApprovingUserUnknown_ThenApprovePeerApprovalRequestThrowsException() throws Exception {
     var activator = new SampleActivator(
       Mockito.mock(EntitlementCatalog.class),
       Mockito.mock(JustificationPolicy.class));
@@ -219,7 +267,7 @@ public class TestEntitlementActivator {
   }
 
   @Test
-  public void whenJustificationInvalid_ThenApproveMpaRequestThrowsException() throws Exception {
+  public void whenJustificationInvalid_ThenApprovePeerApprovalRequestThrowsException() throws Exception {
     var justificationPolicy = Mockito.mock(JustificationPolicy.class);
 
     Mockito.doThrow(new InvalidJustificationException("mock"))
@@ -244,7 +292,7 @@ public class TestEntitlementActivator {
   }
 
   @Test
-  public void whenRequestingUserNotAllowedToRequestAnymore_ThenApproveMpaRequestThrowsException() throws Exception {
+  public void whenRequestingUserNotAllowedToRequestAnymore_ThenApprovePeerApprovalRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
     var activator = new SampleActivator(
       catalog,
@@ -268,7 +316,103 @@ public class TestEntitlementActivator {
   }
 
   @Test
-  public void whenApprovingUserNotAllowedToApprove_ThenApproveMpaRequestThrowsException() throws Exception {
+  public void whenApprovingUserNotAllowedToApprove_ThenApprovePeerApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    var request = activator.createPeerApprovalRequest(
+      SAMPLE_REQUESTING_USER,
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      Instant.now(),
+      Duration.ofMinutes(5));
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+      .when(catalog)
+      .verifyUserCanApprove(eq(SAMPLE_APPROVING_USER), any());
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
+
+  // -------------------------------------------------------------------------
+  // approve (external approval).
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenApprovingUserUnknown_ThenApproveExternalApprovalRequestThrowsException() throws Exception {
+    var activator = new SampleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(JustificationPolicy.class));
+
+    var request = activator.createExternalApprovalRequest(
+      SAMPLE_REQUESTING_USER,
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      Instant.now(),
+      Duration.ofMinutes(5));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> activator.approve(SAMPLE_UNKNOWN_USER, request));
+  }
+
+  @Test
+  public void whenJustificationInvalid_ThenApproveExternalApprovalRequestThrowsException() throws Exception {
+    var justificationPolicy = Mockito.mock(JustificationPolicy.class);
+
+    Mockito.doThrow(new InvalidJustificationException("mock"))
+      .when(justificationPolicy)
+      .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
+
+    var activator = new SampleActivator(
+      Mockito.mock(EntitlementCatalog.class),
+      justificationPolicy);
+
+    var request = activator.createExternalApprovalRequest(
+      SAMPLE_REQUESTING_USER,
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      Instant.now(),
+      Duration.ofMinutes(5));
+
+    assertThrows(
+      InvalidJustificationException.class,
+      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
+
+  @Test
+  public void whenRequestingUserNotAllowedToRequestAnymore_ThenApproveExternalApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    var request = activator.createExternalApprovalRequest(
+      SAMPLE_REQUESTING_USER,
+      Set.of(new SampleEntitlementId("cat", "1")),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      Instant.now(),
+      Duration.ofMinutes(5));
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+      .when(catalog)
+      .verifyUserCanRequest(any());
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
+
+  @Test
+  public void whenApprovingUserNotAllowedToApprove_ThenApproveExternalApprovalRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(EntitlementCatalog.class);
     var activator = new SampleActivator(
       catalog,

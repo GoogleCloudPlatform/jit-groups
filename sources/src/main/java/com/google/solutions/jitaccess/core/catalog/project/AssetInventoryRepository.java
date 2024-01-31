@@ -26,7 +26,6 @@ import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.catalog.EntitlementType;
@@ -184,7 +183,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       Set<Entitlement<ProjectRoleBinding>> peerApprovalEligible;
       if (typesToInclude.contains(EntitlementType.PEER)) {
         peerApprovalEligible = allBindings.stream()
-          .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
+          .filter(binding -> JitConstraints.isPeerApprovalConstraint(binding.getCondition()) || JitConstraints.isExternalApprovalConstraint(binding.getCondition()))
           .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
           .map(roleBinding -> new Entitlement<>(
             roleBinding,
@@ -198,14 +197,54 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       }
 
       //
-      // Determine effective set of eligible roles. If a role is both self approval and
-      // peer approval eligible, only retain the self approval eligible one.
+      // Find all eligible external approval role bindings. The bindings are
+      // conditional and have a special condition that serves
+      // as marker.
+      //
+      Set<Entitlement<ProjectRoleBinding>> externalApprovalEligible;
+      if (typesToInclude.contains(EntitlementType.REQUESTER)) {
+        externalApprovalEligible = allBindings.stream()
+          .filter(binding -> JitConstraints.isExternalApprovalConstraint(binding.getCondition()))
+          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+          .map(roleBinding -> new Entitlement<>(
+            roleBinding,
+            roleBinding.roleBinding().role(),
+            EntitlementType.REQUESTER,
+            Entitlement.Status.AVAILABLE))
+          .collect(Collectors.toSet());
+      }
+      else {
+        externalApprovalEligible = Set.of();
+      }
+
+      //
+      // Find all eligible reviewer role bindings. The bindings are
+      // conditional and have a special condition that serves
+      // as marker.
+      //
+      Set<Entitlement<ProjectRoleBinding>> reviewerEligible;
+      if (typesToInclude.contains(EntitlementType.REVIEWER)) {
+        reviewerEligible = allBindings.stream()
+          .filter(binding -> JitConstraints.isReviewerConstraint(binding.getCondition()))
+          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+          .map(roleBinding -> new Entitlement<>(
+            roleBinding,
+            roleBinding.roleBinding().role(),
+            EntitlementType.REVIEWER,
+            Entitlement.Status.AVAILABLE))
+          .collect(Collectors.toSet());
+      }
+      else {
+        reviewerEligible = Set.of();
+      }
+
+      //
+      // Determine effective set of eligible roles.
       //
       allAvailable.addAll(selfApprovalEligible);
-      allAvailable.addAll(peerApprovalEligible
-        .stream()
-        .filter(r -> !selfApprovalEligible.stream().anyMatch(a -> a.id().equals(r.id())))
-        .collect(Collectors.toList()));
+      allAvailable.addAll(peerApprovalEligible);
+      allAvailable.addAll(externalApprovalEligible);
+      allAvailable.addAll(reviewerEligible);
     }
 
     var allActive = new HashSet<ProjectRoleBinding>();

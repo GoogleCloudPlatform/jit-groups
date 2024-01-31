@@ -95,14 +95,14 @@ class Model {
         }
     }
 
-    /** List peers that can approve a request */
-    async listPeers(projectId, role) {
+    /** List reviewers that can approve a request */
+    async listReviewers(projectId, role, entitlementType) {
         console.assert(projectId);
         console.assert(role);
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}`,
+                url: `/api/projects/${projectId}/reviewers?role=${encodeURIComponent(role)}&entitlementType=${encodeURIComponent(entitlementType)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -112,7 +112,7 @@ class Model {
         }
     }
 
-    /** Activate roles without peer approval */
+    /** Activate roles without self approval */
     async selfApproveActivation(projectId, roles, justification, activationTimeout) {
         console.assert(projectId);
         console.assert(roles.length > 0);
@@ -138,13 +138,14 @@ class Model {
         }
     }
 
-    /** Activate a role with peer approval */
-    async requestActivation(projectId, role, peers, justification, activationTimeout) {
+    /** Activate a role with approval */
+    async requestActivation(projectId, role, reviewers, justification, activationTimeout, activationType) {
         console.assert(projectId);
         console.assert(role);
-        console.assert(peers.length > 0);
+        console.assert(reviewers.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
+        console.assert(activationType === "PEER_APPROVAL" || activationType === "EXTERNAL_APPROVAL")
 
         try {
             return await $.ajax({
@@ -155,8 +156,9 @@ class Model {
                 data: JSON.stringify({
                     role: role,
                     justification: justification,
-                    peers: peers,
-                    activationTimeout: activationTimeout
+                    reviewers: reviewers,
+                    activationTimeout: activationTimeout,
+                    activationType: activationType
                 }),
                 headers: this._getHeaders()
             });
@@ -229,8 +231,8 @@ class DebugModel extends Model {
                     </select>
                 </div>
                 <div>
-                    listPeers:
-                    <select id="debug-listPeers">
+                    listReviewers:
+                    <select id="debug-listReviewers">
                         <option value="">(default)</option>
                         <option value="error">Simulate error</option>
                         <option value="0">Simulate 0 results</option>
@@ -280,7 +282,7 @@ class DebugModel extends Model {
             "debug-principal",
             "debug-listProjects",
             "debug-listRoles",
-            "debug-listPeers",
+            "debug-listReviewers",
             "debug-selfApproveActivation",
             "debug-requestActivation",
             "debug-getActivationRequest",
@@ -354,7 +356,7 @@ class DebugModel extends Model {
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
-            const activationTypes = ["JIT", "MPA", "NONE"];
+            const entitlementTypes = ["JIT", "PEER", "EXTERNAL", "REVIEWER", "NONE"];
             const statuses = ["ACTIVE", "AVAILABLE"];
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
@@ -363,7 +365,7 @@ class DebugModel extends Model {
                         id: "//project-1:roles/simulated-role-" + i,
                         role: "roles/simulated-role-" + i
                     },
-                    activationType: activationTypes[i % activationTypes.length],
+                    entitlementType: entitlementTypes[i % entitlementTypes.length],
                     status: statuses[i % statuses.length]
                 }))
             });
@@ -386,10 +388,10 @@ class DebugModel extends Model {
         }
     }
 
-    async listPeers(projectId, role) {
-        var setting = $("#debug-listPeers").val();
+    async listReviewers(projectId, role, entitlementType) {
+        var setting = $("#debug-listReviewers").val();
         if (!setting) {
-            return super.listPeers(projectId, role);
+            return super.listReviewers(projectId, role, entitlementType);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -397,7 +399,7 @@ class DebugModel extends Model {
         else {
             await new Promise(r => setTimeout(r, 1000));
             return Promise.resolve({
-                peers: Array.from({ length: setting }, (e, i) => ({
+                reviewers: Array.from({ length: setting }, (e, i) => ({
                     email: `user-${i}@example.com`
                 }))
             });
@@ -423,10 +425,10 @@ class DebugModel extends Model {
         }
     }
 
-    async requestActivation(projectId, role, peers, justification, activationTimeout) {
+    async requestActivation(projectId, role, reviewers, justification, activationTimeout, activationType) {
         var setting = $("#debug-requestActivation").val();
         if (!setting) {
-            return super.requestActivation(projectId, role, peers, justification, activationTimeout);
+            return super.requestActivation(projectId, role, reviewers, justification, activationTimeout, activationType);
         }
         else if (setting === "error") {
             await this._simulateError();

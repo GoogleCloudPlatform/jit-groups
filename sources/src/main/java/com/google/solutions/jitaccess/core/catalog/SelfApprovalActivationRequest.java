@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.core.UserId;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,6 +43,7 @@ public abstract class SelfApprovalActivationRequest<TEntitlementId extends Entit
     super(
       id,
       requestingUser,
+      List.of(requestingUser),
       entitlements,
       justification,
       startTime,

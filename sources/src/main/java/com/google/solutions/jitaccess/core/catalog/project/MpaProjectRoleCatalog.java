@@ -38,8 +38,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Catalog that implements JIT and peer-approval based
- * MPA activation for project role-based entitlements.
+ * Catalog that implements JIT and approval based
+ * activation for project role-based entitlements.
  */
 @Singleton
 public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
@@ -74,15 +74,28 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         "The activation duration must be no longer than %d minutes",
         this.options.maxActivationDuration().toMinutes()));
 
-    if (request instanceof PeerApprovalActivationRequest<ProjectRoleBinding> mpaRequest) {
+    if (request instanceof PeerApprovalActivationRequest<ProjectRoleBinding> peerApprovalRequest) {
       Preconditions.checkArgument(
-        mpaRequest.reviewers() != null &&
-          mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
+        peerApprovalRequest.reviewers() != null &&
+          peerApprovalRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
         String.format(
           "At least %d reviewers must be specified",
           this.options.minNumberOfReviewersPerActivationRequest ));
       Preconditions.checkArgument(
-        mpaRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+        peerApprovalRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+        String.format(
+          "The number of reviewers must not exceed %s",
+          this.options.maxNumberOfReviewersPerActivationRequest));
+    }
+    if (request instanceof ExternalApprovalActivationRequest<ProjectRoleBinding> externalApprovalRequest) {
+      Preconditions.checkArgument(
+        externalApprovalRequest.reviewers() != null &&
+          externalApprovalRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
+        String.format(
+          "At least %d reviewers must be specified",
+          this.options.minNumberOfReviewersPerActivationRequest ));
+      Preconditions.checkArgument(
+        externalApprovalRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
         String.format(
           "The number of reviewers must not exceed %s",
           this.options.maxNumberOfReviewersPerActivationRequest));
@@ -106,7 +119,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
       .findEntitlements(
         user,
         projectId,
-        EnumSet.copyOf(Stream.of(EntitlementType.JIT, EntitlementType.PEER).filter(e -> e.activationType == activationType).toList()),
+        EnumSet.copyOf(Stream.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER, EntitlementType.REVIEWER).filter(e -> e.activationType == activationType).toList()),
         EnumSet.of(Entitlement.Status.AVAILABLE))
       .availableEntitlements()
       .stream()
@@ -168,14 +181,14 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     return this.repository.findEntitlements(
       user,
       projectId,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REQUESTER),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 
   @Override
   public SortedSet<UserId> listReviewers(
     UserId requestingUser,
-    ProjectRoleBinding entitlement
+    Entitlement<ProjectRoleBinding> entitlement
   ) throws AccessException, IOException {
 
     //
@@ -185,17 +198,25 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
     verifyUserCanActivateEntitlements(
       requestingUser,
-      entitlement.projectId(),
-      ActivationType.PEER_APPROVAL,
-      List.of(entitlement));
+      entitlement.id().projectId(),
+      entitlement.entitlementType().activationType,
+      List.of(entitlement.id()));
 
-    //
-    // All users that hold the same entitlement can
-    // act as reviewers, except for the requesting user
-    // themselves.
-    //
+    EntitlementType reviewerEntitlementType = EntitlementType.NONE;
+    switch (entitlement.entitlementType().activationType) {
+      case SELF_APPROVAL:
+        return new TreeSet<UserId>(List.of(requestingUser));
+      case PEER_APPROVAL:
+        reviewerEntitlementType = EntitlementType.PEER;
+        break;
+      case EXTERNAL_APPROVAL:
+        reviewerEntitlementType = EntitlementType.REVIEWER;
+        break;
+      case NONE:
+        return new TreeSet<UserId>();
+    }
     return this.repository
-      .findEntitlementHolders(entitlement, EntitlementType.PEER)
+      .findEntitlementHolders(entitlement.id(), reviewerEntitlementType)
       .stream()
       .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
@@ -222,7 +243,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   @Override
   public void verifyUserCanApprove(
     UserId approvingUser,
-    PeerApprovalActivationRequest<ProjectRoleBinding> request
+    ActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);

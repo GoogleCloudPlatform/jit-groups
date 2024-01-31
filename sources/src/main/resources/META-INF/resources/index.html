@@ -125,14 +125,14 @@
                         </span>
                         <div class="mdl-step__content">
                             <div class="step-subheader conditional-mpa">
-                                Peer approval
+                                Approval
                             </div>
                             <div class="step-subsection conditional-mpa">
-                                Select one or more peers to request approval from. To activate the role, at least one
-                                of your peers has to approve your request.
+                                Select one or more reviewers to request approval from. To activate the role, at least one
+                                of your reviewers has to approve your request.
                             </div>
                             <div class="step-subsection conditional-mpa">
-                                <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-peers">
+                                <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-reviewers">
                                     <thead>
                                         <tr>
                                             <th>
@@ -289,9 +289,13 @@
                                     to activate the role. You don't need to request approval from another user.
                                 </li>
                                 <li>
-                                    <i>Multi-party approval</i>: If a role requires multi-party approval, then one of your <i>peers</i>
+                                    <i>Peer approval</i>: If a role requires peer approval, then one of your <i>peers</i>
                                     need to approve your access request before it takes effect. Peers are users that have been
                                     granted the same role as you.
+                                </li>
+                                <li>
+                                    <i>External approval</i>: If a role requires external approval, then someone from a specified group 
+                                    of users outside your peers must approve your access request before it takes effect.
                                 </li>
                             </ul>
                         </p>
@@ -316,11 +320,20 @@
                                     <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
                                 </li>
                                 <li>
-                                    <i>Multi-party approval</i>: To allow a user or group to activate a role if at least one peer
+                                    <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
                                     approves their request, add the following IAM condition to the IAM binding:
-                                    <pre><code class="language-cel">has({}.multiPartyApprovalConstraint)</code></pre>
+                                    <pre><code class="language-cel">has({}.peerApprovalConstraint)</code></pre>
 
                                     Peers are users that have been granted the same role binding on the same project.
+                                </li>
+                                <li>
+                                <i>External approval</i>: To allow a user or group to activate a role if at least one external
+                                    reviewer approves their request, add the following IAM condition to the IAM binding:
+                                    <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
+
+                                    External approvers are users that have been granted the same IAM binding with the following
+                                    IAM condition:
+                                    <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
                                 </li>
                             </ul>
                         </p>
@@ -341,7 +354,7 @@
                             <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>compute-admins@example.com</b> \
   --role <b>roles/compute.admin</b> \
-  --condition "title=Eligible access,expression=has({}.multiPartyApprovalConstraint)"
+  --condition "title=Eligible access,expression=has({}.peerApprovalConstraint)"
 </code></pre>
                         </p>
                     </div>
@@ -519,10 +532,20 @@
                     "ACTIVATION_PENDING": "Waiting for approval"
                 };
 
-                this.activationTypeCaptions = {
+                this.entitlementTypeCaptions = {
                     "JIT": "-",
-                    "MPA": "Peer approval required",
+                    "PEER": "Peer approval required",
+                    "REQUESTER": "External approval required",
+                    "REVIEWER": "Unavailable",
                     "NONE": "Unavailable",
+                };
+
+                this.entitlementTypeActivationTypes = {
+                    "JIT": "SELF_APPROVAL",
+                    "PEER": "PEER_APPROVAL",
+                    "REQUESTER": "EXTERNAL_APPROVAL",
+                    "REVIEWER": "NONE",
+                    "NONE": "NONE"
                 }
             }
 
@@ -543,7 +566,7 @@
                 this.selectRoleStep = new MdlStep("#step-selectrole");
                 this.approveStep = new MdlStep("#step-approve");
                 this._roleTable = new MdlDataTable("#step-selectrole-roles");
-                this._peersTable = new MdlDataTable("#step-approve-peers");
+                this._reviewersTable = new MdlDataTable("#step-approve-reviewers");
 
                 $("#activation-timeout").change(() => {
                     $("#selected-activation-timeout").text(this.activationTimeout);
@@ -592,7 +615,7 @@
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
-                            { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                            { text: this.entitlementTypeCaptions[item.entitlementType] ?? item.entitlementType },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
                         ],
                         true,
@@ -605,10 +628,10 @@
                 return this._roles.filter(i => this._roleTable.selected.includes(i.roleBinding.role));
             }
 
-            set peers(peers) {
-                this._peersTable.clear();
-                peers.forEach((item) => {
-                    this._peersTable.addRow(
+            set reviewers(reviewers) {
+                this._reviewersTable.clear();
+                reviewers.forEach((item) => {
+                    this._reviewersTable.addRow(
                         item.email,
                         [
                             { text: item.email }
@@ -617,8 +640,8 @@
                 });
             }
 
-            get selectedPeers() {
-                return this._peersTable.selected;
+            get selectedReviewers() {
+                return this._reviewersTable.selected;
             }
         }
 
@@ -643,7 +666,7 @@
                 if (activationStatus.isReviewer) {
                     if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
                         $("#request-status-pane-title").text("Review access request");
-                        $("#request-status-pane-description").text("One of your peers is asking you to review the following access request.");
+                        $("#request-status-pane-description").text("Someone is asking you to review the following access request.");
                         $("#request-status-pane-approvebutton").show();
                     }
                     else {
@@ -797,23 +820,23 @@
                         throw "Select one or more roles to actviate";
                     }
 
-                    if (selectedRoles.some(i => i.activationType === "MPA")) {
+                    if (selectedRoles.some(i => i.entitlementType === "PEER" || i.entitlementType === "REQUESTER")) {
                         //
-                        // Multi-party approval: Request and list peers available for this project and role.
+                        // Multi-party approval: Request and list reviewers available for this project and role.
                         //
                         multiPartyApproval = true;
 
                         if (selectedRoles.length > 1) {
-                            throw "You can only request peer approval for a single role at a time";
+                            throw "You can only request approval for a single role at a time";
                         }
 
-                        const peersResult = await backend.listPeers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role);
+                        const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].entitlementType);
 
-                        if (!peersResult.peers || peersResult.peers.length == 0) {
-                            throw "There are currently no peers that could approve your request";
+                        if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
+                            throw "There are currently no reviewers that could approve your request";
                         }
 
-                        requestPane.peers = peersResult.peers;
+                        requestPane.reviewers = reviewersResult.reviewers;
                     }
                     else {
                         //
@@ -830,8 +853,8 @@
                 // Step: Approve.
                 //
                 requestPane.approveStep.addHandler(async () => {
-                    if (multiPartyApproval && gui.requestPane.selectedPeers.length === 0) {
-                        throw "Select one or more peers";
+                    if (multiPartyApproval && gui.requestPane.selectedReviewers.length === 0) {
+                        throw "Select one or more reviewers";
                     }
                     if (!requestPane.justificationText) {
                         throw "Enter a justification";
@@ -845,9 +868,10 @@
                             activationStatus = await backend.requestActivation(
                                 requestPane.selectedProjectId,
                                 requestPane.selectedRoles[0].roleBinding.role,
-                                requestPane.selectedPeers,
+                                requestPane.selectedReviewers,
                                 requestPane.justificationText,
-                                parseInt(requestPane.activationTimeout));
+                                parseInt(requestPane.activationTimeout),
+                                requestPane.entitlementTypeActivationTypes[requestPane.selectedRoles[0].entitlementType]);
                         }
                         else {
                             activationStatus = await backend.selfApproveActivation(

@@ -28,7 +28,6 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementType;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
@@ -54,7 +53,9 @@ public class TestAssetInventoryRepository {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
-  private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
+  private static final String PEER_CONDITION = "has({}.peerApprovalConstraint)";
+  private static final String EXTERNAL_CONDITION = "has({}.externalApprovalConstraint)";
+  private static final String REVIEWER_CONDITION = "has({}.reviewerPrivilege)";
 
   private class SynchronousExecutor implements Executor {
 
@@ -284,9 +285,17 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr().setExpression(JIT_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var mpaBindingForUser = new Binding()
+    var peerBindingForUser = new Binding()
       .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setCondition(new Expr().setExpression(PEER_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var externalBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(EXTERNAL_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var reviewerBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -298,7 +307,7 @@ public class TestAssetInventoryRepository {
         new PolicyInfo()
           .setAttachedResource(SAMPLE_PROJECT.path())
           .setPolicy(new Policy()
-            .setBindings(List.of(jitBindingForUser, mpaBindingForUser)))));
+            .setBindings(List.of(jitBindingForUser, peerBindingForUser, externalBindingForUser, reviewerBindingForUser)))));
 
     var repository = new AssetInventoryRepository(
       new SynchronousExecutor(),
@@ -325,7 +334,7 @@ public class TestAssetInventoryRepository {
     }
 
     //
-    // MPA only.
+    // Peer only.
     //
     {
       var entitlements = repository.findEntitlements(
@@ -337,27 +346,70 @@ public class TestAssetInventoryRepository {
       assertIterableEquals(
         List.of("roles/for-user"),
         entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.PEER, jitEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
+      var peerEntitlement = entitlements.allEntitlements().first();
+      assertEquals(EntitlementType.PEER, peerEntitlement.entitlementType());
+      assertEquals(Entitlement.Status.AVAILABLE, peerEntitlement.status());
     }
 
     //
-    // JIT + MPA.
+    // Requester only.
     //
     {
       var entitlements = repository.findEntitlements(
         SAMPLE_USER,
         SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
+        EnumSet.of(EntitlementType.REQUESTER),
         EnumSet.of(Entitlement.Status.AVAILABLE));
 
       assertIterableEquals(
         List.of("roles/for-user"),
         entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var requesterEntitlement = entitlements.allEntitlements().first();
+      assertEquals(EntitlementType.REQUESTER, requesterEntitlement.entitlementType());
+      assertEquals(Entitlement.Status.AVAILABLE, requesterEntitlement.status());
+    }
+
+    //
+    // Requester only.
+    //
+    {
+      var entitlements = repository.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        EnumSet.of(EntitlementType.REVIEWER),
+        EnumSet.of(Entitlement.Status.AVAILABLE));
+
+      assertIterableEquals(
+        List.of("roles/for-user"),
+        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var reviewerEntitlement = entitlements.allEntitlements().first();
+      assertEquals(EntitlementType.REVIEWER, reviewerEntitlement.entitlementType());
+      assertEquals(Entitlement.Status.AVAILABLE, reviewerEntitlement.status());
+    }
+
+    //
+    // Multiple entitlements.
+    //
+    {
+      var entitlements = repository.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REVIEWER),
+        EnumSet.of(Entitlement.Status.AVAILABLE));
+
+      assertIterableEquals(
+        List.of("roles/for-user", "roles/for-user", "roles/for-user"),
+        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      assertEquals(3, entitlements.allEntitlements().size());
       var jitEntitlement = entitlements.allEntitlements().first();
       assertEquals(EntitlementType.JIT, jitEntitlement.entitlementType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
+      var peerEntitlement = entitlements.allEntitlements().stream().skip(1).findFirst().get();
+      assertEquals(EntitlementType.PEER, peerEntitlement.entitlementType());
+      assertEquals(Entitlement.Status.AVAILABLE, peerEntitlement.status());
+      var reviewerEntitlement = entitlements.allEntitlements().last();
+      assertEquals(EntitlementType.REVIEWER, reviewerEntitlement.entitlementType());
+      assertEquals(Entitlement.Status.AVAILABLE, reviewerEntitlement.status());
     }
   }
 
@@ -453,11 +505,15 @@ public class TestAssetInventoryRepository {
   public void whenEffectiveIamPoliciesOnlyContainInapplicableBindings_ThenFindEntitlementHoldersReturnsEmptyList() throws Exception {
     var otherBinding1 = new Binding()
       .setRole("roles/other-1")
-      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setCondition(new Expr().setExpression(PEER_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
     var otherBinding2 = new Binding()
       .setRole("roles/role-1")
       .setCondition(new Expr().setExpression(JIT_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var otherBinding3 = new Binding()
+      .setRole("roles/role-1")
+      .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -469,7 +525,7 @@ public class TestAssetInventoryRepository {
         new PolicyInfo()
           .setAttachedResource(SAMPLE_PROJECT.path())
           .setPolicy(new Policy()
-            .setBindings(List.of(otherBinding1, otherBinding2)))));
+            .setBindings(List.of(otherBinding1, otherBinding2, otherBinding3)))));
 
     var repository = new AssetInventoryRepository(
       new SynchronousExecutor(),
@@ -500,14 +556,14 @@ public class TestAssetInventoryRepository {
           .setPolicy(new Policy()
             .setBindings(List.of(new Binding()
               .setRole(role.role())
-              .setCondition(new Expr().setExpression(MPA_CONDITION))
+              .setCondition(new Expr().setExpression(PEER_CONDITION))
               .setMembers(List.of("user:user-1@example.com", "user:user-2@example.com"))))),
         new PolicyInfo()
           .setAttachedResource(SAMPLE_PROJECT.path())
           .setPolicy(new Policy()
             .setBindings(List.of(new Binding()
               .setRole(role.role())
-              .setCondition(new Expr().setExpression(MPA_CONDITION))
+              .setCondition(new Expr().setExpression(PEER_CONDITION))
               .setMembers(List.of("user:user-2@example.com")))))));
 
     var repository = new AssetInventoryRepository(
@@ -532,11 +588,11 @@ public class TestAssetInventoryRepository {
 
     var groupBinding = new Binding()
       .setRole(role.role())
-      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setCondition(new Expr().setExpression(PEER_CONDITION))
       .setMembers(List.of("group:group@example.com"));
     var unavailableGroupBinding = new Binding()
       .setRole(role.role())
-      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setCondition(new Expr().setExpression(PEER_CONDITION))
       .setMembers(List.of("group:unavailable-group@example.com"));
 
     var groupsClient = Mockito.mock(DirectoryGroupsClient.class);

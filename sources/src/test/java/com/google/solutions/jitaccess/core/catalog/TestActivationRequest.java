@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,7 +60,7 @@ public class TestActivationRequest {
       String justification,
       Instant startTime,
       Duration duration) {
-      super(id, user, entitlements, justification, startTime, duration);
+      super(id, user, List.of(user), entitlements, justification, startTime, duration);
     }
 
     @Override

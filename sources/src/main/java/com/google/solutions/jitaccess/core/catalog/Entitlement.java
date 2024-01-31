@@ -50,6 +50,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   public int compareTo(Entitlement<TEntitlementId> o) {
     return Comparator
       .comparing((Entitlement<TEntitlementId> e) -> e.status)
+      .thenComparing(e -> e.entitlementType.toString())
       .thenComparing(e -> e.id)
       .compare(this, o);
   }
