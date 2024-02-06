@@ -33,45 +33,45 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestPubSubClient {
-  @Test
-  public void whenUnauthenticated_ThenPublishThrowsException() {
-    var adapter = new PubSubClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenUnauthenticated_ThenPublishThrowsException() {
+        var adapter = new PubSubClient(
+                IntegrationTestEnvironment.INVALID_CREDENTIAL,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
-  }
+        assertThrows(
+                NotAuthenticatedException.class,
+                () -> adapter.publish(
+                        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+                        new PubsubMessage()));
+    }
 
-  @Test
-  public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
-    var adapter = new PubSubClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
-    assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
-  }
+    @Test
+    public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
+        var adapter = new PubSubClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
+        assertThrows(
+                AccessDeniedException.class,
+                () -> adapter.publish(
+                        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+                        new PubsubMessage()));
+    }
 
-  @Test
-  public void whenAuthenticated_ThenPublishSucceeds() throws Exception {
-    // if project id configured but no topic name, just skip the test
-    Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
-    Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
+    @Test
+    public void whenAuthenticated_ThenPublishSucceeds() throws Exception {
+        // if project id configured but no topic name, just skip the test
+        Assumptions.assumeTrue(IntegrationTestEnvironment.PROJECT_ID != null);
+        Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
 
-    var adapter = new PubSubClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        var adapter = new PubSubClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    var messageId = adapter.publish(
-      IntegrationTestEnvironment.PUBSUB_TOPIC,
-      new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
+        var messageId = adapter.publish(
+                IntegrationTestEnvironment.PUBSUB_TOPIC,
+                new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
 
-    assertNotNull(messageId);
-  }
+        assertNotNull(messageId);
+    }
 }

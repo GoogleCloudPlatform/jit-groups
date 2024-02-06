@@ -34,124 +34,124 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestPolicyAnalyzerClient {
-  // -------------------------------------------------------------------------
-  // findAccessibleResourcesByUser.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // findAccessibleResourcesByUser.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.INVALID_CREDENTIAL,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
-  }
+        assertThrows(
+                NotAuthenticatedException.class,
+                () -> adapter.findAccessibleResourcesByUser(
+                        "projects/0",
+                        new UserId("", "bob@example.com"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        true));
+    }
 
-  @Test
-  public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
-  }
+        assertThrows(
+                AccessDeniedException.class,
+                () -> adapter.findAccessibleResourcesByUser(
+                        "projects/0",
+                        new UserId("", "bob@example.com"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        true));
+    }
 
-  @Test
-  public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      new HttpTransport.Options(
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS)));
+    @Test
+    public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                new HttpTransport.Options(
+                        Duration.of(1, ChronoUnit.MILLIS),
+                        Duration.of(1, ChronoUnit.MILLIS),
+                        Duration.of(1, ChronoUnit.MILLIS)));
 
-    assertThrows(
-      SocketTimeoutException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserId("", "bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
-  }
+        assertThrows(
+                SocketTimeoutException.class,
+                () -> adapter.findAccessibleResourcesByUser(
+                        "projects/0",
+                        new UserId("", "bob@example.com"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        true));
+    }
 
-  @Test
-  public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
-      Optional.of("invalid.invalid.invalid"),
-      Optional.empty(),
-      true);
+        var result = adapter.findAccessibleResourcesByUser(
+                "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+                new UserId("", "bob@example.com"),
+                Optional.of("invalid.invalid.invalid"),
+                Optional.empty(),
+                true);
 
-    assertNotNull(result);
-    assertNull(result.getAnalysisResults());
-  }
+        assertNotNull(result);
+        assertNull(result.getAnalysisResults());
+    }
 
-  @Test
-  public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
-      Optional.empty(),
-      Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
-      true);
+        var result = adapter.findAccessibleResourcesByUser(
+                "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+                new UserId("", "bob@example.com"),
+                Optional.empty(),
+                Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
+                true);
 
-    assertNotNull(result);
-    assertNull(result.getAnalysisResults());
-  }
+        assertNotNull(result);
+        assertNull(result.getAnalysisResults());
+    }
 
-  // -------------------------------------------------------------------------
-  // findPermissionedPrincipalsByResource.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // findPermissionedPrincipalsByResource.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.INVALID_CREDENTIAL,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
-  }
+        assertThrows(
+                NotAuthenticatedException.class,
+                () -> adapter.findPermissionedPrincipalsByResource(
+                        "projects/0",
+                        "//cloudresourcemanager.googleapis.com/projects/132",
+                        "roles/browser"));
+    }
 
-  @Test
-  public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
-  }
+        assertThrows(
+                AccessDeniedException.class,
+                () -> adapter.findPermissionedPrincipalsByResource(
+                        "projects/0",
+                        "//cloudresourcemanager.googleapis.com/projects/132",
+                        "roles/browser"));
+    }
 }

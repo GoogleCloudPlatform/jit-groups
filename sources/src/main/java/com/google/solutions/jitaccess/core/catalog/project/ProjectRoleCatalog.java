@@ -24,9 +24,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeCatalog;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -34,27 +34,24 @@ import java.util.SortedSet;
 /**
  * Catalog for project-level role bindings.
  */
-public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBinding> {
-  /**
-   * List projects that the user has any entitlements for.
-   */
-  public abstract SortedSet<ProjectId> listProjects(
-    UserId user
-  ) throws AccessException, IOException;
+public abstract class ProjectRoleCatalog implements RequesterPrivilegeCatalog<ProjectRoleBinding> {
+    /**
+     * List projects that the user has any requester privileges for.
+     */
+    public abstract SortedSet<ProjectId> listProjects(
+            UserId user) throws AccessException, IOException;
 
-  /**
-   * List available entitlements.
-   */
-  public abstract EntitlementSet<ProjectRoleBinding> listEntitlements(
-    UserId user,
-    ProjectId projectId
-  ) throws AccessException, IOException;
+    /**
+     * List available requester privileges.
+     */
+    public abstract RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
+            UserId user,
+            ProjectId projectId) throws AccessException, IOException;
 
-  /**
-   * List available reviewers for (MPA-) activating an entitlement.
-   */
-  public abstract SortedSet<UserId> listReviewers(
-    UserId requestingUser,
-    Entitlement<ProjectRoleBinding> entitlement
-  ) throws AccessException, IOException;
+    /**
+     * List available reviewers for (MPA-) activating a privilege.
+     */
+    public abstract SortedSet<UserId> listReviewers(
+            UserId requestingUser,
+            RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException;
 }

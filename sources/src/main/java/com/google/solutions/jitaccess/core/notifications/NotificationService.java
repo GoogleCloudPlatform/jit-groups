@@ -35,104 +35,103 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public abstract class NotificationService {
-  public abstract void sendNotification(Notification notification) throws NotificationException;
+    public abstract void sendNotification(Notification notification) throws NotificationException;
 
-  public abstract boolean canSendNotifications();
+    public abstract boolean canSendNotifications();
 
+    // -------------------------------------------------------------------------
+    // Inner classes.
+    // -------------------------------------------------------------------------
 
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
+    /**
+     * Concrete class that prints notifications to STDOUT. Useful for local
+     * development only.
+     */
+    public static class SilentNotificationService extends NotificationService {
+        private final boolean printToConsole;
 
-  /**
-   * Concrete class that prints notifications to STDOUT. Useful for local development only.
-   */
-  public static class SilentNotificationService extends NotificationService {
-    private final boolean printToConsole;
+        public SilentNotificationService(boolean printToConsole) {
+            this.printToConsole = printToConsole;
+        }
 
-    public SilentNotificationService(boolean printToConsole) {
-      this.printToConsole = printToConsole;
-    }
+        @Override
+        public boolean canSendNotifications() {
+            return false;
+        }
 
-    @Override
-    public boolean canSendNotifications() {
-      return false;
-    }
-
-    @Override
-    public void sendNotification(Notification notification) {
-      if (this.printToConsole) {
-        //
-        // Print it so that we can see the message during development.
-        //
-        System.out.println(notification);
-      }
-    }
-  }
-
-  /**
-   * Generic notification. The object contains the data for a notification,
-   * but doesn't define its format.
-   */
-  public static abstract class Notification {
-    private final Collection<UserId> toRecipients;
-    private final Collection<UserId> ccRecipients;
-    private final String subject;
-
-    protected final Map<String, Object> properties = new HashMap<>();
-
-    protected boolean isReply() {
-      return false;
-    }
-
-    public Collection<UserId> getToRecipients() {
-      return toRecipients;
-    }
-
-    public Collection<UserId> getCcRecipients() {
-      return ccRecipients;
-    }
-
-    public String getSubject() {
-      return subject;
+        @Override
+        public void sendNotification(Notification notification) {
+            if (this.printToConsole) {
+                //
+                // Print it so that we can see the message during development.
+                //
+                System.out.println(notification);
+            }
+        }
     }
 
     /**
-     * @return string identifying the type of notification.
+     * Generic notification. The object contains the data for a notification,
+     * but doesn't define its format.
      */
-    public abstract String getType();
+    public static abstract class Notification {
+        private final Collection<UserId> toRecipients;
+        private final Collection<UserId> ccRecipients;
+        private final String subject;
 
-    protected Notification(
-      Collection<UserId> toRecipients,
-      Collection<UserId> ccRecipients,
-      String subject
-    ) {
-      Preconditions.checkNotNull(toRecipients, "toRecipients");
-      Preconditions.checkNotNull(ccRecipients, "ccRecipients");
-      Preconditions.checkNotNull(subject, "subject");
+        protected final Map<String, Object> properties = new HashMap<>();
 
-      this.toRecipients = toRecipients;
-      this.ccRecipients = ccRecipients;
-      this.subject = subject;
+        protected boolean isReply() {
+            return false;
+        }
+
+        public Collection<UserId> getToRecipients() {
+            return toRecipients;
+        }
+
+        public Collection<UserId> getCcRecipients() {
+            return ccRecipients;
+        }
+
+        public String getSubject() {
+            return subject;
+        }
+
+        /**
+         * @return string identifying the type of notification.
+         */
+        public abstract String getType();
+
+        protected Notification(
+                Collection<UserId> toRecipients,
+                Collection<UserId> ccRecipients,
+                String subject) {
+            Preconditions.checkNotNull(toRecipients, "toRecipients");
+            Preconditions.checkNotNull(ccRecipients, "ccRecipients");
+            Preconditions.checkNotNull(subject, "subject");
+
+            this.toRecipients = toRecipients;
+            this.ccRecipients = ccRecipients;
+            this.subject = subject;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "Notification to %s: %s\n\n%s",
+                    this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
+                    this.subject,
+                    this.properties
+                            .entrySet()
+                            .stream()
+                            .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
+                            .collect(Collectors.joining("\n", "", "")));
+        }
     }
 
-    @Override
-    public String toString() {
-      return String.format(
-        "Notification to %s: %s\n\n%s",
-        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
-        this.subject,
-        this.properties
-          .entrySet()
-          .stream()
-          .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
-          .collect(Collectors.joining("\n", "", "")));
+    public static class NotificationException extends Exception {
+        public NotificationException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
-  }
-
-  public static class NotificationException extends Exception {
-    public NotificationException(String message, Throwable cause) {
-      super(message, cause);
-    }
-  }
 }

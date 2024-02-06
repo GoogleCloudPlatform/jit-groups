@@ -26,50 +26,50 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 public class UserId implements Comparable<UserId> {
-  public final transient String id;
-  public final String email;
+    public final transient String id;
+    public final String email;
 
-  public UserId(String id, String email) {
-    Preconditions.checkNotNull(email, "email");
+    public UserId(String id, String email) {
+        Preconditions.checkNotNull(email, "email");
 
-    this.id = id;
-    this.email = email;
-  }
-
-  public UserId(String email) {
-    this(null, email);
-  }
-
-  @Override
-  public String toString() {
-    return this.email;
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+        this.id = id;
+        this.email = email;
     }
 
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+    public UserId(String email) {
+        this(null, email);
     }
 
-    UserId userId = (UserId) o;
-    return email.equals(userId.email);
-  }
+    @Override
+    public String toString() {
+        return this.email;
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(email);
-  }
+    // -------------------------------------------------------------------------
+    // Equality.
+    // -------------------------------------------------------------------------
 
-  @Override
-  public int compareTo(UserId o) {
-    return this.email.compareTo(o.email);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        UserId userId = (UserId) o;
+        return email.equals(userId.email);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(email);
+    }
+
+    @Override
+    public int compareTo(UserId o) {
+        return this.email.compareTo(o.email);
+    }
 }

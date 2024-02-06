@@ -36,26 +36,27 @@ import com.google.common.base.Preconditions;
  * filter falsely flags and blocks requests that contain such JWTs.
  */
 public class TokenObfuscator {
-  private TokenObfuscator() {}
+    private TokenObfuscator() {
+    }
 
-  public static String encode(String jwt) {
-    Preconditions.checkNotNull(jwt);
-    Preconditions.checkArgument(jwt.startsWith("ey"));
+    public static String encode(String jwt) {
+        Preconditions.checkNotNull(jwt);
+        Preconditions.checkArgument(jwt.startsWith("ey"));
 
-    //
-    // JWTs start with "ey" and use dots to separate the segments.
-    // By removing the prefix and changing the separator, we
-    // disturb Base64-decodeability and make it look less like a JWT.
-    //
-    return jwt.substring(2)
-      .replace(".ey", "~~")
-      .replace('.', '~');
-  }
+        //
+        // JWTs start with "ey" and use dots to separate the segments.
+        // By removing the prefix and changing the separator, we
+        // disturb Base64-decodeability and make it look less like a JWT.
+        //
+        return jwt.substring(2)
+                .replace(".ey", "~~")
+                .replace('.', '~');
+    }
 
-  public static String decode(String encodedJwt) {
-    Preconditions.checkNotNull(encodedJwt);
-    return "ey" + encodedJwt
-      .replace("~~", ".ey")
-      .replace('~', '.');
-  }
+    public static String decode(String encodedJwt) {
+        Preconditions.checkNotNull(encodedJwt);
+        return "ey" + encodedJwt
+                .replace("~~", ".ey")
+                .replace('~', '.');
+    }
 }

@@ -24,8 +24,12 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeCatalog;
+import com.google.solutions.jitaccess.core.catalog.SamplePrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
@@ -44,117 +48,134 @@ import static org.mockito.Mockito.verify;
 
 public class TestProjectRoleActivator {
 
-  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
-  private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
-  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
-  private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
-  private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
+    private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
+    private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
+    private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
+    private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
+    private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
 
-  // -------------------------------------------------------------------------
-  // provisionAccess - JIT.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // provisionAccess - JIT.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void provisionAccessForJitRequest() throws Exception {
-    var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
-    var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
-      resourceManagerClient,
-      Mockito.mock(JustificationPolicy.class));
+    @Test
+    public void provisionAccessForJitRequest() throws Exception {
+        var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
+        var activator = new ProjectRoleActivator(
+                Mockito.mock(RequesterPrivilegeCatalog.class),
+                resourceManagerClient,
+                Mockito.mock(JustificationPolicy.class));
 
-    var request = activator.createSelfApprovalRequest(
-      SAMPLE_REQUESTING_USER,
-      Set.of(
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_2))),
-      "justification",
-      Instant.now(),
-      Duration.ofMinutes(5));
+        var privilege = new RequesterPrivilege<ProjectRoleBinding>(
+                new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
+                SAMPLE_ROLE_1,
+                ActivationType.SELF_APPROVAL,
+                Status.AVAILABLE);
 
-    var activation = activator.approve(SAMPLE_REQUESTING_USER, request);
+        var request = activator.createActivationRequest(
+                SAMPLE_REQUESTING_USER,
+                Set.of(),
+                privilege,
+                "justification",
+                Instant.now(),
+                Duration.ofMinutes(5));
 
-    assertNotNull(activation);
-    assertSame(request, activation.request());
+        var activation = activator.approve(SAMPLE_REQUESTING_USER, request);
 
-    verify(resourceManagerClient, times(2))
-      .addProjectIamBinding(
-        eq(SAMPLE_PROJECT),
-        argThat(b ->
-            IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
-            b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
-        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
-        eq("Approved by user@example.com, justification: justification"));
-  }
+        assertNotNull(activation);
+        assertSame(request, activation.request());
 
-  // -------------------------------------------------------------------------
-  // provisionAccess - MPA.
-  // -------------------------------------------------------------------------
+        verify(resourceManagerClient, times(1))
+                .addProjectIamBinding(
+                        eq(SAMPLE_PROJECT),
+                        argThat(b -> IamTemporaryAccessConditions
+                                .isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+                                b.getCondition().getTitle().equals(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)),
+                        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
+                        eq("Approved by user@example.com, justification: justification"));
+    }
 
-  @Test
-  public void provisionAccessForMpaRequest() throws Exception {
-    var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
-    var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
-      resourceManagerClient,
-      Mockito.mock(JustificationPolicy.class));
+    // -------------------------------------------------------------------------
+    // provisionAccess - MPA.
+    // -------------------------------------------------------------------------
 
-    var request = activator.createPeerApprovalRequest(
-      SAMPLE_REQUESTING_USER,
-      Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
-      Set.of(SAMPLE_APPROVING_USER),
-      "justification",
-      Instant.now(),
-      Duration.ofMinutes(5));
+    @Test
+    public void provisionAccessForMpaRequest() throws Exception {
+        var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
+        var activator = new ProjectRoleActivator(
+                Mockito.mock(RequesterPrivilegeCatalog.class),
+                resourceManagerClient,
+                Mockito.mock(JustificationPolicy.class));
 
-    var activation = activator.approve(
-      SAMPLE_APPROVING_USER,
-      request);
+        var privilege = new RequesterPrivilege<ProjectRoleBinding>(
+                new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
+                SAMPLE_ROLE_1,
+                ActivationType.PEER_APPROVAL,
+                Status.AVAILABLE);
 
-    assertNotNull(activation);
-    assertSame(request, activation.request());
+        var request = activator.createActivationRequest(
+                SAMPLE_REQUESTING_USER,
+                Set.of(SAMPLE_APPROVING_USER),
+                privilege,
+                "justification",
+                Instant.now(),
+                Duration.ofMinutes(5));
 
-    verify(resourceManagerClient, times(1))
-      .addProjectIamBinding(
-        eq(SAMPLE_PROJECT),
-        argThat(b ->
-          IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
-            b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
-        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
-        eq("Approved by approver@example.com, justification: justification"));
-  }
+        var activation = activator.approve(
+                SAMPLE_APPROVING_USER,
+                request);
 
-  // -------------------------------------------------------------------------
-  // createTokenConverter.
-  // -------------------------------------------------------------------------
+        assertNotNull(activation);
+        assertSame(request, activation.request());
 
-  @Test
-  public void createTokenConverter() throws Exception {
-    var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
-      Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class));
+        verify(resourceManagerClient, times(1))
+                .addProjectIamBinding(
+                        eq(SAMPLE_PROJECT),
+                        argThat(b -> IamTemporaryAccessConditions
+                                .isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+                                b.getCondition().getTitle().equals(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)),
+                        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
+                        eq("Approved by approver@example.com, justification: justification"));
+    }
 
-    var inputRequest = activator.createPeerApprovalRequest(
-      SAMPLE_REQUESTING_USER,
-      Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
-      Set.of(SAMPLE_APPROVING_USER),
-      "justification",
-      Instant.now(),
-      Duration.ofMinutes(5));
+    // -------------------------------------------------------------------------
+    // createTokenConverter.
+    // -------------------------------------------------------------------------
 
-    var payload = activator
-      .createTokenConverter()
-      .convert(inputRequest);
+    @Test
+    public void createTokenConverter() throws Exception {
+        var activator = new ProjectRoleActivator(
+                Mockito.mock(RequesterPrivilegeCatalog.class),
+                Mockito.mock(ResourceManagerClient.class),
+                Mockito.mock(JustificationPolicy.class));
 
-    var outputRequest = activator
-      .createTokenConverter()
-      .convert(payload);
+        var privilege = new RequesterPrivilege<ProjectRoleBinding>(
+                new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
+                SAMPLE_ROLE_1,
+                ActivationType.PEER_APPROVAL,
+                Status.AVAILABLE);
 
-    assertEquals(inputRequest.requestingUser(), outputRequest.requestingUser());
-    assertIterableEquals(inputRequest.reviewers(), outputRequest.reviewers());
-    assertIterableEquals(inputRequest.entitlements(), outputRequest.entitlements());
-    assertEquals(inputRequest.justification(), outputRequest.justification());
-    assertEquals(inputRequest.startTime().getEpochSecond(), outputRequest.startTime().getEpochSecond());
-    assertEquals(inputRequest.endTime().getEpochSecond(), outputRequest.endTime().getEpochSecond());
-  }
+        var inputRequest = activator.createActivationRequest(
+                SAMPLE_REQUESTING_USER,
+                Set.of(SAMPLE_APPROVING_USER),
+                privilege,
+                "justification",
+                Instant.now(),
+                Duration.ofMinutes(5));
+
+        var payload = activator
+                .createTokenConverter()
+                .convert(inputRequest);
+
+        var outputRequest = activator
+                .createTokenConverter()
+                .convert(payload);
+
+        assertEquals(inputRequest.requestingUser(), outputRequest.requestingUser());
+        assertIterableEquals(inputRequest.reviewers(), outputRequest.reviewers());
+        assertEquals(inputRequest.requesterPrivilege(), outputRequest.requesterPrivilege());
+        assertEquals(inputRequest.justification(), outputRequest.justification());
+        assertEquals(inputRequest.startTime().getEpochSecond(), outputRequest.startTime().getEpochSecond());
+        assertEquals(inputRequest.endTime().getEpochSecond(), outputRequest.endTime().getEpochSecond());
+    }
 }

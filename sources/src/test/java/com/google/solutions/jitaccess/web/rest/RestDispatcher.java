@@ -39,119 +39,115 @@ import java.net.URISyntaxException;
 import java.security.Principal;
 
 public class RestDispatcher<TResource> {
-  private final Dispatcher dispatcher;
+    private final Dispatcher dispatcher;
 
-  public RestDispatcher(TResource resource, final UserId userId) {
-    dispatcher = MockDispatcherFactory.createDispatcher();
-    dispatcher.getRegistry().addSingletonResource(resource);
+    public RestDispatcher(TResource resource, final UserId userId) {
+        dispatcher = MockDispatcherFactory.createDispatcher();
+        dispatcher.getRegistry().addSingletonResource(resource);
 
-    //
-    // Register all exception mappers.
-    //
-    for (var mapper : ExceptionMappers.ALL) {
-      dispatcher.getProviderFactory().registerProvider(mapper);
-    }
-
-    //
-    // Inject @Context objects.
-    //
-    dispatcher.getDefaultContextObjects().put(
-      SecurityContext.class,
-      new SecurityContext() {
-        @Override
-        public Principal getUserPrincipal() {
-          return new UserPrincipal() {
-            @Override
-            public UserId getId() {
-              return userId;
-            }
-
-            @Override
-            public DeviceInfo getDevice() {
-              return DeviceInfo.UNKNOWN;
-            }
-
-            @Override
-            public String getName() {
-              return "mock@example.com";
-            }
-          };
+        //
+        // Register all exception mappers.
+        //
+        for (var mapper : ExceptionMappers.ALL) {
+            dispatcher.getProviderFactory().registerProvider(mapper);
         }
 
-        @Override
-        public boolean isUserInRole(String s) {
-          return false;
-        }
+        //
+        // Inject @Context objects.
+        //
+        dispatcher.getDefaultContextObjects().put(
+                SecurityContext.class,
+                new SecurityContext() {
+                    @Override
+                    public Principal getUserPrincipal() {
+                        return new UserPrincipal() {
+                            @Override
+                            public UserId getId() {
+                                return userId;
+                            }
 
-        @Override
-        public boolean isSecure() {
-          return true;
-        }
+                            @Override
+                            public DeviceInfo getDevice() {
+                                return DeviceInfo.UNKNOWN;
+                            }
 
-        @Override
-        public String getAuthenticationScheme() {
-          return "Mock";
-        }
-      });
-  }
+                            @Override
+                            public String getName() {
+                                return "mock@example.com";
+                            }
+                        };
+                    }
 
-  private <TResponse> Response<TResponse> invoke(
-    MockHttpRequest request,
-    Class<TResponse> responseType
-  ) {
-    var response = new MockHttpResponse();
-    var synchronousExecutionContext = new SynchronousExecutionContext(
-      (SynchronousDispatcher)dispatcher,
-      request,
-      response);
+                    @Override
+                    public boolean isUserInRole(String s) {
+                        return false;
+                    }
 
-    request.setAsynchronousContext(synchronousExecutionContext);
-    dispatcher.invoke(request, response);
-    return new Response<>(response, responseType);
-  }
+                    @Override
+                    public boolean isSecure() {
+                        return true;
+                    }
 
-  public <TResponse> Response<TResponse> get(
-    String path,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
-    return invoke(MockHttpRequest.get(path), responseType);
-  }
-
-  public <TResponse> Response<TResponse> post(
-    String path,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
-    return invoke(MockHttpRequest.post(path), responseType);
-  }
-
-  public <TRequest, TResponse> Response<TResponse> post(
-    String path,
-    TRequest request,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
-    var mockRequest = MockHttpRequest.post(path)
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON_TYPE)
-      .content(new Gson().toJson(request).getBytes());
-
-    return invoke(mockRequest, responseType);
-  }
-
-  public static class Response<T> {
-    private final MockHttpResponse mockResponse;
-    private final Class<T> responseType;
-
-    public Response(MockHttpResponse mockResponse, Class<T> responseType) {
-      this.mockResponse = mockResponse;
-      this.responseType = responseType;
+                    @Override
+                    public String getAuthenticationScheme() {
+                        return "Mock";
+                    }
+                });
     }
 
-    public int getStatus() {
-      return this.mockResponse.getStatus();
+    private <TResponse> Response<TResponse> invoke(
+            MockHttpRequest request,
+            Class<TResponse> responseType) {
+        var response = new MockHttpResponse();
+        var synchronousExecutionContext = new SynchronousExecutionContext(
+                (SynchronousDispatcher) dispatcher,
+                request,
+                response);
+
+        request.setAsynchronousContext(synchronousExecutionContext);
+        dispatcher.invoke(request, response);
+        return new Response<>(response, responseType);
     }
 
-    public T getBody() throws UnsupportedEncodingException {
-      return new Gson().fromJson(this.mockResponse.getContentAsString(), responseType);
+    public <TResponse> Response<TResponse> get(
+            String path,
+            Class<TResponse> responseType) throws URISyntaxException {
+        return invoke(MockHttpRequest.get(path), responseType);
     }
-  }
+
+    public <TResponse> Response<TResponse> post(
+            String path,
+            Class<TResponse> responseType) throws URISyntaxException {
+        return invoke(MockHttpRequest.post(path), responseType);
+    }
+
+    public <TRequest, TResponse> Response<TResponse> post(
+            String path,
+            TRequest request,
+            Class<TResponse> responseType) throws URISyntaxException {
+        var mockRequest = MockHttpRequest.post(path)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON_TYPE)
+                .content(new Gson().toJson(request).getBytes());
+
+        return invoke(mockRequest, responseType);
+    }
+
+    public static class Response<T> {
+        private final MockHttpResponse mockResponse;
+        private final Class<T> responseType;
+
+        public Response(MockHttpResponse mockResponse, Class<T> responseType) {
+            this.mockResponse = mockResponse;
+            this.responseType = responseType;
+        }
+
+        public int getStatus() {
+            return this.mockResponse.getStatus();
+        }
+
+        public T getBody() throws UnsupportedEncodingException {
+            return new Gson().fromJson(this.mockResponse.getContentAsString(), responseType);
+        }
+    }
 }

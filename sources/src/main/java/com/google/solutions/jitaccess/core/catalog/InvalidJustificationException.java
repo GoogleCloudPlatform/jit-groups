@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 
 public class InvalidJustificationException extends AccessDeniedException {
-  public InvalidJustificationException(String message) {
-    super(message);
-  }
+    public InvalidJustificationException(String message) {
+        super(message);
+    }
 }

@@ -26,17 +26,16 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestExceptions {
-  @Test
-  public void getFullMessageConcatenatesCauses()
-  {
-    var exception = new AccessDeniedException(
-      "Access denied",
-      new IllegalStateException(
-        "Illegal state",
-        new NullPointerException()));
+    @Test
+    public void getFullMessageConcatenatesCauses() {
+        var exception = new AccessDeniedException(
+                "Access denied",
+                new IllegalStateException(
+                        "Illegal state",
+                        new NullPointerException()));
 
-    assertEquals(
-      "Access denied, caused by IllegalStateException: Illegal state, caused by NullPointerException",
-      Exceptions.getFullMessage(exception));
-  }
+        assertEquals(
+                "Access denied, caused by IllegalStateException: Illegal state, caused by NullPointerException",
+                Exceptions.getFullMessage(exception));
+    }
 }

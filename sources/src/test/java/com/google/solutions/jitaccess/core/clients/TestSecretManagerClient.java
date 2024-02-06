@@ -43,108 +43,107 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestSecretManagerClient {
-  private static final String SECRET_NAME = "testsecret";
-  private static final String SECRET_PATH = String.format(
-    "projects/%s/secrets/%s",
-    IntegrationTestEnvironment.PROJECT_ID,
-    SECRET_NAME);
-  private static final String SECRET_LASTEST_VERSION_PATH = String.format(
-    "%s/versions/latest",
-    SECRET_PATH);
-  private static final String SECRET_CONTENT = "(secret)";
-  private static final Replication SECRET_REPLICATION = IntegrationTestEnvironment.REGION == null ? new Replication().setAutomatic(new Automatic()) 
-    : new Replication().setUserManaged(new UserManaged().setReplicas(List.of(new Replica().setLocation(IntegrationTestEnvironment.REGION))));
+    private static final String SECRET_NAME = "testsecret";
+    private static final String SECRET_PATH = String.format(
+            "projects/%s/secrets/%s",
+            IntegrationTestEnvironment.PROJECT_ID,
+            SECRET_NAME);
+    private static final String SECRET_LASTEST_VERSION_PATH = String.format(
+            "%s/versions/latest",
+            SECRET_PATH);
+    private static final String SECRET_CONTENT = "(secret)";
+    private static final Replication SECRET_REPLICATION = IntegrationTestEnvironment.REGION == null
+            ? new Replication().setAutomatic(new Automatic())
+            : new Replication().setUserManaged(new UserManaged()
+                    .setReplicas(List.of(new Replica().setLocation(IntegrationTestEnvironment.REGION))));
 
-  private static SecretManager createClient() throws GeneralSecurityException, IOException {
-    return new SecretManager.Builder(
-      HttpTransport.newTransport(),
-      new GsonFactory(),
-      new HttpCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS))
-      .build();
-  }
-
-  @BeforeAll
-  public static void recreateSecret() throws GeneralSecurityException, IOException {
-    var client = createClient();
-    //
-    // Delete existing secret if it exists.
-    //
-    try {
-      client
-        .projects()
-        .secrets()
-        .delete(SECRET_PATH)
-        .execute();
-    }
-    catch (GoogleJsonResponseException e)
-    {
-      if (e.getStatusCode() != 404) {
-        throw (GoogleJsonResponseException)e.fillInStackTrace();
-      }
+    private static SecretManager createClient() throws GeneralSecurityException, IOException {
+        return new SecretManager.Builder(
+                HttpTransport.newTransport(),
+                new GsonFactory(),
+                new HttpCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS))
+                .build();
     }
 
-    //
-    // Create new secret.
-    //
-    client
-      .projects()
-      .secrets()
-      .create(String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
-        new Secret().setReplication(SECRET_REPLICATION)
-      )
-      .setSecretId(SECRET_NAME)
-      .execute();
-  }
+    @BeforeAll
+    public static void recreateSecret() throws GeneralSecurityException, IOException {
+        var client = createClient();
+        //
+        // Delete existing secret if it exists.
+        //
+        try {
+            client
+                    .projects()
+                    .secrets()
+                    .delete(SECRET_PATH)
+                    .execute();
+        } catch (GoogleJsonResponseException e) {
+            if (e.getStatusCode() != 404) {
+                throw (GoogleJsonResponseException) e.fillInStackTrace();
+            }
+        }
 
-  //---------------------------------------------------------------------
-  // accessSecret.
-  //---------------------------------------------------------------------
+        //
+        // Create new secret.
+        //
+        client
+                .projects()
+                .secrets()
+                .create(String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
+                        new Secret().setReplication(SECRET_REPLICATION))
+                .setSecretId(SECRET_NAME)
+                .execute();
+    }
 
-  @Test
-  public void whenUnauthenticated_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+    // ---------------------------------------------------------------------
+    // accessSecret.
+    // ---------------------------------------------------------------------
 
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.accessSecret(SECRET_LASTEST_VERSION_PATH));
-  }
+    @Test
+    public void whenUnauthenticated_ThenAccessSecretThrowsException() {
+        var adapter = new SecretManagerClient(
+                IntegrationTestEnvironment.INVALID_CREDENTIAL,
+                HttpTransport.Options.DEFAULT);
 
-  @Test
-  public void whenCallerLacksPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        assertThrows(
+                NotAuthenticatedException.class,
+                () -> adapter.accessSecret(SECRET_LASTEST_VERSION_PATH));
+    }
 
-    assertThrows(
-      AccessDeniedException.class,
-      () ->adapter.accessSecret(SECRET_LASTEST_VERSION_PATH));
-  }
+    @Test
+    public void whenCallerLacksPermission_ThenAccessSecretThrowsException() {
+        var adapter = new SecretManagerClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-  @Test
-  public void whenSecretNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        assertThrows(
+                AccessDeniedException.class,
+                () -> adapter.accessSecret(SECRET_LASTEST_VERSION_PATH));
+    }
 
-    assertThrows(
-      ResourceNotFoundException.class,
-      () ->adapter.accessSecret(String.format(
-        "projects/%s/secrets/doesnotexist/versions/latest",
-        IntegrationTestEnvironment.PROJECT_ID)));
-  }
+    @Test
+    public void whenSecretNotFondPermission_ThenAccessSecretThrowsException() {
+        var adapter = new SecretManagerClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-  @Test
-  public void whenSecretVersionNotFondPermission_ThenAccessSecretThrowsException() {
-    var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> adapter.accessSecret(String.format(
+                        "projects/%s/secrets/doesnotexist/versions/latest",
+                        IntegrationTestEnvironment.PROJECT_ID)));
+    }
 
-    assertThrows(
-      ResourceNotFoundException.class,
-      () ->adapter.accessSecret(String.format(
-        "%s/versions/99",
-        SECRET_PATH)));
-  }
+    @Test
+    public void whenSecretVersionNotFondPermission_ThenAccessSecretThrowsException() {
+        var adapter = new SecretManagerClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> adapter.accessSecret(String.format(
+                        "%s/versions/99",
+                        SECRET_PATH)));
+    }
 }

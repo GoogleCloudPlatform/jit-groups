@@ -21,27 +21,26 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-class SampleEntitlementId extends EntitlementId
-{
-  private final String catalog;
-  private final String id;
+public class SamplePrivilegeId extends PrivilegeId {
+    private final String catalog;
+    private final String id;
 
-  public SampleEntitlementId(String catalog, String id) {
-    this.catalog = catalog;
-    this.id = id;
-  }
+    public SamplePrivilegeId(String catalog, String id) {
+        this.catalog = catalog;
+        this.id = id;
+    }
 
-  public SampleEntitlementId(String id) {
-    this("sample", id);
-  }
+    public SamplePrivilegeId(String id) {
+        this("sample", id);
+    }
 
-  @Override
-  public String catalog() {
-    return this.catalog;
-  }
+    @Override
+    public String catalog() {
+        return this.catalog;
+    }
 
-  @Override
-  public String id() {
-    return this.id;
-  }
+    @Override
+    public String id() {
+        return this.id;
+    }
 }

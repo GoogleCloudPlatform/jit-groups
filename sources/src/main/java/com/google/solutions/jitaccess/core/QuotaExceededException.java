@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 public class QuotaExceededException extends AccessException {
-  public QuotaExceededException(String message, Exception inner) {
-    super(message, inner);
-  }
+    public QuotaExceededException(String message, Exception inner) {
+        super(message, inner);
+    }
 }

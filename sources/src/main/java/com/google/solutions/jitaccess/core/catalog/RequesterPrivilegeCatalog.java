@@ -21,38 +21,25 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Set;
+import java.io.IOException;
 
 /**
- * Request for activating requester entitlement.
+ * A catalog of requester privileges that can be browsed by the user.
  */
-public abstract class ExternalApprovalActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
+public interface RequesterPrivilegeCatalog<TPrivilegeId extends PrivilegeId> {
+    /**
+     * Verify if a user is allowed to make the given request.
+     */
+    void verifyUserCanRequest(
+            ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
-  protected ExternalApprovalActivationRequest(
-    ActivationId id,
-    UserId requestingUser,
-    Set<TEntitlementId> entitlements,
-    Set<UserId> reviewers,
-    String justification,
-    Instant startTime,
-    Duration duration) {
-    super(
-      id,
-      requestingUser,
-      reviewers,
-      entitlements,
-      justification,
-      startTime,
-      duration);
-  }
-
-  @Override
-  public final ActivationType type() {
-    return ActivationType.EXTERNAL_APPROVAL;
-  }
+    /**
+     * Verify if a user is allowed to approve a given request.
+     */
+    void verifyUserCanApprove(
+            UserId approvingUser,
+            ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 }

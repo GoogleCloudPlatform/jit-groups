@@ -29,7 +29,7 @@ import java.security.Principal;
  * Represents a logged-in user.
  */
 public interface UserPrincipal extends Principal {
-  UserId getId();
+    UserId getId();
 
-  DeviceInfo getDevice();
+    DeviceInfo getDevice();
 }

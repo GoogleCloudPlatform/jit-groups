@@ -39,67 +39,64 @@ import java.time.Duration;
  * system property.
  */
 public class HttpTransport {
-  private HttpTransport() {}
-
-  public static NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
-    var trustStore = System.getProperty("javax.net.ssl.trustStore");
-    var trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-
-    if (trustStore != null && trustStorePassword != null) {
-      //
-      // Use a custom keystore.
-      //
-      // NB. There's little reason to use a custom trust store in production, but
-      // during development, using a custom trust store is necessary if we want to
-      // trace and decrypt HTTPS traffic.
-      //
-      try (var trustStoreStream = new FileInputStream(trustStore)) {
-        var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-        keyStore.load(trustStoreStream, trustStorePassword.toCharArray());
-
-        return new NetHttpTransport
-          .Builder()
-          .trustCertificates(keyStore)
-          .build();
-      }
+    private HttpTransport() {
     }
-    else {
-      //
-      // Use the Google keystore.
-      //
-      return GoogleNetHttpTransport.newTrustedTransport();
+
+    public static NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
+        var trustStore = System.getProperty("javax.net.ssl.trustStore");
+        var trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+
+        if (trustStore != null && trustStorePassword != null) {
+            //
+            // Use a custom keystore.
+            //
+            // NB. There's little reason to use a custom trust store in production, but
+            // during development, using a custom trust store is necessary if we want to
+            // trace and decrypt HTTPS traffic.
+            //
+            try (var trustStoreStream = new FileInputStream(trustStore)) {
+                var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                keyStore.load(trustStoreStream, trustStorePassword.toCharArray());
+
+                return new NetHttpTransport.Builder()
+                        .trustCertificates(keyStore)
+                        .build();
+            }
+        } else {
+            //
+            // Use the Google keystore.
+            //
+            return GoogleNetHttpTransport.newTrustedTransport();
+        }
     }
-  }
 
-  public static HttpRequestInitializer newAuthenticatingRequestInitializer(
-    Credentials credentials,
-    Options httpOptions
-  ) {
-    return new HttpCredentialsAdapter(credentials) {
-      @Override
-      public void initialize(HttpRequest request) throws IOException {
-        super.initialize(request);
+    public static HttpRequestInitializer newAuthenticatingRequestInitializer(
+            Credentials credentials,
+            Options httpOptions) {
+        return new HttpCredentialsAdapter(credentials) {
+            @Override
+            public void initialize(HttpRequest request) throws IOException {
+                super.initialize(request);
 
-        if (!httpOptions.readTimeout.isZero()) {
-          request.setReadTimeout((int) httpOptions.readTimeout.toMillis());
-        }
+                if (!httpOptions.readTimeout.isZero()) {
+                    request.setReadTimeout((int) httpOptions.readTimeout.toMillis());
+                }
 
-        if (!httpOptions.writeTimeout.isZero()) {
-          request.setWriteTimeout((int) httpOptions.writeTimeout.toMillis());
-        }
+                if (!httpOptions.writeTimeout.isZero()) {
+                    request.setWriteTimeout((int) httpOptions.writeTimeout.toMillis());
+                }
 
-        if (!httpOptions.connectTimeout.isZero()) {
-          request.setConnectTimeout((int) httpOptions.connectTimeout.toMillis());
-        }
-      }
-    };
-  }
+                if (!httpOptions.connectTimeout.isZero()) {
+                    request.setConnectTimeout((int) httpOptions.connectTimeout.toMillis());
+                }
+            }
+        };
+    }
 
-  public record Options(
-    Duration connectTimeout,
-    Duration readTimeout,
-    Duration writeTimeout
-  ) {
-    public static Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
-  }
+    public record Options(
+            Duration connectTimeout,
+            Duration readTimeout,
+            Duration writeTimeout) {
+        public static Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
+    }
 }

@@ -28,51 +28,51 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestDeviceInfo {
-  @Test
-  public void toStringReturnsDeviceId() {
-    assertEquals("device-1", new DeviceInfo("device-1", List.of()).toString());
-  }
+    @Test
+    public void toStringReturnsDeviceId() {
+        assertEquals("device-1", new DeviceInfo("device-1", List.of()).toString());
+    }
 
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Equality.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
-    DeviceInfo id2 = new DeviceInfo("device-1", List.of());
+    @Test
+    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+        DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+        DeviceInfo id2 = new DeviceInfo("device-1", List.of());
 
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertTrue(id1.equals(id2));
+        assertEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    @Test
+    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+        DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
-    assertTrue(id1.equals(id1));
-  }
+        assertTrue(id1.equals(id1));
+    }
 
-  @Test
-  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
-    DeviceInfo id2 = new DeviceInfo("device-1", List.of("level-1"));
+    @Test
+    public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
+        DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+        DeviceInfo id2 = new DeviceInfo("device-1", List.of("level-1"));
 
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertFalse(id1.equals(id2));
+        assertNotEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    @Test
+    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+        DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
-    assertFalse(id1.equals(null));
-  }
+        assertFalse(id1.equals(null));
+    }
 
-  @Test
-  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    @Test
+    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+        DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
-    assertFalse(id1.equals(""));
-  }
+        assertFalse(id1.equals(""));
+    }
 }

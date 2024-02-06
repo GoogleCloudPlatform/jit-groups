@@ -30,21 +30,22 @@ import java.util.Base64;
  * Unique ID of an activation.
  */
 public record ActivationId(String id) {
-  public ActivationId {
-    Preconditions.checkNotNull(id);
-  }
 
-  private static final SecureRandom random = new SecureRandom();
+    public ActivationId {
+        Preconditions.checkNotNull(id);
+    }
 
-  public static ActivationId newId(ActivationType type) {
-    var id = new byte[12];
-    random.nextBytes(id);
+    private static final SecureRandom random = new SecureRandom();
 
-    return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
-  }
+    public static ActivationId newId(ActivationType type) {
+        var id = new byte[12];
+        random.nextBytes(id);
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
+        return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
+    }
+
+    @Override
+    public String toString() {
+        return this.id;
+    }
 }

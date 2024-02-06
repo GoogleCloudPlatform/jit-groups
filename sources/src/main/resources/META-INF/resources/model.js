@@ -96,13 +96,13 @@ class Model {
     }
 
     /** List reviewers that can approve a request */
-    async listReviewers(projectId, role, entitlementType) {
+    async listReviewers(projectId, role, activationType) {
         console.assert(projectId);
         console.assert(role);
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/reviewers?role=${encodeURIComponent(role)}&entitlementType=${encodeURIComponent(entitlementType)}`,
+                url: `/api/projects/${projectId}/reviewers?role=${encodeURIComponent(role)}&activationType=${encodeURIComponent(activationType)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -317,7 +317,7 @@ class DebugModel extends Model {
             isReviewer: (!forSelf),
             justification: justification,
             beneficiary: { email: "user" },
-            reviewers: forSelf ? [] : [{ email: "reviewer"}],
+            reviewers: forSelf ? [] : [{ email: "reviewer" }],
             items: roles.map(r => ({
                 activationId: "sim-1",
                 projectId: projectId,
@@ -356,7 +356,7 @@ class DebugModel extends Model {
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
-            const entitlementTypes = ["JIT", "PEER", "EXTERNAL", "REVIEWER", "NONE"];
+            const activationTypes = ["JIT", "PEER", "EXTERNAL", "REVIEWER", "NONE"];
             const statuses = ["ACTIVE", "AVAILABLE"];
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
@@ -365,7 +365,7 @@ class DebugModel extends Model {
                         id: "//project-1:roles/simulated-role-" + i,
                         role: "roles/simulated-role-" + i
                     },
-                    entitlementType: entitlementTypes[i % entitlementTypes.length],
+                    activationType: activationTypes[i % activationTypes.length],
                     status: statuses[i % statuses.length]
                 }))
             });
@@ -388,10 +388,10 @@ class DebugModel extends Model {
         }
     }
 
-    async listReviewers(projectId, role, entitlementType) {
+    async listReviewers(projectId, role, activationType) {
         var setting = $("#debug-listReviewers").val();
         if (!setting) {
-            return super.listReviewers(projectId, role, entitlementType);
+            return super.listReviewers(projectId, role, activationType);
         }
         else if (setting === "error") {
             await this._simulateError();

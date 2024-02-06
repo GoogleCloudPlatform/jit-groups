@@ -38,84 +38,82 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestMailNotificationService {
-  private static class TestNotification extends NotificationService.Notification {
-    private final String templateId;
+    private static class TestNotification extends NotificationService.Notification {
+        private final String templateId;
 
-    protected TestNotification(
-      UserId recipient,
-      String subject,
-      Map<String, Object> properties,
-      String templateId
-    ) {
-      super(
-        List.of(recipient),
-        List.of(),
-        subject);
-      this.properties.putAll(properties);
-      this.templateId = templateId;
+        protected TestNotification(
+                UserId recipient,
+                String subject,
+                Map<String, Object> properties,
+                String templateId) {
+            super(
+                    List.of(recipient),
+                    List.of(),
+                    subject);
+            this.properties.putAll(properties);
+            this.templateId = templateId;
+        }
+
+        @Override
+        public String getType() {
+            return this.templateId;
+        }
     }
 
-    @Override
-    public String getType() {
-      return this.templateId;
+    // -------------------------------------------------------------------------
+    // sendNotification.
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
+        var mailAdapter = Mockito.mock(SmtpClient.class);
+        var service = new MailNotificationService(
+                mailAdapter,
+                new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
+
+        var to = new UserId("user@example.com");
+        service.sendNotification(new TestNotification(
+                to,
+                "Test email",
+                new HashMap<String, Object>(),
+                "unknown-templateid"));
+
+        verify(mailAdapter, times(0)).sendMail(
+                eq(List.of(to)),
+                eq(List.of()),
+                eq("Test email"),
+                anyString(),
+                eq(EnumSet.of(SmtpClient.Flags.NONE)));
     }
-  }
 
-  // -------------------------------------------------------------------------
-  // sendNotification.
-  // -------------------------------------------------------------------------
+    @Test
+    public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
+        var mailAdapter = Mockito.mock(SmtpClient.class);
+        var service = new MailNotificationService(
+                mailAdapter,
+                new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
-  @Test
-  public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
-    var mailAdapter = Mockito.mock(SmtpClient.class);
-    var service = new MailNotificationService(
-      mailAdapter,
-      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
+        var to = new UserId("user@example.com");
+        service.sendNotification(new TestNotification(
+                to,
+                "Test email",
+                new HashMap<String, Object>(),
+                "RequestActivation"));
 
-    var to = new UserId("user@example.com");
-    service.sendNotification(new TestNotification(
-      to,
-      "Test email",
-      new HashMap<String, Object>(),
-      "unknown-templateid"));
+        verify(mailAdapter, times(1)).sendMail(
+                eq(List.of(to)),
+                eq(List.of()),
+                eq("Test email"),
+                anyString(),
+                eq(EnumSet.of(SmtpClient.Flags.NONE)));
+    }
 
-    verify(mailAdapter, times(0)).sendMail(
-      eq(List.of(to)),
-      eq(List.of()),
-      eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.NONE)));
-  }
+    // -------------------------------------------------------------------------
+    // loadResource.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
-    var mailAdapter = Mockito.mock(SmtpClient.class);
-    var service = new MailNotificationService(
-      mailAdapter,
-      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
-
-    var to = new UserId("user@example.com");
-    service.sendNotification(new TestNotification(
-      to,
-      "Test email",
-      new HashMap<String, Object>(),
-      "RequestActivation"));
-
-    verify(mailAdapter, times(1)).sendMail(
-      eq(List.of(to)),
-      eq(List.of()),
-      eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.NONE)));
-  }
-
-  // -------------------------------------------------------------------------
-  // loadResource.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception
-  {
-    assertNull(MailNotificationService.loadResource("doesnotexist"));
-  }
+    @Test
+    public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception {
+        assertNull(MailNotificationService.loadResource("doesnotexist"));
+    }
 }

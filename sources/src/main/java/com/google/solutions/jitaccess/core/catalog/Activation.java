@@ -24,13 +24,12 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.common.base.Preconditions;
 
 /**
- * Represents a successful activation of one or more entitlements.
+ * Represents a successful activation of a requester privilege.
  */
-public record Activation<TEntitlementId extends EntitlementId>(
-  ActivationRequest<TEntitlementId> request
-) {
-  public Activation {
-    Preconditions.checkNotNull(request, "request");
-    Preconditions.checkArgument(!request.entitlements().isEmpty());
-  }
+public record Activation<TPrivilegeId extends PrivilegeId>(
+        ActivationRequest<TPrivilegeId> request) {
+    public Activation {
+        Preconditions.checkNotNull(request, "request");
+        Preconditions.checkArgument(request.requesterPrivilege() != null);
+    }
 }

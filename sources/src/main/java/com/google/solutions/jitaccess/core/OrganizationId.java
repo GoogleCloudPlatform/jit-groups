@@ -27,37 +27,37 @@ import com.google.common.base.Preconditions;
  * ID of a Google Cloud organization.
  */
 public record OrganizationId(String id) implements Comparable<OrganizationId>, ResourceId {
-  public OrganizationId {
-    Preconditions.checkNotNull(id, "id");
-    assert !id.startsWith("//");
-    assert !id.contains("/");
-  }
+    public OrganizationId {
+        Preconditions.checkNotNull(id, "id");
+        assert !id.startsWith("//");
+        assert !id.contains("/");
+    }
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
+    @Override
+    public String toString() {
+        return this.id;
+    }
 
-  // -------------------------------------------------------------------------
-  // Comparable.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Comparable.
+    // -------------------------------------------------------------------------
 
-  @Override
-  public int compareTo(OrganizationId o) {
-    return this.id.compareTo(o.id);
-  }
+    @Override
+    public int compareTo(OrganizationId o) {
+        return this.id.compareTo(o.id);
+    }
 
-  // -------------------------------------------------------------------------
-  // ResourceId.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ResourceId.
+    // -------------------------------------------------------------------------
 
-  @Override
-  public String type() {
-    return "organization";
-  }
+    @Override
+    public String type() {
+        return "organization";
+    }
 
-  @Override
-  public String path() {
-    return String.format("organizations/%s", this.id);
-  }
+    @Override
+    public String path() {
+        return String.format("organizations/%s", this.id);
+    }
 }

@@ -37,26 +37,26 @@ import jakarta.ws.rs.ext.Provider;
 @Provider
 @Priority(Priorities.AUTHENTICATION - 100)
 public class TraceContextRequestFilter implements ContainerRequestFilter {
-  /**
-   * Header that contains a unique identifier for the request, cf.
-   * https://cloud.google.com/appengine/docs/standard/java11/reference/request-response-headers
-   */
-  private static final String TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context";
+    /**
+     * Header that contains a unique identifier for the request, cf.
+     * https://cloud.google.com/appengine/docs/standard/java11/reference/request-response-headers
+     */
+    private static final String TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context";
 
-  @Inject
-  LogAdapter log;
+    @Inject
+    LogAdapter log;
 
-  @Override
-  public void filter(ContainerRequestContext containerRequestContext) {
-    Preconditions.checkNotNull(this.log, "log");
+    @Override
+    public void filter(ContainerRequestContext containerRequestContext) {
+        Preconditions.checkNotNull(this.log, "log");
 
-    var traceId = containerRequestContext.getHeaderString(TRACE_CONTEXT_HEADER_NAME);
-    if (traceId != null && !traceId.isEmpty()) {
-      //
-      // Associate the trace ID with the current request so that
-      // subsequent logs can be correlated.
-      //
-      this.log.setTraceId(traceId);
+        var traceId = containerRequestContext.getHeaderString(TRACE_CONTEXT_HEADER_NAME);
+        if (traceId != null && !traceId.isEmpty()) {
+            //
+            // Associate the trace ID with the current request so that
+            // subsequent logs can be correlated.
+            //
+            this.log.setTraceId(traceId);
+        }
     }
-  }
 }

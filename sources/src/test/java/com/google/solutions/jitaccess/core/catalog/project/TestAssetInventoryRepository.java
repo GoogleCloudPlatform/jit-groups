@@ -28,11 +28,13 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementType;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
+
+import org.apache.maven.settings.Activation;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -50,585 +52,585 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestAssetInventoryRepository {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
-  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
-  private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
-  private static final String PEER_CONDITION = "has({}.peerApprovalConstraint)";
-  private static final String EXTERNAL_CONDITION = "has({}.externalApprovalConstraint)";
-  private static final String REVIEWER_CONDITION = "has({}.reviewerPrivilege)";
+    private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+    private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
+    private static final String SELF_APPROVAL_CONDITION = "has({}.jitAccessConstraint)";
+    private static final String PEER_CONDITION = "has({}.multiPartyApprovalconstraint)";
+    private static final String REQUESTER_CONDITION = "has({}.externalApprovalConstraint)";
+    private static final String REVIEWER_CONDITION = "has({}.reviewerPrivilege)";
 
-  private class SynchronousExecutor implements Executor {
+    private class SynchronousExecutor implements Executor {
 
-    @Override
-    public void execute(Runnable command) {
-      command.run();
-    }
-  }
-
-  //---------------------------------------------------------------------------
-  // awaitAndRethrow.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void whenFutureThrowsIoException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new IOException("IO!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-
-  @Test
-  public void whenFutureThrowsAccessException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new AccessDeniedException("Access!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      AccessException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-  @Test
-  public void whenFutureThrowsOtherException_ThenAwaitAndRethrowWrapsException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new RuntimeException("Runtime!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-
-  //---------------------------------------------------------------------------
-  // findProjectBindings.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void whenEffectiveIamPoliciesEmpty_ThenFindProjectBindingsReturnsEmptyList() throws Exception {
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of());
-
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
-
-    var bindings = repository.findProjectBindings(
-      SAMPLE_USER,
-      SAMPLE_PROJECT);
-
-    assertNotNull(bindings);
-    assertIterableEquals(List.of(), bindings);
-  }
-
-  @Test
-  public void whenEffectiveIamPoliciesContainsInapplicableBindings_ThenFindProjectBindingsReturnsEmptyList() throws Exception {
-    var bindingForOtherUser = new Binding()
-      .setRole("roles/for-other-user")
-      .setMembers(List.of("user:other@example.com"));
-    var bindingForServiceAccount = new Binding()
-      .setRole("roles/for-service-account")
-      .setMembers(List.of("serviceAccount:other@example.iam.gserviceaccount.com"));
-    var permanentBindingForGroup = new Binding()
-      .setRole("roles/for-group")
-      .setMembers(List.of("group:other@example.com"));
-
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(
-              bindingForOtherUser,
-              bindingForServiceAccount,
-              permanentBindingForGroup)))));
-
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
-
-    var bindings = repository.findProjectBindings(
-      SAMPLE_USER,
-      SAMPLE_PROJECT);
-
-    assertNotNull(bindings);
-    assertIterableEquals(List.of(), bindings);
-  }
-
-  @Test
-  public void whenEffectiveIamPoliciesContainsBindingsForUser_ThenFindProjectBindingsReturnsList() throws Exception {
-    var bindingForOtherUser = new Binding()
-      .setRole("roles/for-other-user")
-      .setMembers(List.of("user:other@example.com"));
-    var bindingForServiceAccount = new Binding()
-      .setRole("roles/for-service-account")
-      .setMembers(List.of("serviceAccount:other@example.iam.gserviceaccount.com"));
-    var permanentBindingForUser = new Binding()
-      .setRole("roles/for-user-permanent")
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var conditionalBindingForUser = new Binding()
-      .setRole("roles/for-user-conditional")
-      .setCondition(new Expr().setExpression("true"))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(
-              bindingForOtherUser,
-              bindingForServiceAccount,
-              permanentBindingForUser,
-              conditionalBindingForUser)))));
-
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
-
-    var bindings = repository.findProjectBindings(
-      SAMPLE_USER,
-      SAMPLE_PROJECT);
-
-    assertNotNull(bindings);
-    assertIterableEquals(
-      List.of(
-        "roles/for-user-permanent",
-        "roles/for-user-conditional"
-      ),
-      bindings.stream().map(Binding::getRole).collect(Collectors.toList()));
-  }
-
-  @Test
-  public void whenEffectiveIamPoliciesContainsBindingsForGroup_ThenFindProjectBindingsReturnsList() throws Exception {
-    var bindingForGroup1 = new Binding()
-      .setRole("roles/for-group-1")
-      .setMembers(List.of("group:group-1@example.com"));
-    var bindingForGroup2 = new Binding()
-      .setRole("roles/for-group-2")
-      .setMembers(List.of("group:group-2@example.com"));
-    var bindingForOtherGroup = new Binding()
-      .setRole("roles/for-other-group")
-      .setMembers(List.of("group:other-group@example.com"));
-
-    var groupsClient = Mockito.mock(DirectoryGroupsClient.class);
-    when(groupsClient
-      .listDirectGroupMemberships(eq(SAMPLE_USER)))
-      .thenReturn(List.of(
-        new Group().setEmail("group-1@example.com"),
-        new Group().setEmail("group-2@example.com"),
-        new Group().setEmail("junk@example.com")));
-
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource("organization/0")
-          .setPolicy(new Policy()
-            .setBindings(List.of(
-              bindingForGroup1))),
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(
-              bindingForGroup2,
-              bindingForOtherGroup)))));
-
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      groupsClient,
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
-
-    var bindings = repository.findProjectBindings(
-      SAMPLE_USER,
-      SAMPLE_PROJECT);
-
-    assertNotNull(bindings);
-    assertIterableEquals(
-      List.of(
-        "roles/for-group-1",
-        "roles/for-group-2"
-      ),
-      bindings.stream().map(Binding::getRole).collect(Collectors.toList()));
-  }
-
-  //---------------------------------------------------------------------------
-  // findEntitlements.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void whenEffectiveIamPoliciesContainEligibleBindings_ThenFindEntitlementsReturnsList() throws Exception {
-    var jitBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(JIT_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var peerBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(PEER_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var externalBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(EXTERNAL_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var reviewerBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(jitBindingForUser, peerBindingForUser, externalBindingForUser, reviewerBindingForUser)))));
-
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
-
-    //
-    // JIT only.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.JIT),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
-
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.JIT, jitEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
+        @Override
+        public void execute(Runnable command) {
+            command.run();
+        }
     }
 
-    //
-    // Peer only.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.PEER),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
+    // ---------------------------------------------------------------------------
+    // awaitAndRethrow.
+    // ---------------------------------------------------------------------------
 
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var peerEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.PEER, peerEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, peerEntitlement.status());
+    @Test
+    public void whenFutureThrowsIoException_ThenAwaitAndRethrowPropagatesException() {
+        var future = ThrowingCompletableFuture.<String>submit(
+                () -> {
+                    throw new IOException("IO!");
+                },
+                new SynchronousExecutor());
+
+        assertThrows(
+                IOException.class,
+                () -> AssetInventoryRepository.awaitAndRethrow(future));
     }
 
-    //
-    // Requester only.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.REQUESTER),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
+    @Test
+    public void whenFutureThrowsAccessException_ThenAwaitAndRethrowPropagatesException() {
+        var future = ThrowingCompletableFuture.<String>submit(
+                () -> {
+                    throw new AccessDeniedException("Access!");
+                },
+                new SynchronousExecutor());
 
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var requesterEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.REQUESTER, requesterEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, requesterEntitlement.status());
+        assertThrows(
+                AccessException.class,
+                () -> AssetInventoryRepository.awaitAndRethrow(future));
     }
 
-    //
-    // Requester only.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.REVIEWER),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
+    @Test
+    public void whenFutureThrowsOtherException_ThenAwaitAndRethrowWrapsException() {
+        var future = ThrowingCompletableFuture.<String>submit(
+                () -> {
+                    throw new RuntimeException("Runtime!");
+                },
+                new SynchronousExecutor());
 
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var reviewerEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.REVIEWER, reviewerEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, reviewerEntitlement.status());
+        assertThrows(
+                IOException.class,
+                () -> AssetInventoryRepository.awaitAndRethrow(future));
     }
 
-    //
-    // Multiple entitlements.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(EntitlementType.JIT, EntitlementType.PEER, EntitlementType.REVIEWER),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
+    // ---------------------------------------------------------------------------
+    // findProjectBindings.
+    // ---------------------------------------------------------------------------
 
-      assertIterableEquals(
-        List.of("roles/for-user", "roles/for-user", "roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      assertEquals(3, entitlements.allEntitlements().size());
-      var jitEntitlement = entitlements.allEntitlements().first();
-      assertEquals(EntitlementType.JIT, jitEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
-      var peerEntitlement = entitlements.allEntitlements().stream().skip(1).findFirst().get();
-      assertEquals(EntitlementType.PEER, peerEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, peerEntitlement.status());
-      var reviewerEntitlement = entitlements.allEntitlements().last();
-      assertEquals(EntitlementType.REVIEWER, reviewerEntitlement.entitlementType());
-      assertEquals(Entitlement.Status.AVAILABLE, reviewerEntitlement.status());
+    @Test
+    public void whenEffectiveIamPoliciesEmpty_ThenFindProjectBindingsReturnsEmptyList() throws Exception {
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of());
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var bindings = repository.findProjectBindings(
+                SAMPLE_USER,
+                SAMPLE_PROJECT);
+
+        assertNotNull(bindings);
+        assertIterableEquals(List.of(), bindings);
     }
-  }
 
-  @Test
-  public void whenEffectiveIamPoliciesContainsExpiredActivation_ThenFindEntitlementsReturnsList() throws Exception {
-    var jitBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(JIT_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var expiredActivationForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr()
-        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(IamTemporaryAccessConditions.createExpression(
-          Instant.now().minus(2, ChronoUnit.HOURS),
-          Instant.now().minus(1, ChronoUnit.HOURS))))
-      .setMembers(List.of("user:" + SAMPLE_USER.email));
+    @Test
+    public void whenEffectiveIamPoliciesContainsInapplicableBindings_ThenFindProjectBindingsReturnsEmptyList()
+            throws Exception {
+        var bindingForOtherUser = new Binding()
+                .setRole("roles/for-other-user")
+                .setMembers(List.of("user:other@example.com"));
+        var bindingForServiceAccount = new Binding()
+                .setRole("roles/for-service-account")
+                .setMembers(List.of("serviceAccount:other@example.iam.gserviceaccount.com"));
+        var permanentBindingForGroup = new Binding()
+                .setRole("roles/for-group")
+                .setMembers(List.of("group:other@example.com"));
 
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(
+                                                bindingForOtherUser,
+                                                bindingForServiceAccount,
+                                                permanentBindingForGroup)))));
 
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
 
-    var entitlements = repository.findEntitlements(
-      SAMPLE_USER,
-      SAMPLE_PROJECT,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    var entitlement = entitlements.allEntitlements().first();
-    assertEquals(EntitlementType.JIT, entitlement.entitlementType());
-    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
-  }
+        var bindings = repository.findProjectBindings(
+                SAMPLE_USER,
+                SAMPLE_PROJECT);
 
-  @Test
-  public void whenEffectiveIamPoliciesContainsActivation_ThenFindEntitlementsReturnsList() throws Exception {
-    var jitBindingForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr().setExpression(JIT_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var expiredActivationForUser = new Binding()
-      .setRole("roles/for-user")
-      .setCondition(new Expr()
-        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(IamTemporaryAccessConditions.createExpression(
-          Instant.now().minus(1, ChronoUnit.HOURS),
-          Instant.now().plus(1, ChronoUnit.HOURS))))
-      .setMembers(List.of("user:" + SAMPLE_USER.email));
+        assertNotNull(bindings);
+        assertIterableEquals(List.of(), bindings);
+    }
 
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+    @Test
+    public void whenEffectiveIamPoliciesContainsBindingsForUser_ThenFindProjectBindingsReturnsList() throws Exception {
+        var bindingForOtherUser = new Binding()
+                .setRole("roles/for-other-user")
+                .setMembers(List.of("user:other@example.com"));
+        var bindingForServiceAccount = new Binding()
+                .setRole("roles/for-service-account")
+                .setMembers(List.of("serviceAccount:other@example.iam.gserviceaccount.com"));
+        var permanentBindingForUser = new Binding()
+                .setRole("roles/for-user-permanent")
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var conditionalBindingForUser = new Binding()
+                .setRole("roles/for-user-conditional")
+                .setCondition(new Expr().setExpression("true"))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
 
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(
+                                                bindingForOtherUser,
+                                                bindingForServiceAccount,
+                                                permanentBindingForUser,
+                                                conditionalBindingForUser)))));
 
-    var entitlements = repository.findEntitlements(
-      SAMPLE_USER,
-      SAMPLE_PROJECT,
-      EnumSet.of(EntitlementType.JIT, EntitlementType.PEER),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    var entitlement = entitlements.allEntitlements().first();
-    assertEquals(EntitlementType.JIT, entitlement.entitlementType());
-    assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
-  }
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
 
-  //---------------------------------------------------------------------------
-  // findEntitlementHolders.
-  //---------------------------------------------------------------------------
+        var bindings = repository.findProjectBindings(
+                SAMPLE_USER,
+                SAMPLE_PROJECT);
 
-  @Test
-  public void whenEffectiveIamPoliciesOnlyContainInapplicableBindings_ThenFindEntitlementHoldersReturnsEmptyList() throws Exception {
-    var otherBinding1 = new Binding()
-      .setRole("roles/other-1")
-      .setCondition(new Expr().setExpression(PEER_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var otherBinding2 = new Binding()
-      .setRole("roles/role-1")
-      .setCondition(new Expr().setExpression(JIT_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var otherBinding3 = new Binding()
-      .setRole("roles/role-1")
-      .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        assertNotNull(bindings);
+        assertIterableEquals(
+                List.of(
+                        "roles/for-user-permanent",
+                        "roles/for-user-conditional"),
+                bindings.stream().map(Binding::getRole).collect(Collectors.toList()));
+    }
 
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(otherBinding1, otherBinding2, otherBinding3)))));
+    @Test
+    public void whenEffectiveIamPoliciesContainsBindingsForGroup_ThenFindProjectBindingsReturnsList() throws Exception {
+        var bindingForGroup1 = new Binding()
+                .setRole("roles/for-group-1")
+                .setMembers(List.of("group:group-1@example.com"));
+        var bindingForGroup2 = new Binding()
+                .setRole("roles/for-group-2")
+                .setMembers(List.of("group:group-2@example.com"));
+        var bindingForOtherGroup = new Binding()
+                .setRole("roles/for-other-group")
+                .setMembers(List.of("group:other-group@example.com"));
 
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
+        var groupsClient = Mockito.mock(DirectoryGroupsClient.class);
+        when(groupsClient
+                .listDirectGroupMemberships(eq(SAMPLE_USER)))
+                .thenReturn(List.of(
+                        new Group().setEmail("group-1@example.com"),
+                        new Group().setEmail("group-2@example.com"),
+                        new Group().setEmail("junk@example.com")));
 
-    var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
-      EntitlementType.PEER);
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource("organization/0")
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(
+                                                bindingForGroup1))),
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(
+                                                bindingForGroup2,
+                                                bindingForOtherGroup)))));
 
-    assertNotNull(holders);
-    assertTrue(holders.isEmpty());
-  }
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                groupsClient,
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
 
-  @Test
-  public void whenEffectiveIamPoliciesContainUsers_ThenFindEntitlementHoldersReturnsList() throws Exception {
-    var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+        var bindings = repository.findProjectBindings(
+                SAMPLE_USER,
+                SAMPLE_PROJECT);
 
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource("organization/0")
-          .setPolicy(new Policy()
-            .setBindings(List.of(new Binding()
-              .setRole(role.role())
-              .setCondition(new Expr().setExpression(PEER_CONDITION))
-              .setMembers(List.of("user:user-1@example.com", "user:user-2@example.com"))))),
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(new Binding()
-              .setRole(role.role())
-              .setCondition(new Expr().setExpression(PEER_CONDITION))
-              .setMembers(List.of("user:user-2@example.com")))))));
+        assertNotNull(bindings);
+        assertIterableEquals(
+                List.of(
+                        "roles/for-group-1",
+                        "roles/for-group-2"),
+                bindings.stream().map(Binding::getRole).collect(Collectors.toList()));
+    }
 
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      Mockito.mock(DirectoryGroupsClient.class),
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
+    // ---------------------------------------------------------------------------
+    // findRequesterPrivileges.
+    // ---------------------------------------------------------------------------
 
-    var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role),
-      EntitlementType.PEER);
+    @Test
+    public void whenEffectiveIamPoliciesContainEligibleBindings_ThenFindRequesterPrivilegesReturnsList()
+            throws Exception {
+        var jitBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var peerBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var externalBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(REQUESTER_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var reviewerBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
 
-    assertNotNull(holders);
-    assertEquals(
-      Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
-      holders);
-  }
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(jitBindingForUser, peerBindingForUser,
+                                                externalBindingForUser, reviewerBindingForUser)))));
 
-  @Test
-  public void whenEffectiveIamPoliciesContainsGroups_ThenFindEntitlementHoldersReturnsList() throws Exception {
-    var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
 
-    var groupBinding = new Binding()
-      .setRole(role.role())
-      .setCondition(new Expr().setExpression(PEER_CONDITION))
-      .setMembers(List.of("group:group@example.com"));
-    var unavailableGroupBinding = new Binding()
-      .setRole(role.role())
-      .setCondition(new Expr().setExpression(PEER_CONDITION))
-      .setMembers(List.of("group:unavailable-group@example.com"));
+        //
+        // Self approval only.
+        //
+        {
+            var privileges = repository.findRequesterPrivileges(
+                    SAMPLE_USER,
+                    SAMPLE_PROJECT,
+                    EnumSet.of(ActivationType.SELF_APPROVAL),
+                    EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-    var groupsClient = Mockito.mock(DirectoryGroupsClient.class);
-    when(groupsClient
-      .listDirectGroupMembers(eq("group@example.com")))
-      .thenReturn(List.of(
-        new Member().setEmail("user-1@example.com"),
-        new Member().setEmail("user-2@example.com")));
-    when(groupsClient
-      .listDirectGroupMembers(eq("unavailable-group@example.com")))
-      .thenThrow(new AccessDeniedException("mock"));
+            assertIterableEquals(
+                    List.of("roles/for-user"),
+                    privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+                            .collect(Collectors.toList()));
+            var selfApprovalPrivilege = privileges.allRequesterPrivileges().first();
+            assertEquals(ActivationType.SELF_APPROVAL, selfApprovalPrivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+        }
 
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-      .getEffectiveIamPolicies(
-        eq("organization/0"),
-        eq(SAMPLE_PROJECT)))
-      .thenReturn(List.of(
-        new PolicyInfo()
-          .setAttachedResource(SAMPLE_PROJECT.path())
-          .setPolicy(new Policy()
-            .setBindings(List.of(groupBinding, unavailableGroupBinding)))));
+        //
+        // Peer only.
+        //
+        {
+            var privileges = repository.findRequesterPrivileges(
+                    SAMPLE_USER,
+                    SAMPLE_PROJECT,
+                    EnumSet.of(ActivationType.PEER_APPROVAL),
+                    EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-    var repository = new AssetInventoryRepository(
-      new SynchronousExecutor(),
-      groupsClient,
-      caiClient,
-      new AssetInventoryRepository.Options("organization/0"));
+            assertIterableEquals(
+                    List.of("roles/for-user"),
+                    privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+                            .collect(Collectors.toList()));
+            var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
+            assertEquals(ActivationType.PEER_APPROVAL, peerApprovalPrivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+        }
 
-    var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role),
-      EntitlementType.PEER);
+        //
+        // Requester only.
+        //
+        {
+            var privileges = repository.findRequesterPrivileges(
+                    SAMPLE_USER,
+                    SAMPLE_PROJECT,
+                    EnumSet.of(ActivationType.EXTERNAL_APPROVAL),
+                    EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-    assertNotNull(holders);
-    assertEquals(
-      Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
-      holders);
-  }
+            assertIterableEquals(
+                    List.of("roles/for-user"),
+                    privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+                            .collect(Collectors.toList()));
+            var externalApprovalprivilege = privileges.allRequesterPrivileges().first();
+            assertEquals(ActivationType.EXTERNAL_APPROVAL, externalApprovalprivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalprivilege.status());
+        }
+
+        //
+        // Multiple privileges.
+        //
+        {
+            var privileges = repository.findRequesterPrivileges(
+                    SAMPLE_USER,
+                    SAMPLE_PROJECT,
+                    EnumSet.of(ActivationType.SELF_APPROVAL, ActivationType.PEER_APPROVAL,
+                            ActivationType.EXTERNAL_APPROVAL),
+                    EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+
+            assertIterableEquals(
+                    List.of("roles/for-user", "roles/for-user", "roles/for-user"),
+                    privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+                            .collect(Collectors.toList()));
+            assertEquals(3, privileges.allRequesterPrivileges().size());
+            var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
+            assertEquals(ActivationType.EXTERNAL_APPROVAL, externalApprovalPrivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+            var peerApprovalPrivilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+            assertEquals(ActivationType.PEER_APPROVAL, peerApprovalPrivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+            var selfApprovalPrivilege = privileges.allRequesterPrivileges().last();
+            assertEquals(ActivationType.SELF_APPROVAL, selfApprovalPrivilege.activationType());
+            assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+
+        }
+    }
+
+    @Test
+    public void whenEffectiveIamPoliciesContainsExpiredActivation_ThenFindRequesterPrivilegesReturnsList()
+            throws Exception {
+        var jitBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var expiredActivationForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr()
+                        .setTitle(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)
+                        .setExpression(IamTemporaryAccessConditions.createExpression(
+                                Instant.now().minus(2, ChronoUnit.HOURS),
+                                Instant.now().minus(1, ChronoUnit.HOURS))))
+                .setMembers(List.of("user:" + SAMPLE_USER.email));
+
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var privileges = repository.findRequesterPrivileges(
+                SAMPLE_USER,
+                SAMPLE_PROJECT,
+                EnumSet.of(ActivationType.SELF_APPROVAL),
+                EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        var privilege = privileges.allRequesterPrivileges().first();
+        assertEquals(ActivationType.SELF_APPROVAL, privilege.activationType());
+        assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    }
+
+    @Test
+    public void whenEffectiveIamPoliciesContainsActivation_ThenFindRequesterPrivilegesReturnsList() throws Exception {
+        var jitBindingForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var expiredActivationForUser = new Binding()
+                .setRole("roles/for-user")
+                .setCondition(new Expr()
+                        .setTitle(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)
+                        .setExpression(IamTemporaryAccessConditions.createExpression(
+                                Instant.now().minus(1, ChronoUnit.HOURS),
+                                Instant.now().plus(1, ChronoUnit.HOURS))))
+                .setMembers(List.of("user:" + SAMPLE_USER.email));
+
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var privileges = repository.findRequesterPrivileges(
+                SAMPLE_USER,
+                SAMPLE_PROJECT,
+                EnumSet.of(ActivationType.SELF_APPROVAL, ActivationType.PEER_APPROVAL),
+                EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        var privilege = privileges.allRequesterPrivileges().first();
+        assertEquals(ActivationType.SELF_APPROVAL, privilege.activationType());
+        assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
+    }
+
+    // ---------------------------------------------------------------------------
+    // findReviewerPrivelegeHolders.
+    // ---------------------------------------------------------------------------
+
+    @Test
+    public void whenEffectiveIamPoliciesOnlyContainInapplicableBindings_ThenFindReviewerPrivelegeHoldersHoldersReturnsEmptyList()
+            throws Exception {
+        var otherBinding1 = new Binding()
+                .setRole("roles/other-1")
+                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var otherBinding2 = new Binding()
+                .setRole("roles/role-1")
+                .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+        var otherBinding3 = new Binding()
+                .setRole("roles/role-1")
+                .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
+                .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(otherBinding1, otherBinding2, otherBinding3)))));
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var holders = repository.findReviewerPrivelegeHolders(
+                new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
+                ActivationType.PEER_APPROVAL);
+
+        assertNotNull(holders);
+        assertTrue(holders.isEmpty());
+    }
+
+    @Test
+    public void whenEffectiveIamPoliciesContainUsers_ThenFindReviewerPrivelegeHoldersHoldersReturnsList()
+            throws Exception {
+        var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource("organization/0")
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(new Binding()
+                                                .setRole(role.role())
+                                                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                                                .setMembers(List.of("user:user-1@example.com",
+                                                        "user:user-2@example.com"))))),
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(new Binding()
+                                                .setRole(role.role())
+                                                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                                                .setMembers(List.of("user:user-2@example.com")))))));
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                Mockito.mock(DirectoryGroupsClient.class),
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var holders = repository.findReviewerPrivelegeHolders(
+                new ProjectRoleBinding(role),
+                ActivationType.PEER_APPROVAL);
+
+        assertNotNull(holders);
+        assertEquals(
+                Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+                holders);
+    }
+
+    @Test
+    public void whenEffectiveIamPoliciesContainsGroups_ThenfindReviewerPrivelegeHoldersReturnsList() throws Exception {
+        var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+
+        var groupBinding = new Binding()
+                .setRole(role.role())
+                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                .setMembers(List.of("group:group@example.com"));
+        var unavailableGroupBinding = new Binding()
+                .setRole(role.role())
+                .setCondition(new Expr().setExpression(PEER_CONDITION))
+                .setMembers(List.of("group:unavailable-group@example.com"));
+
+        var groupsClient = Mockito.mock(DirectoryGroupsClient.class);
+        when(groupsClient
+                .listDirectGroupMembers(eq("group@example.com")))
+                .thenReturn(List.of(
+                        new Member().setEmail("user-1@example.com"),
+                        new Member().setEmail("user-2@example.com")));
+        when(groupsClient
+                .listDirectGroupMembers(eq("unavailable-group@example.com")))
+                .thenThrow(new AccessDeniedException("mock"));
+
+        var caiClient = Mockito.mock(AssetInventoryClient.class);
+        when(caiClient
+                .getEffectiveIamPolicies(
+                        eq("organization/0"),
+                        eq(SAMPLE_PROJECT)))
+                .thenReturn(List.of(
+                        new PolicyInfo()
+                                .setAttachedResource(SAMPLE_PROJECT.path())
+                                .setPolicy(new Policy()
+                                        .setBindings(List.of(groupBinding, unavailableGroupBinding)))));
+
+        var repository = new AssetInventoryRepository(
+                new SynchronousExecutor(),
+                groupsClient,
+                caiClient,
+                new AssetInventoryRepository.Options("organization/0"));
+
+        var holders = repository.findReviewerPrivelegeHolders(
+                new ProjectRoleBinding(role),
+                ActivationType.PEER_APPROVAL);
+
+        assertNotNull(holders);
+        assertEquals(
+                Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+                holders);
+    }
 }

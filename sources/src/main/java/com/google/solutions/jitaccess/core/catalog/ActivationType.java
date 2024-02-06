@@ -22,15 +22,15 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 public enum ActivationType {
-  /** Entitlement can be activated using self-approval */
-  SELF_APPROVAL,
+    /** Requester privilege can be activated using self-approval */
+    SELF_APPROVAL,
 
-  /** Entitlement can be activated using peer approval.  */
-  PEER_APPROVAL,
+    /** Requester privilege requires peer approval */
+    PEER_APPROVAL,
 
-  /** Entitlement can be activated using external approval. */
-  EXTERNAL_APPROVAL,
+    /** Requester privilege requires external approval */
+    EXTERNAL_APPROVAL,
 
-  /** Entitlement can not be activated. */
-  NONE
+    /** Requester privilege (is currently active but) can no longer be activated */
+    NONE
 }

@@ -27,16 +27,15 @@ import com.google.solutions.jitaccess.core.UserId;
  * Policy for verifying justification messages.
  */
 public interface JustificationPolicy {
-  /**
-   * Check that a justification meets criteria.
-   */
-  void checkJustification(
-    UserId user,
-    String justification
-  ) throws InvalidJustificationException;
+    /**
+     * Check that a justification meets criteria.
+     */
+    void checkJustification(
+            UserId user,
+            String justification) throws InvalidJustificationException;
 
-  /**
-   * @return hint indicating what kind of justification is expected.
-   */
-  String hint();
+    /**
+     * @return hint indicating what kind of justification is expected.
+     */
+    String hint();
 }

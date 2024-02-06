@@ -27,37 +27,37 @@ import com.google.common.base.Preconditions;
  * ID of a Google Cloud folder.
  */
 public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
-  public FolderId {
-    Preconditions.checkNotNull(id, "id");
-    assert !id.startsWith("//");
-    assert !id.contains("/");
-  }
+    public FolderId {
+        Preconditions.checkNotNull(id, "id");
+        assert !id.startsWith("//");
+        assert !id.contains("/");
+    }
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
+    @Override
+    public String toString() {
+        return this.id;
+    }
 
-  // -------------------------------------------------------------------------
-  // Comparable.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Comparable.
+    // -------------------------------------------------------------------------
 
-  @Override
-  public int compareTo(FolderId o) {
-    return this.id.compareTo(o.id);
-  }
+    @Override
+    public int compareTo(FolderId o) {
+        return this.id.compareTo(o.id);
+    }
 
-  // -------------------------------------------------------------------------
-  // ResourceId.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ResourceId.
+    // -------------------------------------------------------------------------
 
-  @Override
-  public String type() {
-    return "folder";
-  }
+    @Override
+    public String type() {
+        return "folder";
+    }
 
-  @Override
-  public String path() {
-    return String.format("folders/%s", this.id);
-  }
+    @Override
+    public String path() {
+        return String.format("folders/%s", this.id);
+    }
 }

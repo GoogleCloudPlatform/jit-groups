@@ -29,27 +29,27 @@ import java.util.List;
  * Information about the device of a user.
  */
 public record DeviceInfo(String deviceId, List<String> accessLevels) {
-  public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
+    public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
 
-  public DeviceInfo {
-    Preconditions.checkNotNull(deviceId, "deviceId");
-    Preconditions.checkNotNull(accessLevels, "accessLevels");
-  }
-
-  @Override
-  public String toString() {
-    return this.deviceId;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
+    public DeviceInfo {
+        Preconditions.checkNotNull(deviceId, "deviceId");
+        Preconditions.checkNotNull(accessLevels, "accessLevels");
     }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+
+    @Override
+    public String toString() {
+        return this.deviceId;
     }
-    var that = (DeviceInfo) o;
-    return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
-  }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        var that = (DeviceInfo) o;
+        return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
+    }
 }

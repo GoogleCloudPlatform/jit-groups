@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,7 +11,8 @@
     <title>Just-in-Time Access</title>
 
     <!-- All external resources are hosted by Google -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" href="/mdl-1.3.0/material.indigo-pink.min.css" />
@@ -24,6 +26,7 @@
     <link rel="stylesheet" href="stepper.min.css" />
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="mdl-layout mdl-js-layout">
         <header class="mdl-layout__header mdl-layout__header--transparent">
@@ -59,9 +62,8 @@
                                         <fieldset id="project-selector">
                                             <legend>Project ID</legend>
                                             <img src="icon.search.svg" />
-                                            <input id="project-selector-search"
-                                                   type="text"
-                                                   maxlength="32" autocomplete="off" autofocus />
+                                            <input id="project-selector-search" type="text" maxlength="32"
+                                                autocomplete="off" autofocus />
                                         </fieldset>
                                     </div>
                                 </form>
@@ -69,7 +71,9 @@
                         </div>
 
                         <div class="mdl-step__actions">
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                            <button
+                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                                data-stepper-next>
                                 Continue
                             </button>
                         </div>
@@ -90,7 +94,8 @@
                                     <thead>
                                         <tr>
                                             <th>
-                                                <label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                                                <label
+                                                    class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
                                                     <input type='checkbox' class='mdl-checkbox__input'>
                                                 </label>
                                             </th>
@@ -105,11 +110,14 @@
                             </div>
                             <div class="step-subsection">
                                 Duration: <span id="selected-activation-timeout"></span> minutes.
-                                <input class="mdl-slider mdl-js-slider" id="activation-timeout" type="range" min="5" max="10" value="5" step="5" tabindex="0">
+                                <input class="mdl-slider mdl-js-slider" id="activation-timeout" type="range" min="5"
+                                    max="10" value="5" step="5" tabindex="0">
                             </div>
                         </div>
                         <div class="mdl-step__actions">
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                            <button
+                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                                data-stepper-next>
                                 Continue
                             </button>
                             <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
@@ -128,7 +136,8 @@
                                 Approval
                             </div>
                             <div class="step-subsection conditional-mpa">
-                                Select one or more reviewers to request approval from. To activate the role, at least one
+                                Select one or more reviewers to request approval from. To activate the role, at least
+                                one
                                 of your reviewers has to approve your request.
                             </div>
                             <div class="step-subsection conditional-mpa">
@@ -136,7 +145,8 @@
                                     <thead>
                                         <tr>
                                             <th>
-                                                <label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                                                <label
+                                                    class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
                                                     <input type='checkbox' class='mdl-checkbox__input checkall__input'>
                                                 </label>
                                             </th>
@@ -158,10 +168,7 @@
                                     <div>
                                         <fieldset>
                                             <legend>Justification</legend>
-                                            <input id="justification"
-                                                   type="text"
-                                                   maxlength="100"
-                                                   autocomplete="off" />
+                                            <input id="justification" type="text" maxlength="100" autocomplete="off" />
                                         </fieldset>
                                     </div>
                                 </form>
@@ -172,7 +179,9 @@
                             </div>
                         </div>
                         <div class="mdl-step__actions">
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised" data-stepper-next>
+                            <button
+                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                                data-stepper-next>
                                 Request access
                             </button>
                             <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
@@ -217,12 +226,14 @@
                                 <li>
                                     <span><label for="request-status-pane-starttime">Start time</label></span>
                                     <span id="request-status-pane-starttime"></span>
-                                    <div id="request-status-pane-starttime-utc" class="mdl-tooltip" data-mdl-for="request-status-pane-starttime" />
+                                    <div id="request-status-pane-starttime-utc" class="mdl-tooltip"
+                                        data-mdl-for="request-status-pane-starttime" />
                                 </li>
                                 <li>
                                     <span><label for="request-status-pane-endtime">End time</label></span>
                                     <span id="request-status-pane-endtime"></span>
-                                    <div id="request-status-pane-endtime-utc" class="mdl-tooltip" data-mdl-for="request-status-pane-endtime" />
+                                    <div id="request-status-pane-endtime-utc" class="mdl-tooltip"
+                                        data-mdl-for="request-status-pane-endtime" />
                                 </li>
                                 <li>
                                     <span><label for="request-status-pane-justification">Justification</label></span>
@@ -249,10 +260,13 @@
                         </div>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="#" id="request-status-pane-approvebutton">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="#"
+                            id="request-status-pane-approvebutton">
                             Approve
                         </a>
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-consolebutton">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
+                            href="https://console.cloud.google.com/" target="_blank"
+                            id="request-status-pane-consolebutton">
                             Open Console
                         </a>
                     </div>
@@ -269,35 +283,38 @@
                         <p>
                             This application lets you request temporary access to a Google Cloud project:
 
-                            <ol>
-                                <li>Select the project that you need to access</li>
-                                <li>Select one or more roles to activate</li>
-                                <li>Provide a justification that explains why you need access to this project</li>
-                            </ol>
+                        <ol>
+                            <li>Select the project that you need to access</li>
+                            <li>Select one or more roles to activate</li>
+                            <li>Provide a justification that explains why you need access to this project</li>
+                        </ol>
 
-                            You can only request access to projects and roles that you're <i>eligible</i> to access,
-                            and your access automatically expires after a certain period of time.
+                        You can only request access to projects and roles that you're <i>eligible</i> to access,
+                        and your access automatically expires after a certain period of time.
                         </p>
 
                         <h3 class="mdl-card__title-text">Approval</h3>
                         <p>
                             Roles differ in whether they require approval:
 
-                            <ul>
-                                <li>
-                                    <i>Self-approval</i> If a role permits self-approval, then providing a justification is sufficient
-                                    to activate the role. You don't need to request approval from another user.
-                                </li>
-                                <li>
-                                    <i>Peer approval</i>: If a role requires peer approval, then one of your <i>peers</i>
-                                    need to approve your access request before it takes effect. Peers are users that have been
-                                    granted the same role as you.
-                                </li>
-                                <li>
-                                    <i>External approval</i>: If a role requires external approval, then someone from a specified group 
-                                    of users outside your peers must approve your access request before it takes effect.
-                                </li>
-                            </ul>
+                        <ul>
+                            <li>
+                                <i>Self-approval</i> If a role permits self-approval, then providing a justification is
+                                sufficient
+                                to activate the role. You don't need to request approval from another user.
+                            </li>
+                            <li>
+                                <i>Peer approval</i>: If a role requires peer approval, then one of your <i>peers</i>
+                                need to approve your access request before it takes effect. Peers are users that have
+                                been
+                                granted the same role as you.
+                            </li>
+                            <li>
+                                <i>External approval</i>: If a role requires external approval, then someone from a
+                                specified group
+                                of users outside your peers must approve your access request before it takes effect.
+                            </li>
+                        </ul>
                         </p>
                     </div>
                 </div>
@@ -311,47 +328,53 @@
                         <p>
                             As an administrator, you use IAM role bindings to decide which projects and roles users
                             can request access to. To mark a role binding as <i>eligible</i>, you add a special
-                            <a href="https://cloud.google.com/iam/docs/conditions-overview" target="_blank">IAM condition</a>:
+                            <a href="https://cloud.google.com/iam/docs/conditions-overview" target="_blank">IAM
+                                condition</a>:
 
-                            <ul>
-                                <li>
-                                    <i>Self-approval</i>: To allow a user or group to activate a role without approval, add the
-                                    following IAM condition to the IAM binding:
-                                    <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
-                                </li>
-                                <li>
-                                    <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
-                                    approves their request, add the following IAM condition to the IAM binding:
-                                    <pre><code class="language-cel">has({}.peerApprovalConstraint)</code></pre>
+                        <ul>
+                            <li>
+                                <i>Self-approval</i>: To allow a user or group to activate a role without approval, add
+                                the
+                                following IAM condition to the IAM binding:
+                                <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
+                            </li>
+                            <li>
+                                <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
+                                approves their request, add the following IAM condition to the IAM binding:
+                                <pre><code class="language-cel">has({}.peerApprovalConstraint)</code></pre>
 
-                                    Peers are users that have been granted the same role binding on the same project.
-                                </li>
-                                <li>
-                                <i>External approval</i>: To allow a user or group to activate a role if at least one external
-                                    reviewer approves their request, add the following IAM condition to the IAM binding:
-                                    <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
+                                Peers are users that have been granted the same role binding on the same project.
+                            </li>
+                            <li>
+                                <i>External approval</i>: To allow a user or group to activate a role if at least one
+                                external
+                                reviewer approves their request, add the following IAM condition to the IAM binding:
+                                <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
 
-                                    External approvers are users that have been granted the same IAM binding with the following
-                                    IAM condition:
-                                    <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
-                                </li>
-                            </ul>
+                                External approvers are users that have been granted the same IAM binding with the
+                                following
+                                IAM condition:
+                                <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
+                            </li>
+                        </ul>
                         </p>
                         <h3 class="mdl-card__title-text">Examples</h3>
                         <p>
                             The following <code>gcloud</code> command grants the user <code>alice@example.com</code>
                             permision to activate the role <code>roles/compute.admin</code> without approval:
-                            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+                        <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>alice@example.com</b> \
   --role <b>roles/compute.admin</b> \
   --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
 </code></pre>
                         </p>
                         <p>
-                            The following <code>gcloud</code> command grants the group <code>compute-admins@example.com</code>
-                            permision to activate the role <code>roles/compute.admin</code>, and lets members of that group
+                            The following <code>gcloud</code> command grants the group
+                            <code>compute-admins@example.com</code>
+                            permision to activate the role <code>roles/compute.admin</code>, and lets members of that
+                            group
                             approve each other's requests:
-                            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+                        <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>compute-admins@example.com</b> \
   --role <b>roles/compute.admin</b> \
   --condition "title=Eligible access,expression=has({}.peerApprovalConstraint)"
@@ -367,15 +390,19 @@
                     </div>
                     <div class="mdl-card__supporting-text">
                         <p>
-                            As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users.
+                            As an administrator, you can use Cloud Logging to review when and why eligible roles have
+                            been activated by users.
                         </p>
                         <p>
-                            For example, the following filter lets you find all instances when a role has been activated:
-                            <pre><code class="language-cel">labels.event="api.activateRole"</code></pre>
+                            For example, the following filter lets you find all instances when a role has been
+                            activated:
+                        <pre><code class="language-cel">labels.event="api.activateRole"</code></pre>
                         </p>
                     </div>
                     <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="https://console.cloud.google.com/logs/query;query=labels.event%3D%22api.activateRole%22" target="_blank">
+                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
+                            href="https://console.cloud.google.com/logs/query;query=labels.event%3D%22api.activateRole%22"
+                            target="_blank">
                             Open Logs
                         </a>
                     </div>
@@ -383,9 +410,11 @@
             </div>
         </main>
         <footer class="mdl-mini-footer">
-            <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
+            <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a
+                    href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
             &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access <span id="application-version"></span></a></div>
+            <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access <span
+                        id="application-version"></span></a></div>
         </footer>
         <div id="toast" class="mdl-snackbar mdl-js-snackbar">
             <div class="mdl-snackbar__text">Toast!</div>
@@ -427,7 +456,7 @@
              *  Add data row.
              *  Format of column: { class: ..., text: ... }
              */
-            addRow(value, columns, showCheckbox=true, enabled=true) {
+            addRow(value, columns, showCheckbox = true, enabled = true) {
                 console.assert(value);
                 console.assert(columns);
 
@@ -532,21 +561,11 @@
                     "ACTIVATION_PENDING": "Waiting for approval"
                 };
 
-                this.entitlementTypeCaptions = {
-                    "JIT": "-",
-                    "PEER": "Peer approval required",
-                    "REQUESTER": "External approval required",
-                    "REVIEWER": "Unavailable",
-                    "NONE": "Unavailable",
+                this.activationTypeCaptions = {
+                    "SELF_APPROVAL": "-",
+                    "PEER_APPROVAL": "Peer approval required",
+                    "EXTERNAL_APPROVAL": "External approval required"
                 };
-
-                this.entitlementTypeActivationTypes = {
-                    "JIT": "SELF_APPROVAL",
-                    "PEER": "PEER_APPROVAL",
-                    "REQUESTER": "EXTERNAL_APPROVAL",
-                    "REVIEWER": "NONE",
-                    "NONE": "NONE"
-                }
             }
 
             /**
@@ -615,7 +634,7 @@
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
-                            { text: this.entitlementTypeCaptions[item.entitlementType] ?? item.entitlementType },
+                            { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
                         ],
                         true,
@@ -687,7 +706,7 @@
                         $("#request-status-pane-title").text("Access granted");
                         $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
                         if (activationStatus.items && activationStatus.items.length > 0) {
-                            $("#request-status-pane-consolebutton").attr("href", function(index, attr) {
+                            $("#request-status-pane-consolebutton").attr("href", function (index, attr) {
                                 return `${attr}?project=${activationStatus.items[0].projectId}`
                             })
                         }
@@ -699,9 +718,9 @@
                 const startTime = new Date(activationStatus.items[0].startTime * 1000);
                 const endTime = new Date(activationStatus.items[0].endTime * 1000);
 
-                $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
+                $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60 * 1000))} minutes ago)`);
                 $("#request-status-pane-starttime-utc").text(startTime.toUTCString());
-                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
+                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60 * 1000))} minutes)`);
                 $("#request-status-pane-endtime-utc").text(endTime.toUTCString());
                 $("#request-status-pane-justification").text(activationStatus.justification);
 
@@ -820,7 +839,7 @@
                         throw "Select one or more roles to actviate";
                     }
 
-                    if (selectedRoles.some(i => i.entitlementType === "PEER" || i.entitlementType === "REQUESTER")) {
+                    if (selectedRoles.some(i => i.activationType === "PEER_APPROVAL" || i.activationType === "EXTERNAL_APPROVAL")) {
                         //
                         // Multi-party approval: Request and list reviewers available for this project and role.
                         //
@@ -830,7 +849,7 @@
                             throw "You can only request approval for a single role at a time";
                         }
 
-                        const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].entitlementType);
+                        const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].activationType);
 
                         if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
                             throw "There are currently no reviewers that could approve your request";
@@ -871,7 +890,8 @@
                                 requestPane.selectedReviewers,
                                 requestPane.justificationText,
                                 parseInt(requestPane.activationTimeout),
-                                requestPane.entitlementTypeActivationTypes[requestPane.selectedRoles[0].entitlementType]);
+                                requestPane.selectedRoles[0].activationType
+                            );
                         }
                         else {
                             activationStatus = await backend.selfApproveActivation(
@@ -979,4 +999,5 @@
         });
     </script>
 </body>
+
 </html>

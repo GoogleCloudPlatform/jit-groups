@@ -26,9 +26,9 @@ import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
-import com.google.solutions.jitaccess.core.catalog.EntitlementType;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
@@ -50,325 +50,236 @@ import java.util.stream.Collectors;
  * "eligible").
  */
 public class AssetInventoryRepository implements ProjectRoleRepository {
-  public static final String GROUP_PREFIX = "group:";
-  public static final String USER_PREFIX = "user:";
+    public static final String GROUP_PREFIX = "group:";
+    public static final String USER_PREFIX = "user:";
 
-  private final Options options;
-  private final Executor executor;
-  private final DirectoryGroupsClient groupsClient;
-  private final AssetInventoryClient assetInventoryClient;
+    private final Options options;
+    private final Executor executor;
+    private final DirectoryGroupsClient groupsClient;
+    private final AssetInventoryClient assetInventoryClient;
 
-  public AssetInventoryRepository(
-    Executor executor,
-    DirectoryGroupsClient groupsClient,
-    AssetInventoryClient assetInventoryClient,
-    Options options
-  ) {
-    Preconditions.checkNotNull(executor, "executor");
-    Preconditions.checkNotNull(groupsClient, "groupsClient");
-    Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
-    Preconditions.checkNotNull(options, "options");
+    public AssetInventoryRepository(
+            Executor executor,
+            DirectoryGroupsClient groupsClient,
+            AssetInventoryClient assetInventoryClient,
+            Options options) {
+        Preconditions.checkNotNull(executor, "executor");
+        Preconditions.checkNotNull(groupsClient, "groupsClient");
+        Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
+        Preconditions.checkNotNull(options, "options");
 
-    this.executor = executor;
-    this.groupsClient = groupsClient;
-    this.assetInventoryClient = assetInventoryClient;
-    this.options = options;
-  }
-
-  static <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
-    try {
-      return future.get();
-    }
-    catch (InterruptedException | ExecutionException e) {
-      if (e.getCause() instanceof AccessException) {
-        throw (AccessException)e.getCause().fillInStackTrace();
-      }
-
-      if (e.getCause() instanceof IOException) {
-        throw (IOException)e.getCause().fillInStackTrace();
-      }
-
-      throw new IOException("Awaiting executor tasks failed", e);
-    }
-  }
-
-  List<Binding> findProjectBindings(
-    UserId user,
-    ProjectId projectId
-  ) throws AccessException, IOException {
-    //
-    // Lookup in parallel:
-    // - the effective set of IAM policies applying to this project. This
-    //   includes the IAM policy of the project itself, plus any policies
-    //   applied to its ancestry (folders, organization).
-    // - groups that the user is a member of.
-    //
-    var listMembershipsFuture = ThrowingCompletableFuture.submit(
-      () -> this.groupsClient.listDirectGroupMemberships(user),
-      this.executor);
-
-    var effectivePoliciesFuture = ThrowingCompletableFuture.submit(
-      () -> this.assetInventoryClient.getEffectiveIamPolicies(
-        this.options.scope(),
-        projectId),
-      this.executor);
-
-    var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
-    var allBindings = awaitAndRethrow(effectivePoliciesFuture)
-      .stream()
-
-      // All bindings, across all resources in the ancestry.
-      .flatMap(policy -> policy.getPolicy().getBindings().stream())
-
-      // Only bindings that apply to the user.
-      .filter(binding -> principalSetForUser.isMember(binding))
-      .collect(Collectors.toList());
-    return allBindings;
-  }
-
-  //---------------------------------------------------------------------------
-  // ProjectRoleRepository.
-  //---------------------------------------------------------------------------
-
-  @Override
-  public SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserId user
-  ) {
-    //
-    // Not supported.
-    //
-    throw new IllegalStateException(
-      "Feature is not supported. Use search to determine available projects");
-  }
-
-  @Override
-  public EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserId user,
-    ProjectId projectId,
-    EnumSet<EntitlementType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
-  ) throws AccessException, IOException {
-
-    List<Binding> allBindings = findProjectBindings(user, projectId);
-
-    var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
-    if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
-
-      //
-      // Find all eligible self approval role bindings. The bindings are
-      // conditional and have a special condition that serves
-      // as marker.
-      //
-      Set<Entitlement<ProjectRoleBinding>> selfApprovalEligible;
-      if (typesToInclude.contains(EntitlementType.JIT)) {
-        selfApprovalEligible = allBindings.stream()
-          .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<>(
-            roleBinding,
-            roleBinding.roleBinding().role(),
-            EntitlementType.JIT,
-            Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toSet());
-      }
-      else {
-        selfApprovalEligible = Set.of();
-      }
-
-      //
-      // Find all eligible peer approval role bindings. The bindings are
-      // conditional and have a special condition that serves
-      // as marker.
-      //
-      Set<Entitlement<ProjectRoleBinding>> peerApprovalEligible;
-      if (typesToInclude.contains(EntitlementType.PEER)) {
-        peerApprovalEligible = allBindings.stream()
-          .filter(binding -> JitConstraints.isPeerApprovalConstraint(binding.getCondition()) || JitConstraints.isExternalApprovalConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<>(
-            roleBinding,
-            roleBinding.roleBinding().role(),
-            EntitlementType.PEER,
-            Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toSet());
-      }
-      else {
-        peerApprovalEligible = Set.of();
-      }
-
-      //
-      // Find all eligible external approval role bindings. The bindings are
-      // conditional and have a special condition that serves
-      // as marker.
-      //
-      Set<Entitlement<ProjectRoleBinding>> externalApprovalEligible;
-      if (typesToInclude.contains(EntitlementType.REQUESTER)) {
-        externalApprovalEligible = allBindings.stream()
-          .filter(binding -> JitConstraints.isExternalApprovalConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<>(
-            roleBinding,
-            roleBinding.roleBinding().role(),
-            EntitlementType.REQUESTER,
-            Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toSet());
-      }
-      else {
-        externalApprovalEligible = Set.of();
-      }
-
-      //
-      // Find all eligible reviewer role bindings. The bindings are
-      // conditional and have a special condition that serves
-      // as marker.
-      //
-      Set<Entitlement<ProjectRoleBinding>> reviewerEligible;
-      if (typesToInclude.contains(EntitlementType.REVIEWER)) {
-        reviewerEligible = allBindings.stream()
-          .filter(binding -> JitConstraints.isReviewerConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .map(roleBinding -> new Entitlement<>(
-            roleBinding,
-            roleBinding.roleBinding().role(),
-            EntitlementType.REVIEWER,
-            Entitlement.Status.AVAILABLE))
-          .collect(Collectors.toSet());
-      }
-      else {
-        reviewerEligible = Set.of();
-      }
-
-      //
-      // Determine effective set of eligible roles.
-      //
-      allAvailable.addAll(selfApprovalEligible);
-      allAvailable.addAll(peerApprovalEligible);
-      allAvailable.addAll(externalApprovalEligible);
-      allAvailable.addAll(reviewerEligible);
+        this.executor = executor;
+        this.groupsClient = groupsClient;
+        this.assetInventoryClient = assetInventoryClient;
+        this.options = options;
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
-    if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-      allActive.addAll(allBindings.stream()
-        // Only temporary access bindings.
-        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+    static <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            if (e.getCause() instanceof AccessException) {
+                throw (AccessException) e.getCause().fillInStackTrace();
+            }
 
-        // Only bindings that are still valid.
-        .filter(binding -> IamTemporaryAccessConditions.evaluate(
-          binding.getCondition().getExpression(),
-          Instant.now()))
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause().fillInStackTrace();
+            }
 
-        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-        .collect(Collectors.toList()));
+            throw new IOException("Awaiting executor tasks failed", e);
+        }
     }
 
-    return new EntitlementSet<>(allAvailable, allActive, Set.of());
-  }
+    List<Binding> findProjectBindings(
+            UserId user,
+            ProjectId projectId) throws AccessException, IOException {
+        //
+        // Lookup in parallel:
+        // - the effective set of IAM policies applying to this project. This
+        // includes the IAM policy of the project itself, plus any policies
+        // applied to its ancestry (folders, organization).
+        // - groups that the user is a member of.
+        //
+        var listMembershipsFuture = ThrowingCompletableFuture.submit(
+                () -> this.groupsClient.listDirectGroupMemberships(user),
+                this.executor);
 
-  @Override
-  public Set<UserId> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    EntitlementType entitlementType
-  ) throws AccessException, IOException {
+        var effectivePoliciesFuture = ThrowingCompletableFuture.submit(
+                () -> this.assetInventoryClient.getEffectiveIamPolicies(
+                        this.options.scope(),
+                        projectId),
+                this.executor);
 
-    var policies = this.assetInventoryClient.getEffectiveIamPolicies(
-      this.options.scope,
-      roleBinding.projectId());
+        var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
+        var allBindings = awaitAndRethrow(effectivePoliciesFuture)
+                .stream()
 
-    var principals = policies
-      .stream()
+                // All bindings, across all resources in the ancestry.
+                .flatMap(policy -> policy.getPolicy().getBindings().stream())
 
-      // All bindings, across all resources in the ancestry.
-      .flatMap(policy -> policy.getPolicy().getBindings().stream())
-
-      // Only consider requested role.
-      .filter(binding -> binding.getRole().equals(roleBinding.roleBinding().role()))
-
-      // Only consider eligible bindings.
-      .filter(binding -> JitConstraints.isApprovalConstraint(
-        binding.getCondition(),
-        entitlementType))
-
-      .flatMap(binding -> binding.getMembers().stream())
-      .collect(Collectors.toSet());
-
-    var allUserMembers = principals.stream()
-      .filter(p -> p.startsWith(USER_PREFIX))
-      .map(p -> p.substring(USER_PREFIX.length()))
-      .distinct()
-      .map(email -> new UserId(email))
-      .collect(Collectors.toSet());
-
-    //
-    // Resolve groups.
-    //
-    List<CompletableFuture<Collection<Member>>> listMembersFutures = principals.stream()
-      .filter(p -> p.startsWith(GROUP_PREFIX))
-      .map(p -> p.substring(GROUP_PREFIX.length()))
-      .distinct()
-      .map(groupEmail -> ThrowingCompletableFuture.submit(
-        () -> {
-          try {
-            return this.groupsClient.listDirectGroupMembers(groupEmail);
-          }
-          catch (AccessDeniedException e) {
-            //
-            // Access might be denied if this is an external group,
-            // but this is okay.
-            //
-            return List.<Member>of();
-          }
-        },
-        this.executor))
-      .collect(Collectors.toList());
-
-    var allMembers = new HashSet<>(allUserMembers);
-
-    for (var listMembersFuture : listMembersFutures) {
-      var members = awaitAndRethrow(listMembersFuture)
-        .stream()
-        .map(m -> new UserId(m.getEmail()))
-        .collect(Collectors.toList());
-      allMembers.addAll(members);
+                // Only bindings that apply to the user.
+                .filter(binding -> principalSetForUser.isMember(binding))
+                .collect(Collectors.toList());
+        return allBindings;
     }
 
-    return allMembers;
-  }
+    // ---------------------------------------------------------------------------
+    // ProjectRoleRepository.
+    // ---------------------------------------------------------------------------
 
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
-
-  class PrincipalSet {
-    private final Set<String> principalIdentifiers;
-
-    public PrincipalSet(
-      UserId user,
-      Collection<Group> groups
-    ) {
-      this.principalIdentifiers = groups
-        .stream()
-        .map(g -> String.format("group:%s", g.getEmail()))
-        .collect(Collectors.toSet());
-      this.principalIdentifiers.add(String.format("user:%s", user.email));
+    @Override
+    public SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+            UserId user) {
+        //
+        // Not supported.
+        //
+        throw new IllegalStateException(
+                "Feature is not supported. Use search to determine available projects");
     }
 
-    public boolean isMember(Binding binding) {
-      return binding.getMembers()
-        .stream()
-        .anyMatch(member -> this.principalIdentifiers.contains(member));
+    @Override
+    public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+            UserId user,
+            ProjectId projectId,
+            EnumSet<ActivationType> typesToInclude,
+            EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
+
+        List<Binding> allBindings = findProjectBindings(user, projectId);
+
+        var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
+        if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
+            allAvailable.addAll(
+                    allBindings.stream()
+                            .map(binding -> PrivilegeFactory.createRequesterPrivilege(
+                                    new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+                                    binding.getCondition()))
+                            .filter(result -> result.isPresent())
+                            .map(result -> result.get())
+                            .filter(privilege -> typesToInclude.contains(privilege.activationType()))
+                            .collect(Collectors.toSet()));
+        }
+
+        var allActive = new HashSet<ProjectRoleBinding>();
+        if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
+            allActive.addAll(allBindings.stream()
+                    // Only temporary access bindings.
+                    .filter(binding -> PrivilegeFactory.isActivated(binding.getCondition()))
+
+                    // Only bindings that are still valid.
+                    .filter(binding -> IamTemporaryAccessConditions.evaluate(
+                            binding.getCondition().getExpression(),
+                            Instant.now()))
+
+                    .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+                    .collect(Collectors.toList()));
+        }
+
+        return new RequesterPrivilegeSet<>(allAvailable, allActive, Set.of());
     }
-  }
 
+    @Override
+    public Set<UserId> findReviewerPrivelegeHolders(
+            ProjectRoleBinding roleBinding,
+            ActivationType activationType) throws AccessException, IOException {
 
-  /**
-   * @param scope Scope to use for queries.
-   */
-  public record Options(
-    String scope) {
+        var policies = this.assetInventoryClient.getEffectiveIamPolicies(
+                this.options.scope,
+                roleBinding.projectId());
 
-    public Options {
-      Preconditions.checkNotNull(scope, "scope");
+        var principals = policies
+                .stream()
+
+                // All bindings, across all resources in the ancestry.
+                .flatMap(policy -> policy.getPolicy().getBindings().stream())
+
+                // Only consider requested role.
+                .filter(binding -> binding.getRole().equals(roleBinding.roleBinding().role()))
+
+                // Only consider eligible bindings.
+                .filter(binding -> PrivilegeFactory.createReviewerPrivilege(
+                        new ProjectRoleBinding(new RoleBinding(roleBinding.projectId(), binding.getRole())),
+                        binding.getCondition()).isPresent())
+                .filter(binding -> PrivilegeFactory.createReviewerPrivilege(
+                        new ProjectRoleBinding(new RoleBinding(roleBinding.projectId(), binding.getRole())),
+                        binding.getCondition()).get().reviewableTypes().contains(activationType))
+
+                .flatMap(binding -> binding.getMembers().stream())
+                .collect(Collectors.toSet());
+
+        var allUserMembers = principals.stream()
+                .filter(p -> p.startsWith(USER_PREFIX))
+                .map(p -> p.substring(USER_PREFIX.length()))
+                .distinct()
+                .map(email -> new UserId(email))
+                .collect(Collectors.toSet());
+
+        //
+        // Resolve groups.
+        //
+        List<CompletableFuture<Collection<Member>>> listMembersFutures = principals.stream()
+                .filter(p -> p.startsWith(GROUP_PREFIX))
+                .map(p -> p.substring(GROUP_PREFIX.length()))
+                .distinct()
+                .map(groupEmail -> ThrowingCompletableFuture.submit(
+                        () -> {
+                            try {
+                                return this.groupsClient.listDirectGroupMembers(groupEmail);
+                            } catch (AccessDeniedException e) {
+                                //
+                                // Access might be denied if this is an external group,
+                                // but this is okay.
+                                //
+                                return List.<Member>of();
+                            }
+                        },
+                        this.executor))
+                .collect(Collectors.toList());
+
+        var allMembers = new HashSet<>(allUserMembers);
+
+        for (var listMembersFuture : listMembersFutures) {
+            var members = awaitAndRethrow(listMembersFuture)
+                    .stream()
+                    .map(m -> new UserId(m.getEmail()))
+                    .collect(Collectors.toList());
+            allMembers.addAll(members);
+        }
+
+        return allMembers;
     }
-  }
+
+    // -------------------------------------------------------------------------
+    // Inner classes.
+    // -------------------------------------------------------------------------
+
+    class PrincipalSet {
+        private final Set<String> principalIdentifiers;
+
+        public PrincipalSet(
+                UserId user,
+                Collection<Group> groups) {
+            this.principalIdentifiers = groups
+                    .stream()
+                    .map(g -> String.format("group:%s", g.getEmail()))
+                    .collect(Collectors.toSet());
+            this.principalIdentifiers.add(String.format("user:%s", user.email));
+        }
+
+        public boolean isMember(Binding binding) {
+            return binding.getMembers()
+                    .stream()
+                    .anyMatch(member -> this.principalIdentifiers.contains(member));
+        }
+    }
+
+    /**
+     * @param scope Scope to use for queries.
+     */
+    public record Options(
+            String scope) {
+
+        public Options {
+            Preconditions.checkNotNull(scope, "scope");
+        }
+    }
 }

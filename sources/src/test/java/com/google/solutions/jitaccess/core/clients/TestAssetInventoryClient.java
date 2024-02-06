@@ -30,48 +30,48 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestAssetInventoryClient {
-  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
+    private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
-  // -------------------------------------------------------------------------
-  // getEffectiveIamPolicies.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getEffectiveIamPolicies.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.INVALID_CREDENTIAL,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "folders/0",
-        SAMPLE_PROJECT));
-  }
+        assertThrows(
+                NotAuthenticatedException.class,
+                () -> adapter.getEffectiveIamPolicies(
+                        "folders/0",
+                        SAMPLE_PROJECT));
+    }
 
-  @Test
-  public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "folders/0",
-        SAMPLE_PROJECT));
-  }
+        assertThrows(
+                AccessDeniedException.class,
+                () -> adapter.getEffectiveIamPolicies(
+                        "folders/0",
+                        SAMPLE_PROJECT));
+    }
 
-  @Test
-  public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new PolicyAnalyzerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+    @Test
+    public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
+        var adapter = new PolicyAnalyzerClient(
+                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+                HttpTransport.Options.DEFAULT);
 
-    assertThrows(
-      ResourceNotFoundException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-        new ProjectId("0")));
-  }
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> adapter.getEffectiveIamPolicies(
+                        "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+                        new ProjectId("0")));
+    }
 }

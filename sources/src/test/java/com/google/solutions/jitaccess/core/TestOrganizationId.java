@@ -30,97 +30,97 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestOrganizationId {
 
-  @Test
-  public void toStringReturnsId() {
-    assertEquals("111", new OrganizationId("111").toString());
-  }
+    @Test
+    public void toStringReturnsId() {
+        assertEquals("111", new OrganizationId("111").toString());
+    }
 
-  // -------------------------------------------------------------------------
-  // Type.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Type.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void type() {
-    assertEquals("organization", new OrganizationId("111").type());
-  }
+    @Test
+    public void type() {
+        assertEquals("organization", new OrganizationId("111").type());
+    }
 
-  // -------------------------------------------------------------------------
-  // ID.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ID.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void id() {
-    assertEquals("111", new OrganizationId("111").id());
-  }
+    @Test
+    public void id() {
+        assertEquals("111", new OrganizationId("111").id());
+    }
 
-  // -------------------------------------------------------------------------
-  // Path.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Path.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void path() {
-    assertEquals("organizations/111", new OrganizationId("111").path());
-  }
+    @Test
+    public void path() {
+        assertEquals("organizations/111", new OrganizationId("111").path());
+    }
 
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Equality.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("111");
+    @Test
+    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+        OrganizationId id1 = new OrganizationId("111");
+        OrganizationId id2 = new OrganizationId("111");
 
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertTrue(id1.equals(id2));
+        assertEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
+    @Test
+    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+        OrganizationId id1 = new OrganizationId("111");
 
-    assertTrue(id1.equals(id1));
-  }
+        assertTrue(id1.equals(id1));
+    }
 
-  @Test
-  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("222");
+    @Test
+    public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
+        OrganizationId id1 = new OrganizationId("111");
+        OrganizationId id2 = new OrganizationId("222");
 
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertFalse(id1.equals(id2));
+        assertNotEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    @Test
+    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+        OrganizationId id1 = new OrganizationId("111");
 
-    assertFalse(id1.equals(null));
-  }
+        assertFalse(id1.equals(null));
+    }
 
-  @Test
-  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    @Test
+    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+        OrganizationId id1 = new OrganizationId("111");
 
-    assertFalse(id1.equals(""));
-  }
+        assertFalse(id1.equals(""));
+    }
 
-  // -------------------------------------------------------------------------
-  // Comparable.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Comparable.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-    var organizations = List.of(
-      new OrganizationId("333"),
-      new OrganizationId("111"),
-      new OrganizationId("222"));
+    @Test
+    public void whenInTreeSet_ThenReturnsInExpectedOrder() {
+        var organizations = List.of(
+                new OrganizationId("333"),
+                new OrganizationId("111"),
+                new OrganizationId("222"));
 
-    assertIterableEquals(
-      List.of(
-        new OrganizationId("111"),
-        new OrganizationId("222"),
-        new OrganizationId("333")),
-      new TreeSet<>(organizations));
-  }
+        assertIterableEquals(
+                List.of(
+                        new OrganizationId("111"),
+                        new OrganizationId("222"),
+                        new OrganizationId("333")),
+                new TreeSet<>(organizations));
+    }
 }

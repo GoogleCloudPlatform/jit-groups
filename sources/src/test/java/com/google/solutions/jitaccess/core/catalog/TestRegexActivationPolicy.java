@@ -32,49 +32,45 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestRegexActivationPolicy {
 
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+    private static final UserId SAMPLE_USER = new UserId("user@example.com");
 
-  // -------------------------------------------------------------------------
-  // checkJustification.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // checkJustification.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenJustificationNullOrEmpty_ThenCheckJustificationThrowsException() {
-    var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile(".*")
-    ));
+    @Test
+    public void whenJustificationNullOrEmpty_ThenCheckJustificationThrowsException() {
+        var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
+                "hint",
+                Pattern.compile(".*")));
 
-    assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, null));
-    assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, ""));
-  }
+        assertThrows(
+                InvalidJustificationException.class,
+                () -> policy.checkJustification(SAMPLE_USER, null));
+        assertThrows(
+                InvalidJustificationException.class,
+                () -> policy.checkJustification(SAMPLE_USER, ""));
+    }
 
-  @ParameterizedTest
-  @ValueSource(strings = {" ", "a", "b/a", "b/"})
-  public void whenJustificationDoesNotMatchRegex_ThenCheckJustificationThrowsException(
-    String value
-  ) {
-    var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile("^b/(\\d+)$")
-    ));
+    @ParameterizedTest
+    @ValueSource(strings = { " ", "a", "b/a", "b/" })
+    public void whenJustificationDoesNotMatchRegex_ThenCheckJustificationThrowsException(
+            String value) {
+        var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
+                "hint",
+                Pattern.compile("^b/(\\d+)$")));
 
-    assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, value));
-  }
+        assertThrows(
+                InvalidJustificationException.class,
+                () -> policy.checkJustification(SAMPLE_USER, value));
+    }
 
-  @Test
-  public void whenJustificationMatchesRegex_ThenCheckJustificationReturns() throws Exception {
-    var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile("^b/(\\d+)$")
-    ));
+    @Test
+    public void whenJustificationMatchesRegex_ThenCheckJustificationReturns() throws Exception {
+        var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
+                "hint",
+                Pattern.compile("^b/(\\d+)$")));
 
-    policy.checkJustification(SAMPLE_USER, "b/1");
-  }
+        policy.checkJustification(SAMPLE_USER, "b/1");
+    }
 }

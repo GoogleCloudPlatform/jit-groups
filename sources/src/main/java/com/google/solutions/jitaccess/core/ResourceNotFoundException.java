@@ -22,11 +22,11 @@
 package com.google.solutions.jitaccess.core;
 
 public class ResourceNotFoundException extends AccessException {
-  public ResourceNotFoundException(String message) {
-    super(message, null);
-  }
+    public ResourceNotFoundException(String message) {
+        super(message, null);
+    }
 
-  public ResourceNotFoundException(String message, Exception inner) {
-    super(message, inner);
-  }
+    public ResourceNotFoundException(String message, Exception inner) {
+        super(message, inner);
+    }
 }

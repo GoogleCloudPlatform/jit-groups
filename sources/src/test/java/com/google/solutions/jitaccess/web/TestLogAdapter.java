@@ -31,80 +31,80 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestLogAdapter {
-  @Test
-  public void whenTraceIdAndUserIdSet_ThenWriteLogIncludesFields() {
-    var buffer = new StringBuilder();
-    var adapter = new LogAdapter(buffer);
-    adapter.setTraceId("trace-1");
-    adapter.setPrincipal(
-      new UserPrincipal() {
-        @Override
-        public UserId getId() {
-          return new UserId("id", "email");
-        }
+    @Test
+    public void whenTraceIdAndUserIdSet_ThenWriteLogIncludesFields() {
+        var buffer = new StringBuilder();
+        var adapter = new LogAdapter(buffer);
+        adapter.setTraceId("trace-1");
+        adapter.setPrincipal(
+                new UserPrincipal() {
+                    @Override
+                    public UserId getId() {
+                        return new UserId("id", "email");
+                    }
 
-        @Override
-        public DeviceInfo getDevice() {
-          return new DeviceInfo("device-id", List.of());
-        }
+                    @Override
+                    public DeviceInfo getDevice() {
+                        return new DeviceInfo("device-id", List.of());
+                    }
 
-        @Override
-        public String getName() {
-          return "-";
-        }
-      });
+                    @Override
+                    public String getName() {
+                        return "-";
+                    }
+                });
 
-    adapter.newInfoEntry("event-1", "message-1").write();
+        adapter.newInfoEntry("event-1", "message-1").write();
 
-    assertEquals(
-      "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
-        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
-        "\"email\",\"device_access_levels\":\"\"},\"logging.googleapis.com/trace\":\"trace-1\"}\n",
-      buffer.toString());
-  }
+        assertEquals(
+                "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
+                        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
+                        "\"email\",\"device_access_levels\":\"\"},\"logging.googleapis.com/trace\":\"trace-1\"}\n",
+                buffer.toString());
+    }
 
-  @Test
-  public void whenTraceIdAndAccessLevelsSet_ThenWriteLogIncludesFields() {
-    var buffer = new StringBuilder();
-    var adapter = new LogAdapter(buffer);
-    adapter.setTraceId("trace-1");
-    adapter.setPrincipal(
-      new UserPrincipal() {
-        @Override
-        public UserId getId() {
-          return new UserId("id", "email");
-        }
+    @Test
+    public void whenTraceIdAndAccessLevelsSet_ThenWriteLogIncludesFields() {
+        var buffer = new StringBuilder();
+        var adapter = new LogAdapter(buffer);
+        adapter.setTraceId("trace-1");
+        adapter.setPrincipal(
+                new UserPrincipal() {
+                    @Override
+                    public UserId getId() {
+                        return new UserId("id", "email");
+                    }
 
-        @Override
-        public DeviceInfo getDevice() {
-          return new DeviceInfo("device-id", List.of("level-1", "level-2"));
-        }
+                    @Override
+                    public DeviceInfo getDevice() {
+                        return new DeviceInfo("device-id", List.of("level-1", "level-2"));
+                    }
 
-        @Override
-        public String getName() {
-          return "-";
-        }
-      });
+                    @Override
+                    public String getName() {
+                        return "-";
+                    }
+                });
 
-    adapter.newInfoEntry("event-1", "message-1").write();
+        adapter.newInfoEntry("event-1", "message-1").write();
 
-    assertEquals(
-      "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
-        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
-        "\"email\",\"device_access_levels\":\"level-1, level-2\"}," +
-        "\"logging.googleapis.com/trace\":\"trace-1\"}\n",
-      buffer.toString());
-  }
+        assertEquals(
+                "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
+                        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
+                        "\"email\",\"device_access_levels\":\"level-1, level-2\"}," +
+                        "\"logging.googleapis.com/trace\":\"trace-1\"}\n",
+                buffer.toString());
+    }
 
-  @Test
-  public void whenTraceIdAndPrincipalNotSet_ThenWriteLogSucceeds() {
-    var buffer = new StringBuilder();
-    var adapter = new LogAdapter(buffer);
-    adapter.newErrorEntry("event-1", "message-1").write();
+    @Test
+    public void whenTraceIdAndPrincipalNotSet_ThenWriteLogSucceeds() {
+        var buffer = new StringBuilder();
+        var adapter = new LogAdapter(buffer);
+        adapter.newErrorEntry("event-1", "message-1").write();
 
-    assertEquals(
-      "{\"severity\":\"ERROR\",\"message\":\"message-1\",\"logging.googleapis.com/labels\"" +
-        ":{\"event\":\"event-1\"},\"logging.googleapis.com/trace\":null}\n",
-      buffer.toString());
-  }
+        assertEquals(
+                "{\"severity\":\"ERROR\",\"message\":\"message-1\",\"logging.googleapis.com/labels\"" +
+                        ":{\"event\":\"event-1\"},\"logging.googleapis.com/trace\":null}\n",
+                buffer.toString());
+    }
 }

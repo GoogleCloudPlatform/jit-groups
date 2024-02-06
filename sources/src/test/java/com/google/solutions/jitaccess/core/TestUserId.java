@@ -27,46 +27,46 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestUserId {
 
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Equality.
+    // -------------------------------------------------------------------------
 
-  @Test
-  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    @Test
+    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+        UserId id1 = new UserId("bob", "bob@example.com");
+        UserId id2 = new UserId("bob", "bob@example.com");
 
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertTrue(id1.equals(id2));
+        assertEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    @Test
+    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+        UserId id1 = new UserId("bob", "bob@example.com");
 
-    assertTrue(id1.equals(id1));
-  }
+        assertTrue(id1.equals(id1));
+    }
 
-  @Test
-  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("alice", "alice@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    @Test
+    public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
+        UserId id1 = new UserId("alice", "alice@example.com");
+        UserId id2 = new UserId("bob", "bob@example.com");
 
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
+        assertFalse(id1.equals(id2));
+        assertNotEquals(id1.hashCode(), id2.hashCode());
+    }
 
-  @Test
-  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    @Test
+    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+        UserId id1 = new UserId("bob", "bob@example.com");
 
-    assertFalse(id1.equals(null));
-  }
+        assertFalse(id1.equals(null));
+    }
 
-  @Test
-  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    @Test
+    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+        UserId id1 = new UserId("bob", "bob@example.com");
 
-    assertFalse(id1.equals(""));
-  }
+        assertFalse(id1.equals(""));
+    }
 }

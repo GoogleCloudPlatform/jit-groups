@@ -24,36 +24,36 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
+import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
 
-public class ProjectRoleBinding extends EntitlementId {
-  static final String CATALOG = "iam";
+public class ProjectRoleBinding extends PrivilegeId {
+    static final String CATALOG = "iam";
 
-  private final RoleBinding roleBinding;
+    private final RoleBinding roleBinding;
 
-  public ProjectRoleBinding(RoleBinding roleBinding) {
-    Preconditions.checkNotNull(roleBinding, "roleBinding");
+    public ProjectRoleBinding(RoleBinding roleBinding) {
+        Preconditions.checkNotNull(roleBinding, "roleBinding");
 
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+        assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
 
-    this.roleBinding = roleBinding;
-  }
+        this.roleBinding = roleBinding;
+    }
 
-  public RoleBinding roleBinding() {
-    return this.roleBinding;
-  }
+    public RoleBinding roleBinding() {
+        return this.roleBinding;
+    }
 
-  @Override
-  public String catalog() {
-    return CATALOG;
-  }
+    @Override
+    public String catalog() {
+        return CATALOG;
+    }
 
-  @Override
-  public String id() {
-    return this.roleBinding.toString();
-  }
+    @Override
+    public String id() {
+        return this.roleBinding.toString();
+    }
 
-  public ProjectId projectId() {
-    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
-  }
+    public ProjectId projectId() {
+        return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
+    }
 }
