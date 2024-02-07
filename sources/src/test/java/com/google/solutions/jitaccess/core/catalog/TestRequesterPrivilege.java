@@ -40,7 +40,7 @@ public class TestRequesterPrivilege {
         var privilege = new RequesterPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("1"),
                 "Sample privilege",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.AVAILABLE);
 
         assertEquals("Sample privilege", privilege.toString());
@@ -55,23 +55,23 @@ public class TestRequesterPrivilege {
         var availableA = new RequesterPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.AVAILABLE);
         var activeA = new RequesterPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.ACTIVE);
         var pendingA = new RequesterPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.ACTIVATION_PENDING);
 
         var availableB = new RequesterPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("B"),
                 "Privilege B",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.AVAILABLE);
 
         var privileges = List.of(

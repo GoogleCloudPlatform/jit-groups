@@ -566,6 +566,12 @@
                     "PEER_APPROVAL": "Peer approval required",
                     "EXTERNAL_APPROVAL": "External approval required"
                 };
+
+                this.activationTypes = [
+                    "SELF_APPROVAL",
+                    "PEER_APPROVAL",
+                    "EXTERNAL_APPROVAL"
+                ];
             }
 
             /**
@@ -634,7 +640,7 @@
                         item.roleBinding.role,
                         [
                             { text: item.roleBinding.role },
-                            { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                            { text: this.activationTypeCaptions[this.activationTypes.filter(type => item.activationType.startsWith(type))[0]] ?? item.activationType },
                             { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
                         ],
                         true,
@@ -839,7 +845,7 @@
                         throw "Select one or more roles to actviate";
                     }
 
-                    if (selectedRoles.some(i => i.activationType === "PEER_APPROVAL" || i.activationType === "EXTERNAL_APPROVAL")) {
+                    if (selectedRoles.some(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
                         //
                         // Multi-party approval: Request and list reviewers available for this project and role.
                         //

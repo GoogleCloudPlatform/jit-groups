@@ -72,7 +72,7 @@ public class TestActivationRequest {
                 new ActivationId("sample-1"),
                 new UserId("user@example.com"),
                 new SamplePrivilegeId("1"),
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 "some justification",
                 Instant.ofEpochSecond(0),
                 Duration.ofMinutes(5));

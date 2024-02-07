@@ -21,16 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-public enum ActivationType {
-    /** Requester privilege can be activated using self-approval */
-    SELF_APPROVAL,
+public abstract class ActivationType {
+    public abstract String name();
 
-    /** Requester privilege requires peer approval */
-    PEER_APPROVAL,
-
-    /** Requester privilege requires external approval */
-    EXTERNAL_APPROVAL,
-
-    /** Requester privilege (is currently active but) can no longer be activated */
-    NONE
+    public abstract boolean contains(ActivationType other);
 }

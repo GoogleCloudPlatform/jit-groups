@@ -86,7 +86,7 @@ public abstract class RequesterPrivilegeActivator<TPrivilegeId extends Privilege
         Preconditions.checkNotNull(policy, "policy");
 
         if (!(request.reviewers().contains(approvingUser)
-                || request.activationType() == ActivationType.SELF_APPROVAL)) {
+                || request.activationType() instanceof SelfApproval)) {
             throw new AccessDeniedException(
                     String.format("The request does not permit approval by %s", approvingUser));
         }

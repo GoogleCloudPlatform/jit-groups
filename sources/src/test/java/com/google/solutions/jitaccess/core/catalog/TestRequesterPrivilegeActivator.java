@@ -81,7 +81,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
         var request = activator.createActivationRequest(
                 SAMPLE_REQUESTING_USER,
@@ -114,7 +114,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         assertThrows(
@@ -148,7 +148,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(
@@ -180,7 +180,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         var request = new ActivationRequest<SamplePrivilegeId>(
@@ -208,7 +208,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(
@@ -236,7 +236,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(
@@ -267,7 +267,7 @@ public class TestRequesterPrivilegeActivator {
         var requesterPrivilege = new RequesterPrivilege<>(
                 privilege,
                 privilege.id(),
-                ActivationType.EXTERNAL_APPROVAL,
+                new ExternalApproval("topic"),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(

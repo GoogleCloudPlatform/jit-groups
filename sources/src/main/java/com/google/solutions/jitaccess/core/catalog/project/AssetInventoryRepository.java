@@ -141,7 +141,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
             UserId user,
             ProjectId projectId,
-            EnumSet<ActivationType> typesToInclude,
+            Set<ActivationType> typesToInclude,
             EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
 
         List<Binding> allBindings = findProjectBindings(user, projectId);
@@ -155,7 +155,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
                                     binding.getCondition()))
                             .filter(result -> result.isPresent())
                             .map(result -> result.get())
-                            .filter(privilege -> typesToInclude.contains(privilege.activationType()))
+                            .filter(privilege -> typesToInclude.stream()
+                                    .anyMatch(type -> type.contains(privilege.activationType())))
                             .collect(Collectors.toSet()));
         }
 
@@ -201,7 +202,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
                         binding.getCondition()).isPresent())
                 .filter(binding -> PrivilegeFactory.createReviewerPrivilege(
                         new ProjectRoleBinding(new RoleBinding(roleBinding.projectId(), binding.getRole())),
-                        binding.getCondition()).get().reviewableTypes().contains(activationType))
+                        binding.getCondition()).get().reviewableTypes().stream()
+                        .anyMatch(type -> type.contains(activationType)))
 
                 .flatMap(binding -> binding.getMembers().stream())
                 .collect(Collectors.toSet());

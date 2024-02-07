@@ -91,7 +91,7 @@ public record RequesterPrivilegeSet<TId extends PrivilegeId>(
                 consolidatedSet.add(new RequesterPrivilege<>(
                         activeRequesterPrivilegeId,
                         activeRequesterPrivilegeId.id(),
-                        ActivationType.NONE,
+                        new NoActivation(),
                         RequesterPrivilege.Status.ACTIVE));
             }
         }

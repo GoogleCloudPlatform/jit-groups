@@ -150,7 +150,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
     public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
             UserId user,
             ProjectId projectId,
-            EnumSet<ActivationType> typesToInclude,
+            Set<ActivationType> typesToInclude,
             EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
 
         Preconditions.checkNotNull(user, "user");
@@ -187,7 +187,8 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
                             binding.getCondition()))
                     .filter(result -> result.isPresent())
                     .map(result -> result.get())
-                    .filter(privilege -> typesToInclude.contains(privilege.activationType()))
+                    .filter(privilege -> typesToInclude.stream()
+                            .anyMatch(type -> type.contains(privilege.activationType())))
                     .collect(Collectors.toSet()));
         }
 
@@ -242,7 +243,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
                                 .isPresent())
                 .filter(result -> result.getIamBinding() != null &&
                         PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
-                                .get().reviewableTypes().contains(activationType))
+                                .get().reviewableTypes().stream().anyMatch(type -> type.contains(activationType)))
 
                 // Collect identities (users and group members)
                 .filter(result -> result.getIdentityList() != null)

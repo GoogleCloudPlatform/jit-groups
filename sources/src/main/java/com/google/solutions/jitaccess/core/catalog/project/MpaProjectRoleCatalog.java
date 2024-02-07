@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Catalog that implements self approval and MPA based
@@ -73,8 +72,8 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
                         "The activation duration must be no longer than %d minutes",
                         this.options.maxActivationDuration().toMinutes()));
 
-        if (request.activationType() == ActivationType.PEER_APPROVAL
-                || request.activationType() == ActivationType.EXTERNAL_APPROVAL) {
+        if (request.activationType() instanceof PeerApproval
+                || request.activationType() instanceof ExternalApproval) {
             Preconditions.checkArgument(
                     request.reviewers() != null &&
                             request.reviewers()
@@ -106,13 +105,12 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
                 .findRequesterPrivileges(
                         user,
                         projectId,
-                        EnumSet.of(activationType),
+                        Set.of(activationType),
                         EnumSet.of(RequesterPrivilege.Status.AVAILABLE))
                 .availableRequesterPrivileges()
                 .stream()
                 .collect(Collectors.toMap(privilege -> privilege.id(), privilege -> privilege));
 
-        assert userPrivileges.values().stream().allMatch(e -> e.activationType() == activationType);
         assert userPrivileges.values().stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
 
         for (var requestedPrivilege : privileges) {
@@ -123,7 +121,16 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
                                 "The user %s is not allowed to activate %s using %s",
                                 user,
                                 requestedPrivilege.id(),
-                                activationType));
+                                activationType.name()));
+            }
+            var grantedPrivilegeType = grantedPrivilege.activationType();
+            if (!grantedPrivilegeType.contains(activationType)) {
+                throw new AccessDeniedException(
+                        String.format(
+                                "The user %s is not allowed to activate %s using %s",
+                                user,
+                                requestedPrivilege.id(),
+                                activationType.name()));
             }
         }
     }
@@ -185,8 +192,8 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         return this.repository.findRequesterPrivileges(
                 user,
                 projectId,
-                EnumSet.of(ActivationType.SELF_APPROVAL, ActivationType.PEER_APPROVAL,
-                        ActivationType.EXTERNAL_APPROVAL),
+                Set.of(new SelfApproval(), new PeerApproval(""),
+                        new ExternalApproval("")),
                 EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
     }
 
@@ -244,10 +251,10 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         // NB. The base class already checked that the requesting user
         // is allowed.
         //
-        switch (request.activationType()) {
-            case NONE:
+        switch (request.activationType().name()) {
+            case "NONE":
                 throw new IllegalArgumentException("Activation request of type none cannot be approved.");
-            case SELF_APPROVAL:
+            case "SELF_APPROVAL":
                 if (request.requestingUser() != approvingUser) {
                     throw new AccessDeniedException(
                             String.format(

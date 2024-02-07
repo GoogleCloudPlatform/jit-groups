@@ -51,7 +51,7 @@ public record RequesterPrivilege<TPrivilegeID extends PrivilegeId>(
     public int compareTo(RequesterPrivilege<TPrivilegeID> o) {
         return Comparator
                 .comparing((RequesterPrivilege<TPrivilegeID> e) -> e.status)
-                .thenComparing(e -> e.activationType.toString())
+                .thenComparing(e -> e.activationType.name())
                 .thenComparing(e -> e.id)
                 .compare(this, o);
     }

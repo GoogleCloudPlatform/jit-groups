@@ -26,9 +26,11 @@ import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeCatalog;
 import com.google.solutions.jitaccess.core.catalog.SamplePrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.SelfApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
+import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
@@ -69,7 +71,7 @@ public class TestProjectRoleActivator {
         var privilege = new RequesterPrivilege<ProjectRoleBinding>(
                 new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
                 SAMPLE_ROLE_1,
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(
@@ -110,7 +112,7 @@ public class TestProjectRoleActivator {
         var privilege = new RequesterPrivilege<ProjectRoleBinding>(
                 new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
                 SAMPLE_ROLE_1,
-                ActivationType.PEER_APPROVAL,
+                new PeerApproval("topic"),
                 Status.AVAILABLE);
 
         var request = activator.createActivationRequest(
@@ -152,7 +154,7 @@ public class TestProjectRoleActivator {
         var privilege = new RequesterPrivilege<ProjectRoleBinding>(
                 new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
                 SAMPLE_ROLE_1,
-                ActivationType.PEER_APPROVAL,
+                new PeerApproval("topic"),
                 Status.AVAILABLE);
 
         var inputRequest = activator.createActivationRequest(
@@ -177,5 +179,6 @@ public class TestProjectRoleActivator {
         assertEquals(inputRequest.justification(), outputRequest.justification());
         assertEquals(inputRequest.startTime().getEpochSecond(), outputRequest.startTime().getEpochSecond());
         assertEquals(inputRequest.endTime().getEpochSecond(), outputRequest.endTime().getEpochSecond());
+        assertEquals(inputRequest.activationType().name(), outputRequest.activationType().name());
     }
 }

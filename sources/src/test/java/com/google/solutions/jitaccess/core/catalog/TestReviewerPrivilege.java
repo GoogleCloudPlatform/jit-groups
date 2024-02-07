@@ -24,8 +24,8 @@ package com.google.solutions.jitaccess.core.catalog;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -41,7 +41,7 @@ public class TestReviewerPrivilege {
         var privilege = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("1"),
                 "Sample privilege",
-                EnumSet.of(ActivationType.SELF_APPROVAL));
+                Set.of(new SelfApproval()));
 
         assertEquals("Sample privilege", privilege.toString());
     }
@@ -55,29 +55,29 @@ public class TestReviewerPrivilege {
         var selfApproval = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                EnumSet.of(ActivationType.SELF_APPROVAL));
+                Set.of(new SelfApproval()));
         var peerApproval = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                EnumSet.of(ActivationType.PEER_APPROVAL));
+                Set.of(new PeerApproval("topic")));
         var noApproval = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                EnumSet.of(ActivationType.NONE));
+                Set.of(new NoActivation()));
         var externalApproval = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                EnumSet.of(ActivationType.EXTERNAL_APPROVAL));
+                Set.of(new ExternalApproval("topic")));
         var allApprovals = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("A"),
                 "Privilege A",
-                EnumSet.of(ActivationType.EXTERNAL_APPROVAL, ActivationType.NONE, ActivationType.PEER_APPROVAL,
-                        ActivationType.SELF_APPROVAL));
+                Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
+                        new SelfApproval()));
         var allApprovalsB = new ReviewerPrivilege<SamplePrivilegeId>(
                 new SamplePrivilegeId("B"),
                 "Privilege B",
-                EnumSet.of(ActivationType.EXTERNAL_APPROVAL, ActivationType.NONE, ActivationType.PEER_APPROVAL,
-                        ActivationType.SELF_APPROVAL));
+                Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
+                        new SelfApproval()));
 
         var privileges = List.of(
                 selfApproval,

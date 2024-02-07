@@ -21,11 +21,11 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.api.services.cloudasset.v1.model.ListAssetsResponse;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
+import com.google.solutions.jitaccess.core.catalog.project.ActivationTypeFactory;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
@@ -211,7 +211,8 @@ public class ApiResource {
             return new ProjectRolesResponse(
                     privileges.allRequesterPrivileges()
                             .stream()
-                            .map(privilege -> new ProjectRole(privilege.id().roleBinding(), privilege.activationType(),
+                            .map(privilege -> new ProjectRole(privilege.id().roleBinding(),
+                                    privilege.activationType(),
                                     privilege.status()))
                             .collect(Collectors.toList()),
                     privileges.warnings());
@@ -251,8 +252,8 @@ public class ApiResource {
                 activationType != null && !activationType.trim().isEmpty(),
                 "An activationType is required");
         Preconditions.checkArgument(
-                List.of("PEER_APPROVAL", "EXTERNAL_APPROVAL").contains(activationType),
-                "Invalid activationType. Must be either PEER or REQUESTER.");
+                activationType.contains("PEER_APPROVAL(") || activationType.contains("EXTERNAL_APPROVAL("),
+                "Invalid activationType. Must be either PEER_APPROVAL or EXTERNAL_APPROVAL.");
 
         var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
         var projectId = new ProjectId(projectIdString);
@@ -261,7 +262,7 @@ public class ApiResource {
         var privilege = new RequesterPrivilege<ProjectRoleBinding>(
                 new ProjectRoleBinding(roleBinding),
                 roleBinding.role(),
-                ActivationType.valueOf(activationType),
+                ActivationTypeFactory.createFromName(activationType),
                 Status.AVAILABLE);
 
         try {
@@ -335,7 +336,7 @@ public class ApiResource {
                         new RequesterPrivilege<ProjectRoleBinding>(
                                 new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), role)),
                                 role,
-                                ActivationType.SELF_APPROVAL,
+                                new SelfApproval(),
                                 Status.AVAILABLE),
                         request.justification,
                         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -469,8 +470,8 @@ public class ApiResource {
                 request.activationType != null,
                 "Activation type must be included.");
         Preconditions.checkArgument(
-                List.of(ActivationType.PEER_APPROVAL, ActivationType.EXTERNAL_APPROVAL)
-                        .contains(request.activationType),
+                request.activationType.startsWith("PEER_APPROVAL")
+                        || request.activationType.startsWith("EXTERNAL_APPROVAL"),
                 "Activation type must be either PEER_APPROVAL or EXTERNAL_APPROVAl.");
 
         //
@@ -498,7 +499,7 @@ public class ApiResource {
                     iapPrincipal.getId(),
                     request.reviewers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
                     new RequesterPrivilege<>(new ProjectRoleBinding(roleBinding), roleBinding.role(),
-                            request.activationType, Status.AVAILABLE),
+                            ActivationTypeFactory.createFromName(request.activationType), Status.AVAILABLE),
                     request.justification,
                     Instant.now().truncatedTo(ChronoUnit.SECONDS),
                     requestedRoleBindingDuration);
@@ -861,7 +862,7 @@ public class ApiResource {
 
     public static class ProjectRole {
         public final RoleBinding roleBinding;
-        public final ActivationType activationType;
+        public final String activationType;
         public final RequesterPrivilege.Status status;
 
         public ProjectRole(
@@ -872,7 +873,7 @@ public class ApiResource {
             Preconditions.checkNotNull(roleBinding, "roleBinding");
 
             this.roleBinding = roleBinding;
-            this.activationType = activationType;
+            this.activationType = activationType.name();
             this.status = status;
         }
     }
@@ -897,7 +898,7 @@ public class ApiResource {
         public String justification;
         public List<String> reviewers;
         public int activationTimeout; // in minutes.
-        public ActivationType activationType;
+        public String activationType;
     }
 
     public static class ActivationStatusResponse {

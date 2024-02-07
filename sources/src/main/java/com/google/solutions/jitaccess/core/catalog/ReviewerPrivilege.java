@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.common.base.Preconditions;
 
 import java.util.Comparator;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 public record ReviewerPrivilege<TPrivilegeId extends PrivilegeId>(
         TPrivilegeId id,
         String name,
-        EnumSet<ActivationType> reviewableTypes)
+        Set<ActivationType> reviewableTypes)
         implements Comparable<ReviewerPrivilege<TPrivilegeId>> {
 
     public ReviewerPrivilege {

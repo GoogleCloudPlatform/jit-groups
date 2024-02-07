@@ -145,7 +145,7 @@ class Model {
         console.assert(reviewers.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
-        console.assert(activationType === "PEER_APPROVAL" || activationType === "EXTERNAL_APPROVAL")
+        console.assert(activationType.startsWith("PEER_APPROVAL") || activationType.startsWith("EXTERNAL_APPROVAL"))
 
         try {
             return await $.ajax({
@@ -356,7 +356,7 @@ class DebugModel extends Model {
         }
         else {
             await new Promise(r => setTimeout(r, 2000));
-            const activationTypes = ["JIT", "PEER", "EXTERNAL", "REVIEWER", "NONE"];
+            const activationTypes = ["SELF_APPROVAL", "PEER_APPROVAL()", "EXTERNAL_APPROVAL()", "PEER_APPROVAL(topic)", "EXTERNAL_APPROVAL(topic)"];
             const statuses = ["ACTIVE", "AVAILABLE"];
             return Promise.resolve({
                 warnings: ["This is a simulated result"],

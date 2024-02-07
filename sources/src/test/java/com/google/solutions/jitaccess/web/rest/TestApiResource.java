@@ -279,7 +279,7 @@ public class TestApiResource {
                 .thenThrow(new AccessDeniedException("mock"));
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL",
+                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL()",
                         ExceptionMappers.ErrorEntity.class);
 
         assertEquals(403, response.getStatus());
@@ -294,7 +294,7 @@ public class TestApiResource {
                 .thenThrow(new IOException("mock"));
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=EXTERNAL_APPROVAL",
+                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=EXTERNAL_APPROVAL()",
                         ExceptionMappers.ErrorEntity.class);
 
         assertEquals(403, response.getStatus());
@@ -309,11 +309,11 @@ public class TestApiResource {
                 .listReviewers(
                         eq(SAMPLE_USER),
                         argThat(r -> r.id().roleBinding().role().equals("roles/browser")
-                                && r.activationType() == ActivationType.PEER_APPROVAL)))
+                                && r.activationType() instanceof PeerApproval)))
                 .thenReturn(new TreeSet());
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL",
+                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL()",
                         ApiResource.ProjectRoleReviewersResponse.class);
 
         assertEquals(200, response.getStatus());
@@ -329,12 +329,12 @@ public class TestApiResource {
                 .listReviewers(
                         eq(SAMPLE_USER),
                         argThat(r -> r.id().roleBinding().role().equals("roles/browser")
-                                && r.activationType() == ActivationType.PEER_APPROVAL)))
+                                && r.activationType() instanceof PeerApproval)))
                 .thenReturn(new TreeSet(
                         Set.of(new UserId("reviewer-1@example.com"), new UserId("reviewer-2@example.com"))));
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL",
+                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=PEER_APPROVAL()",
                         ApiResource.ProjectRoleReviewersResponse.class);
 
         assertEquals(200, response.getStatus());
@@ -350,12 +350,12 @@ public class TestApiResource {
                 .listReviewers(
                         eq(SAMPLE_USER),
                         argThat(r -> r.id().roleBinding().role().equals("roles/browser")
-                                && r.activationType() == ActivationType.EXTERNAL_APPROVAL)))
+                                && r.activationType() instanceof ExternalApproval)))
                 .thenReturn(new TreeSet(
                         Set.of(new UserId("reviewer-1@example.com"), new UserId("reviewer-2@example.com"))));
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=EXTERNAL_APPROVAL",
+                .get("/api/projects/project-1/reviewers?role=roles/browser&activationType=EXTERNAL_APPROVAL()",
                         ApiResource.ProjectRoleReviewersResponse.class);
 
         assertEquals(200, response.getStatus());
@@ -456,13 +456,13 @@ public class TestApiResource {
                 new ProjectRoleBinding(
                         new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
                 "ent-1",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.AVAILABLE);
         var role2 = new RequesterPrivilege<ProjectRoleBinding>(
                 new ProjectRoleBinding(
                         new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
                 "ent-2",
-                ActivationType.SELF_APPROVAL,
+                new SelfApproval(),
                 RequesterPrivilege.Status.AVAILABLE);
 
         when(this.resource.mpaCatalog
@@ -581,11 +581,11 @@ public class TestApiResource {
         when(this.resource.projectRoleActivator
                 .createActivationRequest(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new ActivationRequest<ProjectRoleBinding>(
-                        ActivationId.newId(ActivationType.SELF_APPROVAL),
+                        ActivationId.newId(new SelfApproval()),
                         SAMPLE_USER,
                         Set.of(),
                         new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/browser")),
-                        ActivationType.SELF_APPROVAL,
+                        new SelfApproval(),
                         "justification",
                         Instant.now().truncatedTo(ChronoUnit.SECONDS),
                         Duration.ofMinutes(5)));
@@ -615,11 +615,11 @@ public class TestApiResource {
         when(this.resource.projectRoleActivator
                 .createActivationRequest(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new ActivationRequest<ProjectRoleBinding>(
-                        ActivationId.newId(ActivationType.SELF_APPROVAL),
+                        ActivationId.newId(new SelfApproval()),
                         SAMPLE_USER,
                         Set.of(),
                         new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/browser")),
-                        ActivationType.SELF_APPROVAL,
+                        new SelfApproval(),
                         "justification",
                         Instant.now().truncatedTo(ChronoUnit.SECONDS),
                         Duration.ofMinutes(5)));
@@ -706,7 +706,7 @@ public class TestApiResource {
         var request = new ApiResource.ActivationRequest();
         request.reviewers = List.of(SAMPLE_USER.email);
         request.role = null;
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -732,7 +732,7 @@ public class TestApiResource {
         var request = new ApiResource.ActivationRequest();
         request.role = "roles/mock";
         request.reviewers = List.of();
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -758,7 +758,7 @@ public class TestApiResource {
         var request = new ApiResource.ActivationRequest();
         request.role = "roles/mock";
         request.reviewers = List.of("reviewers@example.com");
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -786,7 +786,7 @@ public class TestApiResource {
         request.reviewers = Stream.generate(() -> "reviewer@example.com")
                 .limit(DEFAULT_MAX_NUMBER_OF_REVIEWERS + 1)
                 .collect(Collectors.toList());
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -812,7 +812,7 @@ public class TestApiResource {
         var request = new ApiResource.ActivationRequest();
         request.reviewers = List.of(SAMPLE_USER.email);
         request.role = "roles/mock";
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -867,7 +867,7 @@ public class TestApiResource {
         request.role = "roles/mock";
         request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
         request.justification = "justification";
-        request.activationType = ActivationType.SELF_APPROVAL;
+        request.activationType = new NoActivation().name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -879,6 +879,34 @@ public class TestApiResource {
         var body = response.getBody();
         assertNotNull(body.getMessage());
         assertTrue(body.getMessage().contains("PEER_APPROVAL"));
+    }
+
+    @Test
+    public void whenInvalidTopicName_ThenRequestActivationReturnsError() throws Exception {
+        when(this.resource.mpaCatalog.options())
+                .thenReturn(new MpaProjectRoleCatalog.Options(
+                        null,
+                        DEFAULT_ACTIVATION_DURATION,
+                        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
+                        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
+
+        var request = new ApiResource.ActivationRequest();
+        request.reviewers = List.of(SAMPLE_USER.email);
+        request.role = "roles/mock";
+        request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
+        request.justification = "justification";
+        request.activationType = new PeerApproval("123").name();
+
+        var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
+                "/api/projects/project-1/roles/request",
+                request,
+                ExceptionMappers.ErrorEntity.class);
+
+        assertEquals(400, response.getStatus());
+
+        var body = response.getBody();
+        assertNotNull(body.getMessage());
+        assertTrue(body.getMessage().contains("topic"));
     }
 
     @Test
@@ -896,7 +924,7 @@ public class TestApiResource {
         request.role = "roles/mock";
         request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
         request.justification = "justification";
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -934,7 +962,7 @@ public class TestApiResource {
         request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
         request.justification = "justification";
         request.activationTimeout = 5;
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -969,7 +997,7 @@ public class TestApiResource {
         request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
         request.justification = "justification";
         request.activationTimeout = 5;
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -1005,7 +1033,7 @@ public class TestApiResource {
         request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
         request.justification = "justification";
         request.activationTimeout = 5;
-        request.activationType = ActivationType.PEER_APPROVAL;
+        request.activationType = new PeerApproval("topic").name();
 
         var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
                 "/api/projects/project-1/roles/request",
@@ -1069,7 +1097,7 @@ public class TestApiResource {
                         new RequesterPrivilege<>(
                                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                                 "roles/mock",
-                                ActivationType.SELF_APPROVAL,
+                                new SelfApproval(),
                                 Status.AVAILABLE),
                         "a justification",
                         Instant.now(),
@@ -1104,7 +1132,7 @@ public class TestApiResource {
                         new RequesterPrivilege<>(
                                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                                 "roles/mock",
-                                ActivationType.SELF_APPROVAL,
+                                new SelfApproval(),
                                 Status.AVAILABLE),
                         "a justification",
                         Instant.now(),
@@ -1183,7 +1211,7 @@ public class TestApiResource {
                         new RequesterPrivilege<>(
                                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                                 "roles/mock",
-                                ActivationType.PEER_APPROVAL,
+                                new PeerApproval("topic"),
                                 Status.AVAILABLE),
                         "a justification",
                         Instant.now(),
@@ -1225,7 +1253,7 @@ public class TestApiResource {
                         new RequesterPrivilege<>(
                                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                                 "roles/mock",
-                                ActivationType.PEER_APPROVAL,
+                                new PeerApproval("topic"),
                                 Status.AVAILABLE),
                         "a justification",
                         Instant.now(),
@@ -1266,7 +1294,7 @@ public class TestApiResource {
                         new RequesterPrivilege<>(
                                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                                 "roles/mock",
-                                ActivationType.EXTERNAL_APPROVAL,
+                                new ExternalApproval("topic"),
                                 Status.AVAILABLE),
                         "a justification",
                         Instant.now(),

@@ -61,7 +61,7 @@ public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
         Preconditions.checkNotNull(duration);
 
         Preconditions.checkArgument(
-                !reviewers.isEmpty() || activationType == ActivationType.SELF_APPROVAL,
+                !reviewers.isEmpty() || activationType instanceof SelfApproval,
                 "At least one reviewer must be specified");
 
         Preconditions.checkArgument(
@@ -69,8 +69,8 @@ public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
                 "The duration must be positive");
 
         Preconditions.checkArgument(
-                activationType != ActivationType.NONE,
-                "Activation type cannot be none");
+                !(activationType instanceof NoActivation),
+                "Cannot request activation for privilege with activation type NONE.");
 
         this.id = id;
         this.startTime = startTime;

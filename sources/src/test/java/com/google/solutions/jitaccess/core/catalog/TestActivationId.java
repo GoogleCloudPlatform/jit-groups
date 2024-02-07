@@ -39,8 +39,8 @@ public class TestActivationId {
 
     @Test
     public void toStringContainsTypePrefix() {
-        var id = ActivationId.newId(ActivationType.PEER_APPROVAL);
-        assertTrue(id.toString().startsWith("peer_approval-"));
+        var id = ActivationId.newId(new PeerApproval("test"));
+        assertTrue(id.toString().startsWith("peer_approval(test)-"));
     }
 
     // -------------------------------------------------------------------------

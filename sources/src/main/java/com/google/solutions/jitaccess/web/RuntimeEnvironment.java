@@ -28,7 +28,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
-import com.google.api.services.cloudasset.v1.model.Asset;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
@@ -55,11 +54,8 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provides access to runtime configuration (AppEngine, local). To be injected

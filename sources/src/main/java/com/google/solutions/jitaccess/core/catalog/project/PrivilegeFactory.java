@@ -22,14 +22,15 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import com.google.solutions.jitaccess.core.catalog.ExternalApproval;
+import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.catalog.ReviewerPrivilege;
-import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.SelfApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
 
-import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -39,6 +40,8 @@ class PrivilegeFactory {
     /** Condition title for activated role bindings */
     public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
+    public static final String VALID_TOPIC_PATTERN = "(.([a-zA-Z][a-zA-Z0-9-_]*))?";
+
     /**
      * Condition that marks a role binding as eligible for self approver privilege
      */
@@ -47,18 +50,16 @@ class PrivilegeFactory {
 
     /** Condition that marks a role binding as eligible for peer privilege */
     private static final Pattern PEER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*$");
+            .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint" + VALID_TOPIC_PATTERN
+                    + "\\s*\\)\\s*$");
 
     /** Condition that marks a role binding as eligible for requester privilege */
     private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint\\s*\\)\\s*$");
+            .compile("^\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
     /** Condition that marks a role binding as eligible for reviewer privilege */
     private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege\\s*\\)\\s*$");
-
-    private PrivilegeFactory() {
-    }
+            .compile("^\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
     private static boolean isMatchingCondition(Expr iamCondition, Pattern pattern) {
         if (iamCondition == null) {
@@ -76,6 +77,22 @@ class PrivilegeFactory {
                 .replace(" ", "");
 
         return pattern.matcher(expression).matches();
+    }
+
+    private static String getTopic(Expr iamCondition, Pattern pattern) {
+        var expression = iamCondition
+                .getExpression()
+                .toLowerCase()
+                .replace(" ", "");
+
+        var matcher = pattern.matcher(expression);
+        if (matcher.find()) {
+            if (matcher.groupCount() == 2) {
+                return matcher.group(2) == null ? "" : matcher.group(2);
+            }
+        }
+
+        return "";
     }
 
     /** Check if the IAM condition is a JIT Access constraint */
@@ -110,17 +127,19 @@ class PrivilegeFactory {
             return Optional
                     .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
                             projectRoleBinding.roleBinding().role(),
-                            ActivationType.SELF_APPROVAL,
+                            new SelfApproval(),
                             Status.AVAILABLE));
         } else if (isPeerCondition(iamCondition)) {
+            String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
             return Optional
                     .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(), ActivationType.PEER_APPROVAL,
+                            projectRoleBinding.roleBinding().role(), new PeerApproval(topic),
                             Status.AVAILABLE));
         } else if (isRequesterCondition(iamCondition)) {
+            String topic = getTopic(iamCondition, REQUESTER_CONDITION_PATTERN);
             return Optional
                     .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(), ActivationType.EXTERNAL_APPROVAL,
+                            projectRoleBinding.roleBinding().role(), new ExternalApproval(topic),
                             Status.AVAILABLE));
         } else {
             return Optional.empty();
@@ -131,16 +150,18 @@ class PrivilegeFactory {
             ProjectRoleBinding projectRoleBinding,
             Expr iamCondition) {
         if (isPeerCondition(iamCondition)) {
+            String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
             return Optional
                     .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
                             projectRoleBinding.roleBinding().role(),
-                            EnumSet.of(ActivationType.PEER_APPROVAL)));
+                            Set.of(new PeerApproval(topic))));
         }
         if (isReviewerCondition(iamCondition)) {
+            String topic = getTopic(iamCondition, REVIEWER_CONDITION_PATTERN);
             return Optional
                     .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
                             projectRoleBinding.roleBinding().role(),
-                            EnumSet.of(ActivationType.EXTERNAL_APPROVAL)));
+                            Set.of(new ExternalApproval(topic))));
         } else {
             return Optional.empty();
         }

@@ -35,7 +35,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -136,7 +135,7 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
                         .set("reviewers", request.reviewers().stream().map(id -> id.email).collect(Collectors.toList()))
                         .set("resource", roleBinding.fullResourceName())
                         .set("role", roleBinding.role())
-                        .set("type", request.activationType().toString())
+                        .set("type", request.activationType().name())
                         .set("justification", request.justification())
                         .set("start", request.startTime().getEpochSecond())
                         .set("end", request.endTime().getEpochSecond());
@@ -160,7 +159,7 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
                                 .map(email -> new UserId(email))
                                 .collect(Collectors.toSet()),
                         new ProjectRoleBinding(roleBinding),
-                        ActivationType.valueOf(payload.get("type").toString()),
+                        ActivationTypeFactory.createFromName(payload.get("type").toString()),
                         payload.get("justification").toString(),
                         Instant.ofEpochSecond(startTime),
                         Duration.ofSeconds(endTime - startTime));

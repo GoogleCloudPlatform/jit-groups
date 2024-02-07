@@ -6,7 +6,6 @@ import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -30,7 +29,7 @@ public interface ProjectRoleRepository {
     RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
             UserId user,
             ProjectId projectId,
-            EnumSet<ActivationType> typesToInclude,
+            Set<ActivationType> typesToInclude,
             EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException;
 
     /**
