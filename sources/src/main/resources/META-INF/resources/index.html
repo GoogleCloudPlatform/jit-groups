@@ -341,7 +341,7 @@
                             <li>
                                 <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
                                 approves their request, add the following IAM condition to the IAM binding:
-                                <pre><code class="language-cel">has({}.peerApprovalConstraint)</code></pre>
+                                <pre><code class="language-cel">has({}.multiPartyApprovalConstraint)</code></pre>
 
                                 Peers are users that have been granted the same role binding on the same project.
                             </li>
@@ -377,7 +377,7 @@
                         <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>compute-admins@example.com</b> \
   --role <b>roles/compute.admin</b> \
-  --condition "title=Eligible access,expression=has({}.peerApprovalConstraint)"
+  --condition "title=Eligible access,expression=has({}.multiPartyApprovalConstraint)"
 </code></pre>
                         </p>
                     </div>
