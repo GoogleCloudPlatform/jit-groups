@@ -27,45 +27,45 @@ import java.util.Comparator;
  * Unique identifier of a privilege.
  */
 public abstract class PrivilegeId implements Comparable<PrivilegeId> {
-    /**
-     * @return the catalog the privilege belongs to
-     */
-    public abstract String catalog();
+  /**
+   * @return the catalog the privilege belongs to
+   */
+  public abstract String catalog();
 
-    /**
-     * @return the ID within the catalog
-     */
-    public abstract String id();
+  /**
+   * @return the ID within the catalog
+   */
+  public abstract String id();
 
-    @Override
-    public String toString() {
-        return String.format("%s:%s", this.catalog(), this.id());
+  @Override
+  public String toString() {
+    return String.format("%s:%s", this.catalog(), this.id());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        var that = (PrivilegeId) o;
-        return this.catalog().equals(that.catalog()) && this.id().equals(that.id());
+    if (o == null || getClass() != o.getClass()) {
+      return false;
     }
 
-    @Override
-    public int hashCode() {
-        return id().hashCode();
-    }
+    var that = (PrivilegeId) o;
+    return this.catalog().equals(that.catalog()) && this.id().equals(that.id());
+  }
 
-    @Override
-    public int compareTo(PrivilegeId o) {
-        return Comparator
-                .comparing((PrivilegeId e) -> e.catalog())
-                .thenComparing(e -> e.id())
-                .compare(this, o);
-    }
+  @Override
+  public int hashCode() {
+    return id().hashCode();
+  }
+
+  @Override
+  public int compareTo(PrivilegeId o) {
+    return Comparator
+        .comparing((PrivilegeId e) -> e.catalog())
+        .thenComparing(e -> e.id())
+        .compare(this, o);
+  }
 }

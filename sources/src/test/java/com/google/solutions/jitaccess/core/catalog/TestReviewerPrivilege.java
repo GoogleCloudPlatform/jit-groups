@@ -32,72 +32,72 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestReviewerPrivilege {
 
-    // -------------------------------------------------------------------------
-    // toString.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void toStringReturnsName() {
-        var privilege = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("1"),
-                "Sample privilege",
-                Set.of(new SelfApproval()));
+  @Test
+  public void toStringReturnsName() {
+    var privilege = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("1"),
+        "Sample privilege",
+        Set.of(new SelfApproval()));
 
-        assertEquals("Sample privilege", privilege.toString());
-    }
+    assertEquals("Sample privilege", privilege.toString());
+  }
 
-    // -------------------------------------------------------------------------
-    // compareTo.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // compareTo.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void compareToOrdersByReviewableTypesThenName() {
-        var selfApproval = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                Set.of(new SelfApproval()));
-        var peerApproval = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                Set.of(new PeerApproval("topic")));
-        var noApproval = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                Set.of(new NoActivation()));
-        var externalApproval = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                Set.of(new ExternalApproval("topic")));
-        var allApprovals = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
-                        new SelfApproval()));
-        var allApprovalsB = new ReviewerPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("B"),
-                "Privilege B",
-                Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
-                        new SelfApproval()));
+  @Test
+  public void compareToOrdersByReviewableTypesThenName() {
+    var selfApproval = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        Set.of(new SelfApproval()));
+    var peerApproval = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        Set.of(new PeerApproval("topic")));
+    var noApproval = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        Set.of(new NoActivation()));
+    var externalApproval = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        Set.of(new ExternalApproval("topic")));
+    var allApprovals = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
+            new SelfApproval()));
+    var allApprovalsB = new ReviewerPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("B"),
+        "Privilege B",
+        Set.of(new ExternalApproval("topic"), new NoActivation(), new PeerApproval("topic"),
+            new SelfApproval()));
 
-        var privileges = List.of(
-                selfApproval,
-                peerApproval,
-                noApproval,
-                externalApproval,
-                allApprovals,
-                allApprovalsB);
+    var privileges = List.of(
+        selfApproval,
+        peerApproval,
+        noApproval,
+        externalApproval,
+        allApprovals,
+        allApprovalsB);
 
-        var sorted = new TreeSet<ReviewerPrivilege<SamplePrivilegeId>>();
-        sorted.addAll(privileges);
+    var sorted = new TreeSet<ReviewerPrivilege<SamplePrivilegeId>>();
+    sorted.addAll(privileges);
 
-        Assertions.assertIterableEquals(
-                List.of(
-                        externalApproval,
-                        allApprovals,
-                        allApprovalsB,
-                        noApproval,
-                        peerApproval,
-                        selfApproval),
-                sorted);
-    }
+    Assertions.assertIterableEquals(
+        List.of(
+            externalApproval,
+            allApprovals,
+            allApprovalsB,
+            noApproval,
+            peerApproval,
+            selfApproval),
+        sorted);
+  }
 }

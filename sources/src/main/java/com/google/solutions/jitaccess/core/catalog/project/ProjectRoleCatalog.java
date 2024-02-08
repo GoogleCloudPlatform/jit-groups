@@ -35,23 +35,23 @@ import java.util.SortedSet;
  * Catalog for project-level role bindings.
  */
 public abstract class ProjectRoleCatalog implements RequesterPrivilegeCatalog<ProjectRoleBinding> {
-    /**
-     * List projects that the user has any requester privileges for.
-     */
-    public abstract SortedSet<ProjectId> listProjects(
-            UserId user) throws AccessException, IOException;
+  /**
+   * List projects that the user has any requester privileges for.
+   */
+  public abstract SortedSet<ProjectId> listProjects(
+      UserId user) throws AccessException, IOException;
 
-    /**
-     * List available requester privileges.
-     */
-    public abstract RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
-            UserId user,
-            ProjectId projectId) throws AccessException, IOException;
+  /**
+   * List available requester privileges.
+   */
+  public abstract RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
+      UserId user,
+      ProjectId projectId) throws AccessException, IOException;
 
-    /**
-     * List available reviewers for (MPA-) activating a privilege.
-     */
-    public abstract SortedSet<UserId> listReviewers(
-            UserId requestingUser,
-            RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException;
+  /**
+   * List available reviewers for (MPA-) activating a privilege.
+   */
+  public abstract SortedSet<UserId> listReviewers(
+      UserId requestingUser,
+      RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException;
 }

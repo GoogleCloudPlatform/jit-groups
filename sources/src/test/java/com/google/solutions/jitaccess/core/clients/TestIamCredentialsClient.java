@@ -9,57 +9,57 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestIamCredentialsClient {
 
-    // -------------------------------------------------------------------------
-    // signJwt.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // signJwt.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenUnauthenticated_ThenSignJwtThrowsException() {
-        var adapter = new IamCredentialsClient(
-                IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-                HttpTransport.Options.DEFAULT);
+  @Test
+  public void whenUnauthenticated_ThenSignJwtThrowsException() {
+    var adapter = new IamCredentialsClient(
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
-        var payload = new JsonWebToken.Payload()
-                .setAudience("test");
+    var payload = new JsonWebToken.Payload()
+        .setAudience("test");
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
-    }
+    assertThrows(
+        AccessDeniedException.class,
+        () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
+  }
 
-    @Test
-    public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
-        var adapter = new IamCredentialsClient(
-                IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-                HttpTransport.Options.DEFAULT);
-        var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+  @Test
+  public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
+    var adapter = new IamCredentialsClient(
+        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
+    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
 
-        var payload = new JsonWebToken.Payload()
-                .setAudience(serviceAccount.email)
-                .setIssuer(serviceAccount.email);
+    var payload = new JsonWebToken.Payload()
+        .setAudience(serviceAccount.email)
+        .setIssuer(serviceAccount.email);
 
-        var jwt = adapter.signJwt(serviceAccount, payload);
-        assertNotNull(jwt);
+    var jwt = adapter.signJwt(serviceAccount, payload);
+    assertNotNull(jwt);
 
-        TokenVerifier
-                .newBuilder()
-                .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
-                .setIssuer(serviceAccount.email)
-                .setAudience(serviceAccount.email)
-                .build()
-                .verify(jwt);
-    }
+    TokenVerifier
+        .newBuilder()
+        .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
+        .setIssuer(serviceAccount.email)
+        .setAudience(serviceAccount.email)
+        .build()
+        .verify(jwt);
+  }
 
-    // -------------------------------------------------------------------------
-    // getJwksUrl.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // getJwksUrl.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void getJwksUrl() {
-        assertEquals(
-                String.format(
-                        "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
-                        IntegrationTestEnvironment.NO_ACCESS_USER.email),
-                IamCredentialsClient.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
-    }
+  @Test
+  public void getJwksUrl() {
+    assertEquals(
+        String.format(
+            "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
+            IntegrationTestEnvironment.NO_ACCESS_USER.email),
+        IamCredentialsClient.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
+  }
 }

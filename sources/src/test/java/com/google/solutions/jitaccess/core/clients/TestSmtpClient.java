@@ -31,30 +31,30 @@ import static org.mockito.Mockito.when;
 
 public class TestSmtpClient {
 
-    // ---------------------------------------------------------------------
-    // Options.createAuthenticator.
-    // ---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
+  // Options.createAuthenticator.
+  // ---------------------------------------------------------------------
 
-    @Test
-    public void whenOptionsContainPassword_ThenCreateAuthenticatorUsesPassword() throws Exception {
-        var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
-                .setSmtpCleartextCredentials("user", "password");
+  @Test
+  public void whenOptionsContainPassword_ThenCreateAuthenticatorUsesPassword() throws Exception {
+    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+        .setSmtpCleartextCredentials("user", "password");
 
-        var secretManager = Mockito.mock(SecretManagerClient.class);
+    var secretManager = Mockito.mock(SecretManagerClient.class);
 
-        var authentication = options.createPasswordAuthentication(secretManager);
-        assertEquals("password", authentication.getPassword());
-    }
+    var authentication = options.createPasswordAuthentication(secretManager);
+    assertEquals("password", authentication.getPassword());
+  }
 
-    @Test
-    public void whenOptionsContainSecretPath_ThenCreateAuthenticatorUsesPasswordFromSecret() throws Exception {
-        var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
-                .setSmtpSecretCredentials("user", "path/to/secret");
+  @Test
+  public void whenOptionsContainSecretPath_ThenCreateAuthenticatorUsesPasswordFromSecret() throws Exception {
+    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+        .setSmtpSecretCredentials("user", "path/to/secret");
 
-        var secretManager = Mockito.mock(SecretManagerClient.class);
-        when(secretManager.accessSecret("path/to/secret")).thenReturn("password-from-secret");
+    var secretManager = Mockito.mock(SecretManagerClient.class);
+    when(secretManager.accessSecret("path/to/secret")).thenReturn("password-from-secret");
 
-        var authentication = options.createPasswordAuthentication(secretManager);
-        assertEquals("password-from-secret", authentication.getPassword());
-    }
+    var authentication = options.createPasswordAuthentication(secretManager);
+    assertEquals("password-from-secret", authentication.getPassword());
+  }
 }

@@ -30,16 +30,16 @@ import java.io.IOException;
  * A catalog of requester privileges that can be browsed by the user.
  */
 public interface RequesterPrivilegeCatalog<TPrivilegeId extends PrivilegeId> {
-    /**
-     * Verify if a user is allowed to make the given request.
-     */
-    void verifyUserCanRequest(
-            ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
+  /**
+   * Verify if a user is allowed to make the given request.
+   */
+  void verifyUserCanRequest(
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
-    /**
-     * Verify if a user is allowed to approve a given request.
-     */
-    void verifyUserCanApprove(
-            UserId approvingUser,
-            ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
+  /**
+   * Verify if a user is allowed to approve a given request.
+   */
+  void verifyUserCanApprove(
+      UserId approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 }

@@ -27,8 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class TestApplicationVersion {
 
-    @Test
-    public void VersionStringIsNotEmpty() {
-        assertNotNull(ApplicationVersion.VERSION_STRING);
-    }
+  @Test
+  public void VersionStringIsNotEmpty() {
+    assertNotNull(ApplicationVersion.VERSION_STRING);
+  }
 }

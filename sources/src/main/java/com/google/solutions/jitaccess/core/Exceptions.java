@@ -22,26 +22,26 @@
 package com.google.solutions.jitaccess.core;
 
 public class Exceptions {
-    private Exceptions() {
-    }
+  private Exceptions() {
+  }
 
-    public static String getFullMessage(Throwable e) {
-        var buffer = new StringBuilder();
+  public static String getFullMessage(Throwable e) {
+    var buffer = new StringBuilder();
 
-        for (; e != null; e = e.getCause()) {
-            if (buffer.length() > 0) {
-                buffer.append(", caused by ");
-                buffer.append(e.getClass().getSimpleName());
+    for (; e != null; e = e.getCause()) {
+      if (buffer.length() > 0) {
+        buffer.append(", caused by ");
+        buffer.append(e.getClass().getSimpleName());
 
-                if (e.getMessage() != null) {
-                    buffer.append(": ");
-                    buffer.append(e.getMessage());
-                }
-            } else {
-                buffer.append(e.getMessage());
-            }
+        if (e.getMessage() != null) {
+          buffer.append(": ");
+          buffer.append(e.getMessage());
         }
-
-        return buffer.toString();
+      } else {
+        buffer.append(e.getMessage());
+      }
     }
+
+    return buffer.toString();
+  }
 }

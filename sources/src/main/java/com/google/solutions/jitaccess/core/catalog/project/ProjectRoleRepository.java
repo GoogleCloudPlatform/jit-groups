@@ -17,25 +17,25 @@ import java.util.SortedSet;
  */
 public interface ProjectRoleRepository {
 
-    /**
-     * Find projects that a user has standing, requester privileges in.
-     */
-    SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
-            UserId user) throws AccessException, IOException;
+  /**
+   * Find projects that a user has standing, requester privileges in.
+   */
+  SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+      UserId user) throws AccessException, IOException;
 
-    /**
-     * List requester privileges for the given user.
-     */
-    RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
-            UserId user,
-            ProjectId projectId,
-            Set<ActivationType> typesToInclude,
-            EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException;
+  /**
+   * List requester privileges for the given user.
+   */
+  RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      UserId user,
+      ProjectId projectId,
+      Set<ActivationType> typesToInclude,
+      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException;
 
-    /**
-     * List users that hold an eligible reviewer privilege for a role binding.
-     */
-    Set<UserId> findReviewerPrivelegeHolders(
-            ProjectRoleBinding roleBinding,
-            ActivationType activationType) throws AccessException, IOException;
+  /**
+   * List users that hold an eligible reviewer privilege for a role binding.
+   */
+  Set<UserId> findReviewerPrivelegeHolders(
+      ProjectRoleBinding roleBinding,
+      ActivationType activationType) throws AccessException, IOException;
 }

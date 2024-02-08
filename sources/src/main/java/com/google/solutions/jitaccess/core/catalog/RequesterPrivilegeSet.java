@@ -37,69 +37,69 @@ import java.util.stream.Collectors;
  * @param warnings                     encountered warnings, if any.
  */
 public record RequesterPrivilegeSet<TId extends PrivilegeId>(
-        Set<RequesterPrivilege<TId>> availableRequesterPrivileges,
-        Set<TId> activeRequesterPrivilegeIds,
-        Set<String> warnings) {
-    public RequesterPrivilegeSet {
-        Preconditions.checkNotNull(availableRequesterPrivileges, "availableRequesterPrivileges");
-        Preconditions.checkNotNull(activeRequesterPrivilegeIds, "activeRequesterPrivilegeIds");
-        Preconditions.checkNotNull(warnings, "warnings");
+    Set<RequesterPrivilege<TId>> availableRequesterPrivileges,
+    Set<TId> activeRequesterPrivilegeIds,
+    Set<String> warnings) {
+  public RequesterPrivilegeSet {
+    Preconditions.checkNotNull(availableRequesterPrivileges, "availableRequesterPrivileges");
+    Preconditions.checkNotNull(activeRequesterPrivilegeIds, "activeRequesterPrivilegeIds");
+    Preconditions.checkNotNull(warnings, "warnings");
 
-        assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
+    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
+  }
+
+  /**
+   * @return consolidated set of requester privileges including available and
+   *         active ones.
+   */
+  public SortedSet<RequesterPrivilege<TId>> allRequesterPrivileges() {
+    //
+    // Return a set containing:
+    //
+    // 1. Available privileges
+    // 2. Active privileges
+    //
+    // where (1) and (2) don't overlap.
+    //
+    var availableAndInactive = this.availableRequesterPrivileges
+        .stream()
+        .filter(privilege -> !this.activeRequesterPrivilegeIds.contains(privilege.id()))
+        .collect(Collectors.toCollection(TreeSet::new));
+
+    assert availableAndInactive.stream().noneMatch(e -> this.activeRequesterPrivilegeIds.contains(e.id()));
+
+    var consolidatedSet = new TreeSet<RequesterPrivilege<TId>>(availableAndInactive);
+    for (var activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
+      //
+      // Find the corresponding privilege to determine
+      // whether this is eligible.
+      //
+      var correspondingRequesterPrivilege = this.availableRequesterPrivileges
+          .stream()
+          .filter(privilege -> privilege.id().equals(activeRequesterPrivilegeId))
+          .findFirst();
+      if (correspondingRequesterPrivilege.isPresent()) {
+        consolidatedSet.add(new RequesterPrivilege<>(
+            activeRequesterPrivilegeId,
+            correspondingRequesterPrivilege.get().name(),
+            correspondingRequesterPrivilege.get().activationType(),
+            RequesterPrivilege.Status.ACTIVE));
+      } else {
+        //
+        // Active, but no longer available for activation.
+        //
+        consolidatedSet.add(new RequesterPrivilege<>(
+            activeRequesterPrivilegeId,
+            activeRequesterPrivilegeId.id(),
+            new NoActivation(),
+            RequesterPrivilege.Status.ACTIVE));
+      }
     }
 
-    /**
-     * @return consolidated set of requester privileges including available and
-     *         active ones.
-     */
-    public SortedSet<RequesterPrivilege<TId>> allRequesterPrivileges() {
-        //
-        // Return a set containing:
-        //
-        // 1. Available privileges
-        // 2. Active privileges
-        //
-        // where (1) and (2) don't overlap.
-        //
-        var availableAndInactive = this.availableRequesterPrivileges
-                .stream()
-                .filter(privilege -> !this.activeRequesterPrivilegeIds.contains(privilege.id()))
-                .collect(Collectors.toCollection(TreeSet::new));
+    return consolidatedSet;
+  }
 
-        assert availableAndInactive.stream().noneMatch(e -> this.activeRequesterPrivilegeIds.contains(e.id()));
-
-        var consolidatedSet = new TreeSet<RequesterPrivilege<TId>>(availableAndInactive);
-        for (var activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
-            //
-            // Find the corresponding privilege to determine
-            // whether this is eligible.
-            //
-            var correspondingRequesterPrivilege = this.availableRequesterPrivileges
-                    .stream()
-                    .filter(privilege -> privilege.id().equals(activeRequesterPrivilegeId))
-                    .findFirst();
-            if (correspondingRequesterPrivilege.isPresent()) {
-                consolidatedSet.add(new RequesterPrivilege<>(
-                        activeRequesterPrivilegeId,
-                        correspondingRequesterPrivilege.get().name(),
-                        correspondingRequesterPrivilege.get().activationType(),
-                        RequesterPrivilege.Status.ACTIVE));
-            } else {
-                //
-                // Active, but no longer available for activation.
-                //
-                consolidatedSet.add(new RequesterPrivilege<>(
-                        activeRequesterPrivilegeId,
-                        activeRequesterPrivilegeId.id(),
-                        new NoActivation(),
-                        RequesterPrivilege.Status.ACTIVE));
-            }
-        }
-
-        return consolidatedSet;
-    }
-
-    public static <TId extends PrivilegeId> RequesterPrivilegeSet<TId> empty() {
-        return new RequesterPrivilegeSet<TId>(new TreeSet<>(), Set.of(), Set.of());
-    }
+  public static <TId extends PrivilegeId> RequesterPrivilegeSet<TId> empty() {
+    return new RequesterPrivilegeSet<TId>(new TreeSet<>(), Set.of(), Set.of());
+  }
 }

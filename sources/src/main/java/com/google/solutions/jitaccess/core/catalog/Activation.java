@@ -27,9 +27,9 @@ import com.google.common.base.Preconditions;
  * Represents a successful activation of a requester privilege.
  */
 public record Activation<TPrivilegeId extends PrivilegeId>(
-        ActivationRequest<TPrivilegeId> request) {
-    public Activation {
-        Preconditions.checkNotNull(request, "request");
-        Preconditions.checkArgument(request.requesterPrivilege() != null);
-    }
+    ActivationRequest<TPrivilegeId> request) {
+  public Activation {
+    Preconditions.checkNotNull(request, "request");
+    Preconditions.checkArgument(request.requesterPrivilege() != null);
+  }
 }

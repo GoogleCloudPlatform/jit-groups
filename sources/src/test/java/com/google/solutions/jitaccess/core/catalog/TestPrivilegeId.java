@@ -30,83 +30,83 @@ import java.util.TreeSet;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestPrivilegeId {
-    // -------------------------------------------------------------------------
-    // hashCode.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // hashCode.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenIdIsEqual_ThenHashCodeIsEqual() {
-        assertEquals(
-                new SamplePrivilegeId("cat", "1").hashCode(),
-                new SamplePrivilegeId("dog", "1").hashCode());
-    }
+  @Test
+  public void whenIdIsEqual_ThenHashCodeIsEqual() {
+    assertEquals(
+        new SamplePrivilegeId("cat", "1").hashCode(),
+        new SamplePrivilegeId("dog", "1").hashCode());
+  }
 
-    // -------------------------------------------------------------------------
-    // equals.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // equals.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-        SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
-        SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-1");
+  @Test
+  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+    SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-1");
 
-        assertTrue(id1.equals(id2));
-        assertEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertTrue(id1.equals(id2));
+    assertEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-        SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+  @Test
+  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
-        assertTrue(id1.equals(id1));
-    }
+    assertTrue(id1.equals(id1));
+  }
 
-    @Test
-    public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
-        SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
-        SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-2");
+  @Test
+  public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+    SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-2");
 
-        assertFalse(id1.equals(id2));
-        assertNotEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertFalse(id1.equals(id2));
+    assertNotEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-        SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+  @Test
+  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
-        assertFalse(id1.equals(null));
-    }
+    assertFalse(id1.equals(null));
+  }
 
-    @Test
-    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-        SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+  @Test
+  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
-        assertFalse(id1.equals(""));
-    }
+    assertFalse(id1.equals(""));
+  }
 
-    // -------------------------------------------------------------------------
-    // compareTo.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // compareTo.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void compareToOrdersByCatalogThenId() {
-        var ids = List.of(
-                new SamplePrivilegeId("b", "2"),
-                new SamplePrivilegeId("b", "1"),
-                new SamplePrivilegeId("a", "2"),
-                new SamplePrivilegeId("b", "3"),
-                new SamplePrivilegeId("a", "1"));
+  @Test
+  public void compareToOrdersByCatalogThenId() {
+    var ids = List.of(
+        new SamplePrivilegeId("b", "2"),
+        new SamplePrivilegeId("b", "1"),
+        new SamplePrivilegeId("a", "2"),
+        new SamplePrivilegeId("b", "3"),
+        new SamplePrivilegeId("a", "1"));
 
-        var sorted = new TreeSet<SamplePrivilegeId>();
-        sorted.addAll(ids);
+    var sorted = new TreeSet<SamplePrivilegeId>();
+    sorted.addAll(ids);
 
-        Assertions.assertIterableEquals(
-                List.of(
-                        new SamplePrivilegeId("a", "1"),
-                        new SamplePrivilegeId("a", "2"),
-                        new SamplePrivilegeId("b", "1"),
-                        new SamplePrivilegeId("b", "2"),
-                        new SamplePrivilegeId("b", "3")),
-                sorted);
-    }
+    Assertions.assertIterableEquals(
+        List.of(
+            new SamplePrivilegeId("a", "1"),
+            new SamplePrivilegeId("a", "2"),
+            new SamplePrivilegeId("b", "1"),
+            new SamplePrivilegeId("b", "2"),
+            new SamplePrivilegeId("b", "3")),
+        sorted);
+  }
 }

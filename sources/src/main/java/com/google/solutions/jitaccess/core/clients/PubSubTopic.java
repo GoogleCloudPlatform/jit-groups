@@ -25,17 +25,17 @@ import com.google.common.base.Preconditions;
 
 public record PubSubTopic(String projectId, String topicName) {
 
-    public PubSubTopic {
-        Preconditions.checkNotNull(projectId, "projectId");
-        Preconditions.checkNotNull(topicName, "topicName");
-    }
+  public PubSubTopic {
+    Preconditions.checkNotNull(projectId, "projectId");
+    Preconditions.checkNotNull(topicName, "topicName");
+  }
 
-    @Override
-    public String toString() {
-        return getFullResourceName();
-    }
+  @Override
+  public String toString() {
+    return getFullResourceName();
+  }
 
-    public String getFullResourceName() {
-        return String.format("projects/%s/topics/%s", this.projectId, this.topicName);
-    }
+  public String getFullResourceName() {
+    return String.format("projects/%s/topics/%s", this.projectId, this.topicName);
+  }
 }

@@ -37,133 +37,133 @@ import java.util.regex.Pattern;
  * Helper class for creating privileges and parsing IAM conditions.
  */
 class PrivilegeFactory {
-    /** Condition title for activated role bindings */
-    public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
+  /** Condition title for activated role bindings */
+  public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
 
-    public static final String VALID_TOPIC_PATTERN = "(.([a-zA-Z][a-zA-Z0-9-_]*))?";
+  public static final String VALID_TOPIC_PATTERN = "(.([a-zA-Z][a-zA-Z0-9-_]*))?";
 
-    /**
-     * Condition that marks a role binding as eligible for self approver privilege
-     */
-    private static final Pattern SELF_APPROVER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
+  /**
+   * Condition that marks a role binding as eligible for self approver privilege
+   */
+  private static final Pattern SELF_APPROVER_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
-    /** Condition that marks a role binding as eligible for peer privilege */
-    private static final Pattern PEER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint" + VALID_TOPIC_PATTERN
-                    + "\\s*\\)\\s*$");
+  /** Condition that marks a role binding as eligible for peer privilege */
+  private static final Pattern PEER_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint" + VALID_TOPIC_PATTERN
+          + "\\s*\\)\\s*$");
 
-    /** Condition that marks a role binding as eligible for requester privilege */
-    private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
+  /** Condition that marks a role binding as eligible for requester privilege */
+  private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
-    /** Condition that marks a role binding as eligible for reviewer privilege */
-    private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
-            .compile("^\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
+  /** Condition that marks a role binding as eligible for reviewer privilege */
+  private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
-    private static boolean isMatchingCondition(Expr iamCondition, Pattern pattern) {
-        if (iamCondition == null) {
-            return false;
-        }
-
-        if (iamCondition.getExpression() == null) {
-            return false;
-        }
-
-        // Strip all whitespace to simplify expression matching.
-        var expression = iamCondition
-                .getExpression()
-                .toLowerCase()
-                .replace(" ", "");
-
-        return pattern.matcher(expression).matches();
+  private static boolean isMatchingCondition(Expr iamCondition, Pattern pattern) {
+    if (iamCondition == null) {
+      return false;
     }
 
-    private static String getTopic(Expr iamCondition, Pattern pattern) {
-        var expression = iamCondition
-                .getExpression()
-                .toLowerCase()
-                .replace(" ", "");
-
-        var matcher = pattern.matcher(expression);
-        if (matcher.find()) {
-            if (matcher.groupCount() == 2) {
-                return matcher.group(2) == null ? "" : matcher.group(2);
-            }
-        }
-
-        return "";
+    if (iamCondition.getExpression() == null) {
+      return false;
     }
 
-    /** Check if the IAM condition is a JIT Access constraint */
-    private static boolean isSelfApproverCondition(Expr iamCondition) {
-        return isMatchingCondition(iamCondition, SELF_APPROVER_CONDITION_PATTERN);
+    // Strip all whitespace to simplify expression matching.
+    var expression = iamCondition
+        .getExpression()
+        .toLowerCase()
+        .replace(" ", "");
+
+    return pattern.matcher(expression).matches();
+  }
+
+  private static String getTopic(Expr iamCondition, Pattern pattern) {
+    var expression = iamCondition
+        .getExpression()
+        .toLowerCase()
+        .replace(" ", "");
+
+    var matcher = pattern.matcher(expression);
+    if (matcher.find()) {
+      if (matcher.groupCount() == 2) {
+        return matcher.group(2) == null ? "" : matcher.group(2);
+      }
     }
 
-    /** Check if the IAM condition is a peer approval constraint */
-    private static boolean isPeerCondition(Expr iamCondition) {
-        return isMatchingCondition(iamCondition, PEER_CONDITION_PATTERN);
-    }
+    return "";
+  }
 
-    /** Check if the IAM condition is an external approval constraint */
-    private static boolean isRequesterCondition(Expr iamCondition) {
-        return isMatchingCondition(iamCondition, REQUESTER_CONDITION_PATTERN);
-    }
+  /** Check if the IAM condition is a JIT Access constraint */
+  private static boolean isSelfApproverCondition(Expr iamCondition) {
+    return isMatchingCondition(iamCondition, SELF_APPROVER_CONDITION_PATTERN);
+  }
 
-    /** Check if the IAM condition is a reviewer privilege */
-    private static boolean isReviewerCondition(Expr iamCondition) {
-        return isMatchingCondition(iamCondition, REVIEWER_CONDITION_PATTERN);
-    }
+  /** Check if the IAM condition is a peer approval constraint */
+  private static boolean isPeerCondition(Expr iamCondition) {
+    return isMatchingCondition(iamCondition, PEER_CONDITION_PATTERN);
+  }
 
-    /** Check if the IAM condition indicates an activated role binding */
-    public static boolean isActivated(Expr iamCondition) {
-        return iamCondition != null && ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
-    }
+  /** Check if the IAM condition is an external approval constraint */
+  private static boolean isRequesterCondition(Expr iamCondition) {
+    return isMatchingCondition(iamCondition, REQUESTER_CONDITION_PATTERN);
+  }
 
-    public static Optional<RequesterPrivilege<ProjectRoleBinding>> createRequesterPrivilege(
-            ProjectRoleBinding projectRoleBinding,
-            Expr iamCondition) {
-        if (isSelfApproverCondition(iamCondition)) {
-            return Optional
-                    .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(),
-                            new SelfApproval(),
-                            Status.AVAILABLE));
-        } else if (isPeerCondition(iamCondition)) {
-            String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
-            return Optional
-                    .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(), new PeerApproval(topic),
-                            Status.AVAILABLE));
-        } else if (isRequesterCondition(iamCondition)) {
-            String topic = getTopic(iamCondition, REQUESTER_CONDITION_PATTERN);
-            return Optional
-                    .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(), new ExternalApproval(topic),
-                            Status.AVAILABLE));
-        } else {
-            return Optional.empty();
-        }
-    }
+  /** Check if the IAM condition is a reviewer privilege */
+  private static boolean isReviewerCondition(Expr iamCondition) {
+    return isMatchingCondition(iamCondition, REVIEWER_CONDITION_PATTERN);
+  }
 
-    public static Optional<ReviewerPrivilege<ProjectRoleBinding>> createReviewerPrivilege(
-            ProjectRoleBinding projectRoleBinding,
-            Expr iamCondition) {
-        if (isPeerCondition(iamCondition)) {
-            String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
-            return Optional
-                    .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(),
-                            Set.of(new PeerApproval(topic))));
-        }
-        if (isReviewerCondition(iamCondition)) {
-            String topic = getTopic(iamCondition, REVIEWER_CONDITION_PATTERN);
-            return Optional
-                    .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
-                            projectRoleBinding.roleBinding().role(),
-                            Set.of(new ExternalApproval(topic))));
-        } else {
-            return Optional.empty();
-        }
+  /** Check if the IAM condition indicates an activated role binding */
+  public static boolean isActivated(Expr iamCondition) {
+    return iamCondition != null && ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
+  }
+
+  public static Optional<RequesterPrivilege<ProjectRoleBinding>> createRequesterPrivilege(
+      ProjectRoleBinding projectRoleBinding,
+      Expr iamCondition) {
+    if (isSelfApproverCondition(iamCondition)) {
+      return Optional
+          .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
+              projectRoleBinding.roleBinding().role(),
+              new SelfApproval(),
+              Status.AVAILABLE));
+    } else if (isPeerCondition(iamCondition)) {
+      String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
+      return Optional
+          .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
+              projectRoleBinding.roleBinding().role(), new PeerApproval(topic),
+              Status.AVAILABLE));
+    } else if (isRequesterCondition(iamCondition)) {
+      String topic = getTopic(iamCondition, REQUESTER_CONDITION_PATTERN);
+      return Optional
+          .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
+              projectRoleBinding.roleBinding().role(), new ExternalApproval(topic),
+              Status.AVAILABLE));
+    } else {
+      return Optional.empty();
     }
+  }
+
+  public static Optional<ReviewerPrivilege<ProjectRoleBinding>> createReviewerPrivilege(
+      ProjectRoleBinding projectRoleBinding,
+      Expr iamCondition) {
+    if (isPeerCondition(iamCondition)) {
+      String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
+      return Optional
+          .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
+              projectRoleBinding.roleBinding().role(),
+              Set.of(new PeerApproval(topic))));
+    }
+    if (isReviewerCondition(iamCondition)) {
+      String topic = getTopic(iamCondition, REVIEWER_CONDITION_PATTERN);
+      return Optional
+          .of(new ReviewerPrivilege<ProjectRoleBinding>(projectRoleBinding,
+              projectRoleBinding.roleBinding().role(),
+              Set.of(new ExternalApproval(topic))));
+    } else {
+      return Optional.empty();
+    }
+  }
 }

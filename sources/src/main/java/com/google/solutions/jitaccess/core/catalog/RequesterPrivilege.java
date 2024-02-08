@@ -32,48 +32,48 @@ import java.util.Comparator;
  * period of time has elapsed.
  */
 public record RequesterPrivilege<TPrivilegeID extends PrivilegeId>(
-        TPrivilegeID id,
-        String name,
-        ActivationType activationType,
-        Status status) implements Comparable<RequesterPrivilege<TPrivilegeID>> {
+    TPrivilegeID id,
+    String name,
+    ActivationType activationType,
+    Status status) implements Comparable<RequesterPrivilege<TPrivilegeID>> {
 
-    public RequesterPrivilege {
-        Preconditions.checkNotNull(id, "id");
-        Preconditions.checkNotNull(name, "name");
-    }
+  public RequesterPrivilege {
+    Preconditions.checkNotNull(id, "id");
+    Preconditions.checkNotNull(name, "name");
+  }
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
+  @Override
+  public String toString() {
+    return this.name;
+  }
 
-    @Override
-    public int compareTo(RequesterPrivilege<TPrivilegeID> o) {
-        return Comparator
-                .comparing((RequesterPrivilege<TPrivilegeID> e) -> e.status)
-                .thenComparing(e -> e.activationType.name())
-                .thenComparing(e -> e.id)
-                .compare(this, o);
-    }
+  @Override
+  public int compareTo(RequesterPrivilege<TPrivilegeID> o) {
+    return Comparator
+        .comparing((RequesterPrivilege<TPrivilegeID> e) -> e.status)
+        .thenComparing(e -> e.activationType.name())
+        .thenComparing(e -> e.id)
+        .compare(this, o);
+  }
 
-    // ---------------------------------------------------------------------------
-    // Inner classes.
-    // ---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Inner classes.
+  // ---------------------------------------------------------------------------
 
-    public enum Status {
-        /**
-         * Privilege can be activated.
-         */
-        AVAILABLE,
+  public enum Status {
+    /**
+     * Privilege can be activated.
+     */
+    AVAILABLE,
 
-        /**
-         * Privilege is active.
-         */
-        ACTIVE,
+    /**
+     * Privilege is active.
+     */
+    ACTIVE,
 
-        /**
-         * Approval pending.
-         */
-        ACTIVATION_PENDING
-    }
+    /**
+     * Approval pending.
+     */
+    ACTIVATION_PENDING
+  }
 }

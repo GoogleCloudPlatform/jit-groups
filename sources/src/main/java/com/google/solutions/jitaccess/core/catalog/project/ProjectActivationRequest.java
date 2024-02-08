@@ -25,15 +25,15 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
 
 class ProjectActivationRequest {
-    private ProjectActivationRequest() {
-    }
+  private ProjectActivationRequest() {
+  }
 
-    /**
-     * @return project ID from request.
-     */
-    static ProjectId projectId(ActivationRequest<ProjectRoleBinding> request) {
-        var project = request.requesterPrivilege().roleBinding().fullResourceName();
+  /**
+   * @return project ID from request.
+   */
+  static ProjectId projectId(ActivationRequest<ProjectRoleBinding> request) {
+    var project = request.requesterPrivilege().roleBinding().fullResourceName();
 
-        return ProjectId.fromFullResourceName(project);
-    }
+    return ProjectId.fromFullResourceName(project);
+  }
 }

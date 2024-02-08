@@ -27,62 +27,62 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestActivationId {
 
-    // -------------------------------------------------------------------------
-    // toString.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void toStringReturnsId() {
-        var id = new ActivationId("jit-123");
-        assertEquals("jit-123", id.toString());
-    }
+  @Test
+  public void toStringReturnsId() {
+    var id = new ActivationId("jit-123");
+    assertEquals("jit-123", id.toString());
+  }
 
-    @Test
-    public void toStringContainsTypePrefix() {
-        var id = ActivationId.newId(new PeerApproval("test"));
-        assertTrue(id.toString().startsWith("peer_approval(test)-"));
-    }
+  @Test
+  public void toStringContainsTypePrefix() {
+    var id = ActivationId.newId(new PeerApproval("test"));
+    assertTrue(id.toString().startsWith("peer_approval(test)-"));
+  }
 
-    // -------------------------------------------------------------------------
-    // Equality.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Equality.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-        ActivationId id1 = new ActivationId("jit-1");
-        ActivationId id2 = new ActivationId("jit-1");
+  @Test
+  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+    ActivationId id1 = new ActivationId("jit-1");
+    ActivationId id2 = new ActivationId("jit-1");
 
-        assertTrue(id1.equals(id2));
-        assertEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertTrue(id1.equals(id2));
+    assertEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-        ActivationId id1 = new ActivationId("jit-1");
+  @Test
+  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+    ActivationId id1 = new ActivationId("jit-1");
 
-        assertTrue(id1.equals(id1));
-    }
+    assertTrue(id1.equals(id1));
+  }
 
-    @Test
-    public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
-        ActivationId id1 = new ActivationId("jit-1");
-        ActivationId id2 = new ActivationId("jit-2");
+  @Test
+  public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
+    ActivationId id1 = new ActivationId("jit-1");
+    ActivationId id2 = new ActivationId("jit-2");
 
-        assertFalse(id1.equals(id2));
-        assertNotEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertFalse(id1.equals(id2));
+    assertNotEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-        ActivationId id1 = new ActivationId("jit-1");
+  @Test
+  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+    ActivationId id1 = new ActivationId("jit-1");
 
-        assertFalse(id1.equals(null));
-    }
+    assertFalse(id1.equals(null));
+  }
 
-    @Test
-    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-        ActivationId id1 = new ActivationId("jit-1");
+  @Test
+  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+    ActivationId id1 = new ActivationId("jit-1");
 
-        assertFalse(id1.equals(""));
-    }
+    assertFalse(id1.equals(""));
+  }
 }

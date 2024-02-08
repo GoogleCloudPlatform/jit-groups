@@ -29,40 +29,40 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class TestXsrfRequestFilter {
-    @Test()
-    public void whenHeaderMissing_ThenRequestIsAborted() {
-        var filter = new XsrfRequestFilter();
+  @Test()
+  public void whenHeaderMissing_ThenRequestIsAborted() {
+    var filter = new XsrfRequestFilter();
 
-        ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
-        when(request.getHeaderString(anyString())).thenReturn(null);
+    ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
+    when(request.getHeaderString(anyString())).thenReturn(null);
 
-        filter.filter(request);
+    filter.filter(request);
 
-        verify(request, times(1)).abortWith(Mockito.any());
-    }
+    verify(request, times(1)).abortWith(Mockito.any());
+  }
 
-    @Test()
-    public void whenHeaderHasWrongValue_ThenRequestIsAborted() {
-        var filter = new XsrfRequestFilter();
+  @Test()
+  public void whenHeaderHasWrongValue_ThenRequestIsAborted() {
+    var filter = new XsrfRequestFilter();
 
-        ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
-        when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME)).thenReturn("test");
+    ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
+    when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME)).thenReturn("test");
 
-        filter.filter(request);
+    filter.filter(request);
 
-        verify(request, times(1)).abortWith(Mockito.any());
-    }
+    verify(request, times(1)).abortWith(Mockito.any());
+  }
 
-    @Test()
-    public void whenHeaderHasCorrectValue_ThenRequestProceeds() {
-        var filter = new XsrfRequestFilter();
+  @Test()
+  public void whenHeaderHasCorrectValue_ThenRequestProceeds() {
+    var filter = new XsrfRequestFilter();
 
-        ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
-        when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME))
-                .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
+    ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
+    when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME))
+        .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
 
-        filter.filter(request);
+    filter.filter(request);
 
-        verify(request, times(0)).abortWith(Mockito.any());
-    }
+    verify(request, times(0)).abortWith(Mockito.any());
+  }
 }

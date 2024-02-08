@@ -31,31 +31,31 @@ import java.util.stream.Collectors;
  * Represents a reviewer privilege.
  */
 public record ReviewerPrivilege<TPrivilegeId extends PrivilegeId>(
-        TPrivilegeId id,
-        String name,
-        Set<ActivationType> reviewableTypes)
-        implements Comparable<ReviewerPrivilege<TPrivilegeId>> {
+    TPrivilegeId id,
+    String name,
+    Set<ActivationType> reviewableTypes)
+    implements Comparable<ReviewerPrivilege<TPrivilegeId>> {
 
-    public ReviewerPrivilege {
-        Preconditions.checkNotNull(id, "id");
-        Preconditions.checkNotNull(name, "name");
-        Preconditions.checkArgument(!reviewableTypes.isEmpty(),
-                "reviewableTypes must contain at least one activation type.");
-    }
+  public ReviewerPrivilege {
+    Preconditions.checkNotNull(id, "id");
+    Preconditions.checkNotNull(name, "name");
+    Preconditions.checkArgument(!reviewableTypes.isEmpty(),
+        "reviewableTypes must contain at least one activation type.");
+  }
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
+  @Override
+  public String toString() {
+    return this.name;
+  }
 
-    @Override
-    public int compareTo(ReviewerPrivilege<TPrivilegeId> o) {
-        return Comparator
-                .comparing((ReviewerPrivilege<TPrivilegeId> e) -> e.reviewableTypes.stream()
-                        .map(s -> s.name())
-                        .sorted()
-                        .collect(Collectors.joining("-")))
-                .thenComparing(e -> e.id)
-                .compare(this, o);
-    }
+  @Override
+  public int compareTo(ReviewerPrivilege<TPrivilegeId> o) {
+    return Comparator
+        .comparing((ReviewerPrivilege<TPrivilegeId> e) -> e.reviewableTypes.stream()
+            .map(s -> s.name())
+            .sorted()
+            .collect(Collectors.joining("-")))
+        .thenComparing(e -> e.id)
+        .compare(this, o);
+  }
 }

@@ -37,124 +37,124 @@ import java.util.function.Function;
  */
 @RequestScoped
 public class LogAdapter {
-    private final Appendable output;
+  private final Appendable output;
 
-    private String traceId;
-    private UserPrincipal principal;
+  private String traceId;
+  private UserPrincipal principal;
 
-    public LogAdapter(Appendable output) {
-        Preconditions.checkNotNull(output);
-        this.output = output;
+  public LogAdapter(Appendable output) {
+    Preconditions.checkNotNull(output);
+    this.output = output;
+  }
+
+  public LogAdapter() {
+    this(System.out);
+  }
+
+  /**
+   * Set Trace ID for current request.
+   */
+  public void setTraceId(String traceId) {
+    this.traceId = traceId;
+  }
+
+  /**
+   * Set principal for current request.
+   */
+  public void setPrincipal(UserPrincipal principal) {
+    this.principal = principal;
+  }
+
+  public LogEntry newInfoEntry(String eventId, String message) {
+    return new LogEntry("INFO", eventId, message, this.principal, this.traceId);
+  }
+
+  public LogEntry newWarningEntry(String eventId, String message) {
+    return new LogEntry("WARNING", eventId, message, this.principal, this.traceId);
+  }
+
+  public LogEntry newErrorEntry(String eventId, String message) {
+    return new LogEntry("ERROR", eventId, message, this.principal, this.traceId);
+  }
+
+  public LogEntry newErrorEntry(String eventId, String message, Exception e) {
+    return new LogEntry(
+        "ERROR",
+        eventId,
+        String.format("%s: %s", message, e.getMessage()),
+        this.principal,
+        this.traceId);
+  }
+
+  // ---------------------------------------------------------------------
+  // Inner classes.
+  // ---------------------------------------------------------------------
+
+  /**
+   * Entry that, when serialized to JSON, can be parsed and interpreted by Cloud
+   * Logging.
+   */
+  public class LogEntry {
+    @JsonProperty("severity")
+    private final String severity;
+
+    @JsonProperty("message")
+    private final String message;
+
+    @JsonProperty("logging.googleapis.com/labels")
+    private final Map<String, String> labels;
+
+    @JsonProperty("logging.googleapis.com/trace")
+    private final String traceId;
+
+    private LogEntry(
+        String severity,
+        String eventId,
+        String message,
+        UserPrincipal principal,
+        String traceId) {
+      this.severity = severity;
+      this.message = message;
+      this.traceId = traceId;
+
+      this.labels = new HashMap<>();
+      this.labels.put("event", eventId);
+
+      if (principal != null) {
+        this.labels.put("user", principal.getId().email);
+        this.labels.put("user_id", principal.getId().id);
+        this.labels.put("device_id", principal.getDevice().deviceId());
+        this.labels.put("device_access_levels",
+            String.join(", ", principal.getDevice().accessLevels()));
+      }
     }
 
-    public LogAdapter() {
-        this(System.out);
+    public LogEntry addLabel(String label, String value) {
+      assert !this.labels.containsKey(label);
+
+      this.labels.put(label, value);
+      return this;
+    }
+
+    public LogEntry addLabels(Function<LogEntry, LogEntry> func) {
+      return func.apply(this);
     }
 
     /**
-     * Set Trace ID for current request.
+     * Emit the log entry to the log.
      */
-    public void setTraceId(String traceId) {
-        this.traceId = traceId;
-    }
-
-    /**
-     * Set principal for current request.
-     */
-    public void setPrincipal(UserPrincipal principal) {
-        this.principal = principal;
-    }
-
-    public LogEntry newInfoEntry(String eventId, String message) {
-        return new LogEntry("INFO", eventId, message, this.principal, this.traceId);
-    }
-
-    public LogEntry newWarningEntry(String eventId, String message) {
-        return new LogEntry("WARNING", eventId, message, this.principal, this.traceId);
-    }
-
-    public LogEntry newErrorEntry(String eventId, String message) {
-        return new LogEntry("ERROR", eventId, message, this.principal, this.traceId);
-    }
-
-    public LogEntry newErrorEntry(String eventId, String message, Exception e) {
-        return new LogEntry(
-                "ERROR",
-                eventId,
-                String.format("%s: %s", message, e.getMessage()),
-                this.principal,
-                this.traceId);
-    }
-
-    // ---------------------------------------------------------------------
-    // Inner classes.
-    // ---------------------------------------------------------------------
-
-    /**
-     * Entry that, when serialized to JSON, can be parsed and interpreted by Cloud
-     * Logging.
-     */
-    public class LogEntry {
-        @JsonProperty("severity")
-        private final String severity;
-
-        @JsonProperty("message")
-        private final String message;
-
-        @JsonProperty("logging.googleapis.com/labels")
-        private final Map<String, String> labels;
-
-        @JsonProperty("logging.googleapis.com/trace")
-        private final String traceId;
-
-        private LogEntry(
-                String severity,
-                String eventId,
-                String message,
-                UserPrincipal principal,
-                String traceId) {
-            this.severity = severity;
-            this.message = message;
-            this.traceId = traceId;
-
-            this.labels = new HashMap<>();
-            this.labels.put("event", eventId);
-
-            if (principal != null) {
-                this.labels.put("user", principal.getId().email);
-                this.labels.put("user_id", principal.getId().id);
-                this.labels.put("device_id", principal.getDevice().deviceId());
-                this.labels.put("device_access_levels",
-                        String.join(", ", principal.getDevice().accessLevels()));
-            }
+    public void write() {
+      try {
+        //
+        // Write to STDOUT, AppEngine picks it up from there.
+        //
+        output.append(new ObjectMapper().writeValueAsString(this)).append("\n");
+      } catch (IOException e) {
+        try {
+          output.append(String.format("Failed to log: %s\n", message));
+        } catch (IOException ignored) {
         }
-
-        public LogEntry addLabel(String label, String value) {
-            assert !this.labels.containsKey(label);
-
-            this.labels.put(label, value);
-            return this;
-        }
-
-        public LogEntry addLabels(Function<LogEntry, LogEntry> func) {
-            return func.apply(this);
-        }
-
-        /**
-         * Emit the log entry to the log.
-         */
-        public void write() {
-            try {
-                //
-                // Write to STDOUT, AppEngine picks it up from there.
-                //
-                output.append(new ObjectMapper().writeValueAsString(this)).append("\n");
-            } catch (IOException e) {
-                try {
-                    output.append(String.format("Failed to log: %s\n", message));
-                } catch (IOException ignored) {
-                }
-            }
-        }
+      }
     }
+  }
 }

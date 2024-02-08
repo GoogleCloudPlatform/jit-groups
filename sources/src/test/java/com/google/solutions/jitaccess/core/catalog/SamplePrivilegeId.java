@@ -22,25 +22,25 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 public class SamplePrivilegeId extends PrivilegeId {
-    private final String catalog;
-    private final String id;
+  private final String catalog;
+  private final String id;
 
-    public SamplePrivilegeId(String catalog, String id) {
-        this.catalog = catalog;
-        this.id = id;
-    }
+  public SamplePrivilegeId(String catalog, String id) {
+    this.catalog = catalog;
+    this.id = id;
+  }
 
-    public SamplePrivilegeId(String id) {
-        this("sample", id);
-    }
+  public SamplePrivilegeId(String id) {
+    this("sample", id);
+  }
 
-    @Override
-    public String catalog() {
-        return this.catalog;
-    }
+  @Override
+  public String catalog() {
+    return this.catalog;
+  }
 
-    @Override
-    public String id() {
-        return this.id;
-    }
+  @Override
+  public String id() {
+    return this.id;
+  }
 }

@@ -30,97 +30,97 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestFolderId {
 
-    @Test
-    public void toStringReturnsId() {
-        assertEquals("111", new FolderId("111").toString());
-    }
+  @Test
+  public void toStringReturnsId() {
+    assertEquals("111", new FolderId("111").toString());
+  }
 
-    // -------------------------------------------------------------------------
-    // Type.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Type.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void type() {
-        assertEquals("folder", new FolderId("111").type());
-    }
+  @Test
+  public void type() {
+    assertEquals("folder", new FolderId("111").type());
+  }
 
-    // -------------------------------------------------------------------------
-    // ID.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // ID.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void id() {
-        assertEquals("111", new FolderId("111").id());
-    }
+  @Test
+  public void id() {
+    assertEquals("111", new FolderId("111").id());
+  }
 
-    // -------------------------------------------------------------------------
-    // Path.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Path.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void path() {
-        assertEquals("folders/111", new FolderId("111").path());
-    }
+  @Test
+  public void path() {
+    assertEquals("folders/111", new FolderId("111").path());
+  }
 
-    // -------------------------------------------------------------------------
-    // Equality.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Equality.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-        FolderId id1 = new FolderId("111");
-        FolderId id2 = new FolderId("111");
+  @Test
+  public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
+    FolderId id1 = new FolderId("111");
+    FolderId id2 = new FolderId("111");
 
-        assertTrue(id1.equals(id2));
-        assertEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertTrue(id1.equals(id2));
+    assertEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-        FolderId id1 = new FolderId("111");
+  @Test
+  public void whenObjectAreSame_ThenEqualsReturnsTrue() {
+    FolderId id1 = new FolderId("111");
 
-        assertTrue(id1.equals(id1));
-    }
+    assertTrue(id1.equals(id1));
+  }
 
-    @Test
-    public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-        FolderId id1 = new FolderId("111");
-        FolderId id2 = new FolderId("222");
+  @Test
+  public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
+    FolderId id1 = new FolderId("111");
+    FolderId id2 = new FolderId("222");
 
-        assertFalse(id1.equals(id2));
-        assertNotEquals(id1.hashCode(), id2.hashCode());
-    }
+    assertFalse(id1.equals(id2));
+    assertNotEquals(id1.hashCode(), id2.hashCode());
+  }
 
-    @Test
-    public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-        FolderId id1 = new FolderId("111");
+  @Test
+  public void whenObjectIsNull_ThenEqualsReturnsFalse() {
+    FolderId id1 = new FolderId("111");
 
-        assertFalse(id1.equals(null));
-    }
+    assertFalse(id1.equals(null));
+  }
 
-    @Test
-    public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-        FolderId id1 = new FolderId("111");
+  @Test
+  public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
+    FolderId id1 = new FolderId("111");
 
-        assertFalse(id1.equals(""));
-    }
+    assertFalse(id1.equals(""));
+  }
 
-    // -------------------------------------------------------------------------
-    // Comparable.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Comparable.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-        var folders = List.of(
-                new FolderId("333"),
-                new FolderId("111"),
-                new FolderId("222"));
+  @Test
+  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
+    var folders = List.of(
+        new FolderId("333"),
+        new FolderId("111"),
+        new FolderId("222"));
 
-        assertIterableEquals(
-                List.of(
-                        new FolderId("111"),
-                        new FolderId("222"),
-                        new FolderId("333")),
-                new TreeSet<>(folders));
-    }
+    assertIterableEquals(
+        List.of(
+            new FolderId("111"),
+            new FolderId("222"),
+            new FolderId("333")),
+        new TreeSet<>(folders));
+  }
 }

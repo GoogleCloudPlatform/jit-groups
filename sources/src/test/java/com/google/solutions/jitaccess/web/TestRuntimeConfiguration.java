@@ -32,217 +32,217 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestRuntimeConfiguration {
-    @Test
-    public void whenNotSet_ThenScopeSetToDefault() {
-        var settings = Map.of("GOOGLE_CLOUD_PROJECT", "project-1");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenNotSet_ThenScopeSetToDefault() {
+    var settings = Map.of("GOOGLE_CLOUD_PROJECT", "project-1");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertEquals("projects/project-1", configuration.scope.getValue());
-    }
+    assertEquals("projects/project-1", configuration.scope.getValue());
+  }
 
-    // -------------------------------------------------------------------------
-    // Scope settings.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Scope settings.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenNotSet_ThenActivationTimeoutSetToDefault() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenActivationTimeoutSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertEquals(Duration.ofHours(2), configuration.activationTimeout.getValue());
-    }
+    assertEquals(Duration.ofHours(2), configuration.activationTimeout.getValue());
+  }
 
-    @Test
-    public void whenSet_ThenScopeReturnsSetting() {
-        var settings = Map.of("RESOURCE_SCOPE", "folders/123");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenSet_ThenScopeReturnsSetting() {
+    var settings = Map.of("RESOURCE_SCOPE", "folders/123");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertEquals("folders/123", configuration.scope.getValue());
-    }
+    assertEquals("folders/123", configuration.scope.getValue());
+  }
 
-    // -------------------------------------------------------------------------
-    // Catalog settings.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Catalog settings.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenNotSet_ThenCatalogIsPolicyAnalzer() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenCatalogIsPolicyAnalzer() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertEquals(
-                RuntimeConfiguration.Catalog.POLICYANALYZER,
-                configuration.catalog.getValue());
-        assertFalse(configuration.availableProjectsQuery.isValid());
-    }
+    assertEquals(
+        RuntimeConfiguration.Catalog.POLICYANALYZER,
+        configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+  }
 
-    @Test
-    public void whenUsingPolicyAnalyzerCatalog_ThenCatalogReturnsSetting() {
-        var settings = Map.of("RESOURCE_CATALOG", " PolicyAnalyzer ");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenUsingPolicyAnalyzerCatalog_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " PolicyAnalyzer ");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertEquals(
-                RuntimeConfiguration.Catalog.POLICYANALYZER,
-                configuration.catalog.getValue());
-        assertFalse(configuration.availableProjectsQuery.isValid());
-        assertFalse(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
-    }
+    assertEquals(
+        RuntimeConfiguration.Catalog.POLICYANALYZER,
+        configuration.catalog.getValue());
+    assertFalse(configuration.availableProjectsQuery.isValid());
+    assertFalse(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
+  }
 
-    @Test
-    public void whenUsingAssetInventoryCatalog_ThenCatalogReturnsSetting() {
-        var settings = Map.of("RESOURCE_CATALOG", " AssetInventory ");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenUsingAssetInventoryCatalog_ThenCatalogReturnsSetting() {
+    var settings = Map.of("RESOURCE_CATALOG", " AssetInventory ");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertEquals(
-                RuntimeConfiguration.Catalog.ASSETINVENTORY,
-                configuration.catalog.getValue());
-        assertTrue(configuration.availableProjectsQuery.isValid());
-        assertEquals(
-                "state:ACTIVE",
-                configuration.availableProjectsQuery.getValue());
-        assertTrue(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
-    }
+    assertEquals(
+        RuntimeConfiguration.Catalog.ASSETINVENTORY,
+        configuration.catalog.getValue());
+    assertTrue(configuration.availableProjectsQuery.isValid());
+    assertEquals(
+        "state:ACTIVE",
+        configuration.availableProjectsQuery.getValue());
+    assertTrue(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
+  }
 
-    // -------------------------------------------------------------------------
-    // Activation settings.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Activation settings.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenNotSet_ThenActivationRequestTimeoutSetToDefault() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenActivationRequestTimeoutSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertEquals(Duration.ofHours(1), configuration.activationRequestTimeout.getValue());
-    }
+    assertEquals(Duration.ofHours(1), configuration.activationRequestTimeout.getValue());
+  }
 
-    @Test
-    public void whenNotSet_ThenJustificationPatternSetToDefault() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenJustificationPatternSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertNotNull(configuration.justificationPattern.getValue());
-    }
+    assertNotNull(configuration.justificationPattern.getValue());
+  }
 
-    @Test
-    public void whenNotSet_ThenJustificationHintSetToDefault() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenJustificationHintSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertNotNull(configuration.justificationHint.getValue());
-    }
+    assertNotNull(configuration.justificationHint.getValue());
+  }
 
-    @Test
-    public void whenSet_ThenActivationTimeoutReturnsSetting() {
-        var settings = Map.of("ELEVATION_DURATION", "30");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenSet_ThenActivationTimeoutReturnsSetting() {
+    var settings = Map.of("ELEVATION_DURATION", "30");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertEquals(Duration.ofMinutes(30), configuration.activationTimeout.getValue());
-    }
+    assertEquals(Duration.ofMinutes(30), configuration.activationTimeout.getValue());
+  }
 
-    // -------------------------------------------------------------------------
-    // Notification settings.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Notification settings.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenSet_ThenTimeZoneForNotificationsIsUtc() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenSet_ThenTimeZoneForNotificationsIsUtc() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertEquals(
-                MailNotificationService.Options.DEFAULT_TIMEZONE,
-                configuration.timeZoneForNotifications.getValue());
-    }
+    assertEquals(
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        configuration.timeZoneForNotifications.getValue());
+  }
 
-    @Test
-    public void whenInvalid_ThenTimeZoneForNotificationsIsInvalid() {
-        var settings = Map.of("NOTIFICATION_TIMEZONE", "junk");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenInvalid_ThenTimeZoneForNotificationsIsInvalid() {
+    var settings = Map.of("NOTIFICATION_TIMEZONE", "junk");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertFalse(configuration.timeZoneForNotifications.isValid());
-        assertThrows(ZoneRulesException.class,
-                () -> configuration.timeZoneForNotifications.getValue());
-    }
+    assertFalse(configuration.timeZoneForNotifications.isValid());
+    assertThrows(ZoneRulesException.class,
+        () -> configuration.timeZoneForNotifications.getValue());
+  }
 
-    @Test
-    public void whenSet_ThenTimeZoneForNotificationsReturnsSetting() {
-        var settings = Map.of("NOTIFICATION_TIMEZONE", "Australia/Melbourne");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenSet_ThenTimeZoneForNotificationsReturnsSetting() {
+    var settings = Map.of("NOTIFICATION_TIMEZONE", "Australia/Melbourne");
+    var configuration = new RuntimeConfiguration(settings);
 
-        assertNotEquals(
-                MailNotificationService.Options.DEFAULT_TIMEZONE,
-                configuration.timeZoneForNotifications.getValue());
-    }
+    assertNotEquals(
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        configuration.timeZoneForNotifications.getValue());
+  }
 
-    // -------------------------------------------------------------------------
-    // SMTP settings.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // SMTP settings.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenNotSet_ThenSmtpSettingsSetToDefault() {
-        var configuration = new RuntimeConfiguration(Map.of());
+  @Test
+  public void whenNotSet_ThenSmtpSettingsSetToDefault() {
+    var configuration = new RuntimeConfiguration(Map.of());
 
-        assertEquals("smtp.gmail.com", configuration.smtpHost.getValue());
-        assertEquals(587, configuration.smtpPort.getValue());
-        assertTrue(configuration.smtpEnableStartTls.getValue());
-        assertEquals("JIT Access", configuration.smtpSenderName.getValue());
-        assertFalse(configuration.smtpSenderAddress.isValid());
-        assertFalse(configuration.smtpUsername.isValid());
-        assertFalse(configuration.smtpPassword.isValid());
-    }
+    assertEquals("smtp.gmail.com", configuration.smtpHost.getValue());
+    assertEquals(587, configuration.smtpPort.getValue());
+    assertTrue(configuration.smtpEnableStartTls.getValue());
+    assertEquals("JIT Access", configuration.smtpSenderName.getValue());
+    assertFalse(configuration.smtpSenderAddress.isValid());
+    assertFalse(configuration.smtpUsername.isValid());
+    assertFalse(configuration.smtpPassword.isValid());
+  }
 
-    @Test
-    public void whenSet_ThenSmtpSettingsReturnSettings() {
-        var configuration = new RuntimeConfiguration(Map.of(
-                "SMTP_HOST", "mail.example.com ",
-                "SMTP_PORT", " 25 ",
-                "SMTP_ENABLE_STARTTLS", " False ",
-                "SMTP_SENDER_NAME", "Sender",
-                "SMTP_SENDER_ADDRESS", "sender@example.com",
-                "SMTP_USERNAME", "user",
-                "SMTP_PASSWORD", "password"));
+  @Test
+  public void whenSet_ThenSmtpSettingsReturnSettings() {
+    var configuration = new RuntimeConfiguration(Map.of(
+        "SMTP_HOST", "mail.example.com ",
+        "SMTP_PORT", " 25 ",
+        "SMTP_ENABLE_STARTTLS", " False ",
+        "SMTP_SENDER_NAME", "Sender",
+        "SMTP_SENDER_ADDRESS", "sender@example.com",
+        "SMTP_USERNAME", "user",
+        "SMTP_PASSWORD", "password"));
 
-        assertEquals("mail.example.com", configuration.smtpHost.getValue());
-        assertEquals(25, configuration.smtpPort.getValue());
-        assertFalse(configuration.smtpEnableStartTls.getValue());
-        assertEquals("Sender", configuration.smtpSenderName.getValue());
-        assertEquals("sender@example.com", configuration.smtpSenderAddress.getValue());
-        assertEquals("user", configuration.smtpUsername.getValue());
-        assertEquals("password", configuration.smtpPassword.getValue());
-    }
+    assertEquals("mail.example.com", configuration.smtpHost.getValue());
+    assertEquals(25, configuration.smtpPort.getValue());
+    assertFalse(configuration.smtpEnableStartTls.getValue());
+    assertEquals("Sender", configuration.smtpSenderName.getValue());
+    assertEquals("sender@example.com", configuration.smtpSenderAddress.getValue());
+    assertEquals("user", configuration.smtpUsername.getValue());
+    assertEquals("password", configuration.smtpPassword.getValue());
+  }
 
-    @Test
-    public void whenSmtpExtraOptionsEmpty_ThenGetSmtpExtraOptionsRetunsMap() {
-        var settings = Map.of("SMTP_OPTIONS", "");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenSmtpExtraOptionsEmpty_ThenGetSmtpExtraOptionsRetunsMap() {
+    var settings = Map.of("SMTP_OPTIONS", "");
+    var configuration = new RuntimeConfiguration(settings);
 
-        var extraOptions = configuration.getSmtpExtraOptionsMap();
-        assertNotNull(extraOptions);
-        assertEquals(0, extraOptions.size());
-    }
+    var extraOptions = configuration.getSmtpExtraOptionsMap();
+    assertNotNull(extraOptions);
+    assertEquals(0, extraOptions.size());
+  }
 
-    @Test
-    public void whenSmtpExtraOptionsContainsPairs_ThenGetSmtpExtraOptionsRetunsMap() {
-        var settings = Map.of("SMTP_OPTIONS", " , ONE = one, TWO=two,THREE,FOUR=,,   ");
-        var configuration = new RuntimeConfiguration(settings);
+  @Test
+  public void whenSmtpExtraOptionsContainsPairs_ThenGetSmtpExtraOptionsRetunsMap() {
+    var settings = Map.of("SMTP_OPTIONS", " , ONE = one, TWO=two,THREE,FOUR=,,   ");
+    var configuration = new RuntimeConfiguration(settings);
 
-        var extraOptions = configuration.getSmtpExtraOptionsMap();
-        assertNotNull(extraOptions);
-        assertEquals(2, extraOptions.size());
-        assertEquals("one", extraOptions.get("ONE"));
-        assertEquals("two", extraOptions.get("TWO"));
-    }
+    var extraOptions = configuration.getSmtpExtraOptionsMap();
+    assertNotNull(extraOptions);
+    assertEquals(2, extraOptions.size());
+    assertEquals("one", extraOptions.get("ONE"));
+    assertEquals("two", extraOptions.get("TWO"));
+  }
 
-    @Test
-    public void whenSmtpPasswordAndSecretNotSet_ThenIsSmtpAuthenticationConfiguredIsFalse() {
-        var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=");
-        var configuration = new RuntimeConfiguration(settings);
-        assertFalse(configuration.isSmtpAuthenticationConfigured());
-    }
+  @Test
+  public void whenSmtpPasswordAndSecretNotSet_ThenIsSmtpAuthenticationConfiguredIsFalse() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+  }
 
-    @Test
-    public void whenSmtpUserAndPasswordSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
-        var settings = Map.of("SMTP_USERNAME=user", "SMTP_PASSWORD= pwd");
-        var configuration = new RuntimeConfiguration(settings);
-        assertFalse(configuration.isSmtpAuthenticationConfigured());
-    }
+  @Test
+  public void whenSmtpUserAndPasswordSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_PASSWORD= pwd");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+  }
 
-    @Test
-    public void whenSmtpUserAndSecretSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
-        var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=path");
-        var configuration = new RuntimeConfiguration(settings);
-        assertFalse(configuration.isSmtpAuthenticationConfigured());
-    }
+  @Test
+  public void whenSmtpUserAndSecretSet_ThenIsSmtpAuthenticationConfiguredIsTrue() {
+    var settings = Map.of("SMTP_USERNAME=user", "SMTP_SECRET=path");
+    var configuration = new RuntimeConfiguration(settings);
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+  }
 }

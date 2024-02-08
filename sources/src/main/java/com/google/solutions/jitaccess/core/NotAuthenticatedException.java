@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 public class NotAuthenticatedException extends AccessException {
-    public NotAuthenticatedException(String message, Exception inner) {
-        super(message, inner);
-    }
+  public NotAuthenticatedException(String message, Exception inner) {
+    super(message, inner);
+  }
 }

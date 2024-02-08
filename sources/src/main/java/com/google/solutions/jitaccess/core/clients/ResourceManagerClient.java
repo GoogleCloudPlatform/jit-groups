@@ -44,354 +44,365 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class ResourceManagerClient {
-    public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-    private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
+  public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+  private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
 
-    private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
+  private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
-    private final GoogleCredentials credentials;
-    private final HttpTransport.Options httpOptions;
+  private final GoogleCredentials credentials;
+  private final HttpTransport.Options httpOptions;
 
-    private CloudResourceManager createClient() throws IOException {
-        try {
-            return new CloudResourceManager.Builder(
-                    HttpTransport.newTransport(),
-                    new GsonFactory(),
-                    HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-                    .setApplicationName(ApplicationVersion.USER_AGENT)
-                    .build();
-        } catch (GeneralSecurityException e) {
-            throw new IOException("Creating a ResourceManager client failed", e);
-        }
+  private CloudResourceManager createClient() throws IOException {
+    try {
+      return new CloudResourceManager.Builder(
+          HttpTransport.newTransport(),
+          new GsonFactory(),
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
+          .setApplicationName(ApplicationVersion.USER_AGENT)
+          .build();
+    } catch (GeneralSecurityException e) {
+      throw new IOException("Creating a ResourceManager client failed", e);
     }
+  }
 
-    private static boolean isRoleNotGrantableErrorMessage(String message) {
-        return message != null &&
-                (message.contains("not supported") || message.contains("does not exist"));
-    }
+  private static boolean isRoleNotGrantableErrorMessage(String message) {
+    return message != null &&
+        (message.contains("not supported") || message.contains("does not exist"));
+  }
 
-    public ResourceManagerClient(
-            GoogleCredentials credentials,
-            HttpTransport.Options httpOptions) {
-        Preconditions.checkNotNull(credentials, "credentials");
-        Preconditions.checkNotNull(httpOptions, "httpOptions");
+  public ResourceManagerClient(
+      GoogleCredentials credentials,
+      HttpTransport.Options httpOptions) {
+    Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(httpOptions, "httpOptions");
 
-        this.credentials = credentials;
-        this.httpOptions = httpOptions;
-    }
+    this.credentials = credentials;
+    this.httpOptions = httpOptions;
+  }
 
-    /**
-     * Add an IAM binding using the optimistic concurrency control-mechanism.
-     */
-    public void addProjectIamBinding(
-            ProjectId projectId,
-            Binding binding,
-            EnumSet<ResourceManagerClient.IamBindingOptions> options,
-            String requestReason) throws AccessException, AlreadyExistsException, IOException {
-        Preconditions.checkNotNull(projectId, "projectId");
-        Preconditions.checkNotNull(binding, "binding");
+  /**
+   * Add an IAM binding using the optimistic concurrency control-mechanism.
+   */
+  public void addProjectIamBinding(
+      ProjectId projectId,
+      Binding binding,
+      EnumSet<ResourceManagerClient.IamBindingOptions> options,
+      String requestReason) throws AccessException, AlreadyExistsException, IOException {
+    Preconditions.checkNotNull(projectId, "projectId");
+    Preconditions.checkNotNull(binding, "binding");
 
-        try {
-            var service = createClient();
+    try {
+      var service = createClient();
 
+      //
+      // IAM policies use optimistic concurrency control, so we might need to perform
+      // multiple attempts to update the policy.
+      //
+      for (int attempt = 0; attempt < MAX_SET_IAM_POLICY_ATTEMPTS; attempt++) {
+        //
+        // Read current version of policy.
+        //
+        // NB. The API might return a v1 policy even if we
+        // request a v3 policy.
+        //
+
+        var policy = service
+            .projects()
+            .getIamPolicy(
+                String.format("projects/%s", projectId.id()),
+                new GetIamPolicyRequest()
+                    .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
+            .execute();
+
+        //
+        // Make sure we're using v3; older versions don't support conditions.
+        //
+        policy.setVersion(3);
+
+        if (options.contains(IamBindingOptions.FAIL_IF_BINDING_EXISTS)) {
+          if (policy.getBindings()
+              .stream()
+              .anyMatch(b -> Bindings.equals(b, binding, true))) {
             //
-            // IAM policies use optimistic concurrency control, so we might need to perform
-            // multiple attempts to update the policy.
+            // The exact same binding (incl. condition) exists.
             //
-            for (int attempt = 0; attempt < MAX_SET_IAM_POLICY_ATTEMPTS; attempt++) {
-                //
-                // Read current version of policy.
-                //
-                // NB. The API might return a v1 policy even if we
-                // request a v3 policy.
-                //
-
-                var policy = service
-                        .projects()
-                        .getIamPolicy(
-                                String.format("projects/%s", projectId.id()),
-                                new GetIamPolicyRequest()
-                                        .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
-                        .execute();
-
-                //
-                // Make sure we're using v3; older versions don't support conditions.
-                //
-                policy.setVersion(3);
-
-                if (options.contains(IamBindingOptions.FAIL_IF_BINDING_EXISTS)) {
-                    if (policy.getBindings()
-                            .stream()
-                            .anyMatch(b -> Bindings.equals(b, binding, true))) {
-                        //
-                        // The exact same binding (incl. condition) exists.
-                        //
-                        throw new AlreadyExistsException("The binding already exists");
-                    }
-                }
-
-                if (options.contains(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)) {
-                    //
-                    // Remove existing temporary bindings for the same principal and role.
-                    //
-                    // NB. There's a hard limit on how many role bindings in a policy can
-                    // have the same principal and role. Removing existing bindings
-                    // helps avoid hitting this limit.
-                    //
-                    // NB. This check detects temporary bindings that we created, but it might not
-                    // detect other temporary bindings (which might use a slightly different
-                    // condition)
-                    //
-                    Predicate<Binding> isObsolete = b -> Bindings.equals(b, binding, false)
-                            && b.getCondition() != null
-                            && IamTemporaryAccessConditions
-                                    .isTemporaryAccessCondition(b.getCondition().getExpression());
-
-                    var nonObsoleteBindings = policy.getBindings().stream()
-                            .filter(isObsolete.negate())
-                            .toList();
-
-                    policy.getBindings().clear();
-                    policy.getBindings().addAll(nonObsoleteBindings);
-                }
-
-                //
-                // Apply change and write new version.
-                //
-                policy.getBindings().add(binding);
-
-                try {
-                    var request = service
-                            .projects()
-                            .setIamPolicy(
-                                    String.format("projects/%s", projectId),
-                                    new SetIamPolicyRequest().setPolicy((policy)));
-
-                    request.getRequestHeaders().set("x-goog-request-reason", requestReason);
-                    request.execute();
-
-                    //
-                    // Successful update -> quit loop.
-                    //
-                    return;
-                } catch (GoogleJsonResponseException e) {
-                    if (e.getStatusCode() == 412) {
-                        //
-                        // Concurrent modification - back off and retry.
-                        //
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException ignored) {
-                        }
-                    } else {
-                        throw (GoogleJsonResponseException) e.fillInStackTrace();
-                    }
-                }
-            }
-
-            throw new AlreadyExistsException(
-                    "Failed to update IAM bindings due to concurrent modifications");
-        } catch (GoogleJsonResponseException e) {
-            switch (e.getStatusCode()) {
-                case 400:
-                    //
-                    // One possible reason for an INVALID_ARGUMENT error is that we've tried
-                    // to grant a role on a project that cannot be granted on a project at all.
-                    // If that's the case, provide a more descriptive error message.
-                    //
-                    if (e.getDetails() != null &&
-                            e.getDetails().getErrors() != null &&
-                            e.getDetails().getErrors().size() > 0 &&
-                            isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
-                        throw new AccessDeniedException(
-                                String.format("The role %s cannot be granted on a project", binding.getRole()),
-                                e);
-                    }
-                case 401:
-                    throw new NotAuthenticatedException("Not authenticated", e);
-                case 403:
-                    throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
-                default:
-                    throw (GoogleJsonResponseException) e.fillInStackTrace();
-            }
+            throw new AlreadyExistsException("The binding already exists");
+          }
         }
-    }
 
-    /**
-     * Test whether certain permissions have been granted on the project.
-     */
-    public List<String> testIamPermissions(
-            ProjectId projectId,
-            List<String> permissions) throws NotAuthenticatedException, IOException {
+        if (options.contains(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)) {
+          //
+          // Remove existing temporary bindings for the same principal and role.
+          //
+          // NB. There's a hard limit on how many role bindings in a policy can
+          // have the same principal and role. Removing existing bindings
+          // helps avoid hitting this limit.
+          //
+          // NB. This check detects temporary bindings that we created, but it might not
+          // detect other temporary bindings (which might use a slightly different
+          // condition)
+          //
+          Predicate<Binding> isObsolete = b -> Bindings.equals(b, binding, false)
+              && b.getCondition() != null
+              && IamTemporaryAccessConditions
+                  .isTemporaryAccessCondition(b.getCondition().getExpression());
+
+          var nonObsoleteBindings = policy.getBindings().stream()
+              .filter(isObsolete.negate())
+              .toList();
+
+          policy.getBindings().clear();
+          policy.getBindings().addAll(nonObsoleteBindings);
+        }
+
+        //
+        // Apply change and write new version.
+        //
+        policy.getBindings().add(binding);
+
         try {
-            var response = createClient()
-                    .projects()
-                    .testIamPermissions(
-                            String.format("projects/%s", projectId),
-                            new TestIamPermissionsRequest()
-                                    .setPermissions(permissions))
-                    .execute();
+          var request = service
+              .projects()
+              .setIamPolicy(
+                  String.format("projects/%s", projectId),
+                  new SetIamPolicyRequest().setPolicy((policy)));
 
-            return response.getPermissions() != null
-                    ? response.getPermissions()
-                    : List.of();
+          request.getRequestHeaders().set("x-goog-request-reason", requestReason);
+          request.execute();
+
+          //
+          // Successful update -> quit loop.
+          //
+          return;
         } catch (GoogleJsonResponseException e) {
-            switch (e.getStatusCode()) {
-                case 401:
-                    throw new NotAuthenticatedException("Not authenticated", e);
-                default:
-                    throw (GoogleJsonResponseException) e.fillInStackTrace();
+          if (e.getStatusCode() == 412) {
+            //
+            // Concurrent modification - back off and retry.
+            //
+            try {
+              Thread.sleep(200);
+            } catch (InterruptedException ignored) {
             }
+          } else {
+            throw (GoogleJsonResponseException) e.fillInStackTrace();
+          }
         }
+      }
+
+      throw new AlreadyExistsException(
+          "Failed to update IAM bindings due to concurrent modifications");
+    } catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 400:
+          //
+          // One possible reason for an INVALID_ARGUMENT error is that we've tried
+          // to grant a role on a project that cannot be granted on a project at all.
+          // If that's the case, provide a more descriptive error message.
+          //
+          if (e.getDetails() != null &&
+              e.getDetails().getErrors() != null &&
+              e.getDetails().getErrors().size() > 0 &&
+              isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
+            throw new AccessDeniedException(
+                String.format("The role %s cannot be granted on a project", binding.getRole()),
+                e);
+          }
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
     }
+  }
+
+  /**
+   * Test whether certain permissions have been granted on the project.
+   */
+  public List<String> testIamPermissions(
+      ProjectId projectId,
+      List<String> permissions) throws NotAuthenticatedException, IOException {
+    try {
+      var response = createClient()
+          .projects()
+          .testIamPermissions(
+              String.format("projects/%s", projectId),
+              new TestIamPermissionsRequest()
+                  .setPermissions(permissions))
+          .execute();
+
+      return response.getPermissions() != null
+          ? response.getPermissions()
+          : List.of();
+    } catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Search for projects.
+   */
+  public SortedSet<ProjectId> searchProjectIds(
+      String query) throws NotAuthenticatedException, IOException {
+    try {
+      var client = createClient();
+
+      var response = client
+          .projects()
+          .search()
+          .setQuery(query)
+          .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
+          .execute();
+
+      ArrayList<Project> allProjects = new ArrayList<>();
+      if (response.getProjects() != null) {
+        allProjects.addAll(response.getProjects());
+      }
+
+      while (response.getNextPageToken() != null
+          && !response.getNextPageToken().isEmpty()
+          && response.getProjects() != null
+          && response.getProjects().size() >= SEARCH_PROJECTS_PAGE_SIZE) {
+        response = client
+            .projects()
+            .search()
+            .setQuery(query)
+            .setPageToken(response.getNextPageToken())
+            .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
+            .execute();
+
+        if (response.getProjects() != null) {
+          allProjects.addAll(response.getProjects());
+        }
+      }
+
+      return allProjects.stream()
+          .map(p -> new ProjectId(p.getProjectId()))
+          .collect(Collectors.toCollection(TreeSet::new));
+    } catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  /**
+   * Get the ancestry of a project.
+   *
+   * @return list of ancestors, starting with the project itself.
+   */
+  public Collection<ResourceId> getAncestry(
+      ProjectId projectId) throws AccessException, IOException {
+    try {
+      var response = new GetAncestry(createClient(), projectId.id(), new GetAncestryRequest()).execute();
+      return response.ancestor
+          .stream()
+          .map(a -> {
+            switch (a.resourceId.type) {
+              case "organization":
+                return (ResourceId) new OrganizationId(a.resourceId.id);
+
+              case "folder":
+                return new FolderId(a.resourceId.id);
+
+              case "project":
+                return new ProjectId(a.resourceId.id);
+
+              default:
+                throw new IllegalArgumentException(
+                    String.format("Unknown resource type: %s", a.resourceId.type));
+            }
+          })
+          .collect(Collectors.toList());
+    } catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Inner classes.
+  // ---------------------------------------------------------------------
+
+  /**
+   * Helper class for using Binding objects.
+   */
+  public static class Bindings {
+    public static boolean equals(Binding lhs, Binding rhs, boolean compareCondition) {
+      if (!lhs.getRole().equals(rhs.getRole())) {
+        return false;
+      }
+
+      if (!new HashSet<>(lhs.getMembers()).equals(new HashSet<>(rhs.getMembers()))) {
+        return false;
+      }
+
+      if (compareCondition) {
+        if ((lhs.getCondition() == null) != (rhs.getCondition() == null)) {
+          return false;
+        }
+
+        if (lhs.getCondition() != null && rhs.getCondition() != null) {
+          if (!Objects.equals(lhs.getCondition().getExpression(), rhs.getCondition().getExpression())) {
+            return false;
+          }
+
+          if (!Objects.equals(lhs.getCondition().getTitle(), rhs.getCondition().getTitle())) {
+            return false;
+          }
+
+          if (!Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription())) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+  }
+
+  public enum IamBindingOptions {
+    NONE,
+
+    /** Purge existing temporary bindings for the same principal and role */
+    PURGE_EXISTING_TEMPORARY_BINDINGS,
 
     /**
-     * Search for projects.
+     * Throw an AlreadyExistsException if an equivalent binding for the same
+     * principal and role exists
      */
-    public SortedSet<ProjectId> searchProjectIds(
-            String query) throws NotAuthenticatedException, IOException {
-        try {
-            var client = createClient();
+    FAIL_IF_BINDING_EXISTS
+  }
 
-            var response = client
-                    .projects()
-                    .search()
-                    .setQuery(query)
-                    .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
-                    .execute();
+  // ---------------------------------------------------------------------------
+  // Request classes for APIs only available in v1.
+  // ---------------------------------------------------------------------------
 
-            ArrayList<Project> allProjects = new ArrayList<>();
-            if (response.getProjects() != null) {
-                allProjects.addAll(response.getProjects());
-            }
+  /**
+   * Gets a list of ancestors in the resource hierarchy for the Project identified
+   * by the specified
+   * `project_id` (for example, `my-project-123`). The caller must have read
+   * permissions for this
+   * Project.
+   */
+  private static class GetAncestry extends CloudResourceManagerRequest<GetAncestryResponse> {
 
-            while (response.getNextPageToken() != null
-                    && !response.getNextPageToken().isEmpty()
-                    && response.getProjects() != null
-                    && response.getProjects().size() >= SEARCH_PROJECTS_PAGE_SIZE) {
-                response = client
-                        .projects()
-                        .search()
-                        .setQuery(query)
-                        .setPageToken(response.getNextPageToken())
-                        .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
-                        .execute();
-
-                if (response.getProjects() != null) {
-                    allProjects.addAll(response.getProjects());
-                }
-            }
-
-            return allProjects.stream()
-                    .map(p -> new ProjectId(p.getProjectId()))
-                    .collect(Collectors.toCollection(TreeSet::new));
-        } catch (GoogleJsonResponseException e) {
-            switch (e.getStatusCode()) {
-                case 401:
-                    throw new NotAuthenticatedException("Not authenticated", e);
-                default:
-                    throw (GoogleJsonResponseException) e.fillInStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Get the ancestry of a project.
-     *
-     * @return list of ancestors, starting with the project itself.
-     */
-    public Collection<ResourceId> getAncestry(
-            ProjectId projectId) throws AccessException, IOException {
-        try {
-            var response = new GetAncestry(createClient(), projectId.id(), new GetAncestryRequest()).execute();
-            return response.ancestor
-                    .stream()
-                    .map(a -> {
-                        switch (a.resourceId.type) {
-                            case "organization":
-                                return (ResourceId) new OrganizationId(a.resourceId.id);
-
-                            case "folder":
-                                return new FolderId(a.resourceId.id);
-
-                            case "project":
-                                return new ProjectId(a.resourceId.id);
-
-                            default:
-                                throw new IllegalArgumentException(
-                                        String.format("Unknown resource type: %s", a.resourceId.type));
-                        }
-                    })
-                    .collect(Collectors.toList());
-        } catch (GoogleJsonResponseException e) {
-            switch (e.getStatusCode()) {
-                case 401:
-                    throw new NotAuthenticatedException("Not authenticated", e);
-                case 403:
-                    throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
-                default:
-                    throw (GoogleJsonResponseException) e.fillInStackTrace();
-            }
-        }
-    }
-
-    // ---------------------------------------------------------------------
-    // Inner classes.
-    // ---------------------------------------------------------------------
-
-    /**
-     * Helper class for using Binding objects.
-     */
-    public static class Bindings {
-        public static boolean equals(Binding lhs, Binding rhs, boolean compareCondition) {
-            if (!lhs.getRole().equals(rhs.getRole())) {
-                return false;
-            }
-
-            if (!new HashSet<>(lhs.getMembers()).equals(new HashSet<>(rhs.getMembers()))) {
-                return false;
-            }
-
-            if (compareCondition) {
-                if ((lhs.getCondition() == null) != (rhs.getCondition() == null)) {
-                    return false;
-                }
-
-                if (lhs.getCondition() != null && rhs.getCondition() != null) {
-                    if (!Objects.equals(lhs.getCondition().getExpression(), rhs.getCondition().getExpression())) {
-                        return false;
-                    }
-
-                    if (!Objects.equals(lhs.getCondition().getTitle(), rhs.getCondition().getTitle())) {
-                        return false;
-                    }
-
-                    if (!Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription())) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-    }
-
-    public enum IamBindingOptions {
-        NONE,
-
-        /** Purge existing temporary bindings for the same principal and role */
-        PURGE_EXISTING_TEMPORARY_BINDINGS,
-
-        /**
-         * Throw an AlreadyExistsException if an equivalent binding for the same
-         * principal and role exists
-         */
-        FAIL_IF_BINDING_EXISTS
-    }
-
-    // ---------------------------------------------------------------------------
-    // Request classes for APIs only available in v1.
-    // ---------------------------------------------------------------------------
+    private static final String REST_PATH = "v1/projects/{projectId}:getAncestry";
 
     /**
      * Gets a list of ancestors in the resource hierarchy for the Project identified
@@ -400,270 +411,259 @@ public class ResourceManagerClient {
      * permissions for this
      * Project.
      */
-    private static class GetAncestry extends CloudResourceManagerRequest<GetAncestryResponse> {
+    protected GetAncestry(
+        CloudResourceManager client,
+        String projectId,
+        GetAncestryRequest content) {
+      super(client, "POST", REST_PATH, content, GetAncestryResponse.class);
+      this.projectId = Preconditions.checkNotNull(projectId, "Required parameter projectId must be specified.");
+    }
 
-        private static final String REST_PATH = "v1/projects/{projectId}:getAncestry";
+    @Override
+    public GetAncestry set$Xgafv(String $Xgafv) {
+      return (GetAncestry) super.set$Xgafv($Xgafv);
+    }
 
-        /**
-         * Gets a list of ancestors in the resource hierarchy for the Project identified
-         * by the specified
-         * `project_id` (for example, `my-project-123`). The caller must have read
-         * permissions for this
-         * Project.
-         */
-        protected GetAncestry(
-                CloudResourceManager client,
-                String projectId,
-                GetAncestryRequest content) {
-            super(client, "POST", REST_PATH, content, GetAncestryResponse.class);
-            this.projectId = Preconditions.checkNotNull(projectId, "Required parameter projectId must be specified.");
-        }
+    @Override
+    public GetAncestry setAccessToken(String accessToken) {
+      return (GetAncestry) super.setAccessToken(accessToken);
+    }
 
-        @Override
-        public GetAncestry set$Xgafv(String $Xgafv) {
-            return (GetAncestry) super.set$Xgafv($Xgafv);
-        }
+    @Override
+    public GetAncestry setAlt(String alt) {
+      return (GetAncestry) super.setAlt(alt);
+    }
 
-        @Override
-        public GetAncestry setAccessToken(String accessToken) {
-            return (GetAncestry) super.setAccessToken(accessToken);
-        }
+    @Override
+    public GetAncestry setCallback(String callback) {
+      return (GetAncestry) super.setCallback(callback);
+    }
 
-        @Override
-        public GetAncestry setAlt(String alt) {
-            return (GetAncestry) super.setAlt(alt);
-        }
+    @Override
+    public GetAncestry setFields(String fields) {
+      return (GetAncestry) super.setFields(fields);
+    }
 
-        @Override
-        public GetAncestry setCallback(String callback) {
-            return (GetAncestry) super.setCallback(callback);
-        }
+    @Override
+    public GetAncestry setKey(String key) {
+      return (GetAncestry) super.setKey(key);
+    }
 
-        @Override
-        public GetAncestry setFields(String fields) {
-            return (GetAncestry) super.setFields(fields);
-        }
+    @Override
+    public GetAncestry setOauthToken(String oauthToken) {
+      return (GetAncestry) super.setOauthToken(oauthToken);
+    }
 
-        @Override
-        public GetAncestry setKey(String key) {
-            return (GetAncestry) super.setKey(key);
-        }
+    @Override
+    public GetAncestry setPrettyPrint(Boolean prettyPrint) {
+      return (GetAncestry) super.setPrettyPrint(prettyPrint);
+    }
 
-        @Override
-        public GetAncestry setOauthToken(String oauthToken) {
-            return (GetAncestry) super.setOauthToken(oauthToken);
-        }
+    @Override
+    public GetAncestry setQuotaUser(String quotaUser) {
+      return (GetAncestry) super.setQuotaUser(quotaUser);
+    }
 
-        @Override
-        public GetAncestry setPrettyPrint(Boolean prettyPrint) {
-            return (GetAncestry) super.setPrettyPrint(prettyPrint);
-        }
+    @Override
+    public GetAncestry setUploadType(String uploadType) {
+      return (GetAncestry) super.setUploadType(uploadType);
+    }
 
-        @Override
-        public GetAncestry setQuotaUser(String quotaUser) {
-            return (GetAncestry) super.setQuotaUser(quotaUser);
-        }
+    @Override
+    public GetAncestry setUploadProtocol(String uploadProtocol) {
+      return (GetAncestry) super.setUploadProtocol(uploadProtocol);
+    }
 
-        @Override
-        public GetAncestry setUploadType(String uploadType) {
-            return (GetAncestry) super.setUploadType(uploadType);
-        }
+    /** Required. The Project ID (for example, `my-project-123`). */
+    @Key
+    private String projectId;
 
-        @Override
-        public GetAncestry setUploadProtocol(String uploadProtocol) {
-            return (GetAncestry) super.setUploadProtocol(uploadProtocol);
-        }
+    /**
+     * Required. The Project ID (for example, `my-project-123`).
+     */
+    public String getProjectId() {
+      return projectId;
+    }
 
-        /** Required. The Project ID (for example, `my-project-123`). */
-        @Key
-        private String projectId;
+    /** Required. The Project ID (for example, `my-project-123`). */
+    public GetAncestry setProjectId(String projectId) {
+      this.projectId = projectId;
+      return this;
+    }
 
-        /**
-         * Required. The Project ID (for example, `my-project-123`).
-         */
-        public String getProjectId() {
-            return projectId;
-        }
+    @Override
+    public GetAncestry set(String parameterName, Object value) {
+      return (GetAncestry) super.set(parameterName, value);
+    }
+  }
 
-        /** Required. The Project ID (for example, `my-project-123`). */
-        public GetAncestry setProjectId(String projectId) {
-            this.projectId = projectId;
-            return this;
-        }
+  /**
+   * The request sent to the GetAncestry method.
+   */
+  private final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
+  }
 
-        @Override
-        public GetAncestry set(String parameterName, Object value) {
-            return (GetAncestry) super.set(parameterName, value);
-        }
+  /**
+   * Response from the projects.getAncestry method.
+   */
+  public static final class GetAncestryResponse extends GenericJson {
+    /**
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first
+     * ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * The value may be {@code null}.
+     */
+    @Key
+    private java.util.List<Ancestor> ancestor;
+
+    /**
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first
+     * ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * 
+     * @return value or {@code null} for none
+     */
+    public java.util.List<Ancestor> getAncestor() {
+      return ancestor;
     }
 
     /**
-     * The request sent to the GetAncestry method.
+     * Ancestors are ordered from bottom to top of the resource hierarchy. The first
+     * ancestor is the
+     * project itself, followed by the project's parent, etc..
+     * 
+     * @param ancestor ancestor or {@code null} for none
      */
-    private final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
+    public GetAncestryResponse setAncestor(java.util.List<Ancestor> ancestor) {
+      this.ancestor = ancestor;
+      return this;
+    }
+
+    @Override
+    public GetAncestryResponse set(String fieldName, Object value) {
+      return (GetAncestryResponse) super.set(fieldName, value);
+    }
+
+    @Override
+    public GetAncestryResponse clone() {
+      return (GetAncestryResponse) super.clone();
+    }
+  }
+
+  /**
+   * Identifying information for a single ancestor of a project.
+   */
+  public static final class Ancestor extends com.google.api.client.json.GenericJson {
+    /**
+     * Resource id of the ancestor.
+     * The value may be {@code null}.
+     */
+    @Key
+    private AncestryResourceId resourceId;
+
+    /**
+     * Resource id of the ancestor.
+     * 
+     * @return value or {@code null} for none
+     */
+    public AncestryResourceId getResourceId() {
+      return resourceId;
     }
 
     /**
-     * Response from the projects.getAncestry method.
+     * Resource id of the ancestor.
+     * 
+     * @param resourceId resourceId or {@code null} for none
      */
-    public static final class GetAncestryResponse extends GenericJson {
-        /**
-         * Ancestors are ordered from bottom to top of the resource hierarchy. The first
-         * ancestor is the
-         * project itself, followed by the project's parent, etc..
-         * The value may be {@code null}.
-         */
-        @Key
-        private java.util.List<Ancestor> ancestor;
+    public Ancestor setResourceId(AncestryResourceId resourceId) {
+      this.resourceId = resourceId;
+      return this;
+    }
 
-        /**
-         * Ancestors are ordered from bottom to top of the resource hierarchy. The first
-         * ancestor is the
-         * project itself, followed by the project's parent, etc..
-         * 
-         * @return value or {@code null} for none
-         */
-        public java.util.List<Ancestor> getAncestor() {
-            return ancestor;
-        }
+    @Override
+    public Ancestor set(String fieldName, Object value) {
+      return (Ancestor) super.set(fieldName, value);
+    }
 
-        /**
-         * Ancestors are ordered from bottom to top of the resource hierarchy. The first
-         * ancestor is the
-         * project itself, followed by the project's parent, etc..
-         * 
-         * @param ancestor ancestor or {@code null} for none
-         */
-        public GetAncestryResponse setAncestor(java.util.List<Ancestor> ancestor) {
-            this.ancestor = ancestor;
-            return this;
-        }
+    @Override
+    public Ancestor clone() {
+      return (Ancestor) super.clone();
+    }
+  }
 
-        @Override
-        public GetAncestryResponse set(String fieldName, Object value) {
-            return (GetAncestryResponse) super.set(fieldName, value);
-        }
+  /**
+   * A container to reference an id for any resource type.
+   */
+  public static final class AncestryResourceId extends com.google.api.client.json.GenericJson {
+    /**
+     * The type-specific id. This should correspond to the id used in the
+     * type-specific API's.
+     * The value may be {@code null}.
+     */
+    @Key
+    private String id;
 
-        @Override
-        public GetAncestryResponse clone() {
-            return (GetAncestryResponse) super.clone();
-        }
+    /**
+     * The resource type this id is for. At present, the valid types are:
+     * "organization", "folder",
+     * and "project".
+     * The value may be {@code null}.
+     */
+    @Key
+    private String type;
+
+    /**
+     * The type-specific id. This should correspond to the id used in the
+     * type-specific API's.
+     * 
+     * @return value or {@code null} for none
+     */
+    public String getId() {
+      return id;
     }
 
     /**
-     * Identifying information for a single ancestor of a project.
+     * The type-specific id. This should correspond to the id used in the
+     * type-specific API's.
+     * 
+     * @param id id or {@code null} for none
      */
-    public static final class Ancestor extends com.google.api.client.json.GenericJson {
-        /**
-         * Resource id of the ancestor.
-         * The value may be {@code null}.
-         */
-        @Key
-        private AncestryResourceId resourceId;
-
-        /**
-         * Resource id of the ancestor.
-         * 
-         * @return value or {@code null} for none
-         */
-        public AncestryResourceId getResourceId() {
-            return resourceId;
-        }
-
-        /**
-         * Resource id of the ancestor.
-         * 
-         * @param resourceId resourceId or {@code null} for none
-         */
-        public Ancestor setResourceId(AncestryResourceId resourceId) {
-            this.resourceId = resourceId;
-            return this;
-        }
-
-        @Override
-        public Ancestor set(String fieldName, Object value) {
-            return (Ancestor) super.set(fieldName, value);
-        }
-
-        @Override
-        public Ancestor clone() {
-            return (Ancestor) super.clone();
-        }
+    public AncestryResourceId setId(String id) {
+      this.id = id;
+      return this;
     }
 
     /**
-     * A container to reference an id for any resource type.
+     * The resource type this id is for. At present, the valid types are:
+     * "organization", "folder",
+     * and "project".
+     * 
+     * @return value or {@code null} for none
      */
-    public static final class AncestryResourceId extends com.google.api.client.json.GenericJson {
-        /**
-         * The type-specific id. This should correspond to the id used in the
-         * type-specific API's.
-         * The value may be {@code null}.
-         */
-        @Key
-        private String id;
-
-        /**
-         * The resource type this id is for. At present, the valid types are:
-         * "organization", "folder",
-         * and "project".
-         * The value may be {@code null}.
-         */
-        @Key
-        private String type;
-
-        /**
-         * The type-specific id. This should correspond to the id used in the
-         * type-specific API's.
-         * 
-         * @return value or {@code null} for none
-         */
-        public String getId() {
-            return id;
-        }
-
-        /**
-         * The type-specific id. This should correspond to the id used in the
-         * type-specific API's.
-         * 
-         * @param id id or {@code null} for none
-         */
-        public AncestryResourceId setId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        /**
-         * The resource type this id is for. At present, the valid types are:
-         * "organization", "folder",
-         * and "project".
-         * 
-         * @return value or {@code null} for none
-         */
-        public String getType() {
-            return type;
-        }
-
-        /**
-         * The resource type this id is for. At present, the valid types are:
-         * "organization", "folder",
-         * and "project".
-         * 
-         * @param type type or {@code null} for none
-         */
-        public AncestryResourceId setType(String type) {
-            this.type = type;
-            return this;
-        }
-
-        @Override
-        public AncestryResourceId set(String fieldName, Object value) {
-            return (AncestryResourceId) super.set(fieldName, value);
-        }
-
-        @Override
-        public AncestryResourceId clone() {
-            return (AncestryResourceId) super.clone();
-        }
+    public String getType() {
+      return type;
     }
+
+    /**
+     * The resource type this id is for. At present, the valid types are:
+     * "organization", "folder",
+     * and "project".
+     * 
+     * @param type type or {@code null} for none
+     */
+    public AncestryResourceId setType(String type) {
+      this.type = type;
+      return this;
+    }
+
+    @Override
+    public AncestryResourceId set(String fieldName, Object value) {
+      return (AncestryResourceId) super.set(fieldName, value);
+    }
+
+    @Override
+    public AncestryResourceId clone() {
+      return (AncestryResourceId) super.clone();
+    }
+  }
 }

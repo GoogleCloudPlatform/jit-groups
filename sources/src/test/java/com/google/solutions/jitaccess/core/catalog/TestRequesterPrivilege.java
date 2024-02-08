@@ -31,64 +31,64 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestRequesterPrivilege {
 
-    // -------------------------------------------------------------------------
-    // toString.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void toStringReturnsName() {
-        var privilege = new RequesterPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("1"),
-                "Sample privilege",
-                new SelfApproval(),
-                RequesterPrivilege.Status.AVAILABLE);
+  @Test
+  public void toStringReturnsName() {
+    var privilege = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("1"),
+        "Sample privilege",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
 
-        assertEquals("Sample privilege", privilege.toString());
-    }
+    assertEquals("Sample privilege", privilege.toString());
+  }
 
-    // -------------------------------------------------------------------------
-    // compareTo.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // compareTo.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void compareToOrdersByStatusThenName() {
-        var availableA = new RequesterPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                new SelfApproval(),
-                RequesterPrivilege.Status.AVAILABLE);
-        var activeA = new RequesterPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                new SelfApproval(),
-                RequesterPrivilege.Status.ACTIVE);
-        var pendingA = new RequesterPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("A"),
-                "Privilege A",
-                new SelfApproval(),
-                RequesterPrivilege.Status.ACTIVATION_PENDING);
+  @Test
+  public void compareToOrdersByStatusThenName() {
+    var availableA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
+    var activeA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.ACTIVE);
+    var pendingA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.ACTIVATION_PENDING);
 
-        var availableB = new RequesterPrivilege<SamplePrivilegeId>(
-                new SamplePrivilegeId("B"),
-                "Privilege B",
-                new SelfApproval(),
-                RequesterPrivilege.Status.AVAILABLE);
+    var availableB = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("B"),
+        "Privilege B",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
 
-        var privileges = List.of(
-                availableB,
-                pendingA,
-                availableA,
-                activeA);
+    var privileges = List.of(
+        availableB,
+        pendingA,
+        availableA,
+        activeA);
 
-        var sorted = new TreeSet<RequesterPrivilege<SamplePrivilegeId>>();
-        sorted.addAll(privileges);
+    var sorted = new TreeSet<RequesterPrivilege<SamplePrivilegeId>>();
+    sorted.addAll(privileges);
 
-        Assertions.assertIterableEquals(
-                List.of(
-                        availableA,
-                        availableB,
-                        activeA,
-                        pendingA),
-                sorted);
-    }
+    Assertions.assertIterableEquals(
+        List.of(
+            availableA,
+            availableB,
+            activeA,
+            pendingA),
+        sorted);
+  }
 }

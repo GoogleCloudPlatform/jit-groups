@@ -36,113 +36,113 @@ import java.util.Properties;
 import java.util.Set;
 
 public class IntegrationTestEnvironment {
-    private IntegrationTestEnvironment() {
+  private IntegrationTestEnvironment() {
+  }
+
+  private static final String SETTINGS_FILE = "test.properties";
+  public static final GoogleCredentials INVALID_CREDENTIAL = new GoogleCredentials(
+      new AccessToken("ey00", new Date(Long.MAX_VALUE))) {
+    @Override
+    public void refresh() {
+    }
+  };
+
+  public static final ProjectId PROJECT_ID;
+  public static final String REGION;
+
+  public static final GoogleCredentials APPLICATION_CREDENTIALS;
+  public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
+  public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
+
+  /**
+   * Service account that tests can use to grant temporary access to.
+   */
+  public static final UserId TEMPORARY_ACCESS_USER;
+
+  /**
+   * Service account that doesn't have access to anything.
+   */
+  public static final UserId NO_ACCESS_USER;
+
+  public static final PubSubTopic PUBSUB_TOPIC;
+
+  static {
+    //
+    // Open test settings file.
+    //
+    if (!new File(SETTINGS_FILE).exists()) {
+      throw new RuntimeException(
+          String.format(
+              "Cannot find %s. Create file to specify which test project to use.", SETTINGS_FILE));
     }
 
-    private static final String SETTINGS_FILE = "test.properties";
-    public static final GoogleCredentials INVALID_CREDENTIAL = new GoogleCredentials(
-            new AccessToken("ey00", new Date(Long.MAX_VALUE))) {
-        @Override
-        public void refresh() {
-        }
-    };
+    try (FileInputStream in = new FileInputStream(SETTINGS_FILE)) {
+      Properties settings = new Properties();
+      settings.load(in);
 
-    public static final ProjectId PROJECT_ID;
-    public static final String REGION;
+      PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
+      REGION = getOptional(settings, "test.region", null);
 
-    public static final GoogleCredentials APPLICATION_CREDENTIALS;
-    public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
-    public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
+      NO_ACCESS_USER = new UserId(
+          "no-access",
+          String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
 
-    /**
-     * Service account that tests can use to grant temporary access to.
-     */
-    public static final UserId TEMPORARY_ACCESS_USER;
+      TEMPORARY_ACCESS_USER = new UserId(
+          "temporary-access",
+          String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
-    /**
-     * Service account that doesn't have access to anything.
-     */
-    public static final UserId NO_ACCESS_USER;
+      var defaultCredentials = GoogleCredentials
+          .getApplicationDefault()
+          .createWithQuotaProject(PROJECT_ID.id());
 
-    public static final PubSubTopic PUBSUB_TOPIC;
+      var serviceAccount = getOptional(settings, "test.impersonateServiceAccount", null);
+      if (!Strings.isNullOrEmpty(serviceAccount)) {
+        APPLICATION_CREDENTIALS = impersonate(defaultCredentials, serviceAccount);
+      } else {
+        APPLICATION_CREDENTIALS = defaultCredentials;
+      }
 
-    static {
-        //
-        // Open test settings file.
-        //
-        if (!new File(SETTINGS_FILE).exists()) {
-            throw new RuntimeException(
-                    String.format(
-                            "Cannot find %s. Create file to specify which test project to use.", SETTINGS_FILE));
-        }
+      NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
+      TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
 
-        try (FileInputStream in = new FileInputStream(SETTINGS_FILE)) {
-            Properties settings = new Properties();
-            settings.load(in);
+      var topicName = getOptional(settings, "test.topic", "");
+      if (!Strings.isNullOrEmpty(topicName)) {
+        PUBSUB_TOPIC = new PubSubTopic(PROJECT_ID.id(), topicName);
+      } else {
+        PUBSUB_TOPIC = null;
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load test settings", e);
+    }
+  }
 
-            PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
-            REGION = getOptional(settings, "test.region", null);
-
-            NO_ACCESS_USER = new UserId(
-                    "no-access",
-                    String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
-
-            TEMPORARY_ACCESS_USER = new UserId(
-                    "temporary-access",
-                    String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
-
-            var defaultCredentials = GoogleCredentials
-                    .getApplicationDefault()
-                    .createWithQuotaProject(PROJECT_ID.id());
-
-            var serviceAccount = getOptional(settings, "test.impersonateServiceAccount", null);
-            if (!Strings.isNullOrEmpty(serviceAccount)) {
-                APPLICATION_CREDENTIALS = impersonate(defaultCredentials, serviceAccount);
-            } else {
-                APPLICATION_CREDENTIALS = defaultCredentials;
-            }
-
-            NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
-            TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
-
-            var topicName = getOptional(settings, "test.topic", "");
-            if (!Strings.isNullOrEmpty(topicName)) {
-                PUBSUB_TOPIC = new PubSubTopic(PROJECT_ID.id(), topicName);
-            } else {
-                PUBSUB_TOPIC = null;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load test settings", e);
-        }
+  private static String getMandatory(Properties properties, String property) {
+    String value = properties.getProperty(property);
+    if (value == null || value.isEmpty()) {
+      throw new RuntimeException(
+          String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
     }
 
-    private static String getMandatory(Properties properties, String property) {
-        String value = properties.getProperty(property);
-        if (value == null || value.isEmpty()) {
-            throw new RuntimeException(
-                    String.format("Settings file %s lacks setting for %s", SETTINGS_FILE, property));
-        }
+    return value;
+  }
 
-        return value;
+  private static String getOptional(Properties properties, String property, String defaultVal) {
+    String value = properties.getProperty(property);
+    if (value == null || value.isEmpty()) {
+      return defaultVal;
     }
 
-    private static String getOptional(Properties properties, String property, String defaultVal) {
-        String value = properties.getProperty(property);
-        if (value == null || value.isEmpty()) {
-            return defaultVal;
-        }
+    return value;
+  }
 
-        return value;
-    }
-
-    private static GoogleCredentials impersonate(GoogleCredentials source, String serviceAccount) {
-        return ImpersonatedCredentials.create(
-                source,
-                serviceAccount,
-                null,
-                Set.of(
-                        ResourceManagerClient.OAUTH_SCOPE,
-                        DirectoryGroupsClient.OAUTH_SCOPE).stream().toList(),
-                0);
-    }
+  private static GoogleCredentials impersonate(GoogleCredentials source, String serviceAccount) {
+    return ImpersonatedCredentials.create(
+        source,
+        serviceAccount,
+        null,
+        Set.of(
+            ResourceManagerClient.OAUTH_SCOPE,
+            DirectoryGroupsClient.OAUTH_SCOPE).stream().toList(),
+        0);
+  }
 }

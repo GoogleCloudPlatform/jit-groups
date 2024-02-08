@@ -26,17 +26,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestTokenObfuscator {
-    @Test
-    public void encode() {
-        var jwt = "eyABC.eyDE.FG";
+  @Test
+  public void encode() {
+    var jwt = "eyABC.eyDE.FG";
 
-        assertEquals("ABC~~DE~FG", TokenObfuscator.encode(jwt));
-    }
+    assertEquals("ABC~~DE~FG", TokenObfuscator.encode(jwt));
+  }
 
-    @Test
-    public void roundtrip() {
-        var jwt = "eyABC.eyDE.FG";
+  @Test
+  public void roundtrip() {
+    var jwt = "eyABC.eyDE.FG";
 
-        assertEquals(jwt, TokenObfuscator.decode(TokenObfuscator.encode(jwt)));
-    }
+    assertEquals(jwt, TokenObfuscator.decode(TokenObfuscator.encode(jwt)));
+  }
 }

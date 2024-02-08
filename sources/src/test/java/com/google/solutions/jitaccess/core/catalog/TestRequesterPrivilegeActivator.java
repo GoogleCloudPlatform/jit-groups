@@ -41,249 +41,249 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestRequesterPrivilegeActivator {
-    private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
-    private static final UserId SAMPLE_APPROVING_USER = new UserId("peer@example.com");
-    private static final UserId SAMPLE_UNKNOWN_USER = new UserId("unknown@example.com");
+  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
+  private static final UserId SAMPLE_APPROVING_USER = new UserId("peer@example.com");
+  private static final UserId SAMPLE_UNKNOWN_USER = new UserId("unknown@example.com");
 
-    private class SampleActivator extends RequesterPrivilegeActivator<SamplePrivilegeId> {
-        protected SampleActivator(
-                RequesterPrivilegeCatalog<SamplePrivilegeId> catalog,
-                JustificationPolicy policy) {
-            super(catalog, policy);
-        }
-
-        @Override
-        protected void provisionAccess(
-                UserId approvingUser,
-                ActivationRequest<SamplePrivilegeId> request)
-                throws AccessException, AlreadyExistsException, IOException {
-        }
-
-        @Override
-        public JsonWebTokenConverter<ActivationRequest<SamplePrivilegeId>> createTokenConverter() {
-            return null;
-        }
+  private class SampleActivator extends RequesterPrivilegeActivator<SamplePrivilegeId> {
+    protected SampleActivator(
+        RequesterPrivilegeCatalog<SamplePrivilegeId> catalog,
+        JustificationPolicy policy) {
+      super(catalog, policy);
     }
 
-    // -------------------------------------------------------------------------
-    // createActivationRequest.
-    // -------------------------------------------------------------------------
-
-    @Test
-    public void createActivationRequestChecksAccess() throws Exception {
-        RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
-
-        var activator = new SampleActivator(
-                catalog,
-                Mockito.mock(JustificationPolicy.class));
-
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
-        var request = activator.createActivationRequest(
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege,
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
-
-        assertNotNull(request);
-        assertEquals(SAMPLE_REQUESTING_USER, request.requestingUser());
-        assertEquals(privilege, request.requesterPrivilege());
-
-        verify(catalog, times(1)).verifyUserCanRequest(request);
+    @Override
+    protected void provisionAccess(
+        UserId approvingUser,
+        ActivationRequest<SamplePrivilegeId> request)
+        throws AccessException, AlreadyExistsException, IOException {
     }
 
-    @Test
-    public void whenUserNotAllowedToRequest_ThenCreatePeerApprovalRequestThrowsException() throws Exception {
-        var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
-
-        Mockito.doThrow(new AccessDeniedException("mock"))
-                .when(catalog)
-                .verifyUserCanRequest(any());
-
-        var activator = new SampleActivator(
-                catalog,
-                Mockito.mock(JustificationPolicy.class));
-
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
-
-        assertThrows(
-                AccessDeniedException.class,
-                () -> activator.createActivationRequest(
-                        SAMPLE_REQUESTING_USER,
-                        Set.of(SAMPLE_APPROVING_USER),
-                        requesterPrivilege,
-                        "justification",
-                        Instant.now(),
-                        Duration.ofMinutes(5)));
+    @Override
+    public JsonWebTokenConverter<ActivationRequest<SamplePrivilegeId>> createTokenConverter() {
+      return null;
     }
+  }
 
-    // -------------------------------------------------------------------------
-    // approve.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // createActivationRequest.
+  // -------------------------------------------------------------------------
 
-    @Test
-    public void whenJustificationInvalid_ThenApproveRequestThrowsException() throws Exception {
-        var justificationPolicy = Mockito.mock(JustificationPolicy.class);
+  @Test
+  public void createActivationRequestChecksAccess() throws Exception {
+    RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
 
-        Mockito.doThrow(new InvalidJustificationException("mock"))
-                .when(justificationPolicy)
-                .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
+    var activator = new SampleActivator(
+        catalog,
+        Mockito.mock(JustificationPolicy.class));
 
-        var activator = new SampleActivator(
-                Mockito.mock(RequesterPrivilegeCatalog.class),
-                justificationPolicy);
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
+    var request = activator.createActivationRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege,
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
 
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
+    assertNotNull(request);
+    assertEquals(SAMPLE_REQUESTING_USER, request.requestingUser());
+    assertEquals(privilege, request.requesterPrivilege());
 
-        var request = activator.createActivationRequest(
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege,
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
+    verify(catalog, times(1)).verifyUserCanRequest(request);
+  }
 
-        assertThrows(
-                InvalidJustificationException.class,
-                () -> activator.approve(SAMPLE_APPROVING_USER, request));
-    }
+  @Test
+  public void whenUserNotAllowedToRequest_ThenCreatePeerApprovalRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
 
-    @Test
-    public void whenUserNotAllowedToRequest_ThenApproveRequestThrowsException() throws Exception {
-        RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
+    Mockito.doThrow(new AccessDeniedException("mock"))
+        .when(catalog)
+        .verifyUserCanRequest(any());
 
-        Mockito.doThrow(new AccessDeniedException("mock"))
-                .when(catalog)
-                .verifyUserCanRequest(any());
+    var activator = new SampleActivator(
+        catalog,
+        Mockito.mock(JustificationPolicy.class));
 
-        var activator = new SampleActivator(
-                catalog,
-                Mockito.mock(JustificationPolicy.class));
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
 
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
+    assertThrows(
+        AccessDeniedException.class,
+        () -> activator.createActivationRequest(
+            SAMPLE_REQUESTING_USER,
+            Set.of(SAMPLE_APPROVING_USER),
+            requesterPrivilege,
+            "justification",
+            Instant.now(),
+            Duration.ofMinutes(5)));
+  }
 
-        var request = new ActivationRequest<SamplePrivilegeId>(
-                ActivationId.newId(requesterPrivilege.activationType()),
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege.id(),
-                requesterPrivilege.activationType(),
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
+  // -------------------------------------------------------------------------
+  // approve.
+  // -------------------------------------------------------------------------
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> activator.approve(SAMPLE_APPROVING_USER, request));
-    }
+  @Test
+  public void whenJustificationInvalid_ThenApproveRequestThrowsException() throws Exception {
+    var justificationPolicy = Mockito.mock(JustificationPolicy.class);
 
-    @Test
-    public void whenApprovingUserUnknown_ThenApproveRequestThrowsException() throws Exception {
-        var activator = new SampleActivator(
-                Mockito.mock(RequesterPrivilegeCatalog.class),
-                Mockito.mock(JustificationPolicy.class));
+    Mockito.doThrow(new InvalidJustificationException("mock"))
+        .when(justificationPolicy)
+        .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
 
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
+    var activator = new SampleActivator(
+        Mockito.mock(RequesterPrivilegeCatalog.class),
+        justificationPolicy);
 
-        var request = activator.createActivationRequest(
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege,
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> activator.approve(SAMPLE_UNKNOWN_USER, request));
-    }
+    var request = activator.createActivationRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege,
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
 
-    @Test
-    public void whenRequestingUserNotAllowedToRequestAnymore_ThenApproveRequestThrowsException()
-            throws Exception {
-        var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
-        var activator = new SampleActivator(
-                catalog,
-                Mockito.mock(JustificationPolicy.class));
+    assertThrows(
+        InvalidJustificationException.class,
+        () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
 
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
+  @Test
+  public void whenUserNotAllowedToRequest_ThenApproveRequestThrowsException() throws Exception {
+    RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
 
-        var request = activator.createActivationRequest(
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege,
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
+    Mockito.doThrow(new AccessDeniedException("mock"))
+        .when(catalog)
+        .verifyUserCanRequest(any());
 
-        Mockito.doThrow(new AccessDeniedException("mock"))
-                .when(catalog)
-                .verifyUserCanRequest(any());
+    var activator = new SampleActivator(
+        catalog,
+        Mockito.mock(JustificationPolicy.class));
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> activator.approve(SAMPLE_APPROVING_USER, request));
-    }
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
 
-    @Test
-    public void whenApprovingUserNotAllowedToApprove_ThenApproveRequestThrowsException() throws Exception {
-        var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
-        var activator = new SampleActivator(
-                catalog,
-                Mockito.mock(JustificationPolicy.class));
+    var request = new ActivationRequest<SamplePrivilegeId>(
+        ActivationId.newId(requesterPrivilege.activationType()),
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege.id(),
+        requesterPrivilege.activationType(),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
 
-        var privilege = new SamplePrivilegeId("cat", "1");
-        var requesterPrivilege = new RequesterPrivilege<>(
-                privilege,
-                privilege.id(),
-                new ExternalApproval("topic"),
-                Status.AVAILABLE);
+    assertThrows(
+        AccessDeniedException.class,
+        () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
 
-        var request = activator.createActivationRequest(
-                SAMPLE_REQUESTING_USER,
-                Set.of(SAMPLE_APPROVING_USER),
-                requesterPrivilege,
-                "justification",
-                Instant.now(),
-                Duration.ofMinutes(5));
+  @Test
+  public void whenApprovingUserUnknown_ThenApproveRequestThrowsException() throws Exception {
+    var activator = new SampleActivator(
+        Mockito.mock(RequesterPrivilegeCatalog.class),
+        Mockito.mock(JustificationPolicy.class));
 
-        Mockito.doThrow(new AccessDeniedException("mock"))
-                .when(catalog)
-                .verifyUserCanApprove(eq(SAMPLE_APPROVING_USER), any());
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
 
-        assertThrows(
-                AccessDeniedException.class,
-                () -> activator.approve(SAMPLE_APPROVING_USER, request));
-    }
+    var request = activator.createActivationRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege,
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
+
+    assertThrows(
+        AccessDeniedException.class,
+        () -> activator.approve(SAMPLE_UNKNOWN_USER, request));
+  }
+
+  @Test
+  public void whenRequestingUserNotAllowedToRequestAnymore_ThenApproveRequestThrowsException()
+      throws Exception {
+    var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
+    var activator = new SampleActivator(
+        catalog,
+        Mockito.mock(JustificationPolicy.class));
+
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
+
+    var request = activator.createActivationRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege,
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+        .when(catalog)
+        .verifyUserCanRequest(any());
+
+    assertThrows(
+        AccessDeniedException.class,
+        () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
+
+  @Test
+  public void whenApprovingUserNotAllowedToApprove_ThenApproveRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
+    var activator = new SampleActivator(
+        catalog,
+        Mockito.mock(JustificationPolicy.class));
+
+    var privilege = new SamplePrivilegeId("cat", "1");
+    var requesterPrivilege = new RequesterPrivilege<>(
+        privilege,
+        privilege.id(),
+        new ExternalApproval("topic"),
+        Status.AVAILABLE);
+
+    var request = activator.createActivationRequest(
+        SAMPLE_REQUESTING_USER,
+        Set.of(SAMPLE_APPROVING_USER),
+        requesterPrivilege,
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5));
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+        .when(catalog)
+        .verifyUserCanApprove(eq(SAMPLE_APPROVING_USER), any());
+
+    assertThrows(
+        AccessDeniedException.class,
+        () -> activator.approve(SAMPLE_APPROVING_USER, request));
+  }
 }

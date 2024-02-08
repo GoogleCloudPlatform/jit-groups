@@ -35,80 +35,80 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestMessageTemplate {
-    private static class TestNotification extends NotificationService.Notification {
-        private final String templateId;
+  private static class TestNotification extends NotificationService.Notification {
+    private final String templateId;
 
-        protected TestNotification(
-                UserId recipient,
-                String subject,
-                Map<String, Object> properties,
-                String templateId) {
-            super(
-                    List.of(recipient),
-                    List.of(),
-                    subject);
-            this.properties.putAll(properties);
-            this.templateId = templateId;
-        }
-
-        @Override
-        public String getType() {
-            return this.templateId;
-        }
+    protected TestNotification(
+        UserId recipient,
+        String subject,
+        Map<String, Object> properties,
+        String templateId) {
+      super(
+          List.of(recipient),
+          List.of(),
+          subject);
+      this.properties.putAll(properties);
+      this.templateId = templateId;
     }
 
-    // -------------------------------------------------------------------------
-    // format.
-    // -------------------------------------------------------------------------
-
-    @Test
-    public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() {
-        var properties = new HashMap<String, Object>();
-        properties.put("TEST-1", "<value1/>");
-        properties.put("TEST-2", "<value2/>");
-
-        var notification = new TestNotification(
-                new UserId("user@example.com"),
-                "Test email",
-                properties,
-                "ignored-templateid");
-
-        var template = new MailNotificationService.MessageTemplate(
-                notification.properties
-                        .entrySet()
-                        .stream()
-                        .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-                        .collect(Collectors.joining()),
-                MailNotificationService.Options.DEFAULT_TIMEZONE,
-                HtmlEscapers.htmlEscaper());
-
-        assertEquals(
-                "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
-                template.format(notification));
+    @Override
+    public String getType() {
+      return this.templateId;
     }
+  }
 
-    @Test
-    public void whenPropertiesContainDates_ThenFormatAppliesTimezone() {
-        var properties = new HashMap<String, Object>();
-        properties.put("TEST-1", Instant.ofEpochSecond(86400));
+  // -------------------------------------------------------------------------
+  // format.
+  // -------------------------------------------------------------------------
 
-        var notification = new TestNotification(
-                new UserId("user@example.com"),
-                "Test email",
-                properties,
-                "ignored-templateid");
+  @Test
+  public void whenPropertiesContainHtmlTags_ThenFormatEscapesTags() {
+    var properties = new HashMap<String, Object>();
+    properties.put("TEST-1", "<value1/>");
+    properties.put("TEST-2", "<value2/>");
 
-        var template = new MailNotificationService.MessageTemplate(
-                notification.properties
-                        .entrySet()
-                        .stream()
-                        .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-                        .collect(Collectors.joining()),
-                ZoneId.of("Australia/Melbourne"),
-                HtmlEscapers.htmlEscaper());
+    var notification = new TestNotification(
+        new UserId("user@example.com"),
+        "Test email",
+        properties,
+        "ignored-templateid");
 
-        assertEquals(
-                "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
-                template.format(notification).trim());
-    }
+    var template = new MailNotificationService.MessageTemplate(
+        notification.properties
+            .entrySet()
+            .stream()
+            .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
+            .collect(Collectors.joining()),
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        HtmlEscapers.htmlEscaper());
+
+    assertEquals(
+        "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
+        template.format(notification));
+  }
+
+  @Test
+  public void whenPropertiesContainDates_ThenFormatAppliesTimezone() {
+    var properties = new HashMap<String, Object>();
+    properties.put("TEST-1", Instant.ofEpochSecond(86400));
+
+    var notification = new TestNotification(
+        new UserId("user@example.com"),
+        "Test email",
+        properties,
+        "ignored-templateid");
+
+    var template = new MailNotificationService.MessageTemplate(
+        notification.properties
+            .entrySet()
+            .stream()
+            .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
+            .collect(Collectors.joining()),
+        ZoneId.of("Australia/Melbourne"),
+        HtmlEscapers.htmlEscaper());
+
+    assertEquals(
+        "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
+        template.format(notification).trim());
+  }
 }

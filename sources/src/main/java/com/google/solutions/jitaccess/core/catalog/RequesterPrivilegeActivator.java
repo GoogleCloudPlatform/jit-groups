@@ -36,95 +36,95 @@ import java.util.Set;
  * Activates requester privileges, for example by modifying IAM policies.
  */
 public abstract class RequesterPrivilegeActivator<TPrivilegeId extends PrivilegeId> {
-    private final JustificationPolicy policy;
-    private final RequesterPrivilegeCatalog<TPrivilegeId> catalog;
+  private final JustificationPolicy policy;
+  private final RequesterPrivilegeCatalog<TPrivilegeId> catalog;
 
-    protected RequesterPrivilegeActivator(
-            RequesterPrivilegeCatalog<TPrivilegeId> catalog,
-            JustificationPolicy policy) {
-        Preconditions.checkNotNull(catalog, "catalog");
-        Preconditions.checkNotNull(policy, "policy");
+  protected RequesterPrivilegeActivator(
+      RequesterPrivilegeCatalog<TPrivilegeId> catalog,
+      JustificationPolicy policy) {
+    Preconditions.checkNotNull(catalog, "catalog");
+    Preconditions.checkNotNull(policy, "policy");
 
-        this.catalog = catalog;
-        this.policy = policy;
+    this.catalog = catalog;
+    this.policy = policy;
+  }
+
+  /**
+   * Create a new request to activate a privilege.
+   */
+  public final ActivationRequest<TPrivilegeId> createActivationRequest(
+      UserId requestingUser,
+      Set<UserId> reviewers,
+      RequesterPrivilege<TPrivilegeId> requesterPrivilege,
+      String justification,
+      Instant startTime,
+      Duration duration) throws AccessException, IOException {
+    Preconditions.checkArgument(
+        startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
+        "Start time must not be in the past");
+
+    var request = new ActivationRequest<TPrivilegeId>(
+        ActivationId.newId(requesterPrivilege.activationType()),
+        requestingUser,
+        reviewers,
+        requesterPrivilege.id(),
+        requesterPrivilege.activationType(),
+        justification,
+        startTime,
+        duration);
+
+    this.catalog.verifyUserCanRequest(request);
+    return request;
+  }
+
+  /**
+   * Approve another user's request.
+   */
+  public final Activation<TPrivilegeId> approve(
+      UserId approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException {
+    Preconditions.checkNotNull(policy, "policy");
+
+    if (!(request.reviewers().contains(approvingUser)
+        || request.activationType() instanceof SelfApproval)) {
+      throw new AccessDeniedException(
+          String.format("The request does not permit approval by %s", approvingUser));
     }
 
-    /**
-     * Create a new request to activate a privilege.
-     */
-    public final ActivationRequest<TPrivilegeId> createActivationRequest(
-            UserId requestingUser,
-            Set<UserId> reviewers,
-            RequesterPrivilege<TPrivilegeId> requesterPrivilege,
-            String justification,
-            Instant startTime,
-            Duration duration) throws AccessException, IOException {
-        Preconditions.checkArgument(
-                startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
-                "Start time must not be in the past");
+    //
+    // Check that the justification is ok.
+    //
+    policy.checkJustification(request.requestingUser(), request.justification());
 
-        var request = new ActivationRequest<TPrivilegeId>(
-                ActivationId.newId(requesterPrivilege.activationType()),
-                requestingUser,
-                reviewers,
-                requesterPrivilege.id(),
-                requesterPrivilege.activationType(),
-                justification,
-                startTime,
-                duration);
+    //
+    // Check that the user is (still) allowed to request this privilege.
+    //
+    this.catalog.verifyUserCanRequest(request);
 
-        this.catalog.verifyUserCanRequest(request);
-        return request;
-    }
+    //
+    // Check that the approving user is (still) allowed to approve this privilege
+    // request.
+    //
+    this.catalog.verifyUserCanApprove(approvingUser, request);
 
-    /**
-     * Approve another user's request.
-     */
-    public final Activation<TPrivilegeId> approve(
-            UserId approvingUser,
-            ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException {
-        Preconditions.checkNotNull(policy, "policy");
+    //
+    // Request is legit, apply it.
+    //
+    provisionAccess(approvingUser, request);
 
-        if (!(request.reviewers().contains(approvingUser)
-                || request.activationType() instanceof SelfApproval)) {
-            throw new AccessDeniedException(
-                    String.format("The request does not permit approval by %s", approvingUser));
-        }
+    return new Activation<>(request);
+  }
 
-        //
-        // Check that the justification is ok.
-        //
-        policy.checkJustification(request.requestingUser(), request.justification());
+  /**
+   * Apply a request.
+   */
+  protected abstract void provisionAccess(
+      UserId approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException;
 
-        //
-        // Check that the user is (still) allowed to request this privilege.
-        //
-        this.catalog.verifyUserCanRequest(request);
-
-        //
-        // Check that the approving user is (still) allowed to approve this privilege
-        // request.
-        //
-        this.catalog.verifyUserCanApprove(approvingUser, request);
-
-        //
-        // Request is legit, apply it.
-        //
-        provisionAccess(approvingUser, request);
-
-        return new Activation<>(request);
-    }
-
-    /**
-     * Apply a request.
-     */
-    protected abstract void provisionAccess(
-            UserId approvingUser,
-            ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException;
-
-    /**
-     * Create a converter for turning MPA requests into JWTs, and
-     * vice versa.
-     */
-    public abstract JsonWebTokenConverter<ActivationRequest<TPrivilegeId>> createTokenConverter();
+  /**
+   * Create a converter for turning MPA requests into JWTs, and
+   * vice versa.
+   */
+  public abstract JsonWebTokenConverter<ActivationRequest<TPrivilegeId>> createTokenConverter();
 }

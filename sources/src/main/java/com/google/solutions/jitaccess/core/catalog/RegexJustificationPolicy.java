@@ -33,31 +33,31 @@ import java.util.regex.Pattern;
  */
 @Singleton
 public class RegexJustificationPolicy implements JustificationPolicy {
-    private final Options options;
+  private final Options options;
 
-    public RegexJustificationPolicy(Options options) {
-        Preconditions.checkNotNull(options, "options");
-        this.options = options;
-    }
+  public RegexJustificationPolicy(Options options) {
+    Preconditions.checkNotNull(options, "options");
+    this.options = options;
+  }
 
-    @Override
-    public void checkJustification(
-            UserId user,
-            String justification) throws InvalidJustificationException {
-        if (Strings.isNullOrEmpty(justification) ||
-                !this.options.justificationPattern.matcher(justification).matches()) {
-            throw new InvalidJustificationException(
-                    String.format("Justification does not meet criteria: %s", this.options.justificationHint));
-        }
+  @Override
+  public void checkJustification(
+      UserId user,
+      String justification) throws InvalidJustificationException {
+    if (Strings.isNullOrEmpty(justification) ||
+        !this.options.justificationPattern.matcher(justification).matches()) {
+      throw new InvalidJustificationException(
+          String.format("Justification does not meet criteria: %s", this.options.justificationHint));
     }
+  }
 
-    @Override
-    public String hint() {
-        return this.options.justificationHint();
-    }
+  @Override
+  public String hint() {
+    return this.options.justificationHint();
+  }
 
-    public record Options(
-            String justificationHint,
-            Pattern justificationPattern) {
-    }
+  public record Options(
+      String justificationHint,
+      Pattern justificationPattern) {
+  }
 }

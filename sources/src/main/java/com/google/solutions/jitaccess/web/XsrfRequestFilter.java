@@ -40,23 +40,23 @@ import jakarta.ws.rs.ext.Provider;
 @Priority(Priorities.AUTHENTICATION - 200)
 public class XsrfRequestFilter implements ContainerRequestFilter {
 
-    public static final String XSRF_HEADER_NAME = "X-JITACCESS";
-    public static final String XSRF_HEADER_VALUE = "1";
+  public static final String XSRF_HEADER_NAME = "X-JITACCESS";
+  public static final String XSRF_HEADER_VALUE = "1";
 
-    @Override
-    public void filter(ContainerRequestContext containerRequestContext) {
-        //
-        // Verify that the request contains a special header. Trying to inject
-        // that header from a different site would trigger a CORS check, which
-        // we'd deny.
-        //
-        if (!XSRF_HEADER_VALUE.equals(containerRequestContext.getHeaderString(XSRF_HEADER_NAME))) {
-            containerRequestContext.abortWith(
-                    Response
-                            .status(400, "Invalid request")
-                            .entity(new ExceptionMappers.ErrorEntity(
-                                    new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
-                            .build());
-        }
+  @Override
+  public void filter(ContainerRequestContext containerRequestContext) {
+    //
+    // Verify that the request contains a special header. Trying to inject
+    // that header from a different site would trigger a CORS check, which
+    // we'd deny.
+    //
+    if (!XSRF_HEADER_VALUE.equals(containerRequestContext.getHeaderString(XSRF_HEADER_NAME))) {
+      containerRequestContext.abortWith(
+          Response
+              .status(400, "Invalid request")
+              .entity(new ExceptionMappers.ErrorEntity(
+                  new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
+              .build());
     }
+  }
 }

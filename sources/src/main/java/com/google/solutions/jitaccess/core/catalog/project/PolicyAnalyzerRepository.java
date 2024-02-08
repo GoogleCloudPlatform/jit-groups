@@ -47,225 +47,225 @@ import java.util.stream.Stream;
  * "eligible").
  */
 public class PolicyAnalyzerRepository implements ProjectRoleRepository {
-    private final Options options;
-    private final PolicyAnalyzerClient policyAnalyzerClient;
+  private final Options options;
+  private final PolicyAnalyzerClient policyAnalyzerClient;
 
-    public PolicyAnalyzerRepository(
-            PolicyAnalyzerClient policyAnalyzerClient,
-            Options options) {
-        Preconditions.checkNotNull(policyAnalyzerClient, "assetInventoryClient");
-        Preconditions.checkNotNull(options, "options");
+  public PolicyAnalyzerRepository(
+      PolicyAnalyzerClient policyAnalyzerClient,
+      Options options) {
+    Preconditions.checkNotNull(policyAnalyzerClient, "assetInventoryClient");
+    Preconditions.checkNotNull(options, "options");
 
-        this.policyAnalyzerClient = policyAnalyzerClient;
-        this.options = options;
-    }
+    this.policyAnalyzerClient = policyAnalyzerClient;
+    this.options = options;
+  }
 
-    static List<RoleBinding> findRoleBindings(
-            IamPolicyAnalysis analysisResult,
-            Predicate<Expr> conditionPredicate,
-            Predicate<String> conditionEvaluationPredicate) {
-        //
-        // NB. We don't really care which resource a policy is attached to
-        // (indicated by AttachedResourceFullName). Instead, we care about
-        // which resources it applies to.
-        //
-        return Stream.ofNullable(analysisResult.getAnalysisResults())
-                .flatMap(Collection::stream)
+  static List<RoleBinding> findRoleBindings(
+      IamPolicyAnalysis analysisResult,
+      Predicate<Expr> conditionPredicate,
+      Predicate<String> conditionEvaluationPredicate) {
+    //
+    // NB. We don't really care which resource a policy is attached to
+    // (indicated by AttachedResourceFullName). Instead, we care about
+    // which resources it applies to.
+    //
+    return Stream.ofNullable(analysisResult.getAnalysisResults())
+        .flatMap(Collection::stream)
 
-                // Narrow down to IAM bindings with a specific IAM condition.
-                .filter(result -> conditionPredicate.test(result.getIamBinding() != null
-                        ? result.getIamBinding().getCondition()
-                        : null))
-                .flatMap(result -> result
-                        .getAccessControlLists()
-                        .stream()
+        // Narrow down to IAM bindings with a specific IAM condition.
+        .filter(result -> conditionPredicate.test(result.getIamBinding() != null
+            ? result.getIamBinding().getCondition()
+            : null))
+        .flatMap(result -> result
+            .getAccessControlLists()
+            .stream()
 
-                        // Narrow down to ACLs with a specific IAM condition evaluation result.
-                        .filter(acl -> conditionEvaluationPredicate.test(acl.getConditionEvaluation() != null
-                                ? acl.getConditionEvaluation().getEvaluationValue()
-                                : null))
+            // Narrow down to ACLs with a specific IAM condition evaluation result.
+            .filter(acl -> conditionEvaluationPredicate.test(acl.getConditionEvaluation() != null
+                ? acl.getConditionEvaluation().getEvaluationValue()
+                : null))
 
-                        // Collect all (supported) resources covered by these bindings/ACLs.
-                        .flatMap(acl -> acl.getResources()
-                                .stream()
-                                .filter(res -> ProjectId.isProjectFullResourceName(res.getFullResourceName()))
-                                .map(res -> new RoleBinding(
-                                        res.getFullResourceName(),
-                                        result.getIamBinding().getRole()))))
-                .collect(Collectors.toList());
-    }
-
-    // ---------------------------------------------------------------------------
-    // ProjectRoleRepository.
-    // ---------------------------------------------------------------------------
-
-    @Override
-    public SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
-            UserId user) throws AccessException, IOException {
-
-        Preconditions.checkNotNull(user, "user");
-
-        //
-        // NB. To reliably find projects, we have to let the Asset API consider
-        // inherited role bindings by using the "expand resources" flag. This
-        // flag causes the API to return *all* resources for which an IAM binding
-        // applies.
-        //
-        // The risk here is that the list of resources grows so large that we're hitting
-        // the limits of the API, in which case it starts truncating results. To
-        // mitigate this risk, filter on a permission that:
-        //
-        // - only applies to projects, and has no meaning on descendant resources
-        // - represents the lowest level of access to a project.
-        //
-        var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
-                this.options.scope,
-                user,
-                Optional.of("resourcemanager.projects.get"),
-                Optional.empty(),
-                true);
-
-        //
-        // Consider permanent and eligible bindings.
-        //
-        var roleBindings = findRoleBindings(
-                analysisResult,
-                condition -> condition == null ||
-                        PrivilegeFactory
-                                .createRequesterPrivilege(
-                                        new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")),
-                                        condition)
-                                .isPresent(),
-                evalResult -> evalResult == null ||
-                        "TRUE".equalsIgnoreCase(evalResult) ||
-                        "CONDITIONAL".equalsIgnoreCase(evalResult));
-
-        return roleBindings
+            // Collect all (supported) resources covered by these bindings/ACLs.
+            .flatMap(acl -> acl.getResources()
                 .stream()
-                .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
-                .collect(Collectors.toCollection(TreeSet::new));
+                .filter(res -> ProjectId.isProjectFullResourceName(res.getFullResourceName()))
+                .map(res -> new RoleBinding(
+                    res.getFullResourceName(),
+                    result.getIamBinding().getRole()))))
+        .collect(Collectors.toList());
+  }
+
+  // ---------------------------------------------------------------------------
+  // ProjectRoleRepository.
+  // ---------------------------------------------------------------------------
+
+  @Override
+  public SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+      UserId user) throws AccessException, IOException {
+
+    Preconditions.checkNotNull(user, "user");
+
+    //
+    // NB. To reliably find projects, we have to let the Asset API consider
+    // inherited role bindings by using the "expand resources" flag. This
+    // flag causes the API to return *all* resources for which an IAM binding
+    // applies.
+    //
+    // The risk here is that the list of resources grows so large that we're hitting
+    // the limits of the API, in which case it starts truncating results. To
+    // mitigate this risk, filter on a permission that:
+    //
+    // - only applies to projects, and has no meaning on descendant resources
+    // - represents the lowest level of access to a project.
+    //
+    var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
+        this.options.scope,
+        user,
+        Optional.of("resourcemanager.projects.get"),
+        Optional.empty(),
+        true);
+
+    //
+    // Consider permanent and eligible bindings.
+    //
+    var roleBindings = findRoleBindings(
+        analysisResult,
+        condition -> condition == null ||
+            PrivilegeFactory
+                .createRequesterPrivilege(
+                    new ProjectRoleBinding(new RoleBinding(new ProjectId("project"), "role")),
+                    condition)
+                .isPresent(),
+        evalResult -> evalResult == null ||
+            "TRUE".equalsIgnoreCase(evalResult) ||
+            "CONDITIONAL".equalsIgnoreCase(evalResult));
+
+    return roleBindings
+        .stream()
+        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
+        .collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  @Override
+  public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      UserId user,
+      ProjectId projectId,
+      Set<ActivationType> typesToInclude,
+      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
+
+    Preconditions.checkNotNull(user, "user");
+    Preconditions.checkNotNull(projectId, "projectId");
+
+    //
+    // Use Asset API to search for resources that the user could
+    // access if they satisfied the eligibility condition.
+    //
+    // NB. The existence of an eligibility condition alone isn't
+    // sufficient - it needs to be on a binding that applies to the
+    // user.
+    //
+    // NB. The Asset API considers group membership if the caller
+    // (i.e., the app's service account) has the 'Groups Reader'
+    // admin role.
+    //
+
+    var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
+        this.options.scope,
+        user,
+        Optional.empty(),
+        Optional.of(projectId.getFullResourceName()),
+        false);
+
+    var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
+    if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
+
+      allAvailable.addAll(Stream.ofNullable(analysisResult.getAnalysisResults())
+          .flatMap(Collection::stream)
+          .map(result -> result.getIamBinding())
+          .map(binding -> PrivilegeFactory.createRequesterPrivilege(
+              new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+              binding.getCondition()))
+          .filter(result -> result.isPresent())
+          .map(result -> result.get())
+          .filter(privilege -> typesToInclude.stream()
+              .anyMatch(type -> type.contains(privilege.activationType())))
+          .collect(Collectors.toSet()));
     }
 
-    @Override
-    public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
-            UserId user,
-            ProjectId projectId,
-            Set<ActivationType> typesToInclude,
-            EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
+    var allActive = new HashSet<ProjectRoleBinding>();
+    if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
+      //
+      // Find role bindings which have already been activated.
+      // These bindings have a time condition that we created, and
+      // the condition evaluates to true (indicating it's still
+      // valid).
+      //
 
-        Preconditions.checkNotNull(user, "user");
-        Preconditions.checkNotNull(projectId, "projectId");
+      var activeBindings = findRoleBindings(
+          analysisResult,
+          condition -> PrivilegeFactory.isActivated(condition),
+          evalResult -> "TRUE".equalsIgnoreCase(evalResult));
 
-        //
-        // Use Asset API to search for resources that the user could
-        // access if they satisfied the eligibility condition.
-        //
-        // NB. The existence of an eligibility condition alone isn't
-        // sufficient - it needs to be on a binding that applies to the
-        // user.
-        //
-        // NB. The Asset API considers group membership if the caller
-        // (i.e., the app's service account) has the 'Groups Reader'
-        // admin role.
-        //
-
-        var analysisResult = this.policyAnalyzerClient.findAccessibleResourcesByUser(
-                this.options.scope,
-                user,
-                Optional.empty(),
-                Optional.of(projectId.getFullResourceName()),
-                false);
-
-        var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
-        if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
-
-            allAvailable.addAll(Stream.ofNullable(analysisResult.getAnalysisResults())
-                    .flatMap(Collection::stream)
-                    .map(result -> result.getIamBinding())
-                    .map(binding -> PrivilegeFactory.createRequesterPrivilege(
-                            new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
-                            binding.getCondition()))
-                    .filter(result -> result.isPresent())
-                    .map(result -> result.get())
-                    .filter(privilege -> typesToInclude.stream()
-                            .anyMatch(type -> type.contains(privilege.activationType())))
-                    .collect(Collectors.toSet()));
-        }
-
-        var allActive = new HashSet<ProjectRoleBinding>();
-        if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
-            //
-            // Find role bindings which have already been activated.
-            // These bindings have a time condition that we created, and
-            // the condition evaluates to true (indicating it's still
-            // valid).
-            //
-
-            var activeBindings = findRoleBindings(
-                    analysisResult,
-                    condition -> PrivilegeFactory.isActivated(condition),
-                    evalResult -> "TRUE".equalsIgnoreCase(evalResult));
-
-            allActive.addAll(activeBindings
-                    .stream()
-                    .map(b -> new ProjectRoleBinding(b))
-                    .collect(Collectors.toSet()));
-        }
-
-        var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
-                .flatMap(Collection::stream)
-                .map(e -> e.getCause())
-                .collect(Collectors.toSet());
-
-        return new RequesterPrivilegeSet<>(allAvailable, allActive, warnings);
+      allActive.addAll(activeBindings
+          .stream()
+          .map(b -> new ProjectRoleBinding(b))
+          .collect(Collectors.toSet()));
     }
 
-    @Override
-    public Set<UserId> findReviewerPrivelegeHolders(
-            ProjectRoleBinding roleBinding,
-            ActivationType activationType) throws AccessException, IOException {
+    var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
+        .flatMap(Collection::stream)
+        .map(e -> e.getCause())
+        .collect(Collectors.toSet());
 
-        Preconditions.checkNotNull(roleBinding, "roleBinding");
-        assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
+    return new RequesterPrivilegeSet<>(allAvailable, allActive, warnings);
+  }
 
-        var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
-                this.options.scope,
-                roleBinding.roleBinding().fullResourceName(),
-                roleBinding.roleBinding().role());
+  @Override
+  public Set<UserId> findReviewerPrivelegeHolders(
+      ProjectRoleBinding roleBinding,
+      ActivationType activationType) throws AccessException, IOException {
 
-        return Stream.ofNullable(analysisResult.getAnalysisResults())
-                .flatMap(Collection::stream)
+    Preconditions.checkNotNull(roleBinding, "roleBinding");
+    assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
 
-                // Narrow down to IAM bindings with a privilege that allows reviewing the
-                // activation type.
-                .filter(result -> result.getIamBinding() != null &&
-                        PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
-                                .isPresent())
-                .filter(result -> result.getIamBinding() != null &&
-                        PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
-                                .get().reviewableTypes().stream().anyMatch(type -> type.contains(activationType)))
+    var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
+        this.options.scope,
+        roleBinding.roleBinding().fullResourceName(),
+        roleBinding.roleBinding().role());
 
-                // Collect identities (users and group members)
-                .filter(result -> result.getIdentityList() != null)
-                .flatMap(result -> result.getIdentityList().getIdentities().stream()
-                        .filter(id -> id.getName().startsWith("user:"))
-                        .map(id -> new UserId(id.getName().substring("user:".length()))))
+    return Stream.ofNullable(analysisResult.getAnalysisResults())
+        .flatMap(Collection::stream)
 
-                .collect(Collectors.toCollection(TreeSet::new));
+        // Narrow down to IAM bindings with a privilege that allows reviewing the
+        // activation type.
+        .filter(result -> result.getIamBinding() != null &&
+            PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
+                .isPresent())
+        .filter(result -> result.getIamBinding() != null &&
+            PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
+                .get().reviewableTypes().stream().anyMatch(type -> type.contains(activationType)))
+
+        // Collect identities (users and group members)
+        .filter(result -> result.getIdentityList() != null)
+        .flatMap(result -> result.getIdentityList().getIdentities().stream()
+            .filter(id -> id.getName().startsWith("user:"))
+            .map(id -> new UserId(id.getName().substring("user:".length()))))
+
+        .collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  // -------------------------------------------------------------------------
+  // Inner classes.
+  // -------------------------------------------------------------------------
+
+  /**
+   * @param scope Scope to use for queries.
+   */
+  public record Options(
+      String scope) {
+
+    public Options {
+      Preconditions.checkNotNull(scope, "scope");
     }
-
-    // -------------------------------------------------------------------------
-    // Inner classes.
-    // -------------------------------------------------------------------------
-
-    /**
-     * @param scope Scope to use for queries.
-     */
-    public record Options(
-            String scope) {
-
-        public Options {
-            Preconditions.checkNotNull(scope, "scope");
-        }
-    }
+  }
 }

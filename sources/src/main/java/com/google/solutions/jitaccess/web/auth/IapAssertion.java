@@ -31,47 +31,47 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class IapAssertion {
-    private final JsonWebToken.Payload payload;
+  private final JsonWebToken.Payload payload;
 
-    public IapAssertion(JsonWebToken.Payload payload) {
-        this.payload = payload;
+  public IapAssertion(JsonWebToken.Payload payload) {
+    this.payload = payload;
+  }
+
+  public IapAssertion(JsonWebSignature payload) {
+    this(payload.getPayload());
+  }
+
+  /**
+   * Extract user information
+   */
+  public UserId getUserId() {
+    return new UserId(
+        this.payload.get("sub").toString(),
+        this.payload.get("email").toString());
+  }
+
+  /**
+   * Extract device information (if available)
+   */
+  public DeviceInfo getDeviceInfo() {
+    String deviceId = "unknown";
+    List<String> accessLevels = List.of();
+
+    if (this.payload.containsKey("google")) {
+      var googleClaim = (Map<?, ?>) this.payload.get("google");
+
+      if (googleClaim.containsKey("device_id")) {
+        deviceId = googleClaim.get("device_id").toString();
+      }
+
+      if (googleClaim.containsKey("access_levels")) {
+        accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
+            .stream()
+            .map(Object::toString)
+            .collect(Collectors.toList());
+      }
     }
 
-    public IapAssertion(JsonWebSignature payload) {
-        this(payload.getPayload());
-    }
-
-    /**
-     * Extract user information
-     */
-    public UserId getUserId() {
-        return new UserId(
-                this.payload.get("sub").toString(),
-                this.payload.get("email").toString());
-    }
-
-    /**
-     * Extract device information (if available)
-     */
-    public DeviceInfo getDeviceInfo() {
-        String deviceId = "unknown";
-        List<String> accessLevels = List.of();
-
-        if (this.payload.containsKey("google")) {
-            var googleClaim = (Map<?, ?>) this.payload.get("google");
-
-            if (googleClaim.containsKey("device_id")) {
-                deviceId = googleClaim.get("device_id").toString();
-            }
-
-            if (googleClaim.containsKey("access_levels")) {
-                accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
-                        .stream()
-                        .map(Object::toString)
-                        .collect(Collectors.toList());
-            }
-        }
-
-        return new DeviceInfo(deviceId, accessLevels);
-    }
+    return new DeviceInfo(deviceId, accessLevels);
+  }
 }

@@ -27,66 +27,66 @@ import com.google.common.base.Preconditions;
  * ID of a Google Cloud project.
  */
 public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId {
-    private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
+  private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
-    public ProjectId {
-        Preconditions.checkNotNull(id, "id");
-        assert !id.startsWith("//");
-        assert !id.contains("/");
-    }
+  public ProjectId {
+    Preconditions.checkNotNull(id, "id");
+    assert !id.startsWith("//");
+    assert !id.contains("/");
+  }
 
-    @Override
-    public String toString() {
-        return this.id;
-    }
+  @Override
+  public String toString() {
+    return this.id;
+  }
 
-    // -------------------------------------------------------------------------
-    // Full resource name conversion.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Full resource name conversion.
+  // -------------------------------------------------------------------------
 
-    /**
-     * Return a full resource name as used by the Asset API.
-     */
-    public String getFullResourceName() {
-        return PROJECT_RESOURCE_NAME_PREFIX + this.id;
-    }
+  /**
+   * Return a full resource name as used by the Asset API.
+   */
+  public String getFullResourceName() {
+    return PROJECT_RESOURCE_NAME_PREFIX + this.id;
+  }
 
-    /**
-     * Parse a full resource name (as used by the Asset API).
-     */
-    public static ProjectId fromFullResourceName(String fullResourceName) {
-        return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
-    }
+  /**
+   * Parse a full resource name (as used by the Asset API).
+   */
+  public static ProjectId fromFullResourceName(String fullResourceName) {
+    return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
+  }
 
-    /**
-     * Check if a full resource name identifies a project and can be used for
-     * a ProjectRole.
-     */
-    public static boolean isProjectFullResourceName(String fullResourceName) {
-        return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
-                && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
-    }
+  /**
+   * Check if a full resource name identifies a project and can be used for
+   * a ProjectRole.
+   */
+  public static boolean isProjectFullResourceName(String fullResourceName) {
+    return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
+        && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
+  }
 
-    // -------------------------------------------------------------------------
-    // Comparable.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // Comparable.
+  // -------------------------------------------------------------------------
 
-    @Override
-    public int compareTo(ProjectId o) {
-        return this.id.compareTo(o.id);
-    }
+  @Override
+  public int compareTo(ProjectId o) {
+    return this.id.compareTo(o.id);
+  }
 
-    // -------------------------------------------------------------------------
-    // ResourceId.
-    // -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
+  // ResourceId.
+  // -------------------------------------------------------------------------
 
-    @Override
-    public String type() {
-        return "project";
-    }
+  @Override
+  public String type() {
+    return "project";
+  }
 
-    @Override
-    public String path() {
-        return String.format("projects/%s", this.id);
-    }
+  @Override
+  public String path() {
+    return String.format("projects/%s", this.id);
+  }
 }

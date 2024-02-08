@@ -31,21 +31,21 @@ import java.util.Base64;
  */
 public record ActivationId(String id) {
 
-    public ActivationId {
-        Preconditions.checkNotNull(id);
-    }
+  public ActivationId {
+    Preconditions.checkNotNull(id);
+  }
 
-    private static final SecureRandom random = new SecureRandom();
+  private static final SecureRandom random = new SecureRandom();
 
-    public static ActivationId newId(ActivationType type) {
-        var id = new byte[12];
-        random.nextBytes(id);
+  public static ActivationId newId(ActivationType type) {
+    var id = new byte[12];
+    random.nextBytes(id);
 
-        return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
-    }
+    return new ActivationId(type.name().toLowerCase() + "-" + Base64.getEncoder().encodeToString(id));
+  }
 
-    @Override
-    public String toString() {
-        return this.id;
-    }
+  @Override
+  public String toString() {
+    return this.id;
+  }
 }

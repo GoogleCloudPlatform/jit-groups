@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 public abstract class ActivationType {
-    public abstract String name();
+  public abstract String name();
 
-    public abstract boolean contains(ActivationType other);
+  public abstract boolean contains(ActivationType other);
 }

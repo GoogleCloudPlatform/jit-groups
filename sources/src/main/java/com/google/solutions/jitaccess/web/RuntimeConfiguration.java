@@ -31,413 +31,413 @@ import java.util.*;
 import java.util.function.Function;
 
 class RuntimeConfiguration {
-    enum Catalog {
-        /**
-         * Use Policy Analyzer API. Requires a SCC subscription.
-         */
-        POLICYANALYZER,
+  enum Catalog {
+    /**
+     * Use Policy Analyzer API. Requires a SCC subscription.
+     */
+    POLICYANALYZER,
 
-        /**
-         * Use Asset Inventory API.
-         */
-        ASSETINVENTORY
+    /**
+     * Use Asset Inventory API.
+     */
+    ASSETINVENTORY
+  }
+
+  private final Function<String, String> readSetting;
+
+  public RuntimeConfiguration(Map<String, String> settings) {
+    this(key -> settings.get(key));
+  }
+
+  public RuntimeConfiguration(Function<String, String> readSetting) {
+    this.readSetting = readSetting;
+
+    this.scope = new StringSetting(
+        List.of("RESOURCE_SCOPE"),
+        String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
+    this.customerId = new StringSetting(
+        List.of("RESOURCE_CUSTOMER_ID"),
+        null);
+    this.catalog = new EnumSetting<Catalog>(
+        Catalog.class,
+        List.of("RESOURCE_CATALOG"),
+        Catalog.POLICYANALYZER);
+
+    //
+    // Activation settings.
+    //
+    this.activationTimeout = new DurationSetting(
+        List.of("ELEVATION_DURATION", "ACTIVATION_TIMEOUT"),
+        ChronoUnit.MINUTES,
+        Duration.ofHours(2));
+    this.activationRequestTimeout = new DurationSetting(
+        List.of("ACTIVATION_REQUEST_TIMEOUT"),
+        ChronoUnit.MINUTES,
+        Duration.ofHours(1));
+    this.justificationPattern = new StringSetting(
+        List.of("JUSTIFICATION_PATTERN"),
+        ".*");
+    this.justificationHint = new StringSetting(
+        List.of("JUSTIFICATION_HINT"),
+        "Bug or case number");
+    this.minNumberOfReviewersPerActivationRequest = new IntSetting(
+        List.of("ACTIVATION_REQUEST_MIN_REVIEWERS"),
+        1);
+    this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
+        List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
+        10);
+    this.maxNumberOfPrivilegesPerSelfApproval = new IntSetting(
+        List.of("ACTIVATION_REQUEST_MAX_ROLES"),
+        10);
+    this.availableProjectsQuery = new StringSetting(
+        List.of("AVAILABLE_PROJECTS_QUERY"),
+        this.catalog.getValue() == Catalog.ASSETINVENTORY
+            ? "state:ACTIVE"
+            : null);
+
+    //
+    // Backend service id (Cloud Run only).
+    //
+    this.backendServiceId = new StringSetting(List.of("IAP_BACKEND_SERVICE_ID"), null);
+
+    //
+    // Notification settings.
+    //
+    this.timeZoneForNotifications = new ZoneIdSetting(List.of("NOTIFICATION_TIMEZONE"));
+    this.topicName = new StringSetting(List.of("NOTIFICATION_TOPIC"), null);
+
+    //
+    // SMTP settings.
+    //
+    this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
+    this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
+    this.smtpEnableStartTls = new BooleanSetting(List.of("SMTP_ENABLE_STARTTLS"), true);
+    this.smtpSenderName = new StringSetting(List.of("SMTP_SENDER_NAME"), "JIT Access");
+    this.smtpSenderAddress = new StringSetting(List.of("SMTP_SENDER_ADDRESS"), null);
+    this.smtpUsername = new StringSetting(List.of("SMTP_USERNAME"), null);
+    this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
+    this.smtpSecret = new StringSetting(List.of("SMTP_SECRET"), null);
+    this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
+
+    //
+    // Backend settings.
+    //
+    this.backendConnectTimeout = new DurationSetting(
+        List.of("BACKEND_CONNECT_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(5));
+    this.backendReadTimeout = new DurationSetting(
+        List.of("BACKEND_READ_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(20));
+    this.backendWriteTimeout = new DurationSetting(
+        List.of("BACKEND_WRITE_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(5));
+  }
+
+  // -------------------------------------------------------------------------
+  // Settings.
+  // -------------------------------------------------------------------------
+
+  /**
+   * Scope (within the resource hierarchy) that this application manages
+   * access for.
+   */
+  public final StringSetting scope;
+
+  /**
+   * Cloud Identity/Workspace customer ID.
+   */
+  public final StringSetting customerId;
+
+  /**
+   * Catalog implementation to use.
+   */
+  public final EnumSetting<Catalog> catalog;
+
+  /**
+   * Topic (within the resource hierarchy) that binding information will
+   * publish to.
+   */
+  public final StringSetting topicName;
+
+  /**
+   * Duration for which an activated role remains activated.
+   */
+  public final DurationSetting activationTimeout;
+
+  /**
+   * Time allotted for reviewers to approve an activation request.
+   */
+  public final DurationSetting activationRequestTimeout;
+
+  /**
+   * Regular expression that justifications must satisfy.
+   */
+  public final StringSetting justificationPattern;
+
+  /**
+   * Hint (or description) for users indicating what kind of justification they
+   * need to supply.
+   */
+  public final StringSetting justificationHint;
+
+  /**
+   * Zone to apply to dates when sending notifications.
+   */
+  public final ZoneIdSetting timeZoneForNotifications;
+
+  /**
+   * SMTP server for sending notifications.
+   */
+  public final StringSetting smtpHost;
+
+  /**
+   * SMTP port for sending notifications.
+   */
+  public final IntSetting smtpPort;
+
+  /**
+   * Enable StartTLS.
+   */
+  public final BooleanSetting smtpEnableStartTls;
+
+  /**
+   * Human-readable sender name used for notifications.
+   */
+  public final StringSetting smtpSenderName;
+
+  /**
+   * Email address used for notifications.
+   */
+  public final StringSetting smtpSenderAddress;
+
+  /**
+   * SMTP username.
+   */
+  public final StringSetting smtpUsername;
+
+  /**
+   * SMTP password. For Gmail, this should be an application-specific password.
+   */
+  public final StringSetting smtpPassword;
+
+  /**
+   * Path to a SecretManager secret that contains the SMTP password.
+   * For Gmail, this should be an application-specific password.
+   *
+   * The path must be in the format projects/x/secrets/y/versions/z.
+   */
+  public final StringSetting smtpSecret;
+
+  /**
+   * Extra JavaMail options.
+   */
+  public final StringSetting smtpExtraOptions;
+
+  /**
+   * Backend Service Id for token validation
+   */
+  public final StringSetting backendServiceId;
+
+  /**
+   * Minimum number of reviewers foa an activation request.
+   */
+  public final IntSetting minNumberOfReviewersPerActivationRequest;
+
+  /**
+   * Maximum number of reviewers foa an activation request.
+   */
+  public final IntSetting maxNumberOfReviewersPerActivationRequest;
+
+  /**
+   * Maximum number of (JIT-) privileges that can be activated at once.
+   */
+  public final IntSetting maxNumberOfPrivilegesPerSelfApproval;
+
+  /**
+   * In some cases listing all available projects is not working fast enough and
+   * times out,
+   * so this method is available as alternative.
+   * The format is the same as Google Resource Manager API requires for the query
+   * parameter, for example:
+   * - parent:folders/{folder_id}
+   * - parent:organizations/{organization_id}
+   */
+  public final StringSetting availableProjectsQuery;
+
+  /**
+   * Connect timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendConnectTimeout;
+
+  /**
+   * Read timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendReadTimeout;
+
+  /**
+   * Write timeout for HTTP requests to backends.
+   */
+  public final DurationSetting backendWriteTimeout;
+
+  public boolean isSmtpConfigured() {
+    var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
+    return requiredSettings.stream().allMatch(s -> s.isValid());
+  }
+
+  public boolean isSmtpAuthenticationConfigured() {
+    return this.smtpUsername.isValid() &&
+        (this.smtpPassword.isValid() || this.smtpSecret.isValid());
+  }
+
+  public Map<String, String> getSmtpExtraOptionsMap() {
+    var map = new HashMap<String, String>();
+
+    if (this.smtpExtraOptions.isValid()) {
+      for (var kvp : this.smtpExtraOptions.getValue().split(",")) {
+        var parts = kvp.split("=");
+        if (parts.length == 2) {
+          map.put(parts[0].trim(), parts[1].trim());
+        }
+      }
     }
 
-    private final Function<String, String> readSetting;
+    return map;
+  }
 
-    public RuntimeConfiguration(Map<String, String> settings) {
-        this(key -> settings.get(key));
+  public Set<String> getRequiredOauthScopes() {
+    var scopes = new HashSet<String>();
+
+    scopes.add(ResourceManagerClient.OAUTH_SCOPE);
+    scopes.add(PolicyAnalyzerClient.OAUTH_SCOPE);
+    scopes.add(AssetInventoryClient.OAUTH_SCOPE);
+    scopes.add(IamCredentialsClient.OAUTH_SCOPE);
+    scopes.add(SecretManagerClient.OAUTH_SCOPE);
+
+    if (this.catalog.getValue() == RuntimeConfiguration.Catalog.ASSETINVENTORY) {
+      scopes.add(DirectoryGroupsClient.OAUTH_SCOPE);
     }
 
-    public RuntimeConfiguration(Function<String, String> readSetting) {
-        this.readSetting = readSetting;
+    return scopes;
+  }
 
-        this.scope = new StringSetting(
-                List.of("RESOURCE_SCOPE"),
-                String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
-        this.customerId = new StringSetting(
-                List.of("RESOURCE_CUSTOMER_ID"),
-                null);
-        this.catalog = new EnumSetting<Catalog>(
-                Catalog.class,
-                List.of("RESOURCE_CATALOG"),
-                Catalog.POLICYANALYZER);
+  // -------------------------------------------------------------------------
+  // Inner classes.
+  // -------------------------------------------------------------------------
 
-        //
-        // Activation settings.
-        //
-        this.activationTimeout = new DurationSetting(
-                List.of("ELEVATION_DURATION", "ACTIVATION_TIMEOUT"),
-                ChronoUnit.MINUTES,
-                Duration.ofHours(2));
-        this.activationRequestTimeout = new DurationSetting(
-                List.of("ACTIVATION_REQUEST_TIMEOUT"),
-                ChronoUnit.MINUTES,
-                Duration.ofHours(1));
-        this.justificationPattern = new StringSetting(
-                List.of("JUSTIFICATION_PATTERN"),
-                ".*");
-        this.justificationHint = new StringSetting(
-                List.of("JUSTIFICATION_HINT"),
-                "Bug or case number");
-        this.minNumberOfReviewersPerActivationRequest = new IntSetting(
-                List.of("ACTIVATION_REQUEST_MIN_REVIEWERS"),
-                1);
-        this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
-                List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
-                10);
-        this.maxNumberOfPrivilegesPerSelfApproval = new IntSetting(
-                List.of("ACTIVATION_REQUEST_MAX_ROLES"),
-                10);
-        this.availableProjectsQuery = new StringSetting(
-                List.of("AVAILABLE_PROJECTS_QUERY"),
-                this.catalog.getValue() == Catalog.ASSETINVENTORY
-                        ? "state:ACTIVE"
-                        : null);
+  public abstract class Setting<T> {
+    private final Collection<String> keys;
+    private final T defaultValue;
 
-        //
-        // Backend service id (Cloud Run only).
-        //
-        this.backendServiceId = new StringSetting(List.of("IAP_BACKEND_SERVICE_ID"), null);
+    protected abstract T parse(String value);
 
-        //
-        // Notification settings.
-        //
-        this.timeZoneForNotifications = new ZoneIdSetting(List.of("NOTIFICATION_TIMEZONE"));
-        this.topicName = new StringSetting(List.of("NOTIFICATION_TOPIC"), null);
-
-        //
-        // SMTP settings.
-        //
-        this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
-        this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
-        this.smtpEnableStartTls = new BooleanSetting(List.of("SMTP_ENABLE_STARTTLS"), true);
-        this.smtpSenderName = new StringSetting(List.of("SMTP_SENDER_NAME"), "JIT Access");
-        this.smtpSenderAddress = new StringSetting(List.of("SMTP_SENDER_ADDRESS"), null);
-        this.smtpUsername = new StringSetting(List.of("SMTP_USERNAME"), null);
-        this.smtpPassword = new StringSetting(List.of("SMTP_PASSWORD"), null);
-        this.smtpSecret = new StringSetting(List.of("SMTP_SECRET"), null);
-        this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
-
-        //
-        // Backend settings.
-        //
-        this.backendConnectTimeout = new DurationSetting(
-                List.of("BACKEND_CONNECT_TIMEOUT"),
-                ChronoUnit.SECONDS,
-                Duration.ofSeconds(5));
-        this.backendReadTimeout = new DurationSetting(
-                List.of("BACKEND_READ_TIMEOUT"),
-                ChronoUnit.SECONDS,
-                Duration.ofSeconds(20));
-        this.backendWriteTimeout = new DurationSetting(
-                List.of("BACKEND_WRITE_TIMEOUT"),
-                ChronoUnit.SECONDS,
-                Duration.ofSeconds(5));
+    protected Setting(Collection<String> keys, T defaultValue) {
+      this.keys = keys;
+      this.defaultValue = defaultValue;
     }
 
-    // -------------------------------------------------------------------------
-    // Settings.
-    // -------------------------------------------------------------------------
+    public T getValue() {
+      for (var key : this.keys) {
+        var value = readSetting.apply(key);
+        if (value != null) {
+          value = value.trim();
+          if (!value.isEmpty()) {
+            return parse(value);
+          }
+        }
+      }
 
-    /**
-     * Scope (within the resource hierarchy) that this application manages
-     * access for.
-     */
-    public final StringSetting scope;
-
-    /**
-     * Cloud Identity/Workspace customer ID.
-     */
-    public final StringSetting customerId;
-
-    /**
-     * Catalog implementation to use.
-     */
-    public final EnumSetting<Catalog> catalog;
-
-    /**
-     * Topic (within the resource hierarchy) that binding information will
-     * publish to.
-     */
-    public final StringSetting topicName;
-
-    /**
-     * Duration for which an activated role remains activated.
-     */
-    public final DurationSetting activationTimeout;
-
-    /**
-     * Time allotted for reviewers to approve an activation request.
-     */
-    public final DurationSetting activationRequestTimeout;
-
-    /**
-     * Regular expression that justifications must satisfy.
-     */
-    public final StringSetting justificationPattern;
-
-    /**
-     * Hint (or description) for users indicating what kind of justification they
-     * need to supply.
-     */
-    public final StringSetting justificationHint;
-
-    /**
-     * Zone to apply to dates when sending notifications.
-     */
-    public final ZoneIdSetting timeZoneForNotifications;
-
-    /**
-     * SMTP server for sending notifications.
-     */
-    public final StringSetting smtpHost;
-
-    /**
-     * SMTP port for sending notifications.
-     */
-    public final IntSetting smtpPort;
-
-    /**
-     * Enable StartTLS.
-     */
-    public final BooleanSetting smtpEnableStartTls;
-
-    /**
-     * Human-readable sender name used for notifications.
-     */
-    public final StringSetting smtpSenderName;
-
-    /**
-     * Email address used for notifications.
-     */
-    public final StringSetting smtpSenderAddress;
-
-    /**
-     * SMTP username.
-     */
-    public final StringSetting smtpUsername;
-
-    /**
-     * SMTP password. For Gmail, this should be an application-specific password.
-     */
-    public final StringSetting smtpPassword;
-
-    /**
-     * Path to a SecretManager secret that contains the SMTP password.
-     * For Gmail, this should be an application-specific password.
-     *
-     * The path must be in the format projects/x/secrets/y/versions/z.
-     */
-    public final StringSetting smtpSecret;
-
-    /**
-     * Extra JavaMail options.
-     */
-    public final StringSetting smtpExtraOptions;
-
-    /**
-     * Backend Service Id for token validation
-     */
-    public final StringSetting backendServiceId;
-
-    /**
-     * Minimum number of reviewers foa an activation request.
-     */
-    public final IntSetting minNumberOfReviewersPerActivationRequest;
-
-    /**
-     * Maximum number of reviewers foa an activation request.
-     */
-    public final IntSetting maxNumberOfReviewersPerActivationRequest;
-
-    /**
-     * Maximum number of (JIT-) privileges that can be activated at once.
-     */
-    public final IntSetting maxNumberOfPrivilegesPerSelfApproval;
-
-    /**
-     * In some cases listing all available projects is not working fast enough and
-     * times out,
-     * so this method is available as alternative.
-     * The format is the same as Google Resource Manager API requires for the query
-     * parameter, for example:
-     * - parent:folders/{folder_id}
-     * - parent:organizations/{organization_id}
-     */
-    public final StringSetting availableProjectsQuery;
-
-    /**
-     * Connect timeout for HTTP requests to backends.
-     */
-    public final DurationSetting backendConnectTimeout;
-
-    /**
-     * Read timeout for HTTP requests to backends.
-     */
-    public final DurationSetting backendReadTimeout;
-
-    /**
-     * Write timeout for HTTP requests to backends.
-     */
-    public final DurationSetting backendWriteTimeout;
-
-    public boolean isSmtpConfigured() {
-        var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
-        return requiredSettings.stream().allMatch(s -> s.isValid());
+      if (this.defaultValue != null) {
+        return this.defaultValue;
+      } else {
+        throw new IllegalStateException("No value provided for " + this.keys);
+      }
     }
 
-    public boolean isSmtpAuthenticationConfigured() {
-        return this.smtpUsername.isValid() &&
-                (this.smtpPassword.isValid() || this.smtpSecret.isValid());
+    public boolean isValid() {
+      try {
+        getValue();
+        return true;
+      } catch (Exception ignored) {
+        return false;
+      }
+    }
+  }
+
+  public class StringSetting extends Setting<String> {
+    public StringSetting(Collection<String> keys, String defaultValue) {
+      super(keys, defaultValue);
     }
 
-    public Map<String, String> getSmtpExtraOptionsMap() {
-        var map = new HashMap<String, String>();
+    @Override
+    protected String parse(String value) {
+      return value;
+    }
+  }
 
-        if (this.smtpExtraOptions.isValid()) {
-            for (var kvp : this.smtpExtraOptions.getValue().split(",")) {
-                var parts = kvp.split("=");
-                if (parts.length == 2) {
-                    map.put(parts[0].trim(), parts[1].trim());
-                }
-            }
-        }
-
-        return map;
+  public class IntSetting extends Setting<Integer> {
+    public IntSetting(Collection<String> keys, Integer defaultValue) {
+      super(keys, defaultValue);
     }
 
-    public Set<String> getRequiredOauthScopes() {
-        var scopes = new HashSet<String>();
+    @Override
+    protected Integer parse(String value) {
+      return Integer.parseInt(value);
+    }
+  }
 
-        scopes.add(ResourceManagerClient.OAUTH_SCOPE);
-        scopes.add(PolicyAnalyzerClient.OAUTH_SCOPE);
-        scopes.add(AssetInventoryClient.OAUTH_SCOPE);
-        scopes.add(IamCredentialsClient.OAUTH_SCOPE);
-        scopes.add(SecretManagerClient.OAUTH_SCOPE);
-
-        if (this.catalog.getValue() == RuntimeConfiguration.Catalog.ASSETINVENTORY) {
-            scopes.add(DirectoryGroupsClient.OAUTH_SCOPE);
-        }
-
-        return scopes;
+  public class BooleanSetting extends Setting<Boolean> {
+    public BooleanSetting(Collection<String> keys, Boolean defaultValue) {
+      super(keys, defaultValue);
     }
 
-    // -------------------------------------------------------------------------
-    // Inner classes.
-    // -------------------------------------------------------------------------
+    @Override
+    protected Boolean parse(String value) {
+      return Boolean.parseBoolean(value);
+    }
+  }
 
-    public abstract class Setting<T> {
-        private final Collection<String> keys;
-        private final T defaultValue;
+  public class DurationSetting extends Setting<Duration> {
+    private final ChronoUnit unit;
 
-        protected abstract T parse(String value);
-
-        protected Setting(Collection<String> keys, T defaultValue) {
-            this.keys = keys;
-            this.defaultValue = defaultValue;
-        }
-
-        public T getValue() {
-            for (var key : this.keys) {
-                var value = readSetting.apply(key);
-                if (value != null) {
-                    value = value.trim();
-                    if (!value.isEmpty()) {
-                        return parse(value);
-                    }
-                }
-            }
-
-            if (this.defaultValue != null) {
-                return this.defaultValue;
-            } else {
-                throw new IllegalStateException("No value provided for " + this.keys);
-            }
-        }
-
-        public boolean isValid() {
-            try {
-                getValue();
-                return true;
-            } catch (Exception ignored) {
-                return false;
-            }
-        }
+    public DurationSetting(Collection<String> keys, ChronoUnit unit, Duration defaultValue) {
+      super(keys, defaultValue);
+      this.unit = unit;
     }
 
-    public class StringSetting extends Setting<String> {
-        public StringSetting(Collection<String> keys, String defaultValue) {
-            super(keys, defaultValue);
-        }
+    @Override
+    protected Duration parse(String value) {
+      return Duration.of(Integer.parseInt(value), this.unit);
+    }
+  }
 
-        @Override
-        protected String parse(String value) {
-            return value;
-        }
+  public class ZoneIdSetting extends Setting<ZoneId> {
+    public ZoneIdSetting(Collection<String> keys) {
+      super(keys, ZoneOffset.UTC);
     }
 
-    public class IntSetting extends Setting<Integer> {
-        public IntSetting(Collection<String> keys, Integer defaultValue) {
-            super(keys, defaultValue);
-        }
+    @Override
+    protected ZoneId parse(String value) {
+      return ZoneId.of(value);
+    }
+  }
 
-        @Override
-        protected Integer parse(String value) {
-            return Integer.parseInt(value);
-        }
+  public class EnumSetting<E extends Enum<E>> extends Setting<E> {
+    private final Class<E> enumClass;
+
+    public EnumSetting(
+        Class<E> enumClass,
+        Collection<String> keys,
+        E defaultValue) {
+      super(keys, defaultValue);
+      this.enumClass = enumClass;
     }
 
-    public class BooleanSetting extends Setting<Boolean> {
-        public BooleanSetting(Collection<String> keys, Boolean defaultValue) {
-            super(keys, defaultValue);
-        }
-
-        @Override
-        protected Boolean parse(String value) {
-            return Boolean.parseBoolean(value);
-        }
+    @Override
+    protected E parse(String value) {
+      return E.valueOf(this.enumClass, value.trim().toUpperCase());
     }
-
-    public class DurationSetting extends Setting<Duration> {
-        private final ChronoUnit unit;
-
-        public DurationSetting(Collection<String> keys, ChronoUnit unit, Duration defaultValue) {
-            super(keys, defaultValue);
-            this.unit = unit;
-        }
-
-        @Override
-        protected Duration parse(String value) {
-            return Duration.of(Integer.parseInt(value), this.unit);
-        }
-    }
-
-    public class ZoneIdSetting extends Setting<ZoneId> {
-        public ZoneIdSetting(Collection<String> keys) {
-            super(keys, ZoneOffset.UTC);
-        }
-
-        @Override
-        protected ZoneId parse(String value) {
-            return ZoneId.of(value);
-        }
-    }
-
-    public class EnumSetting<E extends Enum<E>> extends Setting<E> {
-        private final Class<E> enumClass;
-
-        public EnumSetting(
-                Class<E> enumClass,
-                Collection<String> keys,
-                E defaultValue) {
-            super(keys, defaultValue);
-            this.enumClass = enumClass;
-        }
-
-        @Override
-        protected E parse(String value) {
-            return E.valueOf(this.enumClass, value.trim().toUpperCase());
-        }
-    }
+  }
 }
