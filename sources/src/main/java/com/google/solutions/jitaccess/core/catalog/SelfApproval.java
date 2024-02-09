@@ -1,16 +1,16 @@
 package com.google.solutions.jitaccess.core.catalog;
 
-public class SelfApproval extends ActivationType {
+public class SelfApproval implements ActivationType {
 
-  private final String name = "SELF_APPROVAL";
+  private final String base_name = "SELF_APPROVAL";
 
   @Override
   public String name() {
-    return this.name;
+    return this.base_name;
   }
 
   @Override
-  public boolean contains(ActivationType other) {
+  public boolean isParentTypeOf(ActivationType other) {
     return this.name().equals(other.name());
   }
 }

@@ -1,8 +1,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
-public class PeerApproval extends ActivationType {
+public class PeerApproval implements ActivationType {
 
-  private final String name = "PEER_APPROVAL";
+  private final String baseName = "PEER_APPROVAL";
   private final String topic;
 
   public PeerApproval(String topic) {
@@ -11,11 +11,11 @@ public class PeerApproval extends ActivationType {
 
   @Override
   public String name() {
-    return this.name + "(" + this.topic + ")";
+    return this.baseName + "(" + this.topic + ")";
   }
 
   @Override
-  public boolean contains(ActivationType other) {
+  public boolean isParentTypeOf(ActivationType other) {
     if (!(other instanceof PeerApproval)) {
       return false;
     }

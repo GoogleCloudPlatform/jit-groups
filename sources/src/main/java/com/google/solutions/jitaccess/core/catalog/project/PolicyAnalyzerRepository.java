@@ -188,7 +188,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
           .filter(result -> result.isPresent())
           .map(result -> result.get())
           .filter(privilege -> typesToInclude.stream()
-              .anyMatch(type -> type.contains(privilege.activationType())))
+              .anyMatch(type -> type.isParentTypeOf(privilege.activationType())))
           .collect(Collectors.toSet()));
     }
 
@@ -243,7 +243,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
                 .isPresent())
         .filter(result -> result.getIamBinding() != null &&
             PrivilegeFactory.createReviewerPrivilege(roleBinding, result.getIamBinding().getCondition())
-                .get().reviewableTypes().stream().anyMatch(type -> type.contains(activationType)))
+                .get().reviewableTypes().stream().anyMatch(type -> type.isParentTypeOf(activationType)))
 
         // Collect identities (users and group members)
         .filter(result -> result.getIdentityList() != null)

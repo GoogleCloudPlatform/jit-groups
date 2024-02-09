@@ -511,7 +511,7 @@ public class TestApiResource {
   public void whenProjectIsNull_ThenSelfApproveActivationReturnsError() throws Exception {
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
         "/api/projects/%20/roles/self-activate",
-        new ApiResource.SelfActivationRequest(),
+        new ApiResource.SelfActivationRequestRecord(),
         ExceptionMappers.ErrorEntity.class);
 
     assertEquals(400, response.getStatus());
@@ -523,7 +523,7 @@ public class TestApiResource {
 
   @Test
   public void whenRolesEmpty_ThenSelfApproveActivationReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequest();
+    var request = new ApiResource.SelfActivationRequestRecord();
     request.roles = List.of();
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -540,7 +540,7 @@ public class TestApiResource {
 
   @Test
   public void whenRolesExceedsLimit_ThenSelfApproveActivationReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequest();
+    var request = new ApiResource.SelfActivationRequestRecord();
 
     request.roles = Stream
         .generate(() -> "roles/role-x")
@@ -561,7 +561,7 @@ public class TestApiResource {
 
   @Test
   public void whenJustificationMissing_ThenSelfApproveActivationReturnsError() throws Exception {
-    var request = new ApiResource.SelfActivationRequest();
+    var request = new ApiResource.SelfActivationRequestRecord();
     request.roles = List.of("roles/browser");
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
@@ -593,7 +593,7 @@ public class TestApiResource {
         .approve(any(), any()))
         .thenThrow(new AccessDeniedException("mock"));
 
-    var request = new ApiResource.SelfActivationRequest();
+    var request = new ApiResource.SelfActivationRequestRecord();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
     request.activationTimeout = 5;
@@ -627,7 +627,7 @@ public class TestApiResource {
         .approve(any(), any()))
         .then(r -> new Activation<>((ActivationRequest<ProjectRoleBinding>) r.getArguments()[1]));
 
-    var request = new ApiResource.SelfActivationRequest();
+    var request = new ApiResource.SelfActivationRequestRecord();
     request.roles = List.of("roles/browser", "roles/browser");
     request.justification = "justification";
     request.activationTimeout = 5;
@@ -684,7 +684,7 @@ public class TestApiResource {
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER).post(
         "/api/projects/%20/roles/request",
-        new ApiResource.SelfActivationRequest(),
+        new ApiResource.SelfActivationRequestRecord(),
         ExceptionMappers.ErrorEntity.class);
 
     assertEquals(400, response.getStatus());
@@ -703,7 +703,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.reviewers = List.of(SAMPLE_USER.email);
     request.role = null;
     request.activationType = new PeerApproval("topic").name();
@@ -729,7 +729,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = List.of();
     request.activationType = new PeerApproval("topic").name();
@@ -755,7 +755,7 @@ public class TestApiResource {
             2,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = List.of("reviewers@example.com");
     request.activationType = new PeerApproval("topic").name();
@@ -781,7 +781,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = Stream.generate(() -> "reviewer@example.com")
         .limit(DEFAULT_MAX_NUMBER_OF_REVIEWERS + 1)
@@ -809,7 +809,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.reviewers = List.of(SAMPLE_USER.email);
     request.role = "roles/mock";
     request.activationType = new PeerApproval("topic").name();
@@ -835,7 +835,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.reviewers = List.of(SAMPLE_USER.email);
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
@@ -862,7 +862,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.reviewers = List.of(SAMPLE_USER.email);
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
@@ -890,7 +890,7 @@ public class TestApiResource {
             DEFAULT_MIN_NUMBER_OF_REVIEWERS,
             DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.reviewers = List.of(SAMPLE_USER.email);
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
@@ -920,7 +920,7 @@ public class TestApiResource {
 
     when(this.notificationService.canSendNotifications()).thenReturn(false);
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
@@ -957,7 +957,7 @@ public class TestApiResource {
             any()))
         .thenThrow(new AccessDeniedException("mock"));
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
@@ -992,7 +992,7 @@ public class TestApiResource {
         .sign(any(), any()))
         .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = "roles/mock";
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
@@ -1028,7 +1028,7 @@ public class TestApiResource {
         .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
-    var request = new ApiResource.ActivationRequest();
+    var request = new ApiResource.ActivationRequestRecord();
     request.role = roleBinding.role();
     request.reviewers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";

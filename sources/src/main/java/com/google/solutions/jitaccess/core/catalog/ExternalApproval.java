@@ -1,8 +1,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
-public class ExternalApproval extends ActivationType {
+public class ExternalApproval implements ActivationType {
 
-  private final String name = "EXTERNAL_APPROVAL";
+  private final String baseName = "EXTERNAL_APPROVAL";
   private final String topic;
 
   public ExternalApproval(String topic) {
@@ -11,11 +11,11 @@ public class ExternalApproval extends ActivationType {
 
   @Override
   public String name() {
-    return this.name + "(" + this.topic + ")";
+    return this.baseName + "(" + this.topic + ")";
   }
 
   @Override
-  public boolean contains(ActivationType other) {
+  public boolean isParentTypeOf(ActivationType other) {
     if (!(other instanceof ExternalApproval)) {
       return false;
     }

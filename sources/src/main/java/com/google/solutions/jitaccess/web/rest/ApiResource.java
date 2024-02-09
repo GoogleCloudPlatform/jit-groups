@@ -296,7 +296,7 @@ public class ApiResource {
   @Path("projects/{projectId}/roles/self-activate")
   public ActivationStatusResponse selfApproveActivation(
       @PathParam("projectId") String projectIdString,
-      SelfActivationRequest request,
+      SelfActivationRequestRecord request,
       @Context SecurityContext securityContext) throws AccessDeniedException, AlreadyExistsException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
@@ -326,9 +326,9 @@ public class ApiResource {
     // Create a self approval activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    List<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> requests = new ArrayList<>();
+    List<ActivationRequest<ProjectRoleBinding>> requests = new ArrayList<>();
     for (var role : Set.copyOf(request.roles)) {
-      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> activationRequest;
+      ActivationRequest<ProjectRoleBinding> activationRequest;
       try {
         activationRequest = this.projectRoleActivator.createActivationRequest(
             iapPrincipal.getId(),
@@ -437,7 +437,7 @@ public class ApiResource {
   @Path("projects/{projectId}/roles/request")
   public ActivationStatusResponse requestActivation(
       @PathParam("projectId") String projectIdString,
-      ActivationRequest request,
+      ActivationRequestRecord request,
       @Context SecurityContext securityContext,
       @Context UriInfo uriInfo) throws AccessDeniedException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
@@ -492,7 +492,7 @@ public class ApiResource {
     // Create an MPA activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> activationRequest;
+    ActivationRequest<ProjectRoleBinding> activationRequest;
 
     try {
       activationRequest = this.projectRoleActivator.createActivationRequest(
@@ -638,8 +638,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
           iapPrincipal.getId(),
           List.of(activationRequest),
-          RequesterPrivilege.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated
-                                                         // already.
+          RequesterPrivilege.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
     } catch (Exception e) {
       this.logAdapter
           .newErrorEntry(
@@ -674,7 +673,7 @@ public class ApiResource {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
-    com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> activationRequest;
+    ActivationRequest<ProjectRoleBinding> activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
           this.projectRoleActivator.createTokenConverter(),
@@ -760,7 +759,7 @@ public class ApiResource {
 
   private static <T extends PrivilegeId> LogAdapter.LogEntry addLabels(
       LogAdapter.LogEntry entry,
-      com.google.solutions.jitaccess.core.catalog.ActivationRequest<T> request) {
+      ActivationRequest<T> request) {
     entry
         .addLabel("activation_id", request.id().toString())
         .addLabel("activation_start", request.startTime().atOffset(ZoneOffset.UTC).toString())
@@ -887,13 +886,13 @@ public class ApiResource {
     }
   }
 
-  public static class SelfActivationRequest {
+  public static class SelfActivationRequestRecord {
     public List<String> roles;
     public String justification;
     public int activationTimeout; // in minutes.
   }
 
-  public static class ActivationRequest {
+  public static class ActivationRequestRecord {
     public String role;
     public String justification;
     public List<String> reviewers;
@@ -911,7 +910,7 @@ public class ApiResource {
 
     private ActivationStatusResponse(
         UserId caller,
-        List<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> requests,
+        List<ActivationRequest<ProjectRoleBinding>> requests,
         RequesterPrivilege.Status status) {
       Preconditions.checkNotNull(requests);
 
@@ -966,7 +965,7 @@ public class ApiResource {
   public class RequestActivationNotification extends NotificationService.Notification {
     protected RequestActivationNotification(
         ProjectId projectId,
-        com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request,
+        ActivationRequest<ProjectRoleBinding> request,
         Instant requestExpiryTime,
         URL activationRequestUrl) throws MalformedURLException {
       super(

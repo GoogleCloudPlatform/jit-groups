@@ -156,7 +156,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
               .filter(result -> result.isPresent())
               .map(result -> result.get())
               .filter(privilege -> typesToInclude.stream()
-                  .anyMatch(type -> type.contains(privilege.activationType())))
+                  .anyMatch(type -> type.isParentTypeOf(privilege.activationType())))
               .collect(Collectors.toSet()));
     }
 
@@ -203,7 +203,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         .filter(binding -> PrivilegeFactory.createReviewerPrivilege(
             new ProjectRoleBinding(new RoleBinding(roleBinding.projectId(), binding.getRole())),
             binding.getCondition()).get().reviewableTypes().stream()
-            .anyMatch(type -> type.contains(activationType)))
+            .anyMatch(type -> type.isParentTypeOf(activationType)))
 
         .flatMap(binding -> binding.getMembers().stream())
         .collect(Collectors.toSet());

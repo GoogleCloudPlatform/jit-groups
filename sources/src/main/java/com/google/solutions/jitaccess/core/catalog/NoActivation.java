@@ -1,6 +1,6 @@
 package com.google.solutions.jitaccess.core.catalog;
 
-public class NoActivation extends ActivationType {
+public class NoActivation implements ActivationType {
 
   private final String name = "NONE";
 
@@ -10,7 +10,7 @@ public class NoActivation extends ActivationType {
   }
 
   @Override
-  public boolean contains(ActivationType other) {
+  public boolean isParentTypeOf(ActivationType other) {
     return this.name().equals(other.name());
   }
 }

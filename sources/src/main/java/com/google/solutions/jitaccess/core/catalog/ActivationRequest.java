@@ -29,7 +29,7 @@ import java.time.Instant;
 import java.util.Collection;
 
 /**
- * Represents a request for activating one or more requester privileges.
+ * Represents a request for activating a privilege.
  */
 public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
   private final ActivationId id;

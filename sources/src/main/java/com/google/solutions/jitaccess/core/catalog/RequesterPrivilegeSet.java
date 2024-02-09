@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
  * @param activeRequesterPrivilegeIds  IDs of active requester privileges.
  * @param warnings                     encountered warnings, if any.
  */
-public record RequesterPrivilegeSet<TId extends PrivilegeId>(
-    Set<RequesterPrivilege<TId>> availableRequesterPrivileges,
-    Set<TId> activeRequesterPrivilegeIds,
+public record RequesterPrivilegeSet<TPrivilegeId extends PrivilegeId>(
+    Set<RequesterPrivilege<TPrivilegeId>> availableRequesterPrivileges,
+    Set<TPrivilegeId> activeRequesterPrivilegeIds,
     Set<String> warnings) {
   public RequesterPrivilegeSet {
     Preconditions.checkNotNull(availableRequesterPrivileges, "availableRequesterPrivileges");
@@ -52,7 +52,7 @@ public record RequesterPrivilegeSet<TId extends PrivilegeId>(
    * @return consolidated set of requester privileges including available and
    *         active ones.
    */
-  public SortedSet<RequesterPrivilege<TId>> allRequesterPrivileges() {
+  public SortedSet<RequesterPrivilege<TPrivilegeId>> allRequesterPrivileges() {
     //
     // Return a set containing:
     //
@@ -68,8 +68,8 @@ public record RequesterPrivilegeSet<TId extends PrivilegeId>(
 
     assert availableAndInactive.stream().noneMatch(e -> this.activeRequesterPrivilegeIds.contains(e.id()));
 
-    var consolidatedSet = new TreeSet<RequesterPrivilege<TId>>(availableAndInactive);
-    for (var activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
+    var consolidatedSet = new TreeSet<RequesterPrivilege<TPrivilegeId>>(availableAndInactive);
+    for (TPrivilegeId activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
       //
       // Find the corresponding privilege to determine
       // whether this is eligible.
@@ -99,7 +99,7 @@ public record RequesterPrivilegeSet<TId extends PrivilegeId>(
     return consolidatedSet;
   }
 
-  public static <TId extends PrivilegeId> RequesterPrivilegeSet<TId> empty() {
-    return new RequesterPrivilegeSet<TId>(new TreeSet<>(), Set.of(), Set.of());
+  public static <TPrivilegeId extends PrivilegeId> RequesterPrivilegeSet<TPrivilegeId> empty() {
+    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), Set.of(), Set.of());
   }
 }

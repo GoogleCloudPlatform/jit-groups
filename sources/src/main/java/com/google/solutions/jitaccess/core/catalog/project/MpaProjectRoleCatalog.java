@@ -124,7 +124,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
                 activationType.name()));
       }
       var grantedPrivilegeType = grantedPrivilege.activationType();
-      if (!grantedPrivilegeType.contains(activationType)) {
+      if (!grantedPrivilegeType.isParentTypeOf(activationType)) {
         throw new AccessDeniedException(
             String.format(
                 "The user %s is not allowed to activate %s using %s",
