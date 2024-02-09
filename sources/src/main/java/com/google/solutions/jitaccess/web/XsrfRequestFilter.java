@@ -52,11 +52,11 @@ public class XsrfRequestFilter implements ContainerRequestFilter {
     //
     if (!XSRF_HEADER_VALUE.equals(containerRequestContext.getHeaderString(XSRF_HEADER_NAME))) {
       containerRequestContext.abortWith(
-        Response
-          .status(400, "Invalid request")
-          .entity(new ExceptionMappers.ErrorEntity(
-            new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
-          .build());
+          Response
+              .status(400, "Invalid request")
+              .entity(new ExceptionMappers.ErrorEntity(
+                  new AccessDeniedException("Missing header: " + XSRF_HEADER_NAME)))
+              .build());
     }
   }
 }

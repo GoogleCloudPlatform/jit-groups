@@ -21,35 +21,25 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.UserId;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Set;
+import java.io.IOException;
 
 /**
- * Request for "JIT-activating" an entitlement.
+ * A catalog of requester privileges that can be browsed by the user.
  */
-public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
-  protected JitActivationRequest(
-    ActivationId id,
-    UserId requestingUser,
-    Set<TEntitlementId> entitlements,
-    String justification,
-    Instant startTime,
-    Duration duration) {
-    super(
-      id,
-      requestingUser,
-      entitlements,
-      justification,
-      startTime,
-      duration);
-  }
+public interface RequesterPrivilegeCatalog<TPrivilegeId extends PrivilegeId> {
+  /**
+   * Verify if a user is allowed to make the given request.
+   */
+  void verifyUserCanRequest(
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
-  @Override
-  public final ActivationType type() {
-    return ActivationType.JIT;
-  }
+  /**
+   * Verify if a user is allowed to approve a given request.
+   */
+  void verifyUserCanApprove(
+      UserId approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 }

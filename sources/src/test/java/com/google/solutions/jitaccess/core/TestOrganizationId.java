@@ -112,15 +112,15 @@ public class TestOrganizationId {
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
     var organizations = List.of(
-      new OrganizationId("333"),
-      new OrganizationId("111"),
-      new OrganizationId("222"));
+        new OrganizationId("333"),
+        new OrganizationId("111"),
+        new OrganizationId("222"));
 
     assertIterableEquals(
-      List.of(
-        new OrganizationId("111"),
-        new OrganizationId("222"),
-        new OrganizationId("333")),
-      new TreeSet<>(organizations));
+        List.of(
+            new OrganizationId("111"),
+            new OrganizationId("222"),
+            new OrganizationId("333")),
+        new TreeSet<>(organizations));
   }
 }

@@ -29,8 +29,7 @@ import java.util.TreeSet;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProjectId {
-  private final String SAMPLE_PROJECT_FULLRESOURCENAME =
-    "//cloudresourcemanager.googleapis.com/projects/project-1";
+  private final String SAMPLE_PROJECT_FULLRESOURCENAME = "//cloudresourcemanager.googleapis.com/projects/project-1";
 
   @Test
   public void toStringReturnsId() {
@@ -44,15 +43,15 @@ public class TestProjectId {
   @Test
   public void getFullResourceNameReturnsFullyQualifiedName() {
     assertEquals(
-      "//cloudresourcemanager.googleapis.com/projects/project-1",
-      new ProjectId("project-1").getFullResourceName());
+        "//cloudresourcemanager.googleapis.com/projects/project-1",
+        new ProjectId("project-1").getFullResourceName());
   }
 
   @Test
   public void fromFullResourceNameReturnsProjectId() {
     assertEquals(
-      new ProjectId("project-1"),
-      ProjectId.fromFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1"));
+        new ProjectId("project-1"),
+        ProjectId.fromFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1"));
   }
 
   @Test
@@ -142,15 +141,15 @@ public class TestProjectId {
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
     var projects = List.of(
-      new ProjectId("project-3"),
-      new ProjectId("project-1"),
-      new ProjectId("project-2"));
+        new ProjectId("project-3"),
+        new ProjectId("project-1"),
+        new ProjectId("project-2"));
 
     assertIterableEquals(
-      List.of(
-        new ProjectId("project-1"),
-        new ProjectId("project-2"),
-        new ProjectId("project-3")),
-      new TreeSet<>(projects));
+        List.of(
+            new ProjectId("project-1"),
+            new ProjectId("project-2"),
+            new ProjectId("project-3")),
+        new TreeSet<>(projects));
   }
 }

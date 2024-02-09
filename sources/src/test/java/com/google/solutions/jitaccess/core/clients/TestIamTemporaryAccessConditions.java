@@ -49,8 +49,7 @@ public class TestIamTemporaryAccessConditions {
 
   @Test
   public void whenExpressionIsTemporaryCondition_ThenIsTemporaryAccessConditionReturnsTrue() {
-    var clause =
-      "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+    var clause = "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))  ";
 
     assertTrue(IamTemporaryAccessConditions.isTemporaryAccessCondition(clause));
@@ -58,8 +57,7 @@ public class TestIamTemporaryAccessConditions {
 
   @Test
   public void whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryAccessConditionReturnsTrue() {
-    var clause =
-      "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+    var clause = "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";
 
     assertFalse(IamTemporaryAccessConditions.isTemporaryAccessCondition(clause));
@@ -71,14 +69,13 @@ public class TestIamTemporaryAccessConditions {
 
   @Test
   public void whenDurationValid_ThenCreateExpressionReturnsClause() {
-    var clause =
-      IamTemporaryAccessConditions.createExpression(
+    var clause = IamTemporaryAccessConditions.createExpression(
         Instant.from(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)), Duration.ofMinutes(5));
 
     assertEquals(
-      "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
-        + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))",
-      clause);
+        "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+            + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))",
+        clause);
   }
 
   // -------------------------------------------------------------------------
@@ -87,9 +84,9 @@ public class TestIamTemporaryAccessConditions {
 
   @ParameterizedTest
   @ValueSource(strings = {
-    "",
-    "(request.time >= 1)",
-    "(request.time >= timestamp(\"notadate\") && " + "request.time < timestamp(\"notadate\"))"
+      "",
+      "(request.time >= 1)",
+      "(request.time >= timestamp(\"notadate\") && " + "request.time < timestamp(\"notadate\"))"
   })
   public void whenExpressionInvalid_ThenEvaluateReturnsFalse(String value) {
     assertFalse(IamTemporaryAccessConditions.evaluate(value, Instant.now()));
@@ -97,9 +94,9 @@ public class TestIamTemporaryAccessConditions {
 
   @ParameterizedTest
   @ValueSource(strings = {
-    "(request.time >= timestamp(\"2023-12-19T23:36:40Z\") && request.time < timestamp(\"2023-12-19T23:51:40Z\"))",
-    "(request.time >= timestamp(\"2023-10-17T20:58:38.187523315Z\") && request.time < timestamp(\"2023-10-18T02:43:38.187523315Z\"))",
-    "(request.time >= timestamp(\"2099-12-19T23:36:40Z\") && request.time < timestamp(\"2023-12-19T23:51:40Z\"))",
+      "(request.time >= timestamp(\"2023-12-19T23:36:40Z\") && request.time < timestamp(\"2023-12-19T23:51:40Z\"))",
+      "(request.time >= timestamp(\"2023-10-17T20:58:38.187523315Z\") && request.time < timestamp(\"2023-10-18T02:43:38.187523315Z\"))",
+      "(request.time >= timestamp(\"2099-12-19T23:36:40Z\") && request.time < timestamp(\"2023-12-19T23:51:40Z\"))",
   })
   public void whenExpressionExpired_ThenEvaluateReturnsFalse(String value) {
     assertTrue(IamTemporaryAccessConditions.isTemporaryAccessCondition(value));
@@ -111,10 +108,10 @@ public class TestIamTemporaryAccessConditions {
     var now = Instant.now();
 
     assertTrue(IamTemporaryAccessConditions.evaluate(
-      IamTemporaryAccessConditions.createExpression(now, now.plusSeconds(1)),
-      Instant.now()));
+        IamTemporaryAccessConditions.createExpression(now, now.plusSeconds(1)),
+        Instant.now()));
     assertTrue(IamTemporaryAccessConditions.evaluate(
-      IamTemporaryAccessConditions.createExpression(now.minusSeconds(1), now.plusSeconds(1)),
-      Instant.now()));
+        IamTemporaryAccessConditions.createExpression(now.minusSeconds(1), now.plusSeconds(1)),
+        Instant.now()));
   }
 }

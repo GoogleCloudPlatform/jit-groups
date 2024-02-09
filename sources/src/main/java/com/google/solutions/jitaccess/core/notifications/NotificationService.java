@@ -39,13 +39,13 @@ public abstract class NotificationService {
 
   public abstract boolean canSendNotifications();
 
-
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
   /**
-   * Concrete class that prints notifications to STDOUT. Useful for local development only.
+   * Concrete class that prints notifications to STDOUT. Useful for local
+   * development only.
    */
   public static class SilentNotificationService extends NotificationService {
     private final boolean printToConsole;
@@ -103,10 +103,9 @@ public abstract class NotificationService {
     public abstract String getType();
 
     protected Notification(
-      Collection<UserId> toRecipients,
-      Collection<UserId> ccRecipients,
-      String subject
-    ) {
+        Collection<UserId> toRecipients,
+        Collection<UserId> ccRecipients,
+        String subject) {
       Preconditions.checkNotNull(toRecipients, "toRecipients");
       Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");
@@ -119,14 +118,14 @@ public abstract class NotificationService {
     @Override
     public String toString() {
       return String.format(
-        "Notification to %s: %s\n\n%s",
-        this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
-        this.subject,
-        this.properties
-          .entrySet()
-          .stream()
-          .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
-          .collect(Collectors.joining("\n", "", "")));
+          "Notification to %s: %s\n\n%s",
+          this.toRecipients.stream().map(e -> e.email).collect(Collectors.joining(", ")),
+          this.subject,
+          this.properties
+              .entrySet()
+              .stream()
+              .map(e -> String.format(" %s: %s", e.getKey(), e.getValue()))
+              .collect(Collectors.joining("\n", "", "")));
     }
   }
 

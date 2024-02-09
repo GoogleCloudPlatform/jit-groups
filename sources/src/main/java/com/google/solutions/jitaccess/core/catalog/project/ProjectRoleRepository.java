@@ -3,9 +3,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -13,32 +13,29 @@ import java.util.Set;
 import java.util.SortedSet;
 
 /**
- * Repository for ProjectRoleBinding-based entitlements.
+ * Repository for ProjectRoleBinding-based privileges.
  */
 public interface ProjectRoleRepository {
 
   /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
+   * Find projects that a user has standing, requester privileges in.
    */
-  SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserId user
-  ) throws AccessException, IOException;
+  SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+      UserId user) throws AccessException, IOException;
 
   /**
-   * List entitlements for the given user.
+   * List requester privileges for the given user.
    */
-  EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserId user,
-    ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
-  ) throws AccessException, IOException;
+  RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      UserId user,
+      ProjectId projectId,
+      Set<ActivationType> typesToInclude,
+      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException;
 
   /**
-   * List users that hold an eligible role binding.
+   * List users that hold an eligible reviewer privilege for a role binding.
    */
-  Set<UserId> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    ActivationType activationType
-  ) throws AccessException, IOException;
+  Set<UserId> findReviewerPrivelegeHolders(
+      ProjectRoleBinding roleBinding,
+      ActivationType activationType) throws AccessException, IOException;
 }

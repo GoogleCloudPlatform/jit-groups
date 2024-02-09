@@ -46,12 +46,13 @@ public class MailNotificationService extends NotificationService {
 
   /**
    * Load a resource from a JAR resource.
+   * 
    * @return null if not found.
    */
-  public static String loadResource(String resourceName) throws NotificationException{
+  public static String loadResource(String resourceName) throws NotificationException {
     try (var stream = NotificationService.class
-      .getClassLoader()
-      .getResourceAsStream(resourceName)) {
+        .getClassLoader()
+        .getResourceAsStream(resourceName)) {
 
       if (stream == null) {
         return null;
@@ -59,29 +60,26 @@ public class MailNotificationService extends NotificationService {
 
       var content = stream.readAllBytes();
       if (content.length > 3 &&
-        content[0] == (byte)0xEF &&
-        content[1] == (byte)0xBB &&
-        content[2] == (byte)0xBF) {
+          content[0] == (byte) 0xEF &&
+          content[1] == (byte) 0xBB &&
+          content[2] == (byte) 0xBF) {
 
         //
         // Strip UTF-8 BOM.
         //
         return new String(content, 3, content.length - 3);
-      }
-      else {
+      } else {
         return new String(content);
       }
-    }
-    catch (IOException e) {
+    } catch (IOException e) {
       throw new NotificationException(
-        String.format("Reading the template %s from the JAR file failed", resourceName), e);
+          String.format("Reading the template %s from the JAR file failed", resourceName), e);
     }
   }
 
   public MailNotificationService(
-    SmtpClient smtpClient,
-    Options options
-  ) {
+      SmtpClient smtpClient,
+      Options options) {
     Preconditions.checkNotNull(smtpClient);
     Preconditions.checkNotNull(options);
 
@@ -103,7 +101,7 @@ public class MailNotificationService extends NotificationService {
     Preconditions.checkNotNull(notification, "notification");
 
     var htmlTemplate = loadResource(
-      String.format("notifications/%s.html", notification.getType()));
+        String.format("notifications/%s.html", notification.getType()));
     if (htmlTemplate == null) {
       //
       // Unknown kind of notification, ignore.
@@ -112,22 +110,21 @@ public class MailNotificationService extends NotificationService {
     }
 
     var formattedMessage = new MessageTemplate(
-      htmlTemplate,
-      this.options.timeZone,
-      HtmlEscapers.htmlEscaper())
-      .format(notification);
+        htmlTemplate,
+        this.options.timeZone,
+        HtmlEscapers.htmlEscaper())
+        .format(notification);
 
     try {
       this.smtpClient.sendMail(
-        notification.getToRecipients(),
-        notification.getCcRecipients(),
-        notification.getSubject(),
-        formattedMessage,
-        notification.isReply()
-          ? EnumSet.of(SmtpClient.Flags.REPLY)
-          : EnumSet.of(SmtpClient.Flags.NONE));
-    }
-    catch (SmtpClient.MailException e) {
+          notification.getToRecipients(),
+          notification.getCcRecipients(),
+          notification.getSubject(),
+          formattedMessage,
+          notification.isReply()
+              ? EnumSet.of(SmtpClient.Flags.REPLY)
+              : EnumSet.of(SmtpClient.Flags.NONE));
+    } catch (SmtpClient.MailException e) {
       throw new NotificationException("The notification could not be sent", e);
     }
   }
@@ -145,10 +142,9 @@ public class MailNotificationService extends NotificationService {
     private final ZoneId timezoneId;
 
     public MessageTemplate(
-      String template,
-      ZoneId timezoneId,
-      Escaper escaper
-    ) {
+        String template,
+        ZoneId timezoneId,
+        Escaper escaper) {
       Preconditions.checkNotNull(template, "template");
       Preconditions.checkNotNull(timezoneId, "timezoneId");
       Preconditions.checkNotNull(escaper, "escaper");
@@ -173,16 +169,14 @@ public class MailNotificationService extends NotificationService {
           // Apply time zone and convert to string.
           //
           propertyValue = OffsetDateTime
-            .ofInstant((Instant) property.getValue(), this.timezoneId)
-            .truncatedTo(ChronoUnit.SECONDS)
-            .format(DateTimeFormatter.RFC_1123_DATE_TIME);
-        }
-        else if (property.getValue() instanceof Collection<?>) {
-          propertyValue = ((Collection<?>)property.getValue()).stream()
-            .map(i -> i.toString())
-            .collect(Collectors.joining(", "));
-        }
-        else {
+              .ofInstant((Instant) property.getValue(), this.timezoneId)
+              .truncatedTo(ChronoUnit.SECONDS)
+              .format(DateTimeFormatter.RFC_1123_DATE_TIME);
+        } else if (property.getValue() instanceof Collection<?>) {
+          propertyValue = ((Collection<?>) property.getValue()).stream()
+              .map(i -> i.toString())
+              .collect(Collectors.joining(", "));
+        } else {
           //
           // Convert to a safe string.
           //

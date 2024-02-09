@@ -39,7 +39,8 @@ import java.time.Duration;
  * system property.
  */
 public class HttpTransport {
-  private HttpTransport() {}
+  private HttpTransport() {
+  }
 
   public static NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
     var trustStore = System.getProperty("javax.net.ssl.trustStore");
@@ -57,13 +58,11 @@ public class HttpTransport {
         var keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(trustStoreStream, trustStorePassword.toCharArray());
 
-        return new NetHttpTransport
-          .Builder()
-          .trustCertificates(keyStore)
-          .build();
+        return new NetHttpTransport.Builder()
+            .trustCertificates(keyStore)
+            .build();
       }
-    }
-    else {
+    } else {
       //
       // Use the Google keystore.
       //
@@ -72,9 +71,8 @@ public class HttpTransport {
   }
 
   public static HttpRequestInitializer newAuthenticatingRequestInitializer(
-    Credentials credentials,
-    Options httpOptions
-  ) {
+      Credentials credentials,
+      Options httpOptions) {
     return new HttpCredentialsAdapter(credentials) {
       @Override
       public void initialize(HttpRequest request) throws IOException {
@@ -96,10 +94,9 @@ public class HttpTransport {
   }
 
   public record Options(
-    Duration connectTimeout,
-    Duration readTimeout,
-    Duration writeTimeout
-  ) {
+      Duration connectTimeout,
+      Duration readTimeout,
+      Duration writeTimeout) {
     public static Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
   }
 }

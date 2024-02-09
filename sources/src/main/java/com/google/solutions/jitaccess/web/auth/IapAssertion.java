@@ -46,8 +46,8 @@ public class IapAssertion {
    */
   public UserId getUserId() {
     return new UserId(
-      this.payload.get("sub").toString(),
-      this.payload.get("email").toString());
+        this.payload.get("sub").toString(),
+        this.payload.get("email").toString());
   }
 
   /**
@@ -66,9 +66,9 @@ public class IapAssertion {
 
       if (googleClaim.containsKey("access_levels")) {
         accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
-          .stream()
-          .map(Object::toString)
-          .collect(Collectors.toList());
+            .stream()
+            .map(Object::toString)
+            .collect(Collectors.toList());
       }
     }
 

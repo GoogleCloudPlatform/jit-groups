@@ -16,38 +16,38 @@ public class TestIamCredentialsClient {
   @Test
   public void whenUnauthenticated_ThenSignJwtThrowsException() {
     var adapter = new IamCredentialsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     var payload = new JsonWebToken.Payload()
-      .setAudience("test");
+        .setAudience("test");
 
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
+        AccessDeniedException.class,
+        () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
   }
 
   @Test
   public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
     var adapter = new IamCredentialsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
+        .setAudience(serviceAccount.email)
+        .setIssuer(serviceAccount.email);
 
     var jwt = adapter.signJwt(serviceAccount, payload);
     assertNotNull(jwt);
 
     TokenVerifier
-      .newBuilder()
-      .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.email)
-      .setAudience(serviceAccount.email)
-      .build()
-      .verify(jwt);
+        .newBuilder()
+        .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
+        .setIssuer(serviceAccount.email)
+        .setAudience(serviceAccount.email)
+        .build()
+        .verify(jwt);
   }
 
   // -------------------------------------------------------------------------
@@ -57,9 +57,9 @@ public class TestIamCredentialsClient {
   @Test
   public void getJwksUrl() {
     assertEquals(
-      String.format(
-        "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
-        IntegrationTestEnvironment.NO_ACCESS_USER.email),
-      IamCredentialsClient.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
+        String.format(
+            "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
+            IntegrationTestEnvironment.NO_ACCESS_USER.email),
+        IamCredentialsClient.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
   }
 }

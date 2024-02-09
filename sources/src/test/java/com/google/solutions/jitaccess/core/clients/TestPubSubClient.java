@@ -36,26 +36,26 @@ public class TestPubSubClient {
   @Test
   public void whenUnauthenticated_ThenPublishThrowsException() {
     var adapter = new PubSubClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
+        NotAuthenticatedException.class,
+        () -> adapter.publish(
+            new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+            new PubsubMessage()));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
     var adapter = new PubSubClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
+        AccessDeniedException.class,
+        () -> adapter.publish(
+            new PubSubTopic(IntegrationTestEnvironment.PROJECT_ID.id(), "topic-1"),
+            new PubsubMessage()));
   }
 
   @Test
@@ -65,12 +65,12 @@ public class TestPubSubClient {
     Assumptions.assumeTrue(IntegrationTestEnvironment.PUBSUB_TOPIC != null);
 
     var adapter = new PubSubClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     var messageId = adapter.publish(
-      IntegrationTestEnvironment.PUBSUB_TOPIC,
-      new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
+        IntegrationTestEnvironment.PUBSUB_TOPIC,
+        new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(messageId);
   }

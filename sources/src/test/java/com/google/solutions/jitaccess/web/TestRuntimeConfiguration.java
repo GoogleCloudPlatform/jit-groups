@@ -68,8 +68,8 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(Map.of());
 
     assertEquals(
-      RuntimeConfiguration.Catalog.POLICYANALYZER,
-      configuration.catalog.getValue());
+        RuntimeConfiguration.Catalog.POLICYANALYZER,
+        configuration.catalog.getValue());
     assertFalse(configuration.availableProjectsQuery.isValid());
   }
 
@@ -79,8 +79,8 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(settings);
 
     assertEquals(
-      RuntimeConfiguration.Catalog.POLICYANALYZER,
-      configuration.catalog.getValue());
+        RuntimeConfiguration.Catalog.POLICYANALYZER,
+        configuration.catalog.getValue());
     assertFalse(configuration.availableProjectsQuery.isValid());
     assertFalse(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
   }
@@ -91,12 +91,12 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(settings);
 
     assertEquals(
-      RuntimeConfiguration.Catalog.ASSETINVENTORY,
-      configuration.catalog.getValue());
+        RuntimeConfiguration.Catalog.ASSETINVENTORY,
+        configuration.catalog.getValue());
     assertTrue(configuration.availableProjectsQuery.isValid());
     assertEquals(
-      "state:ACTIVE",
-      configuration.availableProjectsQuery.getValue());
+        "state:ACTIVE",
+        configuration.availableProjectsQuery.getValue());
     assertTrue(configuration.getRequiredOauthScopes().contains(DirectoryGroupsClient.OAUTH_SCOPE));
   }
 
@@ -142,8 +142,8 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(Map.of());
 
     assertEquals(
-      MailNotificationService.Options.DEFAULT_TIMEZONE,
-      configuration.timeZoneForNotifications.getValue());
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        configuration.timeZoneForNotifications.getValue());
   }
 
   @Test
@@ -153,7 +153,7 @@ public class TestRuntimeConfiguration {
 
     assertFalse(configuration.timeZoneForNotifications.isValid());
     assertThrows(ZoneRulesException.class,
-      () -> configuration.timeZoneForNotifications.getValue());
+        () -> configuration.timeZoneForNotifications.getValue());
   }
 
   @Test
@@ -162,8 +162,8 @@ public class TestRuntimeConfiguration {
     var configuration = new RuntimeConfiguration(settings);
 
     assertNotEquals(
-      MailNotificationService.Options.DEFAULT_TIMEZONE,
-      configuration.timeZoneForNotifications.getValue());
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        configuration.timeZoneForNotifications.getValue());
   }
 
   // -------------------------------------------------------------------------
@@ -186,14 +186,13 @@ public class TestRuntimeConfiguration {
   @Test
   public void whenSet_ThenSmtpSettingsReturnSettings() {
     var configuration = new RuntimeConfiguration(Map.of(
-      "SMTP_HOST", "mail.example.com ",
-      "SMTP_PORT", " 25 ",
-      "SMTP_ENABLE_STARTTLS", " False ",
-      "SMTP_SENDER_NAME", "Sender",
-      "SMTP_SENDER_ADDRESS", "sender@example.com",
-      "SMTP_USERNAME", "user",
-      "SMTP_PASSWORD", "password"
-    ));
+        "SMTP_HOST", "mail.example.com ",
+        "SMTP_PORT", " 25 ",
+        "SMTP_ENABLE_STARTTLS", " False ",
+        "SMTP_SENDER_NAME", "Sender",
+        "SMTP_SENDER_ADDRESS", "sender@example.com",
+        "SMTP_USERNAME", "user",
+        "SMTP_PASSWORD", "password"));
 
     assertEquals("mail.example.com", configuration.smtpHost.getValue());
     assertEquals(25, configuration.smtpPort.getValue());

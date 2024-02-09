@@ -24,11 +24,11 @@ package com.google.solutions.jitaccess.core.catalog;
 import java.util.Comparator;
 
 /**
- * Unique identifier of an entitlement.
+ * Unique identifier of a privilege.
  */
-public abstract class EntitlementId implements Comparable<EntitlementId> {
+public abstract class PrivilegeId implements Comparable<PrivilegeId> {
   /**
-   * @return the catalog the entitlement belongs to
+   * @return the catalog the privilege belongs to
    */
   public abstract String catalog();
 
@@ -52,7 +52,7 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
       return false;
     }
 
-    var that = (EntitlementId) o;
+    var that = (PrivilegeId) o;
     return this.catalog().equals(that.catalog()) && this.id().equals(that.id());
   }
 
@@ -62,10 +62,10 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
   }
 
   @Override
-  public int compareTo(EntitlementId o) {
+  public int compareTo(PrivilegeId o) {
     return Comparator
-      .comparing((EntitlementId e) -> e.catalog())
-      .thenComparing(e -> e.id())
-      .compare(this, o);
+        .comparing((PrivilegeId e) -> e.catalog())
+        .thenComparing(e -> e.id())
+        .compare(this, o);
   }
 }

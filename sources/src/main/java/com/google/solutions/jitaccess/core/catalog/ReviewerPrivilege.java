@@ -22,47 +22,40 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserId;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * Request for "MPA-activating" an entitlement.
+ * Represents a reviewer privilege.
  */
-public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
-  private final Collection<UserId> reviewers;
+public record ReviewerPrivilege<TPrivilegeId extends PrivilegeId>(
+    TPrivilegeId id,
+    String name,
+    Set<ActivationType> reviewableTypes)
+    implements Comparable<ReviewerPrivilege<TPrivilegeId>> {
 
-  protected MpaActivationRequest(
-    ActivationId id,
-    UserId requestingUser,
-    Set<TEntitlementId> entitlements,
-    Set<UserId> reviewers,
-    String justification,
-    Instant startTime,
-    Duration duration) {
-    super(
-      id,
-      requestingUser,
-      entitlements,
-      justification,
-      startTime,
-      duration);
-
-    Preconditions.checkNotNull(reviewers, "reviewers");
-    Preconditions.checkArgument(!reviewers.isEmpty());
-    this.reviewers = reviewers;
-  }
-
-  public Collection<UserId> reviewers() {
-    return this.reviewers;
+  public ReviewerPrivilege {
+    Preconditions.checkNotNull(id, "id");
+    Preconditions.checkNotNull(name, "name");
+    Preconditions.checkArgument(!reviewableTypes.isEmpty(),
+        "reviewableTypes must contain at least one activation type.");
   }
 
   @Override
-  public final ActivationType type() {
-    return ActivationType.MPA;
+  public String toString() {
+    return this.name;
+  }
+
+  @Override
+  public int compareTo(ReviewerPrivilege<TPrivilegeId> o) {
+    return Comparator
+        .comparing((ReviewerPrivilege<TPrivilegeId> e) -> e.reviewableTypes.stream()
+            .map(s -> s.name())
+            .sorted()
+            .collect(Collectors.joining("-")))
+        .thenComparing(e -> e.id)
+        .compare(this, o);
   }
 }

@@ -24,9 +24,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
+import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
 
-public class ProjectRoleBinding extends EntitlementId {
+public class ProjectRoleBinding extends PrivilegeId {
   static final String CATALOG = "iam";
 
   private final RoleBinding roleBinding;

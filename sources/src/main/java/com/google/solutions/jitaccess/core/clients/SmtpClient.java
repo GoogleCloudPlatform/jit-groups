@@ -44,11 +44,9 @@ public class SmtpClient {
   private final SecretManagerClient secretManagerClient;
   private final Options options;
 
-
   public SmtpClient(
-    SecretManagerClient secretManagerClient,
-    Options options
-  ) {
+      SecretManagerClient secretManagerClient,
+      Options options) {
     Preconditions.checkNotNull(secretManagerClient, "secretManagerAdapter");
     Preconditions.checkNotNull(options, "options");
 
@@ -57,12 +55,11 @@ public class SmtpClient {
   }
 
   public void sendMail(
-    Collection<UserId> toRecipients,
-    Collection<UserId> ccRecipients,
-    String subject,
-    Multipart content,
-    EnumSet<Flags> flags
-  ) throws MailException {
+      Collection<UserId> toRecipients,
+      Collection<UserId> ccRecipients,
+      String subject,
+      Multipart content,
+      EnumSet<Flags> flags) throws MailException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");
     Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
@@ -71,19 +68,18 @@ public class SmtpClient {
     PasswordAuthentication authentication;
     try {
       authentication = this.options.createPasswordAuthentication(this.secretManagerClient);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       throw new MailException("Looking up SMTP credentials failed", e);
     }
 
     var session = Session.getDefaultInstance(
-      this.options.smtpProperties,
-      new Authenticator() {
-        @Override
-        protected PasswordAuthentication getPasswordAuthentication() {
-          return authentication;
-        }
-      });
+        this.options.smtpProperties,
+        new Authenticator() {
+          @Override
+          protected PasswordAuthentication getPasswordAuthentication() {
+            return authentication;
+          }
+        });
 
     try {
       var message = new MimeMessage(session);
@@ -91,16 +87,16 @@ public class SmtpClient {
 
       message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
 
-      for (var recipient : toRecipients){
+      for (var recipient : toRecipients) {
         message.addRecipient(
-          Message.RecipientType.TO,
-          new InternetAddress(recipient.email, recipient.email));
+            Message.RecipientType.TO,
+            new InternetAddress(recipient.email, recipient.email));
       }
 
-      for (var recipient : ccRecipients){
+      for (var recipient : ccRecipients) {
         message.addRecipient(
-          Message.RecipientType.CC,
-          new InternetAddress(recipient.email, recipient.email));
+            Message.RecipientType.CC,
+            new InternetAddress(recipient.email, recipient.email));
       }
 
       //
@@ -112,25 +108,22 @@ public class SmtpClient {
       if (flags.contains(Flags.REPLY)) {
         message.setFlag(jakarta.mail.Flags.Flag.ANSWERED, true);
         message.setSubject("Re: " + subject);
-      }
-      else {
+      } else {
         message.setSubject(subject);
       }
 
       Transport.send(message);
-    }
-    catch (MessagingException | UnsupportedEncodingException e) {
+    } catch (MessagingException | UnsupportedEncodingException e) {
       throw new MailException("The mail could not be delivered", e);
     }
   }
 
   public void sendMail(
-    Collection<UserId> toRecipients,
-    Collection<UserId> ccRecipients,
-    String subject,
-    String htmlContent,
-    EnumSet<Flags> flags
-  ) throws MailException {
+      Collection<UserId> toRecipients,
+      Collection<UserId> ccRecipients,
+      String subject,
+      String htmlContent,
+      EnumSet<Flags> flags) throws MailException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");
     Preconditions.checkNotNull(ccRecipients, "ccRecipients");
     Preconditions.checkNotNull(subject, "subject");
@@ -144,13 +137,12 @@ public class SmtpClient {
       content.addBodyPart(htmlPart);
 
       sendMail(
-        toRecipients,
-        ccRecipients,
-        subject,
-        content,
-        flags);
-    }
-    catch (MessagingException e) {
+          toRecipients,
+          ccRecipients,
+          subject,
+          content,
+          flags);
+    } catch (MessagingException e) {
       throw new MailException("The mail could not be formatted", e);
     }
   }
@@ -174,13 +166,12 @@ public class SmtpClient {
     private String smtpSecretPath;
 
     public Options(
-      String smtpHost,
-      int smtpPort,
-      String senderName,
-      String senderAddress,
-      boolean enableStartTls,
-      Map<String, String> extraOptions
-    ) {
+        String smtpHost,
+        int smtpPort,
+        String senderName,
+        String senderAddress,
+        boolean enableStartTls,
+        Map<String, String> extraOptions) {
       Preconditions.checkNotNull(smtpHost, "smtpHost");
       Preconditions.checkNotNull(senderName, "senderName");
       Preconditions.checkNotNull(senderAddress, "senderAddress");
@@ -239,23 +230,20 @@ public class SmtpClient {
     }
 
     public PasswordAuthentication createPasswordAuthentication(
-      SecretManagerClient adapter
-    ) throws AccessException, IOException {
+        SecretManagerClient adapter) throws AccessException, IOException {
       //
       // Resolve authenticator on first use. To avoid holding a lock for
       // longer than necessary, we allow the lookup to occur multiple times and
       // let the first writer win.
       //
-      if (this.cachedAuthentication == null)
-      {
+      if (this.cachedAuthentication == null) {
         String password;
         if (this.smtpSecretPath != null && this.smtpSecretPath.length() > 0) {
           //
           // Read password from secret manager.
           //
           password = adapter.accessSecret(this.smtpSecretPath);
-        }
-        else {
+        } else {
           //
           // Use clear-text password.
           //
@@ -278,4 +266,3 @@ public class SmtpClient {
     }
   }
 }
-

@@ -22,7 +22,8 @@
 package com.google.solutions.jitaccess.core;
 
 public class Exceptions {
-  private Exceptions() {}
+  private Exceptions() {
+  }
 
   public static String getFullMessage(Throwable e) {
     var buffer = new StringBuilder();
@@ -36,8 +37,7 @@ public class Exceptions {
           buffer.append(": ");
           buffer.append(e.getMessage());
         }
-      }
-      else {
+      } else {
         buffer.append(e.getMessage());
       }
     }

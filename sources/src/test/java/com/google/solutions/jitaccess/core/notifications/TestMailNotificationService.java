@@ -42,15 +42,14 @@ public class TestMailNotificationService {
     private final String templateId;
 
     protected TestNotification(
-      UserId recipient,
-      String subject,
-      Map<String, Object> properties,
-      String templateId
-    ) {
+        UserId recipient,
+        String subject,
+        Map<String, Object> properties,
+        String templateId) {
       super(
-        List.of(recipient),
-        List.of(),
-        subject);
+          List.of(recipient),
+          List.of(),
+          subject);
       this.properties.putAll(properties);
       this.templateId = templateId;
     }
@@ -69,44 +68,44 @@ public class TestMailNotificationService {
   public void whenTemplateNotFound_ThenSendNotificationDoesNotSendMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
-      mailAdapter,
-      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
+        mailAdapter,
+        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      to,
-      "Test email",
-      new HashMap<String, Object>(),
-      "unknown-templateid"));
+        to,
+        "Test email",
+        new HashMap<String, Object>(),
+        "unknown-templateid"));
 
     verify(mailAdapter, times(0)).sendMail(
-      eq(List.of(to)),
-      eq(List.of()),
-      eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.NONE)));
+        eq(List.of(to)),
+        eq(List.of()),
+        eq("Test email"),
+        anyString(),
+        eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
 
   @Test
   public void whenTemplateFound_ThenSendNotificationSendsMail() throws Exception {
     var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
-      mailAdapter,
-      new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
+        mailAdapter,
+        new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
     var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      to,
-      "Test email",
-      new HashMap<String, Object>(),
-      "RequestActivation"));
+        to,
+        "Test email",
+        new HashMap<String, Object>(),
+        "RequestActivation"));
 
     verify(mailAdapter, times(1)).sendMail(
-      eq(List.of(to)),
-      eq(List.of()),
-      eq("Test email"),
-      anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.NONE)));
+        eq(List.of(to)),
+        eq(List.of()),
+        eq("Test email"),
+        anyString(),
+        eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
 
   // -------------------------------------------------------------------------
@@ -114,8 +113,7 @@ public class TestMailNotificationService {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception
-  {
+  public void whenTemplateNotFound_ThenLoadResourceReturnsNull() throws Exception {
     assertNull(MailNotificationService.loadResource("doesnotexist"));
   }
 }

@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestEntitlement {
+public class TestRequesterPrivilege {
 
   // -------------------------------------------------------------------------
   // toString.
@@ -37,13 +37,13 @@ public class TestEntitlement {
 
   @Test
   public void toStringReturnsName() {
-    var ent = new Entitlement<SampleEntitlementId>(
-      new SampleEntitlementId("1"),
-      "Sample entitlement",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+    var privilege = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("1"),
+        "Sample privilege",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
 
-    assertEquals("Sample entitlement", ent.toString());
+    assertEquals("Sample privilege", privilege.toString());
   }
 
   // -------------------------------------------------------------------------
@@ -52,43 +52,43 @@ public class TestEntitlement {
 
   @Test
   public void compareToOrdersByStatusThenName() {
-    var availableA = new Entitlement<SampleEntitlementId>(
-      new SampleEntitlementId("A"),
-      "Entitlement A",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
-    var activeA = new Entitlement<SampleEntitlementId>(
-      new SampleEntitlementId("A"),
-      "Entitlement A",
-      ActivationType.JIT,
-      Entitlement.Status.ACTIVE);
-    var pendingA = new Entitlement<SampleEntitlementId>(
-      new SampleEntitlementId("A"),
-      "Entitlement A",
-      ActivationType.JIT,
-      Entitlement.Status.ACTIVATION_PENDING);
+    var availableA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
+    var activeA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.ACTIVE);
+    var pendingA = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Privilege A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.ACTIVATION_PENDING);
 
-    var availableB = new Entitlement<SampleEntitlementId>(
-      new SampleEntitlementId("B"),
-      "Entitlement B",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+    var availableB = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("B"),
+        "Privilege B",
+        new SelfApproval(),
+        RequesterPrivilege.Status.AVAILABLE);
 
-    var entitlements = List.of(
-      availableB,
-      pendingA,
-      availableA,
-      activeA);
+    var privileges = List.of(
+        availableB,
+        pendingA,
+        availableA,
+        activeA);
 
-    var sorted = new TreeSet<Entitlement<SampleEntitlementId>>();
-    sorted.addAll(entitlements);
+    var sorted = new TreeSet<RequesterPrivilege<SamplePrivilegeId>>();
+    sorted.addAll(privileges);
 
     Assertions.assertIterableEquals(
-      List.of(
-        availableA,
-        availableB,
-        activeA,
-        pendingA),
-      sorted);
+        List.of(
+            availableA,
+            availableB,
+            activeA,
+            pendingA),
+        sorted);
   }
 }

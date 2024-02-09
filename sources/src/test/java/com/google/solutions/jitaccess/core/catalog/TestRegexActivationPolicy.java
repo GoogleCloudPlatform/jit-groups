@@ -41,39 +41,35 @@ public class TestRegexActivationPolicy {
   @Test
   public void whenJustificationNullOrEmpty_ThenCheckJustificationThrowsException() {
     var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile(".*")
-    ));
+        "hint",
+        Pattern.compile(".*")));
 
     assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, null));
+        InvalidJustificationException.class,
+        () -> policy.checkJustification(SAMPLE_USER, null));
     assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, ""));
+        InvalidJustificationException.class,
+        () -> policy.checkJustification(SAMPLE_USER, ""));
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {" ", "a", "b/a", "b/"})
+  @ValueSource(strings = { " ", "a", "b/a", "b/" })
   public void whenJustificationDoesNotMatchRegex_ThenCheckJustificationThrowsException(
-    String value
-  ) {
+      String value) {
     var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile("^b/(\\d+)$")
-    ));
+        "hint",
+        Pattern.compile("^b/(\\d+)$")));
 
     assertThrows(
-      InvalidJustificationException.class,
-      () -> policy.checkJustification(SAMPLE_USER, value));
+        InvalidJustificationException.class,
+        () -> policy.checkJustification(SAMPLE_USER, value));
   }
 
   @Test
   public void whenJustificationMatchesRegex_ThenCheckJustificationReturns() throws Exception {
     var policy = new RegexJustificationPolicy(new RegexJustificationPolicy.Options(
-      "hint",
-      Pattern.compile("^b/(\\d+)$")
-    ));
+        "hint",
+        Pattern.compile("^b/(\\d+)$")));
 
     policy.checkJustification(SAMPLE_USER, "b/1");
   }

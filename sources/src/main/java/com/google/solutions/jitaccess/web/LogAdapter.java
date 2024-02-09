@@ -79,19 +79,20 @@ public class LogAdapter {
 
   public LogEntry newErrorEntry(String eventId, String message, Exception e) {
     return new LogEntry(
-      "ERROR",
-      eventId,
-      String.format("%s: %s", message, e.getMessage()),
-      this.principal,
-      this.traceId);
+        "ERROR",
+        eventId,
+        String.format("%s: %s", message, e.getMessage()),
+        this.principal,
+        this.traceId);
   }
 
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
   // Inner classes.
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
 
   /**
-   * Entry that, when serialized to JSON, can be parsed and interpreted by Cloud Logging.
+   * Entry that, when serialized to JSON, can be parsed and interpreted by Cloud
+   * Logging.
    */
   public class LogEntry {
     @JsonProperty("severity")
@@ -107,12 +108,11 @@ public class LogAdapter {
     private final String traceId;
 
     private LogEntry(
-      String severity,
-      String eventId,
-      String message,
-      UserPrincipal principal,
-      String traceId
-    ) {
+        String severity,
+        String eventId,
+        String message,
+        UserPrincipal principal,
+        String traceId) {
       this.severity = severity;
       this.message = message;
       this.traceId = traceId;
@@ -125,7 +125,7 @@ public class LogAdapter {
         this.labels.put("user_id", principal.getId().id);
         this.labels.put("device_id", principal.getDevice().deviceId());
         this.labels.put("device_access_levels",
-          String.join(", ", principal.getDevice().accessLevels()));
+            String.join(", ", principal.getDevice().accessLevels()));
       }
     }
 
@@ -149,12 +149,10 @@ public class LogAdapter {
         // Write to STDOUT, AppEngine picks it up from there.
         //
         output.append(new ObjectMapper().writeValueAsString(this)).append("\n");
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         try {
           output.append(String.format("Failed to log: %s\n", message));
-        }
-        catch (IOException ignored) {
+        } catch (IOException ignored) {
         }
       }
     }

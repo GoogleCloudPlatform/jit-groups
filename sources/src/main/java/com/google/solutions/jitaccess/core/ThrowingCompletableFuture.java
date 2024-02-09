@@ -37,15 +37,13 @@ public class ThrowingCompletableFuture {
   }
 
   public static <T> CompletableFuture<T> submit(
-    ThrowingSupplier<T> supplier,
-    Executor executor
-  ) {
+      ThrowingSupplier<T> supplier,
+      Executor executor) {
     var future = new CompletableFuture<T>();
     executor.execute(() -> {
       try {
         future.complete(supplier.supply());
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         future.completeExceptionally(e);
       }
     });

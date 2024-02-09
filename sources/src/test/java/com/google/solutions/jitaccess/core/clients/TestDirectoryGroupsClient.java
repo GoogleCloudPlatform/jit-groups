@@ -30,83 +30,83 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestDirectoryGroupsClient {
   private final String INVALID_CUSTOMER_ID = "Cinvalid";
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
   // listDirectGroupMemberships.
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
 
   @Test
   public void whenUnauthenticated_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        NotAuthenticatedException.class,
+        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
   }
 
   @Test
   public void whenUserFromUnknownDomain_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      ResourceNotFoundException.class,
-      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        ResourceNotFoundException.class,
+        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      ResourceNotFoundException.class,
-      () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        ResourceNotFoundException.class,
+        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
   }
 
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
   // listDirectGroupMembers.
-  //---------------------------------------------------------------------
+  // ---------------------------------------------------------------------
 
   @Test
   public void whenUnauthenticated_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.listDirectGroupMembers("group@example.com"));
+        NotAuthenticatedException.class,
+        () -> adapter.listDirectGroupMembers("group@example.com"));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.listDirectGroupMembers("group@example.com"));
+        AccessDeniedException.class,
+        () -> adapter.listDirectGroupMembers("group@example.com"));
   }
 
   @Test
   public void whenGroupDoesNotExist_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
-      HttpTransport.Options.DEFAULT);
+        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      ResourceNotFoundException.class,
-      () -> adapter.listDirectGroupMembers("unknown-groupkey"));
+        ResourceNotFoundException.class,
+        () -> adapter.listDirectGroupMembers("unknown-groupkey"));
   }
 }

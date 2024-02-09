@@ -42,14 +42,12 @@ public class RegexJustificationPolicy implements JustificationPolicy {
 
   @Override
   public void checkJustification(
-    UserId user,
-    String justification
-  ) throws InvalidJustificationException {
-    if (
-      Strings.isNullOrEmpty(justification) ||
-      !this.options.justificationPattern.matcher(justification).matches()) {
+      UserId user,
+      String justification) throws InvalidJustificationException {
+    if (Strings.isNullOrEmpty(justification) ||
+        !this.options.justificationPattern.matcher(justification).matches()) {
       throw new InvalidJustificationException(
-        String.format("Justification does not meet criteria: %s", this.options.justificationHint));
+          String.format("Justification does not meet criteria: %s", this.options.justificationHint));
     }
   }
 
@@ -59,8 +57,7 @@ public class RegexJustificationPolicy implements JustificationPolicy {
   }
 
   public record Options(
-    String justificationHint,
-    Pattern justificationPattern
-  ){
+      String justificationHint,
+      Pattern justificationPattern) {
   }
 }

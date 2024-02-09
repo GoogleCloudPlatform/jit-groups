@@ -104,7 +104,7 @@ public class TestFolderId {
 
     assertFalse(id1.equals(""));
   }
-  
+
   // -------------------------------------------------------------------------
   // Comparable.
   // -------------------------------------------------------------------------
@@ -112,15 +112,15 @@ public class TestFolderId {
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
     var folders = List.of(
-      new FolderId("333"),
-      new FolderId("111"),
-      new FolderId("222"));
+        new FolderId("333"),
+        new FolderId("111"),
+        new FolderId("222"));
 
     assertIterableEquals(
-      List.of(
-        new FolderId("111"),
-        new FolderId("222"),
-        new FolderId("333")),
-      new TreeSet<>(folders));
+        List.of(
+            new FolderId("111"),
+            new FolderId("222"),
+            new FolderId("333")),
+        new TreeSet<>(folders));
   }
 }

@@ -37,8 +37,8 @@ public class TestIapAssertion {
   @Test
   public void getUserId() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
-      .setSubject("subject-1")
-      .set("email", "email-1"));
+        .setSubject("subject-1")
+        .set("email", "email-1"));
 
     assertEquals("subject-1", assertion.getUserId().id);
     assertEquals("email-1", assertion.getUserId().email);
@@ -58,7 +58,7 @@ public class TestIapAssertion {
   @Test
   public void whenGoogleClaimEmpty_ThenGetDeviceInfoReturnsDevice() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
-      .set("google", Map.of()));
+        .set("google", Map.of()));
 
     assertEquals(DeviceInfo.UNKNOWN, assertion.getDeviceInfo());
   }
@@ -66,7 +66,7 @@ public class TestIapAssertion {
   @Test
   public void whenGoogleClaimSet_ThenGetDeviceInfoReturnsDevice() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
-      .set("google", Map.of("device_id", "device-1")));
+        .set("google", Map.of("device_id", "device-1")));
 
     assertEquals("device-1", assertion.getDeviceInfo().deviceId());
     assertEquals(List.of(), assertion.getDeviceInfo().accessLevels());
@@ -75,9 +75,9 @@ public class TestIapAssertion {
   @Test
   public void whenGoogleClaimContainsAccessLevelsSet_ThenGetDeviceInfoReturnsDevice() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
-      .set("google", Map.of(
-        "device_id", "device-1",
-        "access_levels", List.of("level-1", "level-2"))));
+        .set("google", Map.of(
+            "device_id", "device-1",
+            "access_levels", List.of("level-1", "level-2"))));
 
     assertEquals("device-1", assertion.getDeviceInfo().deviceId());
     assertEquals(List.of("level-1", "level-2"), assertion.getDeviceInfo().accessLevels());

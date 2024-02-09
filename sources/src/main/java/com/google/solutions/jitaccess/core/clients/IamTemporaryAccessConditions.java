@@ -32,11 +32,10 @@ import java.util.regex.Pattern;
  * Helper class for creating temporary access IAM conditions.
  */
 public class IamTemporaryAccessConditions {
-  private static final String CONDITION_TEMPLATE =
-    "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
+  private static final String CONDITION_TEMPLATE = "(request.time >= timestamp(\"%s\") && "
+      + "request.time < timestamp(\"%s\"))";
 
-  private static final String CONDITION_PATTERN =
-    "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
+  private static final String CONDITION_PATTERN = "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
       + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
@@ -55,9 +54,9 @@ public class IamTemporaryAccessConditions {
     assert (startTime.isBefore(endTime));
 
     var clause = String.format(
-      CONDITION_TEMPLATE,
-      startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
-      endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
+        CONDITION_TEMPLATE,
+        startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+        endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME));
 
     assert (isTemporaryAccessCondition(clause));
 
@@ -65,9 +64,8 @@ public class IamTemporaryAccessConditions {
   }
 
   public static String createExpression(
-    Instant startTime,
-    TemporalAmount duration
-  ) {
+      Instant startTime,
+      TemporalAmount duration) {
     return createExpression(startTime, startTime.plus(duration));
   }
 
@@ -85,12 +83,10 @@ public class IamTemporaryAccessConditions {
         var endTime = Instant.parse(matcher.group(2));
 
         return !currentTime.isBefore(startTime) && currentTime.isBefore(endTime);
-      }
-      catch (DateTimeParseException e) {
+      } catch (DateTimeParseException e) {
         return false;
       }
-    }
-    else {
+    } else {
       return false;
     }
   }
