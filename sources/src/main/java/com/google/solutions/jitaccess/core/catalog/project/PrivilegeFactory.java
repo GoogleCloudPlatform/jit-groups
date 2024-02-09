@@ -46,20 +46,19 @@ class PrivilegeFactory {
    * Condition that marks a role binding as eligible for self approver privilege
    */
   private static final Pattern SELF_APPROVER_CONDITION_PATTERN = Pattern
-      .compile("^has\\(\\{\\}.jitaccessconstraint\\)$");
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
 
   /** Condition that marks a role binding as eligible for peer privilege */
   private static final Pattern PEER_CONDITION_PATTERN = Pattern
-      .compile("^has\\(\\{\\}.multipartyapprovalconstraint" + VALID_TOPIC_PATTERN
-          + "\\)$");
+      .compile("\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
   /** Condition that marks a role binding as eligible for requester privilege */
   private static final Pattern REQUESTER_CONDITION_PATTERN = Pattern
-      .compile("^has\\(\\{\\}.externalapprovalconstraint" + VALID_TOPIC_PATTERN + "\\)$");
+      .compile("\\s*has\\(\\s*\\{\\s*\\}.externalapprovalconstraint" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
   /** Condition that marks a role binding as eligible for reviewer privilege */
   private static final Pattern REVIEWER_CONDITION_PATTERN = Pattern
-      .compile("^has\\(\\{\\}.reviewerprivilege" + VALID_TOPIC_PATTERN + "\\)$");
+      .compile("\\s*has\\(\\s*\\{\\s*\\}.reviewerprivilege" + VALID_TOPIC_PATTERN + "\\s*\\)\\s*$");
 
   private static boolean isMatchingCondition(Expr iamCondition, Pattern pattern) {
     if (iamCondition == null) {
@@ -73,8 +72,7 @@ class PrivilegeFactory {
     // Strip all whitespace to simplify expression matching.
     var expression = iamCondition
         .getExpression()
-        .toLowerCase()
-        .replace(" ", "");
+        .toLowerCase();
 
     return pattern.matcher(expression).matches();
   }
@@ -82,12 +80,11 @@ class PrivilegeFactory {
   private static String getTopic(Expr iamCondition, Pattern pattern) {
     var expression = iamCondition
         .getExpression()
-        .toLowerCase()
-        .replace(" ", "");
+        .toLowerCase();
 
     var matcher = pattern.matcher(expression);
     if (matcher.find()) {
-      if (matcher.groupCount() == 2) {
+      if (matcher.groupCount() == 4) {
         return matcher.group(2) == null ? "" : matcher.group(2);
       }
     }

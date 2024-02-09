@@ -74,6 +74,67 @@ public class TestAssetInventoryRepository {
     }
   }
 
+  private AssetInventoryClient setupTestBindings() throws Exception {
+    var jitBindingForUser = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var peerBindingForUser = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(PEER_CONDITION))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var peerBindingOtherTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(PEER_CONDITION_OTHER_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var peerBindingNoTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(PEER_CONDITION_NO_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var externalBindingForUser = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REQUESTER_CONDITION))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var externalBindingOtherTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REQUESTER_CONDITION_OTHER_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var externalBindingNoTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REQUESTER_CONDITION_NO_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var reviewerBindingForUser = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var reviewerBindingOtherTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REVIEWER_CONDITION_OTHER_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var reviewerBindingNoTopic = new Binding()
+        .setRole("roles/for-user")
+        .setCondition(new Expr().setExpression(REVIEWER_CONDITION_NO_TOPIC))
+        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+        .getEffectiveIamPolicies(
+            eq("organization/0"),
+            eq(SAMPLE_PROJECT)))
+        .thenReturn(List.of(
+            new PolicyInfo()
+                .setAttachedResource(SAMPLE_PROJECT.path())
+                .setPolicy(new Policy()
+                    .setBindings(
+                        List.of(jitBindingForUser, peerBindingForUser, peerBindingOtherTopic,
+                            peerBindingNoTopic,
+                            externalBindingForUser, externalBindingOtherTopic,
+                            externalBindingNoTopic,
+                            reviewerBindingForUser, reviewerBindingOtherTopic,
+                            reviewerBindingNoTopic)))));
+    return caiClient;
+  }
+
   // ---------------------------------------------------------------------------
   // awaitAndRethrow.
   // ---------------------------------------------------------------------------
@@ -295,65 +356,9 @@ public class TestAssetInventoryRepository {
   // ---------------------------------------------------------------------------
 
   @Test
-  public void whenEffectiveIamPoliciesContainEligibleBindings_ThenFindRequesterPrivilegesReturnsList()
+  public void whenEffectiveIamPoliciesContainEligibleSelfApprovalBinding_ThenFindRequesterPrivilegesReturnsList()
       throws Exception {
-    var jitBindingForUser = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var peerBindingForUser = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(PEER_CONDITION))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var peerBindingOtherTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(PEER_CONDITION_OTHER_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var peerBindingNoTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(PEER_CONDITION_NO_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var externalBindingForUser = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REQUESTER_CONDITION))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var externalBindingOtherTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REQUESTER_CONDITION_OTHER_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var externalBindingNoTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REQUESTER_CONDITION_NO_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var reviewerBindingForUser = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REVIEWER_CONDITION))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var reviewerBindingOtherTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REVIEWER_CONDITION_OTHER_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var reviewerBindingNoTopic = new Binding()
-        .setRole("roles/for-user")
-        .setCondition(new Expr().setExpression(REVIEWER_CONDITION_NO_TOPIC))
-        .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-
-    var caiClient = Mockito.mock(AssetInventoryClient.class);
-    when(caiClient
-        .getEffectiveIamPolicies(
-            eq("organization/0"),
-            eq(SAMPLE_PROJECT)))
-        .thenReturn(List.of(
-            new PolicyInfo()
-                .setAttachedResource(SAMPLE_PROJECT.path())
-                .setPolicy(new Policy()
-                    .setBindings(
-                        List.of(jitBindingForUser, peerBindingForUser, peerBindingOtherTopic,
-                            peerBindingNoTopic,
-                            externalBindingForUser, externalBindingOtherTopic,
-                            externalBindingNoTopic,
-                            reviewerBindingForUser, reviewerBindingOtherTopic,
-                            reviewerBindingNoTopic)))));
+    var caiClient = setupTestBindings();
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -361,180 +366,224 @@ public class TestAssetInventoryRepository {
         caiClient,
         new AssetInventoryRepository.Options("organization/0"));
 
-    //
-    // Self approval only.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new SelfApproval()),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new SelfApproval()),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-      assertIterableEquals(
-          List.of("roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      var selfApprovalPrivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
-    }
+    assertIterableEquals(
+        List.of("roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    var selfApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+  }
 
-    //
-    // Peer only.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new PeerApproval("topic")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+  @Test
+  public void whenEffectiveIamPoliciesContainEligiblePeerApprovalBinding_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
 
-      assertIterableEquals(
-          List.of("roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
-    }
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
 
-    //
-    // Other topic.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new PeerApproval("other_topic")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new PeerApproval("topic")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-      assertIterableEquals(
-          List.of("roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
-    }
+    assertIterableEquals(
+        List.of("roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+  }
 
-    //
-    // No topic.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new PeerApproval("")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+  @Test
+  public void whenEffectiveIamPoliciesContainEligiblePeerApprovalBindingWithOtherTopic_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
 
-      var peerPrivileges = privileges.allRequesterPrivileges();
-      assertEquals(3, peerPrivileges.size());
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
 
-      var peerApprovalPrivilege = peerPrivileges.stream().findFirst().get();
-      assertEquals(new PeerApproval("").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new PeerApproval("other_topic")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-      peerApprovalPrivilege = peerPrivileges.stream().skip(1).findFirst().get();
-      assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertIterableEquals(
+        List.of("roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+  }
 
-      peerApprovalPrivilege = peerPrivileges.stream().skip(2).findFirst().get();
-      assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
-    }
+  @Test
+  public void whenEffectiveIamPoliciesContainEligiblePeerApprovalBindingWithNoTopic_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
 
-    //
-    // Requester only.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new ExternalApproval("topic")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
 
-      assertIterableEquals(
-          List.of("roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      var externalApprovalprivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new ExternalApproval("topic").name(), externalApprovalprivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalprivilege.status());
-    }
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new PeerApproval("")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-    //
-    // Other topic.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new ExternalApproval("other_topic")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    var peerPrivileges = privileges.allRequesterPrivileges();
+    assertEquals(3, peerPrivileges.size());
 
-      assertIterableEquals(
-          List.of("roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
-    }
+    var peerApprovalPrivilege = peerPrivileges.stream().findFirst().get();
+    assertEquals(new PeerApproval("").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
 
-    //
-    // No topic.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new ExternalApproval("")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    peerApprovalPrivilege = peerPrivileges.stream().skip(1).findFirst().get();
+    assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
 
-      var externalPrivileges = privileges.allRequesterPrivileges();
-      assertEquals(3, externalPrivileges.size());
+    peerApprovalPrivilege = peerPrivileges.stream().skip(2).findFirst().get();
+    assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+  }
 
-      var externalApprovalPrivilege = externalPrivileges.stream().findFirst().get();
-      assertEquals(new ExternalApproval("").name(), externalApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+  @Test
+  public void whenEffectiveIamPoliciesContainEligibleExternalApprovalBinding_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
 
-      externalApprovalPrivilege = externalPrivileges.stream().skip(1).findFirst().get();
-      assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
 
-      externalApprovalPrivilege = externalPrivileges.stream().skip(2).findFirst().get();
-      assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
-    }
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new ExternalApproval("topic")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
 
-    //
-    // Multiple privileges.
-    //
-    {
-      var privileges = repository.findRequesterPrivileges(
-          SAMPLE_USER,
-          SAMPLE_PROJECT,
-          Set.of(new SelfApproval(), new PeerApproval("topic"),
-              new ExternalApproval("topic")),
-          EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+    assertIterableEquals(
+        List.of("roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    var externalApprovalprivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new ExternalApproval("topic").name(), externalApprovalprivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalprivilege.status());
+  }
 
-      assertIterableEquals(
-          List.of("roles/for-user", "roles/for-user", "roles/for-user"),
-          privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
-              .collect(Collectors.toList()));
-      assertEquals(3, privileges.allRequesterPrivileges().size());
-      var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
-      assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
-      var peerApprovalPrivilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
-      assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
-      var selfApprovalPrivilege = privileges.allRequesterPrivileges().last();
-      assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
-      assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+  @Test
+  public void whenEffectiveIamPoliciesContainEligibleExternalApprovalBindingWithOtherTopic_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
 
-    }
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
+
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new ExternalApproval("other_topic")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+
+    assertIterableEquals(
+        List.of("roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainEligibleExternalApprovalBindingWithNoTopic_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
+
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
+
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new ExternalApproval("")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+
+    var externalPrivileges = privileges.allRequesterPrivileges();
+    assertEquals(3, externalPrivileges.size());
+
+    var externalApprovalPrivilege = externalPrivileges.stream().findFirst().get();
+    assertEquals(new ExternalApproval("").name(), externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+
+    externalApprovalPrivilege = externalPrivileges.stream().skip(1).findFirst().get();
+    assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+
+    externalApprovalPrivilege = externalPrivileges.stream().skip(2).findFirst().get();
+    assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainEligibleBindingsWithDifferentType_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
+    var caiClient = setupTestBindings();
+
+    var repository = new AssetInventoryRepository(
+        new SynchronousExecutor(),
+        Mockito.mock(DirectoryGroupsClient.class),
+        caiClient,
+        new AssetInventoryRepository.Options("organization/0"));
+
+    var privileges = repository.findRequesterPrivileges(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        Set.of(new SelfApproval(), new PeerApproval("topic"),
+            new ExternalApproval("topic")),
+        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+
+    assertIterableEquals(
+        List.of("roles/for-user", "roles/for-user", "roles/for-user"),
+        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+            .collect(Collectors.toList()));
+    assertEquals(3, privileges.allRequesterPrivileges().size());
+    var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    var peerApprovalPrivilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    var selfApprovalPrivilege = privileges.allRequesterPrivileges().last();
+    assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+
   }
 
   @Test
