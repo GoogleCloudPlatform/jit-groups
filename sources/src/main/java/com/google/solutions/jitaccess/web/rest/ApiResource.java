@@ -638,7 +638,8 @@ public class ApiResource {
       return new ActivationStatusResponse(
           iapPrincipal.getId(),
           List.of(activationRequest),
-          RequesterPrivilege.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
+          RequesterPrivilege.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated
+                                                         // already.
     } catch (Exception e) {
       this.logAdapter
           .newErrorEntry(
@@ -1008,10 +1009,7 @@ public class ApiResource {
         URL activationRequestUrl) throws MalformedURLException {
       super(
           List.of(activation.request().requestingUser()),
-          activation.request().reviewers(), // Move
-                                            // reviewers
-                                            // to
-                                            // CC.
+          activation.request().reviewers(), // Move reviewers to CC.
           String.format(
               "%s requests access to project %s",
               activation.request().requestingUser(),
