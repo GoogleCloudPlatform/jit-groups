@@ -257,12 +257,14 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .collect(Collectors.toSet()));
     }
 
+    var allExpired = Set.<ProjectRoleBinding>of(); // Not supported.
+
     var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
       .flatMap(Collection::stream)
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    return new EntitlementSet<>(allAvailable, allActive, warnings);
+    return new EntitlementSet<>(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override

@@ -25,6 +25,7 @@ import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
@@ -208,27 +209,50 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         .collect(Collectors.toList()));
     }
 
+    Predicate<Binding> isTemporaryIamConditionValid = binding -> {
+      try {
+        return new TemporaryIamCondition(binding.getCondition().getExpression()).evaluate();
+      }
+      catch (CelException e) {
+        return false;
+      }
+    };
+
     var allActive = new HashSet<ProjectRoleBinding>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
+      //
+      // Find temporary bindings that reflect activations and
+      // are still valid.
+      //
       allActive.addAll(allBindings.stream()
         // Only temporary access bindings.
         .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
 
         // Only bindings that are still valid.
-        .filter(binding -> {
-          try {
-            return new TemporaryIamCondition(binding.getCondition().getExpression()).evaluate();
-          }
-          catch (CelException e) {
-            return false;
-          }
-        })
+        .filter(isTemporaryIamConditionValid)
 
         .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
         .collect(Collectors.toList()));
     }
 
-    return new EntitlementSet<>(allAvailable, allActive, Set.of());
+    var allExpired = new HashSet<ProjectRoleBinding>();
+    if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) { //TODO: test
+      //
+      // Find temporary bindings that reflect activations and
+      // re no longer valid.
+      //
+      allActive.addAll(allBindings.stream()
+        // Only temporary access bindings.
+        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+
+        // Only bindings that are no longer valid.
+        .filter(b -> !isTemporaryIamConditionValid.apply(b))
+
+        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+        .collect(Collectors.toList()));
+    }
+
+    return new EntitlementSet<>(allAvailable, allActive, allExpired, Set.of());
   }
 
   @Override

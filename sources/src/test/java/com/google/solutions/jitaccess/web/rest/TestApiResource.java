@@ -388,6 +388,7 @@ public class TestApiResource {
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of()),
         Set.of(),
+        Set.of(),
         Set.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -422,6 +423,7 @@ public class TestApiResource {
         eq(new ProjectId("project-1"))))
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(role1, role2)),
+        Set.of(),
         Set.of(),
         Set.of()));
 

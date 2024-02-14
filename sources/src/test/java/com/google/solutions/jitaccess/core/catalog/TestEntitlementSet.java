@@ -68,6 +68,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(),
+      Set.of(),
       Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
@@ -91,6 +92,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(available1.id()),
+      Set.of(),
       Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
@@ -121,6 +123,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(available1.id(), available2.id()),
+      Set.of(),
       Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
@@ -155,6 +158,7 @@ public class TestEntitlementSet {
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
       Set.of(new StringId("unavailable-1")),
+      Set.of(),
       Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());

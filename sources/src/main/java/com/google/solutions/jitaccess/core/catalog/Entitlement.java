@@ -70,6 +70,11 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
     ACTIVE,
 
     /**
+     * Entitlement was active, but has no expired.
+     */
+    EXPIRED,
+
+    /**
      * Approval pending.
      */
     ACTIVATION_PENDING

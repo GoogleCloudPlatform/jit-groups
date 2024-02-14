@@ -32,26 +32,31 @@ import java.util.stream.Collectors;
  * Set of entitlements
  *
  * @param availableEntitlements available entitlements, regardless of status
- * @param activeEntitlementIds IDs of active entitlements
+ * @param activeEntitlementIds IDs of active entitlements (subset of available entitlements)
+ * @param expiredEntitlementIds IDs of expired entitlements (subset of available entitlements)
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
   Set<Entitlement<TId>> availableEntitlements,
   Set<TId> activeEntitlementIds,
+  Set<TId> expiredEntitlementIds,
   Set<String> warnings
 ) {
   public EntitlementSet {
     Preconditions.checkNotNull(availableEntitlements, "availableEntitlements");
     Preconditions.checkNotNull(activeEntitlementIds, "activeEntitlementIds");
+    Preconditions.checkNotNull(expiredEntitlementIds, "expiredEntitlementIds");
     Preconditions.checkNotNull(warnings, "warnings");
 
     assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
+    assert activeEntitlementIds.stream().noneMatch(id -> expiredEntitlementIds.contains(id));
+    assert expiredEntitlementIds.stream().noneMatch(id -> activeEntitlementIds.contains(id));
   }
 
   /**
    * @return consolidated set of entitlements including available and active ones.
    */
-  public SortedSet<Entitlement<TId>> allEntitlements() {
+  public SortedSet<Entitlement<TId>> allEntitlements() { // TODO: expired?
     //
     // Return a set containing:
     //
@@ -100,6 +105,6 @@ public record EntitlementSet<TId extends EntitlementId>(
   }
 
   public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), Set.of(), Set.of());
+    return new EntitlementSet<TId>(new TreeSet<>(), Set.of(), Set.of(), Set.of());
   }
 }
