@@ -22,14 +22,12 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.cel.TimeSpan;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -96,7 +94,7 @@ public class TestEntitlementSet {
 
     var set = EntitlementSet.build(
       Set.of(available1, available2),
-      Set.of(new EntitlementSet.IdAndValidity<>(
+      Set.of(new EntitlementSet.ActivatedEntitlement<>(
         available1.id(),
         new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),
@@ -128,10 +126,10 @@ public class TestEntitlementSet {
     var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(
-        new EntitlementSet.IdAndValidity<>(
+        new EntitlementSet.ActivatedEntitlement<>(
           available1.id(),
           new TimeSpan(Instant.now(), Duration.ZERO)),
-        new EntitlementSet.IdAndValidity<>(
+        new EntitlementSet.ActivatedEntitlement<>(
           available2.id(),
           new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),
@@ -167,7 +165,7 @@ public class TestEntitlementSet {
 
     var set = EntitlementSet.build(
       Set.of(available1, available2),
-      Set.of(new EntitlementSet.IdAndValidity<>(
+      Set.of(new EntitlementSet.ActivatedEntitlement<>(
         new StringId("unavailable-1"),
         new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),

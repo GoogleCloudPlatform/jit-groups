@@ -46,8 +46,8 @@ public record EntitlementSet<TId extends EntitlementId>(
 
   public static <T extends EntitlementId> EntitlementSet<T> build(
     Set<Entitlement<T>> availableEntitlements,
-    Set<IdAndValidity<T>> validActivations,
-    Set<IdAndValidity<T>> expiredActivations,
+    Set<ActivatedEntitlement<T>> validActivations,
+    Set<ActivatedEntitlement<T>> expiredActivations,
     Set<String> warnings
   )
   {
@@ -69,24 +69,24 @@ public record EntitlementSet<TId extends EntitlementId>(
       .stream()
       .filter(ent -> !validActivations
         .stream()
-        .anyMatch(active -> active.id().equals(ent.id())))
+        .anyMatch(active -> active.entitlementId().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
     assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));
 
     var consolidatedSet = new TreeSet<Entitlement<T>>(availableAndInactive);
-    for (var activeEntitlementId : validActivations) {
+    for (var validActivation : validActivations) {
       //
       // Find the corresponding entitlement to determine
       // whether this is JIT or MPA-eligible.
       //
       var correspondingEntitlement = availableEntitlements
         .stream()
-        .filter(ent -> ent.id().equals(activeEntitlementId.id()))
+        .filter(ent -> ent.id().equals(validActivation.entitlementId()))
         .findFirst();
       if (correspondingEntitlement.isPresent()) {
         consolidatedSet.add(new Entitlement<>(
-          activeEntitlementId.id(),
+          validActivation.entitlementId(),
           correspondingEntitlement.get().name(),
           correspondingEntitlement.get().activationType(),
           Entitlement.Status.ACTIVE));
@@ -96,8 +96,8 @@ public record EntitlementSet<TId extends EntitlementId>(
         // Active, but no longer available for activation.
         //
         consolidatedSet.add(new Entitlement<>(
-          activeEntitlementId.id(),
-          activeEntitlementId.id().id(),
+          validActivation.entitlementId(),
+          validActivation.entitlementId().id(),
           ActivationType.NONE,
           Entitlement.Status.ACTIVE));
       }
@@ -116,9 +116,9 @@ public record EntitlementSet<TId extends EntitlementId>(
     return new EntitlementSet<TId>(new TreeSet<>(), Set.of());
   }
 
-  public record IdAndValidity<TId>(TId id, TimeSpan validity) {
-    public IdAndValidity {
-      Preconditions.checkNotNull(id, "id");
+  public record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) {
+    public ActivatedEntitlement {
+      Preconditions.checkNotNull(entitlementId, "entitlementId");
       Preconditions.checkNotNull(validity, "validity");
     }
   }

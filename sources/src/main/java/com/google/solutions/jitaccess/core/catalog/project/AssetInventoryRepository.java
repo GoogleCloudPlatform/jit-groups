@@ -25,7 +25,6 @@ import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
@@ -212,8 +211,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     // Find temporary bindings that reflect activations and sort out which
     // ones are still active and which ones have expired.
     //
-    var allActive = new HashSet<EntitlementSet.IdAndValidity<ProjectRoleBinding>>();
-    var allExpired = new HashSet<EntitlementSet.IdAndValidity<ProjectRoleBinding>>();
+    var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
 
     for (var binding : allBindings.stream()
       // Only temporary access bindings.
@@ -231,13 +230,13 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       }
 
       if (isValid && statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-        allActive.add(new EntitlementSet.IdAndValidity<>(
+        allActive.add(new EntitlementSet.ActivatedEntitlement<>(
           new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
 
       if (!isValid && statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
-        allExpired.add(new EntitlementSet.IdAndValidity<>(
+        allExpired.add(new EntitlementSet.ActivatedEntitlement<>(
           new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
