@@ -43,18 +43,6 @@ public class TemporaryIamCondition extends IamCondition {
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
-  private Instant extract(int group) {
-    var matcher = CONDITION.matcher(this.condition);
-    if (matcher.find()) {
-      try {
-        return Instant.parse(matcher.group(group));
-      }
-      catch (DateTimeParseException e) {}
-    }
-
-    throw new IllegalArgumentException("Condition is not a temporary IAM condition");
-  }
-
   //---------------------------------------------------------------------------
   // Constructors.
   //---------------------------------------------------------------------------
@@ -78,12 +66,18 @@ public class TemporaryIamCondition extends IamCondition {
   // Publics.
   //---------------------------------------------------------------------------
 
-  public Instant getStartTime() {
-    return extract(1);
-  }
+  public TimeSpan getValidity() {
+    var matcher = CONDITION.matcher(this.condition);
+    if (matcher.find()) {
+      try {
+        return new TimeSpan(
+          Instant.parse(matcher.group(1)),
+          Instant.parse(matcher.group(2)));
+      }
+      catch (DateTimeParseException e) {}
+    }
 
-  public Instant getEndTime() {
-    return extract(2);
+    throw new IllegalArgumentException("Condition is not a temporary IAM condition");
   }
 
   /**
