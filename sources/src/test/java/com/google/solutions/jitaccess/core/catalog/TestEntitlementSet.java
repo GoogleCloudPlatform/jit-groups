@@ -54,11 +54,11 @@ public class TestEntitlementSet {
   }
 
   // -------------------------------------------------------------------------
-  // allEntitlements.
+  // CurrentEntitlements.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenActiveIsEmpty_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenActiveIsEmpty_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -70,19 +70,19 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(),
       Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(), set.activeEntitlementIds());
-    assertIterableEquals(List.of(available1, available2), set.currentEntitlements());
+    assertIterableEquals(
+      List.of(available1, available2),
+      set.currentEntitlements());
   }
 
   @Test
-  public void whenOneEntitlementActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenOneEntitlementActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -94,7 +94,7 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(new EntitlementSet.IdAndValidity<>(
         available1.id(),
@@ -102,12 +102,6 @@ public class TestEntitlementSet {
       Set.of(),
       Set.of());
 
-    assertEquals(
-      Set.of(available1, available2),
-      set.availableEntitlements());
-    assertEquals(
-      Set.of(available1.id()),
-      set.activeEntitlementIds().stream().map(e -> e.id()).collect(Collectors.toSet()));
     assertIterableEquals(List.of(
       available2,
       new Entitlement<StringId>(
@@ -119,7 +113,7 @@ public class TestEntitlementSet {
   }
 
   @Test
-  public void whenAllEntitlementsActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenAllEntitlementsActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -131,7 +125,7 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(
         new EntitlementSet.IdAndValidity<>(
@@ -143,12 +137,6 @@ public class TestEntitlementSet {
       Set.of(),
       Set.of());
 
-    assertEquals(
-      Set.of(available1, available2),
-      set.availableEntitlements());
-    assertEquals(
-      Set.of(available1.id(), available2.id()),
-      set.activeEntitlementIds().stream().map(e -> e.id()).collect(Collectors.toSet()));
     assertIterableEquals(
       List.of(
         new Entitlement<StringId>(
@@ -165,7 +153,7 @@ public class TestEntitlementSet {
   }
 
   @Test
-  public void whenUnavailableEntitlementsIsActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenUnavailableEntitlementsIsActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -177,7 +165,7 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(new EntitlementSet.IdAndValidity<>(
         new StringId("unavailable-1"),
@@ -185,7 +173,6 @@ public class TestEntitlementSet {
       Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertIterableEquals(List.of(
         available1,
         available2,

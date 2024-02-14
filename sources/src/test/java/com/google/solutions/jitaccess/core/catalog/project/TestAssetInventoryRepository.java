@@ -415,8 +415,7 @@ public class TestAssetInventoryRepository {
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
       assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(0, entitlements.activeEntitlementIds().size());
-      assertEquals(0, entitlements.expiredEntitlementIds().size());
+      assertEquals(0, entitlements.expiredEntitlements().size());
 
       var entitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -434,8 +433,7 @@ public class TestAssetInventoryRepository {
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
 
       assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(0, entitlements.activeEntitlementIds().size());
-      assertEquals(2, entitlements.expiredEntitlementIds().size());
+      assertEquals(2, entitlements.expiredEntitlements().size());
 
       var entitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -443,7 +441,7 @@ public class TestAssetInventoryRepository {
 
       assertEquals(
         "roles/for-user",
-        entitlements.expiredEntitlementIds().stream().toList().get(0).id().roleBinding().role());
+        entitlements.expiredEntitlements().stream().toList().get(0).id().roleBinding().role());
     }
   }
 
@@ -487,8 +485,7 @@ public class TestAssetInventoryRepository {
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
 
       assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(1, entitlements.activeEntitlementIds().size());
-      assertEquals(0, entitlements.expiredEntitlementIds().size());
+      assertEquals(0, entitlements.expiredEntitlements().size());
 
       var entitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());

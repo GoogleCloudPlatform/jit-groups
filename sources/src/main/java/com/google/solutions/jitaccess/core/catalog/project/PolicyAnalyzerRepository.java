@@ -266,7 +266,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    return new EntitlementSet<>(allAvailable, allActive, allExpired, warnings);
+    return EntitlementSet.build(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override

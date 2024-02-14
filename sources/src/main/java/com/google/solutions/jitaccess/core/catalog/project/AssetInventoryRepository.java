@@ -243,7 +243,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       }
     }
 
-    return new EntitlementSet<>(allAvailable, allActive, allExpired, Set.of());
+    return EntitlementSet.build(allAvailable, allActive, allExpired, Set.of());
   }
 
   @Override

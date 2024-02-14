@@ -32,32 +32,29 @@ import java.util.stream.Collectors;
 /**
  * Set of entitlements
  *
- * @param availableEntitlements available entitlements, regardless of status
- * @param activeEntitlementIds IDs of active entitlements (subset of available entitlements)
- * @param expiredEntitlementIds IDs of expired entitlements (subset of available entitlements)
+ * @param currentEntitlements available and active entitlements
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
-  Set<Entitlement<TId>> availableEntitlements,
-  Set<IdAndValidity<TId>> activeEntitlementIds, //TODO: Strip suffix
-  Set<IdAndValidity<TId>> expiredEntitlementIds,
+  SortedSet<Entitlement<TId>> currentEntitlements,
   Set<String> warnings
 ) {
   public EntitlementSet {
-    Preconditions.checkNotNull(availableEntitlements, "availableEntitlements");
-    Preconditions.checkNotNull(activeEntitlementIds, "activeEntitlementIds");
-    Preconditions.checkNotNull(expiredEntitlementIds, "expiredEntitlementIds");
+    Preconditions.checkNotNull(currentEntitlements, "currentEntitlements");
     Preconditions.checkNotNull(warnings, "warnings");
+  }
 
+  public static <T extends EntitlementId> EntitlementSet<T> build(
+    Set<Entitlement<T>> availableEntitlements,
+    Set<IdAndValidity<T>> activeEntitlementIds, //TODO: validActivations, expiredActivations
+    Set<IdAndValidity<T>> expiredEntitlementIds,
+    Set<String> warnings
+  )
+  {
     assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
     assert activeEntitlementIds.stream().noneMatch(id -> expiredEntitlementIds.contains(id));
     assert expiredEntitlementIds.stream().noneMatch(id -> activeEntitlementIds.contains(id));
-  }
 
-  /**
-   * @return all entitlements that are active or can be activated.
-   */
-  public SortedSet<Entitlement<TId>> currentEntitlements() {
     //
     // Return a set containing:
     //
@@ -68,22 +65,22 @@ public record EntitlementSet<TId extends EntitlementId>(
     //
     // Expired entitlements are ignored.
     //
-    var availableAndInactive = this.availableEntitlements
+    var availableAndInactive = availableEntitlements
       .stream()
-      .filter(ent -> !this.activeEntitlementIds
+      .filter(ent -> !activeEntitlementIds
         .stream()
         .anyMatch(active -> active.id().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
-    assert availableAndInactive.stream().noneMatch(e -> this.activeEntitlementIds.contains(e.id()));
+    assert availableAndInactive.stream().noneMatch(e -> activeEntitlementIds.contains(e.id()));
 
-    var consolidatedSet = new TreeSet<Entitlement<TId>>(availableAndInactive);
-    for (var activeEntitlementId : this.activeEntitlementIds) {
+    var consolidatedSet = new TreeSet<Entitlement<T>>(availableAndInactive);
+    for (var activeEntitlementId : activeEntitlementIds) {
       //
       // Find the corresponding entitlement to determine
       // whether this is JIT or MPA-eligible.
       //
-      var correspondingEntitlement = this.availableEntitlements
+      var correspondingEntitlement = availableEntitlements
         .stream()
         .filter(ent -> ent.id().equals(activeEntitlementId.id()))
         .findFirst();
@@ -108,7 +105,7 @@ public record EntitlementSet<TId extends EntitlementId>(
       //TODO: add validity to Entitlement
     }
 
-    return consolidatedSet;
+    return new EntitlementSet<>(consolidatedSet, warnings);
   }
 
   public SortedSet<Entitlement<TId>> expiredEntitlements() {
@@ -116,7 +113,7 @@ public record EntitlementSet<TId extends EntitlementId>(
   }
 
   public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), Set.of(), Set.of(), Set.of());
+    return new EntitlementSet<TId>(new TreeSet<>(), Set.of());
   }
 
   public record IdAndValidity<TId>(TId id, TimeSpan validity) {

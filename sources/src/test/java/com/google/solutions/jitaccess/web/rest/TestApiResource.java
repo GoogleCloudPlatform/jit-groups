@@ -385,7 +385,7 @@ public class TestApiResource {
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build(
         new TreeSet<>(Set.of()),
         Set.of(),
         Set.of(),
@@ -421,7 +421,7 @@ public class TestApiResource {
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build(
         new TreeSet<>(Set.of(role1, role2)),
         Set.of(),
         Set.of(),
