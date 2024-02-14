@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.*;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
@@ -32,6 +33,8 @@ import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -51,6 +54,10 @@ public class TestPolicyAnalyzerRepository {
   private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
   private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
   private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
+  private static final String VALID_TEMPORARY_CONDITION =
+    new TemporaryIamCondition(Instant.now(), Instant.now().plus(1, ChronoUnit.HOURS)).toString();
+  private static final String EXPIRED_TEMPORARY_CONDITION =
+    new TemporaryIamCondition(Instant.EPOCH, Instant.now().minus(1, ChronoUnit.HOURS)).toString();
 
   private static IamPolicyAnalysisResult createIamPolicyAnalysisResult(
     String resource,
@@ -674,7 +681,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_USER,
-      "time ...",
+      VALID_TEMPORARY_CONDITION,
       JitConstraints.ACTIVATION_CONDITION_TITLE,
       "TRUE");
 
@@ -682,7 +689,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_USER,
-      "time ...",
+      EXPIRED_TEMPORARY_CONDITION,
       JitConstraints.ACTIVATION_CONDITION_TITLE,
       "FALSE");
 
@@ -859,7 +866,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_PROJECT_ID_1.getFullResourceName(),
       SAMPLE_ROLE_1,
       SAMPLE_USER,
-      "time ...",
+      VALID_TEMPORARY_CONDITION,
       JitConstraints.ACTIVATION_CONDITION_TITLE,
       "TRUE");
 

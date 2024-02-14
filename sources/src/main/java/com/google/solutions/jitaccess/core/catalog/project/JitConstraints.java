@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 
 import java.util.regex.Pattern;
@@ -88,6 +89,7 @@ class JitConstraints {
   /** Check if the IAM condition indicates an activated role binding */
   public static boolean isActivated(Expr iamCondition) {
     return iamCondition != null &&
-      ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
+      ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle()) &&
+      TemporaryIamCondition.isTemporaryAccessCondition(iamCondition.getExpression());
   }
 }
