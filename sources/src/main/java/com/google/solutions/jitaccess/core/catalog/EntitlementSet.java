@@ -46,14 +46,14 @@ public record EntitlementSet<TId extends EntitlementId>(
 
   public static <T extends EntitlementId> EntitlementSet<T> build(
     Set<Entitlement<T>> availableEntitlements,
-    Set<IdAndValidity<T>> activeEntitlementIds, //TODO: validActivations, expiredActivations
-    Set<IdAndValidity<T>> expiredEntitlementIds,
+    Set<IdAndValidity<T>> validActivations,
+    Set<IdAndValidity<T>> expiredActivations,
     Set<String> warnings
   )
   {
     assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
-    assert activeEntitlementIds.stream().noneMatch(id -> expiredEntitlementIds.contains(id));
-    assert expiredEntitlementIds.stream().noneMatch(id -> activeEntitlementIds.contains(id));
+    assert validActivations.stream().noneMatch(id -> expiredActivations.contains(id));
+    assert expiredActivations.stream().noneMatch(id -> validActivations.contains(id));
 
     //
     // Return a set containing:
@@ -67,15 +67,15 @@ public record EntitlementSet<TId extends EntitlementId>(
     //
     var availableAndInactive = availableEntitlements
       .stream()
-      .filter(ent -> !activeEntitlementIds
+      .filter(ent -> !validActivations
         .stream()
         .anyMatch(active -> active.id().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
-    assert availableAndInactive.stream().noneMatch(e -> activeEntitlementIds.contains(e.id()));
+    assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));
 
     var consolidatedSet = new TreeSet<Entitlement<T>>(availableAndInactive);
-    for (var activeEntitlementId : activeEntitlementIds) {
+    for (var activeEntitlementId : validActivations) {
       //
       // Find the corresponding entitlement to determine
       // whether this is JIT or MPA-eligible.
