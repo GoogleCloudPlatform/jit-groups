@@ -33,15 +33,20 @@ import java.util.stream.Collectors;
  * Set of entitlements
  *
  * @param currentEntitlements available and active entitlements
+ * @param expiredEntitlements previously active entitlements
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
-  SortedSet<Entitlement<TId>> currentEntitlements,
+  SortedSet<Entitlement<TId>> currentEntitlements, // TODO: rename to available
+  SortedSet<Entitlement<TId>> expiredEntitlements,
   Set<String> warnings
 ) {
   public EntitlementSet {
     Preconditions.checkNotNull(currentEntitlements, "currentEntitlements");
     Preconditions.checkNotNull(warnings, "warnings");
+
+    assert currentEntitlements.stream().allMatch(e -> e.status() != Entitlement.Status.EXPIRED);
+    assert expiredEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
   }
 
   public static <T extends EntitlementId> EntitlementSet<T> build(
@@ -74,7 +79,7 @@ public record EntitlementSet<TId extends EntitlementId>(
 
     assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));
 
-    var consolidatedSet = new TreeSet<Entitlement<T>>(availableAndInactive);
+    var current = new TreeSet<Entitlement<T>>(availableAndInactive);
     for (var validActivation : validActivations) {
       //
       // Find the corresponding entitlement to determine
@@ -85,35 +90,64 @@ public record EntitlementSet<TId extends EntitlementId>(
         .filter(ent -> ent.id().equals(validActivation.entitlementId()))
         .findFirst();
       if (correspondingEntitlement.isPresent()) {
-        consolidatedSet.add(new Entitlement<>(
+        current.add(new Entitlement<>(
           validActivation.entitlementId(),
           correspondingEntitlement.get().name(),
           correspondingEntitlement.get().activationType(),
-          Entitlement.Status.ACTIVE));
+          Entitlement.Status.ACTIVE,
+          validActivation.validity));
       }
       else {
         //
         // Active, but no longer available for activation.
         //
-        consolidatedSet.add(new Entitlement<>(
+        current.add(new Entitlement<>(
           validActivation.entitlementId(),
           validActivation.entitlementId().id(),
           ActivationType.NONE,
-          Entitlement.Status.ACTIVE));
+          Entitlement.Status.ACTIVE,
+          validActivation.validity));
       }
-
-      //TODO: add validity to Entitlement
     }
 
-    return new EntitlementSet<>(consolidatedSet, warnings);
-  }
+    var expired = new TreeSet<Entitlement<T>>();
+    for (var expiredActivation : expiredActivations) {
+      //
+      // Find the corresponding entitlement to determine
+      // whether this is currently (*) JIT or MPA-eligible.
+      //
+      // (*) it might have changed in the meantime, but that's ok.
+      //
+      var correspondingEntitlement = availableEntitlements
+        .stream()
+        .filter(ent -> ent.id().equals(expiredActivation.entitlementId()))
+        .findFirst();
+      if (correspondingEntitlement.isPresent()) {
+        expired.add(new Entitlement<>(
+          expiredActivation.entitlementId(),
+          correspondingEntitlement.get().name(),
+          correspondingEntitlement.get().activationType(),
+          Entitlement.Status.EXPIRED,
+          expiredActivation.validity));
+      }
+      else {
+        //
+        // Active, but no longer available for activation.
+        //
+        expired.add(new Entitlement<>(
+          expiredActivation.entitlementId(),
+          expiredActivation.entitlementId().id(),
+          ActivationType.NONE,
+          Entitlement.Status.EXPIRED,
+          expiredActivation.validity));
+      }
+    }
 
-  public SortedSet<Entitlement<TId>> expiredEntitlements() {
-    throw new RuntimeException("NIY"); // TODO
+    return new EntitlementSet<>(current, expired, warnings);
   }
 
   public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), Set.of());
+    return new EntitlementSet<TId>(new TreeSet<>(), new TreeSet<>(), Set.of());
   }
 
   public record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) {

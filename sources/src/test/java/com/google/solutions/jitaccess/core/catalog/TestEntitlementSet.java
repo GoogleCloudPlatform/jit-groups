@@ -92,11 +92,12 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
+    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
     var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(new EntitlementSet.ActivatedEntitlement<>(
         available1.id(),
-        new TimeSpan(Instant.now(), Duration.ZERO))),
+        validity1)),
       Set.of(),
       Set.of());
 
@@ -106,7 +107,8 @@ public class TestEntitlementSet {
         new StringId("available-1"),
         "available-1",
         ActivationType.JIT,
-        Entitlement.Status.ACTIVE)),
+        Entitlement.Status.ACTIVE,
+        validity1)),
       set.currentEntitlements());
   }
 
@@ -123,15 +125,16 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
+    var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
     var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(
         new EntitlementSet.ActivatedEntitlement<>(
           available1.id(),
-          new TimeSpan(Instant.now(), Duration.ZERO)),
+          validity),
         new EntitlementSet.ActivatedEntitlement<>(
           available2.id(),
-          new TimeSpan(Instant.now(), Duration.ZERO))),
+          validity)),
       Set.of(),
       Set.of());
 
@@ -141,12 +144,14 @@ public class TestEntitlementSet {
           new StringId("available-1"),
           "available-1",
           ActivationType.JIT,
-          Entitlement.Status.ACTIVE),
+          Entitlement.Status.ACTIVE,
+          validity),
         new Entitlement<StringId>(
           new StringId("available-2"),
           "available-2",
           ActivationType.JIT,
-          Entitlement.Status.ACTIVE)),
+          Entitlement.Status.ACTIVE,
+          validity)),
       set.currentEntitlements());
   }
 
@@ -163,11 +168,12 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
+    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
     var set = EntitlementSet.build(
       Set.of(available1, available2),
       Set.of(new EntitlementSet.ActivatedEntitlement<>(
         new StringId("unavailable-1"),
-        new TimeSpan(Instant.now(), Duration.ZERO))),
+        validity1)),
       Set.of(),
       Set.of());
 
@@ -178,7 +184,8 @@ public class TestEntitlementSet {
           new StringId("unavailable-1"),
           "unavailable-1",
           ActivationType.NONE,
-          Entitlement.Status.ACTIVE)),
+          Entitlement.Status.ACTIVE,
+          validity1)),
       set.currentEntitlements());
   }
 }

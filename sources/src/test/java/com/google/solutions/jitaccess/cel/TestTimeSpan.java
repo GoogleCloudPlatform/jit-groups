@@ -21,20 +21,32 @@
 
 package com.google.solutions.jitaccess.cel;
 
+import org.junit.jupiter.api.Test;
+
 import java.time.Duration;
 import java.time.Instant;
 
-public record TimeSpan(Instant start, Instant end) implements Comparable<TimeSpan> {
-  public TimeSpan {
-    assert !start.isAfter(end);
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class TestTimeSpan {
+  //---------------------------------------------------------------------------
+  // compareTo.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenEndsBefore_ThenCompareToReturnsNegative() {
+    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
+    var rhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(2));
+
+    assertTrue(lhs.compareTo(rhs) < 0);
   }
 
-  public TimeSpan(Instant start, Duration duration) {
-    this(start, start.plus(duration));
-  }
+  @Test
+  public void whenEndsAtSameTime_ThenCompareToReturnsZero() {
+    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
+    var rhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
 
-  @Override
-  public int compareTo(TimeSpan o) {
-    return (int)(this.end.getEpochSecond() - o.end.getEpochSecond());
+    assertEquals(0, lhs.compareTo(rhs));
   }
 }
