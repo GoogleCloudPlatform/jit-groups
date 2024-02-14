@@ -69,7 +69,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
     return Comparator
       .comparing((Entitlement<TEntitlementId> e) -> e.status)
       .thenComparing(e -> e.id)
-      .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder())) //TODO:Test
+      .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder()))
       .compare(this, o);
   }
 

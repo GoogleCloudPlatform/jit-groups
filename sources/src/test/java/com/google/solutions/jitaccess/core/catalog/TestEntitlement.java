@@ -54,7 +54,7 @@ public class TestEntitlement {
   // -------------------------------------------------------------------------
 
   @Test
-  public void compareToOrdersByStatusThenName() {
+  public void compareToOrdersByStatusThenIdThenValidity() {
     var availableA = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("A"),
       "Entitlement A",
@@ -66,6 +66,12 @@ public class TestEntitlement {
       ActivationType.JIT,
       Entitlement.Status.ACTIVE,
       new TimeSpan(Instant.now(), Duration.ofMinutes(1)));
+    var activeA2 = new Entitlement<SampleEntitlementId>(
+      new SampleEntitlementId("A"),
+      "Entitlement A",
+      ActivationType.JIT,
+      Entitlement.Status.ACTIVE,
+      new TimeSpan(Instant.now(), Duration.ofMinutes(2)));
     var pendingA = new Entitlement<SampleEntitlementId>(
       new SampleEntitlementId("A"),
       "Entitlement A",
@@ -82,7 +88,8 @@ public class TestEntitlement {
       availableB,
       pendingA,
       availableA,
-      activeA);
+      activeA,
+      activeA2);
 
     var sorted = new TreeSet<Entitlement<SampleEntitlementId>>();
     sorted.addAll(entitlements);
@@ -92,6 +99,7 @@ public class TestEntitlement {
         availableA,
         availableB,
         activeA,
+        activeA2,
         pendingA),
       sorted);
   }
