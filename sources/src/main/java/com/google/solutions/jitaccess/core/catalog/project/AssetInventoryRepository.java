@@ -26,7 +26,7 @@ import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
-import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.cel.TemporalIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
@@ -36,7 +36,6 @@ import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -211,7 +210,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
     Predicate<Binding> isTemporaryIamConditionValid = binding -> {
       try {
-        return new TemporaryIamCondition(binding.getCondition().getExpression()).evaluate();
+        return new TemporalIamCondition(binding.getCondition().getExpression()).evaluate();
       }
       catch (CelException e) {
         return false;

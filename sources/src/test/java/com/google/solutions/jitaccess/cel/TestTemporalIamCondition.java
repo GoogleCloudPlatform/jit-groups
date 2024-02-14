@@ -30,14 +30,14 @@ import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestTemporaryIamCondition {
+public class TestTemporalIamCondition {
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
 
   @Test
   public void toStringReturnsClause() {
-    var condition =new TemporaryIamCondition(
+    var condition =new TemporalIamCondition(
       Instant.from(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
       Duration.ofMinutes(5));
 
@@ -45,7 +45,7 @@ public class TestTemporaryIamCondition {
       "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))",
       condition.toString());
-    assertTrue(TemporaryIamCondition.isTemporaryAccessCondition(condition.toString()));
+    assertTrue(TemporalIamCondition.isTemporaryAccessCondition(condition.toString()));
   }
 
   // -------------------------------------------------------------------------
@@ -54,13 +54,13 @@ public class TestTemporaryIamCondition {
 
   @Test
   public void whenNotATemporaryCondition_ThenEvaluateReturnsFalse() throws Exception {
-    assertFalse(new TemporaryIamCondition("true").evaluate());
-    assertFalse(new TemporaryIamCondition("1+1").evaluate());
+    assertFalse(new TemporalIamCondition("true").evaluate());
+    assertFalse(new TemporalIamCondition("1+1").evaluate());
   }
 
   @Test
   public void whenInPermittedTimeRange_ThenEvaluateReturnsTrue() throws Exception {
-    var condition = new TemporaryIamCondition(
+    var condition = new TemporalIamCondition(
       Instant.now().minusSeconds(30),
       Duration.ofSeconds(60));
 
@@ -69,7 +69,7 @@ public class TestTemporaryIamCondition {
 
   @Test
   public void whenBeforePermittedTimeRange_ThenEvaluateReturnsTrue() throws Exception {
-    var condition = new TemporaryIamCondition(
+    var condition = new TemporalIamCondition(
       Instant.now().plusSeconds(30),
       Duration.ofSeconds(60));
 
@@ -78,7 +78,7 @@ public class TestTemporaryIamCondition {
 
   @Test
   public void whenPastPermittedTimeRange_ThenEvaluateReturnsTrue() throws Exception {
-    var condition = new TemporaryIamCondition(
+    var condition = new TemporalIamCondition(
       Instant.now().minusSeconds(90),
       Duration.ofSeconds(60));
 
@@ -93,13 +93,13 @@ public class TestTemporaryIamCondition {
   public void whenNotATemporaryCondition_ThenGetValidityThrowsException() {
     assertThrows(
       IllegalArgumentException.class,
-      () -> new TemporaryIamCondition("1+1").getValidity());
+      () -> new TemporalIamCondition("1+1").getValidity());
   }
 
   @Test
   public void getEndTimeReturnsTime() {
     var startTime = Instant.ofEpochSecond(12345);
-    var validity = new TemporaryIamCondition(startTime, Duration.ofHours(1)).getValidity();
+    var validity = new TemporalIamCondition(startTime, Duration.ofHours(1)).getValidity();
 
     assertEquals(startTime, validity.start());
     assertEquals(startTime.plus(Duration.ofHours(1)), validity.end());
@@ -111,12 +111,12 @@ public class TestTemporaryIamCondition {
 
   @Test
   public void whenExpressionIsNull_ThenIsTemporaryAccessConditionReturnsFalse() {
-    assertFalse(TemporaryIamCondition.isTemporaryAccessCondition(null));
+    assertFalse(TemporalIamCondition.isTemporaryAccessCondition(null));
   }
 
   @Test
   public void whenExpressionIsEmpty_ThenIsTemporaryAccessConditionReturnsFalse() {
-    assertFalse(TemporaryIamCondition.isTemporaryAccessCondition(""));
+    assertFalse(TemporalIamCondition.isTemporaryAccessCondition(""));
   }
 
   @Test
@@ -125,7 +125,7 @@ public class TestTemporaryIamCondition {
       "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))  ";
 
-    assertTrue(TemporaryIamCondition.isTemporaryAccessCondition(clause));
+    assertTrue(TemporalIamCondition.isTemporaryAccessCondition(clause));
   }
 
   @Test
@@ -134,6 +134,6 @@ public class TestTemporaryIamCondition {
       "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";
 
-    assertFalse(TemporaryIamCondition.isTemporaryAccessCondition(clause));
+    assertFalse(TemporalIamCondition.isTemporaryAccessCondition(clause));
   }
 }

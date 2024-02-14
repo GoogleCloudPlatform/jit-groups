@@ -27,7 +27,7 @@ import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
-import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.cel.TemporalIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
@@ -371,7 +371,7 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(new TemporaryIamCondition(
+        .setExpression(new TemporalIamCondition(
           Instant.now().minus(2, ChronoUnit.HOURS),
           Duration.ofHours(1)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
@@ -379,7 +379,7 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(new TemporaryIamCondition(
+        .setExpression(new TemporalIamCondition(
           Instant.now().minus(2, ChronoUnit.DAYS),
           Duration.ofHours(1)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
@@ -457,7 +457,7 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(new TemporaryIamCondition(
+        .setExpression(new TemporalIamCondition(
           Instant.now().minus(1, ChronoUnit.HOURS),
           Instant.now().plus(1, ChronoUnit.HOURS)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
