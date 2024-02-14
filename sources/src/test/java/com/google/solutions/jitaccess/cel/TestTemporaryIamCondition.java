@@ -86,22 +86,41 @@ public class TestTemporaryIamCondition {
   }
 
   // -------------------------------------------------------------------------
-  // getExpiry.
+  // getStartTime.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenNotATemporaryCondition_ThenGetExpiryThrowsException() {
+  public void whenNotATemporaryCondition_ThenGetStartTimeThrowsException() {
     assertThrows(
       IllegalArgumentException.class,
-      () -> new TemporaryIamCondition("1+1").getExpiry());
+      () -> new TemporaryIamCondition("1+1").getEndTime());
   }
 
   @Test
-  public void getExpiryThrowsException() {
+  public void getStartTimeReturnsTime() {
+    var startTime = Instant.ofEpochSecond(12345);
+    assertEquals(
+      startTime,
+      new TemporaryIamCondition(startTime, Duration.ofHours(1)).getStartTime());
+  }
+
+  // -------------------------------------------------------------------------
+  // getEndTime.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenNotATemporaryCondition_ThenGetEndTimeThrowsException() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new TemporaryIamCondition("1+1").getEndTime());
+  }
+
+  @Test
+  public void getEndTimeReturnsTime() {
     var startTime = Instant.ofEpochSecond(12345);
     assertEquals(
       startTime.plus(Duration.ofHours(1)),
-      new TemporaryIamCondition(startTime, Duration.ofHours(1)).getExpiry());
+      new TemporaryIamCondition(startTime, Duration.ofHours(1)).getEndTime());
   }
 
   // -------------------------------------------------------------------------
