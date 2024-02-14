@@ -21,9 +21,11 @@
 
 package com.google.solutions.jitaccess.cel;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.regex.Pattern;
 
 /**
  * IAM condition that checks for date range.
@@ -32,10 +34,27 @@ public class TemporaryIamCondition extends IamCondition {
   private static final String CONDITION_TEMPLATE =
     "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
+  private static final String CONDITION_PATTERN =
+    "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
+      + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
+
+  private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
+
   public TemporaryIamCondition(Instant startTime, Instant endTime) {
     super(String.format(
       CONDITION_TEMPLATE,
       startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
       endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
+  }
+
+  public TemporaryIamCondition(Instant startTime, Duration duration) {
+   this(startTime, startTime.plus(duration));
+  }
+
+  /**
+   * Check if the expression is a temporary access IAM condition.
+   */
+  public static boolean isTemporaryAccessCondition(String expression) {
+    return expression != null && CONDITION.matcher(expression).matches();
   }
 }
