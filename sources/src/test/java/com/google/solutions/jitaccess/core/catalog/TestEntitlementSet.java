@@ -21,10 +21,15 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.cel.TimeSpan;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -91,12 +96,18 @@ public class TestEntitlementSet {
 
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
-      Set.of(available1.id()),
+      Set.of(new EntitlementSet.IdAndValidity<>(
+        available1.id(),
+        new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(available1.id()), set.activeEntitlementIds());
+    assertEquals(
+      Set.of(available1, available2),
+      set.availableEntitlements());
+    assertEquals(
+      Set.of(available1.id()),
+      set.activeEntitlementIds().stream().map(e -> e.id()).collect(Collectors.toSet()));
     assertIterableEquals(List.of(
       available2,
       new Entitlement<StringId>(
@@ -122,13 +133,24 @@ public class TestEntitlementSet {
 
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
-      Set.of(available1.id(), available2.id()),
+      Set.of(
+        new EntitlementSet.IdAndValidity<>(
+          available1.id(),
+          new TimeSpan(Instant.now(), Duration.ZERO)),
+        new EntitlementSet.IdAndValidity<>(
+          available2.id(),
+          new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(available1.id(), available2.id()), set.activeEntitlementIds());
-    assertIterableEquals(List.of(
+    assertEquals(
+      Set.of(available1, available2),
+      set.availableEntitlements());
+    assertEquals(
+      Set.of(available1.id(), available2.id()),
+      set.activeEntitlementIds().stream().map(e -> e.id()).collect(Collectors.toSet()));
+    assertIterableEquals(
+      List.of(
         new Entitlement<StringId>(
           new StringId("available-1"),
           "available-1",
@@ -157,7 +179,9 @@ public class TestEntitlementSet {
 
     var set = new EntitlementSet<StringId>(
       Set.of(available1, available2),
-      Set.of(new StringId("unavailable-1")),
+      Set.of(new EntitlementSet.IdAndValidity<>(
+        new StringId("unavailable-1"),
+        new TimeSpan(Instant.now(), Duration.ZERO))),
       Set.of(),
       Set.of());
 

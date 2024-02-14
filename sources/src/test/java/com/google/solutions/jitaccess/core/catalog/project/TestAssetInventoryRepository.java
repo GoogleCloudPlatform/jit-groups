@@ -435,7 +435,7 @@ public class TestAssetInventoryRepository {
 
       assertEquals(1, entitlements.currentEntitlements().size());
       assertEquals(0, entitlements.activeEntitlementIds().size());
-      assertEquals(1, entitlements.expiredEntitlementIds().size());
+      assertEquals(2, entitlements.expiredEntitlementIds().size());
 
       var entitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
@@ -443,7 +443,7 @@ public class TestAssetInventoryRepository {
 
       assertEquals(
         "roles/for-user",
-        entitlements.expiredEntitlementIds().stream().findFirst().get().roleBinding().role());
+        entitlements.expiredEntitlementIds().stream().toList().get(0).id().roleBinding().role());
     }
   }
 

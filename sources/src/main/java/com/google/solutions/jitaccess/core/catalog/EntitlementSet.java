@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TimeSpan;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -38,8 +39,8 @@ import java.util.stream.Collectors;
  */
 public record EntitlementSet<TId extends EntitlementId>(
   Set<Entitlement<TId>> availableEntitlements,
-  Set<TId> activeEntitlementIds,
-  Set<TId> expiredEntitlementIds,
+  Set<IdAndValidity<TId>> activeEntitlementIds, //TODO: Strip suffix
+  Set<IdAndValidity<TId>> expiredEntitlementIds,
   Set<String> warnings
 ) {
   public EntitlementSet {
@@ -54,7 +55,7 @@ public record EntitlementSet<TId extends EntitlementId>(
   }
 
   /**
-   * @return current set of entitlements, including available and active ones.
+   * @return all entitlements that are active or can be activated.
    */
   public SortedSet<Entitlement<TId>> currentEntitlements() {
     //
@@ -69,7 +70,9 @@ public record EntitlementSet<TId extends EntitlementId>(
     //
     var availableAndInactive = this.availableEntitlements
       .stream()
-      .filter(ent -> !this.activeEntitlementIds.contains(ent.id()))
+      .filter(ent -> !this.activeEntitlementIds
+        .stream()
+        .anyMatch(active -> active.id().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
     assert availableAndInactive.stream().noneMatch(e -> this.activeEntitlementIds.contains(e.id()));
@@ -82,11 +85,11 @@ public record EntitlementSet<TId extends EntitlementId>(
       //
       var correspondingEntitlement = this.availableEntitlements
         .stream()
-        .filter(ent -> ent.id().equals(activeEntitlementId))
+        .filter(ent -> ent.id().equals(activeEntitlementId.id()))
         .findFirst();
       if (correspondingEntitlement.isPresent()) {
         consolidatedSet.add(new Entitlement<>(
-          activeEntitlementId,
+          activeEntitlementId.id(),
           correspondingEntitlement.get().name(),
           correspondingEntitlement.get().activationType(),
           Entitlement.Status.ACTIVE));
@@ -96,17 +99,30 @@ public record EntitlementSet<TId extends EntitlementId>(
         // Active, but no longer available for activation.
         //
         consolidatedSet.add(new Entitlement<>(
-          activeEntitlementId,
           activeEntitlementId.id(),
+          activeEntitlementId.id().id(),
           ActivationType.NONE,
           Entitlement.Status.ACTIVE));
       }
+
+      //TODO: add validity to Entitlement
     }
 
     return consolidatedSet;
   }
 
+  public SortedSet<Entitlement<TId>> expiredEntitlements() {
+    throw new RuntimeException("NIY"); // TODO
+  }
+
   public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
     return new EntitlementSet<TId>(new TreeSet<>(), Set.of(), Set.of(), Set.of());
+  }
+
+  public record IdAndValidity<TId>(TId id, TimeSpan validity) {
+    public IdAndValidity {
+      Preconditions.checkNotNull(id, "id");
+      Preconditions.checkNotNull(validity, "validity");
+    }
   }
 }

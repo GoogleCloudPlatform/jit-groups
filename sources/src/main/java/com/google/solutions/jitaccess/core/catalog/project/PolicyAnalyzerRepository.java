@@ -237,7 +237,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .collect(Collectors.toList()));
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
+    var allActive = new HashSet<EntitlementSet.IdAndValidity<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -253,11 +253,13 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       allActive.addAll(activeBindings
         .stream()
-        .map(b -> new ProjectRoleBinding(b))
+        .map(b -> new EntitlementSet.IdAndValidity<ProjectRoleBinding>(
+          new ProjectRoleBinding(b),
+          null)) // TODO: extract validity, test
         .collect(Collectors.toSet()));
     }
 
-    var allExpired = Set.<ProjectRoleBinding>of(); // Not supported.
+    var allExpired = Set.<EntitlementSet.IdAndValidity<ProjectRoleBinding>>of(); //TODO: find expired.
 
     var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
       .flatMap(Collection::stream)
