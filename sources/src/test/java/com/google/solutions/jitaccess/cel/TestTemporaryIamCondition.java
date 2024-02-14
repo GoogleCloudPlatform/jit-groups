@@ -86,6 +86,25 @@ public class TestTemporaryIamCondition {
   }
 
   // -------------------------------------------------------------------------
+  // getExpiry.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenNotATemporaryCondition_ThenGetExpiryThrowsException() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new TemporaryIamCondition("1+1").getExpiry());
+  }
+
+  @Test
+  public void getExpiryThrowsException() {
+    var startTime = Instant.ofEpochSecond(12345);
+    assertEquals(
+      startTime.plus(Duration.ofHours(1)),
+      new TemporaryIamCondition(startTime, Duration.ofHours(1)).getExpiry());
+  }
+
+  // -------------------------------------------------------------------------
   // isTemporaryAccessCondition.
   // -------------------------------------------------------------------------
 

@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 
 /**
@@ -61,6 +62,18 @@ public class TemporaryIamCondition extends IamCondition {
   @Override
   public Boolean evaluate() throws CelException {
     return isTemporaryAccessCondition(this.condition) && super.evaluate();
+  }
+
+  public Instant getExpiry() {
+    var matcher = CONDITION.matcher(this.condition);
+    if (matcher.find()) {
+      try {
+        return Instant.parse(matcher.group(2));
+      }
+      catch (DateTimeParseException e) {}
+    }
+
+    throw new IllegalArgumentException("Condition is not a temporary IAM condition");
   }
 
   /**
