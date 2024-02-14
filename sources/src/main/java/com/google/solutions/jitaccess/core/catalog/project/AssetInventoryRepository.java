@@ -236,12 +236,12 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     }
 
     var allExpired = new HashSet<ProjectRoleBinding>();
-    if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) { //TODO: test
+    if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
       //
       // Find temporary bindings that reflect activations and
       // re no longer valid.
       //
-      allActive.addAll(allBindings.stream()
+      allExpired.addAll(allBindings.stream()
         // Only temporary access bindings.
         .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
 

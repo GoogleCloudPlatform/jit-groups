@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
@@ -317,8 +318,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.allEntitlements().first();
+        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -335,8 +336,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.allEntitlements().first();
+        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.MPA, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -353,8 +354,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.allEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.allEntitlements().first();
+        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.currentEntitlements().first();
       assertEquals(ActivationType.JIT, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -366,13 +367,21 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr().setExpression(JIT_CONDITION))
       .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
-    var expiredActivationForUser = new Binding()
+    var expiredActivationForUser1 = new Binding()
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
         .setExpression(new TemporaryIamCondition(
           Instant.now().minus(2, ChronoUnit.HOURS),
-          Instant.now().minus(1, ChronoUnit.HOURS)).toString()))
+          Duration.ofHours(1)).toString()))
+      .setMembers(List.of("user:" + SAMPLE_USER.email));
+    var expiredActivationForUser2 = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr()
+        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setExpression(new TemporaryIamCondition(
+          Instant.now().minus(2, ChronoUnit.DAYS),
+          Duration.ofHours(1)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -384,7 +393,10 @@ public class TestAssetInventoryRepository {
         new PolicyInfo()
           .setAttachedResource(SAMPLE_PROJECT.path())
           .setPolicy(new Policy()
-            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+            .setBindings(List.of(
+              jitBindingForUser,
+              expiredActivationForUser1,
+              expiredActivationForUser2)))));
 
     var repository = new AssetInventoryRepository(
       new SynchronousExecutor(),
@@ -392,14 +404,47 @@ public class TestAssetInventoryRepository {
       caiClient,
       new AssetInventoryRepository.Options("organization/0"));
 
-    var entitlements = repository.findEntitlements(
-      SAMPLE_USER,
-      SAMPLE_PROJECT,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    var entitlement = entitlements.allEntitlements().first();
-    assertEquals(ActivationType.JIT, entitlement.activationType());
-    assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+    //
+    // AVAILABLE + ACTIVE.
+    //
+    {
+      var entitlements = repository.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+
+      assertEquals(1, entitlements.currentEntitlements().size());
+      assertEquals(0, entitlements.activeEntitlementIds().size());
+      assertEquals(0, entitlements.expiredEntitlementIds().size());
+
+      var entitlement = entitlements.currentEntitlements().first();
+      assertEquals(ActivationType.JIT, entitlement.activationType());
+      assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+    }
+
+    //
+    // AVAILABLE + ACTIVE + EXPIRED.
+    //
+    {
+      var entitlements = repository.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
+
+      assertEquals(1, entitlements.currentEntitlements().size());
+      assertEquals(0, entitlements.activeEntitlementIds().size());
+      assertEquals(1, entitlements.expiredEntitlementIds().size());
+
+      var entitlement = entitlements.currentEntitlements().first();
+      assertEquals(ActivationType.JIT, entitlement.activationType());
+      assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
+
+      assertEquals(
+        "roles/for-user",
+        entitlements.expiredEntitlementIds().stream().findFirst().get().roleBinding().role());
+    }
   }
 
   @Test
@@ -434,14 +479,21 @@ public class TestAssetInventoryRepository {
       caiClient,
       new AssetInventoryRepository.Options("organization/0"));
 
-    var entitlements = repository.findEntitlements(
-      SAMPLE_USER,
-      SAMPLE_PROJECT,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
-    var entitlement = entitlements.allEntitlements().first();
-    assertEquals(ActivationType.JIT, entitlement.activationType());
-    assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
+    {
+      var entitlements = repository.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
+
+      assertEquals(1, entitlements.currentEntitlements().size());
+      assertEquals(1, entitlements.activeEntitlementIds().size());
+      assertEquals(0, entitlements.expiredEntitlementIds().size());
+
+      var entitlement = entitlements.currentEntitlements().first();
+      assertEquals(ActivationType.JIT, entitlement.activationType());
+      assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
+    }
   }
 
   //---------------------------------------------------------------------------

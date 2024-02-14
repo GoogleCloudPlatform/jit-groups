@@ -73,7 +73,7 @@ public class TestEntitlementSet {
 
     assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertEquals(Set.of(), set.activeEntitlementIds());
-    assertIterableEquals(List.of(available1, available2), set.allEntitlements());
+    assertIterableEquals(List.of(available1, available2), set.currentEntitlements());
   }
 
   @Test
@@ -104,7 +104,7 @@ public class TestEntitlementSet {
         "available-1",
         ActivationType.JIT,
         Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+      set.currentEntitlements());
   }
 
   @Test
@@ -139,7 +139,7 @@ public class TestEntitlementSet {
           "available-2",
           ActivationType.JIT,
           Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+      set.currentEntitlements());
   }
 
   @Test
@@ -170,6 +170,6 @@ public class TestEntitlementSet {
           "unavailable-1",
           ActivationType.NONE,
           Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+      set.currentEntitlements());
   }
 }

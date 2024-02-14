@@ -54,9 +54,9 @@ public record EntitlementSet<TId extends EntitlementId>(
   }
 
   /**
-   * @return consolidated set of entitlements including available and active ones.
+   * @return current set of entitlements, including available and active ones.
    */
-  public SortedSet<Entitlement<TId>> allEntitlements() { // TODO: expired?
+  public SortedSet<Entitlement<TId>> currentEntitlements() {
     //
     // Return a set containing:
     //
@@ -64,6 +64,8 @@ public record EntitlementSet<TId extends EntitlementId>(
     //  2. Active entitlements
     //
     // where (1) and (2) don't overlap.
+    //
+    // Expired entitlements are ignored.
     //
     var availableAndInactive = this.availableEntitlements
       .stream()
