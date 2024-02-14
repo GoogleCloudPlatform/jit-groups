@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
-  SortedSet<Entitlement<TId>> currentEntitlements, // TODO: rename to available
+  SortedSet<Entitlement<TId>> currentEntitlements, // TODO(later): rename to available
   SortedSet<Entitlement<TId>> expiredEntitlements,
   Set<String> warnings
 ) {
