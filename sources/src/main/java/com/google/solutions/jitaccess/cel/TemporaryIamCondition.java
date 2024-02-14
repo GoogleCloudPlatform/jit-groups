@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 /**
  * IAM condition that checks for date range.
  */
-public class TemporalIamCondition extends IamCondition {
+public class TemporaryIamCondition extends IamCondition {
   private static final String CONDITION_TEMPLATE =
     "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
@@ -47,18 +47,18 @@ public class TemporalIamCondition extends IamCondition {
   // Constructors.
   //---------------------------------------------------------------------------
 
-  public TemporalIamCondition(Instant startTime, Instant endTime) {
+  public TemporaryIamCondition(Instant startTime, Instant endTime) {
     super(String.format(
       CONDITION_TEMPLATE,
       startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
       endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
   }
 
-  public TemporalIamCondition(Instant startTime, Duration duration) {
+  public TemporaryIamCondition(Instant startTime, Duration duration) {
    this(startTime, startTime.plus(duration));
   }
 
-  public TemporalIamCondition(String condition) {
+  public TemporaryIamCondition(String condition) {
     super(condition);
   }
 

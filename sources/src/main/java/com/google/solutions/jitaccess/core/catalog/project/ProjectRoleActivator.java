@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TemporalIamCondition;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
@@ -80,7 +80,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
         .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
           .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
           .setDescription(bindingDescription)
-          .setExpression(new TemporalIamCondition(startTime, duration).toString()));
+          .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
 
       //TODO(later): Add bindings in a single request.
 
