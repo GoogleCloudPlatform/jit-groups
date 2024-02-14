@@ -21,9 +21,9 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
-import com.google.api.services.admin.directory.model.Group;
-import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.api.services.directory.model.Group;
+import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
