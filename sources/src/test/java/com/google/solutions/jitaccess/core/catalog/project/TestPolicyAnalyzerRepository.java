@@ -711,23 +711,59 @@ public class TestPolicyAnalyzerRepository {
       assetAdapter,
       new PolicyAnalyzerRepository.Options("organizations/0"));
 
-    var entitlements = service.findEntitlements(
-      SAMPLE_USER,
-      SAMPLE_PROJECT_ID_1,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    //
+    // AVAILABLE + ACTIVE.
+    //
+    {
+      var entitlements = service.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT_ID_1,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
-    assertNotNull(entitlements.warnings());
-    assertEquals(0, entitlements.warnings().size());
+      assertNotNull(entitlements.warnings());
+      assertEquals(0, entitlements.warnings().size());
 
-    assertNotNull(entitlements.currentEntitlements());
-    assertEquals(1, entitlements.currentEntitlements().size());
+      assertNotNull(entitlements.currentEntitlements());
+      assertEquals(1, entitlements.currentEntitlements().size());
+      assertEquals(0, entitlements.expiredEntitlements().size());
 
-    var entitlement = entitlements.currentEntitlements().stream().findFirst().get();
-    assertEquals(SAMPLE_PROJECT_ID_1, entitlement.id().projectId());
-    assertEquals(SAMPLE_ROLE_1, entitlement.id().roleBinding().role());
-    assertEquals(ActivationType.JIT, entitlement.activationType());
-    assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
+      var active = entitlements.currentEntitlements().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, active.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, active.id().roleBinding().role());
+      assertEquals(ActivationType.JIT, active.activationType());
+      assertEquals(Entitlement.Status.ACTIVE, active.status());
+    }
+
+    //
+    // AVAILABLE + ACTIVE + EXPIRED.
+    //
+    {
+      var entitlements = service.findEntitlements(
+        SAMPLE_USER,
+        SAMPLE_PROJECT_ID_1,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
+
+      assertNotNull(entitlements.warnings());
+      assertEquals(0, entitlements.warnings().size());
+
+      assertNotNull(entitlements.currentEntitlements());
+      assertEquals(1, entitlements.currentEntitlements().size());
+      assertEquals(1, entitlements.expiredEntitlements().size());
+
+      var active = entitlements.currentEntitlements().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, active.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, active.id().roleBinding().role());
+      assertEquals(ActivationType.JIT, active.activationType());
+      assertEquals(Entitlement.Status.ACTIVE, active.status());
+
+      var expired = entitlements.expiredEntitlements().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, expired.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, expired.id().roleBinding().role());
+      assertEquals(ActivationType.JIT, expired.activationType());
+      assertEquals(Entitlement.Status.EXPIRED, expired.status());
+    }
   }
 
   @Test

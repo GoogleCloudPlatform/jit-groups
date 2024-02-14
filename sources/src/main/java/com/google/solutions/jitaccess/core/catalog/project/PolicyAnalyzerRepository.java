@@ -250,7 +250,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       //
       // Find role bindings which have already been activated.
       // These bindings have a time condition that we created, and
-      // the condition evaluates to true (indicating it's still
+      // the condition evaluates to TRUE (indicating it's still
       // valid).
       //
 
@@ -267,7 +267,24 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .collect(Collectors.toSet()));
     }
 
-    var allExpired = Set.<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>of(); //TODO: find expired.
+    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
+      //
+      // Do the same for conditions that evaluated to FALSE.
+      //
+
+      var activeBindings = findRoleBindings(
+        analysisResult,
+        condition -> JitConstraints.isActivated(condition),
+        evalResult -> "FALSE".equalsIgnoreCase(evalResult));
+
+      allExpired.addAll(activeBindings
+        .stream()
+        .map(conditionalBinding -> new EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>(
+          new ProjectRoleBinding(conditionalBinding.binding),
+          new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
+        .collect(Collectors.toSet()));
+    }
 
     var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
       .flatMap(Collection::stream)
