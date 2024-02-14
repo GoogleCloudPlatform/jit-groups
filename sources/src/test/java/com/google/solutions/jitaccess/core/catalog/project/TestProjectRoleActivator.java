@@ -21,12 +21,12 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -80,7 +80,7 @@ public class TestProjectRoleActivator {
       .addProjectIamBinding(
         eq(SAMPLE_PROJECT),
         argThat(b ->
-            IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+            TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
             b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Self-approved, justification: justification"));
@@ -117,7 +117,7 @@ public class TestProjectRoleActivator {
       .addProjectIamBinding(
         eq(SAMPLE_PROJECT),
         argThat(b ->
-          IamTemporaryAccessConditions.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+          TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
             b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Approved by approver@example.com, justification: justification"));

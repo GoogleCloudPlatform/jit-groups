@@ -25,13 +25,14 @@ import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
+import dev.cel.common.CelException;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -214,9 +215,14 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
 
         // Only bindings that are still valid.
-        .filter(binding -> IamTemporaryAccessConditions.evaluate(
-          binding.getCondition().getExpression(),
-          Instant.now()))
+        .filter(binding -> {
+          try {
+            return new TemporaryIamCondition(binding.getCondition().getExpression()).evaluate();
+          }
+          catch (CelException e) {
+            return false;
+          }
+        })
 
         .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
         .collect(Collectors.toList()));

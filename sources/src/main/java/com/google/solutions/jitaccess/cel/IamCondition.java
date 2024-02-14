@@ -50,7 +50,7 @@ public class IamCondition implements CelExpression<Boolean> {
       .standardCelRuntimeBuilder()
       .build();
 
-  private final String condition;
+  protected final String condition;
 
   public IamCondition(String condition) {
     Preconditions.checkNotNull(condition, "condition");

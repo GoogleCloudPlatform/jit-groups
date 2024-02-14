@@ -21,6 +21,9 @@
 
 package com.google.solutions.jitaccess.cel;
 
+import com.google.protobuf.Timestamp;
+import dev.cel.common.CelException;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -49,6 +52,15 @@ public class TemporaryIamCondition extends IamCondition {
 
   public TemporaryIamCondition(Instant startTime, Duration duration) {
    this(startTime, startTime.plus(duration));
+  }
+
+  public TemporaryIamCondition(String condition) {
+    super(condition);
+  }
+
+  @Override
+  public Boolean evaluate() throws CelException {
+    return isTemporaryAccessCondition(this.condition) && super.evaluate();
   }
 
   /**

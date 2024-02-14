@@ -27,12 +27,12 @@ import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -370,9 +370,9 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(IamTemporaryAccessConditions.createExpression(
+        .setExpression(new TemporaryIamCondition(
           Instant.now().minus(2, ChronoUnit.HOURS),
-          Instant.now().minus(1, ChronoUnit.HOURS))))
+          Instant.now().minus(1, ChronoUnit.HOURS)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -412,9 +412,9 @@ public class TestAssetInventoryRepository {
       .setRole("roles/for-user")
       .setCondition(new Expr()
         .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
-        .setExpression(IamTemporaryAccessConditions.createExpression(
+        .setExpression(new TemporaryIamCondition(
           Instant.now().minus(1, ChronoUnit.HOURS),
-          Instant.now().plus(1, ChronoUnit.HOURS))))
+          Instant.now().plus(1, ChronoUnit.HOURS)).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);

@@ -53,6 +53,12 @@ public class TestTemporaryIamCondition {
   // -------------------------------------------------------------------------
 
   @Test
+  public void whenNotATemporaryCondition_ThenEvaluateReturnsFalse() throws Exception {
+    assertFalse(new TemporaryIamCondition("true").evaluate());
+    assertFalse(new TemporaryIamCondition("1+1").evaluate());
+  }
+
+  @Test
   public void whenInPermittedTimeRange_ThenEvaluateReturnsTrue() throws Exception {
     var condition = new TemporaryIamCondition(
       Instant.now().minusSeconds(30),
