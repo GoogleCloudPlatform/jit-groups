@@ -597,8 +597,7 @@
                                     (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
                               class: item.status === "ACTIVE" ? "activated" : null }
                         ],
-                        true,
-                        item.status !== "ACTIVE");
+                        true);
                 });
             }
 
