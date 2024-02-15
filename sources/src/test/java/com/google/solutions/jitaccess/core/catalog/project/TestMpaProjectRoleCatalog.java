@@ -289,8 +289,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build(
         new TreeSet<>(Set.of(mpaEntitlement)),
+        Set.of(),
         Set.of(),
         Set.of()));
 
@@ -363,8 +364,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.JIT)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build(
         new TreeSet<>(Set.of(jitEntitlement)),
+        Set.of(),
         Set.of(),
         Set.of()));
 
@@ -437,8 +439,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build(
         new TreeSet<>(Set.of(mpaEntitlement)),
+        Set.of(),
         Set.of(),
         Set.of()));
 
@@ -584,12 +587,13 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA)),
       any()))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build((
         new TreeSet<>(Set.of(new Entitlement<>(
           new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/different-role")),
           "-",
           ActivationType.MPA,
-          Entitlement.Status.AVAILABLE))),
+          Entitlement.Status.AVAILABLE)))),
+        Set.of(),
         Set.of(),
         Set.of()));
 
@@ -617,12 +621,13 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA)),
       any()))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(EntitlementSet.build((
         new TreeSet<>(Set.of(new Entitlement<>(
           role,
           "-",
           ActivationType.MPA,
-          Entitlement.Status.AVAILABLE))),
+          Entitlement.Status.AVAILABLE)))),
+        Set.of(),
         Set.of(),
         Set.of()));
     when(policyAnalyzer

@@ -21,8 +21,11 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -49,11 +52,11 @@ public class TestEntitlementSet {
   }
 
   // -------------------------------------------------------------------------
-  // allEntitlements.
+  // CurrentEntitlements.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenActiveIsEmpty_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenActiveIsEmpty_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -65,18 +68,19 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
+      Set.of(),
       Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(), set.activeEntitlementIds());
-    assertIterableEquals(List.of(available1, available2), set.allEntitlements());
+    assertIterableEquals(
+      List.of(available1, available2),
+      set.currentEntitlements());
   }
 
   @Test
-  public void whenOneEntitlementActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenOneEntitlementActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -88,25 +92,28 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
-      Set.of(available1.id()),
+      Set.of(new EntitlementSet.ActivatedEntitlement<>(
+        available1.id(),
+        validity1)),
+      Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(available1.id()), set.activeEntitlementIds());
     assertIterableEquals(List.of(
       available2,
       new Entitlement<StringId>(
         new StringId("available-1"),
         "available-1",
         ActivationType.JIT,
-        Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+        Entitlement.Status.ACTIVE,
+        validity1)),
+      set.currentEntitlements());
   }
 
   @Test
-  public void whenAllEntitlementsActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenAllEntitlementsActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -118,29 +125,38 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
-      Set.of(available1.id(), available2.id()),
+      Set.of(
+        new EntitlementSet.ActivatedEntitlement<>(
+          available1.id(),
+          validity),
+        new EntitlementSet.ActivatedEntitlement<>(
+          available2.id(),
+          validity)),
+      Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
-    assertEquals(Set.of(available1.id(), available2.id()), set.activeEntitlementIds());
-    assertIterableEquals(List.of(
+    assertIterableEquals(
+      List.of(
         new Entitlement<StringId>(
           new StringId("available-1"),
           "available-1",
           ActivationType.JIT,
-          Entitlement.Status.ACTIVE),
+          Entitlement.Status.ACTIVE,
+          validity),
         new Entitlement<StringId>(
           new StringId("available-2"),
           "available-2",
           ActivationType.JIT,
-          Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+          Entitlement.Status.ACTIVE,
+          validity)),
+      set.currentEntitlements());
   }
 
   @Test
-  public void whenUnavailableEntitlementsIsActive_ThenAllEntitlementsReturnsConsolidatedSet() {
+  public void whenUnavailableEntitlementsIsActive_ThenCurrentEntitlementsHaveRightStatus() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -152,12 +168,15 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = new EntitlementSet<StringId>(
+    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
+    var set = EntitlementSet.build(
       Set.of(available1, available2),
-      Set.of(new StringId("unavailable-1")),
+      Set.of(new EntitlementSet.ActivatedEntitlement<>(
+        new StringId("unavailable-1"),
+        validity1)),
+      Set.of(),
       Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableEntitlements());
     assertIterableEquals(List.of(
         available1,
         available2,
@@ -165,7 +184,8 @@ public class TestEntitlementSet {
           new StringId("unavailable-1"),
           "unavailable-1",
           ActivationType.NONE,
-          Entitlement.Status.ACTIVE)),
-      set.allEntitlements());
+          Entitlement.Status.ACTIVE,
+          validity1)),
+      set.currentEntitlements());
   }
 }

@@ -21,13 +21,13 @@
 
 package com.google.solutions.jitaccess.cel;
 
-import com.google.protobuf.Timestamp;
 import dev.cel.common.CelException;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.regex.Pattern;
 
 /**
@@ -42,6 +42,10 @@ public class TemporaryIamCondition extends IamCondition {
       + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
+
+  //---------------------------------------------------------------------------
+  // Constructors.
+  //---------------------------------------------------------------------------
 
   public TemporaryIamCondition(Instant startTime, Instant endTime) {
     super(String.format(
@@ -58,9 +62,22 @@ public class TemporaryIamCondition extends IamCondition {
     super(condition);
   }
 
-  @Override
-  public Boolean evaluate() throws CelException {
-    return isTemporaryAccessCondition(this.condition) && super.evaluate();
+  //---------------------------------------------------------------------------
+  // Publics.
+  //---------------------------------------------------------------------------
+
+  public TimeSpan getValidity() {
+    var matcher = CONDITION.matcher(this.condition);
+    if (matcher.find()) {
+      try {
+        return new TimeSpan(
+          Instant.parse(matcher.group(1)),
+          Instant.parse(matcher.group(2)));
+      }
+      catch (DateTimeParseException e) {}
+    }
+
+    throw new IllegalArgumentException("Condition is not a temporary IAM condition");
   }
 
   /**
@@ -68,5 +85,14 @@ public class TemporaryIamCondition extends IamCondition {
    */
   public static boolean isTemporaryAccessCondition(String expression) {
     return expression != null && CONDITION.matcher(expression).matches();
+  }
+
+  //---------------------------------------------------------------------------
+  // Overrides.
+  //---------------------------------------------------------------------------
+
+  @Override
+  public Boolean evaluate() throws CelException {
+    return isTemporaryAccessCondition(this.condition) && super.evaluate();
   }
 }

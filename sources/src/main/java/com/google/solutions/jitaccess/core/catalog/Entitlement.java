@@ -22,7 +22,9 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TimeSpan;
 
+import java.time.Instant;
 import java.util.Comparator;
 
 /**
@@ -34,11 +36,27 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   TEntitlementId id,
   String name,
   ActivationType activationType,
-  Status status
+  Status status,
+  TimeSpan validity
 ) implements Comparable<Entitlement<TEntitlementId>> {
   public Entitlement {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(name, "name");
+
+    Preconditions.checkArgument(
+      validity == null || (status == Status.ACTIVE || status == Status.EXPIRED));
+    Preconditions.checkArgument(
+      status != Status.ACTIVE || validity.end().isAfter(Instant.now()));
+    Preconditions.checkArgument(
+      status != Status.EXPIRED || validity.end().isBefore(Instant.now()));
+  }
+
+  public Entitlement(
+    TEntitlementId id,
+    String name,
+    ActivationType activationType,
+    Status status) {
+    this(id, name, activationType, status, null);
   }
 
   @Override
@@ -51,6 +69,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
     return Comparator
       .comparing((Entitlement<TEntitlementId> e) -> e.status)
       .thenComparing(e -> e.id)
+      .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder()))
       .compare(this, o);
   }
 
@@ -62,12 +81,17 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
     /**
      * Entitlement can be activated.
      */
-    AVAILABLE,
+    AVAILABLE, //TODO(later): Rename to inactive
 
     /**
      * Entitlement is active.
      */
     ACTIVE,
+
+    /**
+     * Entitlement was active, but has no expired.
+     */
+    EXPIRED,
 
     /**
      * Approval pending.

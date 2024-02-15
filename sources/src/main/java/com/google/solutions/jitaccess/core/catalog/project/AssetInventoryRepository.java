@@ -35,7 +35,6 @@ import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -208,27 +207,42 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         .collect(Collectors.toList()));
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
-    if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-      allActive.addAll(allBindings.stream()
-        // Only temporary access bindings.
-        .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+    //
+    // Find temporary bindings that reflect activations and sort out which
+    // ones are still active and which ones have expired.
+    //
+    var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
 
-        // Only bindings that are still valid.
-        .filter(binding -> {
-          try {
-            return new TemporaryIamCondition(binding.getCondition().getExpression()).evaluate();
-          }
-          catch (CelException e) {
-            return false;
-          }
-        })
+    for (var binding : allBindings.stream()
+      // Only temporary access bindings.
+      .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
+      .collect(Collectors.toUnmodifiableList()))
+    {
+      var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
+      boolean isValid;
 
-        .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-        .collect(Collectors.toList()));
+      try {
+        isValid = condition.evaluate();
+      }
+      catch (CelException e) {
+        isValid = false;
+      }
+
+      if (isValid && statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
+        allActive.add(new EntitlementSet.ActivatedEntitlement<>(
+          new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+          condition.getValidity()));
+      }
+
+      if (!isValid && statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
+        allExpired.add(new EntitlementSet.ActivatedEntitlement<>(
+          new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+          condition.getValidity()));
+      }
     }
 
-    return new EntitlementSet<>(allAvailable, allActive, Set.of());
+    return EntitlementSet.build(allAvailable, allActive, allExpired, Set.of());
   }
 
   @Override

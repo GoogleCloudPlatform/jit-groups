@@ -211,9 +211,13 @@ public class ApiResource {
         projectId);
 
       return new ProjectRolesResponse(
-        entitlements.allEntitlements()
+        entitlements.currentEntitlements()
           .stream()
-          .map(ent -> new ProjectRole(ent.id().roleBinding(), ent.activationType(), ent.status()))
+          .map(ent -> new ProjectRole(
+            ent.id().roleBinding(),
+            ent.activationType(),
+            ent.status(),
+            ent.validity() != null ? ent.validity().end().getEpochSecond() : null))
           .collect(Collectors.toList()),
         entitlements.warnings());
     }
@@ -838,17 +842,20 @@ public class ApiResource {
     public final RoleBinding roleBinding;
     public final ActivationType activationType;
     public final Entitlement.Status status;
+    public final Long /* optional */ validUntil;
 
     public ProjectRole(
       RoleBinding roleBinding,
       ActivationType activationType,
-      Entitlement.Status status) {
+      Entitlement.Status status,
+      Long validUntil) {
 
       Preconditions.checkNotNull(roleBinding, "roleBinding");
 
       this.roleBinding = roleBinding;
       this.activationType = activationType;
       this.status = status;
+      this.validUntil = validUntil;
     }
   }
 
