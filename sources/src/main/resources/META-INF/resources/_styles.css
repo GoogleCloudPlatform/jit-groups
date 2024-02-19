@@ -1,0 +1,234 @@
+body {
+}
+
+p {
+    margin: 0 0 6px;
+    line-height: normal;
+}
+
+/* ==== MDL === */
+
+a {
+    color: #1a73e8;
+}
+
+.mdl-grid.center-items {
+    justify-content: center;
+}
+
+.mdl-data-table {
+    width: 100%;
+}
+
+.mdl-step {
+    height: auto;
+}
+
+.mdl-stepper {
+    max-width: 1024px;
+}
+
+.mdl-step__transient {
+    height: calc(100% - 32px);
+}
+
+.mdl-step__label {
+        padding: 12px 24px 14px 24px;
+}
+
+.mdl-layout__drawer-button, .mdl-layout__header {
+    color: rgb(66,66,66);
+}
+
+.mdl-button {
+    background-color: lightgray;
+    font-weight: 500;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 15px;
+    cursor: pointer;
+    width: 130px;
+    line-height: 36px;
+    text-transform: inherit;
+    padding: unset;
+    color: white;
+}
+
+.mdl-button--colored {
+    background-color: #1a73e8;
+}
+
+.mdl-button.mdl-button--colored {
+    color: white;
+}
+
+.mdl-button--colored.mdl-button:hover {
+    background-color: #1a73e8;
+}
+
+.mdl-card {
+    width: 720px;
+}
+
+.mdl-card__actions {
+    padding: 16px;
+}
+
+.mdl-progress {
+    margin-top: 10px;
+    width: auto;
+}
+
+.mdl-data-table td:first-of-type {
+    width: 50px;
+}
+
+@media screen and (max-width: 1024px) {
+    .mdl-layout__header {
+        display:flex;
+    }
+}
+
+.mdl-mini-footer {
+    justify-content: center;
+    background-color: #fefefe;
+    font-size: 12px;
+}
+
+.mdl-mini-footer a {
+    color: #9e9e9e;
+}
+
+h3.mdl-card__title-text {
+    font-size: 20px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.mdl-layout-title a {
+    color: rgb(66,66,66);
+    text-decoration: none;
+    font-weight: 400;
+}
+
+.mdl-slider__container {
+    height: 40px;
+    width: 200px;
+}
+
+/* ==== Forms === */
+fieldset {
+    border-radius: 4px;
+    color: #202124;
+    margin: 1px 1px 0 1px;
+    padding: 0px 5px 5px 5px;
+    border-width: thin;
+    border-style: solid;
+}
+
+fieldset > input {
+    width: calc(100% - 32px);
+    outline: none;
+    border: none;
+    font-size: 14px;
+}
+
+.ui-autocomplete-loading {
+    background: url(/spinner.gif) no-repeat right center
+}
+
+legend {
+    font-size: 12px;
+}
+
+.ui-widget {
+    font-family: "Roboto",sans-serif;
+}
+
+.ui-menu {
+    font-size: 14px;
+    box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
+}
+
+.ui-menu-item .ui-menu-item-wrapper.ui-state-active {
+    background: #f0f0f0 !important;
+    border: 0px;
+}
+
+.activated {
+    background-color: #188038;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px;
+    display: inline;
+}
+
+.request-details {
+    list-style: none;
+}
+
+.request-details li {
+    list-style-type: square;
+}
+
+.request-details li span {
+    display: inline-block;
+}
+
+.request-details li span:first-of-type {
+    width: 130px;
+}
+
+/* ==== Navigation === */
+.step-subheader {
+    padding-top: 10px;
+    font-weight: bold;
+    color: darkgray;
+}
+
+.step-subsection {
+    padding-bottom: 15px;
+    padding-top: 15px;
+}
+
+.app-pane {
+    display: none;
+}
+
+/* ==== Code blocks === */
+
+pre {
+    background-color: #f0f0f0;
+    position: relative;
+    margin: 5px 0;
+    padding: 1rem 0 1rem 1rem;
+    font-size: 13px;
+}
+
+pre button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+pre button img {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* ==== Debug === */
+
+#debug-pane {
+    position: fixed;
+    width: 300px;
+    background: #eee;
+    bottom: 0px;
+    right: 0px;
+    z-index: 2;
+    padding: 3px;
+}
