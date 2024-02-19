@@ -27,10 +27,10 @@
                     <img src='logo.png' alt='JIT Access'/>
                     Just-in-Time Access
                 </span>
-                <button class="mdc-button mdc-button--outlined jit-projectselector">
+                <button class="mdc-button mdc-button--outlined" id="jit-projectselector">
                     <span class="mdc-button__ripple"></span>
                     <span class="mdc-button__label">
-                        Select project
+                        <span id="jit-scope">No project selected</span>
                         <i class="material-icons mdc-button__icon" aria-hidden="true">expand_more</i>
                     </span>
                 </button>
@@ -60,6 +60,7 @@
               </div>
             </div>
             <div class='jit-main'>
+                <!--
                 <div class="mdc-data-table jit-datatable">
                   <div class="mdc-data-table__table-container">
                     <table class="mdc-data-table__table" aria-label="Dessert calories">
@@ -193,17 +194,16 @@
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Request access</span>
                 </button>
-            
+                -->
             </div>
             
             
             
             
-            <!-- Dialogs -->
-            
-            
-            
-            <div class="mdc-dialog">
+            <!-- 
+                Scope dialog
+            -->
+            <div class="mdc-dialog" id="jit-scopedialog">
               <div class="mdc-dialog__container">
                 <div class="mdc-dialog__surface"
                   role="alertdialog"
@@ -216,8 +216,8 @@
                     <label class="mdc-text-field mdc-text-field--filled mdc-text-field--with-leading-icon">
                       <span class="mdc-text-field__ripple"></span>
                       <span class="mdc-floating-label" id="my-label-id">Project ID</span>
-                      <i class="material-icons mdc-text-field__icon mdc-text-field__icon--leading" tabindex="0" role="button">search</i>
-                      <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id">
+                        <i class="material-icons mdc-text-field__icon mdc-text-field__icon--leading" tabindex="0" role="button">search</i>
+                      <input class="mdc-text-field__input" type="text" id="jit-scopedialog-input">
                       <span class="mdc-line-ripple"></span>
                     </label>
                   </div>
@@ -250,8 +250,13 @@
         mdc.autoInit();
 
         class View {
-            constructor() {
+            constructor(scope) {
                 this.banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
+                this.scopeDialog = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
+
+                $('#jit-projectselector').on('click', () => {
+                    this.setScope(null);
+                });
             }
 
             /** Display an error bar at the top of the screen */
@@ -272,23 +277,32 @@
                 }
             }
 
+            setScope(scope) {
+                if (scope) {
+                    $('#jit-scope').text(scope);
+                }
+                else {
+                     $('#jit-scopedialog-input').focus();
+                     this.scopeDialog.open();
+                }
+            }
         }
         
+        const localSettings = new LocalSettings();
         const queryParameters = new URLSearchParams(location.search);
         const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
-        const localSettings = new LocalSettings();
         const view = new View();
-
         
         $(document).ready(async () => {
-        
-
             try {
                 //
                 // Download policy to check if the communication with the backend
                 // works properly. 
                 //
                 await backend.fetchPolicy();
+                
+                view.setScope(queryParameters.get("projectId") ?? localSettings.lastProjectId);
+
                 //if (activationToken) {
                 //    //
                 //    // Show approver UI.
@@ -311,12 +325,5 @@
             }
         
         });
-    
-        // banner.open();
-        
-        
-        
-        //const dialog = new mdc.dialog.MDCDialog(document.querySelector('.mdc-dialog'));
-        //dialog.open();
     </script>
 </html>

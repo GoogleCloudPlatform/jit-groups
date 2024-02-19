@@ -18,7 +18,7 @@ body {
 
 }
         
-.jit-projectselector {
+#jit-projectselector {
     margin-left: 25px;
 }
       
@@ -52,6 +52,9 @@ body {
     color: #9e9e9e;
 }
 
+#jit-scope {
+    text-transform: none;
+}
 
 /* ==== MDC Overrides === */
 
