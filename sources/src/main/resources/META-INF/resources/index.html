@@ -254,28 +254,64 @@
         "use strict"
         mdc.autoInit();
 
-        class ScopeDialog {
+        class ObservableProperty {
+            constructor(value) {
+                this._value = value;
+                this._onChangeListeners = [];
+            }
+
+            get value() {
+                return this._value;
+            }
+
+            set value(v) {
+                this._value = v;
+                this._onChangeListeners.forEach(cb => cb());
+            }
+
+            onChange(callback) {
+                this._onChangeListeners.push(callback)
+            }
+        }
+
+        class ViewModel {
             constructor() {
+                this.scope = new ObservableProperty();
+            }
+        }
+
+        class ScopeDialog {
+            constructor(viewModel) {
+                console.assert(viewModel);
+
                 this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
+
+                const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
                 this._element.listen('MDCDialog:closed', () => {
-                  this._triggerEl.style.display = null;
+                    viewModel.scope.value = textField.value;
                 });
             }
 
             showDialog() {
                 this._element.open();
-                const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
             }
         }
 
         class View {
-            constructor(scope) {
+            constructor(viewModel) {
+                console.assert(viewModel);
+
+                this._viewModel = viewModel;
                 this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
                 this._scopeDialog = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
 
                 $('#jit-projectselector').on('click', () => {
                     this.selectScope();
                 });
+
+                viewModel.scope.onChange(() => {
+                    $('#jit-scope').text(viewModel.scope.value);
+                })
             }
 
             /** Display an error bar at the top of the screen */
@@ -298,27 +334,16 @@
 
             /** Show dialog to let user select the scope */
             selectScope() {
-                this._scope = new ScopeDialog().showDialog();
-                //console.assert(this._scope);
-            }
-
-            get scope() {
-                return this._scope;
-            }
-
-            set scope(value) {
-                this._scope = value;
-
-                if (value) {
-                    $('#jit-scope').text(value);
-                }
+                new ScopeDialog(this._viewModel).showDialog();
             }
         }
         
         const localSettings = new LocalSettings();
         const queryParameters = new URLSearchParams(location.search);
         const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
-        const view = new View();
+
+        const viewModel = new ViewModel(queryParameters.get("projectId") ?? localSettings.lastProjectId);
+        const view = new View(viewModel);
         
         $(document).ready(async () => {
             //
@@ -342,7 +367,7 @@
                 minLength: 2,
                 position: { of: $("#jit-scopedialog-input") },
                 open: function() {
-                    $("ul.ui-menu").width( $(this).innerWidth() );
+                    $("ul.ui-menu").width($(this).innerWidth());
                 }
             });
 
@@ -354,8 +379,7 @@
                 //
                 await backend.fetchPolicy();
                 
-                view.scope = queryParameters.get("projectId") ?? localSettings.lastProjectId;
-                if (!view.scope) {
+                if (!viewModel.scope.value) {
                     view.selectScope();
                 }
 
