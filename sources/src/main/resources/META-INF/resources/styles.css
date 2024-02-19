@@ -130,6 +130,9 @@ ul.ui-menu  {
     padding-top: 48px;
 }
 
+.mdc-banner__content {
+    max-width: 100%;
+}
 
 /* ==== Debug === */
 
