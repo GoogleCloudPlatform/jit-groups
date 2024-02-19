@@ -35,7 +35,7 @@ body {
     margin-top: 20px;
 }
             
-.jit-datatable {
+#jit-entitlements {
     width: calc(100% - 40px);
 }
 

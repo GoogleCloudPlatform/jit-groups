@@ -60,8 +60,7 @@
               </div>
             </div>
             <div class='jit-main'>
-                <!--
-                <div class="mdc-data-table jit-datatable">
+                <div class="mdc-data-table" id="jit-entitlements">
                   <div class="mdc-data-table__table-container">
                     <table class="mdc-data-table__table" aria-label="Dessert calories">
                       <thead>
@@ -107,66 +106,6 @@
                           <td class="mdc-data-table__cell mdc-data-table__cell--numeric">0:33</td>
                           <td class="mdc-data-table__cell">Allison Brie</td>
                         </tr>
-                        <tr data-row-id="u1" class="mdc-data-table__row mdc-data-table__row--selected" aria-selected="true">
-                          <td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
-                            <div class="mdc-checkbox mdc-data-table__row-checkbox mdc-checkbox--selected">
-                              <input type="checkbox" class="mdc-checkbox__native-control" checked aria-labelledby="u1"/>
-                              <div class="mdc-checkbox__background">
-                                <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                  <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                                </svg>
-                                <div class="mdc-checkbox__mixedmark"></div>
-                              </div>
-                              <div class="mdc-checkbox__ripple"></div>
-                            </div>
-                          </td>
-                          <th class="mdc-data-table__cell" scope="row" id="u1">monarch: prod shared ares-managed-features-provider-heavy</th>
-                          <td class="mdc-data-table__cell">Offline</td>
-                          <td class="mdc-data-table__cell">Huge</td>
-                          <td class="mdc-data-table__cell">Triaged</td>
-                          <td class="mdc-data-table__cell mdc-data-table__cell--numeric">0:33</td>
-                          <td class="mdc-data-table__cell">Brie Larson</td>
-                        </tr>
-                        <tr data-row-id="u2" class="mdc-data-table__row mdc-data-table__row--selected" aria-selected="true">
-                          <td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
-                            <div class="mdc-checkbox mdc-data-table__row-checkbox mdc-checkbox--selected">
-                              <input type="checkbox" class="mdc-checkbox__native-control" checked aria-labelledby="u2"/>
-                              <div class="mdc-checkbox__background">
-                                <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                  <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                                </svg>
-                                <div class="mdc-checkbox__mixedmark"></div>
-                              </div>
-                              <div class="mdc-checkbox__ripple"></div>
-                            </div>
-                          </td>
-                          <th class="mdc-data-table__cell" scope="row" id="u2">monarch: prod shared ares-managed-features-provider-heavy</th>
-                          <td class="mdc-data-table__cell">Online</td>
-                          <td class="mdc-data-table__cell">Minor</td>
-                          <td class="mdc-data-table__cell">Not triaged</td>
-                          <td class="mdc-data-table__cell mdc-data-table__cell--numeric">0:33</td>
-                          <td class="mdc-data-table__cell">Jeremy Lake</td>
-                        </tr>
-                        <tr data-row-id="u3" class="mdc-data-table__row">
-                          <td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
-                            <div class="mdc-checkbox mdc-data-table__row-checkbox">
-                              <input type="checkbox" class="mdc-checkbox__native-control" aria-labelledby="u3"/>
-                              <div class="mdc-checkbox__background">
-                                <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                  <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                                </svg>
-                                <div class="mdc-checkbox__mixedmark"></div>
-                              </div>
-                              <div class="mdc-checkbox__ripple"></div>
-                            </div>
-                          </td>
-                          <th class="mdc-data-table__cell" scope="row" id="u3">Arcus watch slowdown</th>
-                          <td class="mdc-data-table__cell">Online</td>
-                          <td class="mdc-data-table__cell">Negligible</td>
-                          <td class="mdc-data-table__cell">Triaged</td>
-                          <td class="mdc-data-table__cell mdc-data-table__cell--numeric">0:33</td>
-                          <td class="mdc-data-table__cell">Angelina Cheng</td>
-                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -189,7 +128,7 @@
                 </div>
                 
                 
-                
+                <!--
                 <button class="mdc-button foo-button mdc-button--raised jit-actionbutton">
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Request access</span>
@@ -266,7 +205,7 @@
 
             set value(v) {
                 this._value = v;
-                this._onChangeListeners.forEach(cb => cb());
+                this._onChangeListeners.forEach(cb => cb(v));
             }
 
             onChange(callback) {
@@ -277,6 +216,25 @@
         class ViewModel {
             constructor() {
                 this.scope = new ObservableProperty();
+                this.error = new ObservableProperty();
+                this.busy = new ObservableProperty(false);
+
+                this.scope.onChange(async () => {
+                    this.busy.value = true;
+
+                    try {
+
+                        // TODO: reload data
+                        await new Promise(r => setTimeout(r, 500));
+                        throw "bam!";
+                    }
+                    catch (error) {
+                        this.error.value = error;
+                    }
+                    finally {
+                        this.busy.value = false;
+                    }
+                });
             }
         }
 
@@ -289,6 +247,31 @@
                 const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
                 this._element.listen('MDCDialog:closed', () => {
                     viewModel.scope.value = textField.value;
+                });
+
+                //
+                // Configure autocompleter.
+                //
+                $("#jit-scopedialog-input").autocomplete({
+                    source: async (request, response) => {
+                        try {
+                            const projects = await backend.searchProjects(request.term);
+                            response($.map(projects, (item) => {
+                                return {
+                                    label: item,
+                                    value: item
+                                };
+                            }));
+                        }
+                        catch (e) {
+                            view.showError(`Loading projects failed: ${e}`, false);
+                        }
+                    },
+                    minLength: 2,
+                    position: { of: $("#jit-scopedialog-input") },
+                    open: function() {
+                        $("ul.ui-menu").width($(this).innerWidth());
+                    }
                 });
             }
 
@@ -303,14 +286,28 @@
 
                 this._viewModel = viewModel;
                 this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
-                this._scopeDialog = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
 
                 $('#jit-projectselector').on('click', () => {
                     this.selectScope();
                 });
 
-                viewModel.scope.onChange(() => {
-                    $('#jit-scope').text(viewModel.scope.value);
+                viewModel.busy.onChange(busy => {
+                    if (busy) {
+                        this._table.showProgress();
+                    }
+                    else {
+                        this._table.hideProgress();
+                    }
+                });
+
+                viewModel.error.onChange(error => {
+                    this.showError(error, true);
+                    $("#jit-entitlements tbody").remove();
+                });
+
+                viewModel.scope.onChange(scope => {
+                    $('#jit-scope').text(scope);
                 })
             }
 
@@ -342,43 +339,23 @@
         const queryParameters = new URLSearchParams(location.search);
         const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
 
-        const viewModel = new ViewModel(queryParameters.get("projectId") ?? localSettings.lastProjectId);
+        const viewModel = new ViewModel();
         const view = new View(viewModel);
         
         $(document).ready(async () => {
-            //
-            // Configure project selector
-            //
-            $("#jit-scopedialog-input").autocomplete({
-                source: async (request, response) => {
-                    try {
-                        const projects = await backend.searchProjects(request.term);
-                        response($.map(projects, (item) => {
-                            return {
-                                label: item,
-                                value: item
-                            };
-                        }));
-                    }
-                    catch (e) {
-                        view.showError(`Loading projects failed: ${e}`, false);
-                    }
-                },
-                minLength: 2,
-                position: { of: $("#jit-scopedialog-input") },
-                open: function() {
-                    $("ul.ui-menu").width($(this).innerWidth());
-                }
-            });
-
-
+            
             try {
                 //
                 // Download policy to check if the communication with the backend
                 // works properly. 
                 //
                 await backend.fetchPolicy();
-                
+
+                viewModel.scope.value = queryParameters.get("projectId") ?? localSettings.lastProjectId;
+                viewModel.scope.onChange(newScope => {
+                    localSettings.lastProjectId = newScope;
+                });
+
                 if (!viewModel.scope.value) {
                     view.selectScope();
                 }
