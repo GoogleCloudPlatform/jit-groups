@@ -42,7 +42,7 @@
             </section>
           </div>
         </header>
-        <main class="mdc-top-app-bar--fixed-adjust">
+        <main class="mdc-top-app-bar--fixed-adjust jit-app-pane" id="jit-enitlements-pane">
             <div class="mdc-banner" role="banner">
               <div class="mdc-banner__content"
                    role="alertdialog"
@@ -157,6 +157,8 @@
               </div>
               <div class="mdc-dialog__scrim"></div>
             </div>
+        </main>
+        <main class="mdc-top-app-bar--fixed-adjust jit-app-pane" id="jit-status-pane">
         </main>
         <footer class="jit-footer">
             <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
@@ -281,8 +283,29 @@
             }
         }
 
-        class ScopeDialog {
+        class View {
+            /** Display an error bar at the top of the screen */
+            showError(message, showReloadButton) {
+                console.assert(this._banner);
+
+                this._banner.open();
+                $('#jit-banner-text').text(message);
+
+                if (showReloadButton) {
+                    $('#jit-banner-reloadbutton').on('click', () => {
+                        const timestamp = Date.now();
+                        window.location.href = `${window.location.pathname}?_=${timestamp}`;
+                    });
+                }
+                else {
+                    $('#jit-banner-reloadbutton').hide();
+                }
+            }
+        }
+
+        class ScopeDialog extends View {
             constructor(viewModel) {
+                super();
                 console.assert(viewModel);
 
                 //
@@ -310,7 +333,7 @@
                             }));
                         }
                         catch (e) {
-                            view.showError(`Loading projects failed: ${e}`, false);
+                            this.showError(`Loading projects failed: ${e}`, false);
                         }
                     },
                     minLength: 2,
@@ -326,8 +349,45 @@
             }
         }
 
-        class View {
+        /** An SPA-style pane, only one of which is shown at a time */
+        class PaneView extends View {
+            constructor(id) {
+                super();
+                console.assert($("#" + id).length);
+
+                this.id = id;
+
+                this.statusCaptions = {
+                    "ACTIVE": "Active",
+                    "AVAILABLE": "Available",
+                    "ACTIVATION_PENDING": "Waiting for approval"
+                };
+
+                this.activationTypeCaptions = {
+                    "JIT": "-",
+                    "MPA": "Peer approval required",
+                    "NONE": "Unavailable",
+                }
+            }
+
+            /**
+             * Show a pane and hide all other panes.
+             */
+            show() {
+                $(".jit-app-pane").hide();
+                $("#" + this.id).show();
+            }
+
+            /** Show dialog to let user select the scope */
+            selectScope() {
+                new ScopeDialog(this._viewModel).showDialog();
+            }
+        }
+
+        class EntitlementsView extends PaneView {
             constructor(viewModel) {
+                super("jit-enitlements-pane");
+
                 console.assert(viewModel);
 
                 this._viewModel = viewModel;
@@ -390,7 +450,6 @@
                                 ],
                                 true);
                         });
-
                     }
 
                     if (entitlements.warnings) {
@@ -399,37 +458,30 @@
                 });
             }
 
-            /** Display an error bar at the top of the screen */
-            showError(message, showReloadButton) {
-                console.assert(this._banner);
-
-                this._banner.open();
-                $('#jit-banner-text').text(message);
-
-                if (showReloadButton) {
-                    $('#jit-banner-reloadbutton').on('click', () => {
-                        const timestamp = Date.now();
-                        window.location.href = `${window.location.pathname}?_=${timestamp}`;
-                    });
-                }
-                else {
-                    $('#jit-banner-reloadbutton').hide();
+            show() {
+                //super.show();
+                if (!this._viewModel.scope.value) {
+                    this.selectScope();
                 }
             }
+        }
 
-            /** Show dialog to let user select the scope */
-            selectScope() {
-                new ScopeDialog(this._viewModel).showDialog();
+        class StatusView extends PaneView {
+            constructor(viewModel) {
+                super("jit-status-pane");
             }
         }
         
         const localSettings = new LocalSettings();
         const queryParameters = new URLSearchParams(location.search);
         const model = queryParameters.get("debug") ? new DebugModel() : new Model();
+        const activationToken = queryParameters.get("activation");
         
         $(document).ready(async () => {
             const viewModel = new ViewModel(model);
-            const view = new View(viewModel);
+            const view = activationToken 
+                ? new StatusView(viewModel, activationToken) 
+                : new EntitlementsView(viewModel);
 
             try {
                 //
@@ -443,9 +495,10 @@
                     localSettings.lastProjectId = newScope;
                 });
 
-                if (!viewModel.scope.value) {
-                    view.selectScope();
-                }
+                view.show();
+                //if (!viewModel.scope.value) {
+                //    view.selectScope();
+                //}
 
                 //if (activationToken) {
                 //    //
