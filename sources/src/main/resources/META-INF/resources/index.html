@@ -62,7 +62,7 @@
             <div class='jit-main'>
                 <div class="mdc-data-table" id="jit-entitlements">
                   <div class="mdc-data-table__table-container">
-                    <table class="mdc-data-table__table" aria-label="Dessert calories">
+                    <table class="mdc-data-table__table">
                       <thead>
                         <tr class="mdc-data-table__header-row">
                           <th class="mdc-data-table__header-cell mdc-data-table__header-cell--checkbox" role="columnheader" scope="col">
@@ -170,6 +170,54 @@
     <script>
         "use strict"
         mdc.autoInit();
+        mdc.dataTable.MDCDataTable.prototype.clearRows = function() {
+            this.content.innerHTML = '';
+        };
+
+        mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox=true) {
+            console.assert(id);
+            console.assert(columns);
+
+            const tr = $(`<tr data-row-id="${id}" class="mdc-data-table__row"></tr>`);
+            $(this.content).append(tr);
+
+            if (showCheckbox) {
+                const checkboxTd = $(`<td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
+                     <div class="mdc-checkbox mdc-data-table__row-checkbox">
+                       <input type="checkbox" class="mdc-checkbox__native-control"/>
+                       <div class="mdc-checkbox__background">
+                       <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                           <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                       </svg>
+                       <div class="mdc-checkbox__mixedmark"></div>
+                       </div>
+                       <div class="mdc-checkbox__ripple"></div>
+                     </div>
+                   </td>`);
+                tr.append(checkboxTd);
+            }
+
+            let first = true;
+            columns.forEach((value) => {
+                const div = $("<div></div>");
+                div.text(value.text);
+                if (value.class) {
+                    div.attr("class", value.class);
+                }
+
+                let td;
+                if (first) {
+                    td = $(`<th class="mdc-data-table__cell" scope="row" id="${id}"></th>`);
+                    first = false;
+                }
+                else {
+                    td = $(`<td class="mdc-data-table__cell"></td>`);
+                }
+
+                td.append(div);
+                tr.append(td);
+            });
+        };
 
         class ObservableProperty {
             constructor(value) {
@@ -284,6 +332,18 @@
                 this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
 
+                this.statusCaptions = {
+                    "ACTIVE": "Active",
+                    "AVAILABLE": "Available",
+                    "ACTIVATION_PENDING": "Waiting for approval"
+                };
+
+                this.activationTypeCaptions = {
+                    "JIT": "-",
+                    "MPA": "Peer approval required",
+                    "NONE": "Unavailable",
+                }
+
                 //
                 // Setup bindings.
                 //
@@ -315,39 +375,20 @@
                         this.showError("The project doesn't exist, or you don't have permission to activate any roles in this project");
                     }
                     else {
-                        
-                        $("#jit-entitlements tbody tr").remove();
-                        entitlements.roles.forEach(e => {
-                            const tr = $(
-                                `<tr data-row-id="${e.roleBinding.id}" class="mdc-data-table__row">
-                                  <td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
-                                    <div class="mdc-checkbox mdc-data-table__row-checkbox">
-                                      <input type="checkbox" class="mdc-checkbox__native-control"/>
-                                      <div class="mdc-checkbox__background">
-                                        <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                          <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                                        </svg>
-                                        <div class="mdc-checkbox__mixedmark"></div>
-                                      </div>
-                                      <div class="mdc-checkbox__ripple"></div>
-                                    </div>
-                                  </td>
-                                </tr>`);
-                            const role = $(`<th class="mdc-data-table__cell" scope="row" id="${e.roleBinding.id}"></th>`);
-                            role.text(e.roleBinding.role);
-
-                            const requirements = $(`<td class="mdc-data-table__cell"></td>`);
-                            requirements.text("todo");
-
-                            const status = $(`<td class="mdc-data-table__cell"></td>`);
-                            status.text("todo");
-
-                            tr.append(role);
-                            tr.append(requirements);
-                            tr.append(status);
-
-                            $("#jit-entitlements tbody").append(tr);
+                        this._table.clearRows();    
+                        entitlements.roles.forEach(item => {
+                            this._table.addRow(
+                                item.roleBinding.id,
+                                [
+                                    { text: item.roleBinding.role },
+                                    { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                                    { text: (this.statusCaptions[item.status] ?? item.status) + 
+                                            (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
+                                      class: item.status === "ACTIVE" ? "activated" : null }
+                                ],
+                                true);
                         });
+
                     }
 
                     if (entitlements.warnings) {

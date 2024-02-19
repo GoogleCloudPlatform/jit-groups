@@ -4,7 +4,13 @@ body {
     font-family: Roboto;
 }
 
-      
+.activated {
+    background-color: #188038;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px;
+    display: inline;
+}    
 
 .jit-title {
     color: #006CBE;
