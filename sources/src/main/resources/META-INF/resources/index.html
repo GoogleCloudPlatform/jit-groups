@@ -208,18 +208,23 @@
                 <div class="mdc-dialog__surface"
                   role="alertdialog"
                   aria-modal="true"
-                  aria-labelledby="my-dialog-title"
-                  aria-describedby="my-dialog-content">
-                  <!-- Title cannot contain leading whitespace due to mdc-typography-baseline-top() -->
-                  <h2 class="mdc-dialog__title" id="my-dialog-title">Select project</h2>
-                  <div class="mdc-dialog__content" id="my-dialog-content">
-                    <label class="mdc-text-field mdc-text-field--filled mdc-text-field--with-leading-icon">
-                      <span class="mdc-text-field__ripple"></span>
-                      <span class="mdc-floating-label" id="my-label-id">Project ID</span>
-                        <i class="material-icons mdc-text-field__icon mdc-text-field__icon--leading" tabindex="0" role="button">search</i>
-                      <input class="mdc-text-field__input" type="text" id="jit-scopedialog-input">
-                      <span class="mdc-line-ripple"></span>
+                  aria-labelledby="scopedialog-title"
+                  aria-describedby="scopedialog-content">
+                  
+                  <h2 class="mdc-dialog__title" id="scopedialog-title">Select project</h2>
+                  <div class="mdc-dialog__content" id="scopedialog-content">
+                    <label class="mdc-text-field mdc-text-field--outlined">
+                        <span class="mdc-notched-outline">
+                            <span class="mdc-notched-outline__leading"></span>
+                            <span class="mdc-notched-outline__notch">
+                                <span class="mdc-floating-label">Project ID</span>
+                            </span>
+                            <span class="mdc-notched-outline__trailing"></span>
+                        </span>
+                        <input type="text" class="mdc-text-field__input" id="jit-scopedialog-input" autofocus>
                     </label>
+
+
                   </div>
                   <div class="mdc-dialog__actions">
                     <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
@@ -249,21 +254,35 @@
         "use strict"
         mdc.autoInit();
 
+        class ScopeDialog {
+            constructor() {
+                this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
+                this._element.listen('MDCDialog:closed', () => {
+                  this._triggerEl.style.display = null;
+                });
+            }
+
+            showDialog() {
+                this._element.open();
+                const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
+            }
+        }
+
         class View {
             constructor(scope) {
-                this.banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
-                this.scopeDialog = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
+                this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
+                this._scopeDialog = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
 
                 $('#jit-projectselector').on('click', () => {
-                    this.setScope(null);
+                    this.selectScope();
                 });
             }
 
             /** Display an error bar at the top of the screen */
             showError(message, showReloadButton) {
-                console.assert(this.banner);
+                console.assert(this._banner);
 
-                this.banner.open();
+                this._banner.open();
                 $('#jit-banner-text').text(message);
 
                 if (showReloadButton) {
@@ -277,13 +296,21 @@
                 }
             }
 
-            setScope(scope) {
-                if (scope) {
-                    $('#jit-scope').text(scope);
-                }
-                else {
-                     $('#jit-scopedialog-input').focus();
-                     this.scopeDialog.open();
+            /** Show dialog to let user select the scope */
+            selectScope() {
+                this._scope = new ScopeDialog().showDialog();
+                //console.assert(this._scope);
+            }
+
+            get scope() {
+                return this._scope;
+            }
+
+            set scope(value) {
+                this._scope = value;
+
+                if (value) {
+                    $('#jit-scope').text(value);
                 }
             }
         }
@@ -294,6 +321,32 @@
         const view = new View();
         
         $(document).ready(async () => {
+            //
+            // Configure project selector
+            //
+            $("#jit-scopedialog-input").autocomplete({
+                source: async (request, response) => {
+                    try {
+                        const projects = await backend.searchProjects(request.term);
+                        response($.map(projects, (item) => {
+                            return {
+                                label: item,
+                                value: item
+                            };
+                        }));
+                    }
+                    catch (e) {
+                        view.showError(`Loading projects failed: ${e}`, false);
+                    }
+                },
+                minLength: 2,
+                position: { of: $("#jit-scopedialog-input") },
+                open: function() {
+                    $("ul.ui-menu").width( $(this).innerWidth() );
+                }
+            });
+
+
             try {
                 //
                 // Download policy to check if the communication with the backend
@@ -301,7 +354,10 @@
                 //
                 await backend.fetchPolicy();
                 
-                view.setScope(queryParameters.get("projectId") ?? localSettings.lastProjectId);
+                view.scope = queryParameters.get("projectId") ?? localSettings.lastProjectId;
+                if (!view.scope) {
+                    view.selectScope();
+                }
 
                 //if (activationToken) {
                 //    //
