@@ -82,7 +82,8 @@ class ObservableProperty {
     }
 }
 
-class Dialog {
+/** Base class for modal dialogs */
+class DialogBase {
     constructor(selector) {
         this.selector = selector;
         this.element = new mdc.dialog.MDCDialog(document.querySelector(selector));
@@ -105,9 +106,9 @@ class Dialog {
                 }
             });
 
-            this.error = e => {
+            this.cancelDialog = error => {
                 this.element.close();
-                reject(e);
+                reject(error);
             }
 
             this.element.open();
@@ -115,7 +116,26 @@ class Dialog {
     }
 }
 
-class SelectScopeDialog extends Dialog {
+/** Base class for views */
+class ViewBase {
+    constructor(selector) {
+        this.selector = selector;
+    }
+
+    /** Show and hide all other views. */
+    show() {
+        $('.jit-view').hide();
+        $(this.selector).show();
+    }
+
+    cancelView(error) {
+        $('.jit-view').hide();
+        document.appbar.showError(error, true);
+    }
+}
+
+/** Dialog for selecting a scope */
+class SelectScopeDialog extends DialogBase {
     constructor() {
         super('#jit-scopedialog');
         
@@ -140,7 +160,7 @@ class SelectScopeDialog extends Dialog {
                     }));
                 }
                 catch (e) {
-                    this.error(`Loading projects failed: ${e}`);
+                    this.cancelDialog(`Loading projects failed: ${e}`);
                 }
             },
             minLength: 2,
@@ -159,6 +179,7 @@ class SelectScopeDialog extends Dialog {
     }
 }
 
+/** App bar at top of screen */
 class AppBar {
     constructor() {
         this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
@@ -173,14 +194,42 @@ class AppBar {
         //
 
         $('#jit-projectselector').on('click', () => {
-            this.selectScopeAsync();
+            this.selectScopeAsync().catch(e => {}); //TODO: catch cancel, but show error
         });
     }
-
+    
     /** Prompt user to select a scope */
     async selectScopeAsync() {
         var dialog = new SelectScopeDialog();
         this.scope.value = await dialog.showAsync();
+    }
+
+    async initialize() {
+        try {
+            //
+            // Download policy to check if the communication with the model
+            // works properly. 
+            //
+            await document.model.fetchPolicy();
+
+            $("#signed-in-user").text(document.model.policy.signedInUser.email);
+            $("#application-version").text(document.model.policy.applicationVersion);
+
+        }
+        catch (error) {
+            this.showError(error, true);
+            return;
+        }
+
+        const localSettings = new LocalSettings();
+        this.scope.value = new URLSearchParams(location.search).get("projectId") ?? localSettings.lastProjectId;
+        this.scope.onChange(newScope => {
+            localSettings.lastProjectId = newScope;
+        });
+
+        if (!this.scope.value) {
+            await this.selectScopeAsync();
+        }
     }
 
     /** Display an error bar at the top of the screen */
@@ -227,7 +276,7 @@ $(document).ready(async () => {
             </section>
           </div>
         </header>`);
-    $('main').append(`
+    $('main').prepend(`
         <div class="mdc-banner" role="banner">
             <div class="mdc-banner__content" role="alertdialog" aria-live="assertive">
                 <div class="mdc-banner__graphic-text-wrapper">
@@ -287,28 +336,8 @@ $(document).ready(async () => {
         
     mdc.autoInit();
     
-    const queryParameters = new URLSearchParams(location.search);
-    document.model = queryParameters.get("debug") ? new DebugModel() : new Model();
+    document.model = new URLSearchParams(location.search).get("debug") 
+        ? new DebugModel() 
+        : new Model();
     document.appbar = new AppBar();
-
-    try {
-        //
-        // Download policy to check if the communication with the model
-        // works properly. 
-        //
-        await document.model.fetchPolicy();
-        
-        const localSettings = new LocalSettings();
-        document.appbar.scope.value = queryParameters.get("projectId") ?? localSettings.lastProjectId;
-        document.appbar.scope.onChange(newScope => {
-            localSettings.lastProjectId = newScope;
-        });
-
-        $("#signed-in-user").text(document.model.policy.signedInUser.email);
-        $("#application-version").text(document.model.policy.applicationVersion);
-
-    }
-    catch (error) {
-        document.appbar.showError(error, true);
-    }
 });
