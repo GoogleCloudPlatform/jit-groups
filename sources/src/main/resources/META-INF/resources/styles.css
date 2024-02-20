@@ -60,8 +60,8 @@ body {
 
 #jit-scope {
     text-transform: none;
+    font-weight: normal;
 }
-
 
 #jit-scopedialog label {
     margin-top: 10px;

@@ -140,15 +140,13 @@
                         </span>
                         <input type="text" class="mdc-text-field__input" id="jit-scopedialog-input" autofocus>
                     </label>
-
-
                   </div>
                   <div class="mdc-dialog__actions">
                     <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
                       <div class="mdc-button__ripple"></div>
                       <span class="mdc-button__label">Cancel</span>
                     </button>
-                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept">
+                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-scopedialog-ok" disabled>
                       <div class="mdc-button__ripple"></div>
                       <span class="mdc-button__label">OK</span>
                     </button>
@@ -313,9 +311,16 @@
                 //
                 this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
                 const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
-                this._element.listen('MDCDialog:closed', () => {
-                    //TODO: ignore cancel
+                this._element.listen('MDCDialog:closed', e => {
+                    if (e.detail.action !== "accept") {
+                        return;
+                    }
+
                     viewModel.scope.value = textField.value;
+                });
+
+                $('#jit-scopedialog-input').on('input', e => {
+                    $('#jit-scopedialog-ok').prop('disabled', $('#jit-scopedialog-input').val() == '');
                 });
 
                 //
