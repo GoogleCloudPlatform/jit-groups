@@ -33,7 +33,8 @@ public class MailAddressRegexFormatter implements MailAddressFormatter {
         }
 
         if (options.externalsMailAddressPattern == null) {
-            throw new IllegalArgumentException("Email address does not conform to configured patterns.");
+            throw new IllegalArgumentException(
+                    "Email address does not conform to configured internals pattern and no externals pattern has been set.");
         }
 
         formattedAddress = transform(mailAddress, options().externalsMailAddressPattern,
