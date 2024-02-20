@@ -287,6 +287,68 @@ The following table lists all available configuration options.
     <td></td>
     <td>1.2</td>
   </tr>
+  <tr>
+    <td><code>MAIL_INTERNALS_PATTERN</code></td>
+    <td>
+        <p>
+            Regex pattern to be matched for capturing (and transforming) the mail addresses of internals to the organization. For example:
+            <code>(.*)@example.com</code>
+        </p>
+        <p>
+            Used in conjunction with <code>MAIL_INTERNALS_TRANSFORM</code> to transform mail address for instance by replacing domain.
+        </p>
+    </td>
+    <td>Optional</td>
+    <td><code>(.*)</code></td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td><code>MAIL_INTERNALS_TRANSFORM</code></td>
+    <td>
+        <p>
+            String formatting pattern to be used with groups captured from <code>MAIL_INTERNALS_PATTERN</code> to transform mail addresses of internals.
+            For example:
+            <code>%s@domain.com</code>
+        </p>
+        <p>
+            Used in conjunction with <code>MAIL_INTERNALS_PATTERN</code> to transform mail address for instance by replacing domain.
+        </p>
+    </td>
+    <td>Optional</td>
+    <td><code>%s</code></td>
+    <td>-</td>
+  </tr>
+    <tr>
+    <td><code>MAIL_EXTERNALS_PATTERN</code></td>
+    <td>
+        <p>
+            Regex pattern to be matched for capturing (and transforming) the mail addresses of externals to the organization. For example:
+            <code>(.*)@external.com</code>
+        </p>
+        <p>
+            Used in conjunction with <code>MAIL_EXTERNALS_TRANSFORM</code> to transform mail address for instance by replacing domain.
+        </p>
+    </td>
+    <td>Optional</td>
+    <td></td>
+    <td>-</td>
+  </tr>
+  <tr>
+    <td><code>MAIL_EXTERNALS_TRANSFORM</code></td>
+    <td>
+        <p>
+            String formatting pattern to be used with groups captured from <code>MAIL_EXTERNALS_PATTERN</code> to transform mail addresses of externals.
+            For example:
+            <code>%s@domain.com</code>
+        </p>
+        <p>
+            Used in conjunction with <code>MAIL_EXTERNALS_PATTERN</code> to transform mail address for instance by replacing domain.
+        </p>
+    </td>
+    <td>Optional</td>
+    <td></td>
+    <td>-</td>
+  </tr>
 </table>
 
 ## Notifications
