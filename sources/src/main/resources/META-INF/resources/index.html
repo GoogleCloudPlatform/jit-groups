@@ -105,17 +105,11 @@
                   </div>
                 </div>
                 
-                
-                <!--
-                <button class="mdc-button foo-button mdc-button--raised jit-actionbutton">
+                <button class="mdc-button foo-button mdc-button--raised" id="jit-requestaccess" disabled>
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Request access</span>
                 </button>
-                -->
             </div>
-            
-            
-            
             
             <!-- 
                 Scope dialog
@@ -218,7 +212,10 @@
                 tr.append(td);
             });
 
-            //TODO: reattach?
+            //
+            // Update internal bindings.
+            //
+            this.layout();
         };
 
         class ObservableProperty {
@@ -282,6 +279,10 @@
         }
 
         class View {
+            constructor() {
+                this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
+            }
+
             /** Display an error bar at the top of the screen */
             showError(message, showReloadButton) {
                 console.assert(this._banner);
@@ -396,7 +397,6 @@
                 console.assert(viewModel);
 
                 this._viewModel = viewModel;
-                this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
 
                 this.statusCaptions = {
@@ -461,6 +461,14 @@
                         this.showError(entitlements.warnings.join(", "));
                     }
                 });
+
+                const onSelectionChanged = e => {
+                    const selected = this._table.getSelectedRowIds();
+                    $('#jit-requestaccess').prop('disabled', selected.length == 0);
+                };
+                this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
+                this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
+                this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
             }
 
             show() {

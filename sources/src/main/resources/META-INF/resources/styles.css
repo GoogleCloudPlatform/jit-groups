@@ -134,6 +134,11 @@ ul.ui-menu  {
     max-width: 100%;
 }
 
+main .mdc-button {
+    margin-top: 8px;
+    margin-right: 0;
+}
+
 /* ==== Debug === */
 
 #debug-pane {
