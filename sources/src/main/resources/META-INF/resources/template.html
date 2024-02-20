@@ -1,0 +1,41 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+        <meta name="referrer" content="no-referrer" />
+
+        <title>Just-in-Time Access</title>
+
+        <!-- All external resources are hosted by Google -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        
+
+        <link href="mdc/material-components-web.min.css" rel="stylesheet">
+        <script src="mdc/material-components-web.min.js"></script>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <main class="mdc-top-app-bar--fixed-adjust">
+        </main>
+    </body>
+
+    <!-- script -->
+    <script src="model.js"></script>
+    <script src="view.js"></script>
+    <script>
+        "use strict"
+        $(document).ready(async () => {
+
+    
+            if (!document.appbar.scope.value) {
+                document.appbar.selectScope();
+            }
+        });
+        
+    </script>
+</html>
