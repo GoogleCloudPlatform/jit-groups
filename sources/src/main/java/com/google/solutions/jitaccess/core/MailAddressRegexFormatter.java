@@ -5,9 +5,6 @@ import java.util.stream.IntStream;
 
 import com.google.common.base.Preconditions;
 
-import jakarta.inject.Singleton;
-
-@Singleton
 public class MailAddressRegexFormatter implements MailAddressFormatter {
     private final Options options;
 
