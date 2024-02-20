@@ -33,7 +33,12 @@
 
     
             if (!document.appbar.scope.value) {
-                document.appbar.selectScope();
+                try {
+                    await document.appbar.selectScopeAsync();
+                }
+                catch (e) {
+                    document.appbar.showError("No scope selected");
+                }
             }
         });
         

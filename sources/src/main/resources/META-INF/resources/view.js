@@ -84,20 +84,28 @@ class ObservableProperty {
 
 class Dialog {
     constructor(selector) {
-        this._onCloseListeners = [];
-
         this._element = new mdc.dialog.MDCDialog(document.querySelector(selector));
-        this._element.listen('MDCDialog:closed', e => {
-            this._onCloseListeners.forEach(cb => cb(e));
+    }
+
+    /** return the dialog result */
+    get result() {
+        return null;
+    }
+
+    /** show dialog and await result */
+    showAsync() {
+        return new Promise((resolve, reject) => {
+            this._element.listen('MDCDialog:closed', e => {
+                if (e.detail.action == "accept") {
+                    resolve(this.result);
+                }
+                else {
+                    reject();
+                }
+            });
+
+            this._element.open();
         });
-    }
-
-    onClose(callback) {
-        this._onCloseListeners.push(callback)
-    }
-
-    show() {
-        this._element.open();
     }
 }
 
@@ -107,11 +115,8 @@ class SelectScopeDialog extends Dialog {
         
         const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
 
-        this.scope = new ObservableProperty();
-
         $('#jit-scopedialog-input').on('change', e => {
-            this.scope.value = $('#jit-scopedialog-input').val();
-            $('#jit-scopedialog-ok').prop('disabled', this.scope.value == '');
+            $('#jit-scopedialog-ok').prop('disabled', $('#jit-scopedialog-input').val() == '');
         });
 
         //
@@ -138,10 +143,13 @@ class SelectScopeDialog extends Dialog {
                 $("ul.ui-menu").width($(this).innerWidth());
             },
             select: (e, ui) => {
-                this.scope.value = ui.item.value;
-                $('#jit-scopedialog-ok').prop('disabled', this.scope.value == '');
+                $('#jit-scopedialog-ok').prop('disabled', ui.item.value == '');
             }
         });
+    }
+
+    get result() {
+        return $('#jit-scopedialog-input').val();
     }
 }
 
@@ -161,18 +169,13 @@ class AppBar {
         //
 
         $('#jit-projectselector').on('click', () => {
-            selectScope();
+            this.selectScopeAsync();
         });
     }
 
-    selectScope() {
+    async selectScopeAsync() {
         var dialog = new SelectScopeDialog();
-        dialog.onClose(e => {
-            if (e.detail.action == "accept") {
-                this.scope.value = dialog.scope.value;
-            }
-        });
-        dialog.show();
+        this.scope.value = await dialog.showAsync();
     }
 
     /** Display an error bar at the top of the screen */
