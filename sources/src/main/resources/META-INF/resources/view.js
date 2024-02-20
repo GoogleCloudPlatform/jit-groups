@@ -84,7 +84,8 @@ class ObservableProperty {
 
 class Dialog {
     constructor(selector) {
-        this._element = new mdc.dialog.MDCDialog(document.querySelector(selector));
+        this.selector = selector;
+        this.element = new mdc.dialog.MDCDialog(document.querySelector(selector));
     }
 
     /** return the dialog result */
@@ -95,7 +96,7 @@ class Dialog {
     /** show dialog and await result */
     showAsync() {
         return new Promise((resolve, reject) => {
-            this._element.listen('MDCDialog:closed', e => {
+            this.element.listen('MDCDialog:closed', e => {
                 if (e.detail.action == "accept") {
                     resolve(this.result);
                 }
@@ -104,7 +105,12 @@ class Dialog {
                 }
             });
 
-            this._element.open();
+            this.error = e => {
+                this.element.close();
+                reject(e);
+            }
+
+            this.element.open();
         });
     }
 }
@@ -134,7 +140,7 @@ class SelectScopeDialog extends Dialog {
                     }));
                 }
                 catch (e) {
-                    this.showError(`Loading projects failed: ${e}`, false); //TODO: fix
+                    this.error(`Loading projects failed: ${e}`);
                 }
             },
             minLength: 2,
@@ -160,8 +166,6 @@ class AppBar {
         this.scope = new ObservableProperty();
         this.scope.onChange(scope => {
             $('#jit-scope').text(scope);
-
-            //TODO: hide if scope not set?
         })
 
         //
@@ -173,6 +177,7 @@ class AppBar {
         });
     }
 
+    /** Prompt user to select a scope */
     async selectScopeAsync() {
         var dialog = new SelectScopeDialog();
         this.scope.value = await dialog.showAsync();

@@ -37,7 +37,7 @@
                     await document.appbar.selectScopeAsync();
                 }
                 catch (e) {
-                    document.appbar.showError("No scope selected");
+                    document.appbar.showError(e ?? "No scope selected", true);
                 }
             }
         });
