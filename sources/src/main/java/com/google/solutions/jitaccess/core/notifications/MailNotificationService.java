@@ -24,6 +24,8 @@ package com.google.solutions.jitaccess.core.notifications;
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
+import com.google.solutions.jitaccess.core.MailAddressFormatter;
+import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 
 import java.io.IOException;
@@ -43,6 +45,7 @@ import java.util.stream.Collectors;
 public class MailNotificationService extends NotificationService {
   private final Options options;
   private final SmtpClient smtpClient;
+  private final MailAddressFormatter formatter;
 
   /**
    * Load a resource from a JAR resource.
@@ -79,12 +82,15 @@ public class MailNotificationService extends NotificationService {
 
   public MailNotificationService(
       SmtpClient smtpClient,
-      Options options) {
+      Options options,
+      MailAddressFormatter formatter) {
     Preconditions.checkNotNull(smtpClient);
     Preconditions.checkNotNull(options);
+    Preconditions.checkNotNull(formatter);
 
     this.smtpClient = smtpClient;
     this.options = options;
+    this.formatter = formatter;
   }
 
   // -------------------------------------------------------------------------
@@ -117,8 +123,12 @@ public class MailNotificationService extends NotificationService {
 
     try {
       this.smtpClient.sendMail(
-          notification.getToRecipients(),
-          notification.getCcRecipients(),
+          notification.getToRecipients().stream()
+              .map((recipient) -> new UserId(recipient.id, formatter.format(recipient.email)))
+              .collect(Collectors.toList()),
+          notification.getCcRecipients().stream()
+              .map((recipient) -> new UserId(recipient.id, formatter.format(recipient.email)))
+              .collect(Collectors.toList()),
           notification.getSubject(),
           formattedMessage,
           notification.isReply()

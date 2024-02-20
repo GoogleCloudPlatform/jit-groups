@@ -33,6 +33,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
+import com.google.solutions.jitaccess.core.MailAddressRegexFormatter;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
@@ -313,7 +314,7 @@ public class RuntimeEnvironment {
     // configuration if the configuration is incomplete.
     //
     if (this.configuration.isSmtpConfigured()) {
-      var options = new SmtpClient.Options(
+      var smtpOptions = new SmtpClient.Options(
           this.configuration.smtpHost.getValue(),
           this.configuration.smtpPort.getValue(),
           this.configuration.smtpSenderName.getValue(),
@@ -326,19 +327,27 @@ public class RuntimeEnvironment {
       // if both are configured.
       //
       if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
-        options.setSmtpSecretCredentials(
+        smtpOptions.setSmtpSecretCredentials(
             this.configuration.smtpUsername.getValue(),
             this.configuration.smtpSecret.getValue());
       } else if (this.configuration.isSmtpAuthenticationConfigured()
           && this.configuration.smtpPassword.isValid()) {
-        options.setSmtpCleartextCredentials(
+        smtpOptions.setSmtpCleartextCredentials(
             this.configuration.smtpUsername.getValue(),
             this.configuration.smtpPassword.getValue());
       }
 
+      var mailAddressFormatOptions = new MailAddressRegexFormatter.Options(
+          Pattern.compile(this.configuration.internalsMailAddressPattern.getValue()),
+          this.configuration.internalsMailAddressTransform.getValue(),
+          this.configuration.externalsMailAddressPattern.getValue() == null ? null
+              : Pattern.compile(this.configuration.externalsMailAddressPattern.getValue()),
+          this.configuration.externalsMailAddressTransform.getValue());
+
       return new MailNotificationService(
-          new SmtpClient(secretManagerClient, options),
-          new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
+          new SmtpClient(secretManagerClient, smtpOptions),
+          new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()),
+          new MailAddressRegexFormatter(mailAddressFormatOptions));
     } else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }

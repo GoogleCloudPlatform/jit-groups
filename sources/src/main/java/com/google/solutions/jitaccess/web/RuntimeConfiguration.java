@@ -120,6 +120,14 @@ class RuntimeConfiguration {
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
 
     //
+    // Mail formatting settings.
+    //
+    this.internalsMailAddressPattern = new StringSetting(List.of("MAIL_INTERNALS_PATTERN"), "(.*)");
+    this.internalsMailAddressTransform = new StringSetting(List.of("MAIL_INTERNALS_TRANSFORM"), "%s");
+    this.externalsMailAddressPattern = new StringSetting(List.of("MAIL_EXTERNALS_PATTERN"), null);
+    this.externalsMailAddressTransform = new StringSetting(List.of("MAIL_EXTERNALS_TRANSFORM"), null);
+
+    //
     // Backend settings.
     //
     this.backendConnectTimeout = new DurationSetting(
@@ -235,6 +243,30 @@ class RuntimeConfiguration {
    * Extra JavaMail options.
    */
   public final StringSetting smtpExtraOptions;
+
+  /**
+   * Regex pattern for capturing the email address of internals to the
+   * organization.
+   */
+  public final StringSetting internalsMailAddressPattern;
+
+  /**
+   * String format expression for transforming groups captured by regex pattern
+   * into email addresses for internals.
+   */
+  public final StringSetting internalsMailAddressTransform;
+
+  /**
+   * Regex pattern for capturing the email address of externals to the
+   * organization.
+   */
+  public final StringSetting externalsMailAddressPattern;
+
+  /**
+   * String format expression for transforming groups captured by regex pattern
+   * into email addresses for externals.
+   */
+  public final StringSetting externalsMailAddressTransform;
 
   /**
    * Backend Service Id for token validation
