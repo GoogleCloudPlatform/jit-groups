@@ -101,80 +101,33 @@
         class ListEntitlementsView extends EntitlementsViewBase {
             constructor() {
                 super('#jit-entitlements-view');
-
                 
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
-                
-                //
-                // Properties.
-                //
-
-                /** Indicates whether data is being loaded */
-                this.busy = new ObservableProperty(false);
-                
-                /** Set of available entitlements */
-                this.availableEntitlements = new ObservableProperty([]);
-                
                 
                 //
                 // Setup bindings.
                 //
 
                 document.appbar.scope.onChange(async scope => {
-                    this.busy.value = true;
+                    this._table.showProgress();
 
                     try {
+                        this._table.clearRows();    
                         if (scope) {
                             //
                             // Load entitlements.
                             //
-                            this.availableEntitlements.value = await document.model.listRoles(scope);
-                        }
-                        else {
-                            this.availableEntitlements.value = []
+                            const entitlements = await document.model.listRoles(scope);
+                            this._populateList(entitlements);
                         }
                     }
                     catch (error) {
                         this.cancelView(error);
                     }
                     finally {
-                        this.busy.value = false;
-                    }
-                });
-
-                this.busy.onChange(busy => {
-                    if (busy) {
-                        this._table.showProgress();
-                    }
-                    else {
                         this._table.hideProgress();
                     }
                 });
-
-                this.availableEntitlements.onChange(entitlements => {
-                    this._table.clearRows();    
-
-                    if (entitlements.roles && entitlements.roles.length > 0) {
-
-                        entitlements.roles.forEach(item => {
-                            this._table.addRow(
-                                item.roleBinding.id,
-                                [
-                                    { text: item.roleBinding.role },
-                                    { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
-                                    { text: (this.statusCaptions[item.status] ?? item.status) + 
-                                            (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
-                                        class: item.status === "ACTIVE" ? "activated" : null }
-                                ],
-                                true);
-                        });
-
-                        if (entitlements.warnings) {
-                            document.appbar.showError(entitlements.warnings.join(", "));
-                        }
-                    }
-                });
-                
 
                 const onSelectionChanged = e => {
                     const selected = this._table.getSelectedRowIds();
@@ -187,6 +140,27 @@
                 $('#jit-requestaccess').on('click', () => {
                     new RequestDialog().showDialog();
                 });
+            }
+
+            _populateList(entitlements) {
+                if (entitlements.roles && entitlements.roles.length > 0) {
+                    entitlements.roles.forEach(item => {
+                        this._table.addRow(
+                            item.roleBinding.id,
+                            [
+                                { text: item.roleBinding.role },
+                                { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                                { text: (this.statusCaptions[item.status] ?? item.status) + 
+                                        (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
+                                    class: item.status === "ACTIVE" ? "activated" : null }
+                            ],
+                            true);
+                    });
+
+                    if (entitlements.warnings) {
+                        document.appbar.showError(entitlements.warnings.join(", "));
+                    }
+                }
             }
         };
 
