@@ -298,7 +298,7 @@ The following table lists all available configuration options.
             Used in conjunction with <code>MAIL_INTERNALS_TRANSFORM</code> to transform mail address for instance by replacing domain.
         </p>
     </td>
-    <td>Optional</td>
+    <td>Required for MPA</td>
     <td><code>(.*)</code></td>
     <td>-</td>
   </tr>
@@ -314,7 +314,7 @@ The following table lists all available configuration options.
             Used in conjunction with <code>MAIL_INTERNALS_PATTERN</code> to transform mail address for instance by replacing domain.
         </p>
     </td>
-    <td>Optional</td>
+    <td>Required for MPA</td>
     <td><code>%s</code></td>
     <td>-</td>
   </tr>
