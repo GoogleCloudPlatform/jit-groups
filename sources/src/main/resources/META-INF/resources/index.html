@@ -149,6 +149,46 @@
               </div>
               <div class="mdc-dialog__scrim"></div>
             </div>
+            
+            
+            <!-- 
+                Request dialog
+            -->
+            <div class="mdc-dialog" id="jit-requestdialog">
+              <div class="mdc-dialog__container">
+                <div class="mdc-dialog__surface"
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-labelledby="requestdialog-title"
+                  aria-describedby="requestdialog-content">
+                  
+                  <h2 class="mdc-dialog__title" id="requestdialog-title">Activate</h2>
+                  <div class="mdc-dialog__content" id="requestdialog-content">
+                    <label class="mdc-text-field mdc-text-field--outlined">
+                        <span class="mdc-notched-outline">
+                            <span class="mdc-notched-outline__leading"></span>
+                            <span class="mdc-notched-outline__notch">
+                                <span class="mdc-floating-label">Justification</span>
+                            </span>
+                            <span class="mdc-notched-outline__trailing"></span>
+                        </span>
+                        <input type="text" class="mdc-text-field__input" id="jit-requestdialog-justification" autofocus>
+                    </label>
+                  </div>
+                  <div class="mdc-dialog__actions">
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                      <div class="mdc-button__ripple"></div>
+                      <span class="mdc-button__label">Cancel</span>
+                    </button>
+                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-requestdialog-ok" disabled>
+                      <div class="mdc-button__ripple"></div>
+                      <span class="mdc-button__label">OK</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="mdc-dialog__scrim"></div>
+            </div>
         </main>
         <main class="mdc-top-app-bar--fixed-adjust jit-app-pane" id="jit-status-pane">
         </main>
@@ -355,6 +395,21 @@
             }
         }
 
+        class RequestDialog extends View {
+            constructor() {
+                super();
+
+                //
+                // Setup bindings.
+                //
+                this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-requestdialog'));
+            }
+
+            showDialog() {
+                this._element.open();
+            }
+        }
+
         /** An SPA-style pane, only one of which is shown at a time */
         class PaneView extends View {
             constructor(id) {
@@ -398,18 +453,6 @@
 
                 this._viewModel = viewModel;
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
-
-                this.statusCaptions = {
-                    "ACTIVE": "Active",
-                    "AVAILABLE": "Available",
-                    "ACTIVATION_PENDING": "Waiting for approval"
-                };
-
-                this.activationTypeCaptions = {
-                    "JIT": "-",
-                    "MPA": "Peer approval required",
-                    "NONE": "Unavailable",
-                }
 
                 //
                 // Setup bindings.
@@ -469,10 +512,14 @@
                 this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
                 this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
                 this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
+
+                $('#jit-requestaccess').on('click', () => {
+                    new RequestDialog().showDialog();
+                });
             }
 
             show() {
-                //super.show();
+                super.show();
                 if (!this._viewModel.scope.value) {
                     this.selectScope();
                 }
@@ -509,23 +556,6 @@
                 });
 
                 view.show();
-                //if (!viewModel.scope.value) {
-                //    view.selectScope();
-                //}
-
-                //if (activationToken) {
-                //    //
-                //    // Show approver UI.
-                //    //
-                //    gui.requestStatusPane.activationStatus = await model.getActivationRequest(activationToken);
-                //    gui.requestStatusPane.show();
-                //}
-                //else {
-                //    //
-                //    // Show request UI.
-                //    //
-                //    gui.requestPane.show();
-                //}
 
                 $("#signed-in-user").text(model.policy.signedInUser.email)
                 $("#application-version").text(model.policy.applicationVersion)
