@@ -649,7 +649,7 @@
                 super.showAsync();
                 
                 $("#jit-entitlementstatus-consolebutton").click(() => {
-                    document.location = `https://console.cloud.google.com/${document.appbar.scope}`;
+                    document.location = `https://console.cloud.google.com/?project=${document.appbar.scope}`;
                 });
             }
         }
