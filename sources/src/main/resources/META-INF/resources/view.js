@@ -123,9 +123,11 @@ class ViewBase {
     }
 
     /** Show and hide all other views. */
-    show() {
+    async showAsync() {
         $('.jit-view').hide();
         $(this.selector).show();
+        
+        return Promise.resolve({});
     }
 
     cancelView(error) {

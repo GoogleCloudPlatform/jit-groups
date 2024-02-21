@@ -33,6 +33,10 @@ body {
     text-decoration: none;
 }
 
+h1, h2 {
+    font-weight: normal;
+}
+
 .jit-view {
     margin: 20px;
 }
@@ -41,7 +45,7 @@ body {
     margin-top: 20px;
 }
             
-#jit-entitlements {
+.mdc-data-table {
     width: calc(100% - 40px);
 }
 
@@ -58,6 +62,12 @@ body {
     color: #9e9e9e;
 }
 
+.jit-card-subsection {
+    line-height: 22px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
 #jit-scope {
     text-transform: none;
     font-weight: normal;
@@ -67,6 +77,21 @@ body {
     margin-top: 10px;
 }
 
+.tabulated-list {
+    list-style: none;
+}
+
+.tabulated-list li {
+    list-style-type: square;
+}
+
+.tabulated-list li span {
+    display: inline-block;
+}
+
+.tabulated-list li span:first-of-type {
+    width: 130px;
+}
 
 /* ==== jQuery UI === */
 
@@ -137,6 +162,11 @@ ul.ui-menu  {
 main .mdc-button {
     margin-top: 8px;
     margin-right: 0;
+}
+
+.mdc-card {
+    padding: 10px;
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
 }
 
 /* ==== Debug === */
