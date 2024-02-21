@@ -142,6 +142,12 @@ class ViewBase {
     }
 }
 
+class DefaultView extends ViewBase {
+    constructor() {
+        super('#jit-default-view');
+    }
+}
+
 /** Dialog for selecting a scope */
 class SelectScopeDialog extends DialogBase {
     constructor() {
@@ -220,6 +226,11 @@ class AppBar {
     }
 
     async initialize() {
+        //
+        // Clear all views.
+        //
+        new DefaultView().showAsync();
+
         try {
             //
             // Download policy to check if the communication with the model
@@ -307,7 +318,8 @@ $(document).ready(async () => {
                     </button>
                 </div>
             </div>
-        </div>`);
+        </div>
+        <div class='jit-view' id='jit-default-view'></div>`);
     $('body').append(`
         <div class="mdc-dialog" id="jit-scopedialog">
             <div class="mdc-dialog__container">
