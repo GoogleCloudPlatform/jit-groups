@@ -299,7 +299,7 @@ $(document).ready(async () => {
             </section>
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
                 <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="help">
-                    <a href='https://googlecloudplatform.github.io/jit-access/' class='jit-helpbutton' target='_blank'>help_center</a>
+                    <a href='https://googlecloudplatform.github.io/jit-access/?utm_source=jitaccess&utm_medium=help' class='jit-helpbutton' target='_blank'>help_center</a>
                 </button>
             </section>
           </div>
@@ -319,7 +319,7 @@ $(document).ready(async () => {
                 </div>
             </div>
         </div>
-        <div class='jit-view' id='jit-default-view' style="display: none"></div>`);
+        <div class='jit-view' id='jit-default-view'></div>`);
     $('body').append(`
         <div class="mdc-dialog" id="jit-scopedialog">
             <div class="mdc-dialog__container">
@@ -360,7 +360,7 @@ $(document).ready(async () => {
         <footer class="jit-footer">
             <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
             &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/">JIT Access <span id="application-version"></span></a></div>
+            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/?utm_source=iapdesktop&utm_medium=help">JIT Access <span id="application-version"></span></a></div>
         </footer>`);
         
     mdc.autoInit();

@@ -22,7 +22,7 @@
     <body>
         <main class="mdc-top-app-bar--fixed-adjust">
           <!-- ListEntitlementsView -->
-          <div class='jit-view' id='jit-listentitlements-view' style="display: none">
+          <div class='jit-view' id='jit-listentitlements-view'>
             <div class="mdc-data-table" id="jit-entitlements-table">
               <div class="mdc-data-table__table-container">
                 <table class="mdc-data-table__table">
@@ -76,7 +76,7 @@
           </div>
           
           <!-- ProgressView -->
-          <div class='jit-view' id='jit-progress-view' style="display: none">
+          <div class='jit-view' id='jit-progress-view'>
             <h2>Please wait</h2>
             <div class="jit-card-subsection">
                 Your request is being processed...
@@ -98,7 +98,7 @@
           </div>
           
           <!-- EntitlementStatusView -->
-          <div class='jit-view' id='jit-entitlementstatus-view' style="display: none">
+          <div class='jit-view' id='jit-entitlementstatus-view'>
             <div class="mdc-card">
               <h2 id="jit-entitlementstatus-title">.</h2>
               <div class="jit-card-subsection" id="jit-entitlementstatus-description">
@@ -529,7 +529,6 @@
                     this._table.hideProgress();
                 }
 
-
                 return result;
             }
 
@@ -600,6 +599,7 @@
                         else {
                             $("#jit-entitlementstatus-title").text("Access granted");
                             $("#jit-entitlementstatus-description").text("Your request has been submitted and access is granted.");
+                            $("#jit-entitlementstatus-consolebutton").show();
                         }
                     }
                 
@@ -701,7 +701,7 @@
                 await view.showAsync();
             }
             catch (e) {
-                document.appbar.showError(e ?? "No scope selected", true);
+                document.appbar.showError(e ?? "Select a project", true);
             }
             
         });

@@ -44,6 +44,7 @@ h1, h2 {
 
 .jit-view {
     margin: 20px;
+    display: none;
 }
             
 .jit-actionbutton {
