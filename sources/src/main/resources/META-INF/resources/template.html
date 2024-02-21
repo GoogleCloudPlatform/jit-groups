@@ -278,27 +278,8 @@
                 console.assert(model);
 
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements-table'));
-
-                document.appbar.scope.onChange(async scope => {
-                    this._table.showProgress();
-
-                    try {
-                        this._table.clearRows();    
-                        if (scope) {
-                            //
-                            // Load entitlements.
-                            //
-                            const entitlements = await model.listRoles(scope);
-                            this._populateList(entitlements);
-                        }
-                    }
-                    catch (error) {
-                        this.cancelView(error);
-                    }
-                    finally {
-                        this._table.hideProgress();
-                    }
-                });
+                this.model = model;
+               
 
                 const onSelectionChanged = e => {
                     const selected = this._table.getSelectedRowIds();
@@ -313,24 +294,44 @@
                 });
             }
 
-            _populateList(entitlements) {
-                if (entitlements.roles && entitlements.roles.length > 0) {
-                    entitlements.roles.forEach(item => {
-                        this._table.addRow(
-                            item.roleBinding.id,
-                            [
-                                { text: item.roleBinding.role },
-                                { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
-                                { text: (this.statusCaptions[item.status] ?? item.status) + 
-                                        (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
-                                    class: item.status === "ACTIVE" ? "activated" : null }
-                            ],
-                            true);
-                    });
+            async showAsync() {
+                console.assert(document.appbar.scope);
+                super.showAsync();
 
-                    if (entitlements.warnings) {
-                        document.appbar.showError(entitlements.warnings.join(", "));
+                this._table.showProgress();
+                
+                try {
+                    this._table.clearRows();    
+
+                    //
+                    // Load entitlements.
+                    //
+                    const entitlements = await this.model.listRoles(document.appbar.scope);
+                        
+                    if (entitlements.roles && entitlements.roles.length > 0) {
+                        entitlements.roles.forEach(item => {
+                            this._table.addRow(
+                                item.roleBinding.id,
+                                [
+                                    { text: item.roleBinding.role },
+                                    { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
+                                    { text: (this.statusCaptions[item.status] ?? item.status) + 
+                                            (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
+                                        class: item.status === "ACTIVE" ? "activated" : null }
+                                ],
+                                true);
+                        });
+
+                        if (entitlements.warnings) {
+                            document.appbar.showError(entitlements.warnings.join(", "));
+                        }
                     }
+                }
+                catch (error) {
+                    this.cancelView(error);
+                }
+                finally {
+                    this._table.hideProgress();
                 }
             }
         };

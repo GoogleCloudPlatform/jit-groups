@@ -186,10 +186,9 @@ class AppBar {
     constructor() {
         this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
         
-        this.scope = new ObservableProperty();
-        this.scope.onChange(scope => {
-            $('#jit-scope').text(scope);
-        })
+        const localSettings = new LocalSettings();
+        this.scope = new URLSearchParams(location.search).get("projectId") ?? localSettings.lastProjectId;
+        
 
         //
         // Setup bindings.
@@ -203,7 +202,11 @@ class AppBar {
     /** Prompt user to select a scope */
     async selectScopeAsync() {
         var dialog = new SelectScopeDialog();
-        this.scope.value = await dialog.showAsync();
+
+        const newScope = await dialog.showAsync();
+        new LocalSettings().lastProjectId = newScope;
+
+        document.location.reload();
     }
 
     async initialize() {
@@ -223,14 +226,11 @@ class AppBar {
             return;
         }
 
-        const localSettings = new LocalSettings();
-        this.scope.value = new URLSearchParams(location.search).get("projectId") ?? localSettings.lastProjectId;
-        this.scope.onChange(newScope => {
-            localSettings.lastProjectId = newScope;
-        });
-
-        if (!this.scope.value) {
+        if (!this.scope) {
             await this.selectScopeAsync();
+        }
+        else {
+            $('#jit-scope').text(this.scope);
         }
     }
 
