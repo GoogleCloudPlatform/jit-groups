@@ -201,11 +201,6 @@ class AppBar {
         const localSettings = new LocalSettings();
         this.scope = new URLSearchParams(location.search).get("projectId") ?? localSettings.lastProjectId;
         
-
-        //
-        // Setup bindings.
-        //
-
         $('#jit-projectselector').on('click', () => {
             this.selectScopeAsync().catch(e => {
                 if (e) {
@@ -215,6 +210,7 @@ class AppBar {
         });
     }
 
+    /** Reload page, stripping previous parameters */
     _reloadPage() {
         let url = window.location.pathname;
         if (new URLSearchParams(location.search).get("debug")) {
