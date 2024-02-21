@@ -190,12 +190,60 @@
             <div class="mdc-dialog__container">
             <div class="mdc-dialog__surface"
                 role="alertdialog"
-                aria-modal="true"
-                aria-labelledby="requestdialog-title"
-                aria-describedby="requestdialog-content">
+                aria-modal="true">
                   
-                <h2 class="mdc-dialog__title" id="requestdialog-title">Request access</h2>
-                <div class="mdc-dialog__content" id="requestdialog-content">
+                <h2 class="mdc-dialog__title">Request access</h2>
+                <div class="mdc-dialog__content">
+                    <div id="jit-requestdialog-peers">
+                        <div class="jit-card-subsection">
+                            This request needs approval from at least one peer. Select a peer to request approval from:
+                        </div>
+                        <div class="jit-card-subsection">
+                            <div class="mdc-data-table" id="jit-requestdialog-table">
+                              <div class="mdc-data-table__table-container">
+                                <table class="mdc-data-table__table">
+                                  <thead>
+                                    <tr class="mdc-data-table__header-row">
+                                      <th class="mdc-data-table__header-cell mdc-data-table__header-cell--checkbox" role="columnheader" scope="col">
+                                        <div class="mdc-checkbox mdc-data-table__header-row-checkbox mdc-checkbox--selected">
+                                          <input type="checkbox" class="mdc-checkbox__native-control" aria-label="Toggle all rows"/>
+                                          <div class="mdc-checkbox__background">
+                                            <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                                              <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                                            </svg>
+                                            <div class="mdc-checkbox__mixedmark"></div>
+                                          </div>
+                                          <div class="mdc-checkbox__ripple"></div>
+                                        </div>
+                                      </th>
+                                      <th class="mdc-data-table__header-cell" role="columnheader" scope="col">User</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="mdc-data-table__content">
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              <div class="mdc-data-table__progress-indicator">
+                                <div class="mdc-data-table__scrim"></div>
+                                <div class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-data-table__linear-progress" role="progressbar" aria-label="Data is being loaded...">
+                                  <div class="mdc-linear-progress__buffer">
+                                    <div class="mdc-linear-progress__buffer-bar"></div>
+                                    <div class="mdc-linear-progress__buffer-dots"></div>
+                                  </div>
+                                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                                    <span class="mdc-linear-progress__bar-inner"></span>
+                                  </div>
+                                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                                    <span class="mdc-linear-progress__bar-inner"></span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="jit-card-divider"></div>
+                    </div>
+
                     <div class="jit-card-subsection">
                         Provide a justification that explains why you need this access:
                     </div>
@@ -291,11 +339,11 @@
                 console.assert(document.appbar.scope);
                 super.showAsync();
 
-                this._table.showProgress();
                 
                 let selectedEntitlements = []
 
                 try {
+                    this._table.showProgress();
                     this._table.clearRows();    
 
                     //
@@ -355,29 +403,46 @@
                 //
                 $('#jit-listentitlements-requestbutton').on('click', async () => {
                     console.assert(selectedEntitlements.every(e => e.activationType == selectedEntitlements[0].activationType));
+                    const activationType = selectedEntitlements[0].activationType;
 
-                    //TODO: catch
-                    const request = await new RequestDialog(this.model, selectedEntitlements).showAsync();
-                    new ProgressView().showAsync();
+                    try {
+                        
+                        const request = await new RequestDialog(this.model, activationType, selectedEntitlements).showAsync();
+                        new ProgressView().showAsync();
 
-                    if (selectedEntitlements[0].activationType == 'MPA') {
+                        if (activationType == 'MPA') {
 
+                        }
+                        else {
+
+                        }
+
+                        //new ShowEntitlementStatusView().showAsync();
                     }
-                    else {
-
+                    catch (e) {
+                        if (e) {
+                            this.cancelView(e);
+                        }
                     }
-
-                    //new ShowEntitlementStatusView().showAsync();
                 });
             }
         }
 
         class RequestDialog extends DialogBase {
-            constructor(model, selectedEntitlements) {
+            constructor(model, activationType, selectedEntitlements) {
                 super('#jit-requestdialog')
 
                 console.assert(model);
                 console.assert(selectedEntitlements && selectedEntitlements.length > 0);
+
+                this.model = model;
+                this.activationType = activationType;
+                this.selectedEntitlements = selectedEntitlements;
+                
+                //
+                // Peers.
+                //
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-requestdialog-table'));
 
                 //
                 // Duration.
@@ -400,14 +465,52 @@
                 $('#jit-requestdialog-justification-hint').text(model.policy.justificationHint);
                 
 
+                //TODO: check peer selected
                 $('#jit-requestdialog-justification-input').on('input', e => {
                     $('#jit-requestdialog-ok').prop('disabled', $('#jit-requestdialog-justification-input').val() == '');
                 });
-
             }
 
             async showAsync() {
-                return super.showAsync();
+                const result = super.showAsync();
+
+                try {
+                    this._table.showProgress();
+                    this._table.clearRows();    
+                    
+
+                    //
+                    // Update controls when selection changes.
+                    //
+                    const onSelectionChanged = e => {
+                        
+                    };
+
+                    if (this.activationType == 'MPA') {
+                        //
+                        // Load peers.
+                        //
+                        $('#jit-requestdialog-peers').show();
+                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].roleBinding.role);
+                        
+                        this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
+                        this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
+                        this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
+                    }
+                    else {
+                        $('#jit-requestdialog-peers').hide();
+                    }
+
+                }
+                catch (error) {
+                    this.cancelDialog(error);
+                }
+                finally {
+                    this._table.hideProgress();
+                }
+
+
+                return result;
             }
 
             get result() {
