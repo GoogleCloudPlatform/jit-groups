@@ -97,7 +97,7 @@
               </div>
 
               <div class="mdc-card__actions">
-                <button class="mdc-button mdc-card__action mdc-card__action--button" id="jit-showentitlementstatus-approvebutton">
+                <button class="mdc-button mdc-card__action mdc-card__action--button mdc-button--raised" id="jit-showentitlementstatus-approvebutton">
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Approve</span>
                 </button>
@@ -177,7 +177,9 @@
               </div>
             </div>
 
-            <button class="mdc-button foo-button mdc-button--raised" id="jit-requestaccess" disabled="">
+            <div style='margin-top: 10px; color: red' id="jit-listentitlements-warning"></div>
+
+            <button class="mdc-button foo-button mdc-button--raised" id="jit-listentitlements-requestbutton" disabled="">
               <div class="mdc-button__ripple"></div>
               <span class="mdc-button__label">Request access</span>
             </button>
@@ -322,19 +324,6 @@
 
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements-table'));
                 this.model = model;
-               
-
-                const onSelectionChanged = e => {
-                    const selected = this._table.getSelectedRowIds();
-                    $('#jit-requestaccess').prop('disabled', selected.length == 0);
-                };
-                this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
-                this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
-                this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
-
-                $('#jit-requestaccess').on('click', () => {
-                    new RequestDialog().showDialog();
-                });
             }
 
             async showAsync() {
@@ -369,6 +358,28 @@
                             document.appbar.showError(entitlements.warnings.join(", "));
                         }
                     }
+                
+                    const onSelectionChanged = e => {
+                        const selected = this._table.getSelectedRowIds();
+                        const selectedEntitlements = entitlements.roles.filter(i => selected.includes(i.roleBinding.id));
+
+                        if (selectedEntitlements.length > 1 && selectedEntitlements.some(i => i.activationType === "MPA")) {
+                            $('#jit-listentitlements-warning').text('You can only request peer approval for a single role at a time');
+                            $('#jit-listentitlements-requestbutton').prop('disabled', true);
+                        }
+                        else {
+                            $('#jit-listentitlements-warning').text('');
+                            $('#jit-listentitlements-requestbutton').prop('disabled', selectedEntitlements.length == 0);
+                        }
+                    };
+
+                    this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
+                    this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
+                    this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
+
+                    $('#jit-listentitlements-requestbutton').on('click', () => {
+                        new RequestDialog().showDialog();
+                    });
                 }
                 catch (error) {
                     this.cancelView(error);

@@ -4,6 +4,10 @@ body {
     font-family: Roboto;
 }
 
+h1, h2 {
+    font-weight: normal;
+}
+
 .activated {
     background-color: #188038;
     color: #fff;
@@ -33,20 +37,12 @@ body {
     text-decoration: none;
 }
 
-h1, h2 {
-    font-weight: normal;
-}
-
 .jit-view {
     margin: 20px;
 }
             
 .jit-actionbutton {
     margin-top: 20px;
-}
-            
-.mdc-data-table {
-    width: calc(100% - 40px);
 }
 
 .jit-footer {
@@ -136,6 +132,11 @@ ul.ui-menu  {
 }
 
 /* ==== MDC Overrides === */
+
+            
+.mdc-data-table {
+    width: calc(100% - 40px);
+}
 
 .mdc-top-app-bar__row {
     background-color: #FAFAFA;
