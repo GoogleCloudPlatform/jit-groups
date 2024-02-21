@@ -129,6 +129,7 @@ class ViewBase {
 
     /** Show and hide all other views. */
     async showAsync() {
+        document.appbar.clearError();
         $('.jit-view').hide();
         $(this.selector).show();
         
@@ -244,13 +245,13 @@ class AppBar {
     }
 
     /** Display an error bar at the top of the screen */
-    showError(message, showReloadButton) {
+    showError(message, isSevere) {
         console.assert(this._banner);
 
         this._banner.open();
         $('#jit-banner-text').text(message);
 
-        if (showReloadButton) {
+        if (isSevere) {
             $('#jit-banner-reloadbutton').on('click', () => {
                 const timestamp = Date.now();
                 window.location.href = `${window.location.pathname}?_=${timestamp}`;
@@ -258,7 +259,12 @@ class AppBar {
         }
         else {
             $('#jit-banner-reloadbutton').hide();
+            setTimeout(() => this.clearError(), 10000 );
         }
+    }
+
+    clearError() {
+        this._banner.close();
     }
 }
 
