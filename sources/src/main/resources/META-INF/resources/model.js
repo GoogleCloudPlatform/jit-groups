@@ -474,7 +474,7 @@ class DebugModel extends Model {
                 "project-1",
                 "a justification",
                 ["roles/role-1"],
-                "ACTIVATED",
+                "ACTIVE",
                 false,
                 60);
         }
