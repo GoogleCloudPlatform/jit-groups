@@ -85,6 +85,7 @@ public class ApiResource {
 
   private URL createActivationRequestUrl(
     UriInfo uriInfo,
+    ProjectId projectId,
     String activationToken
   ) throws MalformedURLException {
     Preconditions.checkNotNull(uriInfo);
@@ -99,10 +100,15 @@ public class ApiResource {
     //
     // Obfuscate the token to avoid such false-flagging.
     //
+    // NB. We include the project ID to force the approver into
+    // the right scope. This isn't strictly necessary, but it
+    // improves user experience.
+    //
     return this.runtimeEnvironment
       .createAbsoluteUriBuilder(uriInfo)
       .path("/")
       .queryParam("activation", TokenObfuscator.encode(activationToken))
+      .queryParam("projectId", projectId.id())
       .build()
       .toURL();
   }
@@ -511,7 +517,10 @@ public class ApiResource {
       // Notify reviewers, listeners.
       //
       for (var service : this.notificationServices) {
-        var activationRequestUrl = createActivationRequestUrl(uriInfo, activationToken.token());
+        var activationRequestUrl = createActivationRequestUrl(
+          uriInfo,
+          projectId,
+          activationToken.token());
         service.sendNotification(new RequestActivationNotification(
           projectId,
           activationRequest,
@@ -671,12 +680,13 @@ public class ApiResource {
       //
       // Notify listeners.
       //
+      var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName());
       for (var service : this.notificationServices) {
         service.sendNotification(new ActivationApprovedNotification(
-          ProjectId.fromFullResourceName(roleBinding.fullResourceName()),
+          projectId,
           activation,
           iapPrincipal.getId(),
-          createActivationRequestUrl(uriInfo, activationToken)));
+          createActivationRequestUrl(uriInfo, projectId, activationToken)));
       }
 
       //

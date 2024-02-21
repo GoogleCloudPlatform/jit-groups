@@ -46,3 +46,4 @@ runConfigurations/
 .metals
 .vscode
 .idea/
+.vs/
