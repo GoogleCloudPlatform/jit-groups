@@ -417,7 +417,7 @@ class DebugModel extends Model {
                 projectId,
                 justification,
                 roles,
-                "ACTIVATED",
+                "ACTIVE",
                 true,
                 activationTimeout);
         }

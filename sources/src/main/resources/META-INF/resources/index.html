@@ -97,49 +97,49 @@
             </div>
           </div>
           
-          <!-- ShowEntitlementStatusView -->
-          <div class='jit-view' id='jit-showentitlementstatus-view'>
+          <!-- EntitlementStatusView -->
+          <div class='jit-view' id='jit-entitlementstatus-view'>
             <div class="mdc-card">
-              <h2 id="jit-showentitlementstatus-title">.</h2>
-              <div class="jit-card-subsection" id="jit-showentitlementstatus-description">
+              <h2 id="jit-entitlementstatus-title">.</h2>
+              <div class="jit-card-subsection" id="jit-entitlementstatus-description">
               </div>
               <div class="jit-card-subsection">
                 Request details:
                 <ul class="tabulated-list">
                   <li>
                     <span>
-                      <label for="jit-showentitlementstatus-beneficiary">User</label>
+                      <label for="jit-entitlementstatus-beneficiary">User</label>
                     </span>
-                    <span id="jit-showentitlementstatus-beneficiary" />
+                    <span id="jit-entitlementstatus-beneficiary" />
                   </li>
                   <li>
                     <span>
-                      <label for="jit-showentitlementstatus-starttime">Start time</label>
+                      <label for="jit-entitlementstatus-starttime">Start time</label>
                     </span>
-                    <span id="jit-showentitlementstatus-starttime"  aria-describedby="jit-showentitlementstatus-starttime-tt"></span>
+                    <span id="jit-entitlementstatus-starttime"  aria-describedby="jit-entitlementstatus-starttime-tt"></span>
                   </li>
                   <li>
                     <span>
-                      <label for="jit-showentitlementstatus-endtime">End time</label>
+                      <label for="jit-entitlementstatus-endtime">End time</label>
                     </span>
-                    <span id="jit-showentitlementstatus-endtime"></span>
+                    <span id="jit-entitlementstatus-endtime"></span>
                   </li>
                   <li>
                     <span>
-                      <label for="jit-showentitlementstatus-justification">Justification</label>
+                      <label for="jit-entitlementstatus-justification">Justification</label>
                     </span>
-                    <span id="jit-showentitlementstatus-justification"></span>
+                    <span id="jit-entitlementstatus-justification"></span>
                   </li>
                   <li>
                     <span>
-                      <label for="jit-showentitlementstatus-reviewers">Reviewers</label>
+                      <label for="jit-entitlementstatus-reviewers">Reviewers</label>
                     </span>
-                    <span id="jit-showentitlementstatus-reviewers"></span>
+                    <span id="jit-entitlementstatus-reviewers"></span>
                   </li>
                 </ul>
               </div>
               <div class="jit-card-subsection">
-                <div class="mdc-data-table" id="jit-showentitlementstatus-table">
+                <div class="mdc-data-table" id="jit-entitlementstatus-table">
                   <div class="mdc-data-table__table-container">
                     <table class="mdc-data-table__table">
                       <thead>
@@ -173,11 +173,11 @@
               </div>
 
               <div class="mdc-card__actions">
-                <button class="mdc-button mdc-card__action mdc-card__action--button mdc-button--raised" id="jit-showentitlementstatus-approvebutton">
+                <button class="mdc-button mdc-card__action mdc-card__action--button mdc-button--raised" id="jit-entitlementstatus-approvebutton">
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Approve</span>
                 </button>
-                <button class="mdc-button mdc-card__action mdc-card__action--button" id="jit-showentitlementstatus-consolebutton">
+                <button class="mdc-button mdc-card__action mdc-card__action--button" id="jit-entitlementstatus-consolebutton">
                   <div class="mdc-button__ripple"></div>
                   <span class="mdc-button__label">Open Console</span>
                 </button>
@@ -429,7 +429,7 @@
                                 request.duration);
                         }
 
-                        new ShowEntitlementStatusView(document.model, activationStatus).showAsync();
+                        new ConfirmActivationRequestView(document.model, activationStatus).showAsync();
                     }
                     catch (e) {
                         if (e) {
@@ -541,7 +541,6 @@
                 };
             }
         }
-        
 
         class ProgressView extends EntitlementsViewBase {
             constructor() {
@@ -551,9 +550,9 @@
             }
         }
 
-        class ShowEntitlementStatusView extends EntitlementsViewBase {
+        class EntitlementStatusViewBase extends EntitlementsViewBase {
             constructor(model, activationStatus) {
-                super('#jit-showentitlementstatus-view');
+                super('#jit-entitlementstatus-view');
                 
                 console.assert(model);
                 console.assert(activationStatus);
@@ -561,7 +560,7 @@
                 this.model = model;
                 this.activationStatus = activationStatus;
                 
-                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-showentitlementstatus-table'));
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlementstatus-table'));
             }
             
             _createEmailLink(user) {
@@ -574,38 +573,33 @@
             async showAsync() {
                 super.showAsync();
 
-                $("#jit-showentitlementstatus-consolebutton").click(() => {
-                    document.location = `https://console.cloud.google.com/${document.appbar.scope}`;
-                });
-
                 try
                 {
-                    $("#jit-showentitlementstatus-approvebutton").hide();
-                    $("#jit-showentitlementstatus-consolebutton").hide();
+                    $("#jit-entitlementstatus-approvebutton").hide();
+                    $("#jit-entitlementstatus-consolebutton").hide();
                     if (this.activationStatus.isReviewer) {
                         if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
-                            $("#jit-showentitlementstatus-title").text("Review access request");
-                            $("#jit-showentitlementstatus-description").text("One of your peers is asking you to review the following access request.");
-                            $("#jit-showentitlementstatus-approvebutton").show();
+                            $("#jit-entitlementstatus-title").text("Review access request");
+                            $("#jit-entitlementstatus-description").text("One of your peers is asking you to review the following access request.");
+                            $("#jit-entitlementstatus-approvebutton").show();
                         }
                         else {
-                            $("#jit-showentitlementstatus-title").text("Access approved");
-                            $("#jit-showentitlementstatus-description").text("You've approved the following access request.");
+                            $("#jit-entitlementstatus-title").text("Access approved");
+                            $("#jit-entitlementstatus-description").text("You've approved the following access request.");
                         }
 
-                        $("#jit-showentitlementstatus-beneficiary").empty().append(this._createEmailLink(this.activationStatus.beneficiary));
+                        $("#jit-entitlementstatus-beneficiary").empty().append(this._createEmailLink(this.activationStatus.beneficiary));
                     }
                     else if (this.activationStatus.isBeneficiary) {
-                        $("#jit-showentitlementstatus-beneficiary").text("You");
+                        $("#jit-entitlementstatus-beneficiary").text("You");
                         if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
-                            $("#jit-showentitlementstatus-title").text("Request submitted");
-                            $("#jit-showentitlementstatus-description").text("Your request has been submitted for approval. " +
+                            $("#jit-entitlementstatus-title").text("Request submitted");
+                            $("#jit-entitlementstatus-description").text("Your request has been submitted for approval. " +
                                 "You'll receive an email once approval has been granted");
                         }
                         else {
-                            $("#jit-showentitlementstatus-title").text("Access granted");
-                            $("#jit-showentitlementstatus-description").text("Your request has been submitted and access is granted.");
-                            $("#jit-showentitlementstatus-consolebutton").show();
+                            $("#jit-entitlementstatus-title").text("Access granted");
+                            $("#jit-entitlementstatus-description").text("Your request has been submitted and access is granted.");
                         }
                     }
                 
@@ -613,18 +607,18 @@
                     const startTime = new Date(this.activationStatus.items[0].startTime * 1000);
                     const endTime = new Date(this.activationStatus.items[0].endTime * 1000);
 
-                    $("#jit-showentitlementstatus-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
-                    $("#jit-showentitlementstatus-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
-                    $("#jit-showentitlementstatus-justification").text(this.activationStatus.justification);
+                    $("#jit-entitlementstatus-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
+                    $("#jit-entitlementstatus-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
+                    $("#jit-entitlementstatus-justification").text(this.activationStatus.justification);
 
-                    $("#jit-showentitlementstatus-reviewers").empty();
+                    $("#jit-entitlementstatus-reviewers").empty();
                     if (this.activationStatus.reviewers && this.activationStatus.reviewers.length > 0) {
                         for (const reviewer of this.activationStatus.reviewers) {
-                            $("#jit-showentitlementstatus-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
+                            $("#jit-entitlementstatus-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
                         }
                     }
                     else {
-                        $("#jit-showentitlementstatus-reviewers").text("-")
+                        $("#jit-entitlementstatus-reviewers").text("-")
                     }
 
                     this._table.clearRows();
@@ -645,7 +639,45 @@
                 }
             }
         }
-        
+
+        class ConfirmActivationRequestView extends EntitlementStatusViewBase {
+            constructor(model, activationStatus) {
+                super(model, activationStatus)
+            }
+
+            async showAsync() {
+                super.showAsync();
+                
+                $("#jit-entitlementstatus-consolebutton").click(() => {
+                    document.location = `https://console.cloud.google.com/${document.appbar.scope}`;
+                });
+            }
+        }
+
+        class ApproveActivationRequestView extends EntitlementStatusViewBase {
+            constructor(model, activationStatus, activationToken) {
+                super(model, activationStatus)
+
+                this.activationToken = activationToken;
+            }
+
+            async showAsync() {
+                super.showAsync();
+
+                $("#jit-entitlementstatus-approvebutton").click(async () => {
+                    try {
+                        new ProgressView().showAsync();
+                        const newStatus = await this.model.approveActivationRequest(this.activationToken);
+                        new ConfirmActivationRequestView(this.model, newStatus).showAsync();
+                    }
+                    catch (e) {
+                        if (e) {
+                            this.cancelView(e);
+                        }
+                    }
+                });
+            }
+        }
 
         $(document).ready(async () => {
             try
@@ -658,7 +690,7 @@
                     new ProgressView().showAsync();
 
                     const activationStatus = await document.model.getActivationRequest(activationToken);
-                    view = new ShowEntitlementStatusView(document.model, activationStatus);
+                    view = new ApproveActivationRequestView(document.model, activationStatus, activationToken);
                 }
                 else {
                     view = new ListEntitlementsView(document.model);
