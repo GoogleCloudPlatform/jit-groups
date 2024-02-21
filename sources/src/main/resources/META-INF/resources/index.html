@@ -20,70 +20,136 @@
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <header class="mdc-top-app-bar mdc-top-app-bar--dense">
-          <div class="mdc-top-app-bar__row">
-            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
-                <span class="mdc-top-app-bar__title jit-title">
-                    <img src='logo.png' alt='JIT Access'/>
-                    Just-in-Time Access
-                </span>
-                <button class="mdc-button mdc-button--outlined" id="jit-projectselector">
-                    <span class="mdc-button__ripple"></span>
-                    <span class="mdc-button__label">
-                        <span id="jit-scope">No project selected</span>
-                        <i class="material-icons mdc-button__icon" aria-hidden="true">expand_more</i>
-                    </span>
-                </button>
-            </section>
-            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
-              <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="help">
-                  <a href='https://googlecloudplatform.github.io/jit-access/' class='jit-helpbutton' target='_blank'>help_center</a>
-              </button>
-            </section>
-          </div>
-        </header>
-        <main class="mdc-top-app-bar--fixed-adjust jit-app-pane" id="jit-enitlements-pane">
-            <div class="mdc-banner" role="banner">
-              <div class="mdc-banner__content"
-                   role="alertdialog"
-                   aria-live="assertive">
-                <div class="mdc-banner__graphic-text-wrapper">
-                  <div class="mdc-banner__text" id="jit-banner-text">
+        <main class="mdc-top-app-bar--fixed-adjust">
+          <!-- ListEntitlementsView -->
+          <div class='jit-view' id='jit-listentitlements-view'>
+            <div class="mdc-data-table" id="jit-entitlements-table">
+              <div class="mdc-data-table__table-container">
+                <table class="mdc-data-table__table">
+                  <thead>
+                    <tr class="mdc-data-table__header-row">
+                      <th class="mdc-data-table__header-cell mdc-data-table__header-cell--checkbox" role="columnheader" scope="col">
+                        <div class="mdc-checkbox mdc-data-table__header-row-checkbox mdc-checkbox--selected">
+                          <input type="checkbox" class="mdc-checkbox__native-control" aria-label="Toggle all rows"/>
+                          <div class="mdc-checkbox__background">
+                            <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                              <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                            </svg>
+                            <div class="mdc-checkbox__mixedmark"></div>
+                          </div>
+                          <div class="mdc-checkbox__ripple"></div>
+                        </div>
+                      </th>
+                      <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Role</th>
+                      <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Requirements</th>
+                      <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody class="mdc-data-table__content">
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mdc-data-table__progress-indicator">
+                <div class="mdc-data-table__scrim"></div>
+                <div class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-data-table__linear-progress" role="progressbar" aria-label="Data is being loaded...">
+                  <div class="mdc-linear-progress__buffer">
+                    <div class="mdc-linear-progress__buffer-bar"></div>
+                    <div class="mdc-linear-progress__buffer-dots"></div>
                   </div>
-                </div>
-                <div class="mdc-banner__actions" id="jit-banner-reloadbutton">
-                  <button type="button" class="mdc-button mdc-banner__primary-action">
-                    <div class="mdc-button__ripple"></div>
-                    <div class="mdc-button__label">Reload</div>
-                  </button>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
+                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                    <span class="mdc-linear-progress__bar-inner"></span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class='jit-main'>
-                <div class="mdc-data-table" id="jit-entitlements">
+
+            <div style='margin-top: 10px; color: red' id="jit-listentitlements-warning"></div>
+
+            <button class="mdc-button foo-button mdc-button--raised" id="jit-listentitlements-requestbutton" disabled="">
+              <div class="mdc-button__ripple"></div>
+              <span class="mdc-button__label">Request access</span>
+            </button>
+          </div>
+          
+          <!-- ProgressView -->
+          <div class='jit-view' id='jit-progress-view'>
+            <h2>Please wait</h2>
+            <div class="jit-card-subsection">
+                Your request is being processed...
+            </div>
+            <div class="jit-card-subsection">
+              <div role="progressbar" class="mdc-linear-progress mdc-linear-progress--indeterminate" aria-label="Progress Bar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" id="jit-progress-bar">
+                <div class="mdc-linear-progress__buffer">
+                  <div class="mdc-linear-progress__buffer-bar"></div>
+                  <div class="mdc-linear-progress__buffer-dots"></div>
+                </div>
+                <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                  <span class="mdc-linear-progress__bar-inner"></span>
+                </div>
+                <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                  <span class="mdc-linear-progress__bar-inner"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ShowEntitlementStatusView -->
+          <div class='jit-view' id='jit-showentitlementstatus-view'>
+            <div class="mdc-card">
+              <h2 id="jit-showentitlementstatus-title">.</h2>
+              <div class="jit-card-subsection" id="jit-showentitlementstatus-description">
+              </div>
+              <div class="jit-card-subsection">
+                Request details:
+                <ul class="tabulated-list">
+                  <li>
+                    <span>
+                      <label for="jit-showentitlementstatus-beneficiary">User</label>
+                    </span>
+                    <span id="jit-showentitlementstatus-beneficiary" />
+                  </li>
+                  <li>
+                    <span>
+                      <label for="jit-showentitlementstatus-starttime">Start time</label>
+                    </span>
+                    <span id="jit-showentitlementstatus-starttime"  aria-describedby="jit-showentitlementstatus-starttime-tt"></span>
+                  </li>
+                  <li>
+                    <span>
+                      <label for="jit-showentitlementstatus-endtime">End time</label>
+                    </span>
+                    <span id="jit-showentitlementstatus-endtime"></span>
+                  </li>
+                  <li>
+                    <span>
+                      <label for="jit-showentitlementstatus-justification">Justification</label>
+                    </span>
+                    <span id="jit-showentitlementstatus-justification"></span>
+                  </li>
+                  <li>
+                    <span>
+                      <label for="jit-showentitlementstatus-reviewers">Reviewers</label>
+                    </span>
+                    <span id="jit-showentitlementstatus-reviewers"></span>
+                  </li>
+                </ul>
+              </div>
+              <div class="jit-card-subsection">
+                <div class="mdc-data-table" id="jit-showentitlementstatus-table">
                   <div class="mdc-data-table__table-container">
                     <table class="mdc-data-table__table">
                       <thead>
                         <tr class="mdc-data-table__header-row">
-                          <th class="mdc-data-table__header-cell mdc-data-table__header-cell--checkbox" role="columnheader" scope="col">
-                            <div class="mdc-checkbox mdc-data-table__header-row-checkbox mdc-checkbox--selected">
-                              <input type="checkbox" class="mdc-checkbox__native-control" aria-label="Toggle all rows"/>
-                              <div class="mdc-checkbox__background">
-                                <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                                  <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                                </svg>
-                                <div class="mdc-checkbox__mixedmark"></div>
-                              </div>
-                              <div class="mdc-checkbox__ripple"></div>
-                            </div>
-                          </th>
+                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Project</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Role</th>
-                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Requirements</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Status</th>
                         </tr>
                       </thead>
                       <tbody class="mdc-data-table__content">
-                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -104,319 +170,146 @@
                     </div>
                   </div>
                 </div>
-                
-                <button class="mdc-button foo-button mdc-button--raised" id="jit-requestaccess" disabled>
+              </div>
+
+              <div class="mdc-card__actions">
+                <button class="mdc-button mdc-card__action mdc-card__action--button mdc-button--raised" id="jit-showentitlementstatus-approvebutton">
                   <div class="mdc-button__ripple"></div>
-                  <span class="mdc-button__label">Request access</span>
+                  <span class="mdc-button__label">Approve</span>
                 </button>
-            </div>
-            
-            <!-- 
-                Scope dialog
-            -->
-            <div class="mdc-dialog" id="jit-scopedialog">
-              <div class="mdc-dialog__container">
-                <div class="mdc-dialog__surface"
-                  role="alertdialog"
-                  aria-modal="true"
-                  aria-labelledby="scopedialog-title"
-                  aria-describedby="scopedialog-content">
-                  
-                  <h2 class="mdc-dialog__title" id="scopedialog-title">Select project</h2>
-                  <div class="mdc-dialog__content" id="scopedialog-content">
-                    <label class="mdc-text-field mdc-text-field--outlined">
-                        <span class="mdc-notched-outline">
-                            <span class="mdc-notched-outline__leading"></span>
-                            <span class="mdc-notched-outline__notch">
-                                <span class="mdc-floating-label">Project ID</span>
-                            </span>
-                            <span class="mdc-notched-outline__trailing"></span>
-                        </span>
-                        <input type="text" class="mdc-text-field__input" id="jit-scopedialog-input" autofocus>
-                    </label>
-                  </div>
-                  <div class="mdc-dialog__actions">
-                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
-                      <div class="mdc-button__ripple"></div>
-                      <span class="mdc-button__label">Cancel</span>
-                    </button>
-                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-scopedialog-ok" disabled>
-                      <div class="mdc-button__ripple"></div>
-                      <span class="mdc-button__label">OK</span>
-                    </button>
-                  </div>
-                </div>
+                <button class="mdc-button mdc-card__action mdc-card__action--button" id="jit-showentitlementstatus-consolebutton">
+                  <div class="mdc-button__ripple"></div>
+                  <span class="mdc-button__label">Open Console</span>
+                </button>
               </div>
-              <div class="mdc-dialog__scrim"></div>
             </div>
-            
-            
-            <!-- 
-                Request dialog
-            -->
-            <div class="mdc-dialog" id="jit-requestdialog">
-              <div class="mdc-dialog__container">
-                <div class="mdc-dialog__surface"
-                  role="alertdialog"
-                  aria-modal="true"
-                  aria-labelledby="requestdialog-title"
-                  aria-describedby="requestdialog-content">
+          </div>
+          
+          <!-- RequestDialog -->
+          <div class="mdc-dialog" id="jit-requestdialog">
+            <div class="mdc-dialog__container">
+            <div class="mdc-dialog__surface"
+                role="alertdialog"
+                aria-modal="true">
                   
-                  <h2 class="mdc-dialog__title" id="requestdialog-title">Activate</h2>
-                  <div class="mdc-dialog__content" id="requestdialog-content">
-                    <label class="mdc-text-field mdc-text-field--outlined">
-                        <span class="mdc-notched-outline">
-                            <span class="mdc-notched-outline__leading"></span>
-                            <span class="mdc-notched-outline__notch">
-                                <span class="mdc-floating-label">Justification</span>
+                <h2 class="mdc-dialog__title">Request access</h2>
+                <div class="mdc-dialog__content">
+                    <div id="jit-requestdialog-peers">
+                        <div class="jit-card-subsection">
+                            This request needs approval from at least one peer. Select a peer to request approval from:
+                        </div>
+                        <div class="jit-card-subsection">
+                            <div class="mdc-data-table" id="jit-requestdialog-table">
+                              <div class="mdc-data-table__table-container">
+                                <table class="mdc-data-table__table">
+                                  <thead>
+                                    <tr class="mdc-data-table__header-row">
+                                      <th class="mdc-data-table__header-cell mdc-data-table__header-cell--checkbox" role="columnheader" scope="col">
+                                        <div class="mdc-checkbox mdc-data-table__header-row-checkbox mdc-checkbox--selected">
+                                          <input type="checkbox" class="mdc-checkbox__native-control" aria-label="Toggle all rows"/>
+                                          <div class="mdc-checkbox__background">
+                                            <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
+                                              <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
+                                            </svg>
+                                            <div class="mdc-checkbox__mixedmark"></div>
+                                          </div>
+                                          <div class="mdc-checkbox__ripple"></div>
+                                        </div>
+                                      </th>
+                                      <th class="mdc-data-table__header-cell" role="columnheader" scope="col">User</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody class="mdc-data-table__content">
+                                  </tbody>
+                                </table>
+                              </div>
+
+                              <div class="mdc-data-table__progress-indicator">
+                                <div class="mdc-data-table__scrim"></div>
+                                <div class="mdc-linear-progress mdc-linear-progress--indeterminate mdc-data-table__linear-progress" role="progressbar" aria-label="Data is being loaded...">
+                                  <div class="mdc-linear-progress__buffer">
+                                    <div class="mdc-linear-progress__buffer-bar"></div>
+                                    <div class="mdc-linear-progress__buffer-dots"></div>
+                                  </div>
+                                  <div class="mdc-linear-progress__bar mdc-linear-progress__primary-bar">
+                                    <span class="mdc-linear-progress__bar-inner"></span>
+                                  </div>
+                                  <div class="mdc-linear-progress__bar mdc-linear-progress__secondary-bar">
+                                    <span class="mdc-linear-progress__bar-inner"></span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                        </div>
+                        <div class="jit-card-divider"></div>
+                    </div>
+
+                    <div class="jit-card-subsection">
+                        Provide a justification that explains why you need this access:
+                    </div>
+                    <div class="jit-card-subsection">
+                        <label class="mdc-text-field mdc-text-field--outlined" id="jit-requestdialog-justification">
+                            <span class="mdc-notched-outline">
+                                <span class="mdc-notched-outline__leading"></span>
+                                <span class="mdc-notched-outline__notch">
+                                    <span class="mdc-floating-label" id="jit-requestdialog-justification-hint">Justification</span>
+                                </span>
+                                <span class="mdc-notched-outline__trailing"></span>
                             </span>
-                            <span class="mdc-notched-outline__trailing"></span>
-                        </span>
-                        <input type="text" class="mdc-text-field__input" id="jit-requestdialog-justification" autofocus>
-                    </label>
-                  </div>
-                  <div class="mdc-dialog__actions">
-                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
-                      <div class="mdc-button__ripple"></div>
-                      <span class="mdc-button__label">Cancel</span>
-                    </button>
-                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-requestdialog-ok" disabled>
-                      <div class="mdc-button__ripple"></div>
-                      <span class="mdc-button__label">OK</span>
-                    </button>
-                  </div>
+                            <input type="text" class="mdc-text-field__input" id="jit-requestdialog-justification-input" autofocus maxlength="100" autocomplete="off" >
+                        </label>
+                    </div>
+                    <div class="jit-card-subsection">
+                        The justification is logged and might be reviewed by an auditor.
+                    </div>
+
+                    <div class="jit-card-divider"></div>
+                    
+                    <div class="jit-card-subsection">
+                        Select how long you need access to this project:
+                    </div>
+                    <div class="jit-card-subsection">
+                        <div class="mdc-slider" id="jit-requestdialog-duration">
+                          <div class="mdc-slider__track">
+                            <div class="mdc-slider__track--inactive"></div>
+                            <div class="mdc-slider__track--active">
+                              <div class="mdc-slider__track--active_fill"></div>
+                            </div>
+                          </div>
+                          <div class="mdc-slider__thumb">
+                            <div class="mdc-slider__thumb-knob"></div>
+                            <input class="mdc-slider__input" id="jit-requestdialog-duration-input" type="range" min="5" max="100" value="50" name="Duration">
+                          </div>
+                        </div>
+                        <span id="jit-requestdialog-duration-value"></span> minutes.
+                    </div>
                 </div>
-              </div>
-              <div class="mdc-dialog__scrim"></div>
+                <div class="mdc-dialog__actions">
+                <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">Cancel</span>
+                </button>
+                <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-requestdialog-ok" disabled>
+                    <div class="mdc-button__ripple"></div>
+                    <span class="mdc-button__label">OK</span>
+                </button>
+                </div>
             </div>
+            </div>
+            <div class="mdc-dialog__scrim"></div>
+        </div>
         </main>
-        <main class="mdc-top-app-bar--fixed-adjust jit-app-pane" id="jit-status-pane">
-        </main>
-        <footer class="jit-footer">
-            <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
-            &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/">JIT Access <span id="application-version"></span></a></div>
-        </footer>
     </body>
 
     <!-- script -->
     <script src="model.js"></script>
+    <script src="view.js"></script>
     <script>
         "use strict"
-        mdc.autoInit();
-        mdc.dataTable.MDCDataTable.prototype.clearRows = function() {
-            this.content.innerHTML = '';
-        };
 
-        mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox=true) {
-            console.assert(id);
-            console.assert(columns);
-
-            const tr = $(`<tr data-row-id="${id}" class="mdc-data-table__row"></tr>`);
-            $(this.content).append(tr);
-
-            if (showCheckbox) {
-                const checkboxTd = $(`<td class="mdc-data-table__cell mdc-data-table__cell--checkbox">
-                     <div class="mdc-checkbox mdc-data-table__row-checkbox">
-                       <input type="checkbox" class="mdc-checkbox__native-control"/>
-                       <div class="mdc-checkbox__background">
-                       <svg class="mdc-checkbox__checkmark" viewBox="0 0 24 24">
-                           <path class="mdc-checkbox__checkmark-path" fill="none" d="M1.73,12.91 8.1,19.28 22.79,4.59" />
-                       </svg>
-                       <div class="mdc-checkbox__mixedmark"></div>
-                       </div>
-                       <div class="mdc-checkbox__ripple"></div>
-                     </div>
-                   </td>`);
-                tr.append(checkboxTd);
-            }
-
-            let first = true;
-            columns.forEach((value) => {
-                const div = $("<div></div>");
-                div.text(value.text);
-                if (value.class) {
-                    div.attr("class", value.class);
-                }
-
-                let td;
-                if (first) {
-                    td = $(`<th class="mdc-data-table__cell" scope="row" id="${id}"></th>`);
-                    first = false;
-                }
-                else {
-                    td = $(`<td class="mdc-data-table__cell"></td>`);
-                }
-
-                td.append(div);
-                tr.append(td);
-            });
-
-            //
-            // Update internal bindings.
-            //
-            this.layout();
-        };
-
-        class ObservableProperty {
-            constructor(value) {
-                this._value = value;
-                this._onChangeListeners = [];
-            }
-
-            get value() {
-                return this._value;
-            }
-
-            set value(v) {
-                this._value = v;
-                this._onChangeListeners.forEach(cb => cb(v));
-            }
-
-            onChange(callback) {
-                this._onChangeListeners.push(callback)
-            }
-        }
-
-        class ViewModel {
-            constructor(model) {
-                console.assert(model);
-
-                /** Current scope (project) */
-                this.scope = new ObservableProperty();
-
-                /** Last error that occured during data load */
-                this.error = new ObservableProperty();
-
-                /** Indicates whether data is being loaded */
-                this.busy = new ObservableProperty(false);
-
-                /** Set of available entitlements */
-                this.availableEntitlements = new ObservableProperty([]);
-
-                this.scope.onChange(async () => {
-                    this.busy.value = true;
-
-                    try {
-                        if (this.scope.value) {
-                            //
-                            // Load entitlements.
-                            //
-                            this.availableEntitlements.value = await model.listRoles(this.scope.value);
-                        }
-                        else {
-                            this.availableEntitlements.value = []
-                        }
-                    }
-                    catch (error) {
-                        this.error.value = error;
-                    }
-                    finally {
-                        this.busy.value = false;
-                    }
-                });
-            }
-        }
-
-        class View {
-            constructor() {
-                this._banner = new mdc.banner.MDCBanner(document.querySelector('.mdc-banner'));
-            }
-
-            /** Display an error bar at the top of the screen */
-            showError(message, showReloadButton) {
-                console.assert(this._banner);
-
-                this._banner.open();
-                $('#jit-banner-text').text(message);
-
-                if (showReloadButton) {
-                    $('#jit-banner-reloadbutton').on('click', () => {
-                        const timestamp = Date.now();
-                        window.location.href = `${window.location.pathname}?_=${timestamp}`;
-                    });
-                }
-                else {
-                    $('#jit-banner-reloadbutton').hide();
-                }
-            }
-        }
-
-        class ScopeDialog extends View {
-            constructor(viewModel) {
-                super();
-                console.assert(viewModel);
-
-                //
-                // Setup bindings.
-                //
-                this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-scopedialog'));
-                const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
-                this._element.listen('MDCDialog:closed', e => {
-                    if (e.detail.action !== "accept") {
-                        return;
-                    }
-
-                    viewModel.scope.value = textField.value;
-                });
-
-                $('#jit-scopedialog-input').on('input', e => {
-                    $('#jit-scopedialog-ok').prop('disabled', $('#jit-scopedialog-input').val() == '');
-                });
-
-                //
-                // Configure autocompleter.
-                //
-                $("#jit-scopedialog-input").autocomplete({
-                    source: async (request, response) => {
-                        try {
-                            const projects = await model.searchProjects(request.term);
-                            response($.map(projects, (item) => {
-                                return {
-                                    label: item,
-                                    value: item
-                                };
-                            }));
-                        }
-                        catch (e) {
-                            this.showError(`Loading projects failed: ${e}`, false);
-                        }
-                    },
-                    minLength: 2,
-                    position: { of: $("#jit-scopedialog-input") },
-                    open: function() {
-                        $("ul.ui-menu").width($(this).innerWidth());
-                    }
-                });
-            }
-
-            showDialog() {
-                this._element.open();
-            }
-        }
-
-        class RequestDialog extends View {
-            constructor() {
-                super();
-
-                //
-                // Setup bindings.
-                //
-                this._element = new mdc.dialog.MDCDialog(document.querySelector('#jit-requestdialog'));
-            }
-
-            showDialog() {
-                this._element.open();
-            }
-        }
-
-        /** An SPA-style pane, only one of which is shown at a time */
-        class PaneView extends View {
-            constructor(id) {
-                super();
-                console.assert($("#" + id).length);
-
-                this.id = id;
+        class EntitlementsViewBase extends ViewBase {
+            constructor(selector) {
+                super(selector);
 
                 this.statusCaptions = {
                     "ACTIVE": "Active",
@@ -430,140 +323,357 @@
                     "NONE": "Unavailable",
                 }
             }
-
-            /**
-             * Show a pane and hide all other panes.
-             */
-            show() {
-                $(".jit-app-pane").hide();
-                $("#" + this.id).show();
-            }
-
-            /** Show dialog to let user select the scope */
-            selectScope() {
-                new ScopeDialog(this._viewModel).showDialog();
-            }
         }
 
-        class EntitlementsView extends PaneView {
-            constructor(viewModel) {
-                super("jit-enitlements-pane");
+        class ListEntitlementsView extends EntitlementsViewBase {
+            constructor(model) {
+                super('#jit-listentitlements-view');
+                
+                console.assert(model);
 
-                console.assert(viewModel);
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements-table'));
+                this.model = model;
+            }
 
-                this._viewModel = viewModel;
-                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-entitlements'));
+            async showAsync() {
+                console.assert(document.appbar.scope);
+                super.showAsync();
 
-                //
-                // Setup bindings.
-                //
+                
+                let selectedEntitlements = []
 
-                $('#jit-projectselector').on('click', () => {
-                    this.selectScope();
-                });
+                try {
+                    this._table.showProgress();
+                    this._table.clearRows();    
 
-                viewModel.busy.onChange(busy => {
-                    if (busy) {
-                        this._table.showProgress();
-                    }
-                    else {
-                        this._table.hideProgress();
-                    }
-                });
-
-                viewModel.error.onChange(error => {
-                    this.showError(error, true);
-                    $("#jit-entitlements tbody").remove();
-                });
-
-                viewModel.scope.onChange(scope => {
-                    $('#jit-scope').text(scope);
-                })
-
-                viewModel.availableEntitlements.onChange(entitlements => {
-                    if (!entitlements.roles || entitlements.roles.length == 0) {
-                        this.showError("The project doesn't exist, or you don't have permission to activate any roles in this project");
-                    }
-                    else {
-                        this._table.clearRows();    
+                    //
+                    // Load entitlements.
+                    //
+                    const entitlements = await this.model.listRoles(document.appbar.scope);
+                        
+                    if (entitlements.roles && entitlements.roles.length > 0) {
                         entitlements.roles.forEach(item => {
                             this._table.addRow(
-                                item.roleBinding.id,
+                                item.roleBinding.role,
                                 [
                                     { text: item.roleBinding.role },
                                     { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                                     { text: (this.statusCaptions[item.status] ?? item.status) + 
                                             (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
-                                      class: item.status === "ACTIVE" ? "activated" : null }
+                                        class: item.status === "ACTIVE" ? "activated" : null }
                                 ],
                                 true);
                         });
+
+                        if (entitlements.warnings) {
+                            document.appbar.showError(entitlements.warnings.join(", "));
+                        }
                     }
+                
+                    //
+                    // Update controls when selection changes.
+                    //
+                    const onSelectionChanged = e => {
+                        const selected = this._table.getSelectedRowIds();
+                        selectedEntitlements = entitlements.roles.filter(i => selected.includes(i.roleBinding.role));
 
-                    if (entitlements.warnings) {
-                        this.showError(entitlements.warnings.join(", "));
+                        if (selectedEntitlements.length > 1 && selectedEntitlements.some(i => i.activationType === "MPA")) {
+                            $('#jit-listentitlements-warning').text('You can only request peer approval for a single role at a time');
+                            $('#jit-listentitlements-requestbutton').prop('disabled', true);
+                        }
+                        else {
+                            $('#jit-listentitlements-warning').text('');
+                            $('#jit-listentitlements-requestbutton').prop('disabled', selectedEntitlements.length == 0);
+                        }
+                    };
+
+                    this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
+                    this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
+                    this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
+                }
+                catch (error) {
+                    this.cancelView(error);
+                }
+                finally {
+                    this._table.hideProgress();
+                }
+
+                //
+                // Request access.
+                //
+                $('#jit-listentitlements-requestbutton').on('click', async () => {
+                    console.assert(selectedEntitlements.every(e => e.activationType == selectedEntitlements[0].activationType));
+                    const activationType = selectedEntitlements[0].activationType;
+                    
+                    console.assert(activationType != 'MPA' || selectedEntitlements.length == 1);
+
+                    try {
+                        
+                        const request = await new RequestDialog(this.model, activationType, selectedEntitlements).showAsync();
+                        new ProgressView().showAsync();
+                        
+                        let activationStatus;
+                        if (activationType == 'MPA') {
+                            activationStatus = await this.model.requestActivation(
+                                document.appbar.scope,
+                                selectedEntitlements[0].roleBinding.role,
+                                request.peers,
+                                request.justification,
+                                request.duration);
+                        }
+                        else {
+                            activationStatus = await this.model.selfApproveActivation(
+                                document.appbar.scope,
+                                selectedEntitlements.map(e => e.roleBinding.role),
+                                request.justification,
+                                request.duration);
+                        }
+
+                        new ShowEntitlementStatusView(document.model, activationStatus).showAsync();
                     }
-                });
-
-                const onSelectionChanged = e => {
-                    const selected = this._table.getSelectedRowIds();
-                    $('#jit-requestaccess').prop('disabled', selected.length == 0);
-                };
-                this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
-                this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
-                this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
-
-                $('#jit-requestaccess').on('click', () => {
-                    new RequestDialog().showDialog();
+                    catch (e) {
+                        if (e) {
+                            this.cancelView(e);
+                        }
+                    }
                 });
             }
+        }
 
-            show() {
-                super.show();
-                if (!this._viewModel.scope.value) {
-                    this.selectScope();
+        class RequestDialog extends DialogBase {
+            constructor(model, activationType, selectedEntitlements) {
+                super('#jit-requestdialog')
+
+                console.assert(model);
+                console.assert(selectedEntitlements && selectedEntitlements.length > 0);
+
+                this.model = model;
+                this.activationType = activationType;
+                this.selectedEntitlements = selectedEntitlements;
+                
+                //
+                // Peers.
+                //
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-requestdialog-table'));
+
+                //
+                // Duration.
+                //
+                $('#jit-requestdialog-duration-input').prop('max', model.policy.maxActivationTimeout);
+                $('#jit-requestdialog-duration-value').text( model.policy.defaultActivationTimeout);
+
+                this.slider = new mdc.slider.MDCSlider(document.querySelector('#jit-requestdialog-duration'));
+                setTimeout(() => this.slider.layout(), 100);
+                this.slider.setValue(model.policy.defaultActivationTimeout);
+
+                //
+                // Justification.
+                //
+                const textField = new mdc.textField.MDCTextField(document.querySelector('#jit-requestdialog-justification'));
+                $('#jit-requestdialog-justification-hint').text(model.policy.justificationHint);
+                
+            }
+
+            async showAsync() {
+                const result = super.showAsync();
+                    
+                //
+                // Update controls when selection changes.
+                //
+                this.slider.listen('MDCSlider:change', e => {
+                    $('#jit-requestdialog-duration-value').text(e.detail.value);
+                });
+
+                const onPeerOrJustificationChanged = e => {
+                    const enableOkButton = $('#jit-requestdialog-justification-input').val() !== '' &&
+                        (this.activationType != 'MPA' || this._table.getSelectedRowIds().length > 0);
+
+                    $('#jit-requestdialog-ok').prop('disabled', !enableOkButton);
+                };
+
+                $('#jit-requestdialog-justification-input').on('input', e => {
+                    onPeerOrJustificationChanged();
+                });
+                
+                //
+                // Populate peers.
+                //
+                try {
+                    this._table.showProgress();
+                    this._table.clearRows();    
+
+                    if (this.activationType == 'MPA') {
+                        $('#jit-requestdialog-peers').show();
+                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].roleBinding.role);
+                        
+                        peersResult.peers.forEach(item => {
+                            this._table.addRow(
+                                item.email,
+                                [
+                                    { text: item.email }
+                                ],
+                                true);
+                        });
+
+                        this._table.listen('MDCDataTable:rowSelectionChanged', onPeerOrJustificationChanged);
+                        this._table.listen('MDCDataTable:selectedAll', onPeerOrJustificationChanged);
+                        this._table.listen('MDCDataTable:unselectedAll', onPeerOrJustificationChanged);
+                    }
+                    else {
+                        $('#jit-requestdialog-peers').hide();
+                    }
+                }
+                catch (error) {
+                    this.cancelDialog(error);
+                }
+                finally {
+                    this._table.hideProgress();
+                }
+
+
+                return result;
+            }
+
+            get result() {
+                return {
+                    peers: this._table.getSelectedRowIds(),
+                    duration: parseInt($('#jit-requestdialog-duration-input').val()),
+                    justification: $('#jit-requestdialog-justification-input').val()
+                };
+            }
+        }
+        
+
+        class ProgressView extends EntitlementsViewBase {
+            constructor() {
+                super('#jit-progress-view');
+
+                const progressBar = new mdc.linearProgress.MDCLinearProgress(document.querySelector('#jit-progress-bar'));
+            }
+        }
+
+        class ShowEntitlementStatusView extends EntitlementsViewBase {
+            constructor(model, activationStatus) {
+                super('#jit-showentitlementstatus-view');
+                
+                console.assert(model);
+                console.assert(activationStatus);
+
+                this.model = model;
+                this.activationStatus = activationStatus;
+                
+                this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-showentitlementstatus-table'));
+            }
+            
+            _createEmailLink(user) {
+                const link = $("<a target='_blank'/>");
+                link.attr("href", `https://contacts.google.com/search/${user.email}`);
+                link.text(user.email);
+                return link;
+            }
+
+            async showAsync() {
+                super.showAsync();
+
+                $("#jit-showentitlementstatus-consolebutton").click(() => {
+                    document.location = `https://console.cloud.google.com/${document.appbar.scope}`;
+                });
+
+                try
+                {
+                    $("#jit-showentitlementstatus-approvebutton").hide();
+                    $("#jit-showentitlementstatus-consolebutton").hide();
+                    if (this.activationStatus.isReviewer) {
+                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                            $("#jit-showentitlementstatus-title").text("Review access request");
+                            $("#jit-showentitlementstatus-description").text("One of your peers is asking you to review the following access request.");
+                            $("#jit-showentitlementstatus-approvebutton").show();
+                        }
+                        else {
+                            $("#jit-showentitlementstatus-title").text("Access approved");
+                            $("#jit-showentitlementstatus-description").text("You've approved the following access request.");
+                        }
+
+                        $("#jit-showentitlementstatus-beneficiary").empty().append(this._createEmailLink(this.activationStatus.beneficiary));
+                    }
+                    else if (this.activationStatus.isBeneficiary) {
+                        $("#jit-showentitlementstatus-beneficiary").text("You");
+                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                            $("#jit-showentitlementstatus-title").text("Request submitted");
+                            $("#jit-showentitlementstatus-description").text("Your request has been submitted for approval. " +
+                                "You'll receive an email once approval has been granted");
+                        }
+                        else {
+                            $("#jit-showentitlementstatus-title").text("Access granted");
+                            $("#jit-showentitlementstatus-description").text("Your request has been submitted and access is granted.");
+                            $("#jit-showentitlementstatus-consolebutton").show();
+                        }
+                    }
+                
+                    // NB. All roles have the same start/end time.
+                    const startTime = new Date(this.activationStatus.items[0].startTime * 1000);
+                    const endTime = new Date(this.activationStatus.items[0].endTime * 1000);
+
+                    $("#jit-showentitlementstatus-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
+                    $("#jit-showentitlementstatus-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
+                    $("#jit-showentitlementstatus-justification").text(this.activationStatus.justification);
+
+                    $("#jit-showentitlementstatus-reviewers").empty();
+                    if (this.activationStatus.reviewers && this.activationStatus.reviewers.length > 0) {
+                        for (const reviewer of this.activationStatus.reviewers) {
+                            $("#jit-showentitlementstatus-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
+                        }
+                    }
+                    else {
+                        $("#jit-showentitlementstatus-reviewers").text("-")
+                    }
+
+                    this._table.clearRows();
+                    this.activationStatus.items.forEach((item) => {
+                        this._table.addRow(
+                            item.roleBinding.role,
+                            [
+                                { text: item.projectId },
+                                { text: item.roleBinding.role },
+                                { text: this.statusCaptions[item.status] ?? item.status, 
+                                  class: item.status === "ACTIVE" ? "activated" : null }
+                            ],
+                            false);
+                    });
+                }
+                catch (e) {
+                    this.cancelView(e);
                 }
             }
         }
+        
 
-        class StatusView extends PaneView {
-            constructor(viewModel) {
-                super("jit-status-pane");
-            }
-        }
-        
-        const localSettings = new LocalSettings();
-        const queryParameters = new URLSearchParams(location.search);
-        const model = queryParameters.get("debug") ? new DebugModel() : new Model();
-        const activationToken = queryParameters.get("activation");
-        
         $(document).ready(async () => {
-            const viewModel = new ViewModel(model);
-            const view = activationToken 
-                ? new StatusView(viewModel, activationToken) 
-                : new EntitlementsView(viewModel);
+            try
+            {
+                const queryParameters = new URLSearchParams(location.search);
+                const activationToken = queryParameters.get("activation");
 
-            try {
-                //
-                // Download policy to check if the communication with the model
-                // works properly. 
-                //
-                await model.fetchPolicy();
+                let view;
+                if (activationToken) {
+                    new ProgressView().showAsync();
 
-                viewModel.scope.value = queryParameters.get("projectId") ?? localSettings.lastProjectId;
-                viewModel.scope.onChange(newScope => {
-                    localSettings.lastProjectId = newScope;
-                });
+                    const activationStatus = await document.model.getActivationRequest(activationToken);
+                    view = new ShowEntitlementStatusView(document.model, activationStatus);
+                }
+                else {
+                    view = new ListEntitlementsView(document.model);
+                }
 
-                view.show();
-
-                $("#signed-in-user").text(model.policy.signedInUser.email)
-                $("#application-version").text(model.policy.applicationVersion)
+                await document.appbar.initialize();
+                
+                await view.showAsync();
             }
-            catch (error) {
-                view.showError(error, true);
+            catch (e) {
+                document.appbar.showError(e ?? "No scope selected", true);
             }
-        
+            
         });
+        
     </script>
 </html>

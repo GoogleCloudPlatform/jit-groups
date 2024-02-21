@@ -360,7 +360,7 @@ class DebugModel extends Model {
                 warnings: ["This is a simulated result"],
                 roles: Array.from({ length: setting }, (e, i) => ({
                     roleBinding: {
-                        id: "//project-1:roles/simulated-role-" + i,
+                        fullResourceName: "//simulated",
                         role: "roles/simulated-role-" + i
                     },
                     activationType: activationTypes[i % activationTypes.length],

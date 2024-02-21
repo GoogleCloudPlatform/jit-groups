@@ -20,6 +20,11 @@ h1, h2 {
     color: #006CBE;
 }
 
+.jit-title a {
+    color: #006CBE;
+    text-decoration: none;
+}
+
 .jit-title img {
     height: 1.2rem;
     width: auto;

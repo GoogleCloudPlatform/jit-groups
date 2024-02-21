@@ -200,7 +200,11 @@ class AppBar {
         //
 
         $('#jit-projectselector').on('click', () => {
-            this.selectScopeAsync().catch(e => {}); //TODO: catch cancel, but show error
+            this.selectScopeAsync().catch(e => {
+                if (e) {
+                    this.showError(e, true);
+                }
+            });
         });
     }
     
@@ -266,7 +270,7 @@ $(document).ready(async () => {
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
                 <span class="mdc-top-app-bar__title jit-title">
                     <img src='logo.png' alt='JIT Access'/>
-                    Just-in-Time Access
+                    <a href="/">Just-in-Time Access</a>
                 </span>
                 <button class="mdc-button mdc-button--outlined" id="jit-projectselector">
                     <span class="mdc-button__ripple"></span>
