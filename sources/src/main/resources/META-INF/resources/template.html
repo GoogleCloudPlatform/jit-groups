@@ -197,7 +197,7 @@
                 <h2 class="mdc-dialog__title" id="requestdialog-title">Request access</h2>
                 <div class="mdc-dialog__content" id="requestdialog-content">
                     <div class="jit-card-subsection">
-                        Provide a justification that explains why you need to access the project:
+                        Provide a justification that explains why you need this access:
                     </div>
                     <div class="jit-card-subsection">
                         <label class="mdc-text-field mdc-text-field--outlined" id="jit-requestdialog-justification">
@@ -213,6 +213,27 @@
                     </div>
                     <div class="jit-card-subsection">
                         The justification is logged and might be reviewed by an auditor.
+                    </div>
+
+                    <div class="jit-card-divider"></div>
+                    
+                    <div class="jit-card-subsection">
+                        Select how long you need access to this project:
+                    </div>
+                    <div class="jit-card-subsection">
+                        <div class="mdc-slider" id="jit-requestdialog-duration">
+                          <div class="mdc-slider__track">
+                            <div class="mdc-slider__track--inactive"></div>
+                            <div class="mdc-slider__track--active">
+                              <div class="mdc-slider__track--active_fill"></div>
+                            </div>
+                          </div>
+                          <div class="mdc-slider__thumb">
+                            <div class="mdc-slider__thumb-knob"></div>
+                            <input class="mdc-slider__input" id="jit-requestdialog-duration-input" type="range" min="5" max="100" value="50" name="Duration">
+                          </div>
+                        </div>
+                        <span id="jit-requestdialog-duration-value"></span> minutes.
                     </div>
                 </div>
                 <div class="mdc-dialog__actions">
@@ -335,6 +356,7 @@
                 $('#jit-listentitlements-requestbutton').on('click', async () => {
                     console.assert(selectedEntitlements.every(e => e.activationType == selectedEntitlements[0].activationType));
 
+                    //TODO: catch
                     const request = await new RequestDialog(this.model, selectedEntitlements).showAsync();
                     new ProgressView().showAsync();
 
@@ -357,17 +379,41 @@
                 console.assert(model);
                 console.assert(selectedEntitlements && selectedEntitlements.length > 0);
 
-                const textField = new mdc.textField.MDCTextField(document.querySelector('#jit-requestdialog-justification'));
+                //
+                // Duration.
+                //
+                $('#jit-requestdialog-duration-input').prop('max', model.policy.maxActivationTimeout);
+                $('#jit-requestdialog-duration-value').text( model.policy.defaultActivationTimeout);
 
+                const slider = new mdc.slider.MDCSlider(document.querySelector('#jit-requestdialog-duration'));
+                setTimeout(() => slider.layout(), 100);
+
+                slider.listen('MDCSlider:change', e => {
+                    $('#jit-requestdialog-duration-value').text(e.detail.value);
+                });
+                slider.setValue(model.policy.defaultActivationTimeout);
+
+                //
+                // Justification.
+                //
+                const textField = new mdc.textField.MDCTextField(document.querySelector('#jit-requestdialog-justification'));
                 $('#jit-requestdialog-justification-hint').text(model.policy.justificationHint);
+                
+
                 $('#jit-requestdialog-justification-input').on('input', e => {
                     $('#jit-requestdialog-ok').prop('disabled', $('#jit-requestdialog-justification-input').val() == '');
                 });
+
+            }
+
+            async showAsync() {
+                return super.showAsync();
             }
 
             get result() {
                 return {
                     peers: '',
+                    duration: $('#jit-requestdialog-duration-input').val(),
                     justification: $('#jit-requestdialog-justification-input').val()
                 };
             }
