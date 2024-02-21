@@ -179,6 +179,12 @@ main .mdc-button {
 .mdc-card {
     padding: 10px;
     font-size: var(--mdc-typography-body2-font-size, 0.875rem);
+    color: rgba(0,0,0,.8);
+}
+
+.mdc-dialog .mdc-dialog__content{
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
+    color: rgba(0,0,0,.8);
 }
 
 /* ==== Debug === */
