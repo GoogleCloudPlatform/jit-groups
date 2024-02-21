@@ -62,25 +62,25 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
 // Base classes.
 //-----------------------------------------------------------------------------
 
-class ObservableProperty {
-    constructor(value) {
-        this._value = value;
-        this._onChangeListeners = [];
-    }
-
-    get value() {
-        return this._value;
-    }
-
-    set value(v) {
-        this._value = v;
-        this._onChangeListeners.forEach(cb => cb(v));
-    }
-
-    onChange(callback) {
-        this._onChangeListeners.push(callback)
-    }
-}
+//class ObservableProperty {
+//    constructor(value) {
+//        this._value = value;
+//        this._onChangeListeners = [];
+//    }
+//
+//    get value() {
+//        return this._value;
+//    }
+//
+//    set value(v) {
+//        this._value = v;
+//        this._onChangeListeners.forEach(cb => cb(v));
+//    }
+//
+//    onChange(callback) {
+//        this._onChangeListeners.push(callback)
+//    }
+//}
 
 /** Base class for modal dialogs */
 class DialogBase {
