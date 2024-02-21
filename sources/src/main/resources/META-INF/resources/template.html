@@ -404,20 +404,32 @@
                 $('#jit-listentitlements-requestbutton').on('click', async () => {
                     console.assert(selectedEntitlements.every(e => e.activationType == selectedEntitlements[0].activationType));
                     const activationType = selectedEntitlements[0].activationType;
+                    
+                    console.assert(activationType != 'MPA' || selectedEntitlements.length == 1);
 
                     try {
                         
                         const request = await new RequestDialog(this.model, activationType, selectedEntitlements).showAsync();
                         new ProgressView().showAsync();
-
+                        
+                        let activationStatus;
                         if (activationType == 'MPA') {
-
+                            activationStatus = await this.model.requestActivation(
+                                document.appbar.scope,
+                                selectedEntitlements[0].roleBinding.role,
+                                request.peers,
+                                request.justification,
+                                request.duration);
                         }
                         else {
-
+                            activationStatus = await this.model.selfApproveActivation(
+                                document.appbar.scope,
+                                selectedEntitlements.map(e => e.roleBinding.role),
+                                request.justification,
+                                request.duration);
                         }
 
-                        //new ShowEntitlementStatusView().showAsync();
+                        new ShowEntitlementStatusView(document.model, activationStatus).showAsync();
                     }
                     catch (e) {
                         if (e) {
@@ -525,7 +537,7 @@
             get result() {
                 return {
                     peers: this._table.getSelectedRowIds(),
-                    duration: $('#jit-requestdialog-duration-input').val(),
+                    duration: parseInt($('#jit-requestdialog-duration-input').val()),
                     justification: $('#jit-requestdialog-justification-input').val()
                 };
             }
@@ -541,14 +553,14 @@
         }
 
         class ShowEntitlementStatusView extends EntitlementsViewBase {
-            constructor(model, activationToken) {
+            constructor(model, activationStatus) {
                 super('#jit-showentitlementstatus-view');
                 
                 console.assert(model);
-                console.assert(activationToken);
+                console.assert(activationStatus);
 
                 this.model = model;
-                this.activationToken = activationToken;
+                this.activationStatus = activationStatus;
                 
                 this._table = new mdc.dataTable.MDCDataTable(document.querySelector('#jit-showentitlementstatus-table'));
             }
@@ -563,14 +575,16 @@
             async showAsync() {
                 super.showAsync();
 
+                $("#jit-showentitlementstatus-consolebutton").click(() => {
+                    document.location = `https://console.cloud.google.com/${document.appbar.scope}`;
+                });
+
                 try
                 {
-                    const activationStatus = await this.model.getActivationRequest(this.activationToken);
-                
                     $("#jit-showentitlementstatus-approvebutton").hide();
                     $("#jit-showentitlementstatus-consolebutton").hide();
-                    if (activationStatus.isReviewer) {
-                        if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                    if (this.activationStatus.isReviewer) {
+                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
                             $("#jit-showentitlementstatus-title").text("Review access request");
                             $("#jit-showentitlementstatus-description").text("One of your peers is asking you to review the following access request.");
                             $("#jit-showentitlementstatus-approvebutton").show();
@@ -580,11 +594,11 @@
                             $("#jit-showentitlementstatus-description").text("You've approved the following access request.");
                         }
 
-                        $("#jit-showentitlementstatus-beneficiary").empty().append(this._createEmailLink(activationStatus.beneficiary));
+                        $("#jit-showentitlementstatus-beneficiary").empty().append(this._createEmailLink(this.activationStatus.beneficiary));
                     }
-                    else if (activationStatus.isBeneficiary) {
+                    else if (this.activationStatus.isBeneficiary) {
                         $("#jit-showentitlementstatus-beneficiary").text("You");
-                        if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
                             $("#jit-showentitlementstatus-title").text("Request submitted");
                             $("#jit-showentitlementstatus-description").text("Your request has been submitted for approval. " +
                                 "You'll receive an email once approval has been granted");
@@ -592,26 +606,21 @@
                         else {
                             $("#jit-showentitlementstatus-title").text("Access granted");
                             $("#jit-showentitlementstatus-description").text("Your request has been submitted and access is granted.");
-                            if (activationStatus.items && activationStatus.items.length > 0) {
-                                $("#jit-showentitlementstatus-consolebutton").attr("href", function(index, attr) {
-                                    return `${attr}?project=${activationStatus.items[0].projectId}`
-                                })
-                            }
                             $("#jit-showentitlementstatus-consolebutton").show();
                         }
                     }
                 
                     // NB. All roles have the same start/end time.
-                    const startTime = new Date(activationStatus.items[0].startTime * 1000);
-                    const endTime = new Date(activationStatus.items[0].endTime * 1000);
+                    const startTime = new Date(this.activationStatus.items[0].startTime * 1000);
+                    const endTime = new Date(this.activationStatus.items[0].endTime * 1000);
 
                     $("#jit-showentitlementstatus-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
                     $("#jit-showentitlementstatus-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
-                    $("#jit-showentitlementstatus-justification").text(activationStatus.justification);
+                    $("#jit-showentitlementstatus-justification").text(this.activationStatus.justification);
 
                     $("#jit-showentitlementstatus-reviewers").empty();
-                    if (activationStatus.reviewers && activationStatus.reviewers.length > 0) {
-                        for (const reviewer of activationStatus.reviewers) {
+                    if (this.activationStatus.reviewers && this.activationStatus.reviewers.length > 0) {
+                        for (const reviewer of this.activationStatus.reviewers) {
                             $("#jit-showentitlementstatus-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
                         }
                     }
@@ -620,7 +629,7 @@
                     }
 
                     this._table.clearRows();
-                    activationStatus.items.forEach((item) => {
+                    this.activationStatus.items.forEach((item) => {
                         this._table.addRow(
                             item.roleBinding.role,
                             [
@@ -644,10 +653,16 @@
                 const queryParameters = new URLSearchParams(location.search);
                 const activationToken = queryParameters.get("activation");
 
-                //const view = new ProgressView();
-                const view = activationToken
-                    ? new ShowEntitlementStatusView(document.model, activationToken)
-                    : new ListEntitlementsView(document.model)
+                let view;
+                if (activationToken) {
+                    new ProgressView().showAsync();
+
+                    const activationStatus = await document.model.getActivationRequest(activationToken);
+                    view = new ShowEntitlementStatusView(document.model, activationStatus);
+                }
+                else {
+                    view = new ListEntitlementsView(document.model);
+                }
 
                 await document.appbar.initialize();
                 
