@@ -141,16 +141,16 @@ class SelectScopeDialog extends DialogBase {
     constructor() {
         super('#jit-scopedialog');
         
-        const textField = new mdc.textField.MDCTextField(document.querySelector('.mdc-text-field'));
+        const textField = new mdc.textField.MDCTextField(document.querySelector('#jit-scopedialog-project'));
 
-        $('#jit-scopedialog-input').on('change', e => {
-            $('#jit-scopedialog-ok').prop('disabled', $('#jit-scopedialog-input').val() == '');
+        $('#jit-scopedialog-project-input').on('change', e => {
+            $('#jit-scopedialog-ok').prop('disabled', $('#jit-scopedialog-project-input').val() == '');
         });
 
         //
         // Configure autocompleter.
         //
-        $("#jit-scopedialog-input").autocomplete({
+        $("#jit-scopedialog-project-input").autocomplete({
             source: async (request, response) => {
                 try {
                     const projects = await document.model.searchProjects(request.term);
@@ -166,7 +166,7 @@ class SelectScopeDialog extends DialogBase {
                 }
             },
             minLength: 2,
-            position: { of: $("#jit-scopedialog-input") },
+            position: { of: $("#jit-scopedialog-project-input") },
             open: function() {
                 $("ul.ui-menu").width($(this).innerWidth());
             },
@@ -177,7 +177,7 @@ class SelectScopeDialog extends DialogBase {
     }
 
     get result() {
-        return $('#jit-scopedialog-input').val();
+        return $('#jit-scopedialog-project-input').val();
     }
 }
 
@@ -304,26 +304,26 @@ $(document).ready(async () => {
                   
                 <h2 class="mdc-dialog__title" id="scopedialog-title">Select project</h2>
                 <div class="mdc-dialog__content" id="scopedialog-content">
-                <label class="mdc-text-field mdc-text-field--outlined">
-                    <span class="mdc-notched-outline">
-                        <span class="mdc-notched-outline__leading"></span>
-                        <span class="mdc-notched-outline__notch">
-                            <span class="mdc-floating-label">Project ID</span>
+                    <label class="mdc-text-field mdc-text-field--outlined" id="jit-scopedialog-project">
+                        <span class="mdc-notched-outline">
+                            <span class="mdc-notched-outline__leading"></span>
+                            <span class="mdc-notched-outline__notch">
+                                <span class="mdc-floating-label">Project ID</span>
+                            </span>
+                            <span class="mdc-notched-outline__trailing"></span>
                         </span>
-                        <span class="mdc-notched-outline__trailing"></span>
-                    </span>
-                    <input type="text" class="mdc-text-field__input" id="jit-scopedialog-input" autofocus>
-                </label>
+                        <input type="text" class="mdc-text-field__input" id="jit-scopedialog-project-input" autofocus>
+                    </label>
                 </div>
                 <div class="mdc-dialog__actions">
-                <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
-                    <div class="mdc-button__ripple"></div>
-                    <span class="mdc-button__label">Cancel</span>
-                </button>
-                <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-scopedialog-ok" disabled>
-                    <div class="mdc-button__ripple"></div>
-                    <span class="mdc-button__label">OK</span>
-                </button>
+                    <button type="button" class="mdc-button mdc-dialog__button" data-mdc-dialog-action="close">
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">Cancel</span>
+                    </button>
+                    <button type="button" class="mdc-button mdc-dialog__button  mdc-button--raised" data-mdc-dialog-action="accept" id="jit-scopedialog-ok" disabled>
+                        <div class="mdc-button__ripple"></div>
+                        <span class="mdc-button__label">OK</span>
+                    </button>
                 </div>
             </div>
             </div>
