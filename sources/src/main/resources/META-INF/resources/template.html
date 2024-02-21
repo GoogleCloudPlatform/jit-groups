@@ -450,13 +450,9 @@
                 $('#jit-requestdialog-duration-input').prop('max', model.policy.maxActivationTimeout);
                 $('#jit-requestdialog-duration-value').text( model.policy.defaultActivationTimeout);
 
-                const slider = new mdc.slider.MDCSlider(document.querySelector('#jit-requestdialog-duration'));
-                setTimeout(() => slider.layout(), 100);
-
-                slider.listen('MDCSlider:change', e => {
-                    $('#jit-requestdialog-duration-value').text(e.detail.value);
-                });
-                slider.setValue(model.policy.defaultActivationTimeout);
+                this.slider = new mdc.slider.MDCSlider(document.querySelector('#jit-requestdialog-duration'));
+                setTimeout(() => this.slider.layout(), 100);
+                this.slider.setValue(model.policy.defaultActivationTimeout);
 
                 //
                 // Justification.
@@ -464,43 +460,56 @@
                 const textField = new mdc.textField.MDCTextField(document.querySelector('#jit-requestdialog-justification'));
                 $('#jit-requestdialog-justification-hint').text(model.policy.justificationHint);
                 
-
-                //TODO: check peer selected
-                $('#jit-requestdialog-justification-input').on('input', e => {
-                    $('#jit-requestdialog-ok').prop('disabled', $('#jit-requestdialog-justification-input').val() == '');
-                });
             }
 
             async showAsync() {
                 const result = super.showAsync();
+                    
+                //
+                // Update controls when selection changes.
+                //
+                this.slider.listen('MDCSlider:change', e => {
+                    $('#jit-requestdialog-duration-value').text(e.detail.value);
+                });
 
+                const onPeerOrJustificationChanged = e => {
+                    const enableOkButton = $('#jit-requestdialog-justification-input').val() !== '' &&
+                        (this.activationType != 'MPA' || this._table.getSelectedRowIds().length > 0);
+
+                    $('#jit-requestdialog-ok').prop('disabled', !enableOkButton);
+                };
+
+                $('#jit-requestdialog-justification-input').on('input', e => {
+                    onPeerOrJustificationChanged();
+                });
+                
+                //
+                // Populate peers.
+                //
                 try {
                     this._table.showProgress();
                     this._table.clearRows();    
-                    
-
-                    //
-                    // Update controls when selection changes.
-                    //
-                    const onSelectionChanged = e => {
-                        
-                    };
 
                     if (this.activationType == 'MPA') {
-                        //
-                        // Load peers.
-                        //
                         $('#jit-requestdialog-peers').show();
                         const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].roleBinding.role);
                         
-                        this._table.listen('MDCDataTable:rowSelectionChanged', onSelectionChanged);
-                        this._table.listen('MDCDataTable:selectedAll', onSelectionChanged);
-                        this._table.listen('MDCDataTable:unselectedAll', onSelectionChanged);
+                        peersResult.peers.forEach(item => {
+                            this._table.addRow(
+                                item.email,
+                                [
+                                    { text: item.email }
+                                ],
+                                true);
+                        });
+
+                        this._table.listen('MDCDataTable:rowSelectionChanged', onPeerOrJustificationChanged);
+                        this._table.listen('MDCDataTable:selectedAll', onPeerOrJustificationChanged);
+                        this._table.listen('MDCDataTable:unselectedAll', onPeerOrJustificationChanged);
                     }
                     else {
                         $('#jit-requestdialog-peers').hide();
                     }
-
                 }
                 catch (error) {
                     this.cancelDialog(error);
@@ -515,7 +524,7 @@
 
             get result() {
                 return {
-                    peers: '',
+                    peers: this._table.getSelectedRowIds(),
                     duration: $('#jit-requestdialog-duration-input').val(),
                     justification: $('#jit-requestdialog-justification-input').val()
                 };

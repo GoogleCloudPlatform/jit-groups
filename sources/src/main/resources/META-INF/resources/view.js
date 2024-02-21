@@ -6,6 +6,11 @@
 
 mdc.dataTable.MDCDataTable.prototype.clearRows = function() {
     this.content.innerHTML = '';
+    
+    //
+    // Update internal bindings.
+    //
+    this.layout();
 };
 
 mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox=true) {
