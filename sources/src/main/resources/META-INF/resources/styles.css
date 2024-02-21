@@ -146,7 +146,7 @@ ul.ui-menu  {
 /* ==== MDC Overrides === */
 
 .mdc-data-table {
-    width: calc(100% - 40px);
+    width: 100%;
 }
 
 .mdc-top-app-bar__row {
