@@ -214,6 +214,15 @@ class AppBar {
             });
         });
     }
+
+    _reloadPage() {
+        let url = window.location.pathname;
+        if (new URLSearchParams(location.search).get("debug")) {
+            url += '?debug=1';
+        }
+
+        window.location.href = url;
+    }
     
     /** Prompt user to select a scope */
     async selectScopeAsync() {
@@ -221,8 +230,8 @@ class AppBar {
 
         const newScope = await dialog.showAsync();
         new LocalSettings().lastProjectId = newScope;
-
-        document.location.reload();
+        
+        this._reloadPage();
     }
 
     async initialize() {
@@ -252,6 +261,7 @@ class AppBar {
         }
         else {
             $('#jit-scope').text(this.scope);
+            $('title').html(`JIT Access: ${this.scope}`);
         }
     }
 
@@ -264,8 +274,7 @@ class AppBar {
 
         if (isSevere) {
             $('#jit-banner-reloadbutton').on('click', () => {
-                const timestamp = Date.now();
-                window.location.href = `${window.location.pathname}?_=${timestamp}`;
+                this._reloadPage();
             });
         }
         else {

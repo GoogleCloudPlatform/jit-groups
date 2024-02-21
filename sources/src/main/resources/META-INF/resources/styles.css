@@ -30,7 +30,6 @@ h1, h2 {
     width: auto;
     margin-left: 10px;
     margin-right: 10px;
-
 }
         
 #jit-projectselector {
@@ -79,6 +78,8 @@ h1, h2 {
 #jit-scope {
     text-transform: none;
     font-weight: normal;
+    letter-spacing: normal;
+    color: #006CBE;
 }
 
 .mdc-text-field {
