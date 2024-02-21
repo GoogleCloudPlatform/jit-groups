@@ -22,7 +22,7 @@
     <body>
         <main class="mdc-top-app-bar--fixed-adjust">
           <!-- ListEntitlementsView -->
-          <div class='jit-view' id='jit-listentitlements-view'>
+          <div class='jit-view' id='jit-listentitlements-view' style="display: none">
             <div class="mdc-data-table" id="jit-entitlements-table">
               <div class="mdc-data-table__table-container">
                 <table class="mdc-data-table__table">
@@ -76,7 +76,7 @@
           </div>
           
           <!-- ProgressView -->
-          <div class='jit-view' id='jit-progress-view'>
+          <div class='jit-view' id='jit-progress-view' style="display: none">
             <h2>Please wait</h2>
             <div class="jit-card-subsection">
                 Your request is being processed...
@@ -98,7 +98,7 @@
           </div>
           
           <!-- EntitlementStatusView -->
-          <div class='jit-view' id='jit-entitlementstatus-view'>
+          <div class='jit-view' id='jit-entitlementstatus-view' style="display: none">
             <div class="mdc-card">
               <h2 id="jit-entitlementstatus-title">.</h2>
               <div class="jit-card-subsection" id="jit-entitlementstatus-description">
@@ -365,7 +365,7 @@
                                 true);
                         });
 
-                        if (entitlements.warnings) {
+                        if (entitlements.warnings && entitlements.warnings > 0) {
                             document.appbar.showError(entitlements.warnings.join(", "));
                         }
                     }

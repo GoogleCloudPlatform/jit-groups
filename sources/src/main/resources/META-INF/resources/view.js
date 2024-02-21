@@ -319,9 +319,9 @@ $(document).ready(async () => {
                 </div>
             </div>
         </div>
-        <div class='jit-view' id='jit-default-view'></div>`);
+        <div class='jit-view' id='jit-default-view' style="display: none"></div>`);
     $('body').append(`
-        <div class="mdc-dialog" id="jit-scopedialog">
+        <div class="mdc-dialog" id="jit-scopedialog" style="display: none">
             <div class="mdc-dialog__container">
             <div class="mdc-dialog__surface"
                 role="alertdialog"
