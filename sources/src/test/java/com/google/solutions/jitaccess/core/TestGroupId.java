@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,12 +21,14 @@
 
 package com.google.solutions.jitaccess.core;
 
-public abstract class AccessException extends Exception {
-  public AccessException(String message) {
-    super(message);
-  }
+import org.junit.jupiter.api.Test;
 
-  public AccessException(String message, Exception inner) {
-    super(message, inner);
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TestGroupId {
+  @Test
+  public void toStringReturnsEmail()
+  {
+    assertEquals("test@example.com", new UserId(("test@example.com").toString()));
   }
 }

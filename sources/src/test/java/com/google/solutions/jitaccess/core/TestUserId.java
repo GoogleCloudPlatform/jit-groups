@@ -27,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestUserId {
+  @Test
+  public void toStringReturnsEmail()
+  {
+    assertEquals("test@example.com", new UserId(("test@example.com").toString()));
+  }
 
   // -------------------------------------------------------------------------
   // Equality.

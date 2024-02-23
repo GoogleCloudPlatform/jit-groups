@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,14 +19,14 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess;
 
-public abstract class AccessException extends Exception {
-  public AccessException(String message) {
-    super(message);
-  }
+public record GroupId(
+  String email
+) {
 
-  public AccessException(String message, Exception inner) {
-    super(message, inner);
+  @Override
+  public String toString() {
+    return this.email;
   }
 }
