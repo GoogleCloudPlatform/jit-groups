@@ -51,7 +51,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestAssetInventoryRepository {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
   private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
@@ -570,7 +570,7 @@ public class TestAssetInventoryRepository {
 
     assertNotNull(holders);
     assertEquals(
-      Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+      Set.of(new UserEmail("user-1@example.com"), new UserEmail("user-2@example.com")),
       holders);
   }
 
@@ -620,7 +620,7 @@ public class TestAssetInventoryRepository {
 
     assertNotNull(holders);
     assertEquals(
-      Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+      Set.of(new UserEmail("user-1@example.com"), new UserEmail("user-2@example.com")),
       holders);
   }
 }

@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 import java.io.IOException;
 
@@ -41,7 +41,7 @@ public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
    * Verify if a user is allowed to approve a given request.
    */
   void verifyUserCanApprove(
-    UserId approvingUser,
+    UserEmail approvingUser,
     MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 }

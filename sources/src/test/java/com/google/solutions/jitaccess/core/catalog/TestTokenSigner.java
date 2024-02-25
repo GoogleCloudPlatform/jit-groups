@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
@@ -35,9 +35,9 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTokenSigner {
-  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
-  private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
+  private static final UserEmail SAMPLE_USER_1 = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
+  private static final UserEmail SAMPLE_USER_3 = new UserEmail("user-3@example.com");
 
   private static class PseudoJsonConverter implements JsonWebTokenConverter<JsonWebToken.Payload> {
     @Override

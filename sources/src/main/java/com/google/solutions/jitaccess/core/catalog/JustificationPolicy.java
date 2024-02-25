@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 /**
  * Policy for verifying justification messages.
@@ -31,7 +31,7 @@ public interface JustificationPolicy {
    * Check that a justification meets criteria.
    */
   void checkJustification(
-    UserId user,
+    UserEmail user,
     String justification
   ) throws InvalidJustificationException;
 

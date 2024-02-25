@@ -464,7 +464,7 @@ public class ApiResource {
       activationRequest = this.projectRoleActivator.createMpaRequest(
         iapPrincipal.getId(),
         Set.of(new ProjectRoleBinding(roleBinding)),
-        request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
+        request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
         requestedRoleBindingDuration);
@@ -798,14 +798,14 @@ public class ApiResource {
 
   public static class PolicyResponse {
     public final String justificationHint;
-    public final UserId signedInUser;
+    public final UserEmail signedInUser;
     public String applicationVersion;
     public final int defaultActivationTimeout; // in minutes.
     public final int maxActivationTimeout;     // in minutes.
 
     private PolicyResponse(
       String justificationHint,
-      UserId signedInUser,
+      UserEmail signedInUser,
       String applicationVersion,
       int maxActivationTimeoutInMinutes,
       int defaultActivationTimeoutInMinutes
@@ -870,9 +870,9 @@ public class ApiResource {
   }
 
   public static class ProjectRolePeersResponse {
-    public final Set<UserId> peers;
+    public final Set<UserEmail> peers;
 
-    private ProjectRolePeersResponse(Set<UserId> peers) {
+    private ProjectRolePeersResponse(Set<UserEmail> peers) {
       Preconditions.checkNotNull(peers);
       this.peers = peers;
     }
@@ -892,15 +892,15 @@ public class ApiResource {
   }
 
   public static class ActivationStatusResponse {
-    public final UserId beneficiary;
-    public final Collection<UserId> reviewers;
+    public final UserEmail beneficiary;
+    public final Collection<UserEmail> reviewers;
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
     public final List<ActivationStatus> items;
 
     private ActivationStatusResponse(
-      UserId caller,
+      UserEmail caller,
       com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request,
       Entitlement.Status status
     ) {
@@ -1014,7 +1014,7 @@ public class ApiResource {
     protected ActivationApprovedNotification(
       ProjectId projectId,
       Activation<ProjectRoleBinding> activation,
-      UserId approver,
+      UserEmail approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(

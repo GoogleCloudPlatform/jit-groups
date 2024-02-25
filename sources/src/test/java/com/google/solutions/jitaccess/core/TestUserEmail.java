@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -24,9 +24,8 @@ package com.google.solutions.jitaccess.core;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TestUserId {
+public class TestUserEmail {
 
   // -------------------------------------------------------------------------
   // Equality.
@@ -34,8 +33,8 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    UserEmail id1 = new UserEmail("bob@example.com");
+    UserEmail id2 = new UserEmail("bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -43,15 +42,15 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    UserEmail id1 = new UserEmail("bob@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("id-1", "bob@example.com");
-    UserId id2 = new UserId("id-2", "bob@example.com");
+    UserEmail id1 = new UserEmail("alice@example.com");
+    UserEmail id2 = new UserEmail("bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -59,16 +58,15 @@ public class TestUserId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    UserEmail id1 = new UserEmail("bob@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    var id = new UserId("bob", "bob@example.com");
-    var email = new UserEmail("bob@example.com");
+    UserEmail id1 = new UserEmail("bob@example.com");
 
-    assertFalse(id.equals(email));
+    assertFalse(id1.equals(""));
   }
 }

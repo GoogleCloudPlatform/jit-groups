@@ -60,7 +60,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
   private void provisionTemporaryBinding(
     String bindingDescription,
     ProjectId projectId,
-    UserId user,
+    UserEmail user,
     Set<String> roles,
     Instant startTime,
     Duration duration
@@ -121,7 +121,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
   @Override
   protected void provisionAccess(
-    UserId approvingUser,
+    UserEmail approvingUser,
     MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
@@ -188,11 +188,11 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
         return new MpaRequest<>(
           new ActivationId(payload.getJwtId()),
-          new UserId(payload.get("beneficiary").toString()),
+          new UserEmail(payload.get("beneficiary").toString()),
           Set.of(new ProjectRoleBinding(roleBinding)),
           ((List<String>)payload.get("reviewers"))
             .stream()
-            .map(email -> new UserId(email))
+            .map(email -> new UserEmail(email))
             .collect(Collectors.toSet()),
           payload.get("justification").toString(),
           Instant.ofEpochSecond(startTime),

@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -54,7 +54,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Create a new request to activate an entitlement that permits self-approval.
    */
   public final JitActivationRequest<TEntitlementId> createJitRequest(
-    UserId requestingUser,
+    UserEmail requestingUser,
     Set<TEntitlementId> entitlements,
     String justification,
     Instant startTime,
@@ -81,9 +81,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * multi-party approval.
    */
   public MpaActivationRequest<TEntitlementId> createMpaRequest(
-    UserId requestingUser,
+    UserEmail requestingUser,
     Set<TEntitlementId> entitlements,
-    Set<UserId> reviewers,
+    Set<UserEmail> reviewers,
     String justification,
     Instant startTime,
     Duration duration
@@ -142,7 +142,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Approve another user's request.
    */
   public final Activation<TEntitlementId> approve(
-    UserId approvingUser,
+    UserEmail approvingUser,
     MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
@@ -193,7 +193,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Apply a request.
    */
   protected abstract void provisionAccess(
-    UserId approvingUser,
+    UserEmail approvingUser,
     MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
@@ -211,7 +211,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     extends JitActivationRequest<TEntitlementId> {
     public JitRequest(
       ActivationId id,
-      UserId requestingUser,
+      UserEmail requestingUser,
       Set<TEntitlementId> entitlements,
       String justification,
       Instant startTime,
@@ -225,9 +225,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     extends MpaActivationRequest<TEntitlementId> {
     public MpaRequest(
       ActivationId id,
-      UserId requestingUser,
+      UserEmail requestingUser,
       Set<TEntitlementId> entitlements,
-      Set<UserId> reviewers,
+      Set<UserEmail> reviewers,
       String justification,
       Instant startTime,
       Duration duration

@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
@@ -57,8 +57,8 @@ public class SmtpClient {
   }
 
   public void sendMail(
-    Collection<UserId> toRecipients,
-    Collection<UserId> ccRecipients,
+    Collection<UserEmail> toRecipients,
+    Collection<UserEmail> ccRecipients,
     String subject,
     Multipart content,
     EnumSet<Flags> flags
@@ -125,8 +125,8 @@ public class SmtpClient {
   }
 
   public void sendMail(
-    Collection<UserId> toRecipients,
-    Collection<UserId> ccRecipients,
+    Collection<UserEmail> toRecipients,
+    Collection<UserEmail> ccRecipients,
     String subject,
     String htmlContent,
     EnumSet<Flags> flags

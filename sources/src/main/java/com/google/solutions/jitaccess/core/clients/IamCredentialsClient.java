@@ -75,7 +75,7 @@ public class IamCredentialsClient {
    * Sign a JWT using the Google-managed service account key.
    */
   public String signJwt(
-    UserId serviceAccount,
+    UserEmail serviceAccount,
     JsonWebToken.Payload payload
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
@@ -118,7 +118,7 @@ public class IamCredentialsClient {
   /**
    * Get JWKS location for service account key set.
    */
-  public static String getJwksUrl(UserId serviceAccount) {
+  public static String getJwksUrl(UserEmail serviceAccount) {
     return String.format("https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", serviceAccount.email);
   }
 }

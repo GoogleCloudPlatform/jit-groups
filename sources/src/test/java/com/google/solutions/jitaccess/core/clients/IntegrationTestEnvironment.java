@@ -26,7 +26,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -56,12 +56,12 @@ public class IntegrationTestEnvironment {
   /**
    * Service account that tests can use to grant temporary access to.
    */
-  public static final UserId TEMPORARY_ACCESS_USER;
+  public static final UserEmail TEMPORARY_ACCESS_USER;
 
   /**
    * Service account that doesn't have access to anything.
    */
-  public static final UserId NO_ACCESS_USER;
+  public static final UserEmail NO_ACCESS_USER;
 
   public static final PubSubTopic PUBSUB_TOPIC;
 
@@ -81,12 +81,10 @@ public class IntegrationTestEnvironment {
 
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
 
-      NO_ACCESS_USER = new UserId(
-        "no-access",
+      NO_ACCESS_USER = new UserEmail(
         String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
 
-      TEMPORARY_ACCESS_USER = new UserId(
-        "temporary-access",
+      TEMPORARY_ACCESS_USER = new UserEmail(
         String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
       var defaultCredentials = GoogleCredentials
