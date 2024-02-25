@@ -26,9 +26,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestUserEmail {
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
-  public void toStringReturnsEmail()
-  {
+  public void toStringReturnsEmail() {
     assertEquals("test@example.com", new UserEmail("test@example.com").toString());
   }
 

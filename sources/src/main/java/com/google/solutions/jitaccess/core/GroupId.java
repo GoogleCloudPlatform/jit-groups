@@ -39,7 +39,7 @@ public class GroupId extends UserEmail {
     Preconditions.checkNotNull(id, "id");
 
     if (id.startsWith(GROUPS_PREFIX)) {
-      id = id.substring(GROUPS_PREFIX.length()); //TODO: test
+      id = id.substring(GROUPS_PREFIX.length());
     }
 
     this.id = id;

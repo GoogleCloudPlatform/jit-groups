@@ -24,15 +24,27 @@ package com.google.solutions.jitaccess.core;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TestGroupEmail {
+public class TestGroupId {
+
+  // -------------------------------------------------------------------------
+  // Constructor.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenIdHasPrefix_ThenConstructorStripsPrefix() {
+    assertEquals("1", new GroupId("1", "group-1@example.com").id);
+    assertEquals("1", new GroupId("groups/1", "group-1@example.com").id);
+  }
+
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
 
   @Test
-  public void toStringReturnsEmail() {
-    assertEquals("test@example.com", new GroupEmail("test@example.com").toString());
+  public void toStringReturnsPrefixedId() {
+    assertEquals("groups/1", new GroupId("1", "test@example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -41,8 +53,8 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    GroupId id1 = new GroupId("group-1", "group-1@example.com");
+    GroupId id2 = new GroupId("group-1", "group-1@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -50,15 +62,15 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    GroupId id1 = new GroupId("group-1", "group-1@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("alice@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    GroupId id1 = new GroupId("id-1", "group-1@example.com");
+    GroupId id2 = new GroupId("id-2", "group-1@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -66,15 +78,16 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    GroupId id1 = new GroupId("group-1", "group-1@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    var id = new GroupId("group-1", "group-1@example.com");
+    var email = new UserEmail("group-1@example.com");
 
-    assertFalse(id1.equals(""));
+    assertFalse(id.equals(email));
   }
 }
