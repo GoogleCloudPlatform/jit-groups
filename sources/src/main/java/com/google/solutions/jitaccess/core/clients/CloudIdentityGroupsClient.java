@@ -321,7 +321,7 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
-   * Get details for an existing group membership.
+   * Delete a group membership in an idempotent way.
    */
   public void deleteMembership(
     MembershipId membershipId
@@ -345,6 +345,9 @@ public class CloudIdentityGroupsClient {
     }
   }
 
+  /**
+   * Add a member to a group in an idempotent way.
+   */
   public MembershipId addMembership(
     GroupId groupId,
     UserEmail userEmail
