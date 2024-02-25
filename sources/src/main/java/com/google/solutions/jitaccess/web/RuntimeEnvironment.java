@@ -28,13 +28,12 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
-import com.google.api.services.cloudasset.v1.model.Asset;
 import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
@@ -55,11 +54,8 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Provides access to runtime configuration (AppEngine, local). To be injected using CDI.
@@ -72,7 +68,7 @@ public class RuntimeEnvironment {
 
   private final String projectId;
   private final String projectNumber;
-  private final UserId applicationPrincipal;
+  private final UserEmail applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
   /**
@@ -145,7 +141,7 @@ public class RuntimeEnvironment {
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
         var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserId(defaultCredentials.getAccount());
+        this.applicationPrincipal = new UserEmail(defaultCredentials.getAccount());
 
         if (defaultCredentials.getScopes().containsAll(this.configuration.getRequiredOauthScopes())) {
           //
@@ -220,14 +216,14 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.applicationCredentials.refresh();
-          this.applicationPrincipal = new UserId(impersonateServiceAccount);
+          this.applicationPrincipal = new UserEmail(impersonateServiceAccount);
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
-          this.applicationPrincipal = new UserId(
+          this.applicationPrincipal = new UserEmail(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         }
         else {
@@ -272,7 +268,7 @@ public class RuntimeEnvironment {
     return projectNumber;
   }
 
-  public UserId getApplicationPrincipal() {
+  public UserEmail getApplicationPrincipal() {
     return applicationPrincipal;
   }
 

@@ -26,7 +26,7 @@ import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
@@ -89,7 +89,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   void verifyUserCanActivateEntitlements(
-    UserId user,
+    UserEmail user,
     ProjectId projectId,
     ActivationType activationType,
     Collection<ProjectRoleBinding> entitlements
@@ -137,7 +137,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public SortedSet<ProjectId> listProjects(
-    UserId user
+    UserEmail user
   ) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
@@ -161,7 +161,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public EntitlementSet<ProjectRoleBinding> listEntitlements(
-    UserId user,
+    UserEmail user,
     ProjectId projectId
   ) throws AccessException, IOException {
     return this.repository.findEntitlements(
@@ -172,8 +172,8 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public SortedSet<UserId> listReviewers(
-    UserId requestingUser,
+  public SortedSet<UserEmail> listReviewers(
+    UserEmail requestingUser,
     ProjectRoleBinding entitlement
   ) throws AccessException, IOException {
 
@@ -220,7 +220,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public void verifyUserCanApprove(
-    UserId approvingUser,
+    UserEmail approvingUser,
     MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 

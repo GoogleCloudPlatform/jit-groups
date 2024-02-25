@@ -57,7 +57,7 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
    */
   public IamPolicyAnalysis findAccessibleResourcesByUser(
       String scope,
-      UserId user,
+      UserEmail user,
       Optional<String> permission,
       Optional<String> fullResourceName,
       boolean expandResources

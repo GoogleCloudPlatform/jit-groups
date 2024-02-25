@@ -93,7 +93,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   }
 
   List<Binding> findProjectBindings(
-    UserId user,
+    UserEmail user,
     ProjectId projectId
   ) throws AccessException, IOException {
     //
@@ -132,7 +132,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
   @Override
   public SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserId user
+    UserEmail user
   ) {
     //
     // Not supported.
@@ -143,7 +143,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
   @Override
   public EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserId user,
+    UserEmail user,
     ProjectId projectId,
     EnumSet<ActivationType> typesToInclude,
     EnumSet<Entitlement.Status> statusesToInclude
@@ -246,7 +246,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public Set<UserId> findEntitlementHolders(
+  public Set<UserEmail> findEntitlementHolders(
     ProjectRoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException {
@@ -276,7 +276,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       .filter(p -> p.startsWith(USER_PREFIX))
       .map(p -> p.substring(USER_PREFIX.length()))
       .distinct()
-      .map(email -> new UserId(email))
+      .map(email -> new UserEmail(email))
       .collect(Collectors.toSet());
 
     //
@@ -307,7 +307,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     for (var listMembersFuture : listMembersFutures) {
       var members = awaitAndRethrow(listMembersFuture)
         .stream()
-        .map(m -> new UserId(m.getEmail()))
+        .map(m -> new UserEmail(m.getEmail()))
         .collect(Collectors.toList());
       allMembers.addAll(members);
     }
@@ -323,7 +323,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     private final Set<String> principalIdentifiers;
 
     public PrincipalSet(
-      UserId user,
+      UserEmail user,
       Collection<Group> groups
     ) {
       this.principalIdentifiers = groups

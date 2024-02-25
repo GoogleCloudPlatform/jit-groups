@@ -80,7 +80,7 @@ public class DirectoryGroupsClient {
    * List all groups a given user is a direct member of.
    */
   public Collection<Group> listDirectGroupMemberships(
-    UserId user
+    UserEmail user
   ) throws AccessException, IOException {
     try {
       //

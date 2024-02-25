@@ -22,10 +22,7 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -57,8 +54,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class TestApiResource {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2", "user-2@example.com");
 
   private static final String SAMPLE_TOKEN = "eySAMPLE";
   private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile("pattern");
@@ -306,7 +303,7 @@ public class TestApiResource {
       .listReviewers(
         eq(SAMPLE_USER),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
-      .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
+      .thenReturn(new TreeSet(Set.of(new UserEmail("peer-1@example.com"), new UserEmail("peer-2@example.com"))));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
       .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
@@ -951,7 +948,9 @@ public class TestApiResource {
         eq(SAMPLE_TOKEN)))
       .thenReturn(request);
 
-    var response = new RestDispatcher<>(this.resource, new UserId("other-party@example.com"))
+    var response = new RestDispatcher<>(
+      this.resource,
+      new UserId("other-party", "other-party@example.com"))
       .get(
         "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
         ExceptionMappers.ErrorEntity.class);

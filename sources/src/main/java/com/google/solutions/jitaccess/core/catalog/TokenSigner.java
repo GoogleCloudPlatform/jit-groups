@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import jakarta.inject.Singleton;
 
@@ -128,7 +128,7 @@ public class TokenSigner {
     }
   }
 
-  public record Options(UserId serviceAccount, Duration tokenValidity) {
+  public record Options(UserEmail serviceAccount, Duration tokenValidity) {
     public Options {
       Preconditions.checkNotNull(serviceAccount);
       Preconditions.checkArgument(!tokenValidity.isNegative());

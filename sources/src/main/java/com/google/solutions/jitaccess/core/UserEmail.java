@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -26,18 +26,24 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 /**
- * Primary email address and unique ID of a user.
+ * Primary email address of a user.
  */
-public class UserId extends UserEmail {
-  public final transient String id;
+public class UserEmail implements Comparable<UserEmail> {
+  public final String email;
 
-  public UserId(String id, String email) {
-    super(email);
-
-    Preconditions.checkNotNull(id, "id");
-
-    this.id = id;
+  public UserEmail(String email) {
+    Preconditions.checkNotNull(email, "email");
+    this.email = email;
   }
+
+  @Override
+  public String toString() {
+    return this.email;
+  }
+
+  // -------------------------------------------------------------------------
+  // Equality.
+  // -------------------------------------------------------------------------
 
   @Override
   public boolean equals(Object o) {
@@ -49,16 +55,17 @@ public class UserId extends UserEmail {
       return false;
     }
 
-    if (!super.equals(o)) {
-      return false;
-    }
-
-    UserId userId = (UserId) o;
-    return this.id.equals(userId.id);
+    UserEmail userEmail = (UserEmail) o;
+    return email.equals(userEmail.email);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), id);
+    return Objects.hash(email);
+  }
+
+  @Override
+  public int compareTo(UserEmail o) {
+    return this.email.compareTo(o.email);
   }
 }

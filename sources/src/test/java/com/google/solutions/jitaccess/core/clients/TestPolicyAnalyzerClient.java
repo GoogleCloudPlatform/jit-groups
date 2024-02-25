@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import org.junit.jupiter.api.Test;
 
 import java.net.SocketTimeoutException;
@@ -48,7 +48,7 @@ public class TestPolicyAnalyzerClient {
       NotAuthenticatedException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserId("", "bob@example.com"),
+        new UserEmail("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -64,7 +64,7 @@ public class TestPolicyAnalyzerClient {
       AccessDeniedException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserId("", "bob@example.com"),
+        new UserEmail("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -83,7 +83,7 @@ public class TestPolicyAnalyzerClient {
       SocketTimeoutException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserId("", "bob@example.com"),
+        new UserEmail("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -97,7 +97,7 @@ public class TestPolicyAnalyzerClient {
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
+      new UserEmail("bob@example.com"),
       Optional.of("invalid.invalid.invalid"),
       Optional.empty(),
       true);
@@ -114,7 +114,7 @@ public class TestPolicyAnalyzerClient {
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-      new UserId("", "bob@example.com"),
+      new UserEmail("bob@example.com"),
       Optional.empty(),
       Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
       true);

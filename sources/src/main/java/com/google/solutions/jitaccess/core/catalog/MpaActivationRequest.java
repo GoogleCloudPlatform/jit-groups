@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,13 +34,13 @@ import java.util.Set;
  */
 public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
-  private final Collection<UserId> reviewers;
+  private final Collection<UserEmail> reviewers;
 
   protected MpaActivationRequest(
     ActivationId id,
-    UserId requestingUser,
+    UserEmail requestingUser,
     Set<TEntitlementId> entitlements,
-    Set<UserId> reviewers,
+    Set<UserEmail> reviewers,
     String justification,
     Instant startTime,
     Duration duration) {
@@ -57,7 +57,7 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
     this.reviewers = reviewers;
   }
 
-  public Collection<UserId> reviewers() {
+  public Collection<UserEmail> reviewers() {
     return this.reviewers;
   }
 

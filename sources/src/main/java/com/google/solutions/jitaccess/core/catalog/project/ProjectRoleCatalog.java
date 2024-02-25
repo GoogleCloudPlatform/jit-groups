@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 
@@ -38,22 +38,22 @@ public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRo
    * List projects that the user has any entitlements for.
    */
   public abstract SortedSet<ProjectId> listProjects(
-    UserId user
+    UserEmail user
   ) throws AccessException, IOException;
 
   /**
    * List available entitlements.
    */
   public abstract EntitlementSet<ProjectRoleBinding> listEntitlements(
-    UserId user,
+    UserEmail user,
     ProjectId projectId
   ) throws AccessException, IOException;
 
   /**
    * List available reviewers for (MPA-) activating an entitlement.
    */
-  public abstract SortedSet<UserId> listReviewers(
-    UserId requestingUser,
+  public abstract SortedSet<UserEmail> listReviewers(
+    UserEmail requestingUser,
     ProjectRoleBinding entitlement
   ) throws AccessException, IOException;
 }
