@@ -38,6 +38,8 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +51,7 @@ public class CloudIdentityGroupsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final String LOCAL_USERS_AND_SERVICEACCOUNTS_ONLY =
     "member.customer_id == groupCustomerId() && (member.type == 1 || member.type == 2)";
+  private static final int SEARCH_PAGE_SIZE = 1000;
 
   private final Options options;
   private final GoogleCredentials credentials;
@@ -450,6 +453,40 @@ public class CloudIdentityGroupsClient {
         translateAndThrowApiException(e);
         return null;
       }
+    }
+  }
+
+  public Collection<MembershipRelation> searchDirectGroupMemberships(
+    UserEmail userEmail
+  ) throws AccessException, IOException {
+    Preconditions.checkArgument(userEmail.email.indexOf('\'') < 0);
+
+    try {
+      var client = createClient();
+      var result = new ArrayList<MembershipRelation>();
+      String pageToken = null;
+      do {
+        var page = client
+          .groups()
+          .memberships()
+          .searchDirectGroups("groups/-")
+          .setQuery(String.format("member_key_id=='%s'", userEmail.email))
+          .setPageToken(pageToken)
+          .setPageSize(SEARCH_PAGE_SIZE)
+          .execute();
+
+        if (page.getMemberships() != null) {
+          result.addAll(page.getMemberships());
+        }
+
+        pageToken = page.getNextPageToken();
+      } while (pageToken != null);
+
+      return result;
+    }
+    catch (GoogleJsonResponseException e) {
+      translateAndThrowApiException(e);
+      return null;
     }
   }
 

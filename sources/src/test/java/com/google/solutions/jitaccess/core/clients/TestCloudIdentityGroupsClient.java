@@ -399,4 +399,34 @@ public class TestCloudIdentityGroupsClient {
       NotFoundException.class,
       () -> client.getMembership(id));
   }
+
+  //---------------------------------------------------------------------
+  // searchDirectGroupMemberships.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenSearchDirectGroupMembershipsThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> client.searchDirectGroupMemberships(
+        IntegrationTestEnvironment.TEMPORARY_ACCESS_USER));
+  }
+
+  @Test
+  public void searchDirectGroupMemberships() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var memberships = client.searchDirectGroupMemberships(
+      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+    assertEquals(0, memberships.size());
+  }
 }
