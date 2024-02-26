@@ -22,7 +22,7 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupEmail>com.google.solutions</groupEmail>
+  <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
   <version>1.7.0</version>
   <properties>
@@ -36,7 +36,7 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupEmail>io.quarkus</groupEmail>
+        <groupId>io.quarkus</groupId>
         <artifactId>quarkus-bom</artifactId>
         <version>${quarkus.version}</version>
         <type>pom</type>
@@ -47,78 +47,78 @@
 
   <dependencies>
     <dependency>
-      <groupEmail>io.quarkus</groupEmail>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy</artifactId>
     </dependency>
     <dependency>
-      <groupEmail>io.quarkus</groupEmail>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-jackson</artifactId>
     </dependency>
     <dependency>
-      <groupEmail>com.google.auth</groupEmail>
+      <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
       <version>1.23.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudresourcemanager</artifactId>
       <version>v3-rev20240128-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudasset</artifactId>
       <version>v1-rev20240217-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-pubsub</artifactId>
       <version>v1-rev20240208-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-iamcredentials</artifactId>
       <version>v1-rev20211203-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-secretmanager</artifactId>
       <version>v1-rev20240126-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-admin-directory</artifactId>
       <version>directory_v1-rev20240220-2.0.0</version>
     </dependency>
     <dependency>
-      <groupEmail>com.google.apis</groupEmail>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudidentity</artifactId>
       <version>v1-rev20240206-2.0.0</version>
     </dependency>
 
     <dependency>
-      <groupEmail>com.google.code.gson</groupEmail>
+      <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.10.1</version>
     </dependency>
     <dependency>
-      <groupEmail>com.sun.mail</groupEmail>
+      <groupId>com.sun.mail</groupId>
       <artifactId>jakarta.mail</artifactId>
       <version>2.0.1</version>
     </dependency>
     <dependency>
-      <groupEmail>dev.cel</groupEmail>
+      <groupId>dev.cel</groupId>
       <artifactId>cel</artifactId>
       <version>0.3.0</version>
     </dependency>
 
     <!-- Test dependencies -->
     <dependency>
-      <groupEmail>io.quarkus</groupEmail>
+      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupEmail>org.mockito</groupEmail>
+      <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>5.10.0</version>
       <scope>test</scope>
@@ -128,7 +128,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupEmail>io.quarkus</groupEmail>
+        <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus.version}</version>
         <executions>
@@ -140,7 +140,7 @@
         </executions>
       </plugin>
       <plugin>
-        <groupEmail>org.apache.maven.plugins</groupEmail>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire-plugin.version}</version>
       </plugin>
