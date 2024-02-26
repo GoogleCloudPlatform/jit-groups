@@ -297,7 +297,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
             return List.<Member>of();
           }
         },
-        this.executor)).toList();
+        this.executor))
+      .toList();
 
     var allMembers = new HashSet<>(allUserMembers);
 

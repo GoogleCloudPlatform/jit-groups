@@ -242,7 +242,8 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       allAvailable.addAll(jitEligible);
       allAvailable.addAll(mpaEligible
         .stream()
-        .filter(r -> jitEligible.stream().noneMatch(a -> a.id().equals(r.id()))).toList());
+        .filter(r -> jitEligible.stream().noneMatch(a -> a.id().equals(r.id())))
+        .toList());
     }
 
     var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
