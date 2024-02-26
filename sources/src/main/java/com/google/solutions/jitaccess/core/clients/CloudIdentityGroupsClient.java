@@ -509,7 +509,7 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  class IncompleteOperationException extends AccessException {
+  static class IncompleteOperationException extends AccessException {
     public IncompleteOperationException(String message) {
       super(message);
     }

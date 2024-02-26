@@ -86,15 +86,15 @@ public abstract class NotificationService {
       return false;
     }
 
-    public Collection<UserEmail> getToRecipients() {
+    public @NotNull Collection<UserEmail> getToRecipients() {
       return toRecipients;
     }
 
-    public Collection<UserEmail> getCcRecipients() {
+    public @NotNull Collection<UserEmail> getCcRecipients() {
       return ccRecipients;
     }
 
-    public String getSubject() {
+    public @NotNull String getSubject() {
       return subject;
     }
 

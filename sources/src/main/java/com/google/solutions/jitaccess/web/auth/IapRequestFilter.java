@@ -73,7 +73,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
     } else {
       return String.format(
         "/projects/%s/global/backendServices/%s",
-        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId().toString()
+        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId()
       );
     }
   }

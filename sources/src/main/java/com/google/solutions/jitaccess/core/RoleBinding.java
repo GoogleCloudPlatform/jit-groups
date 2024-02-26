@@ -53,7 +53,7 @@ public record RoleBinding (
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(RoleBinding o) {
+  public int compareTo(@NotNull RoleBinding o) {
     return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
       .thenComparing(r -> r.role)
       .compare(this, o);

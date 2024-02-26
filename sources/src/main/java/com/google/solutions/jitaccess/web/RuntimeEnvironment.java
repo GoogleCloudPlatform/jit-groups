@@ -269,7 +269,7 @@ public class RuntimeEnvironment {
     return projectNumber;
   }
 
-  public UserEmail getApplicationPrincipal() {
+  public @NotNull UserEmail getApplicationPrincipal() {
     return applicationPrincipal;
   }
 

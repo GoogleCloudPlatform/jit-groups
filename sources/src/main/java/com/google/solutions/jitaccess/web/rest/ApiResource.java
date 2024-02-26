@@ -800,7 +800,7 @@ public class ApiResource {
   public static class PolicyResponse {
     public final @NotNull String justificationHint;
     public final @NotNull UserEmail signedInUser;
-    public String applicationVersion;
+    public final String applicationVersion;
     public final int defaultActivationTimeout; // in minutes.
     public final int maxActivationTimeout;     // in minutes.
 
@@ -966,7 +966,7 @@ public class ApiResource {
    * Notification indicating that a multi-party approval request has been made
    * and is pending approval.
    */
-  public class RequestActivationNotification extends NotificationService.Notification
+  public static class RequestActivationNotification extends NotificationService.Notification
   {
     protected RequestActivationNotification(
       @NotNull ProjectId projectId,
@@ -1011,7 +1011,7 @@ public class ApiResource {
   /**
    * Notification indicating that a multi-party approval was granted.
    */
-  public class ActivationApprovedNotification extends NotificationService.Notification {
+  public static class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
       ProjectId projectId,
       @NotNull Activation<ProjectRoleBinding> activation,
@@ -1060,7 +1060,7 @@ public class ApiResource {
   /**
    * Notification indicating that a self-approval was performed.
    */
-  public class ActivationSelfApprovedNotification extends NotificationService.Notification {
+  public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
       @NotNull Activation<ProjectRoleBinding> activation)

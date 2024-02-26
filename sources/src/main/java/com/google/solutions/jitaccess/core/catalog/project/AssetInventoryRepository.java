@@ -320,7 +320,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  class PrincipalSet {
+  static class PrincipalSet {
     private final @NotNull Set<String> principalIdentifiers;
 
     public PrincipalSet(

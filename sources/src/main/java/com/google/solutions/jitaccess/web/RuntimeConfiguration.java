@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 class RuntimeConfiguration {
   enum Catalog {
     /**
-     * Use Policy Analyzer API. Requires a SCC subscription.
+     * Use Policy Analyzer API. Requires an SCC subscription.
      */
     POLICYANALYZER,
 

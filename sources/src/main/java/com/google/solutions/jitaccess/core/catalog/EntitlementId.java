@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -64,7 +65,7 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
   }
 
   @Override
-  public int compareTo(EntitlementId o) {
+  public int compareTo(@NotNull EntitlementId o) {
     return Comparator
       .comparing((EntitlementId e) -> e.catalog())
       .thenComparing(e -> e.id())

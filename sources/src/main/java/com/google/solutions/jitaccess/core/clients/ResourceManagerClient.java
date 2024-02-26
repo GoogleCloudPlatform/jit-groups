@@ -513,7 +513,7 @@ public class ResourceManagerClient {
   /**
    * The request sent to the GetAncestry method.
    */
-  private final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
+  private static final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
   }
 
   /**
@@ -522,7 +522,7 @@ public class ResourceManagerClient {
   public static final class GetAncestryResponse extends GenericJson {
     /**
      * Ancestors are ordered from bottom to top of the resource hierarchy. The first ancestor is the
-     * project itself, followed by the project's parent, etc..
+     * project itself, followed by the project's parent, etc.
      * The value may be {@code null}.
      */
     @Key
