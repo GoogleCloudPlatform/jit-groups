@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
@@ -28,12 +28,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Email address of a group.
+ * Primary email address of a user.
  */
-public class GroupEmail implements Comparable<GroupEmail> {
+public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier { // TODO: Rename to UserPrincipal, move to auth
+  public static final String TYPE = "user";
+
   public final @NotNull String email;
 
-  public GroupEmail(@NotNull String email) {
+  public UserEmail(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     this.email = email;
   }
@@ -53,12 +55,12 @@ public class GroupEmail implements Comparable<GroupEmail> {
       return true;
     }
 
-    if (o == null || getClass() != o.getClass()) {
+    if (o == null || getClass() != o.getClass()) { // TODO: equal UserId
       return false;
     }
 
-    GroupEmail GroupEmail = (GroupEmail) o;
-    return email.equals(GroupEmail.email);
+    UserEmail userEmail = (UserEmail) o;
+    return email.equals(userEmail.email);
   }
 
   @Override
@@ -67,7 +69,21 @@ public class GroupEmail implements Comparable<GroupEmail> {
   }
 
   @Override
-  public int compareTo(@NotNull GroupEmail o) {
+  public int compareTo(@NotNull UserEmail o) {
     return this.email.compareTo(o.email);
+  }
+
+  // -------------------------------------------------------------------------
+  // Principal.
+  // -------------------------------------------------------------------------
+
+  @Override
+  public String type() {
+    return TYPE;
+  }
+
+  @Override
+  public String value() {
+    return this.email;
   }
 }

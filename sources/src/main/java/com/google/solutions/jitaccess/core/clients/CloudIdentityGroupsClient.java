@@ -28,6 +28,9 @@ import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.GroupEmail;
+import com.google.solutions.jitaccess.core.auth.GroupId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.NotFoundException;
 import org.jetbrains.annotations.NotNull;
@@ -312,11 +315,23 @@ public class CloudIdentityGroupsClient {
     @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
-      return client
+      var membership = client
         .groups()
         .memberships()
         .get(membershipId.id)
         .execute();
+
+      //
+      // The API automatically filters out expired memberships.
+      //
+      assert membership
+        .getRoles()
+        .stream()
+        .allMatch(
+          r -> r.getExpiryDetail() == null ||
+            Instant.parse(r.getExpiryDetail().getExpireTime()).isAfter(Instant.now()));
+
+      return membership;
     }
     catch (GoogleJsonResponseException e) {
       translateAndThrowApiException(e);
@@ -401,13 +416,12 @@ public class CloudIdentityGroupsClient {
   /**
    * Add a member to a group in an idempotent way.
    */
-  public @NotNull MembershipId addMembership(
+  private @NotNull MembershipId addMembership(
+    @NotNull CloudIdentity client,
     @NotNull GroupId groupId,
     @NotNull UserEmail userEmail,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
-    var client = createClient();
-
     var role = new MembershipRole()
       .setName("MEMBER")
       .setExpiryDetail(new ExpiryDetail()
@@ -454,6 +468,33 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
+   * Add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addMembership(
+    @NotNull GroupId groupId,
+    @NotNull UserEmail userEmail,
+    @NotNull Instant expiry
+  ) throws AccessException, IOException {
+    return addMembership(createClient(), groupId, userEmail, expiry);
+  }
+
+  /**
+   * Add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addMembership(
+    @NotNull GroupEmail groupEmail,
+    @NotNull UserEmail userEmail,
+    @NotNull Instant expiry
+  ) throws AccessException, IOException {
+    var client = createClient();
+    return addMembership(
+      client,
+      lookupGroup(client, groupEmail),
+      userEmail,
+      expiry);
+  }
+
+  /**
    * List members of a group.
    */
   private @NotNull List<Membership> listMemberships(
@@ -468,6 +509,7 @@ public class CloudIdentityGroupsClient {
           .groups()
           .memberships()
           .list(groupId.toString())
+          .setView("FULL") // Include expiry details
           .setPageToken(pageToken)
           .setPageSize(SEARCH_PAGE_SIZE)
           .execute();
@@ -477,6 +519,17 @@ public class CloudIdentityGroupsClient {
         }
 
         pageToken = page.getNextPageToken();
+
+        //
+        // The API automatically filters out expired memberships.
+        //
+        assert page.getMemberships()
+          .stream()
+          .flatMap(m -> m.getRoles().stream())
+          .allMatch(
+            r -> r.getExpiryDetail() == null ||
+            Instant.parse(r.getExpiryDetail().getExpireTime()).isAfter(Instant.now()));
+
       } while (pageToken != null);
 
       return Collections.unmodifiableList(result);
@@ -522,6 +575,15 @@ public class CloudIdentityGroupsClient {
         if (page.getMemberships() != null) {
           result.addAll(page.getMemberships());
         }
+
+        //
+        // The API does **NOT** include expiry details.
+        //
+        assert page.getMemberships() == null || page
+          .getMemberships()
+          .stream()
+          .flatMap(m -> m.getRoles().stream())
+          .allMatch(r -> r.getExpiryDetail() == null);
 
         pageToken = page.getNextPageToken();
       } while (pageToken != null);

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,31 +19,48 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.catalog.OrganizationId;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupId {
-
-  // -------------------------------------------------------------------------
-  // Constructor.
-  // -------------------------------------------------------------------------
+public class TestOrganizationId {
 
   @Test
-  public void whenIdHasPrefix_ThenConstructorStripsPrefix() {
-    assertEquals("1", new GroupId("1", "group-1@example.com").id);
-    assertEquals("1", new GroupId("groups/1", "group-1@example.com").id);
+  public void toStringReturnsId() {
+    assertEquals("111", new OrganizationId("111").toString());
   }
 
   // -------------------------------------------------------------------------
-  // toString.
+  // Type.
   // -------------------------------------------------------------------------
 
   @Test
-  public void toStringReturnsPrefixedId() {
-    assertEquals("groups/1", new GroupId("1", "test@example.com").toString());
+  public void type() {
+    assertEquals("organization", new OrganizationId("111").type());
+  }
+
+  // -------------------------------------------------------------------------
+  // ID.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void id() {
+    assertEquals("111", new OrganizationId("111").id());
+  }
+
+  // -------------------------------------------------------------------------
+  // Path.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void path() {
+    assertEquals("organizations/111", new OrganizationId("111").path());
   }
 
   // -------------------------------------------------------------------------
@@ -52,8 +69,8 @@ public class TestGroupId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
-    GroupId id2 = new GroupId("group-1", "group-1@example.com");
+    OrganizationId id1 = new OrganizationId("111");
+    OrganizationId id2 = new OrganizationId("111");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -61,15 +78,15 @@ public class TestGroupId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
+    OrganizationId id1 = new OrganizationId("111");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    GroupId id1 = new GroupId("id-1", "group-1@example.com");
-    GroupId id2 = new GroupId("id-2", "group-1@example.com");
+    OrganizationId id1 = new OrganizationId("111");
+    OrganizationId id2 = new OrganizationId("222");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -77,16 +94,34 @@ public class TestGroupId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
+    OrganizationId id1 = new OrganizationId("111");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    var id = new GroupId("group-1", "group-1@example.com");
-    var email = new UserEmail("group-1@example.com");
+    OrganizationId id1 = new OrganizationId("111");
 
-    assertFalse(id.equals(email));
+    assertFalse(id1.equals(""));
+  }
+
+  // -------------------------------------------------------------------------
+  // Comparable.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
+    var organizations = List.of(
+      new OrganizationId("333"),
+      new OrganizationId("111"),
+      new OrganizationId("222"));
+
+    assertIterableEquals(
+      List.of(
+        new OrganizationId("111"),
+        new OrganizationId("222"),
+        new OrganizationId("333")),
+      new TreeSet<>(organizations));
   }
 }

@@ -22,13 +22,15 @@
 package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.GroupEmail;
+import com.google.solutions.jitaccess.core.auth.GroupId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -225,7 +227,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void getMembership() throws Exception {
+  public void getMembershipReturnsExpiryDetails() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -233,15 +235,20 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+
+    var membershipExpiry = Instant.now().plusSeconds(300);
     var id = client.addMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER,
-      Instant.now().plusSeconds(300));
+      membershipExpiry);
     var membership = client.getMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER);
 
     assertEquals(id.id(), membership.getName());
+    assertEquals(
+      membershipExpiry.truncatedTo(ChronoUnit.SECONDS),
+      Instant.parse(membership.getRoles().get(0).getExpiryDetail().getExpireTime()));
   }
 
   //---------------------------------------------------------------------
@@ -418,7 +425,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void listMemberships() throws Exception {
+  public void listMembershipsReturnsExpiryDetails() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -426,20 +433,26 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+    var membershipExpiry = Instant.now().plusSeconds(300);
     client.addMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER,
-      Instant.now().plusSeconds(300));
+      membershipExpiry);
 
     var memberships = client.listMemberships(TEST_GROUP_EMAIL);
     assertEquals(2, memberships.size());
 
-    var members = memberships
+    var membership = memberships
       .stream()
-      .map(m -> m.getPreferredMemberKey().getId())
-      .collect(Collectors.toSet());
+      .filter(m -> m.getPreferredMemberKey().getId().equals(ITestEnvironment.TEMPORARY_ACCESS_USER.toString()))
+      .findFirst();
 
-    assertTrue(members.contains(ITestEnvironment.TEMPORARY_ACCESS_USER.email));
+    assertTrue(membership.isPresent());
+
+    assertEquals(1, membership.get().getRoles().size());
+    assertEquals(
+      membershipExpiry.truncatedTo(ChronoUnit.SECONDS),
+      Instant.parse(membership.get().getRoles().get(0).getExpiryDetail().getExpireTime()));
   }
 
   //---------------------------------------------------------------------
@@ -460,7 +473,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void ListMembershipsByUser() throws Exception {
+  public void listMembershipsByUser() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(

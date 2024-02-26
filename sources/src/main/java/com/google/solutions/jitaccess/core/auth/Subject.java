@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,26 +19,23 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
+
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Set;
 
 /**
- * Identifier for a Resource Manager resource.
+ * Represents an entity such as a user.
  */
-public interface ResourceId {
+public interface Subject {
   /**
-   * Type of resource, for example project, folder, organization.
+   * @return Primary id.
    */
-  String type();
+  @NotNull PrincipalIdentifier id();
 
   /**
-   * Unique ID of the resource, without prefix.
+   * @return full set of principals, including groups.
    */
-  String id();
-
-  /**
-   * Path, in notation type/id.
-   *
-   * For example, projects/test-123 folders/234, organizations/345.
-   */
-   String path();
+  @NotNull Set<PrincipalIdentifier> principals();
 }

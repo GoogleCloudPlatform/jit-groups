@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.junit.jupiter.api.Test;
 
 import java.net.SocketTimeoutException;

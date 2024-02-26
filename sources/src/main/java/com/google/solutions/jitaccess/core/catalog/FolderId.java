@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,18 +19,16 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * ID of a Google Cloud project.
+ * ID of a Google Cloud folder.
  */
-public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId {
-  private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
-
-  public ProjectId {
+public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
+  public FolderId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
     assert !id.contains("/");
@@ -42,38 +40,11 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
   }
 
   // -------------------------------------------------------------------------
-  // Full resource name conversion.
-  // -------------------------------------------------------------------------
-
-  /**
-   * Return a full resource name as used by the Asset API.
-   */
-  public @NotNull String getFullResourceName() {
-    return PROJECT_RESOURCE_NAME_PREFIX + this.id;
-  }
-
-  /**
-   * Parse a full resource name (as used by the Asset API).
-   */
-  public static @NotNull ProjectId fromFullResourceName(@NotNull String fullResourceName) {
-    return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
-  }
-
-  /**
-   * Check if a full resource name identifies a project and can be used for
-   * a ProjectRole.
-   */
-  public static boolean isProjectFullResourceName(@NotNull String fullResourceName) {
-    return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
-      && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
-  }
-
-  // -------------------------------------------------------------------------
   // Comparable.
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(@NotNull ProjectId o) {
+  public int compareTo(@NotNull FolderId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -83,11 +54,11 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
 
   @Override
   public @NotNull String type() {
-    return "project";
+    return "folder";
   }
 
   @Override
   public String path() {
-    return String.format("projects/%s", this.id);
+    return String.format("folders/%s", this.id);
   }
 }

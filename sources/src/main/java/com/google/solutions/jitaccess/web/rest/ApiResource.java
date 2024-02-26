@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -170,7 +171,7 @@ public class ApiResource {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var projects = this.mpaCatalog.listProjects(iapPrincipal.getId());
+      var projects = this.mpaCatalog.listScopes(iapPrincipal.getId());
 
       this.logAdapter
         .newInfoEntry(

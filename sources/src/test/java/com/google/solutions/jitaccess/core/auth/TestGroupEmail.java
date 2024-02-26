@@ -19,21 +19,31 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestUserId {
+public class TestGroupEmail {
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void toStringReturnsEmail() {
+    Assertions.assertEquals("test@example.com", new GroupEmail("test@example.com").toString());
+  }
+
   // -------------------------------------------------------------------------
   // Equality.
   // -------------------------------------------------------------------------
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    GroupEmail id1 = new GroupEmail("group@example.com");
+    GroupEmail id2 = new GroupEmail("group@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -41,15 +51,15 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("id-1", "bob@example.com");
-    UserId id2 = new UserId("id-2", "bob@example.com");
+    GroupEmail id1 = new GroupEmail("alice@example.com");
+    GroupEmail id2 = new GroupEmail("group@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -57,16 +67,26 @@ public class TestUserId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    var id = new UserId("bob", "bob@example.com");
-    var email = new UserEmail("bob@example.com");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
-    assertFalse(id.equals(email));
+    assertFalse(id1.equals(""));
+  }
+
+  // -------------------------------------------------------------------------
+  // PrincipalIdentifier.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void value() {
+    assertEquals(
+      "group@example.com",
+      new GroupEmail("group@example.com").value());
   }
 }

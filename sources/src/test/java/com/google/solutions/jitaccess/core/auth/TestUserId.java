@@ -19,30 +19,23 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupEmail {
-  // -------------------------------------------------------------------------
-  // toString.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void toStringReturnsEmail() {
-    assertEquals("test@example.com", new GroupEmail("test@example.com").toString());
-  }
-
+public class TestUserId {
   // -------------------------------------------------------------------------
   // Equality.
   // -------------------------------------------------------------------------
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob", "bob@example.com");
+    UserId id2 = new UserId("bob", "bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -50,15 +43,15 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob", "bob@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("alice@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("id-1", "bob@example.com");
+    UserId id2 = new UserId("id-2", "bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -66,15 +59,16 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob", "bob@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    var id = new UserId("bob", "bob@example.com");
+    var email = new UserEmail("bob@example.com");
 
-    assertFalse(id1.equals(""));
+    assertFalse(id.equals(email));
   }
 }

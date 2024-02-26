@@ -22,9 +22,9 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
-import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;

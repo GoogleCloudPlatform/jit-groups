@@ -22,9 +22,9 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
@@ -453,11 +453,11 @@ public class TestMpaProjectRoleCatalog {
   }
 
   //---------------------------------------------------------------------------
-  // listProjects.
+  // listScopes.
   //---------------------------------------------------------------------------
 
   @Test
-  public void whenProjectQueryProvided_thenListProjectsPerformsProjectSearch() throws Exception {
+  public void whenProjectQueryProvided_thenListScopesPerformsProjectSearch() throws Exception {
     var resourceManager = Mockito.mock(ResourceManagerClient.class);
     when(resourceManager.searchProjectIds(eq("query")))
       .thenReturn(new TreeSet<>(Set.of(
@@ -475,7 +475,7 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var projects = catalog.listProjects(SAMPLE_REQUESTING_USER);
+    var projects = catalog.listScopes(SAMPLE_REQUESTING_USER);
     assertIterableEquals(
       List.of( // Sorted
         new ProjectId("project-1"),
@@ -485,7 +485,7 @@ public class TestMpaProjectRoleCatalog {
   }
 
   @Test
-  public void whenProjectQueryNotProvided_thenListProjectsPerformsPolicySearch() throws Exception {
+  public void whenProjectQueryNotProvided_thenListScopesPerformsPolicySearch() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzerRepository.class);
     when(policyAnalyzer.findProjectsWithEntitlements(eq(SAMPLE_REQUESTING_USER)))
       .thenReturn(new TreeSet<>(Set.of(
@@ -503,7 +503,7 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var projects = catalog.listProjects(SAMPLE_REQUESTING_USER);
+    var projects = catalog.listScopes(SAMPLE_REQUESTING_USER);
     assertIterableEquals(
       List.of( // Sorted
         new ProjectId("project-1"),

@@ -21,14 +21,14 @@
 
 package com.google.solutions.jitaccess.web.auth;
 
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.auth.UserId;
 
 import java.security.Principal;
 
 /**
  * Represents a logged-in user.
  */
-public interface UserPrincipal extends Principal {
+public interface UserPrincipal extends Principal { //TODO: Rename to AuthenticationContext, remove implements, Consolidate with Subject
   UserId getId();
 
   DeviceInfo getDevice();

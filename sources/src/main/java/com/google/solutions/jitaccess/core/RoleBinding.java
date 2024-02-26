@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;

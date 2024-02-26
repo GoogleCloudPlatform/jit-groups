@@ -27,9 +27,11 @@ import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
@@ -76,7 +78,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     this.options = options;
   }
 
-  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException {
+  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException { //TODO: remove
     try {
       return future.get();
     }
@@ -336,7 +338,6 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
         .anyMatch(member -> this.principalIdentifiers.contains(member));
     }
   }
-
 
   /**
    * @param scope Scope to use for queries.

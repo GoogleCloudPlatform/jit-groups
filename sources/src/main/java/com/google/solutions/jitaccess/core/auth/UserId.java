@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
@@ -28,27 +28,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Primary email address and unique ID of a group.
+ * Primary email address and unique ID of a user.
  */
-public class GroupId extends UserEmail {
-  private static final String GROUPS_PREFIX = "groups/";
-
+public class UserId extends UserEmail {
   public final transient @NotNull String id;
 
-  public GroupId(@NotNull String id, String email) {
+  public UserId(@NotNull String id, String email) {
     super(email);
 
     Preconditions.checkNotNull(id, "id");
 
-    if (id.startsWith(GROUPS_PREFIX)) {
-      id = id.substring(GROUPS_PREFIX.length());
-    }
-
     this.id = id;
-  }
-
-  public GroupId(@NotNull String id, @NotNull GroupEmail email) {
-    this(id, email.email);
   }
 
   @Override
@@ -65,20 +55,12 @@ public class GroupId extends UserEmail {
       return false;
     }
 
-    GroupId GroupId = (GroupId) o;
-    return this.id.equals(GroupId.id);
+    UserId userId = (UserId) o;
+    return this.id.equals(userId.id);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), id);
-  }
-
-  /**
-   * @return ID in groups/ID format.
-   */
-  @Override
-  public String toString() {
-    return String.format("%s%s", GROUPS_PREFIX, this.id);
   }
 }
