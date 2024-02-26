@@ -39,11 +39,11 @@ import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestSecretManagerClient {
+public class ITestSecretManagerClient {
   private static final String SECRET_NAME = "testsecret";
   private static final String SECRET_PATH = String.format(
     "projects/%s/secrets/%s",
-    IntegrationTestEnvironment.PROJECT_ID,
+    ITestEnvironment.PROJECT_ID,
     SECRET_NAME);
   private static final String SECRET_LASTEST_VERSION_PATH = String.format(
     "%s/versions/latest",
@@ -54,7 +54,7 @@ public class TestSecretManagerClient {
     return new SecretManager.Builder(
       HttpTransport.newTransport(),
       new GsonFactory(),
-      new HttpCredentialsAdapter(IntegrationTestEnvironment.APPLICATION_CREDENTIALS))
+      new HttpCredentialsAdapter(ITestEnvironment.APPLICATION_CREDENTIALS))
       .build();
   }
 
@@ -84,7 +84,7 @@ public class TestSecretManagerClient {
     client
       .projects()
       .secrets()
-      .create(String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
+      .create(String.format("projects/%s", ITestEnvironment.PROJECT_ID),
         new Secret().setReplication(new Replication().setAutomatic(new Automatic()))
       )
       .setSecretId(SECRET_NAME)
@@ -98,7 +98,7 @@ public class TestSecretManagerClient {
   @Test
   public void whenUnauthenticated_ThenAccessSecretThrowsException() {
     var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -109,7 +109,7 @@ public class TestSecretManagerClient {
   @Test
   public void whenCallerLacksPermission_ThenAccessSecretThrowsException() {
     var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -120,20 +120,20 @@ public class TestSecretManagerClient {
   @Test
   public void whenSecretNotFondPermission_ThenAccessSecretThrowsException() {
     var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
       () ->adapter.accessSecret(String.format(
         "projects/%s/secrets/doesnotexist/versions/latest",
-        IntegrationTestEnvironment.PROJECT_ID)));
+        ITestEnvironment.PROJECT_ID)));
   }
 
   @Test
   public void whenSecretVersionNotFondPermission_ThenAccessSecretThrowsException() {
     var adapter = new SecretManagerClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
