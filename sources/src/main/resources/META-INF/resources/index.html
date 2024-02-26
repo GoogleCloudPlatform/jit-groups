@@ -3,1011 +3,1006 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <meta name="referrer" content="no-referrer" />
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta name="referrer" content="no-referrer" />
 
-    <title>Just-in-Time Access</title>
+  <title>Just-in-Time Access</title>
 
-    <!-- All external resources are hosted by Google -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.css">
-    <link rel="stylesheet" href="/mdl-1.3.0/material.indigo-pink.min.css" />
+  <!-- All external resources are hosted by Google -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" href="/mdl-1.3.0/material.indigo-pink.min.css" />
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 
-    <script defer src="/mdl-1.3.0/material.min.js"></script>
-    <script defer src="stepper.min.js"></script>
+  <script defer src="/mdl-1.3.0/material.min.js"></script>
+  <script defer src="stepper.min.js"></script>
 
-    <link rel="stylesheet" href="stepper.min.css" />
-    <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="stepper.min.css" />
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div class="mdl-layout mdl-js-layout">
-        <header class="mdl-layout__header mdl-layout__header--transparent">
-            <div class="mdl-layout__header-row">
-                <!-- Title -->
-                <span class="mdl-layout-title"><a href="#" id="menu-home">Just-in-Time Access</a></span>
+  <div class="mdl-layout mdl-js-layout">
+    <header class="mdl-layout__header mdl-layout__header--transparent">
+      <div class="mdl-layout__header-row">
+        <!-- Title -->
+        <span class="mdl-layout-title"><a href="#" id="menu-home">Just-in-Time Access</a></span>
+      </div>
+    </header>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">JIT Access</span>
+      <nav class="mdl-navigation">
+        <a class="mdl-navigation__link" href="#" id="menu-requestaccess">Request access</a>
+        <a class="mdl-navigation__link" href="#" id="menu-help">User guide</a>
+      </nav>
+    </div>
+    <main class="mdl-layout__content app-pane" id="request-pane">
+      <div class="mdl-grid center-items">
+        <!-- stepper -->
+        <ul class="mdl-stepper mdl-stepper--feedback mdl-stepper--linear mdl-stepper--vertical">
+          <li class="mdl-step" id="step-selectproject">
+            <span class="mdl-step__label">
+              <span class="mdl-step__title">
+                <span class="mdl-step__title-text">Project</span>
+              </span>
+            </span>
+            <div class="mdl-step__content">
+              <div class="step-subsection">
+                Select the project to request access to:
+              </div>
+              <div class="step-subsection">
+                <form action="#">
+                  <div>
+                    <fieldset id="project-selector">
+                      <legend>Project ID</legend>
+                      <img src="icon.search.svg" />
+                      <input id="project-selector-search" type="text" maxlength="32" autocomplete="off" autofocus />
+                    </fieldset>
+                  </div>
+                </form>
+              </div>
             </div>
-        </header>
-        <div class="mdl-layout__drawer">
-            <span class="mdl-layout-title">JIT Access</span>
-            <nav class="mdl-navigation">
-                <a class="mdl-navigation__link" href="#" id="menu-requestaccess">Request access</a>
-                <a class="mdl-navigation__link" href="#" id="menu-help">User guide</a>
-            </nav>
+
+            <div class="mdl-step__actions">
+              <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                data-stepper-next>
+                Continue
+              </button>
+            </div>
+
+          </li>
+          <li class="mdl-step" id="step-selectrole">
+            <span class="mdl-step__label">
+              <span class="mdl-step__title">
+                <span class="mdl-step__title-text">Roles to activate</span>
+              </span>
+            </span>
+            <div class="mdl-step__content">
+              <div class="step-subsection">
+                Select the roles that you want to activate for this project:
+              </div>
+              <div class="step-subsection">
+                <table class="mdl-data-table mdl-shadow--2dp" id="step-selectrole-roles">
+                  <thead>
+                    <tr>
+                      <th>
+                        <label
+                          class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                          <input type='checkbox' class='mdl-checkbox__input'>
+                        </label>
+                      </th>
+                      <th class="mdl-data-table__cell--non-numeric">Role</th>
+                      <th class="mdl-data-table__cell--non-numeric">Requirements</th>
+                      <th class="mdl-data-table__cell--non-numeric">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <div class="step-subsection">
+                Duration: <span id="selected-activation-timeout"></span> minutes.
+                <input class="mdl-slider mdl-js-slider" id="activation-timeout" type="range" min="5" max="10" value="5"
+                  step="5" tabindex="0">
+              </div>
+            </div>
+            <div class="mdl-step__actions">
+              <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                data-stepper-next>
+                Continue
+              </button>
+              <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
+                Cancel
+              </button>
+            </div>
+          </li>
+          <li class="mdl-step" id="step-approve">
+            <span class="mdl-step__label">
+              <span class="mdl-step__title">
+                <span class="mdl-step__title-text">Approval and justification</span>
+              </span>
+            </span>
+            <div class="mdl-step__content">
+              <div class="step-subheader conditional-mpa">
+                Approval
+              </div>
+              <div class="step-subsection conditional-mpa">
+                Select one or more reviewers to request approval from. To activate the role, at least
+                one
+                of your reviewers has to approve your request.
+              </div>
+              <div class="step-subsection conditional-mpa">
+                <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-reviewers">
+                  <thead>
+                    <tr>
+                      <th>
+                        <label
+                          class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
+                          <input type='checkbox' class='mdl-checkbox__input checkall__input'>
+                        </label>
+                      </th>
+                      <th class="mdl-data-table__cell--non-numeric">User</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <div class="step-subheader conditional-mpa">
+                Justification
+              </div>
+              <div class="step-subsection">
+                Provide a justification that explains why you need to access the project:
+              </div>
+              <div class="step-subsection">
+                <form action="#">
+                  <div>
+                    <fieldset>
+                      <legend>Justification</legend>
+                      <input id="justification" type="text" maxlength="100" autocomplete="off" />
+                    </fieldset>
+                  </div>
+                </form>
+              </div>
+              <div class="step-subsection">
+                The justification
+                is logged and might be reviewed by an auditor.
+              </div>
+            </div>
+            <div class="mdl-step__actions">
+              <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
+                data-stepper-next>
+                Request access
+              </button>
+              <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
+                Cancel
+              </button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </main>
+    <main class="mdl-layout__content app-pane" id="busy-pane">
+      <div class="mdl-grid center-items">
+        <div class="mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Please wait</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            Your request is being processed...
+            <div>
+              <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
+            </div>
+          </div>
         </div>
-        <main class="mdl-layout__content app-pane" id="request-pane">
-            <div class="mdl-grid center-items">
-                <!-- stepper -->
-                <ul class="mdl-stepper mdl-stepper--feedback mdl-stepper--linear mdl-stepper--vertical">
-                    <li class="mdl-step" id="step-selectproject">
-                        <span class="mdl-step__label">
-                            <span class="mdl-step__title">
-                                <span class="mdl-step__title-text">Project</span>
-                            </span>
-                        </span>
-                        <div class="mdl-step__content">
-                            <div class="step-subsection">
-                                Select the project to request access to:
-                            </div>
-                            <div class="step-subsection">
-                                <form action="#">
-                                    <div>
-                                        <fieldset id="project-selector">
-                                            <legend>Project ID</legend>
-                                            <img src="icon.search.svg" />
-                                            <input id="project-selector-search" type="text" maxlength="32"
-                                                autocomplete="off" autofocus />
-                                        </fieldset>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="mdl-step__actions">
-                            <button
-                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
-                                data-stepper-next>
-                                Continue
-                            </button>
-                        </div>
-
-                    </li>
-                    <li class="mdl-step" id="step-selectrole">
-                        <span class="mdl-step__label">
-                            <span class="mdl-step__title">
-                                <span class="mdl-step__title-text">Roles to activate</span>
-                            </span>
-                        </span>
-                        <div class="mdl-step__content">
-                            <div class="step-subsection">
-                                Select the roles that you want to activate for this project:
-                            </div>
-                            <div class="step-subsection">
-                                <table class="mdl-data-table mdl-shadow--2dp" id="step-selectrole-roles">
-                                    <thead>
-                                        <tr>
-                                            <th>
-                                                <label
-                                                    class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
-                                                    <input type='checkbox' class='mdl-checkbox__input'>
-                                                </label>
-                                            </th>
-                                            <th class="mdl-data-table__cell--non-numeric">Role</th>
-                                            <th class="mdl-data-table__cell--non-numeric">Requirements</th>
-                                            <th class="mdl-data-table__cell--non-numeric">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="step-subsection">
-                                Duration: <span id="selected-activation-timeout"></span> minutes.
-                                <input class="mdl-slider mdl-js-slider" id="activation-timeout" type="range" min="5"
-                                    max="10" value="5" step="5" tabindex="0">
-                            </div>
-                        </div>
-                        <div class="mdl-step__actions">
-                            <button
-                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
-                                data-stepper-next>
-                                Continue
-                            </button>
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
-                                Cancel
-                            </button>
-                        </div>
-                    </li>
-                    <li class="mdl-step" id="step-approve">
-                        <span class="mdl-step__label">
-                            <span class="mdl-step__title">
-                                <span class="mdl-step__title-text">Approval and justification</span>
-                            </span>
-                        </span>
-                        <div class="mdl-step__content">
-                            <div class="step-subheader conditional-mpa">
-                                Approval
-                            </div>
-                            <div class="step-subsection conditional-mpa">
-                                Select one or more reviewers to request approval from. To activate the role, at least
-                                one
-                                of your reviewers has to approve your request.
-                            </div>
-                            <div class="step-subsection conditional-mpa">
-                                <table class="mdl-data-table mdl-shadow--2dp" id="step-approve-reviewers">
-                                    <thead>
-                                        <tr>
-                                            <th>
-                                                <label
-                                                    class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select checkall'>
-                                                    <input type='checkbox' class='mdl-checkbox__input checkall__input'>
-                                                </label>
-                                            </th>
-                                            <th class="mdl-data-table__cell--non-numeric">User</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="step-subheader conditional-mpa">
-                                Justification
-                            </div>
-                            <div class="step-subsection">
-                                Provide a justification that explains why you need to access the project:
-                            </div>
-                            <div class="step-subsection">
-                                <form action="#">
-                                    <div>
-                                        <fieldset>
-                                            <legend>Justification</legend>
-                                            <input id="justification" type="text" maxlength="100" autocomplete="off" />
-                                        </fieldset>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="step-subsection">
-                                The justification
-                                is logged and might be reviewed by an auditor.
-                            </div>
-                        </div>
-                        <div class="mdl-step__actions">
-                            <button
-                                class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored mdl-button--raised"
-                                data-stepper-next>
-                                Request access
-                            </button>
-                            <button class="mdl-button mdl-js-button mdl-js-ripple-effect" data-stepper-cancel>
-                                Cancel
-                            </button>
-                        </div>
-                    </li>
-                </ul>
+      </div>
+    </main>
+    <main class="mdl-layout__content app-pane" id="request-status-pane">
+      <div class="mdl-grid center-items">
+        <div class="mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text" id="request-status-pane-title">.</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            <div class="step-subsection" id="request-status-pane-description">
             </div>
-        </main>
-        <main class="mdl-layout__content app-pane" id="busy-pane">
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Please wait</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        Your request is being processed...
-                        <div>
-                            <div class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="step-subsection">
+              Request details:
+              <ul class="request-details">
+                <li>
+                  <span><label for="request-status-pane-beneficiary">User</label></span>
+                  <span id="request-status-pane-beneficiary" />
+                </li>
+                <li>
+                  <span><label for="request-status-pane-starttime">Start time</label></span>
+                  <span id="request-status-pane-starttime"></span>
+                  <div id="request-status-pane-starttime-utc" class="mdl-tooltip"
+                    data-mdl-for="request-status-pane-starttime" />
+                </li>
+                <li>
+                  <span><label for="request-status-pane-endtime">End time</label></span>
+                  <span id="request-status-pane-endtime"></span>
+                  <div id="request-status-pane-endtime-utc" class="mdl-tooltip"
+                    data-mdl-for="request-status-pane-endtime" />
+                </li>
+                <li>
+                  <span><label for="request-status-pane-justification">Justification</label></span>
+                  <span id="request-status-pane-justification"></span>
+                </li>
+                <li>
+                  <span><label for="request-status-pane-reviewers">Reviewers</label></span>
+                  <span id="request-status-pane-reviewers"></span>
+                </li>
+              </ul>
             </div>
-        </main>
-        <main class="mdl-layout__content app-pane" id="request-status-pane">
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text" id="request-status-pane-title">.</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        <div class="step-subsection" id="request-status-pane-description">
-                        </div>
-                        <div class="step-subsection">
-                            Request details:
-                            <ul class="request-details">
-                                <li>
-                                    <span><label for="request-status-pane-beneficiary">User</label></span>
-                                    <span id="request-status-pane-beneficiary" />
-                                </li>
-                                <li>
-                                    <span><label for="request-status-pane-starttime">Start time</label></span>
-                                    <span id="request-status-pane-starttime"></span>
-                                    <div id="request-status-pane-starttime-utc" class="mdl-tooltip"
-                                        data-mdl-for="request-status-pane-starttime" />
-                                </li>
-                                <li>
-                                    <span><label for="request-status-pane-endtime">End time</label></span>
-                                    <span id="request-status-pane-endtime"></span>
-                                    <div id="request-status-pane-endtime-utc" class="mdl-tooltip"
-                                        data-mdl-for="request-status-pane-endtime" />
-                                </li>
-                                <li>
-                                    <span><label for="request-status-pane-justification">Justification</label></span>
-                                    <span id="request-status-pane-justification"></span>
-                                </li>
-                                <li>
-                                    <span><label for="request-status-pane-reviewers">Reviewers</label></span>
-                                    <span id="request-status-pane-reviewers"></span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="step-subsection">
-                            <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
-                                <thead>
-                                    <tr>
-                                        <th class="mdl-data-table__cell--non-numeric">Project</th>
-                                        <th class="mdl-data-table__cell--non-numeric">Role</th>
-                                        <th class="mdl-data-table__cell--non-numeric">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="#"
-                            id="request-status-pane-approvebutton">
-                            Approve
-                        </a>
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
-                            href="https://console.cloud.google.com/" target="_blank"
-                            id="request-status-pane-consolebutton">
-                            Open Console
-                        </a>
-                    </div>
-                </div>
+            <div class="step-subsection">
+              <table class="mdl-data-table mdl-shadow--2dp" id="activatedroles">
+                <thead>
+                  <tr>
+                    <th class="mdl-data-table__cell--non-numeric">Project</th>
+                    <th class="mdl-data-table__cell--non-numeric">Role</th>
+                    <th class="mdl-data-table__cell--non-numeric">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                </tbody>
+              </table>
             </div>
-        </main>
-        <main class="mdl-layout__content app-pane" id="help-pane">
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Requesting just-in-time access</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        <p>
-                            This application lets you request temporary access to a Google Cloud project:
+          </div>
+          <div class="mdl-card__actions mdl-card--border">
+            <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored" href="#"
+              id="request-status-pane-approvebutton">
+              Approve
+            </a>
+            <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
+              href="https://console.cloud.google.com/" target="_blank" id="request-status-pane-consolebutton">
+              Open Console
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+    <main class="mdl-layout__content app-pane" id="help-pane">
+      <div class="mdl-grid center-items">
+        <div class="mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Requesting just-in-time access</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            <p>
+              This application lets you request temporary access to a Google Cloud project:
 
-                        <ol>
-                            <li>Select the project that you need to access</li>
-                            <li>Select one or more roles to activate</li>
-                            <li>Provide a justification that explains why you need access to this project</li>
-                        </ol>
+            <ol>
+              <li>Select the project that you need to access</li>
+              <li>Select one or more roles to activate</li>
+              <li>Provide a justification that explains why you need access to this project</li>
+            </ol>
 
-                        You can only request access to projects and roles that you're <i>eligible</i> to access,
-                        and your access automatically expires after a certain period of time.
-                        </p>
+            You can only request access to projects and roles that you're <i>eligible</i> to access,
+            and your access automatically expires after a certain period of time.
+            </p>
 
-                        <h3 class="mdl-card__title-text">Approval</h3>
-                        <p>
-                            Roles differ in whether they require approval:
+            <h3 class="mdl-card__title-text">Approval</h3>
+            <p>
+              Roles differ in whether they require approval:
 
-                        <ul>
-                            <li>
-                                <i>Self-approval</i> If a role permits self-approval, then providing a justification is
-                                sufficient
-                                to activate the role. You don't need to request approval from another user.
-                            </li>
-                            <li>
-                                <i>Peer approval</i>: If a role requires peer approval, then one of your <i>peers</i>
-                                need to approve your access request before it takes effect. Peers are users that have
-                                been
-                                granted the same role as you.
-                            </li>
-                            <li>
-                                <i>External approval</i>: If a role requires external approval, then someone from a
-                                specified group
-                                of users outside your peers must approve your access request before it takes effect.
-                            </li>
-                        </ul>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Grant just-in-time access</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        <p>
-                            As an administrator, you use IAM role bindings to decide which projects and roles users
-                            can request access to. To mark a role binding as <i>eligible</i>, you add a special
-                            <a href="https://cloud.google.com/iam/docs/conditions-overview" target="_blank">IAM
-                                condition</a>:
+            <ul>
+              <li>
+                <i>Self-approval</i> If a role permits self-approval, then providing a justification is
+                sufficient
+                to activate the role. You don't need to request approval from another user.
+              </li>
+              <li>
+                <i>Peer approval</i>: If a role requires peer approval, then one of your <i>peers</i>
+                need to approve your access request before it takes effect. Peers are users that have
+                been
+                granted the same role as you.
+              </li>
+              <li>
+                <i>External approval</i>: If a role requires external approval, then someone from a
+                specified group
+                of users outside your peers must approve your access request before it takes effect.
+              </li>
+            </ul>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="mdl-grid center-items">
+        <div class="mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Grant just-in-time access</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            <p>
+              As an administrator, you use IAM role bindings to decide which projects and roles users
+              can request access to. To mark a role binding as <i>eligible</i>, you add a special
+              <a href="https://cloud.google.com/iam/docs/conditions-overview" target="_blank">IAM
+                condition</a>:
 
-                        <ul>
-                            <li>
-                                <i>Self-approval</i>: To allow a user or group to activate a role without approval, add
-                                the
-                                following IAM condition to the IAM binding:
-                                <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
-                            </li>
-                            <li>
-                                <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
-                                approves their request, add the following IAM condition to the IAM binding:
-                                <pre><code class="language-cel">has({}.multiPartyApprovalConstraint)</code></pre>
+            <ul>
+              <li>
+                <i>Self-approval</i>: To allow a user or group to activate a role without approval, add
+                the
+                following IAM condition to the IAM binding:
+                <pre><code class="language-cel">has({}.jitAccessConstraint)</code></pre>
+              </li>
+              <li>
+                <i>Peer approval</i>: To allow a user or group to activate a role if at least one peer
+                approves their request, add the following IAM condition to the IAM binding:
+                <pre><code class="language-cel">has({}.multiPartyApprovalConstraint)</code></pre>
 
-                                Peers are users that have been granted the same role binding on the same project.
-                            </li>
-                            <li>
-                                <i>External approval</i>: To allow a user or group to activate a role if at least one
-                                external
-                                reviewer approves their request, add the following IAM condition to the IAM binding:
-                                <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
+                Peers are users that have been granted the same role binding on the same project.
+              </li>
+              <li>
+                <i>External approval</i>: To allow a user or group to activate a role if at least one
+                external
+                reviewer approves their request, add the following IAM condition to the IAM binding:
+                <pre><code class="language-cel">has({}.externalApprovalConstraint)</code></pre>
 
-                                External approvers are users that have been granted the same IAM binding with the
-                                following
-                                IAM condition:
-                                <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
-                            </li>
-                        </ul>
-                        </p>
-                        <h3 class="mdl-card__title-text">Examples</h3>
-                        <p>
-                            The following <code>gcloud</code> command grants the user <code>alice@example.com</code>
-                            permision to activate the role <code>roles/compute.admin</code> without approval:
-                        <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+                External approvers are users that have been granted the same IAM binding with the
+                following
+                IAM condition:
+                <pre><code class="language-cel">has({}.reviewerPrivilege)</code></pre>
+              </li>
+            </ul>
+            </p>
+            <h3 class="mdl-card__title-text">Examples</h3>
+            <p>
+              The following <code>gcloud</code> command grants the user <code>alice@example.com</code>
+              permision to activate the role <code>roles/compute.admin</code> without approval:
+            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>alice@example.com</b> \
   --role <b>roles/compute.admin</b> \
   --condition "title=Eligible access,expression=has({}.jitAccessConstraint)"
 </code></pre>
-                        </p>
-                        <p>
-                            The following <code>gcloud</code> command grants the group
-                            <code>compute-admins@example.com</code>
-                            permision to activate the role <code>roles/compute.admin</code>, and lets members of that
-                            group
-                            approve each other's requests:
-                        <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
+            </p>
+            <p>
+              The following <code>gcloud</code> command grants the group
+              <code>compute-admins@example.com</code>
+              permision to activate the role <code>roles/compute.admin</code>, and lets members of that
+              group
+              approve each other's requests:
+            <pre><code class="language-cel">gcloud projects add-iam-policy-binding <b>PROJECT_ID</b> \
   --member user:<b>compute-admins@example.com</b> \
   --role <b>roles/compute.admin</b> \
   --condition "title=Eligible access,expression=has({}.multiPartyApprovalConstraint)"
 </code></pre>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="mdl-grid center-items">
-                <div class="mdl-card mdl-shadow--2dp">
-                    <div class="mdl-card__title">
-                        <h2 class="mdl-card__title-text">Audit and review just-in-time access</h2>
-                    </div>
-                    <div class="mdl-card__supporting-text">
-                        <p>
-                            As an administrator, you can use Cloud Logging to review when and why eligible roles have
-                            been activated by users.
-                        </p>
-                        <p>
-                            For example, the following filter lets you find all instances when a role has been
-                            activated:
-                        <pre><code class="language-cel">labels.event="api.activateRole"</code></pre>
-                        </p>
-                    </div>
-                    <div class="mdl-card__actions mdl-card--border">
-                        <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
-                            href="https://console.cloud.google.com/logs/query;query=labels.event%3D%22api.activateRole%22"
-                            target="_blank">
-                            Open Logs
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </main>
-        <footer class="mdl-mini-footer">
-            <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a
-                    href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
-            &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access <span
-                        id="application-version"></span></a></div>
-        </footer>
-        <div id="toast" class="mdl-snackbar mdl-js-snackbar">
-            <div class="mdl-snackbar__text">Toast!</div>
-            <button type="button" class="mdl-snackbar__action"></button>
+            </p>
+          </div>
         </div>
+      </div>
+      <div class="mdl-grid center-items">
+        <div class="mdl-card mdl-shadow--2dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text">Audit and review just-in-time access</h2>
+          </div>
+          <div class="mdl-card__supporting-text">
+            <p>
+              As an administrator, you can use Cloud Logging to review when and why eligible roles have
+              been activated by users.
+            </p>
+            <p>
+              For example, the following filter lets you find all instances when a role has been
+              activated:
+            <pre><code class="language-cel">labels.event="api.activateRole"</code></pre>
+            </p>
+          </div>
+          <div class="mdl-card__actions mdl-card--border">
+            <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored"
+              href="https://console.cloud.google.com/logs/query;query=labels.event%3D%22api.activateRole%22"
+              target="_blank">
+              Open Logs
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer class="mdl-mini-footer">
+      <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a
+          href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
+      &nbsp;|&nbsp;
+      <div>Powered by&nbsp;<a href="https://github.com/GoogleCloudPlatform/jit-access">JIT Access <span
+            id="application-version"></span></a></div>
+    </footer>
+    <div id="toast" class="mdl-snackbar mdl-js-snackbar">
+      <div class="mdl-snackbar__text">Toast!</div>
+      <button type="button" class="mdl-snackbar__action"></button>
     </div>
+  </div>
 
-    <!-- script -->
-    <script src="model.js"></script>
-    <script>
-        "use strict"
+  <!-- script -->
+  <script src="model.js"></script>
+  <script>
+    "use strict"
 
-        /** Helper class for modifying MDL data tables */
-        class MdlDataTable {
-            constructor(selector) {
-                console.assert(selector);
-                console.assert($(selector).length > 0);
+    /** Helper class for modifying MDL data tables */
+    class MdlDataTable {
+      constructor(selector) {
+        console.assert(selector);
+        console.assert($(selector).length > 0);
 
-                this.selector = selector;
-                this.rowIndex = 0;
+        this.selector = selector;
+        this.rowIndex = 0;
 
-                const checkAllCheckbox = $(`${selector} .checkall`)
-                checkAllCheckbox.change(() => {
+        const checkAllCheckbox = $(`${selector} .checkall`)
+        checkAllCheckbox.change(() => {
 
-                    $(`${selector} .mdl-checkbox__input`).not(':disabled').each((index, element) => {
-                        const checkbox = element.parentElement.MaterialCheckbox;
+          $(`${selector} .mdl-checkbox__input`).not(':disabled').each((index, element) => {
+            const checkbox = element.parentElement.MaterialCheckbox;
 
-                        if (checkAllCheckbox.children("input").is(":checked")) {
-                            checkbox.check();
-                        }
-                        else {
-                            checkbox.uncheck();
-                        }
-                    });
-                });
+            if (checkAllCheckbox.children("input").is(":checked")) {
+              checkbox.check();
             }
-
-            /** 
-             *  Add data row.
-             *  Format of column: { class: ..., text: ... }
-             */
-            addRow(value, columns, showCheckbox = true, enabled = true) {
-                console.assert(value);
-                console.assert(columns);
-
-                const tr = $("<tr>");
-                $(`${this.selector} tbody`).append(tr);
-
-                const id = $(this.selector).attr('id') + this.rowIndex;
-                if (showCheckbox) {
-                    const input = $("<input type='checkbox' class='mdl-checkbox__input'></label>");
-                    input.val(value);
-
-                    const label = $(`<label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select' id='${id}'></label>`);
-                    label.append(input);
-
-                    const td = $("<td></td>");
-                    td.append(label);
-                    tr.append(td);
-                }
-
-                columns.forEach((value) => {
-                    const div = $("<div></div>");
-                    div.text(value.text);
-                    if (value.class) {
-                        div.attr("class", value.class);
-                    }
-
-                    const td = $("<td class='mdl-data-table__cell--non-numeric'>");
-                    td.append(div);
-                    tr.append(td);
-                });
-
-                componentHandler.upgradeAllRegistered();
-
-                if (showCheckbox && !enabled) {
-                    document.querySelector("#" + id).MaterialCheckbox.disable();
-                }
-
-                this.rowIndex += 1;
+            else {
+              checkbox.uncheck();
             }
+          });
+        });
+      }
 
-            /** Get values of selected rows */
-            get selected() {
-                var boxes = $(`${this.selector} input:checked`).not(".checkall__input");
-                return $.map(boxes, input => input.value);
-            }
+      /** 
+       *  Add data row.
+       *  Format of column: { class: ..., text: ... }
+       */
+      addRow(value, columns, showCheckbox = true, enabled = true) {
+        console.assert(value);
+        console.assert(columns);
 
-            clear() {
-                $(`${this.selector} tbody`).empty();
-            }
+        const tr = $("<tr>");
+        $(`${this.selector} tbody`).append(tr);
+
+        const id = $(this.selector).attr('id') + this.rowIndex;
+        if (showCheckbox) {
+          const input = $("<input type='checkbox' class='mdl-checkbox__input'></label>");
+          input.val(value);
+
+          const label = $(`<label class='mdl-checkbox mdl-js-checkbox mdl-js-ripple-effect mdl-data-table__select' id='${id}'></label>`);
+          label.append(input);
+
+          const td = $("<td></td>");
+          td.append(label);
+          tr.append(td);
         }
 
-        /** Helper class for modifying MDL steps */
-        class MdlStep {
-            constructor(selector) {
-                console.assert(selector);
-                console.assert($(selector).length > 0);
+        columns.forEach((value) => {
+          const div = $("<div></div>");
+          div.text(value.text);
+          if (value.class) {
+            div.attr("class", value.class);
+          }
 
-                this.selector = selector;
-            }
+          const td = $("<td class='mdl-data-table__cell--non-numeric'>");
+          td.append(div);
+          tr.append(td);
+        });
 
-            /** Add handler that is triggered when a user clicks the "Continue" button of a step */
-            addHandler(nextHandler) {
-                console.assert(nextHandler);
+        componentHandler.upgradeAllRegistered();
 
-                const stepperElement = document.querySelector("ul.mdl-stepper");
-                console.assert(stepperElement);
-
-                const stepper = stepperElement.MaterialStepper;
-                const stepElement = stepperElement.querySelector(this.selector);
-
-                const wrappedHandler = async (event) => {
-                    try {
-                        await nextHandler();
-                        stepper.next();
-                    }
-                    catch (error) {
-                        stepper.error(error);
-                    }
-                };
-
-                stepElement.addEventListener("onstepnext", wrappedHandler);
-                stepElement.addEventListener("onstepcancel", (event) => location.reload());
-
-                // Trigger handler when a form is submitted.
-                $(this.selector + " form").submit(function (event) {
-                    event.preventDefault();
-                    wrappedHandler(event);
-                });
-            }
+        if (showCheckbox && !enabled) {
+          document.querySelector("#" + id).MaterialCheckbox.disable();
         }
 
-        /** An SPA-style pane, only one of which is shown at a time */
-        class AppPane {
-            constructor(id) {
-                console.assert($("#" + id).length);
+        this.rowIndex += 1;
+      }
 
-                this.id = id;
+      /** Get values of selected rows */
+      get selected() {
+        var boxes = $(`${this.selector} input:checked`).not(".checkall__input");
+        return $.map(boxes, input => input.value);
+      }
 
-                this.statusCaptions = {
-                    "ACTIVE": "Active",
-                    "AVAILABLE": "Available",
-                    "ACTIVATION_PENDING": "Waiting for approval"
-                };
+      clear() {
+        $(`${this.selector} tbody`).empty();
+      }
+    }
 
-                this.activationTypeCaptions = {
-                    "SELF_APPROVAL": "-",
-                    "PEER_APPROVAL": "Peer approval required",
-                    "EXTERNAL_APPROVAL": "External approval required"
-                };
+    /** Helper class for modifying MDL steps */
+    class MdlStep {
+      constructor(selector) {
+        console.assert(selector);
+        console.assert($(selector).length > 0);
 
-                this.activationTypes = [
-                    "SELF_APPROVAL",
-                    "PEER_APPROVAL",
-                    "EXTERNAL_APPROVAL"
-                ];
-            }
+        this.selector = selector;
+      }
 
-            /**
-             * Show a pane and hide all other panes.
-             */
-            show() {
-                $(".app-pane").hide();
-                $("#" + this.id).show();
-            }
-        }
+      /** Add handler that is triggered when a user clicks the "Continue" button of a step */
+      addHandler(nextHandler) {
+        console.assert(nextHandler);
 
-        class RequestPane extends AppPane {
-            constructor() {
-                super("request-pane");
+        const stepperElement = document.querySelector("ul.mdl-stepper");
+        console.assert(stepperElement);
 
-                this.requestStep = new MdlStep("#step-selectproject");
-                this.selectRoleStep = new MdlStep("#step-selectrole");
-                this.approveStep = new MdlStep("#step-approve");
-                this._roleTable = new MdlDataTable("#step-selectrole-roles");
-                this._reviewersTable = new MdlDataTable("#step-approve-reviewers");
+        const stepper = stepperElement.MaterialStepper;
+        const stepElement = stepperElement.querySelector(this.selector);
 
-                $("#activation-timeout").change(() => {
-                    $("#selected-activation-timeout").text(this.activationTimeout);
-                });
-            }
-
-            get selectedProjectId() {
-                return $("#project-selector-search").val();
-            }
-
-            set selectedProjectId(projectId) {
-                $("#project-selector-search").val(projectId);
-            }
-
-            get justificationText() {
-                return $("#justification").val();
-            }
-
-            set justificationHint(hint) {
-                $("#step-approve legend").text(hint);
-            }
-
-            get activationTimeout() {
-                return $("#activation-timeout")[0].value;
-            }
-
-            set activationTimeout(timeoutInMinutes) {
-                $("#activation-timeout")[0].MaterialSlider.change(timeoutInMinutes);
-                $("#selected-activation-timeout").text(timeoutInMinutes);
-            }
-
-            get maxActivationTimeout() {
-                return $("#activation-timeout")[0].max;
-            }
-
-            set maxActivationTimeout(timeoutInMinutes) {
-                $("#activation-timeout")[0].max = timeoutInMinutes;
-            }
-
-            set roles(roles) {
-                this._roles = roles;
-
-                this._roleTable.clear();
-                roles.forEach((item) => {
-                    this._roleTable.addRow(
-                        item.roleBinding.role,
-                        [
-                            { text: item.roleBinding.role },
-                            { text: this.activationTypeCaptions[this.activationTypes.filter(type => item.activationType.startsWith(type))[0]] ?? item.activationType },
-                            {
-                                text: (this.statusCaptions[item.status] ?? item.status) +
-                                    (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60 * 1000))} minutes left)`),
-                                class: item.status === "ACTIVE" ? "activated" : null
-                            }
-                        ],
-                        true,
-                        item.status !== "ACTIVE");
-                });
-            }
-
-            get selectedRoles() {
-                console.assert(this._roles);
-                return this._roles.filter(i => this._roleTable.selected.includes(i.roleBinding.role));
-            }
-
-            set reviewers(reviewers) {
-                this._reviewersTable.clear();
-                reviewers.forEach((item) => {
-                    this._reviewersTable.addRow(
-                        item.email,
-                        [
-                            { text: item.email }
-                        ],
-                        true);
-                });
-            }
-
-            get selectedReviewers() {
-                return this._reviewersTable.selected;
-            }
-        }
-
-        class RequestStatusPane extends AppPane {
-            constructor() {
-                super("request-status-pane")
-
-                this._activatedRoleTable = new MdlDataTable("#activatedroles");
-            }
-
-            _createEmailLink(user) {
-                const link = $("<a target='_blank'/>");
-                link.attr("href", `https://contacts.google.com/search/${user.email}`);
-                link.text(user.email);
-                return link;
-            }
-
-            set activationStatus(activationStatus) {
-                $("#request-status-pane-approvebutton").hide();
-                $("#request-status-pane-consolebutton").hide();
-
-                if (activationStatus.isReviewer) {
-                    if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
-                        $("#request-status-pane-title").text("Review access request");
-                        $("#request-status-pane-description").text("Someone is asking you to review the following access request.");
-                        $("#request-status-pane-approvebutton").show();
-                    }
-                    else {
-                        $("#request-status-pane-title").text("Access approved");
-                        $("#request-status-pane-description").text("You've approved the following access request.");
-                    }
-
-                    $("#request-status-pane-beneficiary").empty().append(this._createEmailLink(activationStatus.beneficiary));
-                }
-                else if (activationStatus.isBeneficiary) {
-                    $("#request-status-pane-beneficiary").text("You");
-                    if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
-                        $("#request-status-pane-title").text("Request submitted");
-                        $("#request-status-pane-description").text("Your request has been submitted for approval. " +
-                            "You'll receive an email once approval has been granted");
-                    }
-                    else {
-                        $("#request-status-pane-title").text("Access granted");
-                        $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
-                        if (activationStatus.items && activationStatus.items.length > 0) {
-                            $("#request-status-pane-consolebutton").attr("href", function (index, attr) {
-                                return `${attr}?project=${activationStatus.items[0].projectId}`
-                            })
-                        }
-                        $("#request-status-pane-consolebutton").show();
-                    }
-                }
-
-                // NB. All roles have the same start/end time.
-                const startTime = new Date(activationStatus.items[0].startTime * 1000);
-                const endTime = new Date(activationStatus.items[0].endTime * 1000);
-
-                $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60 * 1000))} minutes ago)`);
-                $("#request-status-pane-starttime-utc").text(startTime.toUTCString());
-                $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60 * 1000))} minutes)`);
-                $("#request-status-pane-endtime-utc").text(endTime.toUTCString());
-                $("#request-status-pane-justification").text(activationStatus.justification);
-
-                $("#request-status-pane-reviewers").empty();
-                if (activationStatus.reviewers && activationStatus.reviewers.length > 0) {
-                    for (const reviewer of activationStatus.reviewers) {
-                        $("#request-status-pane-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
-                    }
-                }
-                else {
-                    $("#request-status-pane-reviewers").text("-")
-                }
-
-                this._activatedRoleTable.clear();
-                activationStatus.items.forEach((item) => {
-                    this._activatedRoleTable.addRow(
-                        item.roleBinding.role,
-                        [
-                            { text: item.projectId },
-                            { text: item.roleBinding.role },
-                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
-                        ],
-                        false);
-                });
-            }
-        }
-
-        /** Wrapper for HTML-based view */
-        class View {
-            constructor() {
-                this.requestPane = new RequestPane();
-                this.helpPane = new AppPane("help-pane");
-                this.busyPane = new AppPane("busy-pane");
-                this.requestStatusPane = new RequestStatusPane();
-            }
-
-            /** Display a toast bar at the bottom of the screen */
-            showToast(message, showReloadButton) {
-                console.assert(message);
-
-                const toast = document.querySelector("#toast");
-                console.assert(toast);
-
-                const config = {
-                    message: message,
-                    timeout: showReloadButton ? 60000 : 10000
-                }
-
-                // Show a button to perform a cache-busting reload.
-                if (showReloadButton) {
-                    config.actionText = "Reload";
-                    config.actionHandler = () => {
-                        const timestamp = Date.now();
-                        window.location.href = `${window.location.pathname}?_=${timestamp}`;
-                    }
-                }
-
-                toast.MaterialSnackbar.showSnackbar(config);
-            }
+        const wrappedHandler = async (event) => {
+          try {
+            await nextHandler();
+            stepper.next();
+          }
+          catch (error) {
+            stepper.error(error);
+          }
         };
 
-        const queryParameters = new URLSearchParams(location.search);
-        const activationToken = queryParameters.get("activation");
-        const gui = new View();
-        const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
-        const localSettings = new LocalSettings();
+        stepElement.addEventListener("onstepnext", wrappedHandler);
+        stepElement.addEventListener("onstepcancel", (event) => location.reload());
 
-        $("#menu-home").click(() => window.location.replace(location.pathname));
-        $("#menu-requestaccess").click(() => window.location.replace(location.pathname));
-        $("#menu-help").click(() => gui.helpPane.show());
-        $(document).ready(async () => {
-            //
-            // Configure steps.
-            //
-            (function () {
-                componentHandler.upgradeAllRegistered();
-
-                //
-                // Step: Select project.
-                //
-                const requestPane = gui.requestPane;
-                requestPane.selectedProjectId = queryParameters.get("projectId") ?? localSettings.lastProjectId;
-
-                requestPane.requestStep.addHandler(async () => {
-                    if (!(requestPane.selectedProjectId)) {
-                        throw "Select a project";
-                    }
-
-                    localSettings.lastProjectId = requestPane.selectedProjectId;
-
-                    //
-                    // Request and list roles available in that project.
-                    //
-                    const rolesResult = await backend.listRoles(requestPane.selectedProjectId)
-                    if (!rolesResult.roles || rolesResult.roles.length == 0) {
-                        throw "The project doesn't exist, or you don't have permission to activate any roles in this project";
-                    }
-
-                    if (rolesResult.warnings && rolesResult.warnings.length > 0) {
-                        gui.showToast(rolesResult.warnings.join(", "));
-                    }
-
-                    requestPane.roles = rolesResult.roles;
-                    requestPane.maxActivationTimeout = backend.policy.maxActivationTimeout;
-                    requestPane.activationTimeout = backend.policy.defaultActivationTimeout;
-                });
-
-                //
-                // Step: Select role.
-                //
-                let multiPartyApproval;
-                requestPane.selectRoleStep.addHandler(async () => {
-                    const selectedRoles = gui.requestPane.selectedRoles;
-
-                    if (selectedRoles.length === 0) {
-                        throw "Select one or more roles to actviate";
-                    }
-
-                    if (selectedRoles.some(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
-                        //
-                        // Multi-party approval: Request and list reviewers available for this project and role.
-                        //
-                        multiPartyApproval = true;
-
-                        if (selectedRoles.length > 1) {
-                            throw "You can only request approval for a single role at a time";
-                        }
-
-                        const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].activationType);
-
-                        if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
-                            throw "There are currently no reviewers that could approve your request";
-                        }
-
-                        requestPane.reviewers = reviewersResult.reviewers;
-                    }
-                    else {
-                        //
-                        // Self - approval.
-                        //
-                        multiPartyApproval = false;
-                        $(".conditional-mpa").hide();
-                    }
-
-                    requestPane.justificationHint = backend.policy.justificationHint;
-                });
-
-                //
-                // Step: Approve.
-                //
-                requestPane.approveStep.addHandler(async () => {
-                    if (multiPartyApproval && gui.requestPane.selectedReviewers.length === 0) {
-                        throw "Select one or more reviewers";
-                    }
-                    if (!requestPane.justificationText) {
-                        throw "Enter a justification";
-                    }
-
-                    gui.busyPane.show();
-                    try {
-                        let activationStatus;
-                        if (multiPartyApproval) {
-                            console.assert(requestPane.selectedRoles.length == 1);
-                            activationStatus = await backend.requestActivation(
-                                requestPane.selectedProjectId,
-                                requestPane.selectedRoles[0].roleBinding.role,
-                                requestPane.selectedReviewers,
-                                requestPane.justificationText,
-                                parseInt(requestPane.activationTimeout),
-                                requestPane.selectedRoles[0].activationType
-                            );
-                        }
-                        else {
-                            activationStatus = await backend.selfApproveActivation(
-                                requestPane.selectedProjectId,
-                                requestPane.selectedRoles.map(r => r.roleBinding.role),
-                                requestPane.justificationText,
-                                parseInt(requestPane.activationTimeout))
-                        }
-
-                        gui.requestStatusPane.activationStatus = activationStatus;
-                        gui.requestStatusPane.show();
-                    }
-                    catch (error) {
-                        gui.showToast(error);
-                        gui.requestPane.show();
-                    }
-                });
-            }());
-
-            $("#request-status-pane-approvebutton").click(async () => {
-                gui.busyPane.show();
-                try {
-                    console.assert(activationToken);
-                    gui.requestStatusPane.activationStatus = await backend.approveActivationRequest(activationToken);
-                }
-                catch (error) {
-                    gui.showToast(error);
-                }
-                finally {
-                    gui.requestStatusPane.show();
-                }
-            });
-
-            //
-            // Add Copy button to code blocks.
-            //
-            (function () {
-                document.querySelectorAll("pre").forEach((block) => {
-                    if (navigator.clipboard) {
-                        const img = document.createElement("img");
-                        img.src = "icon.copy.svg";
-
-                        const button = document.createElement("button");
-                        button.appendChild(img);
-                        block.appendChild(button);
-
-                        button.addEventListener("click", async () => {
-                            const code = block.querySelector("code");
-                            const text = code.innerText;
-
-                            await navigator.clipboard.writeText(text);
-                        });
-                    }
-                });
-            }());
-
-            //
-            // Configure project selector
-            //
-            $("#project-selector-search").autocomplete({
-                source: async (request, response) => {
-                    try {
-                        const projects = await backend.searchProjects(request.term);
-                        response($.map(projects, (item) => {
-                            return {
-                                label: item,
-                                value: item
-                            };
-                        }));
-                    }
-                    catch (e) {
-                        gui.showToast(`Loading projects failed: ${e}`, false);
-                    }
-                },
-                minLength: 2,
-                position: { of: $("#project-selector") }
-            });
-
-            try {
-                //
-                // Download policy to check if the communication with the backend
-                // works properly. 
-                //
-                await backend.fetchPolicy();
-                if (activationToken) {
-                    //
-                    // Show approver UI.
-                    //
-                    gui.requestStatusPane.activationStatus = await backend.getActivationRequest(activationToken);
-                    gui.requestStatusPane.show();
-                }
-                else {
-                    //
-                    // Show request UI.
-                    //
-                    gui.requestPane.show();
-                }
-
-                $("#signed-in-user").text(backend.policy.signedInUser.email)
-                $("#application-version").text(backend.policy.applicationVersion)
-            }
-            catch (error) {
-                gui.showToast(error, true);
-            }
+        // Trigger handler when a form is submitted.
+        $(this.selector + " form").submit(function (event) {
+          event.preventDefault();
+          wrappedHandler(event);
         });
-    </script>
+      }
+    }
+
+    /** An SPA-style pane, only one of which is shown at a time */
+    class AppPane {
+      constructor(id) {
+        console.assert($("#" + id).length);
+
+        this.id = id;
+
+        this.statusCaptions = {
+          "ACTIVE": "Active",
+          "INACTIVE": "Available",
+          "ACTIVATION_PENDING": "Waiting for approval"
+        };
+
+        this.activationTypeCaptions = {
+          "SELF_APPROVAL": "-",
+          "PEER_APPROVAL": "Peer approval required",
+          "EXTERNAL_APPROVAL": "External approval required"
+        };
+
+        this.activationTypes = [
+          "SELF_APPROVAL",
+          "PEER_APPROVAL",
+          "EXTERNAL_APPROVAL"
+        ];
+      }
+
+      /**
+       * Show a pane and hide all other panes.
+       */
+      show() {
+        $(".app-pane").hide();
+        $("#" + this.id).show();
+      }
+    }
+
+    class RequestPane extends AppPane {
+      constructor() {
+        super("request-pane");
+
+        this.requestStep = new MdlStep("#step-selectproject");
+        this.selectRoleStep = new MdlStep("#step-selectrole");
+        this.approveStep = new MdlStep("#step-approve");
+        this._roleTable = new MdlDataTable("#step-selectrole-roles");
+        this._reviewersTable = new MdlDataTable("#step-approve-reviewers");
+
+        $("#activation-timeout").change(() => {
+          $("#selected-activation-timeout").text(this.activationTimeout);
+        });
+      }
+
+      get selectedProjectId() {
+        return $("#project-selector-search").val();
+      }
+
+      set selectedProjectId(projectId) {
+        $("#project-selector-search").val(projectId);
+      }
+
+      get justificationText() {
+        return $("#justification").val();
+      }
+
+      set justificationHint(hint) {
+        $("#step-approve legend").text(hint);
+      }
+
+      get activationTimeout() {
+        return $("#activation-timeout")[0].value;
+      }
+
+      set activationTimeout(timeoutInMinutes) {
+        $("#activation-timeout")[0].MaterialSlider.change(timeoutInMinutes);
+        $("#selected-activation-timeout").text(timeoutInMinutes);
+      }
+
+      get maxActivationTimeout() {
+        return $("#activation-timeout")[0].max;
+      }
+
+      set maxActivationTimeout(timeoutInMinutes) {
+        $("#activation-timeout")[0].max = timeoutInMinutes;
+      }
+
+      set roles(roles) {
+        this._roles = roles;
+
+        this._roleTable.clear();
+        roles.forEach((item) => {
+          this._roleTable.addRow(
+            item.roleBinding.role,
+            [
+              { text: item.roleBinding.role },
+              { text: this.activationTypeCaptions[this.activationTypes.filter(type => item.activationType.startsWith(type))[0]] ?? item.activationType },
+              {
+                text: (this.statusCaptions[item.status] ?? item.status) +
+                  (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60 * 1000))} minutes left)`),
+                class: item.status === "ACTIVE" ? "activated" : null
+              }
+            ],
+            true,
+            item.status !== "ACTIVE");
+        });
+      }
+
+      get selectedRoles() {
+        console.assert(this._roles);
+        return this._roles.filter(i => this._roleTable.selected.includes(i.roleBinding.role));
+      }
+
+      set reviewers(reviewers) {
+        this._reviewersTable.clear();
+        reviewers.forEach((item) => {
+          this._reviewersTable.addRow(
+            item.email,
+            [
+              { text: item.email }
+            ],
+            true);
+        });
+      }
+
+      get selectedReviewers() {
+        return this._reviewersTable.selected;
+      }
+    }
+
+    class RequestStatusPane extends AppPane {
+      constructor() {
+        super("request-status-pane")
+
+        this._activatedRoleTable = new MdlDataTable("#activatedroles");
+      }
+
+      _createEmailLink(user) {
+        const link = $("<a target='_blank'/>");
+        link.attr("href", `https://contacts.google.com/search/${user.email}`);
+        link.text(user.email);
+        return link;
+      }
+
+      set activationStatus(activationStatus) {
+        $("#request-status-pane-approvebutton").hide();
+        $("#request-status-pane-consolebutton").hide();
+
+        if (activationStatus.isReviewer) {
+          if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+            $("#request-status-pane-title").text("Review access request");
+            $("#request-status-pane-description").text("Someone is asking you to review the following access request.");
+            $("#request-status-pane-approvebutton").show();
+          }
+          else {
+            $("#request-status-pane-title").text("Access approved");
+            $("#request-status-pane-description").text("You've approved the following access request.");
+          }
+
+          $("#request-status-pane-beneficiary").empty().append(this._createEmailLink(activationStatus.beneficiary));
+        }
+        else if (activationStatus.isBeneficiary) {
+          $("#request-status-pane-beneficiary").text("You");
+          if (activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+            $("#request-status-pane-title").text("Request submitted");
+            $("#request-status-pane-description").text("Your request has been submitted for approval. " +
+              "You'll receive an email once approval has been granted");
+          }
+          else {
+            $("#request-status-pane-title").text("Access granted");
+            $("#request-status-pane-description").text("Your request has been submitted and access is granted.");
+            if (activationStatus.items && activationStatus.items.length > 0) {
+              $("#request-status-pane-consolebutton").attr("href", function (index, attr) {
+                return `${attr}?project=${activationStatus.items[0].projectId}`
+              })
+            }
+            $("#request-status-pane-consolebutton").show();
+          }
+        }
+
+        // NB. All roles have the same start/end time.
+        const startTime = new Date(activationStatus.items[0].startTime * 1000);
+        const endTime = new Date(activationStatus.items[0].endTime * 1000);
+
+        $("#request-status-pane-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60 * 1000))} minutes ago)`);
+        $("#request-status-pane-starttime-utc").text(startTime.toUTCString());
+        $("#request-status-pane-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60 * 1000))} minutes)`);
+        $("#request-status-pane-endtime-utc").text(endTime.toUTCString());
+        $("#request-status-pane-justification").text(activationStatus.justification);
+
+        $("#request-status-pane-reviewers").empty();
+        if (activationStatus.reviewers && activationStatus.reviewers.length > 0) {
+          for (const reviewer of activationStatus.reviewers) {
+            $("#request-status-pane-reviewers").append(this._createEmailLink(reviewer)).append("<br />");
+          }
+        }
+        else {
+          $("#request-status-pane-reviewers").text("-")
+        }
+
+        this._activatedRoleTable.clear();
+        activationStatus.items.forEach((item) => {
+          this._activatedRoleTable.addRow(
+            item.roleBinding.role,
+            [
+              { text: item.projectId },
+              { text: item.roleBinding.role },
+              { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
+            ],
+            false);
+        });
+      }
+    }
+
+    /** Wrapper for HTML-based view */
+    class View {
+      constructor() {
+        this.requestPane = new RequestPane();
+        this.helpPane = new AppPane("help-pane");
+        this.busyPane = new AppPane("busy-pane");
+        this.requestStatusPane = new RequestStatusPane();
+      }
+
+      /** Display a toast bar at the bottom of the screen */
+      showToast(message, showReloadButton) {
+        console.assert(message);
+
+        const toast = document.querySelector("#toast");
+        console.assert(toast);
+
+        const config = {
+          message: message,
+          timeout: showReloadButton ? 60000 : 10000
+        }
+
+        // Show a button to perform a cache-busting reload.
+        if (showReloadButton) {
+          config.actionText = "Reload";
+          config.actionHandler = () => {
+            const timestamp = Date.now();
+            window.location.href = `${window.location.pathname}?_=${timestamp}`;
+          }
+        }
+
+        toast.MaterialSnackbar.showSnackbar(config);
+      }
+    };
+
+    const queryParameters = new URLSearchParams(location.search);
+    const activationToken = queryParameters.get("activation");
+    const gui = new View();
+    const backend = queryParameters.get("debug") ? new DebugModel() : new Model();
+    const localSettings = new LocalSettings();
+
+    $("#menu-home").click(() => window.location.replace(location.pathname));
+    $("#menu-requestaccess").click(() => window.location.replace(location.pathname));
+    $("#menu-help").click(() => gui.helpPane.show());
+    $(document).ready(async () => {
+      //
+      // Configure steps.
+      //
+      (function () {
+        componentHandler.upgradeAllRegistered();
+
+        //
+        // Step: Select project.
+        //
+        const requestPane = gui.requestPane;
+        requestPane.selectedProjectId = queryParameters.get("projectId") ?? localSettings.lastProjectId;
+
+        requestPane.requestStep.addHandler(async () => {
+          if (!(requestPane.selectedProjectId)) {
+            throw "Select a project";
+          }
+
+          localSettings.lastProjectId = requestPane.selectedProjectId;
+
+          //
+          // Request and list roles available in that project.
+          //
+          const rolesResult = await backend.listRoles(requestPane.selectedProjectId)
+          if (!rolesResult.roles || rolesResult.roles.length == 0) {
+            throw "The project doesn't exist, or you don't have permission to activate any roles in this project";
+          }
+
+          if (rolesResult.warnings && rolesResult.warnings.length > 0) {
+            gui.showToast(rolesResult.warnings.join(", "));
+          }
+
+          requestPane.roles = rolesResult.roles;
+          requestPane.maxActivationTimeout = backend.policy.maxActivationTimeout;
+          requestPane.activationTimeout = backend.policy.defaultActivationTimeout;
+        });
+
+        //
+        // Step: Select role.
+        //
+        let multiPartyApproval;
+        requestPane.selectRoleStep.addHandler(async () => {
+          const selectedRoles = gui.requestPane.selectedRoles;
+
+          if (selectedRoles.length === 0) {
+            throw "Select one or more roles to actviate";
+          }
+
+          if (selectedRoles.some(i => i.activationType.startsWith("PEER_APPROVAL") || i.activationType.startsWith("EXTERNAL_APPROVAL"))) {
+            //
+            // Multi-party approval: Request and list reviewers available for this project and role.
+            //
+            multiPartyApproval = true;
+
+            if (selectedRoles.length > 1) {
+              throw "You can only request approval for a single role at a time";
+            }
+
+            const reviewersResult = await backend.listReviewers(requestPane.selectedProjectId, selectedRoles[0].roleBinding.role, selectedRoles[0].activationType);
+
+            if (!reviewersResult.reviewers || reviewersResult.reviewers.length == 0) {
+              throw "There are currently no reviewers that could approve your request";
+            }
+
+            requestPane.reviewers = reviewersResult.reviewers;
+          }
+          else {
+            //
+            // Self - approval.
+            //
+            multiPartyApproval = false;
+            $(".conditional-mpa").hide();
+          }
+
+          requestPane.justificationHint = backend.policy.justificationHint;
+        });
+
+        //
+        // Step: Approve.
+        //
+        requestPane.approveStep.addHandler(async () => {
+          if (multiPartyApproval && gui.requestPane.selectedReviewers.length === 0) {
+            throw "Select one or more reviewers";
+          }
+          if (!requestPane.justificationText) {
+            throw "Enter a justification";
+          }
+
+          gui.busyPane.show();
+          try {
+            let activationStatus;
+            if (multiPartyApproval) {
+              console.assert(requestPane.selectedRoles.length == 1);
+              activationStatus = await backend.requestActivation(
+                requestPane.selectedProjectId,
+                requestPane.selectedRoles[0].roleBinding.role,
+                requestPane.selectedReviewers,
+                requestPane.justificationText,
+                parseInt(requestPane.activationTimeout),
+                requestPane.selectedRoles[0].activationType
+              );
+            }
+            else {
+              activationStatus = await backend.selfApproveActivation(
+                requestPane.selectedProjectId,
+                requestPane.selectedRoles.map(r => r.roleBinding.role),
+                requestPane.justificationText,
+                parseInt(requestPane.activationTimeout))
+            }
+
+            gui.requestStatusPane.activationStatus = activationStatus;
+            gui.requestStatusPane.show();
+          }
+          catch (error) {
+            gui.showToast(error);
+            gui.requestPane.show();
+          }
+        });
+      }());
+
+      $("#request-status-pane-approvebutton").click(async () => {
+        gui.busyPane.show();
+        try {
+          console.assert(activationToken);
+          gui.requestStatusPane.activationStatus = await backend.approveActivationRequest(activationToken);
+        }
+        catch (error) {
+          gui.showToast(error);
+        }
+        finally {
+          gui.requestStatusPane.show();
+        }
+      });
+
+      //
+      // Add Copy button to code blocks.
+      //
+      (function () {
+        document.querySelectorAll("pre").forEach((block) => {
+          if (navigator.clipboard) {
+            const img = document.createElement("img");
+            img.src = "icon.copy.svg";
+
+            const button = document.createElement("button");
+            button.appendChild(img);
+            block.appendChild(button);
+
+            button.addEventListener("click", async () => {
+              const code = block.querySelector("code");
+              const text = code.innerText;
+
+              await navigator.clipboard.writeText(text);
+            });
+          }
+        });
+      }());
+
+      //
+      // Configure project selector
+      //
+      $("#project-selector-search").autocomplete({
+        source: async (request, response) => {
+          try {
+            const projects = await backend.searchProjects(request.term);
+            response($.map(projects, (item) => {
+              return {
+                label: item,
+                value: item
+              };
+            }));
+          }
+          catch (e) {
+            gui.showToast(`Loading projects failed: ${e}`, false);
+          }
+        },
+        minLength: 2,
+        position: { of: $("#project-selector") }
+      });
+
+      try {
+        //
+        // Download policy to check if the communication with the backend
+        // works properly. 
+        //
+        await backend.fetchPolicy();
+        if (activationToken) {
+          //
+          // Show approver UI.
+          //
+          gui.requestStatusPane.activationStatus = await backend.getActivationRequest(activationToken);
+          gui.requestStatusPane.show();
+        }
+        else {
+          //
+          // Show request UI.
+          //
+          gui.requestPane.show();
+        }
+
+        $("#signed-in-user").text(backend.policy.signedInUser.email)
+        $("#application-version").text(backend.policy.applicationVersion)
+      }
+      catch (error) {
+        gui.showToast(error, true);
+      }
+    });
+  </script>
 </body>
 
 </html>
