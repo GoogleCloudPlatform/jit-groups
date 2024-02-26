@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 import java.util.Objects;
 
 /**
- * Primary email address and unique ID of a user.
+ * Primary email address and unique ID of a group.
  */
 public class GroupId extends UserEmail {
   private static final String GROUPS_PREFIX = "groups/";
@@ -72,6 +72,9 @@ public class GroupId extends UserEmail {
     return Objects.hash(super.hashCode(), id);
   }
 
+  /**
+   * @return ID in groups/ID format.
+   */
   @Override
   public String toString() {
     return String.format("%s%s", GROUPS_PREFIX, this.id); //TODO: test
