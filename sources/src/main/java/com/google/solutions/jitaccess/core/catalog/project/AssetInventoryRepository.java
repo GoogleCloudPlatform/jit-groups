@@ -115,7 +115,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       this.executor);
 
     var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
-    var allBindings = awaitAndRethrow(effectivePoliciesFuture)
+    return awaitAndRethrow(effectivePoliciesFuture)
       .stream()
 
       // All bindings, across all resources in the ancestry.
@@ -124,7 +124,6 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       // Only bindings that apply to the user.
       .filter(binding -> principalSetForUser.isMember(binding))
       .collect(Collectors.toList());
-    return allBindings;
   }
 
   //---------------------------------------------------------------------------
@@ -204,8 +203,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       allAvailable.addAll(jitEligible);
       allAvailable.addAll(mpaEligible
         .stream()
-        .filter(r -> !jitEligible.stream().anyMatch(a -> a.id().equals(r.id())))
-        .collect(Collectors.toList()));
+        .filter(r -> jitEligible.stream().noneMatch(a -> a.id().equals(r.id()))).toList());
     }
 
     //
@@ -217,8 +215,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
     for (var binding : allBindings.stream()
       // Only temporary access bindings.
-      .filter(binding -> JitConstraints.isActivated(binding.getCondition()))
-      .collect(Collectors.toUnmodifiableList()))
+      .filter(binding -> JitConstraints.isActivated(binding.getCondition())).toList())
     {
       var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
       boolean isValid;
@@ -300,16 +297,14 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
             return List.<Member>of();
           }
         },
-        this.executor))
-      .collect(Collectors.toList());
+        this.executor)).toList();
 
     var allMembers = new HashSet<>(allUserMembers);
 
     for (var listMembersFuture : listMembersFutures) {
       var members = awaitAndRethrow(listMembersFuture)
         .stream()
-        .map(m -> new UserEmail(m.getEmail()))
-        .collect(Collectors.toList());
+        .map(m -> new UserEmail(m.getEmail())).toList();
       allMembers.addAll(members);
     }
 

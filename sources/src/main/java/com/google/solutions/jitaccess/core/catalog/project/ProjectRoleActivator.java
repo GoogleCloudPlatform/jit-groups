@@ -178,6 +178,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
           .set("end", request.endTime().getEpochSecond());
       }
 
+      @SuppressWarnings("unchecked")
       @Override
       public @NotNull MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.@NotNull Payload payload) {
         var roleBinding = new RoleBinding(

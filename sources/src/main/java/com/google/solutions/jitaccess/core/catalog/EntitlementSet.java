@@ -73,9 +73,9 @@ public record EntitlementSet<TId extends EntitlementId>(
     //
     var availableAndInactive = availableEntitlements
       .stream()
-      .filter(ent -> !validActivations
+      .filter(ent -> validActivations
         .stream()
-        .anyMatch(active -> active.entitlementId().equals(ent.id())))
+        .noneMatch(active -> active.entitlementId().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
     assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));

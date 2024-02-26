@@ -76,7 +76,7 @@ public class TemporaryIamCondition extends IamCondition {
           Instant.parse(matcher.group(1)),
           Instant.parse(matcher.group(2)));
       }
-      catch (DateTimeParseException e) {}
+      catch (DateTimeParseException ignored) {}
     }
 
     throw new IllegalArgumentException("Condition is not a temporary IAM condition");
