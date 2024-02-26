@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TimeSpan;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -31,28 +32,34 @@ import java.util.stream.Collectors;
 /**
  * Set of requester privileges
  *
- * @param availableRequesterPrivileges available requester privileges,
- *                                     regardless of status
- * @param activeRequesterPrivilegeIds  IDs of active requester privileges.
+ * @param availableRequesterPrivileges available and active requester privileges
+ * @param expiredRequesterPrivileges   previously active requester privileges
  * @param warnings                     encountered warnings, if any.
  */
 public record RequesterPrivilegeSet<TPrivilegeId extends PrivilegeId>(
-    Set<RequesterPrivilege<TPrivilegeId>> availableRequesterPrivileges,
-    Set<TPrivilegeId> activeRequesterPrivilegeIds,
+    SortedSet<RequesterPrivilege<TPrivilegeId>> availableRequesterPrivileges,
+    SortedSet<RequesterPrivilege<TPrivilegeId>> expiredRequesterPrivileges,
     Set<String> warnings) {
-  public RequesterPrivilegeSet {
+
+  public RequesterPrivilegeSet
+
+  {
     Preconditions.checkNotNull(availableRequesterPrivileges, "availableRequesterPrivileges");
-    Preconditions.checkNotNull(activeRequesterPrivilegeIds, "activeRequesterPrivilegeIds");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
+    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() != RequesterPrivilege.Status.EXPIRED);
+    assert expiredRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.EXPIRED);
   }
 
-  /**
-   * @return consolidated set of requester privileges including available and
-   *         active ones.
-   */
-  public SortedSet<RequesterPrivilege<TPrivilegeId>> allRequesterPrivileges() {
+  public static <T extends PrivilegeId> RequesterPrivilegeSet<T> build(
+      Set<RequesterPrivilege<T>> availableRequesterPrivileges,
+      Set<ActivatedRequesterPrivilege<T>> validActivations,
+      Set<ActivatedRequesterPrivilege<T>> expiredActivations,
+      Set<String> warnings) {
+    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.INACTIVE);
+    assert validActivations.stream().noneMatch(id -> expiredActivations.contains(id));
+    assert expiredActivations.stream().noneMatch(id -> validActivations.contains(id));
+
     //
     // Return a set containing:
     //
@@ -61,45 +68,89 @@ public record RequesterPrivilegeSet<TPrivilegeId extends PrivilegeId>(
     //
     // where (1) and (2) don't overlap.
     //
-    var availableAndInactive = this.availableRequesterPrivileges
+    // Expired privileges are ignored.
+    //
+    var availableAndInactive = availableRequesterPrivileges
         .stream()
-        .filter(privilege -> !this.activeRequesterPrivilegeIds.contains(privilege.id()))
+        .filter(privilege -> !validActivations
+            .stream()
+            .anyMatch(active -> active.privilegeId().equals(privilege.id())))
         .collect(Collectors.toCollection(TreeSet::new));
 
-    assert availableAndInactive.stream().noneMatch(e -> this.activeRequesterPrivilegeIds.contains(e.id()));
+    assert availableAndInactive.stream().noneMatch(
+        p -> validActivations.stream().map(active -> active.privilegeId.id()).collect(Collectors.toList())
+            .contains(p.id().id()));
 
-    var consolidatedSet = new TreeSet<RequesterPrivilege<TPrivilegeId>>(availableAndInactive);
-    for (TPrivilegeId activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
+    var current = new TreeSet<RequesterPrivilege<T>>(availableAndInactive);
+    for (var validActivation : validActivations) {
       //
       // Find the corresponding privilege to determine
       // whether this is eligible.
       //
-      var correspondingRequesterPrivilege = this.availableRequesterPrivileges
+      var correspondingRequesterPrivilege = availableRequesterPrivileges
           .stream()
-          .filter(privilege -> privilege.id().equals(activeRequesterPrivilegeId))
+          .filter(privilege -> privilege.id().id().equals(validActivation.privilegeId().id()))
           .findFirst();
       if (correspondingRequesterPrivilege.isPresent()) {
-        consolidatedSet.add(new RequesterPrivilege<>(
-            activeRequesterPrivilegeId,
+        current.add(new RequesterPrivilege<>(
+            validActivation.privilegeId(),
             correspondingRequesterPrivilege.get().name(),
             correspondingRequesterPrivilege.get().activationType(),
-            RequesterPrivilege.Status.ACTIVE));
+            RequesterPrivilege.Status.ACTIVE,
+            validActivation.validity));
       } else {
         //
         // Active, but no longer available for activation.
         //
-        consolidatedSet.add(new RequesterPrivilege<>(
-            activeRequesterPrivilegeId,
-            activeRequesterPrivilegeId.id(),
+        current.add(new RequesterPrivilege<>(
+            validActivation.privilegeId(),
+            validActivation.privilegeId().id(),
             new NoActivation(),
-            RequesterPrivilege.Status.ACTIVE));
+            RequesterPrivilege.Status.ACTIVE,
+            validActivation.validity));
       }
     }
 
-    return consolidatedSet;
+    var expired = new TreeSet<RequesterPrivilege<T>>();
+    for (var expiredActivation : expiredActivations) {
+      //
+      // Find the corresponding privilege to determine
+      // whether this is currently eligible.
+      //
+      // it might have changed in the meantime, but that's ok.
+      //
+      var correspondingRequesterPrivilege = availableRequesterPrivileges
+          .stream()
+          .filter(privilege -> privilege.id().id().equals(expiredActivation.privilegeId().id()))
+          .findFirst();
+      if (correspondingRequesterPrivilege.isPresent()) {
+        expired.add(new RequesterPrivilege<>(
+            expiredActivation.privilegeId(),
+            correspondingRequesterPrivilege.get().name(),
+            correspondingRequesterPrivilege.get().activationType(),
+            RequesterPrivilege.Status.EXPIRED,
+            expiredActivation.validity));
+      } else {
+        expired.add(new RequesterPrivilege<>(
+            expiredActivation.privilegeId(),
+            expiredActivation.privilegeId().id(),
+            new NoActivation(),
+            RequesterPrivilege.Status.EXPIRED,
+            expiredActivation.validity));
+      }
+    }
+
+    return new RequesterPrivilegeSet<>(current, expired, warnings);
   }
 
   public static <TPrivilegeId extends PrivilegeId> RequesterPrivilegeSet<TPrivilegeId> empty() {
-    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), Set.of(), Set.of());
+    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), new TreeSet<>(), Set.of());
+  }
+
+  public record ActivatedRequesterPrivilege<TId>(TId privilegeId, TimeSpan validity) {
+    public ActivatedRequesterPrivilege {
+      Preconditions.checkNotNull(privilegeId, "privilegeId");
+      Preconditions.checkNotNull(validity, "validity");
+    }
   }
 }

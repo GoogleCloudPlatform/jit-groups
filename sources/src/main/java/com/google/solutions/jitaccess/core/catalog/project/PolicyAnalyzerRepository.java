@@ -23,7 +23,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
+import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysisResult;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
@@ -35,6 +37,7 @@ import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,10 +63,17 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
     this.options = options;
   }
 
-  static List<RoleBinding> findRoleBindings(
+  private record ConditionalRoleBinding(RoleBinding binding, Expr condition) {
+  }
+
+  static List<ConditionalRoleBinding> findRoleBindings(
       IamPolicyAnalysis analysisResult,
       Predicate<Expr> conditionPredicate,
       Predicate<String> conditionEvaluationPredicate) {
+    Function<IamPolicyAnalysisResult, Expr> getIamCondition = res -> res.getIamBinding() != null
+        ? res.getIamBinding().getCondition()
+        : null;
+
     //
     // NB. We don't really care which resource a policy is attached to
     // (indicated by AttachedResourceFullName). Instead, we care about
@@ -73,9 +83,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .flatMap(Collection::stream)
 
         // Narrow down to IAM bindings with a specific IAM condition.
-        .filter(result -> conditionPredicate.test(result.getIamBinding() != null
-            ? result.getIamBinding().getCondition()
-            : null))
+        .filter(result -> conditionPredicate.test(getIamCondition.apply(result)))
         .flatMap(result -> result
             .getAccessControlLists()
             .stream()
@@ -89,9 +97,11 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
             .flatMap(acl -> acl.getResources()
                 .stream()
                 .filter(res -> ProjectId.isProjectFullResourceName(res.getFullResourceName()))
-                .map(res -> new RoleBinding(
-                    res.getFullResourceName(),
-                    result.getIamBinding().getRole()))))
+                .map(res -> new ConditionalRoleBinding(
+                    new RoleBinding(
+                        res.getFullResourceName(),
+                        result.getIamBinding().getRole()),
+                    getIamCondition.apply(result)))))
         .collect(Collectors.toList());
   }
 
@@ -142,7 +152,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
     return roleBindings
         .stream()
-        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
+        .map(b -> ProjectId.fromFullResourceName(b.binding.fullResourceName()))
         .collect(Collectors.toCollection(TreeSet::new));
   }
 
@@ -177,7 +187,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         false);
 
     var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
-    if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
+    if (statusesToInclude.contains(RequesterPrivilege.Status.INACTIVE)) {
 
       allAvailable.addAll(Stream.ofNullable(analysisResult.getAnalysisResults())
           .flatMap(Collection::stream)
@@ -192,12 +202,12 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
           .collect(Collectors.toSet()));
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
+    var allActive = new HashSet<RequesterPrivilegeSet.ActivatedRequesterPrivilege<ProjectRoleBinding>>();
     if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
       // These bindings have a time condition that we created, and
-      // the condition evaluates to true (indicating it's still
+      // the condition evaluates to TRUE (indicating it's still
       // valid).
       //
 
@@ -208,7 +218,28 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       allActive.addAll(activeBindings
           .stream()
-          .map(b -> new ProjectRoleBinding(b))
+          .map(conditionalBinding -> new RequesterPrivilegeSet.ActivatedRequesterPrivilege<ProjectRoleBinding>(
+              new ProjectRoleBinding(conditionalBinding.binding),
+              new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
+          .collect(Collectors.toSet()));
+    }
+
+    var allExpired = new HashSet<RequesterPrivilegeSet.ActivatedRequesterPrivilege<ProjectRoleBinding>>();
+    if (statusesToInclude.contains(RequesterPrivilege.Status.EXPIRED)) {
+      //
+      // Do the same for conditions that evaluated to FALSE.
+      //
+
+      var activeBindings = findRoleBindings(
+          analysisResult,
+          condition -> PrivilegeFactory.isActivated(condition),
+          evalResult -> "FALSE".equalsIgnoreCase(evalResult));
+
+      allExpired.addAll(activeBindings
+          .stream()
+          .map(conditionalBinding -> new RequesterPrivilegeSet.ActivatedRequesterPrivilege<ProjectRoleBinding>(
+              new ProjectRoleBinding(conditionalBinding.binding),
+              new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
           .collect(Collectors.toSet()));
     }
 
@@ -217,7 +248,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .map(e -> e.getCause())
         .collect(Collectors.toSet());
 
-    return new RequesterPrivilegeSet<>(allAvailable, allActive, warnings);
+    return RequesterPrivilegeSet.build(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override

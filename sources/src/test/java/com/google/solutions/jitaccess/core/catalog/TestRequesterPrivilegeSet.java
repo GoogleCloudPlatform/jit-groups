@@ -21,9 +21,12 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,65 +54,68 @@ public class TestRequesterPrivilegeSet {
   }
 
   // -------------------------------------------------------------------------
-  // allRequesterPrivileges.
+  // availableRequesterPrivileges.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenActiveIsEmpty_ThenAllRequesterPrivilegesReturnsConsolidatedSet() {
+  public void whenActiveIsEmpty_ThenAvailablePrivilegesHaveRightStatus() {
     var available1 = new RequesterPrivilege<StringId>(
         new StringId("available-1"),
         "available-1",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var available2 = new RequesterPrivilege<StringId>(
         new StringId("available-2"),
         "available-2",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
-    var set = new RequesterPrivilegeSet<StringId>(
+    var set = RequesterPrivilegeSet.build(
         Set.of(available1, available2),
+        Set.of(),
         Set.of(),
         Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
-    assertEquals(Set.of(), set.activeRequesterPrivilegeIds());
-    assertIterableEquals(List.of(available1, available2), set.allRequesterPrivileges());
   }
 
   @Test
-  public void whenOnePrivilegeActive_ThenAllRequesterPrivilegesReturnsConsolidatedSet() {
+  public void whenOnePrivilegeActive_ThenAvailablePrivilegesHaveRightStatus() {
     var selfApproval = new SelfApproval();
     var available1 = new RequesterPrivilege<StringId>(
         new StringId("available-1"),
         "available-1",
         selfApproval,
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var available2 = new RequesterPrivilege<StringId>(
         new StringId("available-2"),
         "available-2",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
-    var set = new RequesterPrivilegeSet<StringId>(
+    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
+    var set = RequesterPrivilegeSet.build(
         Set.of(available1, available2),
-        Set.of(available1.id()),
+        Set.of(
+            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+                available1.id(),
+                validity1)),
+        Set.of(),
         Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
-    assertEquals(Set.of(available1.id()), set.activeRequesterPrivilegeIds());
     assertIterableEquals(List.of(
         available2,
         new RequesterPrivilege<StringId>(
             new StringId("available-1"),
             "available-1",
             selfApproval,
-            RequesterPrivilege.Status.ACTIVE)),
-        set.allRequesterPrivileges());
+            RequesterPrivilege.Status.ACTIVE,
+            validity1)),
+        set.availableRequesterPrivileges());
   }
 
   @Test
-  public void whenAllPrivilegesActive_ThenAllRequesterPrivilegesReturnsConsolidatedSet() {
+  public void whenAllPrivilegesActive_ThenAvailablePrivilegesHaveRightStatus() {
     var selfApproval = new SelfApproval();
     var selfApproval2 = new SelfApproval();
 
@@ -117,59 +123,70 @@ public class TestRequesterPrivilegeSet {
         new StringId("available-1"),
         "available-1",
         selfApproval,
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var available2 = new RequesterPrivilege<StringId>(
         new StringId("available-2"),
         "available-2",
         selfApproval2,
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
-    var set = new RequesterPrivilegeSet<StringId>(
+    var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
+    var set = RequesterPrivilegeSet.build(
         Set.of(available1, available2),
-        Set.of(available1.id(), available2.id()),
+        Set.of(
+            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+                available1.id(),
+                validity),
+            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+                available2.id(),
+                validity)),
+        Set.of(),
         Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
-    assertEquals(Set.of(available1.id(), available2.id()), set.activeRequesterPrivilegeIds());
     assertIterableEquals(List.of(
         new RequesterPrivilege<StringId>(
             new StringId("available-1"),
             "available-1",
             selfApproval,
-            RequesterPrivilege.Status.ACTIVE),
+            RequesterPrivilege.Status.ACTIVE,
+            validity),
         new RequesterPrivilege<StringId>(
             new StringId("available-2"),
             "available-2",
             selfApproval2,
-            RequesterPrivilege.Status.ACTIVE)),
-        set.allRequesterPrivileges());
+            RequesterPrivilege.Status.ACTIVE,
+            validity)),
+        set.availableRequesterPrivileges());
   }
 
   @Test
-  public void whenUnavailablePrivilegesIsActive_ThenAllRequesterPrivilegesReturnsConsolidatedSet() {
+  public void whenUnavailablePrivilegesIsActive_ThenAvailablePrivilegesHaveRightStatus() {
 
     var available1 = new RequesterPrivilege<StringId>(
         new StringId("available-1"),
         "available-1",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var available2 = new RequesterPrivilege<StringId>(
         new StringId("available-2"),
         "available-2",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
+    var validity1 = new TimeSpan(Instant.now().minus(Duration.ofMinutes(2)), Duration.ofMinutes(1));
     var unavailableId = new StringId("unavailable-1");
-    var set = new RequesterPrivilegeSet<StringId>(
+    var set = RequesterPrivilegeSet.build(
         Set.of(available1, available2),
-        Set.of(unavailableId),
+        Set.of(),
+        Set.of(new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(unavailableId, validity1)),
         Set.of());
 
     assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
     assertIterableEquals(List.of(
         available1.id(),
-        available2.id(),
-        unavailableId),
-        set.allRequesterPrivileges().stream().map(privilege -> privilege.id()).collect(Collectors.toList()));
+        available2.id()),
+        set.availableRequesterPrivileges().stream().map(privilege -> privilege.id())
+            .collect(Collectors.toList()));
+    assertEquals(unavailableId, set.expiredRequesterPrivileges().first().id());
   }
 }

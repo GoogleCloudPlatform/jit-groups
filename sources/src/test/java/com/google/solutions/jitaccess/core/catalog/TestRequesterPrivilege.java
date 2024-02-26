@@ -21,9 +21,12 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -41,7 +44,7 @@ public class TestRequesterPrivilege {
         new SamplePrivilegeId("1"),
         "Sample privilege",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
     assertEquals("Sample privilege", privilege.toString());
   }
@@ -56,12 +59,19 @@ public class TestRequesterPrivilege {
         new SamplePrivilegeId("A"),
         "Privilege A",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var activeA = new RequesterPrivilege<SamplePrivilegeId>(
         new SamplePrivilegeId("A"),
         "Privilege A",
         new SelfApproval(),
-        RequesterPrivilege.Status.ACTIVE);
+        RequesterPrivilege.Status.ACTIVE,
+        new TimeSpan(Instant.now(), Duration.ofMinutes(1)));
+    var activeA2 = new RequesterPrivilege<SamplePrivilegeId>(
+        new SamplePrivilegeId("A"),
+        "Entitlement A",
+        new SelfApproval(),
+        RequesterPrivilege.Status.ACTIVE,
+        new TimeSpan(Instant.now(), Duration.ofMinutes(2)));
     var pendingA = new RequesterPrivilege<SamplePrivilegeId>(
         new SamplePrivilegeId("A"),
         "Privilege A",
@@ -72,13 +82,14 @@ public class TestRequesterPrivilege {
         new SamplePrivilegeId("B"),
         "Privilege B",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var privileges = List.of(
         availableB,
         pendingA,
         availableA,
-        activeA);
+        activeA,
+        activeA2);
 
     var sorted = new TreeSet<RequesterPrivilege<SamplePrivilegeId>>();
     sorted.addAll(privileges);
@@ -88,6 +99,7 @@ public class TestRequesterPrivilege {
             availableA,
             availableB,
             activeA,
+            activeA2,
             pendingA),
         sorted);
   }

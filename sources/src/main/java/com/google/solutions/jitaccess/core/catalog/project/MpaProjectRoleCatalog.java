@@ -101,17 +101,18 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     // NB. It doesn't matter whether the user has already
     // activated the role.
     //
+
     var userPrivileges = this.repository
         .findRequesterPrivileges(
             user,
             projectId,
             Set.of(activationType),
-            EnumSet.of(RequesterPrivilege.Status.AVAILABLE))
+            EnumSet.of(RequesterPrivilege.Status.INACTIVE))
         .availableRequesterPrivileges()
         .stream()
         .collect(Collectors.toMap(privilege -> privilege.id(), privilege -> privilege));
 
-    assert userPrivileges.values().stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
+    assert userPrivileges.values().stream().allMatch(e -> e.status() == RequesterPrivilege.Status.INACTIVE);
 
     for (var requestedPrivilege : privileges) {
       var grantedPrivilege = userPrivileges.get(requestedPrivilege);
@@ -194,7 +195,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         projectId,
         Set.of(new SelfApproval(), new PeerApproval(""),
             new ExternalApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
   }
 
   @Override

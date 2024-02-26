@@ -30,6 +30,7 @@ import com.google.api.services.cloudresourcemanager.v3.CloudResourceManagerReque
 import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
 
@@ -144,8 +145,7 @@ public class ResourceManagerClient {
           //
           Predicate<Binding> isObsolete = b -> Bindings.equals(b, binding, false)
               && b.getCondition() != null
-              && IamTemporaryAccessConditions
-                  .isTemporaryAccessCondition(b.getCondition().getExpression());
+              && TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression());
 
           var nonObsoleteBindings = policy.getBindings().stream()
               .filter(isObsolete.negate())

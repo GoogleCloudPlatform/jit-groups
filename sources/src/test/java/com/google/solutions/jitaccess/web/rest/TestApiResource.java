@@ -432,8 +432,9 @@ public class TestApiResource {
         .listRequesterPrivileges(
             eq(SAMPLE_USER),
             eq(new ProjectId("project-1"))))
-        .thenReturn(new RequesterPrivilegeSet<>(
+        .thenReturn(RequesterPrivilegeSet.build(
             new TreeSet<>(Set.of()),
+            Set.of(),
             Set.of(),
             Set.of("warning")));
 
@@ -457,20 +458,21 @@ public class TestApiResource {
             new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
         "ent-1",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
     var role2 = new RequesterPrivilege<ProjectRoleBinding>(
         new ProjectRoleBinding(
             new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
         "ent-2",
         new SelfApproval(),
-        RequesterPrivilege.Status.AVAILABLE);
+        RequesterPrivilege.Status.INACTIVE);
 
     when(this.resource.mpaCatalog
         .listRequesterPrivileges(
             eq(SAMPLE_USER),
             eq(new ProjectId("project-1"))))
-        .thenReturn(new RequesterPrivilegeSet<>(
+        .thenReturn(RequesterPrivilegeSet.build(
             new TreeSet<>(Set.of(role1, role2)),
+            Set.of(),
             Set.of(),
             Set.of()));
 
@@ -1098,7 +1100,7 @@ public class TestApiResource {
                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                 "roles/mock",
                 new SelfApproval(),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             "a justification",
             Instant.now(),
             Duration.ofSeconds(60));
@@ -1133,7 +1135,7 @@ public class TestApiResource {
                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                 "roles/mock",
                 new SelfApproval(),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             "a justification",
             Instant.now(),
             Duration.ofSeconds(60));
@@ -1212,7 +1214,7 @@ public class TestApiResource {
                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                 "roles/mock",
                 new PeerApproval("topic"),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             "a justification",
             Instant.now(),
             Duration.ofSeconds(60));
@@ -1254,7 +1256,7 @@ public class TestApiResource {
                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                 "roles/mock",
                 new PeerApproval("topic"),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             "a justification",
             Instant.now(),
             Duration.ofSeconds(60));
@@ -1295,7 +1297,7 @@ public class TestApiResource {
                 new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock")),
                 "roles/mock",
                 new ExternalApproval("topic"),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             "a justification",
             Instant.now(),
             Duration.ofSeconds(60));

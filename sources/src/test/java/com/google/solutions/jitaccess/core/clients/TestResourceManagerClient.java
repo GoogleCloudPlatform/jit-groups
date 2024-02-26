@@ -29,6 +29,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest
 import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
@@ -105,7 +106,7 @@ public class TestResourceManagerClient {
         IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
-    String condition = IamTemporaryAccessConditions.createExpression(Instant.now(), Duration.ofMinutes(5));
+    String condition = new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5)).toString();
 
     adapter.addProjectIamBinding(
         IntegrationTestEnvironment.PROJECT_ID,
@@ -131,9 +132,9 @@ public class TestResourceManagerClient {
             .setRole("roles/browser")
             .setCondition(new Expr()
                 .setTitle("old binding")
-                .setExpression(IamTemporaryAccessConditions.createExpression(
+                .setExpression(new TemporaryIamCondition(
                     Instant.now().minus(Duration.ofDays(1)),
-                    Duration.ofMinutes(5)))),
+                    Duration.ofMinutes(5)).toString())),
         EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
         REQUEST_REASON);
 
@@ -186,8 +187,7 @@ public class TestResourceManagerClient {
             .setCondition(new Expr()
                 .setTitle("new binding")
                 .setExpression(
-                    IamTemporaryAccessConditions.createExpression(
-                        Instant.now(), Duration.ofMinutes(5)))),
+                    new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5)).toString())),
         EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
         REQUEST_REASON);
 
@@ -232,9 +232,9 @@ public class TestResourceManagerClient {
         .setRole("roles/browser")
         .setCondition(new Expr()
             .setTitle("temporary binding")
-            .setExpression(IamTemporaryAccessConditions.createExpression(
+            .setExpression(new TemporaryIamCondition(
                 Instant.now(),
-                Instant.now().plus(Duration.ofMinutes(1)))));
+                Instant.now().plus(Duration.ofMinutes(1))).toString()));
 
     // Add binding -> succeeds as no equivalent binding exists.
     adapter.addProjectIamBinding(

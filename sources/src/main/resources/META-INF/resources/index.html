@@ -641,7 +641,11 @@
                         [
                             { text: item.roleBinding.role },
                             { text: this.activationTypeCaptions[this.activationTypes.filter(type => item.activationType.startsWith(type))[0]] ?? item.activationType },
-                            { text: this.statusCaptions[item.status] ?? item.status, class: item.status === "ACTIVE" ? "activated" : null }
+                            {
+                                text: (this.statusCaptions[item.status] ?? item.status) +
+                                    (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60 * 1000))} minutes left)`),
+                                class: item.status === "ACTIVE" ? "activated" : null
+                            }
                         ],
                         true,
                         item.status !== "ACTIVE");

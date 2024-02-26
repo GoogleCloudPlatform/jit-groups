@@ -82,7 +82,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
         Set.of(SAMPLE_APPROVING_USER),
@@ -115,7 +115,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     assertThrows(
         AccessDeniedException.class,
@@ -149,7 +149,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -181,7 +181,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = new ActivationRequest<SamplePrivilegeId>(
         ActivationId.newId(requesterPrivilege.activationType()),
@@ -209,7 +209,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -237,7 +237,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -268,7 +268,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,

@@ -209,11 +209,13 @@ public class ApiResource {
           projectId);
 
       return new ProjectRolesResponse(
-          privileges.allRequesterPrivileges()
+          privileges.availableRequesterPrivileges()
               .stream()
-              .map(privilege -> new ProjectRole(privilege.id().roleBinding(),
+              .map(privilege -> new ProjectRole(
+                  privilege.id().roleBinding(),
                   privilege.activationType(),
-                  privilege.status()))
+                  privilege.status(),
+                  privilege.validity() != null ? privilege.validity().end().getEpochSecond() : null))
               .collect(Collectors.toList()),
           privileges.warnings());
     } catch (Exception e) {
@@ -263,7 +265,7 @@ public class ApiResource {
         new ProjectRoleBinding(roleBinding),
         roleBinding.role(),
         ActivationTypeFactory.createFromName(activationType),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     try {
       var reviewers = this.mpaCatalog.listReviewers(
@@ -337,7 +339,7 @@ public class ApiResource {
                 new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), role)),
                 role,
                 new SelfApproval(),
-                Status.AVAILABLE),
+                Status.INACTIVE),
             request.justification,
             Instant.now().truncatedTo(ChronoUnit.SECONDS),
             requestedRoleBindingDuration);
@@ -499,7 +501,7 @@ public class ApiResource {
           iapPrincipal.getId(),
           request.reviewers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
           new RequesterPrivilege<>(new ProjectRoleBinding(roleBinding), roleBinding.role(),
-              ActivationTypeFactory.createFromName(request.activationType), Status.AVAILABLE),
+              ActivationTypeFactory.createFromName(request.activationType), Status.INACTIVE),
           request.justification,
           Instant.now().truncatedTo(ChronoUnit.SECONDS),
           requestedRoleBindingDuration);
@@ -864,17 +866,20 @@ public class ApiResource {
     public final RoleBinding roleBinding;
     public final String activationType;
     public final RequesterPrivilege.Status status;
+    public final Long /* optional */ validUntil;
 
     public ProjectRole(
         RoleBinding roleBinding,
         ActivationType activationType,
-        RequesterPrivilege.Status status) {
+        RequesterPrivilege.Status status,
+        Long validUntil) {
 
       Preconditions.checkNotNull(roleBinding, "roleBinding");
 
       this.roleBinding = roleBinding;
       this.activationType = activationType.name();
       this.status = status;
+      this.validUntil = validUntil;
     }
   }
 
