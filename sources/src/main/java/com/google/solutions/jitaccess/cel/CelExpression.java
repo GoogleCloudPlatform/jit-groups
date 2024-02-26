@@ -1,7 +1,6 @@
 package com.google.solutions.jitaccess.cel;
 
 import dev.cel.common.CelException;
-import dev.cel.runtime.CelEvaluationException;
 
 /**
  * A CEL expression.

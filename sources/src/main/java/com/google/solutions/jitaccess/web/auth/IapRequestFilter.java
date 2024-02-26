@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web.auth;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.UserId;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;

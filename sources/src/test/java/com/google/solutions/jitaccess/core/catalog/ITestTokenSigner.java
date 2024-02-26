@@ -25,8 +25,8 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
-import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.core.clients.ITestEnvironment;
+import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;

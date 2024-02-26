@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web.auth;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.UserId;
 import org.jetbrains.annotations.NotNull;
 

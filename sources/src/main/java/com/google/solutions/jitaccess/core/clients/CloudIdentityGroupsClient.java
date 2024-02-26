@@ -27,12 +27,10 @@ import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.GroupEmail;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.NotFoundException;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
