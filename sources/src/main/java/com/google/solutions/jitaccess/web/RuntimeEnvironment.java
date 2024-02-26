@@ -394,6 +394,12 @@ public class RuntimeEnvironment {
   }
 
   @Produces
+  public CloudIdentityGroupsClient.Options getCloudIdentityGroupsClientOptions() {
+    return new CloudIdentityGroupsClient.Options(
+      this.configuration.customerId.getValue());
+  }
+
+  @Produces
   @Singleton
   public ProjectRoleRepository getProjectRoleRepository(
     Executor executor,

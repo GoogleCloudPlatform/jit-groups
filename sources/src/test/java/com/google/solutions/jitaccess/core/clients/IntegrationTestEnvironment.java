@@ -49,10 +49,6 @@ public class IntegrationTestEnvironment {
 
   public static final ProjectId PROJECT_ID;
 
-  public static final GoogleCredentials APPLICATION_CREDENTIALS;
-  public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
-  public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
-
   /**
    * Service account that tests can use to grant temporary access to.
    */
@@ -62,6 +58,31 @@ public class IntegrationTestEnvironment {
    * Service account that doesn't have access to anything.
    */
   public static final UserEmail NO_ACCESS_USER;
+
+  /**
+   * Credentials with application-level access.
+   */
+  public static final GoogleCredentials APPLICATION_CREDENTIALS;
+
+  /**
+   * Credentials with no access.
+   */
+  public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
+
+  /**
+   * Credentials used or granting temporary access.
+   */
+  public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
+
+  /**
+   * Account/customer ID (Cxxxxx) of a Cloud Identity/Workspace account.
+   */
+  public static final String CLOUD_IDENTITY_ACCOUNT_ID;
+
+  /**
+   * Domain name of the Cloud Identity/Workspace account.
+   */
+  public static final String CLOUD_IDENTITY_DOAMIN;
 
   public static final PubSubTopic PUBSUB_TOPIC;
 
@@ -79,7 +100,17 @@ public class IntegrationTestEnvironment {
       Properties settings = new Properties();
       settings.load(in);
 
+      //
+      // Project, account settings.
+      //
+
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
+      CLOUD_IDENTITY_ACCOUNT_ID = getMandatory(settings, "test.cloudIdentity.accountId");
+      CLOUD_IDENTITY_DOAMIN = getMandatory(settings, "test.cloudIdentity.domain");
+
+      //
+      // User settings.
+      //
 
       NO_ACCESS_USER = new UserEmail(
         String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
@@ -101,6 +132,10 @@ public class IntegrationTestEnvironment {
 
       NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
+
+      //
+      // Pub/Sub settings.
+      //
 
       var topicName = getOptional(settings, "test.topic", "");
       if (!Strings.isNullOrEmpty(topicName)) {

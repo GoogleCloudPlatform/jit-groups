@@ -150,7 +150,7 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body);
-    assertEquals(SAMPLE_USER, body.signedInUser);
+    assertEquals(SAMPLE_USER.email, body.signedInUser.email);
   }
 
   // -------------------------------------------------------------------------
@@ -574,7 +574,7 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(SAMPLE_USER, body.beneficiary);
+    assertEquals(SAMPLE_USER.email, body.beneficiary.email);
     assertEquals(0, body.reviewers.size());
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
@@ -883,8 +883,8 @@ public class TestApiResource {
       ApiResource.ActivationStatusResponse.class);
 
     var body = response.getBody();
-    assertEquals(SAMPLE_USER, body.beneficiary);
-    assertIterableEquals(Set.of(SAMPLE_USER_2), body.reviewers);
+    assertEquals(SAMPLE_USER.email, body.beneficiary.email);
+    assertIterableEquals(Set.of(new UserEmail(SAMPLE_USER_2.email)), body.reviewers);
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
     assertEquals("justification", body.justification);
@@ -989,7 +989,7 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(request.requestingUser(), body.beneficiary);
+    assertEquals(request.requestingUser().email, body.beneficiary.email);
     assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
     assertTrue(body.isBeneficiary);
     assertFalse(body.isReviewer);
@@ -1145,7 +1145,7 @@ public class TestApiResource {
     assertEquals(200, response.getStatus());
 
     var body = response.getBody();
-    assertEquals(request.requestingUser(), body.beneficiary);
+    assertEquals(request.requestingUser().email, body.beneficiary.email);
     assertIterableEquals(Set.of(SAMPLE_USER_2), request.reviewers());
     assertFalse(body.isBeneficiary);
     assertTrue(body.isReviewer);
