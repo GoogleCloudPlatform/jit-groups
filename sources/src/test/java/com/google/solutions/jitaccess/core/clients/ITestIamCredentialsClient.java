@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestIamCredentialsClient {
+public class ITestIamCredentialsClient {
 
   // -------------------------------------------------------------------------
   // signJwt.
@@ -16,7 +16,7 @@ public class TestIamCredentialsClient {
   @Test
   public void whenUnauthenticated_ThenSignJwtThrowsException() {
     var adapter = new IamCredentialsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     var payload = new JsonWebToken.Payload()
@@ -24,15 +24,15 @@ public class TestIamCredentialsClient {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload));
+      () -> adapter.signJwt(ITestEnvironment.NO_ACCESS_USER, payload));
   }
 
   @Test
   public void whenCallerHasPermission_ThenSignJwtSucceeds() throws Exception {
     var adapter = new IamCredentialsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()
       .setAudience(serviceAccount.email)
@@ -59,7 +59,7 @@ public class TestIamCredentialsClient {
     assertEquals(
       String.format(
         "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
-        IntegrationTestEnvironment.NO_ACCESS_USER.email),
-      IamCredentialsClient.getJwksUrl(IntegrationTestEnvironment.NO_ACCESS_USER));
+        ITestEnvironment.NO_ACCESS_USER.email),
+      IamCredentialsClient.getJwksUrl(ITestEnvironment.NO_ACCESS_USER));
   }
 }

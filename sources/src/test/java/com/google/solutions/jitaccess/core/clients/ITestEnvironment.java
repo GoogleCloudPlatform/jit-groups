@@ -35,8 +35,8 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
 
-public class IntegrationTestEnvironment {
-  private IntegrationTestEnvironment() {
+public class ITestEnvironment {
+  private ITestEnvironment() {
   }
 
   private static final String SETTINGS_FILE = "test.properties";

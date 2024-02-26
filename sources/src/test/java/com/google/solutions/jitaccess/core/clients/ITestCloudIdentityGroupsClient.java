@@ -31,18 +31,18 @@ import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestCloudIdentityGroupsClient {
+public class ITestCloudIdentityGroupsClient {
   private final String INVALID_CUSTOMER_ID = "Cinvalid";
   private static final GroupEmail TEST_GROUP_EMAIL = new GroupEmail(
     String.format(
       "jitaccess-test@%s",
-      IntegrationTestEnvironment.CLOUD_IDENTITY_DOAMIN));
+      ITestEnvironment.CLOUD_IDENTITY_DOAMIN));
 
   @BeforeEach
   public void setUp() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     try {
@@ -65,7 +65,7 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenGetGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
@@ -77,9 +77,9 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenCallerLacksPermission_ThenGetGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -90,24 +90,24 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenGroupNotFound_ThenGetThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
       () -> client.getGroup(new GroupEmail(String.format(
         "jitaccess-doesnotexist@%s",
-        IntegrationTestEnvironment.CLOUD_IDENTITY_DOAMIN))));
+        ITestEnvironment.CLOUD_IDENTITY_DOAMIN))));
   }
 
   @Test
   public void getGroup() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     client.createGroup(TEST_GROUP_EMAIL, "description");
@@ -123,7 +123,7 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenCreateGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
@@ -137,9 +137,9 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenCustomerIdDoesNotMatchDomain_ThenCreateGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -152,8 +152,8 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void createGroupIsIdempotent() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     //
@@ -182,7 +182,7 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenDeleteGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
@@ -194,9 +194,9 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenGroupIdInvalid_ThenDeleteGroupThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -211,34 +211,34 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenGroupIdInvalid_ThenGetMembershipThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       IllegalArgumentException.class,
       () -> client.getMembership(
         new GroupId("1", "doesnotexist@google.com"),
-        IntegrationTestEnvironment.NO_ACCESS_USER));
+        ITestEnvironment.NO_ACCESS_USER));
   }
 
   @Test
   public void getMembership() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
     var id = client.addMembership(
       groupId,
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+      ITestEnvironment.TEMPORARY_ACCESS_USER,
       Instant.now().plusSeconds(300));
     var membership = client.getMembership(
       groupId,
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+      ITestEnvironment.TEMPORARY_ACCESS_USER);
 
     assertEquals(id.id(), membership.getName());
   }
@@ -250,7 +250,7 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenAddMembershipThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
@@ -265,9 +265,9 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenGroupIdInvalid_ThenAddMembershipThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -281,11 +281,11 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void addMembershipIsIdempotent() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
-    var userEmail = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
+    var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
     // Add member twice.
@@ -300,8 +300,8 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenExpiryIsInThePast_ThenAddMembershipThrowsException() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
@@ -310,19 +310,19 @@ public class TestCloudIdentityGroupsClient {
       IllegalArgumentException.class,
       () -> client.addMembership(
         groupId,
-        IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+        ITestEnvironment.TEMPORARY_ACCESS_USER,
         Instant.now().minusSeconds(300)));
   }
 
   @Test
   public void whenMembershipExists_ThenAddMembershipUpdatesExpiry() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
-    var userEmail = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
+    var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
     // Add membership with an initial expiry.
@@ -362,7 +362,7 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenDeleteMembershipThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
@@ -375,15 +375,15 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void deleteMembershipIsIdempotent() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
     var id = client.addMembership(
       groupId,
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+      ITestEnvironment.TEMPORARY_ACCESS_USER,
       Instant.now().plusSeconds(300));
 
     //
@@ -407,26 +407,26 @@ public class TestCloudIdentityGroupsClient {
   @Test
   public void whenUnauthenticated_ThenSearchDirectGroupMembershipsThrowsException() {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
       () -> client.searchDirectGroupMemberships(
-        IntegrationTestEnvironment.TEMPORARY_ACCESS_USER));
+        ITestEnvironment.TEMPORARY_ACCESS_USER));
   }
 
   @Test
   public void searchDirectGroupMemberships() throws Exception {
     var client = new CloudIdentityGroupsClient(
-      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
-        IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
     var memberships = client.searchDirectGroupMemberships(
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+      ITestEnvironment.TEMPORARY_ACCESS_USER);
     assertEquals(0, memberships.size());
   }
 }
