@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
@@ -50,12 +51,12 @@ import java.util.stream.Stream;
  * "eligible").
  */
 public class PolicyAnalyzerRepository implements ProjectRoleRepository {
-  private final Options options;
-  private final PolicyAnalyzerClient policyAnalyzerClient;
+  private final @NotNull Options options;
+  private final @NotNull PolicyAnalyzerClient policyAnalyzerClient;
 
   public PolicyAnalyzerRepository(
-    PolicyAnalyzerClient policyAnalyzerClient,
-    Options options
+    @NotNull PolicyAnalyzerClient policyAnalyzerClient,
+    @NotNull Options options
   ) {
     Preconditions.checkNotNull(policyAnalyzerClient, "assetInventoryClient");
     Preconditions.checkNotNull(options, "options");
@@ -66,10 +67,10 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
   private record ConditionalRoleBinding(RoleBinding binding, Expr condition) {}
 
-  static List<ConditionalRoleBinding> findRoleBindings(
-    IamPolicyAnalysis analysisResult,
-    Predicate<Expr> conditionPredicate,
-    Predicate<String> conditionEvaluationPredicate
+  static @NotNull List<ConditionalRoleBinding> findRoleBindings(
+    @NotNull IamPolicyAnalysis analysisResult,
+    @NotNull Predicate<Expr> conditionPredicate,
+    @NotNull Predicate<String> conditionEvaluationPredicate
   ) {
     Function<IamPolicyAnalysisResult, Expr> getIamCondition =
       res -> res.getIamBinding() != null ? res.getIamBinding().getCondition() : null;
@@ -110,7 +111,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   //---------------------------------------------------------------------------
 
   @Override
-  public SortedSet<ProjectId> findProjectsWithEntitlements(
+  public @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
     UserEmail user
   ) throws AccessException, IOException {
 
@@ -155,11 +156,11 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public EntitlementSet<ProjectRoleBinding> findEntitlements(
+  public @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserEmail user,
-    ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
+    @NotNull ProjectId projectId,
+    @NotNull EnumSet<ActivationType> typesToInclude,
+    @NotNull EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
@@ -295,9 +296,9 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public Set<UserEmail> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    ActivationType activationType
+  public @NotNull Set<UserEmail> findEntitlementHolders(
+    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ActivationType activationType
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");

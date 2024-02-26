@@ -27,10 +27,10 @@ import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.GroupEmail;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.NotFoundException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -53,14 +53,14 @@ public class CloudIdentityGroupsClient {
     "member.customer_id == groupCustomerId() && (member.type == 1 || member.type == 2)";
   private static final int SEARCH_PAGE_SIZE = 1000;
 
-  private final Options options;
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
+  private final @NotNull Options options;
+  private final @NotNull GoogleCredentials credentials;
+  private final HttpTransport.@NotNull Options httpOptions;
 
   public CloudIdentityGroupsClient(
-    GoogleCredentials credentials,
-    Options options,
-    HttpTransport.Options httpOptions
+    @NotNull GoogleCredentials credentials,
+    @NotNull Options options,
+    HttpTransport.@NotNull Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(options, "options");
@@ -71,7 +71,7 @@ public class CloudIdentityGroupsClient {
     this.httpOptions = httpOptions;
   }
 
-  private CloudIdentity createClient() throws IOException {
+  private @NotNull CloudIdentity createClient() throws IOException {
     try {
       return new CloudIdentity.Builder(
         HttpTransport.newTransport(),
@@ -86,7 +86,7 @@ public class CloudIdentityGroupsClient {
   }
 
   private static boolean isAlreadyExistsError(
-    GoogleJsonResponseException e
+    @NotNull GoogleJsonResponseException e
   ) {
     return
       e.getStatusCode() == 409 &&
@@ -94,7 +94,7 @@ public class CloudIdentityGroupsClient {
   }
 
   private static void translateAndThrowApiException(
-    GoogleJsonResponseException e
+    @NotNull GoogleJsonResponseException e
   ) throws AccessException, IOException {
     switch (e.getStatusCode()) {
       case 400:
@@ -117,9 +117,9 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a group ID by email.
    */
-  private GroupId lookupGroup(
-    CloudIdentity client,
-    GroupEmail email
+  private @NotNull GroupId lookupGroup(
+    @NotNull CloudIdentity client,
+    @NotNull GroupEmail email
   ) throws AccessException, IOException {
     try {
       var id = client
@@ -140,9 +140,9 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group.
    */
-  private Group getGroup(
-    CloudIdentity client,
-    GroupId groupId
+  private @NotNull Group getGroup(
+    @NotNull CloudIdentity client,
+    @NotNull GroupId groupId
   ) throws AccessException, IOException {
     try {
       return client
@@ -159,8 +159,8 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group.
    */
-  public Group getGroup(
-    GroupId groupId
+  public @NotNull Group getGroup(
+    @NotNull GroupId groupId
   ) throws AccessException, IOException {
     return getGroup(createClient(), groupId);
   }
@@ -168,8 +168,8 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group.
    */
-  public Group getGroup(
-    GroupEmail groupEmail
+  public @NotNull Group getGroup(
+    @NotNull GroupEmail groupEmail
   ) throws AccessException, IOException {
     var client = createClient();
     return getGroup(client, lookupGroup(client, groupEmail));
@@ -178,8 +178,8 @@ public class CloudIdentityGroupsClient {
   /**
    * Create group in an idempotent way.
    */
-  public GroupId createGroup(
-    GroupEmail emailAddress,
+  public @NotNull GroupId createGroup(
+    @NotNull GroupEmail emailAddress,
     String description
   ) throws AccessException, IOException {
     try {
@@ -260,7 +260,7 @@ public class CloudIdentityGroupsClient {
    * Delete a group.
    */
   public void deleteGroup(
-    GroupId groupId
+    @NotNull GroupId groupId
   ) throws AccessException, IOException {
     try {
       var createOperation = createClient()
@@ -287,10 +287,10 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a membership ID by group and user email.
    */
-  private MembershipId lookupGroupMembership(
-    CloudIdentity client,
-    GroupId groupId,
-    UserEmail userEmail
+  private @NotNull MembershipId lookupGroupMembership(
+    @NotNull CloudIdentity client,
+    @NotNull GroupId groupId,
+    @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     try {
       return new MembershipId(client
@@ -310,9 +310,9 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group membership.
    */
-  private Membership getMembership(
-    CloudIdentity client,
-    MembershipId membershipId
+  private @NotNull Membership getMembership(
+    @NotNull CloudIdentity client,
+    @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
       return client
@@ -330,8 +330,8 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group membership.
    */
-  public Membership getMembership(
-    MembershipId membershipId
+  public @NotNull Membership getMembership(
+    @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     return getMembership(createClient(), membershipId);
   }
@@ -339,9 +339,9 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group membership.
    */
-  public Membership getMembership(
-    GroupId groupId,
-    UserEmail userEmail
+  public @NotNull Membership getMembership(
+    @NotNull GroupId groupId,
+    @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     var client = createClient();
     var id = lookupGroupMembership(client, groupId, userEmail);
@@ -352,7 +352,7 @@ public class CloudIdentityGroupsClient {
    * Delete a group membership in an idempotent way.
    */
   public void deleteMembership(
-    MembershipId membershipId
+    @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
       createClient()
@@ -373,10 +373,10 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  private MembershipId updateMembership(
-    CloudIdentity client,
-    GroupId groupId,
-    UserEmail userEmail,
+  private @NotNull MembershipId updateMembership(
+    @NotNull CloudIdentity client,
+    @NotNull GroupId groupId,
+    @NotNull UserEmail userEmail,
     MembershipRole role
   ) throws AccessException, IOException {
     var membershipId = lookupGroupMembership(client, groupId, userEmail);
@@ -404,10 +404,10 @@ public class CloudIdentityGroupsClient {
   /**
    * Add a member to a group in an idempotent way.
    */
-  public MembershipId addMembership(
-    GroupId groupId,
-    UserEmail userEmail,
-    Instant expiry
+  public @NotNull MembershipId addMembership(
+    @NotNull GroupId groupId,
+    @NotNull UserEmail userEmail,
+    @NotNull Instant expiry
   ) throws AccessException, IOException {
     var client = createClient();
 
@@ -456,8 +456,8 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  public Collection<MembershipRelation> searchDirectGroupMemberships(
-    UserEmail userEmail
+  public @NotNull Collection<MembershipRelation> searchDirectGroupMemberships(
+    @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     Preconditions.checkArgument(userEmail.email.indexOf('\'') < 0);
 
@@ -507,7 +507,7 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  class IncompleteOperationException extends AccessException {
+  static class IncompleteOperationException extends AccessException {
     public IncompleteOperationException(String message) {
       super(message);
     }

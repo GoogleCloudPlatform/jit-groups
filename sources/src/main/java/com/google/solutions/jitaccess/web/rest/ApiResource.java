@@ -41,6 +41,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -83,9 +85,9 @@ public class ApiResource {
   @Inject
   Options options;
 
-  private URL createActivationRequestUrl(
-    UriInfo uriInfo,
-    ProjectId projectId,
+  private @NotNull URL createActivationRequestUrl(
+    @NotNull UriInfo uriInfo,
+    @NotNull ProjectId projectId,
     String activationToken
   ) throws MalformedURLException {
     Preconditions.checkNotNull(uriInfo);
@@ -140,8 +142,8 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public PolicyResponse getPolicy(
-    @Context SecurityContext securityContext
+  public @NotNull PolicyResponse getPolicy(
+    @Context @NotNull SecurityContext securityContext
   ) {
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
 
@@ -160,8 +162,8 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
-  public ProjectsResponse listProjects(
-    @Context SecurityContext securityContext
+  public @NotNull ProjectsResponse listProjects(
+    @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
@@ -198,9 +200,9 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles")
-  public ProjectRolesResponse listRoles(
-    @PathParam("projectId") String projectIdString,
-    @Context SecurityContext securityContext
+  public @NotNull ProjectRolesResponse listRoles(
+    @PathParam("projectId") @Nullable String projectIdString,
+    @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
@@ -246,10 +248,10 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/peers")
-  public ProjectRolePeersResponse listPeers(
-    @PathParam("projectId") String projectIdString,
-    @QueryParam("role") String role,
-    @Context SecurityContext securityContext
+  public @NotNull ProjectRolePeersResponse listPeers(
+    @PathParam("projectId") @Nullable String projectIdString,
+    @QueryParam("role") @Nullable String role,
+    @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
@@ -294,10 +296,10 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public ActivationStatusResponse selfApproveActivation(
-    @PathParam("projectId") String projectIdString,
-    SelfActivationRequest request,
-    @Context SecurityContext securityContext
+  public @NotNull ActivationStatusResponse selfApproveActivation(
+    @PathParam("projectId") @Nullable String projectIdString,
+    @NotNull SelfActivationRequest request,
+    @Context @NotNull SecurityContext securityContext
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
@@ -407,11 +409,11 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/request")
-  public ActivationStatusResponse requestActivation(
-    @PathParam("projectId") String projectIdString,
-    ActivationRequest request,
-    @Context SecurityContext securityContext,
-    @Context UriInfo uriInfo
+  public @NotNull ActivationStatusResponse requestActivation(
+    @PathParam("projectId") @Nullable String projectIdString,
+    @NotNull ActivationRequest request,
+    @Context @NotNull SecurityContext securityContext,
+    @Context @NotNull UriInfo uriInfo
   ) throws AccessDeniedException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
     assert this.tokenSigner != null;
@@ -581,9 +583,9 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public ActivationStatusResponse getActivationRequest(
-    @QueryParam("activation") String obfuscatedActivationToken,
-    @Context SecurityContext securityContext
+  public @NotNull ActivationStatusResponse getActivationRequest(
+    @QueryParam("activation") @Nullable String obfuscatedActivationToken,
+    @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     assert this.tokenSigner != null;
 
@@ -628,10 +630,10 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public ActivationStatusResponse approveActivationRequest(
-    @QueryParam("activation") String obfuscatedActivationToken,
-    @Context SecurityContext securityContext,
-    @Context UriInfo uriInfo
+  public @NotNull ActivationStatusResponse approveActivationRequest(
+    @QueryParam("activation") @Nullable String obfuscatedActivationToken,
+    @Context @NotNull SecurityContext securityContext,
+    @Context @NotNull UriInfo uriInfo
   ) throws AccessException {
     assert this.tokenSigner != null;
     assert this.mpaCatalog != null;
@@ -675,7 +677,6 @@ public class ApiResource {
         activationRequest);
 
       assert activation != null;
-
 
       //
       // Notify listeners.
@@ -737,9 +738,9 @@ public class ApiResource {
   // Logging helper methods.
   // -------------------------------------------------------------------------
 
-  private static <T extends  EntitlementId> LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    com.google.solutions.jitaccess.core.catalog.ActivationRequest<T> request
+  private static <T extends  EntitlementId> LogAdapter.@NotNull LogEntry addLabels(
+    LogAdapter.@NotNull LogEntry entry,
+    com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<T> request
   ) {
     entry
       .addLabel("activation_id", request.id().toString())
@@ -760,8 +761,8 @@ public class ApiResource {
   }
 
   private static LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    RoleBinding roleBinding
+    LogAdapter.@NotNull LogEntry entry,
+    @NotNull RoleBinding roleBinding
   ) {
     return entry
       .addLabel("role", roleBinding.role())
@@ -770,8 +771,8 @@ public class ApiResource {
   }
 
   private static LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    Collection<? extends EntitlementId> entitlements
+    LogAdapter.@NotNull LogEntry entry,
+    @NotNull Collection<? extends EntitlementId> entitlements
   ) {
     return entry.addLabel(
       "entitlements",
@@ -779,15 +780,15 @@ public class ApiResource {
   }
 
   private static LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    Exception exception
+    LogAdapter.@NotNull LogEntry entry,
+    @NotNull Exception exception
   ) {
     return entry.addLabel("error", exception.getClass().getSimpleName());
   }
 
   private static LogAdapter.LogEntry addLabels(
-    LogAdapter.LogEntry entry,
-    ProjectId project
+    LogAdapter.@NotNull LogEntry entry,
+    @NotNull ProjectId project
   ) {
     return entry.addLabel("project", project.id());
   }
@@ -797,15 +798,15 @@ public class ApiResource {
   // -------------------------------------------------------------------------
 
   public static class PolicyResponse {
-    public final String justificationHint;
-    public final UserEmail signedInUser;
-    public String applicationVersion;
+    public final @NotNull String justificationHint;
+    public final @NotNull UserEmail signedInUser;
+    public final String applicationVersion;
     public final int defaultActivationTimeout; // in minutes.
     public final int maxActivationTimeout;     // in minutes.
 
     private PolicyResponse(
-      String justificationHint,
-      UserEmail signedInUser,
+      @NotNull String justificationHint,
+      @NotNull UserEmail signedInUser,
       String applicationVersion,
       int maxActivationTimeoutInMinutes,
       int defaultActivationTimeoutInMinutes
@@ -825,9 +826,9 @@ public class ApiResource {
   }
 
   public static class ProjectsResponse {
-    public final Set<String> projects;
+    public final @NotNull Set<String> projects;
 
-    private ProjectsResponse(SortedSet<String> projects) {
+    private ProjectsResponse(@NotNull SortedSet<String> projects) {
       Preconditions.checkNotNull(projects, "projects");
       this.projects = projects;
     }
@@ -835,10 +836,10 @@ public class ApiResource {
 
   public static class ProjectRolesResponse {
     public final Set<String> warnings;
-    public final List<ProjectRole> roles;
+    public final @NotNull List<ProjectRole> roles;
 
     private ProjectRolesResponse(
-      List<ProjectRole> roles,
+      @NotNull List<ProjectRole> roles,
       Set<String> warnings
     ) {
       Preconditions.checkNotNull(roles, "roles");
@@ -849,13 +850,13 @@ public class ApiResource {
   }
 
   public static class ProjectRole {
-    public final RoleBinding roleBinding;
+    public final @NotNull RoleBinding roleBinding;
     public final ActivationType activationType;
     public final Entitlement.Status status;
     public final Long /* optional */ validUntil;
 
     public ProjectRole(
-      RoleBinding roleBinding,
+      @NotNull RoleBinding roleBinding,
       ActivationType activationType,
       Entitlement.Status status,
       Long validUntil) {
@@ -870,9 +871,9 @@ public class ApiResource {
   }
 
   public static class ProjectRolePeersResponse {
-    public final Set<UserEmail> peers;
+    public final @NotNull Set<UserEmail> peers;
 
-    private ProjectRolePeersResponse(Set<UserEmail> peers) {
+    private ProjectRolePeersResponse(@NotNull Set<UserEmail> peers) {
       Preconditions.checkNotNull(peers);
       this.peers = peers;
     }
@@ -885,7 +886,7 @@ public class ApiResource {
   }
 
   public static class ActivationRequest {
-    public String role;
+    public @Nullable String role;
     public String justification;
     public List<String> peers;
     public int activationTimeout; // in minutes.
@@ -897,11 +898,11 @@ public class ApiResource {
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
-    public final List<ActivationStatus> items;
+    public final @NotNull List<ActivationStatus> items;
 
     private ActivationStatusResponse(
       UserEmail caller,
-      com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request,
+      com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<ProjectRoleBinding> request,
       Entitlement.Status status
     ) {
       Preconditions.checkNotNull(request);
@@ -933,17 +934,17 @@ public class ApiResource {
     public static class ActivationStatus {
       public final String activationId;
       public final String projectId;
-      public final RoleBinding roleBinding;
+      public final @NotNull RoleBinding roleBinding;
       public final Entitlement.Status status;
       public final long startTime;
       public final long endTime;
 
       private ActivationStatus(
-        ActivationId activationId,
-        RoleBinding roleBinding,
+        @NotNull ActivationId activationId,
+        @NotNull RoleBinding roleBinding,
         Entitlement.Status status,
-        Instant startTime,
-        Instant endTime
+        @NotNull Instant startTime,
+        @NotNull Instant endTime
       ) {
         assert endTime.isAfter(startTime);
 
@@ -965,13 +966,13 @@ public class ApiResource {
    * Notification indicating that a multi-party approval request has been made
    * and is pending approval.
    */
-  public class RequestActivationNotification extends NotificationService.Notification
+  public static class RequestActivationNotification extends NotificationService.Notification
   {
     protected RequestActivationNotification(
-      ProjectId projectId,
-      MpaActivationRequest<ProjectRoleBinding> request,
+      @NotNull ProjectId projectId,
+      @NotNull MpaActivationRequest<ProjectRoleBinding> request,
       Instant requestExpiryTime,
-      URL activationRequestUrl) throws MalformedURLException
+      @NotNull URL activationRequestUrl) throws MalformedURLException
     {
       super(
         request.reviewers(),
@@ -1002,7 +1003,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getType() {
+    public @NotNull String getType() {
       return "RequestActivation";
     }
   }
@@ -1010,11 +1011,11 @@ public class ApiResource {
   /**
    * Notification indicating that a multi-party approval was granted.
    */
-  public class ActivationApprovedNotification extends NotificationService.Notification {
+  public static class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
       ProjectId projectId,
-      Activation<ProjectRoleBinding> activation,
-      UserEmail approver,
+      @NotNull Activation<ProjectRoleBinding> activation,
+      @NotNull UserEmail approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
@@ -1051,7 +1052,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getType() {
+    public @NotNull String getType() {
       return "ActivationApproved";
     }
   }
@@ -1059,10 +1060,10 @@ public class ApiResource {
   /**
    * Notification indicating that a self-approval was performed.
    */
-  public class ActivationSelfApprovedNotification extends NotificationService.Notification {
+  public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
-      Activation<ProjectRoleBinding> activation)
+      @NotNull Activation<ProjectRoleBinding> activation)
     {
       super(
         List.of(activation.request().requestingUser()),
@@ -1092,7 +1093,7 @@ public class ApiResource {
     }
 
     @Override
-    public String getType() {
+    public @NotNull String getType() {
       return "ActivationSelfApproved";
     }
   }

@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -65,7 +66,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   }
 
   @Override
-  public int compareTo(Entitlement<TEntitlementId> o) {
+  public int compareTo(@NotNull Entitlement<TEntitlementId> o) {
     return Comparator
       .comparing((Entitlement<TEntitlementId> e) -> e.status)
       .thenComparing(e -> e.id)

@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * ID of a Google Cloud organization.
@@ -43,7 +44,7 @@ public record OrganizationId(String id) implements Comparable<OrganizationId>, R
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(OrganizationId o) {
+  public int compareTo(@NotNull OrganizationId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -52,7 +53,7 @@ public record OrganizationId(String id) implements Comparable<OrganizationId>, R
   // -------------------------------------------------------------------------
 
   @Override
-  public String type() {
+  public @NotNull String type() {
     return "organization";
   }
 

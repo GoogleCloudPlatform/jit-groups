@@ -30,6 +30,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Require requests to have a special header to prevent against
@@ -44,7 +45,7 @@ public class XsrfRequestFilter implements ContainerRequestFilter {
   public static final String XSRF_HEADER_VALUE = "1";
 
   @Override
-  public void filter(ContainerRequestContext containerRequestContext) {
+  public void filter(@NotNull ContainerRequestContext containerRequestContext) {
     //
     // Verify that the request contains a special header. Trying to inject
     // that header from a different site would trigger a CORS check, which

@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.Dependent;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -43,11 +44,11 @@ import java.util.stream.Collectors;
  */
 @Dependent
 public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBinding> {
-  private final ResourceManagerClient resourceManagerClient;
+  private final @NotNull ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
     EntitlementCatalog<ProjectRoleBinding> catalog,
-    ResourceManagerClient resourceManagerClient,
+    @NotNull ResourceManagerClient resourceManagerClient,
     JustificationPolicy policy
   ) {
     super(catalog, policy);
@@ -61,9 +62,9 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
     String bindingDescription,
     ProjectId projectId,
     UserEmail user,
-    Set<String> roles,
-    Instant startTime,
-    Duration duration
+    @NotNull Set<String> roles,
+    @NotNull Instant startTime,
+    @NotNull Duration duration
   ) throws AccessException, AlreadyExistsException, IOException {
 
     //
@@ -98,7 +99,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
   @Override
   protected void provisionAccess(
-    JitActivationRequest<ProjectRoleBinding> request
+    @NotNull JitActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -121,8 +122,8 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
 
   @Override
   protected void provisionAccess(
-    UserEmail approvingUser,
-    MpaActivationRequest<ProjectRoleBinding> request
+    @NotNull UserEmail approvingUser,
+    @NotNull MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -151,10 +152,10 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
   }
 
   @Override
-  public JsonWebTokenConverter<MpaActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public @NotNull JsonWebTokenConverter<MpaActivationRequest<ProjectRoleBinding>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(MpaActivationRequest<ProjectRoleBinding> request) {
+      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRoleBinding> request) {
         var roleBindings = request.entitlements()
           .stream()
           .map(ent -> ent.roleBinding())
@@ -178,7 +179,7 @@ public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBindin
       }
 
       @Override
-      public MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.Payload payload) {
+      public @NotNull MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.@NotNull Payload payload) {
         var roleBinding = new RoleBinding(
           payload.get("resource").toString(),
           payload.get("role").toString());

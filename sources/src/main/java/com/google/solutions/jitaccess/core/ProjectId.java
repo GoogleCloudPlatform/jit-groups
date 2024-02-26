@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * ID of a Google Cloud project.
@@ -47,14 +48,14 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
   /**
    * Return a full resource name as used by the Asset API.
    */
-  public String getFullResourceName() {
+  public @NotNull String getFullResourceName() {
     return PROJECT_RESOURCE_NAME_PREFIX + this.id;
   }
 
   /**
    * Parse a full resource name (as used by the Asset API).
    */
-  public static ProjectId fromFullResourceName(String fullResourceName) {
+  public static @NotNull ProjectId fromFullResourceName(@NotNull String fullResourceName) {
     return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
   }
 
@@ -62,7 +63,7 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
    * Check if a full resource name identifies a project and can be used for
    * a ProjectRole.
    */
-  public static boolean isProjectFullResourceName(String fullResourceName) {
+  public static boolean isProjectFullResourceName(@NotNull String fullResourceName) {
     return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
       && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
   }
@@ -72,7 +73,7 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(ProjectId o) {
+  public int compareTo(@NotNull ProjectId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -81,7 +82,7 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
   // -------------------------------------------------------------------------
 
   @Override
-  public String type() {
+  public @NotNull String type() {
     return "project";
   }
 

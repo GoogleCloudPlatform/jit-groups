@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.UserEmail;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -36,12 +37,12 @@ import java.util.Set;
  * Activates entitlements, for example by modifying IAM policies.
  */
 public abstract class EntitlementActivator<TEntitlementId extends EntitlementId> {
-  private final JustificationPolicy policy;
-  private final EntitlementCatalog<TEntitlementId> catalog;
+  private final @NotNull JustificationPolicy policy;
+  private final @NotNull EntitlementCatalog<TEntitlementId> catalog;
 
   protected EntitlementActivator(
-    EntitlementCatalog<TEntitlementId> catalog,
-    JustificationPolicy policy
+    @NotNull EntitlementCatalog<TEntitlementId> catalog,
+    @NotNull JustificationPolicy policy
   ) {
     Preconditions.checkNotNull(catalog, "catalog");
     Preconditions.checkNotNull(policy, "policy");
@@ -53,11 +54,11 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   /**
    * Create a new request to activate an entitlement that permits self-approval.
    */
-  public final JitActivationRequest<TEntitlementId> createJitRequest(
+  public final @NotNull JitActivationRequest<TEntitlementId> createJitRequest(
     UserEmail requestingUser,
     Set<TEntitlementId> entitlements,
     String justification,
-    Instant startTime,
+    @NotNull Instant startTime,
     Duration duration
   ) {
     Preconditions.checkArgument(
@@ -80,12 +81,12 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Create a new request to activate an entitlement that requires
    * multi-party approval.
    */
-  public MpaActivationRequest<TEntitlementId> createMpaRequest(
+  public @NotNull MpaActivationRequest<TEntitlementId> createMpaRequest(
     UserEmail requestingUser,
-    Set<TEntitlementId> entitlements,
+    @NotNull Set<TEntitlementId> entitlements,
     Set<UserEmail> reviewers,
     String justification,
-    Instant startTime,
+    @NotNull Instant startTime,
     Duration duration
   ) throws AccessException, IOException {
 
@@ -114,8 +115,8 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   /**
    * Activate an entitlement that permits self-approval.
    */
-  public final Activation<TEntitlementId> activate(
-    JitActivationRequest<TEntitlementId> request
+  public final @NotNull Activation<TEntitlementId> activate(
+    @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
@@ -141,9 +142,9 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
   /**
    * Approve another user's request.
    */
-  public final Activation<TEntitlementId> approve(
-    UserEmail approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+  public final @NotNull Activation<TEntitlementId> approve(
+    @NotNull UserEmail approvingUser,
+    @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
@@ -201,7 +202,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
    * Create a converter for turning MPA requests into JWTs, and
    * vice versa.
    */
-  public abstract JsonWebTokenConverter<MpaActivationRequest<TEntitlementId>> createTokenConverter();
+  public abstract @NotNull JsonWebTokenConverter<MpaActivationRequest<TEntitlementId>> createTokenConverter();
 
   // -------------------------------------------------------------------------
   // Inner classes.
@@ -226,7 +227,7 @@ public abstract class EntitlementActivator<TEntitlementId extends EntitlementId>
     public MpaRequest(
       ActivationId id,
       UserEmail requestingUser,
-      Set<TEntitlementId> entitlements,
+      @NotNull Set<TEntitlementId> entitlements,
       Set<UserEmail> reviewers,
       String justification,
       Instant startTime,

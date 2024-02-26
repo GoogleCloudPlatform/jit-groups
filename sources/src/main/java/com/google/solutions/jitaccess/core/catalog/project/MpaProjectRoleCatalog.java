@@ -30,6 +30,7 @@ import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,14 +43,14 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
-  private final ProjectRoleRepository repository;
-  private final ResourceManagerClient resourceManagerClient;
-  private final Options options;
+  private final @NotNull ProjectRoleRepository repository;
+  private final @NotNull ResourceManagerClient resourceManagerClient;
+  private final @NotNull Options options;
 
   public MpaProjectRoleCatalog(
-    ProjectRoleRepository repository,
-    ResourceManagerClient resourceManagerClient,
-    Options options
+    @NotNull ProjectRoleRepository repository,
+    @NotNull ResourceManagerClient resourceManagerClient,
+    @NotNull Options options
   ) {
     Preconditions.checkNotNull(repository, "repository");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
@@ -60,7 +61,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     this.options = options;
   }
 
-  void validateRequest(ActivationRequest<ProjectRoleBinding> request) {
+  void validateRequest(@NotNull ActivationRequest<ProjectRoleBinding> request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -91,8 +92,8 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   void verifyUserCanActivateEntitlements(
     UserEmail user,
     ProjectId projectId,
-    ActivationType activationType,
-    Collection<ProjectRoleBinding> entitlements
+    @NotNull ActivationType activationType,
+    @NotNull Collection<ProjectRoleBinding> entitlements
   ) throws AccessException, IOException {
     //
     // Verify that the user has eligible role bindings
@@ -172,9 +173,9 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public SortedSet<UserEmail> listReviewers(
+  public @NotNull SortedSet<UserEmail> listReviewers(
     UserEmail requestingUser,
-    ProjectRoleBinding entitlement
+    @NotNull ProjectRoleBinding entitlement
   ) throws AccessException, IOException {
 
     //
@@ -202,7 +203,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public void verifyUserCanRequest(
-    ActivationRequest<ProjectRoleBinding> request
+    @NotNull ActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);
@@ -221,7 +222,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   @Override
   public void verifyUserCanApprove(
     UserEmail approvingUser,
-    MpaActivationRequest<ProjectRoleBinding> request
+    @NotNull MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
     validateRequest(request);

@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -29,9 +31,9 @@ import java.util.Objects;
  * Primary email address and unique ID of a user.
  */
 public class UserId extends UserEmail {
-  public final transient String id;
+  public final transient @NotNull String id;
 
-  public UserId(String id, String email) {
+  public UserId(@NotNull String id, String email) {
     super(email);
 
     Preconditions.checkNotNull(id, "id");
@@ -40,7 +42,7 @@ public class UserId extends UserEmail {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

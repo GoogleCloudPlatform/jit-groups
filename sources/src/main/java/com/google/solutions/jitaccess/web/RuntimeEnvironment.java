@@ -50,6 +50,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -68,7 +69,7 @@ public class RuntimeEnvironment {
 
   private final String projectId;
   private final String projectNumber;
-  private final UserEmail applicationPrincipal;
+  private final @NotNull UserEmail applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
   /**
@@ -254,7 +255,7 @@ public class RuntimeEnvironment {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
-  public UriBuilder createAbsoluteUriBuilder(UriInfo uriInfo) {
+  public UriBuilder createAbsoluteUriBuilder(@NotNull UriInfo uriInfo) {
     return uriInfo
       .getBaseUriBuilder()
       .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
@@ -268,7 +269,7 @@ public class RuntimeEnvironment {
     return projectNumber;
   }
 
-  public UserEmail getApplicationPrincipal() {
+  public @NotNull UserEmail getApplicationPrincipal() {
     return applicationPrincipal;
   }
 
@@ -282,7 +283,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public TokenSigner.Options getTokenServiceOptions() {
+  public TokenSigner.@NotNull Options getTokenServiceOptions() {
     //
     // NB. The clock for activations "starts ticking" when the activation was
     // requested. The time allotted for reviewers to approve the request
@@ -299,7 +300,7 @@ public class RuntimeEnvironment {
 
   @Produces
   @Singleton
-  public NotificationService getPubSubNotificationService(
+  public @NotNull NotificationService getPubSubNotificationService(
     PubSubClient pubSubClient
   ) {
     if (this.configuration.topicName.isValid()) {
@@ -315,7 +316,7 @@ public class RuntimeEnvironment {
 
   @Produces
   @Singleton
-  public NotificationService getEmailNotificationService(
+  public @NotNull NotificationService getEmailNotificationService(
     SecretManagerClient secretManagerClient
   ) {
     //
@@ -356,13 +357,13 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public ApiResource.Options getApiOptions() {
+  public ApiResource.@NotNull Options getApiOptions() {
     return new ApiResource.Options(
       this.configuration.maxNumberOfEntitlementsPerSelfApproval.getValue());
   }
 
   @Produces
-  public HttpTransport.Options getHttpTransportOptions() {
+  public HttpTransport.@NotNull Options getHttpTransportOptions() {
     return new HttpTransport.Options(
       this.configuration.backendConnectTimeout.getValue(),
       this.configuration.backendReadTimeout.getValue(),
@@ -370,14 +371,14 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RegexJustificationPolicy.Options getRegexJustificationPolicyOptions() {
+  public RegexJustificationPolicy.@NotNull Options getRegexJustificationPolicyOptions() {
     return new RegexJustificationPolicy.Options(
       this.configuration.justificationHint.getValue(),
       Pattern.compile(this.configuration.justificationPattern.getValue()));
   }
 
   @Produces
-  public MpaProjectRoleCatalog.Options getIamPolicyCatalogOptions() {
+  public MpaProjectRoleCatalog.@NotNull Options getIamPolicyCatalogOptions() {
     return new MpaProjectRoleCatalog.Options(
       this.configuration.availableProjectsQuery.isValid()
         ? this.configuration.availableProjectsQuery.getValue()
@@ -388,22 +389,22 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public DirectoryGroupsClient.Options getDirectoryGroupsClientOptions() {
+  public DirectoryGroupsClient.@NotNull Options getDirectoryGroupsClientOptions() {
     return new DirectoryGroupsClient.Options(
       this.configuration.customerId.getValue());
   }
 
   @Produces
-  public CloudIdentityGroupsClient.Options getCloudIdentityGroupsClientOptions() {
+  public CloudIdentityGroupsClient.@NotNull Options getCloudIdentityGroupsClientOptions() {
     return new CloudIdentityGroupsClient.Options(
       this.configuration.customerId.getValue());
   }
 
   @Produces
   @Singleton
-  public ProjectRoleRepository getProjectRoleRepository(
+  public @NotNull ProjectRoleRepository getProjectRoleRepository(
     Executor executor,
-    Instance<DirectoryGroupsClient> groupsClient,
+    @NotNull Instance<DirectoryGroupsClient> groupsClient,
     PolicyAnalyzerClient policyAnalyzerClient
   ) {
     switch (this.configuration.catalog.getValue()) {

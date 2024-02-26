@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.UserEmail;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -34,20 +35,20 @@ import java.util.stream.Collectors;
  * Represents a request for activating one or more entitlements.
  */
 public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
-  private final ActivationId id;
-  private final Instant startTime;
-  private final Duration duration;
-  private final UserEmail requestingUser;
-  private final Set<TEntitlementId> entitlements;
-  private final String justification;
+  private final @NotNull ActivationId id;
+  private final @NotNull Instant startTime;
+  private final @NotNull Duration duration;
+  private final @NotNull UserEmail requestingUser;
+  private final @NotNull Set<TEntitlementId> entitlements;
+  private final @NotNull String justification;
 
   protected ActivationRequest(
-    ActivationId id,
-    UserEmail requestingUser,
-    Set<TEntitlementId> entitlements,
-    String justification,
-    Instant startTime,
-    Duration duration
+    @NotNull ActivationId id,
+    @NotNull UserEmail requestingUser,
+    @NotNull Set<TEntitlementId> entitlements,
+    @NotNull String justification,
+    @NotNull Instant startTime,
+    @NotNull Duration duration
     ) {
 
     Preconditions.checkNotNull(id, "id");

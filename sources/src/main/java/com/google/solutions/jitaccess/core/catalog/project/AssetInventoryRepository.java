@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
@@ -53,16 +54,16 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
 
-  private final Options options;
-  private final Executor executor;
-  private final DirectoryGroupsClient groupsClient;
-  private final AssetInventoryClient assetInventoryClient;
+  private final @NotNull Options options;
+  private final @NotNull Executor executor;
+  private final @NotNull DirectoryGroupsClient groupsClient;
+  private final @NotNull AssetInventoryClient assetInventoryClient;
 
   public AssetInventoryRepository(
-    Executor executor,
-    DirectoryGroupsClient groupsClient,
-    AssetInventoryClient assetInventoryClient,
-    Options options
+    @NotNull Executor executor,
+    @NotNull DirectoryGroupsClient groupsClient,
+    @NotNull AssetInventoryClient assetInventoryClient,
+    @NotNull Options options
   ) {
     Preconditions.checkNotNull(executor, "executor");
     Preconditions.checkNotNull(groupsClient, "groupsClient");
@@ -75,7 +76,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     this.options = options;
   }
 
-  static <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
+  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException {
     try {
       return future.get();
     }
@@ -92,8 +93,8 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     }
   }
 
-  List<Binding> findProjectBindings(
-    UserEmail user,
+  @NotNull List<Binding> findProjectBindings(
+    @NotNull UserEmail user,
     ProjectId projectId
   ) throws AccessException, IOException {
     //
@@ -142,11 +143,11 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserEmail user,
-    ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
+  public @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
+    @NotNull UserEmail user,
+    @NotNull ProjectId projectId,
+    @NotNull EnumSet<ActivationType> typesToInclude,
+    @NotNull EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException {
 
     List<Binding> allBindings = findProjectBindings(user, projectId);
@@ -246,9 +247,9 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public Set<UserEmail> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    ActivationType activationType
+  public @NotNull Set<UserEmail> findEntitlementHolders(
+    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ActivationType activationType
   ) throws AccessException, IOException {
 
     var policies = this.assetInventoryClient.getEffectiveIamPolicies(
@@ -319,12 +320,12 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  class PrincipalSet {
-    private final Set<String> principalIdentifiers;
+  static class PrincipalSet {
+    private final @NotNull Set<String> principalIdentifiers;
 
     public PrincipalSet(
-      UserEmail user,
-      Collection<Group> groups
+      @NotNull UserEmail user,
+      @NotNull Collection<Group> groups
     ) {
       this.principalIdentifiers = groups
         .stream()
@@ -333,7 +334,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       this.principalIdentifiers.add(String.format("user:%s", user.email));
     }
 
-    public boolean isMember(Binding binding) {
+    public boolean isMember(@NotNull Binding binding) {
       return binding.getMembers()
         .stream()
         .anyMatch(member -> this.principalIdentifiers.contains(member));

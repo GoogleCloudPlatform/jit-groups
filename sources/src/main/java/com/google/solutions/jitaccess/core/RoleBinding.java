@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 
@@ -38,7 +39,7 @@ public record RoleBinding (
     Preconditions.checkNotNull(role, "role");
   }
 
-  public RoleBinding(ProjectId project, String role) {
+  public RoleBinding(@NotNull ProjectId project, String role) {
     this(project.getFullResourceName(), role);
   }
 
@@ -52,7 +53,7 @@ public record RoleBinding (
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(RoleBinding o) {
+  public int compareTo(@NotNull RoleBinding o) {
     return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
       .thenComparing(r -> r.role)
       .compare(this, o);

@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
 import com.google.solutions.jitaccess.core.UserEmail;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -65,7 +66,7 @@ public class TestEntitlementActivator {
     }
 
     @Override
-    public JsonWebTokenConverter<MpaActivationRequest<SampleEntitlementId>> createTokenConverter() {
+    public @NotNull JsonWebTokenConverter<MpaActivationRequest<SampleEntitlementId>> createTokenConverter() {
       return null;
     }
   }

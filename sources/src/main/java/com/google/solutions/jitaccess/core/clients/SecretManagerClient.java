@@ -28,6 +28,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -40,12 +42,12 @@ public class SecretManagerClient {
   private static final String SECRET_CHARSET = "UTF-8";
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
+  private final @NotNull GoogleCredentials credentials;
+  private final HttpTransport.@NotNull Options httpOptions;
 
   public SecretManagerClient(
-    GoogleCredentials credentials,
-    HttpTransport.Options httpOptions
+    @NotNull GoogleCredentials credentials,
+    HttpTransport.@NotNull Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -54,7 +56,7 @@ public class SecretManagerClient {
     this.httpOptions = httpOptions;
   }
 
-  private SecretManager createClient() throws IOException {
+  private @NotNull SecretManager createClient() throws IOException {
     try {
       return new SecretManager.Builder(
           HttpTransport.newTransport(),
@@ -72,7 +74,7 @@ public class SecretManagerClient {
    * Access a secret
    * @param secretPath resource path, in the format projects/x/secrets/y/versions/z
    */
-  public String accessSecret(
+  public @Nullable String accessSecret(
     String secretPath
   ) throws AccessException, IOException {
     try {

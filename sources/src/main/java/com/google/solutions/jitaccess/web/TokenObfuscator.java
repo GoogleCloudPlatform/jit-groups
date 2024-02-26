@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Obfuscator for JWTs.
@@ -38,7 +39,7 @@ import com.google.common.base.Preconditions;
 public class TokenObfuscator {
   private TokenObfuscator() {}
 
-  public static String encode(String jwt) {
+  public static @NotNull String encode(@NotNull String jwt) {
     Preconditions.checkNotNull(jwt);
     Preconditions.checkArgument(jwt.startsWith("ey"));
 
@@ -52,7 +53,7 @@ public class TokenObfuscator {
       .replace('.', '~');
   }
 
-  public static String decode(String encodedJwt) {
+  public static @NotNull String decode(@NotNull String encodedJwt) {
     Preconditions.checkNotNull(encodedJwt);
     return "ey" + encodedJwt
       .replace("~~", ".ey")

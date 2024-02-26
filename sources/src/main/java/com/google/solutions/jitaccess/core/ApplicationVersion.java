@@ -21,15 +21,17 @@
 
 package com.google.solutions.jitaccess.core;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.Properties;
 
 public class ApplicationVersion {
-  public static final String VERSION_STRING;
+  public static final @NotNull String VERSION_STRING;
 
-  public static final String USER_AGENT;
+  public static final @NotNull String USER_AGENT;
 
-  private static String loadVersion() {
+  private static @NotNull String loadVersion() {
     try {
       //
       // Read properties file from JAR. This file should
