@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.SortedSet;
@@ -49,10 +50,10 @@ public record EntitlementSet<TId extends EntitlementId>(
     assert expiredEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
   }
 
-  public static <T extends EntitlementId> EntitlementSet<T> build(
-    Set<Entitlement<T>> availableEntitlements,
-    Set<ActivatedEntitlement<T>> validActivations,
-    Set<ActivatedEntitlement<T>> expiredActivations,
+  public static <T extends EntitlementId> @NotNull EntitlementSet<T> build(
+    @NotNull Set<Entitlement<T>> availableEntitlements,
+    @NotNull Set<ActivatedEntitlement<T>> validActivations,
+    @NotNull Set<ActivatedEntitlement<T>> expiredActivations,
     Set<String> warnings
   )
   {
@@ -146,7 +147,7 @@ public record EntitlementSet<TId extends EntitlementId>(
     return new EntitlementSet<>(current, expired, warnings);
   }
 
-  public static <TId extends EntitlementId> EntitlementSet<TId> empty() {
+  public static <TId extends EntitlementId> @NotNull EntitlementSet<TId> empty() {
     return new EntitlementSet<TId>(new TreeSet<>(), new TreeSet<>(), Set.of());
   }
 

@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -29,9 +31,9 @@ import java.util.Objects;
  * Primary email address of a user.
  */
 public class UserEmail implements Comparable<UserEmail> {
-  public final String email;
+  public final @NotNull String email;
 
-  public UserEmail(String email) {
+  public UserEmail(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     this.email = email;
   }
@@ -46,7 +48,7 @@ public class UserEmail implements Comparable<UserEmail> {
   // -------------------------------------------------------------------------
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -65,7 +67,7 @@ public class UserEmail implements Comparable<UserEmail> {
   }
 
   @Override
-  public int compareTo(UserEmail o) {
+  public int compareTo(@NotNull UserEmail o) {
     return this.email.compareTo(o.email);
   }
 }

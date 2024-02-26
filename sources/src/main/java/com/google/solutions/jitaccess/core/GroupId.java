@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -31,9 +33,9 @@ import java.util.Objects;
 public class GroupId extends UserEmail {
   private static final String GROUPS_PREFIX = "groups/";
 
-  public final transient String id;
+  public final transient @NotNull String id;
 
-  public GroupId(String id, String email) {
+  public GroupId(@NotNull String id, String email) {
     super(email);
 
     Preconditions.checkNotNull(id, "id");
@@ -45,12 +47,12 @@ public class GroupId extends UserEmail {
     this.id = id;
   }
 
-  public GroupId(String id, GroupEmail email) {
+  public GroupId(@NotNull String id, @NotNull GroupEmail email) {
     this(id, email.email);
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -77,6 +79,6 @@ public class GroupId extends UserEmail {
    */
   @Override
   public String toString() {
-    return String.format("%s%s", GROUPS_PREFIX, this.id); //TODO: test
+    return String.format("%s%s", GROUPS_PREFIX, this.id);
   }
 }

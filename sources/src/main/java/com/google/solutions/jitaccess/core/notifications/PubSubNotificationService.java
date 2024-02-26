@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.clients.PubSubClient;
 import com.google.solutions.jitaccess.core.clients.PubSubTopic;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -18,12 +19,12 @@ import java.util.stream.Collectors;
  * Concrete class that delivers notifications over Pub/Sub.
  */
 public class PubSubNotificationService extends NotificationService {
-  private final PubSubClient adapter;
-  private final Options options;
+  private final @NotNull PubSubClient adapter;
+  private final @NotNull Options options;
 
   public PubSubNotificationService(
-    PubSubClient adapter,
-    Options options
+    @NotNull PubSubClient adapter,
+    @NotNull Options options
   ) {
     Preconditions.checkNotNull(adapter, "adapter");
     Preconditions.checkNotNull(options, "options");
@@ -43,7 +44,7 @@ public class PubSubNotificationService extends NotificationService {
   }
 
   @Override
-  public void sendNotification(Notification notification) throws NotificationException {
+  public void sendNotification(@NotNull Notification notification) throws NotificationException {
     var attributes = new GenericJson();
     for (var property : notification.properties.entrySet())
     {

@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.cel;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.time.Duration;
 import java.time.Instant;
 
@@ -29,12 +31,12 @@ public record TimeSpan(Instant start, Instant end) implements Comparable<TimeSpa
     assert !start.isAfter(end);
   }
 
-  public TimeSpan(Instant start, Duration duration) {
+  public TimeSpan(@NotNull Instant start, @NotNull Duration duration) {
     this(start, start.plus(duration));
   }
 
   @Override
-  public int compareTo(TimeSpan o) {
+  public int compareTo(@NotNull TimeSpan o) {
     return (int)(this.end.getEpochSecond() - o.end.getEpochSecond());
   }
 }

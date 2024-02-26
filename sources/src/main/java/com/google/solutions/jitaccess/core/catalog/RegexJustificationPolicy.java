@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.UserEmail;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
 
@@ -33,9 +34,9 @@ import java.util.regex.Pattern;
  */
 @Singleton
 public class RegexJustificationPolicy implements JustificationPolicy {
-  private final Options options;
+  private final @NotNull Options options;
 
-  public RegexJustificationPolicy(Options options) {
+  public RegexJustificationPolicy(@NotNull Options options) {
     Preconditions.checkNotNull(options, "options");
     this.options = options;
   }
@@ -43,7 +44,7 @@ public class RegexJustificationPolicy implements JustificationPolicy {
   @Override
   public void checkJustification(
     UserEmail user,
-    String justification
+    @NotNull String justification
   ) throws InvalidJustificationException {
     if (
       Strings.isNullOrEmpty(justification) ||

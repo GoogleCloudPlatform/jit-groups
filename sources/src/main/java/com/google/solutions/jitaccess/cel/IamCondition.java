@@ -32,6 +32,7 @@ import dev.cel.compiler.CelCompilerFactory;
 import dev.cel.parser.CelStandardMacro;
 import dev.cel.runtime.CelRuntime;
 import dev.cel.runtime.CelRuntimeFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
@@ -50,9 +51,9 @@ public class IamCondition implements CelExpression<Boolean> {
       .standardCelRuntimeBuilder()
       .build();
 
-  protected final String condition;
+  protected final @NotNull String condition;
 
-  public IamCondition(String condition) {
+  public IamCondition(@NotNull String condition) {
     Preconditions.checkNotNull(condition, "condition");
     this.condition = condition;
   }

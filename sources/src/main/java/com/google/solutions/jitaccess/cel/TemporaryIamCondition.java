@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.cel;
 
 import dev.cel.common.CelException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -47,18 +49,18 @@ public class TemporaryIamCondition extends IamCondition {
   // Constructors.
   //---------------------------------------------------------------------------
 
-  public TemporaryIamCondition(Instant startTime, Instant endTime) {
+  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Instant endTime) {
     super(String.format(
       CONDITION_TEMPLATE,
       startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
       endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
   }
 
-  public TemporaryIamCondition(Instant startTime, Duration duration) {
+  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Duration duration) {
    this(startTime, startTime.plus(duration));
   }
 
-  public TemporaryIamCondition(String condition) {
+  public TemporaryIamCondition(@NotNull String condition) {
     super(condition);
   }
 
@@ -66,7 +68,7 @@ public class TemporaryIamCondition extends IamCondition {
   // Publics.
   //---------------------------------------------------------------------------
 
-  public TimeSpan getValidity() {
+  public @NotNull TimeSpan getValidity() {
     var matcher = CONDITION.matcher(this.condition);
     if (matcher.find()) {
       try {
@@ -83,7 +85,7 @@ public class TemporaryIamCondition extends IamCondition {
   /**
    * Check if the expression is a temporary access IAM condition.
    */
-  public static boolean isTemporaryAccessCondition(String expression) {
+  public static boolean isTemporaryAccessCondition(@Nullable String expression) {
     return expression != null && CONDITION.matcher(expression).matches();
   }
 

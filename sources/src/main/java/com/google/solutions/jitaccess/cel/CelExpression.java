@@ -8,7 +8,7 @@ import dev.cel.runtime.CelEvaluationException;
  */
 public interface CelExpression<TResult> {
   /**
-   * Evaulate the expression.
+   * Evaluate the expression.
    * @return result
    */
   TResult evaluate() throws CelException;

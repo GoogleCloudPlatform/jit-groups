@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Comparator;
 
 /**
@@ -43,7 +45,7 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -29,9 +31,9 @@ import java.util.Objects;
  * Email address of a group.
  */
 public class GroupEmail implements Comparable<GroupEmail> {
-  public final String email;
+  public final @NotNull String email;
 
-  public GroupEmail(String email) {
+  public GroupEmail(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     this.email = email;
   }
@@ -46,7 +48,7 @@ public class GroupEmail implements Comparable<GroupEmail> {
   // -------------------------------------------------------------------------
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -65,7 +67,7 @@ public class GroupEmail implements Comparable<GroupEmail> {
   }
 
   @Override
-  public int compareTo(GroupEmail o) {
+  public int compareTo(@NotNull GroupEmail o) {
     return this.email.compareTo(o.email);
   }
 }

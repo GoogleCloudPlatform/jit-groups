@@ -24,6 +24,8 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
@@ -47,7 +49,7 @@ class JitConstraints {
   private JitConstraints() {
   }
 
-  private static boolean isConstraint(Expr iamCondition, Pattern pattern) {
+  private static boolean isConstraint(@Nullable Expr iamCondition, @NotNull Pattern pattern) {
     if (iamCondition == null) {
       return false;
     }
@@ -78,7 +80,7 @@ class JitConstraints {
   /** Check if the IAM condition is a JIT- or MPA constraint */
   public static boolean isApprovalConstraint(
     Expr iamCondition,
-    ActivationType activationType) {
+    @NotNull ActivationType activationType) {
     switch (activationType) {
       case JIT: return isJitAccessConstraint(iamCondition);
       case MPA: return isMultiPartyApprovalConstraint(iamCondition);
@@ -87,7 +89,7 @@ class JitConstraints {
   }
 
   /** Check if the IAM condition indicates an activated role binding */
-  public static boolean isActivated(Expr iamCondition) {
+  public static boolean isActivated(@Nullable Expr iamCondition) {
     return iamCondition != null &&
       ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle()) &&
       TemporaryIamCondition.isTemporaryAccessCondition(iamCondition.getExpression());

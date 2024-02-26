@@ -25,6 +25,7 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.UserId;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,14 +39,14 @@ public class IapAssertion {
     this.payload = payload;
   }
 
-  public IapAssertion(JsonWebSignature payload) {
+  public IapAssertion(@NotNull JsonWebSignature payload) {
     this(payload.getPayload());
   }
 
   /**
    * Extract user information
    */
-  public UserId getUserId() {
+  public @NotNull UserId getUserId() {
     return new UserId(
       this.payload.get("sub").toString(),
       this.payload.get("email").toString());
@@ -54,7 +55,7 @@ public class IapAssertion {
   /**
    * Extract device information (if available)
    */
-  public DeviceInfo getDeviceInfo() {
+  public @NotNull DeviceInfo getDeviceInfo() {
     String deviceId = "unknown";
     List<String> accessLevels = List.of();
 

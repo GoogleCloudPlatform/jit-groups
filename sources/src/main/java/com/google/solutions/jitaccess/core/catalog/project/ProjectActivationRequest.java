@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ class ProjectActivationRequest {
   /**
    * @return common project ID for all requested entitlements.
    */
-  static ProjectId projectId(ActivationRequest<ProjectRoleBinding> request) {
+  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
     var projects = request.entitlements().stream()
       .map(e -> e.roleBinding().fullResourceName())
       .collect(Collectors.toSet());
