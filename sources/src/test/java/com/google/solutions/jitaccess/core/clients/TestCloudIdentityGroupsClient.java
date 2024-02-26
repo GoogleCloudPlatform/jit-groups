@@ -2,7 +2,11 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.*;
 import jakarta.ws.rs.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,6 +16,26 @@ public class TestCloudIdentityGroupsClient {
     String.format(
       "jitaccess-test@%s",
       IntegrationTestEnvironment.CLOUD_IDENTITY_DOAMIN));
+
+  @BeforeEach
+  public void setUp() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    try {
+      var groupId = new GroupId(
+        client.getGroup(TEST_GROUP_EMAIL).getName(),
+        TEST_GROUP_EMAIL);
+      client.deleteGroup(groupId);
+    }
+    catch (AccessDeniedException ignored) {
+      //
+      // Group doesn't exist, ok.
+      //
+    }
+  }
 
   //---------------------------------------------------------------------
   // getGroup.
@@ -189,7 +213,8 @@ public class TestCloudIdentityGroupsClient {
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
     var id = client.addMembership(
       groupId,
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+      Instant.now().plusSeconds(300));
     var membership = client.getMembership(
       groupId,
       IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
@@ -212,7 +237,8 @@ public class TestCloudIdentityGroupsClient {
       NotAuthenticatedException.class,
       () -> client.addMembership(
         new GroupId("1", "test@example.com"),
-        new UserEmail("user@example.com")));
+        new UserEmail("user@example.com"),
+        Instant.now().plusSeconds(300)));
   }
 
   @Test
@@ -227,7 +253,8 @@ public class TestCloudIdentityGroupsClient {
       IllegalArgumentException.class,
       () -> client.addMembership(
         new GroupId("1", "doesnotexist@google.com"),
-        new UserEmail("user@example.com")));
+        new UserEmail("user@example.com"),
+        Instant.now().plusSeconds(300)));
   }
 
   @Test
@@ -236,19 +263,75 @@ public class TestCloudIdentityGroupsClient {
       IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
-
-    //
-    // Create group.
-    //
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+    var userEmail = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
     // Add member twice.
     //
-    var id = client.addMembership(groupId, IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
-    var sameId = client.addMembership(groupId, IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+    var expiry = Instant.now().plusSeconds(300);
+    var id = client.addMembership(groupId, userEmail, expiry);
+    var sameId = client.addMembership(groupId, userEmail, expiry);
 
     assertEquals(id, sameId);
+  }
+
+  @Test
+  public void whenExpiryIsInThePast_ThenAddMembershipThrowsException() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> client.addMembership(
+        groupId,
+        IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+        Instant.now().minusSeconds(300)));
+  }
+
+  @Test
+  public void whenMembershipExists_ThenAddMembershipUpdatesExpiry() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(IntegrationTestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+    var userEmail = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
+
+    //
+    // Add membership with an initial expiry.
+    //
+    var initialExpiry = Instant.now().plusSeconds(300);
+    client.addMembership(groupId, userEmail, initialExpiry);
+
+    assertEquals(
+      initialExpiry.truncatedTo(ChronoUnit.SECONDS),
+      Instant.parse(client
+        .getMembership(groupId, userEmail)
+        .getRoles()
+        .get(0)
+        .getExpiryDetail()
+        .getExpireTime()));
+
+    //
+    // Change expiry.
+    //
+    var newExpiry = Instant.now().plusSeconds(400);
+    client.addMembership(groupId, userEmail, newExpiry);
+
+    assertEquals(
+      newExpiry.truncatedTo(ChronoUnit.SECONDS),
+      Instant.parse(client
+        .getMembership(groupId, userEmail)
+        .getRoles()
+        .get(0)
+        .getExpiryDetail()
+        .getExpireTime()));
   }
 
   //---------------------------------------------------------------------
@@ -279,7 +362,8 @@ public class TestCloudIdentityGroupsClient {
     var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
     var id = client.addMembership(
       groupId,
-      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER);
+      IntegrationTestEnvironment.TEMPORARY_ACCESS_USER,
+      Instant.now().plusSeconds(300));
 
     //
     // Delete twice.

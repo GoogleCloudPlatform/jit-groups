@@ -13,6 +13,10 @@ import jakarta.ws.rs.NotFoundException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -345,15 +349,56 @@ public class CloudIdentityGroupsClient {
     }
   }
 
+  private MembershipId updateMembership(
+    CloudIdentity client,
+    GroupId groupId,
+    UserEmail userEmail,
+    MembershipRole role
+  ) throws AccessException, IOException {
+    var membershipId = lookupGroupMembership(client, groupId, userEmail);
+    try {
+      client
+        .groups()
+        .memberships()
+        .modifyMembershipRoles(
+          membershipId.id,
+          new ModifyMembershipRolesRequest()
+            .setUpdateRolesParams(List.of(
+              new UpdateMembershipRolesParams()
+                .setFieldMask("expiryDetail.expire_time")
+                .setMembershipRole(role))))
+        .execute();
+
+      return membershipId;
+    }
+    catch (GoogleJsonResponseException e) {
+      translateAndThrowApiException(e);
+      return null;
+    }
+  }
+
   /**
    * Add a member to a group in an idempotent way.
    */
   public MembershipId addMembership(
     GroupId groupId,
-    UserEmail userEmail
+    UserEmail userEmail,
+    Instant expiry
   ) throws AccessException, IOException {
     var client = createClient();
+
+    var role = new MembershipRole()
+      .setName("MEMBER")
+      .setExpiryDetail(new ExpiryDetail()
+        .setExpireTime(expiry
+          .atOffset(ZoneOffset.UTC)
+          .truncatedTo(ChronoUnit.SECONDS)
+          .format(DateTimeFormatter.ISO_DATE_TIME)));
+
     try {
+      //
+      // Try to add new membership.
+      //
       var operation = client
         .groups()
         .memberships()
@@ -361,8 +406,7 @@ public class CloudIdentityGroupsClient {
           groupId.toString(),
           new Membership()
             .setPreferredMemberKey(new EntityKey().setId(userEmail.email))
-            .setRoles(List.of(new MembershipRole().setName("MEMBER")))
-        )
+            .setRoles(List.of(role)))
         .execute();
 
       if (!operation.getDone()) {
@@ -377,9 +421,9 @@ public class CloudIdentityGroupsClient {
     catch (GoogleJsonResponseException e) {
       if (isAlreadyExistsError(e)) {
         //
-        // Member exists, ok.
+        // Membership exists, but the expiry might be incorrect.
         //
-        return lookupGroupMembership(client, groupId, userEmail);
+        return updateMembership(client, groupId, userEmail, role);
       }
       else {
         translateAndThrowApiException(e);
