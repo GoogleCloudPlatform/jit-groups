@@ -76,7 +76,7 @@ public class TestProjectRoleRepository {
 
     assertIterableEquals(
       List.of(available1, available2),
-      set.currentEntitlements());
+      set.available());
   }
 
   @Test
@@ -109,7 +109,7 @@ public class TestProjectRoleRepository {
           ActivationType.JIT,
           Entitlement.Status.ACTIVE,
           validity1)),
-      set.currentEntitlements());
+      set.available());
   }
 
   @Test
@@ -152,7 +152,7 @@ public class TestProjectRoleRepository {
           ActivationType.JIT,
           Entitlement.Status.ACTIVE,
           validity)),
-      set.currentEntitlements());
+      set.available());
   }
 
   @Test
@@ -186,6 +186,6 @@ public class TestProjectRoleRepository {
           ActivationType.NONE,
           Entitlement.Status.ACTIVE,
           validity1)),
-      set.currentEntitlements());
+      set.available());
   }
 }

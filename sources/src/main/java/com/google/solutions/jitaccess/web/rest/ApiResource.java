@@ -219,7 +219,7 @@ public class ApiResource {
         projectId);
 
       return new ProjectRolesResponse(
-        entitlements.currentEntitlements()
+        entitlements.available()
           .stream()
           .map(ent -> new ProjectRole(
             ent.id().roleBinding(),

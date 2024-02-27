@@ -108,7 +108,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
         projectId,
         EnumSet.of(activationType),
         EnumSet.of(Entitlement.Status.AVAILABLE))
-      .currentEntitlements()
+      .available()
       .stream()
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
 
