@@ -1,16 +1,18 @@
 Multi-party approval (MPA) is an optional feature that lets you demand that users solicit approval from a peer before
-they can activate certain roles. Multi-party approval is a complement to just-in-time self-approval and differs in the following ways:
+they can activate certain roles. Multi-party approval is a complement to just-in-time self-approval. It comes in two variations Peer approval and External approval and differs in the following ways:
 
 <table>
 <tr>
     <th></th>
     <th>Self-approval</th>
-    <th>Multi-party approval</th>
+    <th>Peer approval</th>
+    <th>External approval</th>
 </tr>
 <tr>
     <th>IAM condition</th>
     <td><code>has({}.jitAccessConstraint)</code></td>
     <td><code>has({}.multiPartyApprovalConstraint)</code></td>
+    <td><code>has({}.externalApprovalConstraint)</code></td>
 </tr>
 <tr>
     <th>Activation requirements</th>
@@ -21,15 +23,31 @@ they can activate certain roles. Multi-party approval is a complement to just-in
             <li>Approval from a peer</li>
         </ol>
     </td>
+    <td>
+        <ol>
+            <li>Justification (such as a case number)</li>
+            <li>Approval from an external reviewer</li>
+        </ol>
+    </td>
 </tr>
 </table>
 
-Multi-party approval is handled on a peer-to-peer basis:
+Peer approval is handled on a peer-to-peer basis:
+*   If two users are granted a role binding for, say `roles/compute.admin` on `project-1` with the Peer approval
+    IAM condition, then they can approve each other’s requests.
 
-*   If two users are granted an MPA-eligible role binding for, say `roles/compute.admin` on `project-1`,
-    then they can approve each other’s requests.
-*   When soliciting approval, a user can see the list of qualified peers, and can choose the peer(s)
-    to request approval from. It’s sufficient to gain approval from a single peer.
+External approval is handled slightly differently:
+*  A user is granted a role binding say `roles/compute.admin` on `project-1` with the External approval
+    IAM condition.
+*  Another user is granted an equivalent role binding i.e. `roles/compute.admin` on the same scope with the 
+    `has({}.reviewerPrivilege)` IAM condition.
+*  The first user can request activation of the role whereas the second user can review and approve the 
+    activation request of the first user. Note that the first user cannot review requests and the second user
+    cannot request activation.
+
+In either case:
+*   When soliciting approval, a user can see the list of qualified reviewer, and can choose the reviewer(s)
+    to request approval from. It’s sufficient to gain approval from a single reviewer.
 
 The approval process is driven by email, as illustrated by the following example:
 
@@ -43,6 +61,23 @@ The approval process is driven by email, as illustrated by the following example
 4.  Following a link in the email, Bob opens the JIT Access application. He sees the resource, role,
     and justification provided by Alice and approves (or disregards) the request.
 5.  Alice receives an email confirming that her access has been approved.
+
+## Teams
+To provide more fine-grained control over who can approve which requests one can specify a team as part of the IAM condition in the following manner:
+
+```has({}.multiPartyApprovalConstraint.codeNinjas)```
+
+Here the IAM condition specifies the `codeNinjas` team but any name can be used here and it does not need to match any existing groups etc. 
+
+Users given a role binding specifying another different team say
+
+```has({}.multiPartyApprovalConstraint.cloudExperts)```
+
+cannot review the activation requests of users granted the `codeNinjas` team IAM condition and vice versa. 
+
+Teams can be specified both for Peer approval and External approval. In case of external approval the team of the `has({}.externalApprovalConstraint)` condition must match the team of the `has({}.reviewerPrivilege)` condition.
+
+Users granted an IAM binding with either Peer approval privilege or reviewer privilege that does not specify a team can review activation requests originating from the users of any team.
 
 ## Activation tokens
 
