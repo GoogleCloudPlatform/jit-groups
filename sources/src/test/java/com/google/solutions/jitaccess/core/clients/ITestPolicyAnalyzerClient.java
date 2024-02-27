@@ -41,66 +41,66 @@ public class ITestPolicyAnalyzerClient {
   @Test
   public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.INVALID_CREDENTIAL,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserEmail("bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
+        NotAuthenticatedException.class,
+        () -> adapter.findAccessibleResourcesByUser(
+            "projects/0",
+            new UserEmail("bob@example.com"),
+            Optional.empty(),
+            Optional.empty(),
+            true));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserEmail("bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
+        AccessDeniedException.class,
+        () -> adapter.findAccessibleResourcesByUser(
+            "projects/0",
+            new UserEmail("bob@example.com"),
+            Optional.empty(),
+            Optional.empty(),
+            true));
   }
 
   @Test
   public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      new HttpTransport.Options(
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS),
-        Duration.of(1, ChronoUnit.MILLIS)));
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
+        new HttpTransport.Options(
+            Duration.of(1, ChronoUnit.MILLIS),
+            Duration.of(1, ChronoUnit.MILLIS),
+            Duration.of(1, ChronoUnit.MILLIS)));
 
     assertThrows(
-      SocketTimeoutException.class,
-      () -> adapter.findAccessibleResourcesByUser(
-        "projects/0",
-        new UserEmail("bob@example.com"),
-        Optional.empty(),
-        Optional.empty(),
-        true));
+        SocketTimeoutException.class,
+        () -> adapter.findAccessibleResourcesByUser(
+            "projects/0",
+            new UserEmail("bob@example.com"),
+            Optional.empty(),
+            Optional.empty(),
+            true));
   }
 
   @Test
   public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + ITestEnvironment.PROJECT_ID,
-      new UserEmail("bob@example.com"),
-      Optional.of("invalid.invalid.invalid"),
-      Optional.empty(),
-      true);
+        "projects/" + ITestEnvironment.PROJECT_ID,
+        new UserEmail("bob@example.com"),
+        Optional.of("invalid.invalid.invalid"),
+        Optional.empty(),
+        true);
 
     assertNotNull(result);
     assertNull(result.getAnalysisResults());
@@ -109,15 +109,15 @@ public class ITestPolicyAnalyzerClient {
   @Test
   public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
-      "projects/" + ITestEnvironment.PROJECT_ID,
-      new UserEmail("bob@example.com"),
-      Optional.empty(),
-      Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
-      true);
+        "projects/" + ITestEnvironment.PROJECT_ID,
+        new UserEmail("bob@example.com"),
+        Optional.empty(),
+        Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
+        true);
 
     assertNotNull(result);
     assertNull(result.getAnalysisResults());
@@ -130,28 +130,28 @@ public class ITestPolicyAnalyzerClient {
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.INVALID_CREDENTIAL,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
+        NotAuthenticatedException.class,
+        () -> adapter.findPermissionedPrincipalsByResource(
+            "projects/0",
+            "//cloudresourcemanager.googleapis.com/projects/132",
+            "roles/browser"));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.findPermissionedPrincipalsByResource(
-        "projects/0",
-        "//cloudresourcemanager.googleapis.com/projects/132",
-        "roles/browser"));
+        AccessDeniedException.class,
+        () -> adapter.findPermissionedPrincipalsByResource(
+            "projects/0",
+            "//cloudresourcemanager.googleapis.com/projects/132",
+            "roles/browser"));
   }
 }

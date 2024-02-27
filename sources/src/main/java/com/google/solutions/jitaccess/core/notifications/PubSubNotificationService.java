@@ -23,9 +23,8 @@ public class PubSubNotificationService extends NotificationService {
   private final @NotNull Options options;
 
   public PubSubNotificationService(
-    @NotNull PubSubClient adapter,
-    @NotNull Options options
-  ) {
+      @NotNull PubSubClient adapter,
+      @NotNull Options options) {
     Preconditions.checkNotNull(adapter, "adapter");
     Preconditions.checkNotNull(options, "options");
     Preconditions.checkNotNull(options.topic, "options");
@@ -46,22 +45,19 @@ public class PubSubNotificationService extends NotificationService {
   @Override
   public void sendNotification(@NotNull Notification notification) throws NotificationException {
     var attributes = new GenericJson();
-    for (var property : notification.properties.entrySet())
-    {
+    for (var property : notification.properties.entrySet()) {
       Object propertyValue;
       if (property.getValue() instanceof Instant) {
         //
         // Serialize ISO-8601 representation instead of individual
         // object fields.
         //
-        propertyValue = ((Instant)property.getValue()).toString();
-      }
-      else if (property.getValue() instanceof Collection<?>) {
-        propertyValue = ((Collection<?>)property.getValue()).stream()
-          .map(i -> i.toString())
-          .collect(Collectors.toList());
-      }
-      else {
+        propertyValue = ((Instant) property.getValue()).toString();
+      } else if (property.getValue() instanceof Collection<?>) {
+        propertyValue = ((Collection<?>) property.getValue()).stream()
+            .map(i -> i.toString())
+            .collect(Collectors.toList());
+      } else {
         propertyValue = property.getValue().toString();
       }
 
@@ -69,17 +65,17 @@ public class PubSubNotificationService extends NotificationService {
     }
 
     var payload = new GenericJson()
-      .set("type", notification.getType())
-      .set("attributes", attributes);
+        .set("type", notification.getType())
+        .set("attributes", attributes);
 
     var payloadAsJson = new Gson().toJson(payload);
 
     try {
       var message = new PubsubMessage()
-        .encodeData(payloadAsJson.getBytes(StandardCharsets.UTF_8));
+          .encodeData(payloadAsJson.getBytes(StandardCharsets.UTF_8));
 
       this.adapter.publish(options.topic, message);
-    } catch (AccessException | IOException e){
+    } catch (AccessException | IOException e) {
       throw new NotificationException("Publishing event to Pub/Sub failed", e);
     }
   }
@@ -89,7 +85,8 @@ public class PubSubNotificationService extends NotificationService {
   // -------------------------------------------------------------------------
 
   /**
-   * @param topicResourceName PubSub topic in format projects/{project}/topics/{topic}
+   * @param topicResourceName PubSub topic in format
+   *                          projects/{project}/topics/{topic}
    */
   public record Options(PubSubTopic topic) {
   }

@@ -44,11 +44,11 @@ public class TestRoleBinding {
   @Test
   public void whenValueIsEquivalent_ThenEqualsReturnsTrue() {
     var ref1 = new RoleBinding(
-      "//full-name",
-      "roles/test");
+        "//full-name",
+        "roles/test");
     var ref2 = new RoleBinding(
-      "//full-name",
-      "roles/test");
+        "//full-name",
+        "roles/test");
 
     assertTrue(ref1.equals(ref2));
     assertTrue(ref1.equals((Object) ref2));
@@ -59,8 +59,8 @@ public class TestRoleBinding {
   @Test
   public void whenObjectsAreSame_ThenEqualsReturnsTrue() {
     var role = new RoleBinding(
-      "//full-name",
-      "roles/test");
+        "//full-name",
+        "roles/test");
 
     assertTrue(role.equals(role));
     assertTrue(role.equals((Object) role));
@@ -70,11 +70,11 @@ public class TestRoleBinding {
   @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
     var role1 = new RoleBinding(
-      "//full-name",
-      "roles/test");
+        "//full-name",
+        "roles/test");
     var role2 = new RoleBinding(
-      "//full-name",
-      "roles/other");
+        "//full-name",
+        "roles/other");
 
     assertFalse(role1.equals(role2));
     assertFalse(role1.equals((Object) role2));
@@ -83,11 +83,11 @@ public class TestRoleBinding {
   @Test
   public void whenResourcesDiffer_ThenEqualsReturnsFalse() {
     var ref1 = new RoleBinding(
-      "//one",
-      "roles/test");
+        "//one",
+        "roles/test");
     var ref2 = new RoleBinding(
-      "//two",
-      "roles/test");
+        "//two",
+        "roles/test");
 
     assertFalse(ref1.equals(ref2));
     assertFalse(ref1.equals((Object) ref2));
@@ -96,8 +96,8 @@ public class TestRoleBinding {
   @Test
   public void equalsNullIsFalse() {
     var ref1 = new RoleBinding(
-      "//full-name",
-      "roles/test");
+        "//full-name",
+        "roles/test");
 
     assertFalse(ref1.equals(null));
   }

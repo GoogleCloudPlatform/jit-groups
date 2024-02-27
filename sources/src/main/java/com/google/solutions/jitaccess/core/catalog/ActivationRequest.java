@@ -28,49 +28,58 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
- * Represents a request for activating one or more entitlements.
+ * Represents a request for activating a privilege.
  */
-public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
+public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
   private final @NotNull ActivationId id;
   private final @NotNull Instant startTime;
   private final @NotNull Duration duration;
   private final @NotNull UserEmail requestingUser;
-  private final @NotNull Set<TEntitlementId> entitlements;
+  private final @NotNull TPrivilegeId requesterPrivilege;
+  private final @NotNull ActivationType activationType;
   private final @NotNull String justification;
+  private final @NotNull Collection<UserEmail> reviewers;
 
-  protected ActivationRequest(
-    @NotNull ActivationId id,
-    @NotNull UserEmail requestingUser,
-    @NotNull Set<TEntitlementId> entitlements,
-    @NotNull String justification,
-    @NotNull Instant startTime,
-    @NotNull Duration duration
-    ) {
+  public ActivationRequest(
+      @NotNull ActivationId id,
+      @NotNull UserEmail requestingUser,
+      @NotNull Collection<UserEmail> reviewers,
+      @NotNull TPrivilegeId requesterPrivilege,
+      @NotNull ActivationType activationType,
+      @NotNull String justification,
+      @NotNull Instant startTime,
+      @NotNull Duration duration) {
 
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(requestingUser, "user");
-    Preconditions.checkNotNull(entitlements, "entitlements");
+    Preconditions.checkNotNull(requesterPrivilege, "requesterPrivilege");
+    Preconditions.checkNotNull(reviewers, "reviewers");
     Preconditions.checkNotNull(justification, "justification");
     Preconditions.checkNotNull(startTime);
-    Preconditions.checkNotNull(startTime);
+    Preconditions.checkNotNull(activationType);
+    Preconditions.checkNotNull(duration);
 
     Preconditions.checkArgument(
-      !entitlements.isEmpty(),
-      "At least one entitlement must be specified");
+        !reviewers.isEmpty() || activationType instanceof SelfApproval,
+        "At least one reviewer must be specified");
 
     Preconditions.checkArgument(
-      !duration.isZero() &&! duration.isNegative(),
-      "The duration must be positive");
+        !duration.isZero() && !duration.isNegative(),
+        "The duration must be positive");
+
+    Preconditions.checkArgument(
+        !(activationType instanceof NoActivation),
+        "Cannot request activation for privilege with activation type NONE.");
 
     this.id = id;
     this.startTime = startTime;
     this.duration = duration;
     this.requestingUser = requestingUser;
-    this.entitlements = entitlements;
+    this.reviewers = reviewers;
+    this.requesterPrivilege = requesterPrivilege;
+    this.activationType = activationType;
     this.justification = justification;
   }
 
@@ -110,10 +119,24 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   }
 
   /**
-   * @return one or more entitlements.
+   * @return users that can review request.
    */
-  public Collection<TEntitlementId> entitlements() {
-    return this.entitlements;
+  public Collection<UserEmail> reviewers() {
+    return this.reviewers;
+  }
+
+  /**
+   * @return requester privilege to activate.
+   */
+  public TPrivilegeId requesterPrivilege() {
+    return this.requesterPrivilege;
+  }
+
+  /**
+   * @return type of activation.
+   */
+  public ActivationType activationType() {
+    return this.activationType;
   }
 
   /**
@@ -123,16 +146,14 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     return this.justification;
   }
 
-  public abstract ActivationType type();
-
   @Override
   public String toString() {
     return String.format(
-      "[%s] entitlements=%s, startTime=%s, duration=%s, justification=%s",
-      this.id,
-      this.entitlements.stream().map(e -> e.toString()).collect(Collectors.joining(",")),
-      this.startTime,
-      this.duration,
-      this.justification);
+        "[%s] requesterPrivilege=%s, startTime=%s, duration=%s, justification=%s",
+        this.id,
+        this.requesterPrivilege.toString(),
+        this.startTime,
+        this.duration,
+        this.justification);
   }
 }

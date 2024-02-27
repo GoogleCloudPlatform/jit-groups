@@ -43,9 +43,8 @@ public class TokenSigner {
   private final TokenVerifier tokenVerifier;
 
   public TokenSigner(
-    IamCredentialsClient iamCredentialsClient,
-    @NotNull Options options
-  ) {
+      IamCredentialsClient iamCredentialsClient,
+      @NotNull Options options) {
     this.options = options;
     this.iamCredentialsClient = iamCredentialsClient;
 
@@ -53,20 +52,19 @@ public class TokenSigner {
     // Create verifier to check signature and obligatory claims.
     //
     this.tokenVerifier = TokenVerifier
-      .newBuilder()
-      .setCertificatesLocation(IamCredentialsClient.getJwksUrl(options.serviceAccount))
-      .setIssuer(options.serviceAccount.email)
-      .setAudience(options.serviceAccount.email)
-      .build();
+        .newBuilder()
+        .setCertificatesLocation(IamCredentialsClient.getJwksUrl(options.serviceAccount))
+        .setIssuer(options.serviceAccount.email)
+        .setAudience(options.serviceAccount.email)
+        .build();
   }
 
   /**
    * Create a signed JWT for a given payload.
    */
   public <T> @NotNull TokenWithExpiry sign(
-    @NotNull JsonWebTokenConverter<T> converter,
-    T payload
-  ) throws AccessException, IOException {
+      @NotNull JsonWebTokenConverter<T> converter,
+      T payload) throws AccessException, IOException {
 
     Preconditions.checkNotNull(converter, "converter");
     Preconditions.checkNotNull(payload, "payload");
@@ -76,31 +74,31 @@ public class TokenSigner {
     //
     var issueTime = Instant.now();
     var expiryTime = issueTime.plus(this.options.tokenValidity);
-    var jwtPayload =  converter.convert(payload)
-      .setAudience(this.options.serviceAccount.email)
-      .setIssuer(this.options.serviceAccount.email)
-      .setIssuedAtTimeSeconds(issueTime.getEpochSecond())
-      .setExpirationTimeSeconds(expiryTime.getEpochSecond());
+    var jwtPayload = converter.convert(payload)
+        .setAudience(this.options.serviceAccount.email)
+        .setIssuer(this.options.serviceAccount.email)
+        .setIssuedAtTimeSeconds(issueTime.getEpochSecond())
+        .setExpirationTimeSeconds(expiryTime.getEpochSecond());
 
     return new TokenWithExpiry(
-      this.iamCredentialsClient.signJwt(this.options.serviceAccount, jwtPayload),
-      issueTime,
-      expiryTime);
+        this.iamCredentialsClient.signJwt(this.options.serviceAccount, jwtPayload),
+        issueTime,
+        expiryTime);
   }
 
   /**
    * Decode and verify a JWT.
    */
   public <T> T verify(
-    @NotNull JsonWebTokenConverter<T> converter,
-    String token
-  ) throws TokenVerifier.VerificationException {
+      @NotNull JsonWebTokenConverter<T> converter,
+      String token) throws TokenVerifier.VerificationException {
 
     Preconditions.checkNotNull(converter, "converter");
     Preconditions.checkNotNull(token, "token");
 
     //
-    // Verify the token against the service account's JWKs. If that succeeds, we know
+    // Verify the token against the service account's JWKs. If that succeeds, we
+    // know
     // that the token has been issued by us.
     //
     var decodedToken = this.tokenVerifier.verify(token);
@@ -119,9 +117,9 @@ public class TokenSigner {
   // -------------------------------------------------------------------------
 
   public record TokenWithExpiry(
-    String token,
-    Instant issueTime,
-    Instant expiryTime) {
+      String token,
+      Instant issueTime,
+      Instant expiryTime) {
     public TokenWithExpiry {
       Preconditions.checkNotNull(token, "token");
       Preconditions.checkArgument(expiryTime.isAfter(issueTime));

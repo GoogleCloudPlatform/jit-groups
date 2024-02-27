@@ -22,18 +22,25 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.cel.TimeSpan;
-import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
+import com.google.solutions.jitaccess.core.catalog.SelfApproval;
+
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class TestProjectRoleRepository {
-  private class StringId extends EntitlementId {
+  private class StringId extends PrivilegeId {
     private final String id;
 
     public StringId(String id) {
@@ -50,142 +57,141 @@ public class TestProjectRoleRepository {
       return this.id;
     }
   }
-  
+
   // -------------------------------------------------------------------------
-  // buildEntitlementSet.
+  // availableRequesterPrivileges.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenActiveIsEmpty_ThenBuildEntitlementSetReturnsConsolidatedList() {
-    var available1 = new Entitlement<StringId>(
-      new StringId("available-1"),
-      "available-1",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
-    var available2 = new Entitlement<StringId>(
-      new StringId("available-2"),
-      "available-2",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+  public void whenActiveIsEmpty_ThenAvailablePrivilegesHaveRightStatus() {
+    var available1 = new RequesterPrivilege<StringId>(
+        new StringId("available-1"),
+        "available-1",
+        new SelfApproval(),
+        RequesterPrivilege.Status.INACTIVE);
+    var available2 = new RequesterPrivilege<StringId>(
+        new StringId("available-2"),
+        "available-2",
+        new SelfApproval(),
+        RequesterPrivilege.Status.INACTIVE);
 
-    var set = ProjectRoleRepository.buildEntitlementSet(
-      Set.of(available1, available2),
-      Set.of(),
-      Set.of(),
-      Set.of());
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
+        Set.of(available1, available2),
+        Set.of(),
+        Set.of(),
+        Set.of());
 
-    assertIterableEquals(
-      List.of(available1, available2),
-      set.available());
+    assertEquals(Set.of(available1, available2), set.available());
   }
 
   @Test
-  public void whenOneEntitlementActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
-    var available1 = new Entitlement<StringId>(
-      new StringId("available-1"),
-      "available-1",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
-    var available2 = new Entitlement<StringId>(
-      new StringId("available-2"),
-      "available-2",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+  public void whenOnePrivilegeActive_ThenAvailablePrivilegesHaveRightStatus() {
+    var selfApproval = new SelfApproval();
+    var available1 = new RequesterPrivilege<StringId>(
+        new StringId("available-1"),
+        "available-1",
+        selfApproval,
+        RequesterPrivilege.Status.INACTIVE);
+    var available2 = new RequesterPrivilege<StringId>(
+        new StringId("available-2"),
+        "available-2",
+        new SelfApproval(),
+        RequesterPrivilege.Status.INACTIVE);
 
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = ProjectRoleRepository.buildEntitlementSet(
-      Set.of(available1, available2),
-      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
-        available1.id(),
-        validity1)),
-      Set.of(),
-      Set.of());
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
+        Set.of(available1, available2),
+        Set.of(
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
+                available1.id(),
+                validity1)),
+        Set.of(),
+        Set.of());
 
     assertIterableEquals(List.of(
         available2,
-        new Entitlement<StringId>(
-          new StringId("available-1"),
-          "available-1",
-          ActivationType.JIT,
-          Entitlement.Status.ACTIVE,
-          validity1)),
-      set.available());
+        new RequesterPrivilege<StringId>(
+            new StringId("available-1"),
+            "available-1",
+            selfApproval,
+            RequesterPrivilege.Status.ACTIVE,
+            validity1)),
+        set.available());
   }
 
   @Test
-  public void whenAllEntitlementsActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
-    var available1 = new Entitlement<StringId>(
-      new StringId("available-1"),
-      "available-1",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
-    var available2 = new Entitlement<StringId>(
-      new StringId("available-2"),
-      "available-2",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+  public void whenAllPrivilegesActive_ThenAvailablePrivilegesHaveRightStatus() {
+    var selfApproval = new SelfApproval();
+    var selfApproval2 = new SelfApproval();
+
+    var available1 = new RequesterPrivilege<StringId>(
+        new StringId("available-1"),
+        "available-1",
+        selfApproval,
+        RequesterPrivilege.Status.INACTIVE);
+    var available2 = new RequesterPrivilege<StringId>(
+        new StringId("available-2"),
+        "available-2",
+        selfApproval2,
+        RequesterPrivilege.Status.INACTIVE);
 
     var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = ProjectRoleRepository.buildEntitlementSet(
-      Set.of(available1, available2),
-      Set.of(
-        new ProjectRoleRepository.ActivatedEntitlement<>(
-          available1.id(),
-          validity),
-        new ProjectRoleRepository.ActivatedEntitlement<>(
-          available2.id(),
-          validity)),
-      Set.of(),
-      Set.of());
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
+        Set.of(available1, available2),
+        Set.of(
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
+                available1.id(),
+                validity),
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
+                available2.id(),
+                validity)),
+        Set.of(),
+        Set.of());
 
-    assertIterableEquals(
-      List.of(
-        new Entitlement<StringId>(
-          new StringId("available-1"),
-          "available-1",
-          ActivationType.JIT,
-          Entitlement.Status.ACTIVE,
-          validity),
-        new Entitlement<StringId>(
-          new StringId("available-2"),
-          "available-2",
-          ActivationType.JIT,
-          Entitlement.Status.ACTIVE,
-          validity)),
-      set.available());
+    assertIterableEquals(List.of(
+        new RequesterPrivilege<StringId>(
+            new StringId("available-1"),
+            "available-1",
+            selfApproval,
+            RequesterPrivilege.Status.ACTIVE,
+            validity),
+        new RequesterPrivilege<StringId>(
+            new StringId("available-2"),
+            "available-2",
+            selfApproval2,
+            RequesterPrivilege.Status.ACTIVE,
+            validity)),
+        set.available());
   }
 
   @Test
-  public void whenUnavailableEntitlementsIsActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
-    var available1 = new Entitlement<StringId>(
-      new StringId("available-1"),
-      "available-1",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
-    var available2 = new Entitlement<StringId>(
-      new StringId("available-2"),
-      "available-2",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+  public void whenUnavailablePrivilegesIsActive_ThenAvailablePrivilegesHaveRightStatus() {
 
-    var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = ProjectRoleRepository.buildEntitlementSet(
-      Set.of(available1, available2),
-      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
-        new StringId("unavailable-1"),
-        validity1)),
-      Set.of(),
-      Set.of());
+    var available1 = new RequesterPrivilege<StringId>(
+        new StringId("available-1"),
+        "available-1",
+        new SelfApproval(),
+        RequesterPrivilege.Status.INACTIVE);
+    var available2 = new RequesterPrivilege<StringId>(
+        new StringId("available-2"),
+        "available-2",
+        new SelfApproval(),
+        RequesterPrivilege.Status.INACTIVE);
 
+    var validity1 = new TimeSpan(Instant.now().minus(Duration.ofMinutes(2)), Duration.ofMinutes(1));
+    var unavailableId = new StringId("unavailable-1");
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
+        Set.of(available1, available2),
+        Set.of(),
+        Set.of(new ProjectRoleRepository.ActivatedRequesterPrivilege<>(unavailableId, validity1)),
+        Set.of());
+
+    assertEquals(Set.of(available1, available2), set.available());
     assertIterableEquals(List.of(
-        available1,
-        available2,
-        new Entitlement<StringId>(
-          new StringId("unavailable-1"),
-          "unavailable-1",
-          ActivationType.NONE,
-          Entitlement.Status.ACTIVE,
-          validity1)),
-      set.available());
+        available1.id(),
+        available2.id()),
+        set.available().stream().map(privilege -> privilege.id())
+            .collect(Collectors.toList()));
+    assertEquals(unavailableId, set.expired().first().id());
   }
 }

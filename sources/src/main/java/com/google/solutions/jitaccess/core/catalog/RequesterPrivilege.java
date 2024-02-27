@@ -29,34 +29,35 @@ import java.time.Instant;
 import java.util.Comparator;
 
 /**
- * Represents an entitlement. An entitlement is dormant unless the user
+ * Represents a requester privilege. A requester privilege is dormant unless the
+ * user
  * activates it, and it automatically becomes inactive again after a certain
  * period of time has elapsed.
  */
-public record Entitlement<TEntitlementId extends EntitlementId> (
-  TEntitlementId id,
-  String name,
-  ActivationType activationType,
-  Status status,
-  TimeSpan validity
-) implements Comparable<Entitlement<TEntitlementId>> {
-  public Entitlement {
+public record RequesterPrivilege<TPrivilegeID extends PrivilegeId>(
+    TPrivilegeID id,
+    String name,
+    ActivationType activationType,
+    Status status,
+    TimeSpan validity) implements Comparable<RequesterPrivilege<TPrivilegeID>> {
+
+  public RequesterPrivilege {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(name, "name");
 
     Preconditions.checkArgument(
-      validity == null || (status == Status.ACTIVE || status == Status.EXPIRED));
+        validity == null || (status == Status.ACTIVE || status == Status.EXPIRED));
     Preconditions.checkArgument(
-      status != Status.ACTIVE || validity.end().isAfter(Instant.now()));
+        status != Status.ACTIVE || validity.end().isAfter(Instant.now()));
     Preconditions.checkArgument(
-      status != Status.EXPIRED || validity.end().isBefore(Instant.now()));
+        status != Status.EXPIRED || validity.end().isBefore(Instant.now()));
   }
 
-  public Entitlement(
-    TEntitlementId id,
-    String name,
-    ActivationType activationType,
-    Status status) {
+  public RequesterPrivilege(
+      TPrivilegeID id,
+      String name,
+      ActivationType activationType,
+      Status status) {
     this(id, name, activationType, status, null);
   }
 
@@ -66,26 +67,27 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   }
 
   @Override
-  public int compareTo(@NotNull Entitlement<TEntitlementId> o) {
+  public int compareTo(@NotNull RequesterPrivilege<TPrivilegeID> o) {
     return Comparator
-      .comparing((Entitlement<TEntitlementId> e) -> e.status)
-      .thenComparing(e -> e.id)
-      .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder()))
-      .compare(this, o);
+        .comparing((RequesterPrivilege<TPrivilegeID> e) -> e.status)
+        .thenComparing(e -> e.activationType.name())
+        .thenComparing(e -> e.id)
+        .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder()))
+        .compare(this, o);
   }
 
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Inner classes.
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   public enum Status {
     /**
-     * Entitlement can be activated.
+     * Privilege can be activated.
      */
-    AVAILABLE, //TODO(later): Rename to inactive
+    INACTIVE,
 
     /**
-     * Entitlement is active.
+     * Privilege is active.
      */
     ACTIVE,
 

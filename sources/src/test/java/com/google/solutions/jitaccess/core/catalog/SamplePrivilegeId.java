@@ -21,27 +21,26 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserEmail;
+public class SamplePrivilegeId extends PrivilegeId {
+  private final String catalog;
+  private final String id;
 
-import java.io.IOException;
+  public SamplePrivilegeId(String catalog, String id) {
+    this.catalog = catalog;
+    this.id = id;
+  }
 
-/**
- * A catalog of entitlement that can be browsed by the user.
- */
-public interface EntitlementCatalog<TEntitlementId extends EntitlementId> {
-  /**
-   * Verify if a user is allowed to make the given request.
-   */
-  void verifyUserCanRequest(
-    ActivationRequest<TEntitlementId> request
-  ) throws AccessException, IOException;
+  public SamplePrivilegeId(String id) {
+    this("sample", id);
+  }
 
-  /**
-   * Verify if a user is allowed to approve a given request.
-   */
-  void verifyUserCanApprove(
-    UserEmail approvingUser,
-    MpaActivationRequest<TEntitlementId> request
-  ) throws AccessException, IOException;
+  @Override
+  public String catalog() {
+    return this.catalog;
+  }
+
+  @Override
+  public String id() {
+    return this.id;
+  }
 }

@@ -37,7 +37,8 @@ import org.jetbrains.annotations.NotNull;
  * filter falsely flags and blocks requests that contain such JWTs.
  */
 public class TokenObfuscator {
-  private TokenObfuscator() {}
+  private TokenObfuscator() {
+  }
 
   public static @NotNull String encode(@NotNull String jwt) {
     Preconditions.checkNotNull(jwt);
@@ -49,14 +50,14 @@ public class TokenObfuscator {
     // disturb Base64-decodeability and make it look less like a JWT.
     //
     return jwt.substring(2)
-      .replace(".ey", "~~")
-      .replace('.', '~');
+        .replace(".ey", "~~")
+        .replace('.', '~');
   }
 
   public static @NotNull String decode(@NotNull String encodedJwt) {
     Preconditions.checkNotNull(encodedJwt);
     return "ey" + encodedJwt
-      .replace("~~", ".ey")
-      .replace('~', '.');
+        .replace("~~", ".ey")
+        .replace('~', '.');
   }
 }

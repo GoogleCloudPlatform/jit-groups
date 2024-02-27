@@ -54,47 +54,47 @@ class RuntimeConfiguration {
     this.readSetting = readSetting;
 
     this.scope = new StringSetting(
-      List.of("RESOURCE_SCOPE"),
-      String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
+        List.of("RESOURCE_SCOPE"),
+        String.format("projects/%s", this.readSetting.apply("GOOGLE_CLOUD_PROJECT")));
     this.customerId = new StringSetting(
-      List.of("RESOURCE_CUSTOMER_ID"),
-      null);
+        List.of("RESOURCE_CUSTOMER_ID"),
+        null);
     this.catalog = new EnumSetting<Catalog>(
-      Catalog.class,
-      List.of("RESOURCE_CATALOG"),
-      Catalog.POLICYANALYZER);
+        Catalog.class,
+        List.of("RESOURCE_CATALOG"),
+        Catalog.POLICYANALYZER);
 
     //
     // Activation settings.
     //
     this.activationTimeout = new DurationSetting(
-      List.of("ELEVATION_DURATION", "ACTIVATION_TIMEOUT"),
-      ChronoUnit.MINUTES,
-      Duration.ofHours(2));
+        List.of("ELEVATION_DURATION", "ACTIVATION_TIMEOUT"),
+        ChronoUnit.MINUTES,
+        Duration.ofHours(2));
     this.activationRequestTimeout = new DurationSetting(
-      List.of("ACTIVATION_REQUEST_TIMEOUT"),
-      ChronoUnit.MINUTES,
-      Duration.ofHours(1));
+        List.of("ACTIVATION_REQUEST_TIMEOUT"),
+        ChronoUnit.MINUTES,
+        Duration.ofHours(1));
     this.justificationPattern = new StringSetting(
-      List.of("JUSTIFICATION_PATTERN"),
-      ".*");
+        List.of("JUSTIFICATION_PATTERN"),
+        ".*");
     this.justificationHint = new StringSetting(
-      List.of("JUSTIFICATION_HINT"),
-      "Bug or case number");
+        List.of("JUSTIFICATION_HINT"),
+        "Bug or case number");
     this.minNumberOfReviewersPerActivationRequest = new IntSetting(
-      List.of("ACTIVATION_REQUEST_MIN_REVIEWERS"),
-      1);
+        List.of("ACTIVATION_REQUEST_MIN_REVIEWERS"),
+        1);
     this.maxNumberOfReviewersPerActivationRequest = new IntSetting(
-      List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
-      10);
-    this.maxNumberOfEntitlementsPerSelfApproval = new IntSetting(
-      List.of("ACTIVATION_REQUEST_MAX_ROLES"),
-      10);
+        List.of("ACTIVATION_REQUEST_MAX_REVIEWERS"),
+        10);
+    this.maxNumberOfPrivilegesPerSelfApproval = new IntSetting(
+        List.of("ACTIVATION_REQUEST_MAX_ROLES"),
+        10);
     this.availableProjectsQuery = new StringSetting(
-      List.of("AVAILABLE_PROJECTS_QUERY"),
-      this.catalog.getValue() == Catalog.ASSETINVENTORY
-        ? "state:ACTIVE"
-        : null);
+        List.of("AVAILABLE_PROJECTS_QUERY"),
+        this.catalog.getValue() == Catalog.ASSETINVENTORY
+            ? "state:ACTIVE"
+            : null);
 
     //
     // Backend service id (Cloud Run only).
@@ -121,20 +121,28 @@ class RuntimeConfiguration {
     this.smtpExtraOptions = new StringSetting(List.of("SMTP_OPTIONS"), null);
 
     //
+    // Mail formatting settings.
+    //
+    this.internalsMailAddressPattern = new StringSetting(List.of("MAIL_INTERNALS_PATTERN"), "(.*)");
+    this.internalsMailAddressTransform = new StringSetting(List.of("MAIL_INTERNALS_TRANSFORM"), "%s");
+    this.externalsMailAddressPattern = new StringSetting(List.of("MAIL_EXTERNALS_PATTERN"), null);
+    this.externalsMailAddressTransform = new StringSetting(List.of("MAIL_EXTERNALS_TRANSFORM"), null);
+
+    //
     // Backend settings.
     //
     this.backendConnectTimeout = new DurationSetting(
-      List.of("BACKEND_CONNECT_TIMEOUT"),
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(5));
+        List.of("BACKEND_CONNECT_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(5));
     this.backendReadTimeout = new DurationSetting(
-      List.of("BACKEND_READ_TIMEOUT"),
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(20));
+        List.of("BACKEND_READ_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(20));
     this.backendWriteTimeout = new DurationSetting(
-      List.of("BACKEND_WRITE_TIMEOUT"),
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(5));
+        List.of("BACKEND_WRITE_TIMEOUT"),
+        ChronoUnit.SECONDS,
+        Duration.ofSeconds(5));
   }
 
   // -------------------------------------------------------------------------
@@ -162,7 +170,6 @@ class RuntimeConfiguration {
    * publish to.
    */
   public final @NotNull StringSetting topicName;
-
 
   /**
    * Duration for which an activated role remains activated.
@@ -239,6 +246,30 @@ class RuntimeConfiguration {
   public final @NotNull StringSetting smtpExtraOptions;
 
   /**
+   * Regex pattern for capturing the email address of internals to the
+   * organization.
+   */
+  public final StringSetting internalsMailAddressPattern;
+
+  /**
+   * String format expression for transforming groups captured by regex pattern
+   * into email addresses for internals.
+   */
+  public final StringSetting internalsMailAddressTransform;
+
+  /**
+   * Regex pattern for capturing the email address of externals to the
+   * organization.
+   */
+  public final StringSetting externalsMailAddressPattern;
+
+  /**
+   * String format expression for transforming groups captured by regex pattern
+   * into email addresses for externals.
+   */
+  public final StringSetting externalsMailAddressTransform;
+
+  /**
    * Backend Service Id for token validation
    */
   public final @NotNull StringSetting backendServiceId;
@@ -254,14 +285,16 @@ class RuntimeConfiguration {
   public final @NotNull IntSetting maxNumberOfReviewersPerActivationRequest;
 
   /**
-   * Maximum number of (JIT-) entitlements that can be activated at once.
+   * Maximum number of (JIT-) privileges that can be activated at once.
    */
-  public final @NotNull IntSetting maxNumberOfEntitlementsPerSelfApproval;
+  public final @NotNull IntSetting maxNumberOfPrivilegesPerSelfApproval;
 
   /**
-   * In some cases listing all available projects is not working fast enough and times out,
+   * In some cases listing all available projects is not working fast enough and
+   * times out,
    * so this method is available as alternative.
-   * The format is the same as Google Resource Manager API requires for the query parameter, for example:
+   * The format is the same as Google Resource Manager API requires for the query
+   * parameter, for example:
    * - parent:folders/{folder_id}
    * - parent:organizations/{organization_id}
    */
@@ -289,7 +322,7 @@ class RuntimeConfiguration {
 
   public boolean isSmtpAuthenticationConfigured() {
     return this.smtpUsername.isValid() &&
-      (this.smtpPassword.isValid() || this.smtpSecret.isValid());
+        (this.smtpPassword.isValid() || this.smtpSecret.isValid());
   }
 
   public @NotNull Map<String, String> getSmtpExtraOptionsMap() {
@@ -351,8 +384,7 @@ class RuntimeConfiguration {
 
       if (this.defaultValue != null) {
         return this.defaultValue;
-      }
-      else {
+      } else {
         throw new IllegalStateException("No value provided for " + this.keys);
       }
     }
@@ -361,8 +393,7 @@ class RuntimeConfiguration {
       try {
         getValue();
         return true;
-      }
-      catch (Exception ignored) {
+      } catch (Exception ignored) {
         return false;
       }
     }
@@ -403,6 +434,7 @@ class RuntimeConfiguration {
 
   public class DurationSetting extends Setting<Duration> {
     private final ChronoUnit unit;
+
     public DurationSetting(Collection<String> keys, ChronoUnit unit, Duration defaultValue) {
       super(keys, defaultValue);
       this.unit = unit;
@@ -429,10 +461,9 @@ class RuntimeConfiguration {
     private final Class<E> enumClass;
 
     public EnumSetting(
-      Class<E> enumClass,
-      Collection<String> keys,
-      E defaultValue
-    ) {
+        Class<E> enumClass,
+        Collection<String> keys,
+        E defaultValue) {
       super(keys, defaultValue);
       this.enumClass = enumClass;
     }

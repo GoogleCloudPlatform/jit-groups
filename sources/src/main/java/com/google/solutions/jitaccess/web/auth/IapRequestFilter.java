@@ -40,7 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import java.security.Principal;
 
 /**
- * Verifies that requests have a valid IAP assertion, and makes the assertion available as
+ * Verifies that requests have a valid IAP assertion, and makes the assertion
+ * available as
  * SecurityContext.
  */
 @Dependent
@@ -58,6 +59,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   @Inject
   RuntimeEnvironment runtimeEnvironment;
+
   //
   // For AppEngine, we can derive the expected audience
   // from the project number and name.
@@ -67,15 +69,15 @@ public class IapRequestFilter implements ContainerRequestFilter {
   public String getExpectedAudience() {
     if (runtimeEnvironment.isRunningOnAppEngine()) {
       return String.format(
-        "/projects/%s/apps/%s",
-        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getProjectId());
+          "/projects/%s/apps/%s",
+          this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getProjectId());
     } else {
       return String.format(
-        "/projects/%s/global/backendServices/%s",
-        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId()
-      );
+          "/projects/%s/global/backendServices/%s",
+          this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId());
     }
   }
+
   /**
    * Authenticate request using IAP assertion.
    */
@@ -83,25 +85,25 @@ public class IapRequestFilter implements ContainerRequestFilter {
     //
     // Read IAP assertion header and validate it.
     //
-    
+
     String expectedAudience = getExpectedAudience();
 
     String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
       this.log
-        .newErrorEntry(EVENT_AUTHENTICATE, "Missing IAP assertion in header, IAP might be disabled")
-        .write();
+          .newErrorEntry(EVENT_AUTHENTICATE, "Missing IAP assertion in header, IAP might be disabled")
+          .write();
 
       throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
     }
 
     try {
       final var verifiedAssertion = new IapAssertion(
-        TokenVerifier.newBuilder()
-          .setAudience(expectedAudience)
-          .setIssuer(IAP_ISSUER_URL)
-          .build()
-          .verify(assertion));
+          TokenVerifier.newBuilder()
+              .setAudience(expectedAudience)
+              .setIssuer(IAP_ISSUER_URL)
+              .build()
+              .verify(assertion));
 
       //
       // Associate the token with the request so that controllers
@@ -123,17 +125,17 @@ public class IapRequestFilter implements ContainerRequestFilter {
           return verifiedAssertion.getDeviceInfo();
         }
       };
-    }
-    catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
+    } catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       this.log
-        .newErrorEntry(
-          EVENT_AUTHENTICATE,
-          String.format(
-            "Verifying IAP assertion failed. This might be because the " +
-            "IAP assertion was tampered with, or because it had the wrong audience " +
-            "(expected audience: %s).", expectedAudience),
-          e)
-        .write();
+          .newErrorEntry(
+              EVENT_AUTHENTICATE,
+              String.format(
+                  "Verifying IAP assertion failed. This might be because the " +
+                      "IAP assertion was tampered with, or because it had the wrong audience " +
+                      "(expected audience: %s).",
+                  expectedAudience),
+              e)
+          .write();
 
       throw new ForbiddenException("Invalid IAP assertion", e);
     }
@@ -174,33 +176,33 @@ public class IapRequestFilter implements ContainerRequestFilter {
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
 
     var principal = this.runtimeEnvironment.isDebugModeEnabled()
-      ? authenticateDebugRequest(requestContext)
-      : authenticateIapRequest(requestContext);
+        ? authenticateDebugRequest(requestContext)
+        : authenticateIapRequest(requestContext);
 
     this.log.setPrincipal(principal);
 
     requestContext.setSecurityContext(
-      new SecurityContext() {
-        @Override
-        public @NotNull Principal getUserPrincipal() {
-          return principal;
-        }
+        new SecurityContext() {
+          @Override
+          public @NotNull Principal getUserPrincipal() {
+            return principal;
+          }
 
-        @Override
-        public boolean isUserInRole(String s) {
-          return false;
-        }
+          @Override
+          public boolean isUserInRole(String s) {
+            return false;
+          }
 
-        @Override
-        public boolean isSecure() {
-          return true;
-        }
+          @Override
+          public boolean isSecure() {
+            return true;
+          }
 
-        @Override
-        public @NotNull String getAuthenticationScheme() {
-          return "IAP";
-        }
-      });
+          @Override
+          public @NotNull String getAuthenticationScheme() {
+            return "IAP";
+          }
+        });
 
     this.log.newInfoEntry(EVENT_AUTHENTICATE, "Authenticated IAP principal").write();
   }

@@ -45,9 +45,8 @@ public class PubSubClient {
   private final HttpTransport.@NotNull Options httpOptions;
 
   public PubSubClient(
-    @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions)
-  {
+      @NotNull GoogleCredentials credentials,
+      HttpTransport.@NotNull Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -61,18 +60,16 @@ public class PubSubClient {
           HttpTransport.newTransport(),
           new GsonFactory(),
           HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
+          .setApplicationName(ApplicationVersion.USER_AGENT)
+          .build();
+    } catch (GeneralSecurityException e) {
       throw new IOException("Creating a PubSub client failed", e);
     }
   }
 
   public String publish(
-    @NotNull PubSubTopic topic,
-    PubsubMessage message
-  ) throws AccessException, IOException {
+      @NotNull PubSubTopic topic,
+      PubsubMessage message) throws AccessException, IOException {
     var client = createClient();
 
     try {
@@ -80,31 +77,30 @@ public class PubSubClient {
       request.setMessages(Arrays.asList(message));
 
       var result = client
-        .projects()
-        .topics()
-        .publish(topic.getFullResourceName(), request)
-        .execute();
-      if (result.getMessageIds().size() < 1){
+          .projects()
+          .topics()
+          .publish(topic.getFullResourceName(), request)
+          .execute();
+      if (result.getMessageIds().size() < 1) {
         throw new IOException(
-          String.format("Publishing message to topic %s returned empty response", topic));
+            String.format("Publishing message to topic %s returned empty response", topic));
       }
 
       return result.getMessageIds().get(0);
-    }
-    catch (GoogleJsonResponseException e) {
+    } catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
         case 404:
           throw new AccessDeniedException(
-            String.format(
-              "Pub/Sub topic '%s' cannot be accessed or does not exist: %s",
-              topic,
-              e.getMessage()),
-            e);
+              String.format(
+                  "Pub/Sub topic '%s' cannot be accessed or does not exist: %s",
+                  topic,
+                  e.getMessage()),
+              e);
         default:
-          throw (GoogleJsonResponseException)e.fillInStackTrace();
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
     }
   }

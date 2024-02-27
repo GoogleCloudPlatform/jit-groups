@@ -53,37 +53,37 @@ public class ITestTokenSigner {
   @Test
   public void signAddsObligatoryClaims() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSignerOptions = new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5));
     var tokenSigner = new TokenSigner(
-      credentialsAdapter,
-      tokenSignerOptions);
+        credentialsAdapter,
+        tokenSignerOptions);
 
     var emptyPayload = new JsonWebToken.Payload();
 
     var token = tokenSigner.sign(
-      new PseudoJsonConverter(),
-      emptyPayload);
+        new PseudoJsonConverter(),
+        emptyPayload);
 
     assertNotNull(token.token());
     assertTrue(token.issueTime().isBefore(Instant.now().plusSeconds(5)));
     assertTrue(token.issueTime().isAfter(Instant.now().minusSeconds(5)));
 
     assertEquals(
-      token.issueTime().plus(tokenSignerOptions.tokenValidity()),
-      token.expiryTime());
+        token.issueTime().plus(tokenSignerOptions.tokenValidity()),
+        token.expiryTime());
 
     var verifiedPayload = TokenVerifier
-      .newBuilder()
-      .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.email)
-      .setAudience(serviceAccount.email)
-      .build()
-      .verify(token.token())
-      .getPayload();
+        .newBuilder()
+        .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
+        .setIssuer(serviceAccount.email)
+        .setAudience(serviceAccount.email)
+        .build()
+        .verify(token.token())
+        .getPayload();
 
     assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
     assertEquals(serviceAccount.email, verifiedPayload.getAudience());
@@ -98,92 +98,92 @@ public class ITestTokenSigner {
   @Test
   public void whenJwtMissesAudienceClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
-      credentialsAdapter,
-      new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
+        credentialsAdapter,
+        new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setIssuer(serviceAccount.email);
+        .setIssuer(serviceAccount.email);
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
     assertThrows(
-      TokenVerifier.VerificationException.class,
-      () -> tokenSigner.verify(
-        new PseudoJsonConverter(),
-        jwt));
+        TokenVerifier.VerificationException.class,
+        () -> tokenSigner.verify(
+            new PseudoJsonConverter(),
+            jwt));
   }
 
   @Test
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
-      credentialsAdapter,
-      new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
+        credentialsAdapter,
+        new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email);
+        .setAudience(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
     assertThrows(
-      TokenVerifier.VerificationException.class,
-      () -> tokenSigner.verify(
-        new PseudoJsonConverter(),
-        jwt));
+        TokenVerifier.VerificationException.class,
+        () -> tokenSigner.verify(
+            new PseudoJsonConverter(),
+            jwt));
   }
 
   @Test
   public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
-      credentialsAdapter,
-      new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
+        credentialsAdapter,
+        new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
+        .setAudience(serviceAccount.email)
+        .setIssuer(serviceAccount.email);
 
     var jwt = credentialsAdapter.signJwt(ITestEnvironment.NO_ACCESS_USER, payload);
 
     assertThrows(
-      TokenVerifier.VerificationException.class,
-      () -> tokenSigner.verify(
-        new PseudoJsonConverter(),
-        jwt));
+        TokenVerifier.VerificationException.class,
+        () -> tokenSigner.verify(
+            new PseudoJsonConverter(),
+            jwt));
   }
 
   @Test
   public void whenJwtValid_ThenVerifySucceeds() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
-      credentialsAdapter,
-      new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
+        credentialsAdapter,
+        new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5)));
 
     var inputPayload = new JsonWebToken.Payload()
-      .setJwtId("sample-1");
+        .setJwtId("sample-1");
 
     var token = tokenSigner.sign(
-      new PseudoJsonConverter(),
-      inputPayload);
+        new PseudoJsonConverter(),
+        inputPayload);
     var outputPayload = tokenSigner.verify(
-      new PseudoJsonConverter(),
-      token.token());
+        new PseudoJsonConverter(),
+        token.token());
 
     assertEquals(inputPayload.getJwtId(), outputPayload.getJwtId());
   }

@@ -29,10 +29,9 @@ import java.util.Comparator;
 /**
  * Represents a role that has been granted on a resource.
  */
-public record RoleBinding (
-  String fullResourceName,
-  String role
-) implements Comparable<RoleBinding> {
+public record RoleBinding(
+    String fullResourceName,
+    String role) implements Comparable<RoleBinding> {
 
   public RoleBinding {
     Preconditions.checkNotNull(fullResourceName, "fullResourceName");
@@ -55,7 +54,7 @@ public record RoleBinding (
   @Override
   public int compareTo(@NotNull RoleBinding o) {
     return Comparator.comparing((RoleBinding r) -> r.fullResourceName)
-      .thenComparing(r -> r.role)
-      .compare(this, o);
+        .thenComparing(r -> r.role)
+        .compare(this, o);
   }
 }

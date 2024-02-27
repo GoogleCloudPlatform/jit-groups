@@ -39,39 +39,39 @@ public class ITestAssetInventoryClient {
   @Test
   public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.INVALID_CREDENTIAL,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "folders/0",
-        SAMPLE_PROJECT));
+        NotAuthenticatedException.class,
+        () -> adapter.getEffectiveIamPolicies(
+            "folders/0",
+            SAMPLE_PROJECT));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "folders/0",
-        SAMPLE_PROJECT));
+        AccessDeniedException.class,
+        () -> adapter.getEffectiveIamPolicies(
+            "folders/0",
+            SAMPLE_PROJECT));
   }
 
   @Test
   public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      ResourceNotFoundException.class,
-      () -> adapter.getEffectiveIamPolicies(
-        "projects/" + ITestEnvironment.PROJECT_ID,
-        new ProjectId("0")));
+        ResourceNotFoundException.class,
+        () -> adapter.getEffectiveIamPolicies(
+            "projects/" + ITestEnvironment.PROJECT_ID,
+            new ProjectId("0")));
   }
 }

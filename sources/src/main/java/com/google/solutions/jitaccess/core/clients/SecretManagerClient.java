@@ -46,9 +46,8 @@ public class SecretManagerClient {
   private final HttpTransport.@NotNull Options httpOptions;
 
   public SecretManagerClient(
-    @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
-  ) {
+      @NotNull GoogleCredentials credentials,
+      HttpTransport.@NotNull Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -62,29 +61,29 @@ public class SecretManagerClient {
           HttpTransport.newTransport(),
           new GsonFactory(),
           HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
+          .setApplicationName(ApplicationVersion.USER_AGENT)
+          .build();
+    } catch (GeneralSecurityException e) {
       throw new IOException("Creating a SecretManager client failed", e);
     }
   }
 
   /**
    * Access a secret
-   * @param secretPath resource path, in the format projects/x/secrets/y/versions/z
+   * 
+   * @param secretPath resource path, in the format
+   *                   projects/x/secrets/y/versions/z
    */
   public @Nullable String accessSecret(
-    String secretPath
-  ) throws AccessException, IOException {
+      String secretPath) throws AccessException, IOException {
     try {
       var payload = createClient()
-        .projects()
-        .secrets()
-        .versions()
-        .access(secretPath)
-        .execute()
-        .getPayload();
+          .projects()
+          .secrets()
+          .versions()
+          .access(secretPath)
+          .execute()
+          .getPayload();
 
       if (payload == null) {
         return null;
@@ -93,23 +92,21 @@ public class SecretManagerClient {
       var payloadData = payload.decodeData();
       if (payloadData == null) {
         return null;
-      }
-      else {
+      } else {
         return new String(payloadData, SECRET_CHARSET);
       }
-    }
-    catch (GoogleJsonResponseException e) {
+    } catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(
-            String.format("Access to secret '%s' was denied", secretPath), e);
+              String.format("Access to secret '%s' was denied", secretPath), e);
         case 404:
           throw new ResourceNotFoundException(
-            String.format("The secret '%s' does not exist", secretPath), e);
+              String.format("The secret '%s' does not exist", secretPath), e);
         default:
-          throw (GoogleJsonResponseException)e.fillInStackTrace();
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
     }
   }

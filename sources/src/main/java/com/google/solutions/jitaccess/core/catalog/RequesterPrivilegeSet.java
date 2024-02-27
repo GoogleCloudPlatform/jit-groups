@@ -22,33 +22,35 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import org.jetbrains.annotations.NotNull;
+import autovalue.shaded.org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Set of entitlements
+ * Set of requester privileges
  *
- * @param available available and active entitlements
- * @param expired previously active entitlements
- * @param warnings encountered warnings, if any.
+ * @param available available and active requester privileges
+ * @param expired   previously active requester privileges
+ * @param warnings  encountered warnings, if any.
  */
-public record EntitlementSet<TId extends EntitlementId>(
-  @NotNull SortedSet<Entitlement<TId>> available,
-  @NotNull SortedSet<Entitlement<TId>> expired,
-  @NotNull Set<String> warnings
-) {
-  public EntitlementSet {
+public record RequesterPrivilegeSet<TPrivilegeId extends PrivilegeId>(
+    @NotNull SortedSet<RequesterPrivilege<TPrivilegeId>> available,
+    @NotNull SortedSet<RequesterPrivilege<TPrivilegeId>> expired,
+    @NotNull Set<String> warnings) {
+
+  public RequesterPrivilegeSet
+
+  {
     Preconditions.checkNotNull(available, "available");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    assert available.stream().allMatch(e -> e.status() != Entitlement.Status.EXPIRED);
-    assert expired.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
+    assert available.stream().allMatch(e -> e.status() != RequesterPrivilege.Status.EXPIRED);
+    assert expired.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.EXPIRED);
   }
 
-  public static <TId extends EntitlementId> @NotNull EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), new TreeSet<>(), Set.of());
+  public static @NotNull <TPrivilegeId extends PrivilegeId> RequesterPrivilegeSet<TPrivilegeId> empty() {
+    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), new TreeSet<>(), Set.of());
   }
 }

@@ -36,47 +36,46 @@ import java.util.regex.Pattern;
  * IAM condition that checks for date range.
  */
 public class TemporaryIamCondition extends IamCondition {
-  private static final String CONDITION_TEMPLATE =
-    "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
+  private static final String CONDITION_TEMPLATE = "(request.time >= timestamp(\"%s\") && "
+      + "request.time < timestamp(\"%s\"))";
 
-  private static final String CONDITION_PATTERN =
-    "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
+  private static final String CONDITION_PATTERN = "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
       + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Constructors.
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Instant endTime) {
     super(String.format(
-      CONDITION_TEMPLATE,
-      startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
-      endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
+        CONDITION_TEMPLATE,
+        startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+        endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
   }
 
   public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Duration duration) {
-   this(startTime, startTime.plus(duration));
+    this(startTime, startTime.plus(duration));
   }
 
   public TemporaryIamCondition(@NotNull String condition) {
     super(condition);
   }
 
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Publics.
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   public @NotNull TimeSpan getValidity() {
     var matcher = CONDITION.matcher(this.condition);
     if (matcher.find()) {
       try {
         return new TimeSpan(
-          Instant.parse(matcher.group(1)),
-          Instant.parse(matcher.group(2)));
+            Instant.parse(matcher.group(1)),
+            Instant.parse(matcher.group(2)));
+      } catch (DateTimeParseException ignored) {
       }
-      catch (DateTimeParseException ignored) {}
     }
 
     throw new IllegalArgumentException("Condition is not a temporary IAM condition");
@@ -89,9 +88,9 @@ public class TemporaryIamCondition extends IamCondition {
     return expression != null && CONDITION.matcher(expression).matches();
   }
 
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Overrides.
-  //---------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
   @Override
   public Boolean evaluate() throws CelException {

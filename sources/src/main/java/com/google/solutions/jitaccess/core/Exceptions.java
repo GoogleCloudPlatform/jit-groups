@@ -25,7 +25,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Exceptions {
-  private Exceptions() {}
+  private Exceptions() {
+  }
 
   public static @NotNull String getFullMessage(@Nullable Throwable e) {
     var buffer = new StringBuilder();
@@ -39,8 +40,7 @@ public class Exceptions {
           buffer.append(": ");
           buffer.append(e.getMessage());
         }
-      }
-      else {
+      } else {
         buffer.append(e.getMessage());
       }
     }

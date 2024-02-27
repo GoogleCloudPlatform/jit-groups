@@ -36,26 +36,26 @@ public class ITestPubSubClient {
   @Test
   public void whenUnauthenticated_ThenPublishThrowsException() {
     var adapter = new PubSubClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.INVALID_CREDENTIAL,
+        HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      NotAuthenticatedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(ITestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
+        NotAuthenticatedException.class,
+        () -> adapter.publish(
+            new PubSubTopic(ITestEnvironment.PROJECT_ID.id(), "topic-1"),
+            new PubsubMessage()));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
     var adapter = new PubSubClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
     assertThrows(
-      AccessDeniedException.class,
-      () -> adapter.publish(
-        new PubSubTopic(ITestEnvironment.PROJECT_ID.id(), "topic-1"),
-        new PubsubMessage()));
+        AccessDeniedException.class,
+        () -> adapter.publish(
+            new PubSubTopic(ITestEnvironment.PROJECT_ID.id(), "topic-1"),
+            new PubsubMessage()));
   }
 
   @Test
@@ -65,12 +65,12 @@ public class ITestPubSubClient {
     Assumptions.assumeTrue(ITestEnvironment.PUBSUB_TOPIC != null);
 
     var adapter = new PubSubClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
+        ITestEnvironment.APPLICATION_CREDENTIALS,
+        HttpTransport.Options.DEFAULT);
 
     var messageId = adapter.publish(
-      ITestEnvironment.PUBSUB_TOPIC,
-      new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
+        ITestEnvironment.PUBSUB_TOPIC,
+        new PubsubMessage().encodeData("test".getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(messageId);
   }

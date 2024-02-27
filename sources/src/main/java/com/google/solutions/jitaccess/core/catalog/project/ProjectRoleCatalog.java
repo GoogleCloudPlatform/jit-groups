@@ -24,8 +24,9 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeCatalog;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -33,27 +34,25 @@ import java.util.SortedSet;
 /**
  * Catalog for project-level role bindings.
  */
-public abstract class ProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBinding> {
+public abstract class ProjectRoleCatalog implements RequesterPrivilegeCatalog<ProjectRoleBinding> {
   /**
-   * List projects that the user has any entitlements for.
+   * List projects that the user has any requester privileges for.
    */
   public abstract SortedSet<ProjectId> listProjects(
-    UserEmail user
-  ) throws AccessException, IOException;
+      UserEmail user) throws AccessException, IOException;
 
   /**
-   * List available entitlements.
+   * List available requester privileges.
    */
-  public abstract EntitlementSet<ProjectRoleBinding> listEntitlements(
-    UserEmail user,
-    ProjectId projectId
-  ) throws AccessException, IOException;
+
+  public abstract RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
+      UserEmail user,
+      ProjectId projectId) throws AccessException, IOException;
 
   /**
-   * List available reviewers for (MPA-) activating an entitlement.
+   * List available reviewers for (MPA-) activating a privilege.
    */
   public abstract SortedSet<UserEmail> listReviewers(
-    UserEmail requestingUser,
-    ProjectRoleBinding entitlement
-  ) throws AccessException, IOException;
+      UserEmail requestingUser,
+      RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException;
 }

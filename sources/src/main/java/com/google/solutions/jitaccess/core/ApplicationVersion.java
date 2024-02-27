@@ -39,9 +39,8 @@ public class ApplicationVersion {
       // resources plugin.
       //
       try (var propertiesFile = ApplicationVersion.class
-        .getClassLoader()
-        .getResourceAsStream("version.properties"))
-      {
+          .getClassLoader()
+          .getResourceAsStream("version.properties")) {
         if (propertiesFile != null) {
           var versionProperties = new Properties();
           versionProperties.load(propertiesFile);
@@ -52,8 +51,7 @@ public class ApplicationVersion {
           }
         }
       }
-    }
-    catch (IOException ignored) {
+    } catch (IOException ignored) {
     }
 
     return "unknown";

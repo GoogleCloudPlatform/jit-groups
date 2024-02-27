@@ -21,13 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-public enum ActivationType {
-  /** Entitlement can be activated using self-approval */
-  JIT,
+public interface ActivationType {
+  public String name();
 
-  /** Entitlement can be activated using multi-party approval.  */
-  MPA,
-
-  /** Entitlement can no longer be activated. */
-  NONE
+  public boolean isParentTypeOf(ActivationType other);
 }

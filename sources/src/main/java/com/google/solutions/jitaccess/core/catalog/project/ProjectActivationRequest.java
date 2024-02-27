@@ -25,24 +25,16 @@ import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.stream.Collectors;
-
 class ProjectActivationRequest {
   private ProjectActivationRequest() {
   }
 
   /**
-   * @return common project ID for all requested entitlements.
+   * @return project ID from request.
    */
   static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
-    var projects = request.entitlements().stream()
-      .map(e -> e.roleBinding().fullResourceName())
-      .collect(Collectors.toSet());
+    var project = request.requesterPrivilege().roleBinding().fullResourceName();
 
-    if (projects.size() != 1) {
-      throw new IllegalArgumentException("Entitlements must be part of the same project");
-    }
-
-    return ProjectId.fromFullResourceName(projects.stream().findFirst().get());
+    return ProjectId.fromFullResourceName(project);
   }
 }

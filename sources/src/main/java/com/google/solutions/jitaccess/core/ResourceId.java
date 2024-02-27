@@ -40,5 +40,5 @@ public interface ResourceId {
    *
    * For example, projects/test-123 folders/234, organizations/345.
    */
-   String path();
+  String path();
 }

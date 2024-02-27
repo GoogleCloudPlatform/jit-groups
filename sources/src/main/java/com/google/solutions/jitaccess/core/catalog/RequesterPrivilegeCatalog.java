@@ -21,27 +21,25 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-class SampleEntitlementId extends EntitlementId
-{
-  private final String catalog;
-  private final String id;
+import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.UserEmail;
 
-  public SampleEntitlementId(String catalog, String id) {
-    this.catalog = catalog;
-    this.id = id;
-  }
+import java.io.IOException;
 
-  public SampleEntitlementId(String id) {
-    this("sample", id);
-  }
+/**
+ * A catalog of requester privileges that can be browsed by the user.
+ */
+public interface RequesterPrivilegeCatalog<TPrivilegeId extends PrivilegeId> {
+  /**
+   * Verify if a user is allowed to make the given request.
+   */
+  void verifyUserCanRequest(
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
-  @Override
-  public String catalog() {
-    return this.catalog;
-  }
-
-  @Override
-  public String id() {
-    return this.id;
-  }
+  /**
+   * Verify if a user is allowed to approve a given request.
+   */
+  void verifyUserCanApprove(
+      UserEmail approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 }

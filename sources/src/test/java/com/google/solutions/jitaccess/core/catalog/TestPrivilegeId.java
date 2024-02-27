@@ -29,7 +29,7 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestEntitlementId {
+public class TestPrivilegeId {
   // -------------------------------------------------------------------------
   // hashCode.
   // -------------------------------------------------------------------------
@@ -37,9 +37,8 @@ public class TestEntitlementId {
   @Test
   public void whenIdIsEqual_ThenHashCodeIsEqual() {
     assertEquals(
-      new SampleEntitlementId("cat", "1").hashCode(),
-      new SampleEntitlementId("dog", "1").hashCode()
-    );
+        new SamplePrivilegeId("cat", "1").hashCode(),
+        new SamplePrivilegeId("dog", "1").hashCode());
   }
 
   // -------------------------------------------------------------------------
@@ -48,8 +47,8 @@ public class TestEntitlementId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    SampleEntitlementId id1 = new SampleEntitlementId("cat", "jit-1");
-    SampleEntitlementId id2 = new SampleEntitlementId("cat", "jit-1");
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+    SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-1");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -57,15 +56,15 @@ public class TestEntitlementId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    SampleEntitlementId id1 = new SampleEntitlementId("cat", "jit-1");
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreNotEquivalent_ThenEqualsReturnsFalse() {
-    SampleEntitlementId id1 = new SampleEntitlementId("cat", "jit-1");
-    SampleEntitlementId id2 = new SampleEntitlementId("cat", "jit-2");
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
+    SamplePrivilegeId id2 = new SamplePrivilegeId("cat", "jit-2");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -73,14 +72,14 @@ public class TestEntitlementId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    SampleEntitlementId id1 = new SampleEntitlementId("cat", "jit-1");
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    SampleEntitlementId id1 = new SampleEntitlementId("cat", "jit-1");
+    SamplePrivilegeId id1 = new SamplePrivilegeId("cat", "jit-1");
 
     assertFalse(id1.equals(""));
   }
@@ -92,22 +91,22 @@ public class TestEntitlementId {
   @Test
   public void compareToOrdersByCatalogThenId() {
     var ids = List.of(
-      new SampleEntitlementId("b", "2"),
-      new SampleEntitlementId("b", "1"),
-      new SampleEntitlementId("a", "2"),
-      new SampleEntitlementId("b", "3"),
-      new SampleEntitlementId("a", "1"));
+        new SamplePrivilegeId("b", "2"),
+        new SamplePrivilegeId("b", "1"),
+        new SamplePrivilegeId("a", "2"),
+        new SamplePrivilegeId("b", "3"),
+        new SamplePrivilegeId("a", "1"));
 
-    var sorted = new TreeSet<SampleEntitlementId>();
+    var sorted = new TreeSet<SamplePrivilegeId>();
     sorted.addAll(ids);
 
     Assertions.assertIterableEquals(
-      List.of(
-        new SampleEntitlementId("a", "1"),
-        new SampleEntitlementId("a", "2"),
-        new SampleEntitlementId("b", "1"),
-        new SampleEntitlementId("b", "2"),
-        new SampleEntitlementId("b", "3")),
-      sorted);
+        List.of(
+            new SamplePrivilegeId("a", "1"),
+            new SamplePrivilegeId("a", "2"),
+            new SamplePrivilegeId("b", "1"),
+            new SamplePrivilegeId("b", "2"),
+            new SamplePrivilegeId("b", "3")),
+        sorted);
   }
 }

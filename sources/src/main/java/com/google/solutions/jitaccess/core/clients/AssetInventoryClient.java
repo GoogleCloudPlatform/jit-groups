@@ -43,9 +43,8 @@ public class AssetInventoryClient {
   protected final HttpTransport.@NotNull Options httpOptions;
 
   public AssetInventoryClient(
-    @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
-  ) {
+      @NotNull GoogleCredentials credentials,
+      @NotNull HttpTransport.Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -56,13 +55,12 @@ public class AssetInventoryClient {
   protected @NotNull CloudAsset createClient() throws IOException {
     try {
       return new CloudAsset.Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
+          HttpTransport.newTransport(),
+          new GsonFactory(),
+          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
+          .setApplicationName(ApplicationVersion.USER_AGENT)
+          .build();
+    } catch (GeneralSecurityException e) {
       throw new IOException("Creating a CloudAsset client failed", e);
     }
   }
@@ -71,40 +69,38 @@ public class AssetInventoryClient {
    * Get effective set of IAM policies for a project.
    */
   public List<PolicyInfo> getEffectiveIamPolicies(
-    String scope,
-    @NotNull ProjectId projectId
-  ) throws AccessException, IOException {
+      String scope,
+      @NotNull ProjectId projectId) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(projectId, "projectId");
 
-    try
-    {
+    try {
       var results = createClient()
-        .effectiveIamPolicies()
-        .batchGet(scope)
-        .setNames(List.of(projectId.getFullResourceName()))
-        .execute()
-        .getPolicyResults();
+          .effectiveIamPolicies()
+          .batchGet(scope)
+          .setNames(List.of(projectId.getFullResourceName()))
+          .execute()
+          .getPolicyResults();
 
       return results.isEmpty()
-        ? List.of()
-        : results.get(0).getPolicies();
-    }
-    catch (GoogleJsonResponseException e) {
+          ? List.of()
+          : results.get(0).getPolicies();
+    } catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(
-            String.format("Denied access to scope '%s'", scope), e);
+              String.format("Denied access to scope '%s'", scope), e);
         case 404:
           throw new ResourceNotFoundException(
-            String.format("The project '%s' does not exist", projectId), e);
+              String.format("The project '%s' does not exist", projectId), e);
         case 429:
           throw new QuotaExceededException(
-            "Exceeded quota for BatchGetEffectiveIamPolicies API requests. Consider increasing the request " +
-              "quota in the application project.",
-            e);
+              "Exceeded quota for BatchGetEffectiveIamPolicies API requests. Consider increasing the request "
+                  +
+                  "quota in the application project.",
+              e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }

@@ -39,15 +39,14 @@ public class TestMessageTemplate {
     private final String templateId;
 
     protected TestNotification(
-      UserEmail recipient,
-      String subject,
-      Map<String, Object> properties,
-      String templateId
-    ) {
+        UserEmail recipient,
+        String subject,
+        Map<String, Object> properties,
+        String templateId) {
       super(
-        List.of(recipient),
-        List.of(),
-        subject);
+          List.of(recipient),
+          List.of(),
+          subject);
       this.properties.putAll(properties);
       this.templateId = templateId;
     }
@@ -69,23 +68,23 @@ public class TestMessageTemplate {
     properties.put("TEST-2", "<value2/>");
 
     var notification = new TestNotification(
-      new UserEmail("user@example.com"),
-      "Test email",
-      properties,
-      "ignored-templateid");
+        new UserEmail("user@example.com"),
+        "Test email",
+        properties,
+        "ignored-templateid");
 
     var template = new MailNotificationService.MessageTemplate(
-      notification.properties
-        .entrySet()
-        .stream()
-        .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-        .collect(Collectors.joining()),
-      MailNotificationService.Options.DEFAULT_TIMEZONE,
-      HtmlEscapers.htmlEscaper());
+        notification.properties
+            .entrySet()
+            .stream()
+            .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
+            .collect(Collectors.joining()),
+        MailNotificationService.Options.DEFAULT_TIMEZONE,
+        HtmlEscapers.htmlEscaper());
 
     assertEquals(
-      "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
-      template.format(notification));
+        "TEST-1=&lt;value1/&gt;\nTEST-2=&lt;value2/&gt;\n",
+        template.format(notification));
   }
 
   @Test
@@ -94,22 +93,22 @@ public class TestMessageTemplate {
     properties.put("TEST-1", Instant.ofEpochSecond(86400));
 
     var notification = new TestNotification(
-      new UserEmail("user@example.com"),
-      "Test email",
-      properties,
-      "ignored-templateid");
+        new UserEmail("user@example.com"),
+        "Test email",
+        properties,
+        "ignored-templateid");
 
     var template = new MailNotificationService.MessageTemplate(
-      notification.properties
-        .entrySet()
-        .stream()
-        .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
-        .collect(Collectors.joining()),
-      ZoneId.of("Australia/Melbourne"),
-      HtmlEscapers.htmlEscaper());
+        notification.properties
+            .entrySet()
+            .stream()
+            .map(e -> String.format("%s={{%s}}\n", e.getKey(), e.getKey()))
+            .collect(Collectors.joining()),
+        ZoneId.of("Australia/Melbourne"),
+        HtmlEscapers.htmlEscaper());
 
     assertEquals(
-      "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
-      template.format(notification).trim());
+        "TEST-1=Fri, 2 Jan 1970 10:00:00 +1000",
+        template.format(notification).trim());
   }
 }

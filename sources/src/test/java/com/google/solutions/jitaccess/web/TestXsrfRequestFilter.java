@@ -59,7 +59,7 @@ public class TestXsrfRequestFilter {
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(XsrfRequestFilter.XSRF_HEADER_NAME))
-      .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
+        .thenReturn(XsrfRequestFilter.XSRF_HEADER_VALUE);
 
     filter.filter(request);
 

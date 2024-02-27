@@ -26,16 +26,15 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestActivationRequest {
-  private class SampleEntitlementId extends EntitlementId
-  {
+  private class SamplePrivilegeId extends PrivilegeId {
     private final String id;
 
-    public SampleEntitlementId(String id) {
+    public SamplePrivilegeId(String id) {
       this.id = id;
     }
 
@@ -50,21 +49,16 @@ public class TestActivationRequest {
     }
   }
 
-  private class SampleActivationRequest extends ActivationRequest<SampleEntitlementId>
-  {
+  private class SampleActivationRequest extends ActivationRequest<SamplePrivilegeId> {
     public SampleActivationRequest(
-      ActivationId id,
-      UserEmail user,
-      Set<SampleEntitlementId> entitlements,
-      String justification,
-      Instant startTime,
-      Duration duration) {
-      super(id, user, entitlements, justification, startTime, duration);
-    }
-
-    @Override
-    public ActivationType type() {
-      return ActivationType.JIT;
+        ActivationId id,
+        UserEmail user,
+        SamplePrivilegeId requesterPrivilege,
+        ActivationType activationType,
+        String justification,
+        Instant startTime,
+        Duration duration) {
+      super(id, user, List.of(user), requesterPrivilege, activationType, justification, startTime, duration);
     }
   }
 
@@ -75,17 +69,17 @@ public class TestActivationRequest {
   @Test
   public void toStringReturnsSummary() {
     var request = new SampleActivationRequest(
-      new ActivationId("sample-1"),
-      new UserEmail("user@example.com"),
-      Set.of(
-        new SampleEntitlementId("1")),
-      "some justification",
-      Instant.ofEpochSecond(0),
-      Duration.ofMinutes(5));
+        new ActivationId("sample-1"),
+        new UserEmail("user@example.com"),
+        new SamplePrivilegeId("1"),
+        new SelfApproval(),
+        "some justification",
+        Instant.ofEpochSecond(0),
+        Duration.ofMinutes(5));
 
     assertEquals(
-      "[sample-1] entitlements=sample:1, startTime=1970-01-01T00:00:00Z, " +
-        "duration=PT5M, justification=some justification",
-      request.toString());
+        "[sample-1] requesterPrivilege=sample:1, startTime=1970-01-01T00:00:00Z, " +
+            "duration=PT5M, justification=some justification",
+        request.toString());
   }
 }

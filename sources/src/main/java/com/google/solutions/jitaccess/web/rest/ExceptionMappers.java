@@ -37,38 +37,38 @@ import java.io.IOException;
 
 public class ExceptionMappers {
   public static final Class<?>[] ALL = new Class<?>[] {
-    NotAuthenticatedExceptionMapper.class,
-    AccessDeniedExceptionExceptionMapper.class,
-    ForbiddenExceptionMapper.class,
-    IllegalArgumentExceptionMapper.class,
-    IllegalStateExceptionMapper.class,
-    NullPointerExceptionMapper.class,
-    IOExceptionMapper.class,
-    UnhandledExceptionMapper.class,
-    NotAllowedExceptionMapper.class,
-    NotAcceptableExceptionMapper.class,
-    NotFoundExceptionMapper.class
+      NotAuthenticatedExceptionMapper.class,
+      AccessDeniedExceptionExceptionMapper.class,
+      ForbiddenExceptionMapper.class,
+      IllegalArgumentExceptionMapper.class,
+      IllegalStateExceptionMapper.class,
+      NullPointerExceptionMapper.class,
+      IOExceptionMapper.class,
+      UnhandledExceptionMapper.class,
+      NotAllowedExceptionMapper.class,
+      NotAcceptableExceptionMapper.class,
+      NotFoundExceptionMapper.class
   };
 
   @Provider
   public static class NotAuthenticatedExceptionMapper
-    implements ExceptionMapper<NotAuthenticatedException> {
+      implements ExceptionMapper<NotAuthenticatedException> {
     @Override
     public Response toResponse(@NotNull NotAuthenticatedException exception) {
       return Response
-        .status(Response.Status.UNAUTHORIZED)
-        .entity(new ErrorEntity(exception)).build();
+          .status(Response.Status.UNAUTHORIZED)
+          .entity(new ErrorEntity(exception)).build();
     }
   }
 
   @Provider
   public static class AccessDeniedExceptionExceptionMapper
-    implements ExceptionMapper<AccessDeniedException> {
+      implements ExceptionMapper<AccessDeniedException> {
     @Override
     public Response toResponse(@NotNull AccessDeniedException exception) {
       return Response
-        .status(Response.Status.FORBIDDEN)
-        .entity(new ErrorEntity(exception)).build();
+          .status(Response.Status.FORBIDDEN)
+          .entity(new ErrorEntity(exception)).build();
     }
   }
 
@@ -77,8 +77,8 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull ForbiddenException exception) {
       return Response
-        .status(Response.Status.FORBIDDEN)
-        .entity(new ErrorEntity(exception)).build();
+          .status(Response.Status.FORBIDDEN)
+          .entity(new ErrorEntity(exception)).build();
     }
   }
 
@@ -87,9 +87,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull IllegalArgumentException exception) {
       return Response
-        .status(Response.Status.BAD_REQUEST)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.BAD_REQUEST)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -98,9 +98,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull IllegalStateException exception) {
       return Response
-        .status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -109,9 +109,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull NullPointerException exception) {
       return Response
-        .status(Response.Status.BAD_REQUEST)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.BAD_REQUEST)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -120,9 +120,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull IOException exception) {
       return Response
-        .status(Response.Status.BAD_GATEWAY)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.BAD_GATEWAY)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -131,9 +131,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull NotAllowedException exception) {
       return Response
-        .status(Response.Status.METHOD_NOT_ALLOWED)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.METHOD_NOT_ALLOWED)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -142,9 +142,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull NotAcceptableException exception) {
       return Response
-        .status(Response.Status.NOT_ACCEPTABLE)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.NOT_ACCEPTABLE)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -153,9 +153,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull NotFoundException exception) {
       return Response
-        .status(Response.Status.NOT_FOUND)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.NOT_FOUND)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 
@@ -164,9 +164,9 @@ public class ExceptionMappers {
     @Override
     public Response toResponse(@NotNull UnhandledException exception) {
       return Response
-        .status(Response.Status.INTERNAL_SERVER_ERROR)
-        .entity(new ErrorEntity(exception))
-        .build();
+          .status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(new ErrorEntity(exception))
+          .build();
     }
   }
 

@@ -39,15 +39,13 @@ public class ThrowingCompletableFuture {
   }
 
   public static <T> @NotNull CompletableFuture<T> submit(
-    @NotNull ThrowingSupplier<T> supplier,
-    @NotNull Executor executor
-  ) {
+      @NotNull ThrowingSupplier<T> supplier,
+      @NotNull Executor executor) {
     var future = new CompletableFuture<T>();
     executor.execute(() -> {
       try {
         future.complete(supplier.supply());
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         future.completeExceptionally(e);
       }
     });

@@ -65,7 +65,7 @@ public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId 
    */
   public static boolean isProjectFullResourceName(@NotNull String fullResourceName) {
     return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
-      && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
+        && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
   }
 
   // -------------------------------------------------------------------------
