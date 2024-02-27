@@ -38,10 +38,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Client for the Cloud Identity Groups API.
@@ -456,7 +453,54 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  public @NotNull Collection<MembershipRelation> searchDirectGroupMemberships(
+  /**
+   * List members of a group.
+   */
+  private @NotNull List<Membership> listMemberships(
+    @NotNull CloudIdentity client,
+    @NotNull GroupId groupId
+  ) throws AccessException, IOException {
+    try {
+      var result = new ArrayList<Membership>();
+      String pageToken = null;
+      do {
+        var page = client
+          .groups()
+          .memberships()
+          .list(groupId.toString())
+          .setPageToken(pageToken)
+          .setPageSize(SEARCH_PAGE_SIZE)
+          .execute();
+
+        if (page.getMemberships() != null) {
+          result.addAll(page.getMemberships());
+        }
+
+        pageToken = page.getNextPageToken();
+      } while (pageToken != null);
+
+      return Collections.unmodifiableList(result);
+    }
+    catch (GoogleJsonResponseException e) {
+      translateAndThrowApiException(e);
+      return null;
+    }
+  }
+
+  /**
+   * List members of a group.
+   */
+  public @NotNull List<Membership> listMemberships(
+    @NotNull GroupEmail groupEmail
+  ) throws AccessException, IOException {
+    var client = createClient();
+    return listMemberships(client, lookupGroup(client, groupEmail));
+  }
+
+  /**
+   * List groups a user is a member of.
+   */
+  public @NotNull List<MembershipRelation> listMembershipsByUser(
     @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     Preconditions.checkArgument(userEmail.email.indexOf('\'') < 0);
@@ -482,7 +526,7 @@ public class CloudIdentityGroupsClient {
         pageToken = page.getNextPageToken();
       } while (pageToken != null);
 
-      return result;
+      return Collections.unmodifiableList(result);
     }
     catch (GoogleJsonResponseException e) {
       translateAndThrowApiException(e);
