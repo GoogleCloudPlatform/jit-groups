@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web.auth;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -42,7 +43,7 @@ public record DeviceInfo(String deviceId, List<String> accessLevels) {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

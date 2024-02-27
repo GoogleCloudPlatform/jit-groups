@@ -22,7 +22,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -32,24 +33,24 @@ import java.util.Collection;
  * Represents a request for activating a privilege.
  */
 public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
-  private final ActivationId id;
-  private final Instant startTime;
-  private final Duration duration;
-  private final UserId requestingUser;
-  private final TPrivilegeId requesterPrivilege;
-  private final ActivationType activationType;
-  private final String justification;
-  private final Collection<UserId> reviewers;
+  private final @NotNull ActivationId id;
+  private final @NotNull Instant startTime;
+  private final @NotNull Duration duration;
+  private final @NotNull UserEmail requestingUser;
+  private final @NotNull TPrivilegeId requesterPrivilege;
+  private final @NotNull ActivationType activationType;
+  private final @NotNull String justification;
+  private final @NotNull Collection<UserEmail> reviewers;
 
   public ActivationRequest(
-      ActivationId id,
-      UserId requestingUser,
-      Collection<UserId> reviewers,
-      TPrivilegeId requesterPrivilege,
-      ActivationType activationType,
-      String justification,
-      Instant startTime,
-      Duration duration) {
+      @NotNull ActivationId id,
+      @NotNull UserEmail requestingUser,
+      @NotNull Collection<UserEmail> reviewers,
+      @NotNull TPrivilegeId requesterPrivilege,
+      @NotNull ActivationType activationType,
+      @NotNull String justification,
+      @NotNull Instant startTime,
+      @NotNull Duration duration) {
 
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(requestingUser, "user");
@@ -113,14 +114,14 @@ public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
   /**
    * @return user that requested access.
    */
-  public UserId requestingUser() {
+  public UserEmail requestingUser() {
     return this.requestingUser;
   }
 
   /**
    * @return users that can review request.
    */
-  public Collection<UserId> reviewers() {
+  public Collection<UserEmail> reviewers() {
     return this.reviewers;
   }
 

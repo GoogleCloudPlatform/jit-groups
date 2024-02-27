@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import org.junit.jupiter.api.Test;
 
 import java.net.SocketTimeoutException;
@@ -33,7 +33,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestPolicyAnalyzerClient {
+public class ITestPolicyAnalyzerClient {
   // -------------------------------------------------------------------------
   // findAccessibleResourcesByUser.
   // -------------------------------------------------------------------------
@@ -41,14 +41,14 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenUnauthenticated_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         NotAuthenticatedException.class,
         () -> adapter.findAccessibleResourcesByUser(
             "projects/0",
-            new UserId("", "bob@example.com"),
+            new UserEmail("bob@example.com"),
             Optional.empty(),
             Optional.empty(),
             true));
@@ -57,14 +57,14 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenCallerLacksPermission_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         AccessDeniedException.class,
         () -> adapter.findAccessibleResourcesByUser(
             "projects/0",
-            new UserId("", "bob@example.com"),
+            new UserEmail("bob@example.com"),
             Optional.empty(),
             Optional.empty(),
             true));
@@ -73,7 +73,7 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenRequestTimesOut_ThenFindAccessibleResourcesByUserThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         new HttpTransport.Options(
             Duration.of(1, ChronoUnit.MILLIS),
             Duration.of(1, ChronoUnit.MILLIS),
@@ -83,7 +83,7 @@ public class TestPolicyAnalyzerClient {
         SocketTimeoutException.class,
         () -> adapter.findAccessibleResourcesByUser(
             "projects/0",
-            new UserId("", "bob@example.com"),
+            new UserEmail("bob@example.com"),
             Optional.empty(),
             Optional.empty(),
             true));
@@ -92,12 +92,12 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenPermissionDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
-        "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-        new UserId("", "bob@example.com"),
+        "projects/" + ITestEnvironment.PROJECT_ID,
+        new UserEmail("bob@example.com"),
         Optional.of("invalid.invalid.invalid"),
         Optional.empty(),
         true);
@@ -109,12 +109,12 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenResourceDoesNotExist_ThenFindAccessibleResourcesByUserReturnsEmptyResult() throws Exception {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     var result = adapter.findAccessibleResourcesByUser(
-        "projects/" + IntegrationTestEnvironment.PROJECT_ID,
-        new UserId("", "bob@example.com"),
+        "projects/" + ITestEnvironment.PROJECT_ID,
+        new UserEmail("bob@example.com"),
         Optional.empty(),
         Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
         true);
@@ -130,7 +130,7 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenUnauthenticated_ThenPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -144,7 +144,7 @@ public class TestPolicyAnalyzerClient {
   @Test
   public void whenCallerLacksPermission_ThenFindPermissionedPrincipalsByResourceThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(

@@ -23,8 +23,10 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import jakarta.inject.Singleton;
+import jakarta.validation.constraints.Null;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
 
@@ -33,17 +35,17 @@ import java.util.regex.Pattern;
  */
 @Singleton
 public class RegexJustificationPolicy implements JustificationPolicy {
-  private final Options options;
+  private final @NotNull Options options;
 
-  public RegexJustificationPolicy(Options options) {
+  public RegexJustificationPolicy(@NotNull Options options) {
     Preconditions.checkNotNull(options, "options");
     this.options = options;
   }
 
   @Override
   public void checkJustification(
-      UserId user,
-      String justification) throws InvalidJustificationException {
+      @NotNull UserEmail user,
+      @Null String justification) throws InvalidJustificationException {
     if (Strings.isNullOrEmpty(justification) ||
         !this.options.justificationPattern.matcher(justification).matches()) {
       throw new InvalidJustificationException(

@@ -27,6 +27,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -43,8 +44,8 @@ import java.util.Optional;
 @Singleton
 public class PolicyAnalyzerClient extends AssetInventoryClient {
   public PolicyAnalyzerClient(
-      GoogleCredentials credentials,
-      HttpTransport.Options httpOptions) {
+      @NotNull GoogleCredentials credentials,
+      HttpTransport.@NotNull Options httpOptions) {
     super(credentials, httpOptions);
   }
 
@@ -57,10 +58,10 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
    * privileges in Cloud Identity/Workspace.
    */
   public IamPolicyAnalysis findAccessibleResourcesByUser(
-      String scope,
-      UserId user,
-      Optional<String> permission,
-      Optional<String> fullResourceName,
+      @NotNull String scope,
+      @NotNull UserEmail user,
+      @NotNull Optional<String> permission,
+      @NotNull Optional<String> fullResourceName,
       boolean expandResources) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(user, "user");
@@ -120,9 +121,9 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
    * given resource.
    */
   public IamPolicyAnalysis findPermissionedPrincipalsByResource(
-      String scope,
+      @NotNull String scope,
       String fullResourceName,
-      String role) throws AccessException, IOException {
+      @NotNull String role) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");
     Preconditions.checkNotNull(fullResourceName, "fullResourceName");
     Preconditions.checkNotNull(role, "role");

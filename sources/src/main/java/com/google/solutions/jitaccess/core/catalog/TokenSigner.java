@@ -24,9 +24,10 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -43,7 +44,7 @@ public class TokenSigner {
 
   public TokenSigner(
       IamCredentialsClient iamCredentialsClient,
-      Options options) {
+      @NotNull Options options) {
     this.options = options;
     this.iamCredentialsClient = iamCredentialsClient;
 
@@ -61,8 +62,8 @@ public class TokenSigner {
   /**
    * Create a signed JWT for a given payload.
    */
-  public <T> TokenWithExpiry sign(
-      JsonWebTokenConverter<T> converter,
+  public <T> @NotNull TokenWithExpiry sign(
+      @NotNull JsonWebTokenConverter<T> converter,
       T payload) throws AccessException, IOException {
 
     Preconditions.checkNotNull(converter, "converter");
@@ -89,7 +90,7 @@ public class TokenSigner {
    * Decode and verify a JWT.
    */
   public <T> T verify(
-      JsonWebTokenConverter<T> converter,
+      @NotNull JsonWebTokenConverter<T> converter,
       String token) throws TokenVerifier.VerificationException {
 
     Preconditions.checkNotNull(converter, "converter");
@@ -126,7 +127,7 @@ public class TokenSigner {
     }
   }
 
-  public record Options(UserId serviceAccount, Duration tokenValidity) {
+  public record Options(UserEmail serviceAccount, Duration tokenValidity) {
     public Options {
       Preconditions.checkNotNull(serviceAccount);
       Preconditions.checkArgument(!tokenValidity.isNegative());

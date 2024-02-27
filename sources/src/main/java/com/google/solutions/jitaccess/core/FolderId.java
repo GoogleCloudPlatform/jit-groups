@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * ID of a Google Cloud folder.
@@ -43,7 +44,7 @@ public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(FolderId o) {
+  public int compareTo(@NotNull FolderId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -52,7 +53,7 @@ public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
   // -------------------------------------------------------------------------
 
   @Override
-  public String type() {
+  public @NotNull String type() {
     return "folder";
   }
 

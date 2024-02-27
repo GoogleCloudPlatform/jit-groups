@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestUserId {
-
   // -------------------------------------------------------------------------
   // Equality.
   // -------------------------------------------------------------------------
@@ -49,8 +48,8 @@ public class TestUserId {
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("alice", "alice@example.com");
-    UserId id2 = new UserId("bob", "bob@example.com");
+    UserId id1 = new UserId("id-1", "bob@example.com");
+    UserId id2 = new UserId("id-2", "bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -65,8 +64,9 @@ public class TestUserId {
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    UserId id1 = new UserId("bob", "bob@example.com");
+    var id = new UserId("bob", "bob@example.com");
+    var email = new UserEmail("bob@example.com");
 
-    assertFalse(id1.equals(""));
+    assertFalse(id.equals(email));
   }
 }

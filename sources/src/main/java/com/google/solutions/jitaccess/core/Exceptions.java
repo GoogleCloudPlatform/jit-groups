@@ -21,11 +21,14 @@
 
 package com.google.solutions.jitaccess.core;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public class Exceptions {
   private Exceptions() {
   }
 
-  public static String getFullMessage(Throwable e) {
+  public static @NotNull String getFullMessage(@Nullable Throwable e) {
     var buffer = new StringBuilder();
 
     for (; e != null; e = e.getCause()) {

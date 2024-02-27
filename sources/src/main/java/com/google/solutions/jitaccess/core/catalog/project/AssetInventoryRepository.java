@@ -21,20 +21,21 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
-import com.google.api.services.admin.directory.model.Group;
-import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.api.services.directory.model.Group;
+import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
+import dev.cel.common.CelException;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -49,20 +50,20 @@ import java.util.stream.Collectors;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class AssetInventoryRepository implements ProjectRoleRepository {
+public class AssetInventoryRepository extends ProjectRoleRepository {
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
 
-  private final Options options;
-  private final Executor executor;
-  private final DirectoryGroupsClient groupsClient;
-  private final AssetInventoryClient assetInventoryClient;
+  private final @NotNull Options options;
+  private final @NotNull Executor executor;
+  private final @NotNull DirectoryGroupsClient groupsClient;
+  private final @NotNull AssetInventoryClient assetInventoryClient;
 
   public AssetInventoryRepository(
-      Executor executor,
-      DirectoryGroupsClient groupsClient,
-      AssetInventoryClient assetInventoryClient,
-      Options options) {
+      @NotNull Executor executor,
+      @NotNull DirectoryGroupsClient groupsClient,
+      @NotNull AssetInventoryClient assetInventoryClient,
+      @NotNull Options options) {
     Preconditions.checkNotNull(executor, "executor");
     Preconditions.checkNotNull(groupsClient, "groupsClient");
     Preconditions.checkNotNull(assetInventoryClient, "assetInventoryClient");
@@ -74,7 +75,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     this.options = options;
   }
 
-  static <T> T awaitAndRethrow(CompletableFuture<T> future) throws AccessException, IOException {
+  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException {
     try {
       return future.get();
     } catch (InterruptedException | ExecutionException e) {
@@ -90,8 +91,9 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
     }
   }
 
+  @NotNull
   List<Binding> findProjectBindings(
-      UserId user,
+      @NotNull UserEmail user,
       ProjectId projectId) throws AccessException, IOException {
     //
     // Lookup in parallel:
@@ -129,7 +131,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
 
   @Override
   public SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
-      UserId user) {
+      UserEmail user) {
     //
     // Not supported.
     //
@@ -138,16 +140,16 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   }
 
   @Override
-  public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
-      UserId user,
-      ProjectId projectId,
-      Set<ActivationType> typesToInclude,
-      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
+  public @NotNull RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      @NotNull UserEmail user,
+      @NotNull ProjectId projectId,
+      @NotNull Set<ActivationType> typesToInclude,
+      @NotNull EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
 
     List<Binding> allBindings = findProjectBindings(user, projectId);
 
     var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
-    if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
+    if (statusesToInclude.contains(RequesterPrivilege.Status.INACTIVE)) {
       allAvailable.addAll(
           allBindings.stream()
               .map(binding -> PrivilegeFactory.createRequesterPrivilege(
@@ -160,28 +162,46 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
               .collect(Collectors.toSet()));
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
-    if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
-      allActive.addAll(allBindings.stream()
-          // Only temporary access bindings.
-          .filter(binding -> PrivilegeFactory.isActivated(binding.getCondition()))
+    //
+    // Find temporary bindings that reflect activations and sort out which
+    // ones are still active and which ones have expired.
+    //
+    var allActive = new HashSet<ActivatedRequesterPrivilege<ProjectRoleBinding>>();
+    var allExpired = new HashSet<ActivatedRequesterPrivilege<ProjectRoleBinding>>();
 
-          // Only bindings that are still valid.
-          .filter(binding -> IamTemporaryAccessConditions.evaluate(
-              binding.getCondition().getExpression(),
-              Instant.now()))
+    for (var binding : allBindings.stream()
+        // Only temporary access bindings.
+        .filter(binding -> PrivilegeFactory.isActivated(binding.getCondition()))
+        .collect(Collectors.toUnmodifiableList())) {
+      var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
+      boolean isValid;
 
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
-          .collect(Collectors.toList()));
+      try {
+        isValid = condition.evaluate();
+      } catch (CelException e) {
+        isValid = false;
+      }
+
+      if (isValid && statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
+        allActive.add(new ActivatedRequesterPrivilege<>(
+            new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+            condition.getValidity()));
+      }
+
+      if (!isValid && statusesToInclude.contains(RequesterPrivilege.Status.EXPIRED)) {
+        allExpired.add(new ActivatedRequesterPrivilege<>(
+            new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+            condition.getValidity()));
+      }
     }
 
-    return new RequesterPrivilegeSet<>(allAvailable, allActive, Set.of());
+    return buildRequesterPrivilegeSet(allAvailable, allActive, allExpired, Set.of());
   }
 
   @Override
-  public Set<UserId> findReviewerPrivelegeHolders(
-      ProjectRoleBinding roleBinding,
-      ActivationType activationType) throws AccessException, IOException {
+  public @NotNull Set<UserEmail> findReviewerPrivelegeHolders(
+      @NotNull ProjectRoleBinding roleBinding,
+      @NotNull ActivationType activationType) throws AccessException, IOException {
 
     var policies = this.assetInventoryClient.getEffectiveIamPolicies(
         this.options.scope,
@@ -212,7 +232,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
         .filter(p -> p.startsWith(USER_PREFIX))
         .map(p -> p.substring(USER_PREFIX.length()))
         .distinct()
-        .map(email -> new UserId(email))
+        .map(email -> new UserEmail(email))
         .collect(Collectors.toSet());
 
     //
@@ -235,14 +255,14 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
               }
             },
             this.executor))
-        .collect(Collectors.toList());
+        .toList();
 
     var allMembers = new HashSet<>(allUserMembers);
 
     for (var listMembersFuture : listMembersFutures) {
       var members = awaitAndRethrow(listMembersFuture)
           .stream()
-          .map(m -> new UserId(m.getEmail()))
+          .map(m -> new UserEmail(m.getEmail()))
           .collect(Collectors.toList());
       allMembers.addAll(members);
     }
@@ -254,12 +274,12 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  class PrincipalSet {
-    private final Set<String> principalIdentifiers;
+  static class PrincipalSet {
+    private final @NotNull Set<String> principalIdentifiers;
 
     public PrincipalSet(
-        UserId user,
-        Collection<Group> groups) {
+        @NotNull UserEmail user,
+        @NotNull Collection<Group> groups) {
       this.principalIdentifiers = groups
           .stream()
           .map(g -> String.format("group:%s", g.getEmail()))
@@ -267,7 +287,7 @@ public class AssetInventoryRepository implements ProjectRoleRepository {
       this.principalIdentifiers.add(String.format("user:%s", user.email));
     }
 
-    public boolean isMember(Binding binding) {
+    public boolean isMember(@NotNull Binding binding) {
       return binding.getMembers()
           .stream()
           .anyMatch(member -> this.principalIdentifiers.contains(member));

@@ -21,12 +21,13 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
-import com.google.api.services.admin.directory.model.Group;
-import com.google.api.services.admin.directory.model.Member;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
+import com.google.api.services.directory.model.Group;
+import com.google.api.services.directory.model.Member;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.ExternalApproval;
 import com.google.solutions.jitaccess.core.catalog.PeerApproval;
@@ -34,8 +35,6 @@ import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.catalog.SelfApproval;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
-
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -53,7 +52,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestAssetInventoryRepository {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SELF_APPROVAL_CONDITION = "has({}.jitAccessConstraint)";
   private static final String PEER_CONDITION = "has({}.multiPartyApprovalConstraint.topic)";
@@ -126,11 +125,15 @@ public class TestAssetInventoryRepository {
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
                     .setBindings(
-                        List.of(jitBindingForUser, peerBindingForUser, peerBindingOtherTopic,
+                        List.of(jitBindingForUser,
+                            peerBindingForUser,
+                            peerBindingOtherTopic,
                             peerBindingNoTopic,
-                            externalBindingForUser, externalBindingOtherTopic,
+                            externalBindingForUser,
+                            externalBindingOtherTopic,
                             externalBindingNoTopic,
-                            reviewerBindingForUser, reviewerBindingOtherTopic,
+                            reviewerBindingForUser,
+                            reviewerBindingOtherTopic,
                             reviewerBindingNoTopic)))));
     return caiClient;
   }
@@ -247,7 +250,8 @@ public class TestAssetInventoryRepository {
   }
 
   @Test
-  public void whenEffectiveIamPoliciesContainsBindingsForUser_ThenFindProjectBindingsReturnsList() throws Exception {
+  public void whenEffectiveIamPoliciesContainsBindingsForUser_ThenFindProjectBindingsReturnsList()
+      throws Exception {
     var bindingForOtherUser = new Binding()
         .setRole("roles/for-other-user")
         .setMembers(List.of("user:other@example.com"));
@@ -296,7 +300,8 @@ public class TestAssetInventoryRepository {
   }
 
   @Test
-  public void whenEffectiveIamPoliciesContainsBindingsForGroup_ThenFindProjectBindingsReturnsList() throws Exception {
+  public void whenEffectiveIamPoliciesContainsBindingsForGroup_ThenFindProjectBindingsReturnsList()
+      throws Exception {
     var bindingForGroup1 = new Binding()
         .setRole("roles/for-group-1")
         .setMembers(List.of("group:group-1@example.com"));
@@ -370,15 +375,15 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new SelfApproval()),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    var selfApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    var selfApprovalPrivilege = privileges.available().first();
     assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, selfApprovalPrivilege.status());
   }
 
   @Test
@@ -396,15 +401,15 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    var peerApprovalPrivilege = privileges.available().first();
     assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
   }
 
   @Test
@@ -422,15 +427,15 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new PeerApproval("other_topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    var peerApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    var peerApprovalPrivilege = privileges.available().first();
     assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
   }
 
   @Test
@@ -448,22 +453,22 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new PeerApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
-    var peerPrivileges = privileges.allRequesterPrivileges();
+    var peerPrivileges = privileges.available();
     assertEquals(3, peerPrivileges.size());
 
     var peerApprovalPrivilege = peerPrivileges.stream().findFirst().get();
     assertEquals(new PeerApproval("").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
 
     peerApprovalPrivilege = peerPrivileges.stream().skip(1).findFirst().get();
     assertEquals(new PeerApproval("other_topic").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
 
     peerApprovalPrivilege = peerPrivileges.stream().skip(2).findFirst().get();
     assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
   }
 
   @Test
@@ -481,15 +486,15 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    var externalApprovalprivilege = privileges.allRequesterPrivileges().first();
+    var externalApprovalprivilege = privileges.available().first();
     assertEquals(new ExternalApproval("topic").name(), externalApprovalprivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalprivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalprivilege.status());
   }
 
   @Test
@@ -507,15 +512,16 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new ExternalApproval("other_topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
-    assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    var externalApprovalPrivilege = privileges.available().first();
+    assertEquals(new ExternalApproval("other_topic").name(),
+        externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalPrivilege.status());
   }
 
   @Test
@@ -533,22 +539,23 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new ExternalApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
-    var externalPrivileges = privileges.allRequesterPrivileges();
+    var externalPrivileges = privileges.available();
     assertEquals(3, externalPrivileges.size());
 
     var externalApprovalPrivilege = externalPrivileges.stream().findFirst().get();
     assertEquals(new ExternalApproval("").name(), externalApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalPrivilege.status());
 
     externalApprovalPrivilege = externalPrivileges.stream().skip(1).findFirst().get();
-    assertEquals(new ExternalApproval("other_topic").name(), externalApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    assertEquals(new ExternalApproval("other_topic").name(),
+        externalApprovalPrivilege.activationType().name());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalPrivilege.status());
 
     externalApprovalPrivilege = externalPrivileges.stream().skip(2).findFirst().get();
     assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalPrivilege.status());
   }
 
   @Test
@@ -567,22 +574,23 @@ public class TestAssetInventoryRepository {
         SAMPLE_PROJECT,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE));
 
     assertIterableEquals(
         List.of("roles/for-user", "roles/for-user", "roles/for-user"),
-        privileges.allRequesterPrivileges().stream().map(e -> e.id().roleBinding().role())
+        privileges.available().stream().map(e -> e.id().roleBinding().role())
             .collect(Collectors.toList()));
-    assertEquals(3, privileges.allRequesterPrivileges().size());
-    var externalApprovalPrivilege = privileges.allRequesterPrivileges().first();
+    assertEquals(3, privileges.available().size());
+    var externalApprovalPrivilege = privileges.available().first();
     assertEquals(new ExternalApproval("topic").name(), externalApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, externalApprovalPrivilege.status());
-    var peerApprovalPrivilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    assertEquals(RequesterPrivilege.Status.INACTIVE, externalApprovalPrivilege.status());
+    var peerApprovalPrivilege = privileges.available().stream().skip(1).findFirst()
+        .get();
     assertEquals(new PeerApproval("topic").name(), peerApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, peerApprovalPrivilege.status());
-    var selfApprovalPrivilege = privileges.allRequesterPrivileges().last();
+    assertEquals(RequesterPrivilege.Status.INACTIVE, peerApprovalPrivilege.status());
+    var selfApprovalPrivilege = privileges.available().last();
     assertEquals(new SelfApproval().name(), selfApprovalPrivilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, selfApprovalPrivilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, selfApprovalPrivilege.status());
 
   }
 
@@ -597,9 +605,9 @@ public class TestAssetInventoryRepository {
         .setRole("roles/for-user")
         .setCondition(new Expr()
             .setTitle(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)
-            .setExpression(IamTemporaryAccessConditions.createExpression(
+            .setExpression(new TemporaryIamCondition(
                 Instant.now().minus(2, ChronoUnit.HOURS),
-                Instant.now().minus(1, ChronoUnit.HOURS))))
+                Instant.now().minus(1, ChronoUnit.HOURS)).toString()))
         .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -611,7 +619,8 @@ public class TestAssetInventoryRepository {
             new PolicyInfo()
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
-                    .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+                    .setBindings(List.of(jitBindingForUser,
+                        expiredActivationForUser)))));
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -619,18 +628,51 @@ public class TestAssetInventoryRepository {
         caiClient,
         new AssetInventoryRepository.Options("organization/0"));
 
-    var privileges = repository.findRequesterPrivileges(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        Set.of(new SelfApproval()),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
-    var privilege = privileges.allRequesterPrivileges().first();
-    assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    //
+    // AVAILABLE + ACTIVE.
+    //
+    {
+      var privileges = repository.findRequesterPrivileges(
+          SAMPLE_USER,
+          SAMPLE_PROJECT,
+          Set.of(new SelfApproval()),
+          EnumSet.of(RequesterPrivilege.Status.INACTIVE,
+              RequesterPrivilege.Status.ACTIVE));
+      var privilege = privileges.available().first();
+      assertEquals(new SelfApproval().name(), privilege.activationType().name());
+      assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
+    }
+
+    //
+    // AVAILABLE + ACTIVE + EXPIRED.
+    //
+    {
+      var privileges = repository.findRequesterPrivileges(
+          SAMPLE_USER,
+          SAMPLE_PROJECT,
+          Set.of(new SelfApproval(), new PeerApproval("topic")),
+          EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE,
+              RequesterPrivilege.Status.EXPIRED));
+
+      assertEquals(1, privileges.available().size());
+      assertEquals(1, privileges.available().size());
+
+      var privilege = privileges.available().first();
+      assertEquals(new SelfApproval().name(), privilege.activationType().name());
+      assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
+
+      assertEquals(
+          "roles/for-user",
+          privileges.available().stream().toList().get(0).id()
+              .roleBinding()
+              .role());
+    }
+
   }
 
   @Test
-  public void whenEffectiveIamPoliciesContainsActivation_ThenFindRequesterPrivilegesReturnsList() throws Exception {
+  public void whenEffectiveIamPoliciesContainsActivation_ThenFindRequesterPrivilegesReturnsList()
+      throws Exception {
     var jitBindingForUser = new Binding()
         .setRole("roles/for-user")
         .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))
@@ -639,9 +681,9 @@ public class TestAssetInventoryRepository {
         .setRole("roles/for-user")
         .setCondition(new Expr()
             .setTitle(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)
-            .setExpression(IamTemporaryAccessConditions.createExpression(
+            .setExpression(new TemporaryIamCondition(
                 Instant.now().minus(1, ChronoUnit.HOURS),
-                Instant.now().plus(1, ChronoUnit.HOURS))))
+                Instant.now().plus(1, ChronoUnit.HOURS)).toString()))
         .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
@@ -653,7 +695,8 @@ public class TestAssetInventoryRepository {
             new PolicyInfo()
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
-                    .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+                    .setBindings(List.of(jitBindingForUser,
+                        expiredActivationForUser)))));
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -665,10 +708,11 @@ public class TestAssetInventoryRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT,
         Set.of(new SelfApproval(), new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
-    var privilege = privileges.allRequesterPrivileges().first();
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
+    var privilege = privileges.available().first();
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
+
   }
 
   // ---------------------------------------------------------------------------
@@ -700,7 +744,9 @@ public class TestAssetInventoryRepository {
             new PolicyInfo()
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
-                    .setBindings(List.of(otherBinding1, otherBinding2, otherBinding3)))));
+                    .setBindings(List.of(otherBinding1,
+                        otherBinding2,
+                        otherBinding3)))));
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -732,16 +778,20 @@ public class TestAssetInventoryRepository {
                 .setPolicy(new Policy()
                     .setBindings(List.of(new Binding()
                         .setRole(role.role())
-                        .setCondition(new Expr().setExpression(PEER_CONDITION))
-                        .setMembers(List.of("user:user-1@example.com",
+                        .setCondition(new Expr()
+                            .setExpression(PEER_CONDITION))
+                        .setMembers(List.of(
+                            "user:user-1@example.com",
                             "user:user-2@example.com"))))),
             new PolicyInfo()
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
                     .setBindings(List.of(new Binding()
                         .setRole(role.role())
-                        .setCondition(new Expr().setExpression(PEER_CONDITION))
-                        .setMembers(List.of("user:user-2@example.com")))))));
+                        .setCondition(new Expr()
+                            .setExpression(PEER_CONDITION))
+                        .setMembers(List.of(
+                            "user:user-2@example.com")))))));
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -755,12 +805,13 @@ public class TestAssetInventoryRepository {
 
     assertNotNull(holders);
     assertEquals(
-        Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com")),
+        Set.of(new UserEmail("user-1@example.com"), new UserEmail("user-2@example.com")),
         holders);
   }
 
   @Test
-  public void whenEffectiveIamPoliciesContainsGroups_ThenfindReviewerPrivelegeHoldersReturnsList() throws Exception {
+  public void whenEffectiveIamPoliciesContainsGroups_ThenfindReviewerPrivelegeHoldersReturnsList()
+      throws Exception {
     var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
 
     var groupBinding = new Binding()
@@ -801,7 +852,9 @@ public class TestAssetInventoryRepository {
                 .setAttachedResource(SAMPLE_PROJECT.path())
                 .setPolicy(new Policy()
                     .setBindings(
-                        List.of(groupBinding, groupBindingNoTopic, unavailableGroupBinding)))));
+                        List.of(groupBinding,
+                            groupBindingNoTopic,
+                            unavailableGroupBinding)))));
 
     var repository = new AssetInventoryRepository(
         new SynchronousExecutor(),
@@ -815,8 +868,8 @@ public class TestAssetInventoryRepository {
 
     assertNotNull(holders);
     assertEquals(
-        Set.of(new UserId("user-1@example.com"), new UserId("user-2@example.com"),
-            new UserId("user-3@example.com"), new UserId("user-4@example.com")),
+        Set.of(new UserEmail("user-1@example.com"), new UserEmail("user-2@example.com"),
+            new UserEmail("user-3@example.com"), new UserEmail("user-4@example.com")),
         holders);
   }
 }

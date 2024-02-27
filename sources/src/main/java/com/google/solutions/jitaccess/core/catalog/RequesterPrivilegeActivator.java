@@ -25,7 +25,10 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.UserId;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -36,12 +39,12 @@ import java.util.Set;
  * Activates requester privileges, for example by modifying IAM policies.
  */
 public abstract class RequesterPrivilegeActivator<TPrivilegeId extends PrivilegeId> {
-  private final JustificationPolicy policy;
-  private final RequesterPrivilegeCatalog<TPrivilegeId> catalog;
+  private final @NotNull JustificationPolicy policy;
+  private final @NotNull RequesterPrivilegeCatalog<TPrivilegeId> catalog;
 
   protected RequesterPrivilegeActivator(
-      RequesterPrivilegeCatalog<TPrivilegeId> catalog,
-      JustificationPolicy policy) {
+      @NotNull RequesterPrivilegeCatalog<TPrivilegeId> catalog,
+      @NotNull JustificationPolicy policy) {
     Preconditions.checkNotNull(catalog, "catalog");
     Preconditions.checkNotNull(policy, "policy");
 
@@ -52,12 +55,12 @@ public abstract class RequesterPrivilegeActivator<TPrivilegeId extends Privilege
   /**
    * Create a new request to activate a privilege.
    */
-  public final ActivationRequest<TPrivilegeId> createActivationRequest(
-      UserId requestingUser,
-      Set<UserId> reviewers,
+  public final @NotNull ActivationRequest<TPrivilegeId> createActivationRequest(
+      UserEmail requestingUser,
+      Set<UserEmail> reviewers,
       RequesterPrivilege<TPrivilegeId> requesterPrivilege,
       String justification,
-      Instant startTime,
+      @NotNull Instant startTime,
       Duration duration) throws AccessException, IOException {
     Preconditions.checkArgument(
         startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
@@ -80,9 +83,9 @@ public abstract class RequesterPrivilegeActivator<TPrivilegeId extends Privilege
   /**
    * Approve another user's request.
    */
-  public final Activation<TPrivilegeId> approve(
-      UserId approvingUser,
-      ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException {
+  public final @NotNull Activation<TPrivilegeId> approve(
+      @NotNull UserEmail approvingUser,
+      @NotNull ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(policy, "policy");
 
     if (!(request.reviewers().contains(approvingUser)
@@ -119,7 +122,7 @@ public abstract class RequesterPrivilegeActivator<TPrivilegeId extends Privilege
    * Apply a request.
    */
   protected abstract void provisionAccess(
-      UserId approvingUser,
+      UserEmail approvingUser,
       ActivationRequest<TPrivilegeId> request) throws AccessException, AlreadyExistsException, IOException;
 
   /**

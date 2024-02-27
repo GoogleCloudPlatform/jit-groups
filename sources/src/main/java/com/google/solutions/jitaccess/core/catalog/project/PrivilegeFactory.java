@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.ExternalApproval;
 import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
@@ -94,7 +95,8 @@ class PrivilegeFactory {
 
   /** Check if the IAM condition indicates an activated role binding */
   public static boolean isActivated(Expr iamCondition) {
-    return iamCondition != null && ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle());
+    return iamCondition != null && ACTIVATION_CONDITION_TITLE.equals(iamCondition.getTitle())
+        && TemporaryIamCondition.isTemporaryAccessCondition(iamCondition.getExpression());
   }
 
   public static Optional<RequesterPrivilege<ProjectRoleBinding>> createRequesterPrivilege(
@@ -105,19 +107,19 @@ class PrivilegeFactory {
           .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
               projectRoleBinding.roleBinding().role(),
               new SelfApproval(),
-              Status.AVAILABLE));
+              Status.INACTIVE));
     } else if (isMatchingCondition(iamCondition, PEER_CONDITION_PATTERN)) {
       String topic = getTopic(iamCondition, PEER_CONDITION_PATTERN);
       return Optional
           .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
               projectRoleBinding.roleBinding().role(), new PeerApproval(topic),
-              Status.AVAILABLE));
+              Status.INACTIVE));
     } else if (isMatchingCondition(iamCondition, REQUESTER_CONDITION_PATTERN)) {
       String topic = getTopic(iamCondition, REQUESTER_CONDITION_PATTERN);
       return Optional
           .of(new RequesterPrivilege<ProjectRoleBinding>(projectRoleBinding,
               projectRoleBinding.roleBinding().role(), new ExternalApproval(topic),
-              Status.AVAILABLE));
+              Status.INACTIVE));
     } else {
       return Optional.empty();
     }

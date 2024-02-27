@@ -21,6 +21,9 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Comparator;
 
 /**
@@ -43,7 +46,7 @@ public abstract class PrivilegeId implements Comparable<PrivilegeId> {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -62,7 +65,7 @@ public abstract class PrivilegeId implements Comparable<PrivilegeId> {
   }
 
   @Override
-  public int compareTo(PrivilegeId o) {
+  public int compareTo(@NotNull PrivilegeId o) {
     return Comparator
         .comparing((PrivilegeId e) -> e.catalog())
         .thenComparing(e -> e.id())

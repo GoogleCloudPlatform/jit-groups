@@ -22,84 +22,35 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import autovalue.shaded.org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Set of requester privileges
  *
- * @param availableRequesterPrivileges available requester privileges,
- *                                     regardless of status
- * @param activeRequesterPrivilegeIds  IDs of active requester privileges.
- * @param warnings                     encountered warnings, if any.
+ * @param available available and active requester privileges
+ * @param expired   previously active requester privileges
+ * @param warnings  encountered warnings, if any.
  */
 public record RequesterPrivilegeSet<TPrivilegeId extends PrivilegeId>(
-    Set<RequesterPrivilege<TPrivilegeId>> availableRequesterPrivileges,
-    Set<TPrivilegeId> activeRequesterPrivilegeIds,
-    Set<String> warnings) {
-  public RequesterPrivilegeSet {
-    Preconditions.checkNotNull(availableRequesterPrivileges, "availableRequesterPrivileges");
-    Preconditions.checkNotNull(activeRequesterPrivilegeIds, "activeRequesterPrivilegeIds");
+    @NotNull SortedSet<RequesterPrivilege<TPrivilegeId>> available,
+    @NotNull SortedSet<RequesterPrivilege<TPrivilegeId>> expired,
+    @NotNull Set<String> warnings) {
+
+  public RequesterPrivilegeSet
+
+  {
+    Preconditions.checkNotNull(available, "available");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.AVAILABLE);
+    assert available.stream().allMatch(e -> e.status() != RequesterPrivilege.Status.EXPIRED);
+    assert expired.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.EXPIRED);
   }
 
-  /**
-   * @return consolidated set of requester privileges including available and
-   *         active ones.
-   */
-  public SortedSet<RequesterPrivilege<TPrivilegeId>> allRequesterPrivileges() {
-    //
-    // Return a set containing:
-    //
-    // 1. Available privileges
-    // 2. Active privileges
-    //
-    // where (1) and (2) don't overlap.
-    //
-    var availableAndInactive = this.availableRequesterPrivileges
-        .stream()
-        .filter(privilege -> !this.activeRequesterPrivilegeIds.contains(privilege.id()))
-        .collect(Collectors.toCollection(TreeSet::new));
-
-    assert availableAndInactive.stream().noneMatch(e -> this.activeRequesterPrivilegeIds.contains(e.id()));
-
-    var consolidatedSet = new TreeSet<RequesterPrivilege<TPrivilegeId>>(availableAndInactive);
-    for (TPrivilegeId activeRequesterPrivilegeId : this.activeRequesterPrivilegeIds) {
-      //
-      // Find the corresponding privilege to determine
-      // whether this is eligible.
-      //
-      var correspondingRequesterPrivilege = this.availableRequesterPrivileges
-          .stream()
-          .filter(privilege -> privilege.id().equals(activeRequesterPrivilegeId))
-          .findFirst();
-      if (correspondingRequesterPrivilege.isPresent()) {
-        consolidatedSet.add(new RequesterPrivilege<>(
-            activeRequesterPrivilegeId,
-            correspondingRequesterPrivilege.get().name(),
-            correspondingRequesterPrivilege.get().activationType(),
-            RequesterPrivilege.Status.ACTIVE));
-      } else {
-        //
-        // Active, but no longer available for activation.
-        //
-        consolidatedSet.add(new RequesterPrivilege<>(
-            activeRequesterPrivilegeId,
-            activeRequesterPrivilegeId.id(),
-            new NoActivation(),
-            RequesterPrivilege.Status.ACTIVE));
-      }
-    }
-
-    return consolidatedSet;
-  }
-
-  public static <TPrivilegeId extends PrivilegeId> RequesterPrivilegeSet<TPrivilegeId> empty() {
-    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), Set.of(), Set.of());
+  public static @NotNull <TPrivilegeId extends PrivilegeId> RequesterPrivilegeSet<TPrivilegeId> empty() {
+    return new RequesterPrivilegeSet<TPrivilegeId>(new TreeSet<>(), new TreeSet<>(), Set.of());
   }
 }

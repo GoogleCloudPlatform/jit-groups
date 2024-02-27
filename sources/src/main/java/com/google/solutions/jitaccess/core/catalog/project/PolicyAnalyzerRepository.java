@@ -23,18 +23,22 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
+import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysisResult;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,13 +50,13 @@ import java.util.stream.Stream;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class PolicyAnalyzerRepository implements ProjectRoleRepository {
-  private final Options options;
-  private final PolicyAnalyzerClient policyAnalyzerClient;
+public class PolicyAnalyzerRepository extends ProjectRoleRepository {
+  private final @NotNull Options options;
+  private final @NotNull PolicyAnalyzerClient policyAnalyzerClient;
 
   public PolicyAnalyzerRepository(
-      PolicyAnalyzerClient policyAnalyzerClient,
-      Options options) {
+      @NotNull PolicyAnalyzerClient policyAnalyzerClient,
+      @NotNull Options options) {
     Preconditions.checkNotNull(policyAnalyzerClient, "assetInventoryClient");
     Preconditions.checkNotNull(options, "options");
 
@@ -60,10 +64,17 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
     this.options = options;
   }
 
-  static List<RoleBinding> findRoleBindings(
-      IamPolicyAnalysis analysisResult,
-      Predicate<Expr> conditionPredicate,
-      Predicate<String> conditionEvaluationPredicate) {
+  private record ConditionalRoleBinding(RoleBinding binding, Expr condition) {
+  }
+
+  static List<ConditionalRoleBinding> findRoleBindings(
+      @NotNull IamPolicyAnalysis analysisResult,
+      @NotNull Predicate<Expr> conditionPredicate,
+      @NotNull Predicate<String> conditionEvaluationPredicate) {
+    Function<IamPolicyAnalysisResult, Expr> getIamCondition = res -> res.getIamBinding() != null
+        ? res.getIamBinding().getCondition()
+        : null;
+
     //
     // NB. We don't really care which resource a policy is attached to
     // (indicated by AttachedResourceFullName). Instead, we care about
@@ -73,9 +84,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .flatMap(Collection::stream)
 
         // Narrow down to IAM bindings with a specific IAM condition.
-        .filter(result -> conditionPredicate.test(result.getIamBinding() != null
-            ? result.getIamBinding().getCondition()
-            : null))
+        .filter(result -> conditionPredicate.test(getIamCondition.apply(result)))
         .flatMap(result -> result
             .getAccessControlLists()
             .stream()
@@ -89,9 +98,11 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
             .flatMap(acl -> acl.getResources()
                 .stream()
                 .filter(res -> ProjectId.isProjectFullResourceName(res.getFullResourceName()))
-                .map(res -> new RoleBinding(
-                    res.getFullResourceName(),
-                    result.getIamBinding().getRole()))))
+                .map(res -> new ConditionalRoleBinding(
+                    new RoleBinding(
+                        res.getFullResourceName(),
+                        result.getIamBinding().getRole()),
+                    getIamCondition.apply(result)))))
         .collect(Collectors.toList());
   }
 
@@ -100,8 +111,8 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
   // ---------------------------------------------------------------------------
 
   @Override
-  public SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
-      UserId user) throws AccessException, IOException {
+  public @NotNull SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+      UserEmail user) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
 
@@ -142,16 +153,16 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
     return roleBindings
         .stream()
-        .map(b -> ProjectId.fromFullResourceName(b.fullResourceName()))
+        .map(b -> ProjectId.fromFullResourceName(b.binding.fullResourceName()))
         .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Override
-  public RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
-      UserId user,
-      ProjectId projectId,
-      Set<ActivationType> typesToInclude,
-      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
+  public @NotNull RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      UserEmail user,
+      @NotNull ProjectId projectId,
+      @NotNull Set<ActivationType> typesToInclude,
+      @NotNull EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
     Preconditions.checkNotNull(projectId, "projectId");
@@ -177,7 +188,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         false);
 
     var allAvailable = new TreeSet<RequesterPrivilege<ProjectRoleBinding>>();
-    if (statusesToInclude.contains(RequesterPrivilege.Status.AVAILABLE)) {
+    if (statusesToInclude.contains(RequesterPrivilege.Status.INACTIVE)) {
 
       allAvailable.addAll(Stream.ofNullable(analysisResult.getAnalysisResults())
           .flatMap(Collection::stream)
@@ -192,12 +203,12 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
           .collect(Collectors.toSet()));
     }
 
-    var allActive = new HashSet<ProjectRoleBinding>();
+    var allActive = new HashSet<ActivatedRequesterPrivilege<ProjectRoleBinding>>();
     if (statusesToInclude.contains(RequesterPrivilege.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
       // These bindings have a time condition that we created, and
-      // the condition evaluates to true (indicating it's still
+      // the condition evaluates to TRUE (indicating it's still
       // valid).
       //
 
@@ -208,7 +219,28 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       allActive.addAll(activeBindings
           .stream()
-          .map(b -> new ProjectRoleBinding(b))
+          .map(conditionalBinding -> new ActivatedRequesterPrivilege<ProjectRoleBinding>(
+              new ProjectRoleBinding(conditionalBinding.binding),
+              new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
+          .collect(Collectors.toSet()));
+    }
+
+    var allExpired = new HashSet<ActivatedRequesterPrivilege<ProjectRoleBinding>>();
+    if (statusesToInclude.contains(RequesterPrivilege.Status.EXPIRED)) {
+      //
+      // Do the same for conditions that evaluated to FALSE.
+      //
+
+      var activeBindings = findRoleBindings(
+          analysisResult,
+          condition -> PrivilegeFactory.isActivated(condition),
+          evalResult -> "FALSE".equalsIgnoreCase(evalResult));
+
+      allExpired.addAll(activeBindings
+          .stream()
+          .map(conditionalBinding -> new ActivatedRequesterPrivilege<ProjectRoleBinding>(
+              new ProjectRoleBinding(conditionalBinding.binding),
+              new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
           .collect(Collectors.toSet()));
     }
 
@@ -217,13 +249,13 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .map(e -> e.getCause())
         .collect(Collectors.toSet());
 
-    return new RequesterPrivilegeSet<>(allAvailable, allActive, warnings);
+    return buildRequesterPrivilegeSet(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override
-  public Set<UserId> findReviewerPrivelegeHolders(
-      ProjectRoleBinding roleBinding,
-      ActivationType activationType) throws AccessException, IOException {
+  public @NotNull Set<UserEmail> findReviewerPrivelegeHolders(
+      @NotNull ProjectRoleBinding roleBinding,
+      @NotNull ActivationType activationType) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
     assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
@@ -249,7 +281,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .filter(result -> result.getIdentityList() != null)
         .flatMap(result -> result.getIdentityList().getIdentities().stream()
             .filter(id -> id.getName().startsWith("user:"))
-            .map(id -> new UserId(id.getName().substring("user:".length()))))
+            .map(id -> new UserEmail(id.getName().substring("user:".length()))))
 
         .collect(Collectors.toCollection(TreeSet::new));
   }

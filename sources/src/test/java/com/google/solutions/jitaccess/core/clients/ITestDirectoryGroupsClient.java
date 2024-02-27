@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestDirectoryGroupsClient {
+public class ITestDirectoryGroupsClient {
   private final String INVALID_CUSTOMER_ID = "Cinvalid";
   // ---------------------------------------------------------------------
   // listDirectGroupMemberships.
@@ -37,37 +37,37 @@ public class TestDirectoryGroupsClient {
   @Test
   public void whenUnauthenticated_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         NotAuthenticatedException.class,
-        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        () -> adapter.listDirectGroupMemberships(ITestEnvironment.NO_ACCESS_USER));
   }
 
   @Test
   public void whenUserFromUnknownDomain_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        () -> adapter.listDirectGroupMemberships(ITestEnvironment.NO_ACCESS_USER));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembershipsThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         ResourceNotFoundException.class,
-        () -> adapter.listDirectGroupMemberships(IntegrationTestEnvironment.NO_ACCESS_USER));
+        () -> adapter.listDirectGroupMemberships(ITestEnvironment.NO_ACCESS_USER));
   }
 
   // ---------------------------------------------------------------------
@@ -77,7 +77,7 @@ public class TestDirectoryGroupsClient {
   @Test
   public void whenUnauthenticated_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 
@@ -89,7 +89,7 @@ public class TestDirectoryGroupsClient {
   @Test
   public void whenCallerLacksPermission_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 
@@ -101,7 +101,7 @@ public class TestDirectoryGroupsClient {
   @Test
   public void whenGroupDoesNotExist_ThenListDirectGroupMembersThrowsException() {
     var adapter = new DirectoryGroupsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         new DirectoryGroupsClient.Options(INVALID_CUSTOMER_ID),
         HttpTransport.Options.DEFAULT);
 

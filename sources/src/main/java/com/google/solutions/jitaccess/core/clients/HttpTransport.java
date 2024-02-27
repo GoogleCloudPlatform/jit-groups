@@ -27,6 +27,7 @@ import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.auth.Credentials;
 import com.google.auth.http.HttpCredentialsAdapter;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class HttpTransport {
   private HttpTransport() {
   }
 
-  public static NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
+  public static @NotNull NetHttpTransport newTransport() throws GeneralSecurityException, IOException {
     var trustStore = System.getProperty("javax.net.ssl.trustStore");
     var trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
 
@@ -70,12 +71,12 @@ public class HttpTransport {
     }
   }
 
-  public static HttpRequestInitializer newAuthenticatingRequestInitializer(
-      Credentials credentials,
-      Options httpOptions) {
+  public static @NotNull HttpRequestInitializer newAuthenticatingRequestInitializer(
+      @NotNull Credentials credentials,
+      @NotNull Options httpOptions) {
     return new HttpCredentialsAdapter(credentials) {
       @Override
-      public void initialize(HttpRequest request) throws IOException {
+      public void initialize(@NotNull HttpRequest request) throws IOException {
         super.initialize(request);
 
         if (!httpOptions.readTimeout.isZero()) {
@@ -97,6 +98,6 @@ public class HttpTransport {
       Duration connectTimeout,
       Duration readTimeout,
       Duration writeTimeout) {
-    public static Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
+    public static @NotNull Options DEFAULT = new Options(Duration.ZERO, Duration.ZERO, Duration.ZERO);
   }
 }

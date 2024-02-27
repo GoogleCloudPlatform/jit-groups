@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -36,9 +38,9 @@ public class ThrowingCompletableFuture {
     T supply() throws Exception;
   }
 
-  public static <T> CompletableFuture<T> submit(
-      ThrowingSupplier<T> supplier,
-      Executor executor) {
+  public static <T> @NotNull CompletableFuture<T> submit(
+      @NotNull ThrowingSupplier<T> supplier,
+      @NotNull Executor executor) {
     var future = new CompletableFuture<T>();
     executor.execute(() -> {
       try {

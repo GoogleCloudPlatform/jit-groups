@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestRegexActivationPolicy {
 
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user@example.com");
 
   // -------------------------------------------------------------------------
   // checkJustification.

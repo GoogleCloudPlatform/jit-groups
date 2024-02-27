@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -22,35 +22,27 @@
 package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class UserId implements Comparable<UserId> {
-  public final transient String id;
-  public final String email;
+/**
+ * Primary email address and unique ID of a user.
+ */
+public class UserId extends UserEmail {
+  public final transient @NotNull String id;
 
-  public UserId(String id, String email) {
-    Preconditions.checkNotNull(email, "email");
+  public UserId(@NotNull String id, String email) {
+    super(email);
+
+    Preconditions.checkNotNull(id, "id");
 
     this.id = id;
-    this.email = email;
-  }
-
-  public UserId(String email) {
-    this(null, email);
   }
 
   @Override
-  public String toString() {
-    return this.email;
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -59,17 +51,16 @@ public class UserId implements Comparable<UserId> {
       return false;
     }
 
+    if (!super.equals(o)) {
+      return false;
+    }
+
     UserId userId = (UserId) o;
-    return email.equals(userId.email);
+    return this.id.equals(userId.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(email);
-  }
-
-  @Override
-  public int compareTo(UserId o) {
-    return this.email.compareTo(o.email);
+    return Objects.hash(super.hashCode(), id);
   }
 }

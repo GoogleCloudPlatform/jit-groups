@@ -22,18 +22,23 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.*;
+import com.google.api.services.directory.model.Privilege;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ExternalApproval;
 import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.SelfApproval;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -45,9 +50,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestPolicyAnalyzerRepository {
-  private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
-  private static final UserId SAMPLE_APPROVING_USER_1 = new UserId("approver-1", "approver-1@example.com");
-  private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2", "approver-2@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER_1 = new UserEmail("approver-1@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER_2 = new UserEmail("approver-2@example.com");
   private static final ProjectId SAMPLE_PROJECT_ID_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_ID_2 = new ProjectId("project-2");
   private static final ProjectId SAMPLE_PROJECT_ID_3 = new ProjectId("project-3");
@@ -63,11 +68,15 @@ public class TestPolicyAnalyzerRepository {
   private static final String REQUESTER_CONDITION_OTHER_TOPIC = "has({}.externalApprovalConstraint.other_topic)";
   private static final String REQUESTER_CONDITION_NO_TOPIC = "has({}.externalApprovalConstraint)";
   private static final String REVIEWER_CONDITION = "has({}.reviewerPrivilege.topic)";
+  private static final String VALID_TEMPORARY_CONDITION = new TemporaryIamCondition(Instant.now(),
+      Instant.now().plus(1, ChronoUnit.HOURS)).toString();
+  private static final String EXPIRED_TEMPORARY_CONDITION = new TemporaryIamCondition(Instant.EPOCH,
+      Instant.now().minus(1, ChronoUnit.HOURS)).toString();
 
   private static IamPolicyAnalysisResult createIamPolicyAnalysisResult(
       String resource,
       String role,
-      UserId user) {
+      UserEmail user) {
     return new IamPolicyAnalysisResult()
         .setAttachedResourceFullName(resource)
         .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
@@ -81,7 +90,7 @@ public class TestPolicyAnalyzerRepository {
   private static IamPolicyAnalysisResult createConditionalIamPolicyAnalysisResult(
       String resource,
       String role,
-      UserId user,
+      UserEmail user,
       String condition,
       String conditionTitle,
       String evaluationResult) {
@@ -100,10 +109,12 @@ public class TestPolicyAnalyzerRepository {
                 .setExpression(condition)))
         .setIdentityList(new GoogleCloudAssetV1IdentityList()
             .setIdentities(List.of(
-                new GoogleCloudAssetV1Identity().setName("user:" + user.email),
+                new GoogleCloudAssetV1Identity()
+                    .setName("user:" + user.email),
                 new GoogleCloudAssetV1Identity()
                     .setName("serviceAccount:ignoreme@x.iam.gserviceaccount.com"),
-                new GoogleCloudAssetV1Identity().setName("group:ignoreme@example.com"))));
+                new GoogleCloudAssetV1Identity().setName(
+                    "group:ignoreme@example.com"))));
   }
 
   // ---------------------------------------------------------------------
@@ -148,7 +159,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     "a==b",
@@ -180,7 +192,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER))));
 
@@ -210,28 +223,32 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     SELF_APPROVAL_CONDITION,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_2.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_2
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_3.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_3
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_3.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_3
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REVIEWER_CONDITION,
@@ -276,13 +293,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -299,8 +316,11 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 new IamPolicyAnalysisResult()
-                    .setAttachedResourceFullName(SAMPLE_PROJECT_ID_1.getFullResourceName())
-                    .setIamBinding(new Binding().setRole("role")))));
+                    .setAttachedResourceFullName(
+                        SAMPLE_PROJECT_ID_1
+                            .getFullResourceName())
+                    .setIamBinding(new Binding()
+                        .setRole("role")))));
 
     var service = new PolicyAnalyzerRepository(
         assetAdapter,
@@ -311,13 +331,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -334,7 +354,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER))));
 
@@ -347,13 +368,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -370,7 +391,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     SELF_APPROVAL_CONDITION,
@@ -386,20 +408,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -417,14 +439,16 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     SELF_APPROVAL_CONDITION,
                     "eligible binding #1",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     SELF_APPROVAL_CONDITION,
@@ -440,20 +464,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -471,7 +495,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION,
@@ -487,20 +512,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -518,7 +543,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION_OTHER_TOPIC,
@@ -534,13 +560,12 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
-
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -558,7 +583,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION_NO_TOPIC,
@@ -574,13 +600,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -598,21 +624,24 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION_OTHER_TOPIC,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION_NO_TOPIC,
@@ -628,34 +657,34 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval(""),
             new ExternalApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(3, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("other_topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -673,14 +702,16 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION,
                     "eligible binding # 1",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     PEER_CONDITION,
@@ -696,20 +727,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -727,7 +758,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION,
@@ -743,20 +775,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -774,7 +806,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION_OTHER_TOPIC,
@@ -790,13 +823,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -814,7 +847,8 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION_NO_TOPIC,
@@ -830,13 +864,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -854,21 +888,24 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION_OTHER_TOPIC,
                     "eligible binding",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION_NO_TOPIC,
@@ -884,34 +921,34 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval(""),
             new ExternalApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(3, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("other_topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -929,14 +966,16 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION,
                     "eligible binding # 1",
                     "CONDITIONAL"),
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
                     REQUESTER_CONDITION,
@@ -952,20 +991,20 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -1004,8 +1043,9 @@ public class TestPolicyAnalyzerRepository {
         eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
         eq(false)))
         .thenReturn(new IamPolicyAnalysis()
-            .setAnalysisResults(List.of(jitEligibleBinding, peerApprovalEligibleBinding,
-                externalApprovalEligibleBinding)));
+            .setAnalysisResults(
+                List.of(jitEligibleBinding, peerApprovalEligibleBinding,
+                    externalApprovalEligibleBinding)));
 
     var service = new PolicyAnalyzerRepository(
         assetAdapter,
@@ -1016,31 +1056,31 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(3, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_3, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_2, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.allRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
@@ -1079,8 +1119,9 @@ public class TestPolicyAnalyzerRepository {
         eq(Optional.of(SAMPLE_PROJECT_ID_1.getFullResourceName())),
         eq(false)))
         .thenReturn(new IamPolicyAnalysis()
-            .setAnalysisResults(List.of(jitEligibleBinding, peerApprovalEligibleBinding,
-                externalApprovalEligibleBinding)));
+            .setAnalysisResults(
+                List.of(jitEligibleBinding, peerApprovalEligibleBinding,
+                    externalApprovalEligibleBinding)));
 
     var service = new PolicyAnalyzerRepository(
         assetAdapter,
@@ -1092,74 +1133,75 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic"),
             new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(allPrivileges.warnings());
     assertEquals(0, allPrivileges.warnings().size());
 
-    assertNotNull(allPrivileges.allRequesterPrivileges());
-    assertEquals(3, allPrivileges.allRequesterPrivileges().size());
+    assertNotNull(allPrivileges.available());
+    assertEquals(3, allPrivileges.available().size());
 
-    var privilege = allPrivileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = allPrivileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = allPrivileges.allRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = allPrivileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = allPrivileges.allRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = allPrivileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
     // Self approval only -> Other bindings are ignored.
     var selfApprovalPrivilege = service.findRequesterPrivileges(
         SAMPLE_USER,
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval()),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, selfApprovalPrivilege.allRequesterPrivileges().size());
-    privilege = selfApprovalPrivilege.allRequesterPrivileges().stream().findFirst().get();
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
+    assertEquals(1, selfApprovalPrivilege.available().size());
+    privilege = selfApprovalPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
     // Peer only -> Other bindings are ignored.
     var peerPrivilege = service.findRequesterPrivileges(
         SAMPLE_USER,
         SAMPLE_PROJECT_ID_1,
         Set.of(new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, peerPrivilege.allRequesterPrivileges().size());
-    privilege = peerPrivilege.allRequesterPrivileges().stream().findFirst().get();
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
+    assertEquals(1, peerPrivilege.available().size());
+    privilege = peerPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
     // External only -> Other bindings are ignored.
     var requesterPrivilege = service.findRequesterPrivileges(
         SAMPLE_USER,
         SAMPLE_PROJECT_ID_1,
         Set.of(new ExternalApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, peerPrivilege.allRequesterPrivileges().size());
-    privilege = requesterPrivilege.allRequesterPrivileges().stream().findFirst().get();
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
+    assertEquals(1, peerPrivilege.available().size());
+    privilege = requesterPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.AVAILABLE, privilege.status());
+    assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
   }
 
   @Test
-  public void whenAnalysisContainsActivatedBinding_ThenFindRequesterPrivilegesReturnsMergedList() throws Exception {
+  public void whenAnalysisContainsActivatedBinding_ThenFindRequesterPrivilegesReturnsMergedList()
+      throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var eligibleBinding = createConditionalIamPolicyAnalysisResult(
@@ -1174,7 +1216,7 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1.getFullResourceName(),
         SAMPLE_ROLE_1,
         SAMPLE_USER,
-        "time ...",
+        VALID_TEMPORARY_CONDITION,
         PrivilegeFactory.ACTIVATION_CONDITION_TITLE,
         "TRUE");
 
@@ -1182,7 +1224,7 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1.getFullResourceName(),
         SAMPLE_ROLE_1,
         SAMPLE_USER,
-        "time ...",
+        EXPIRED_TEMPORARY_CONDITION,
         PrivilegeFactory.ACTIVATION_CONDITION_TITLE,
         "FALSE");
 
@@ -1203,23 +1245,60 @@ public class TestPolicyAnalyzerRepository {
         assetAdapter,
         new PolicyAnalyzerRepository.Options("organizations/0"));
 
-    var privileges = service.findRequesterPrivileges(
-        SAMPLE_USER,
-        SAMPLE_PROJECT_ID_1,
-        Set.of(new SelfApproval(), new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+    {
+      //
+      // AVAILABLE + ACTIVE.
+      //
+      var privileges = service.findRequesterPrivileges(
+          SAMPLE_USER,
+          SAMPLE_PROJECT_ID_1,
+          Set.of(new SelfApproval(), new PeerApproval("topic")),
+          EnumSet.of(RequesterPrivilege.Status.INACTIVE,
+              RequesterPrivilege.Status.ACTIVE));
 
-    assertNotNull(privileges.warnings());
-    assertEquals(0, privileges.warnings().size());
+      assertNotNull(privileges.warnings());
+      assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+      assertNotNull(privileges.available());
+      assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
-    assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
-    assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
-    assertEquals(new SelfApproval().name(), privilege.activationType().name());
-    assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
+      var privilege = privileges.available().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
+      assertEquals(new SelfApproval().name(), privilege.activationType().name());
+      assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
+    }
+
+    //
+    // AVAILABLE + ACTIVE + EXPIRED.
+    //
+    {
+      var privileges = service.findRequesterPrivileges(
+          SAMPLE_USER,
+          SAMPLE_PROJECT_ID_1,
+          Set.of(new SelfApproval(), new PeerApproval("topic")),
+          EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE,
+              RequesterPrivilege.Status.EXPIRED));
+
+      assertNotNull(privileges.warnings());
+      assertEquals(0, privileges.warnings().size());
+
+      assertNotNull(privileges.available());
+      assertEquals(1, privileges.available().size());
+      assertEquals(1, privileges.expired().size());
+
+      var active = privileges.available().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, active.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, active.id().roleBinding().role());
+      assertEquals(new SelfApproval().name(), active.activationType().name());
+      assertEquals(RequesterPrivilege.Status.ACTIVE, active.status());
+
+      var expired = privileges.expired().stream().findFirst().get();
+      assertEquals(SAMPLE_PROJECT_ID_1, expired.id().projectId());
+      assertEquals(SAMPLE_ROLE_1, expired.id().roleBinding().role());
+      assertEquals(new SelfApproval().name(), expired.activationType().name());
+      assertEquals(RequesterPrivilege.Status.EXPIRED, expired.status());
+    }
   }
 
   @Test
@@ -1237,10 +1316,12 @@ public class TestPolicyAnalyzerRepository {
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(
                 createConditionalIamPolicyAnalysisResult(
-                    SAMPLE_PROJECT_ID_1.getFullResourceName(),
+                    SAMPLE_PROJECT_ID_1
+                        .getFullResourceName(),
                     SAMPLE_ROLE_1,
                     SAMPLE_USER,
-                    SELF_APPROVAL_CONDITION + " && resource.name=='Foo'",
+                    SELF_APPROVAL_CONDITION
+                        + " && resource.name=='Foo'",
                     "eligible binding with extra junk",
                     "CONDITIONAL"))));
 
@@ -1252,13 +1333,13 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(0, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -1268,18 +1349,22 @@ public class TestPolicyAnalyzerRepository {
 
     var parentFolderAcl = new GoogleCloudAssetV1AccessControlList()
         .setResources(List.of(new GoogleCloudAssetV1Resource()
-            .setFullResourceName("//cloudresourcemanager.googleapis.com/folders/folder-1")))
+            .setFullResourceName(
+                "//cloudresourcemanager.googleapis.com/folders/folder-1")))
         .setConditionEvaluation(new ConditionEvaluation()
             .setEvaluationValue("CONDITIONAL"));
 
     var childFolderAndProjectAcl = new GoogleCloudAssetV1AccessControlList()
         .setResources(List.of(
             new GoogleCloudAssetV1Resource()
-                .setFullResourceName("//cloudresourcemanager.googleapis.com/folders/folder-1"),
+                .setFullResourceName(
+                    "//cloudresourcemanager.googleapis.com/folders/folder-1"),
             new GoogleCloudAssetV1Resource()
-                .setFullResourceName(SAMPLE_PROJECT_ID_1.getFullResourceName()),
+                .setFullResourceName(SAMPLE_PROJECT_ID_1
+                    .getFullResourceName()),
             new GoogleCloudAssetV1Resource()
-                .setFullResourceName(SAMPLE_PROJECT_ID_2.getFullResourceName())))
+                .setFullResourceName(SAMPLE_PROJECT_ID_2
+                    .getFullResourceName())))
         .setConditionEvaluation(new ConditionEvaluation()
             .setEvaluationValue("CONDITIONAL"));
 
@@ -1292,14 +1377,17 @@ public class TestPolicyAnalyzerRepository {
             eq(false)))
         .thenReturn(new IamPolicyAnalysis()
             .setAnalysisResults(List.of(new IamPolicyAnalysisResult()
-                .setAttachedResourceFullName("//cloudresourcemanager.googleapis.com/folders/folder-1")
+                .setAttachedResourceFullName(
+                    "//cloudresourcemanager.googleapis.com/folders/folder-1")
                 .setAccessControlLists(List.of(
                     parentFolderAcl,
                     childFolderAndProjectAcl))
                 .setIamBinding(new Binding()
-                    .setMembers(List.of("user:" + SAMPLE_USER))
+                    .setMembers(List.of(
+                        "user:" + SAMPLE_USER))
                     .setRole(SAMPLE_ROLE_1)
-                    .setCondition(new Expr().setExpression(SELF_APPROVAL_CONDITION))))));
+                    .setCondition(new Expr().setExpression(
+                        SELF_APPROVAL_CONDITION))))));
 
     var service = new PolicyAnalyzerRepository(
         assetAdapter,
@@ -1309,21 +1397,22 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_USER,
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval(), new PeerApproval("topic")),
-        EnumSet.of(RequesterPrivilege.Status.AVAILABLE, RequesterPrivilege.Status.ACTIVE));
+        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var first = privileges.allRequesterPrivileges().first();
+    var first = privileges.available().first();
     assertEquals(new RoleBinding(SAMPLE_PROJECT_ID_1, SAMPLE_ROLE_1), first.id().roleBinding());
     assertEquals(new SelfApproval().name(), first.activationType().name());
   }
 
   @Test
-  public void whenStatusSetToActiveOnly_ThenFindRequesterPrivilegesOnlyReturnsActivatedBindings() throws Exception {
+  public void whenStatusSetToActiveOnly_ThenFindRequesterPrivilegesOnlyReturnsActivatedBindings()
+      throws Exception {
     var assetAdapter = Mockito.mock(PolicyAnalyzerClient.class);
 
     var jitEligibleBinding = createConditionalIamPolicyAnalysisResult(
@@ -1346,7 +1435,7 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1.getFullResourceName(),
         SAMPLE_ROLE_1,
         SAMPLE_USER,
-        "time ...",
+        VALID_TEMPORARY_CONDITION,
         PrivilegeFactory.ACTIVATION_CONDITION_TITLE,
         "TRUE");
 
@@ -1376,15 +1465,15 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.allRequesterPrivileges());
-    assertEquals(1, privileges.allRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.allRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
   }
 
-  // ---------------------------------------------------------------------
+  // ----------------------------------------s-----------------------------
   // findReviewerPrivelegeHolders.
   // ---------------------------------------------------------------------
 

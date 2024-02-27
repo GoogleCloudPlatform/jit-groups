@@ -21,18 +21,16 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeCatalog;
-import com.google.solutions.jitaccess.core.catalog.SamplePrivilegeId;
 import com.google.solutions.jitaccess.core.catalog.SelfApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
-import com.google.solutions.jitaccess.core.clients.IamTemporaryAccessConditions;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,8 +48,8 @@ import static org.mockito.Mockito.verify;
 
 public class TestProjectRoleActivator {
 
-  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
-  private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
+  private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("approver@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
   private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
@@ -72,7 +70,7 @@ public class TestProjectRoleActivator {
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
         SAMPLE_ROLE_1,
         new SelfApproval(),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -90,8 +88,8 @@ public class TestProjectRoleActivator {
     verify(resourceManagerClient, times(1))
         .addProjectIamBinding(
             eq(SAMPLE_PROJECT),
-            argThat(b -> IamTemporaryAccessConditions
-                .isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+            argThat(b -> TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression())
+                &&
                 b.getCondition().getTitle().equals(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)),
             eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
             eq("Approved by user@example.com, justification: justification"));
@@ -113,7 +111,7 @@ public class TestProjectRoleActivator {
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
         SAMPLE_ROLE_1,
         new PeerApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -133,8 +131,8 @@ public class TestProjectRoleActivator {
     verify(resourceManagerClient, times(1))
         .addProjectIamBinding(
             eq(SAMPLE_PROJECT),
-            argThat(b -> IamTemporaryAccessConditions
-                .isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+            argThat(b -> TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression())
+                &&
                 b.getCondition().getTitle().equals(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)),
             eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
             eq("Approved by approver@example.com, justification: justification"));
@@ -155,7 +153,7 @@ public class TestProjectRoleActivator {
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
         SAMPLE_ROLE_1,
         new PeerApproval("topic"),
-        Status.AVAILABLE);
+        Status.INACTIVE);
 
     var inputRequest = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,

@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
@@ -34,7 +33,7 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.MailAddressRegexFormatter;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
@@ -51,6 +50,7 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -70,7 +70,7 @@ public class RuntimeEnvironment {
 
   private final String projectId;
   private final String projectNumber;
-  private final UserId applicationPrincipal;
+  private final @NotNull UserEmail applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
   /**
@@ -82,9 +82,14 @@ public class RuntimeEnvironment {
   // Private helpers.
   // -------------------------------------------------------------------------
 
-  private static HttpResponse getMetadata(String path) throws IOException {
-    GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
-    HttpRequest request = new NetHttpTransport().createRequestFactory().buildGetRequest(genericUrl);
+  private static HttpResponse getMetadata() throws IOException {
+    var genericUrl = new GenericUrl(
+        ComputeEngineCredentials.getMetadataServerUrl() +
+            "/computeMetadata/v1/project/?recursive=true");
+
+    var request = new NetHttpTransport()
+        .createRequestFactory()
+        .buildGetRequest(genericUrl);
 
     request.setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()));
     request.getHeaders().set("Metadata-Flavor", "Google");
@@ -135,14 +140,13 @@ public class RuntimeEnvironment {
       // Initialize using service account attached to AppEngine or Cloud Run.
       //
       try {
-        GenericData projectMetadata = getMetadata("/computeMetadata/v1/project/?recursive=true")
-            .parseAs(GenericData.class);
+        GenericData projectMetadata = getMetadata().parseAs(GenericData.class);
 
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
         var defaultCredentials = (ComputeEngineCredentials) GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserId(defaultCredentials.getAccount());
+        this.applicationPrincipal = new UserEmail(defaultCredentials.getAccount());
 
         if (defaultCredentials.getScopes().containsAll(this.configuration.getRequiredOauthScopes())) {
           //
@@ -214,13 +218,13 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.applicationCredentials.refresh();
-          this.applicationPrincipal = new UserId(impersonateServiceAccount);
+          this.applicationPrincipal = new UserEmail(impersonateServiceAccount);
         } else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
-          this.applicationPrincipal = new UserId(
+          this.applicationPrincipal = new UserEmail(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         } else {
           throw new RuntimeException(String.format(
@@ -248,7 +252,7 @@ public class RuntimeEnvironment {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
-  public UriBuilder createAbsoluteUriBuilder(UriInfo uriInfo) {
+  public UriBuilder createAbsoluteUriBuilder(@NotNull UriInfo uriInfo) {
     return uriInfo
         .getBaseUriBuilder()
         .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
@@ -262,7 +266,7 @@ public class RuntimeEnvironment {
     return projectNumber;
   }
 
-  public UserId getApplicationPrincipal() {
+  public @NotNull UserEmail getApplicationPrincipal() {
     return applicationPrincipal;
   }
 
@@ -276,7 +280,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public TokenSigner.Options getTokenServiceOptions() {
+  public TokenSigner.@NotNull Options getTokenServiceOptions() {
     //
     // NB. The clock for activations "starts ticking" when the activation was
     // requested. The time allotted for reviewers to approve the request
@@ -293,7 +297,8 @@ public class RuntimeEnvironment {
 
   @Produces
   @Singleton
-  public NotificationService getPubSubNotificationService(
+
+  public @NotNull NotificationService getPubSubNotificationService(
       PubSubClient pubSubClient) {
     if (this.configuration.topicName.isValid()) {
       return new PubSubNotificationService(
@@ -307,7 +312,8 @@ public class RuntimeEnvironment {
 
   @Produces
   @Singleton
-  public NotificationService getEmailNotificationService(
+
+  public @NotNull NotificationService getEmailNotificationService(
       SecretManagerClient secretManagerClient) {
     //
     // Configure SMTP if possible, and fall back to a fail-safe
@@ -354,13 +360,13 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public ApiResource.Options getApiOptions() {
+  public ApiResource.@NotNull Options getApiOptions() {
     return new ApiResource.Options(
         this.configuration.maxNumberOfPrivilegesPerSelfApproval.getValue());
   }
 
   @Produces
-  public HttpTransport.Options getHttpTransportOptions() {
+  public HttpTransport.@NotNull Options getHttpTransportOptions() {
     return new HttpTransport.Options(
         this.configuration.backendConnectTimeout.getValue(),
         this.configuration.backendReadTimeout.getValue(),
@@ -368,14 +374,14 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RegexJustificationPolicy.Options getRegexJustificationPolicyOptions() {
+  public RegexJustificationPolicy.@NotNull Options getRegexJustificationPolicyOptions() {
     return new RegexJustificationPolicy.Options(
         this.configuration.justificationHint.getValue(),
         Pattern.compile(this.configuration.justificationPattern.getValue()));
   }
 
   @Produces
-  public MpaProjectRoleCatalog.Options getIamPolicyCatalogOptions() {
+  public MpaProjectRoleCatalog.@NotNull Options getIamPolicyCatalogOptions() {
     return new MpaProjectRoleCatalog.Options(
         this.configuration.availableProjectsQuery.isValid()
             ? this.configuration.availableProjectsQuery.getValue()
@@ -386,16 +392,23 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public DirectoryGroupsClient.Options getDirectoryGroupsClientOptions() {
+  public DirectoryGroupsClient.@NotNull Options getDirectoryGroupsClientOptions() {
     return new DirectoryGroupsClient.Options(
         this.configuration.customerId.getValue());
   }
 
   @Produces
+  public CloudIdentityGroupsClient.@NotNull Options getCloudIdentityGroupsClientOptions() {
+    return new CloudIdentityGroupsClient.Options(
+        this.configuration.customerId.getValue());
+  }
+
+  @Produces
   @Singleton
-  public ProjectRoleRepository getProjectRoleRepository(
+
+  public @NotNull ProjectRoleRepository getProjectRoleRepository(
       Executor executor,
-      Instance<DirectoryGroupsClient> groupsClient,
+      @NotNull Instance<DirectoryGroupsClient> groupsClient,
       PolicyAnalyzerClient policyAnalyzerClient) {
     switch (this.configuration.catalog.getValue()) {
       case ASSETINVENTORY:

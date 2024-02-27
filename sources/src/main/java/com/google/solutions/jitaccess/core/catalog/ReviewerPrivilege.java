@@ -30,13 +30,16 @@ import java.util.stream.Collectors;
 /**
  * Represents a reviewer privilege.
  */
+
 public record ReviewerPrivilege<TPrivilegeId extends PrivilegeId>(
     TPrivilegeId id,
     String name,
     Set<ActivationType> reviewableTypes)
     implements Comparable<ReviewerPrivilege<TPrivilegeId>> {
 
-  public ReviewerPrivilege {
+  public ReviewerPrivilege
+
+  {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(name, "name");
     Preconditions.checkArgument(!reviewableTypes.isEmpty(),
