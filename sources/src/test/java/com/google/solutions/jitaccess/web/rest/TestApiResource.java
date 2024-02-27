@@ -382,10 +382,9 @@ public class TestApiResource {
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(EntitlementSet.build(
+      .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of()),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(Set.of()),
         Set.of("warning")));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -418,10 +417,9 @@ public class TestApiResource {
       .listEntitlements(
         eq(SAMPLE_USER),
         eq(new ProjectId("project-1"))))
-      .thenReturn(EntitlementSet.build(
+      .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(role1, role2)),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)

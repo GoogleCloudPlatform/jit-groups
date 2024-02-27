@@ -289,10 +289,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(EntitlementSet.build(
+      .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(mpaEntitlement)),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
 
     when(policyAnalyzer
@@ -364,10 +363,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.JIT)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(EntitlementSet.build(
+      .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(jitEntitlement)),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
 
     var request = Mockito.mock(JitActivationRequest.class);
@@ -439,10 +437,9 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
-      .thenReturn(EntitlementSet.build(
+      .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(mpaEntitlement)),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
 
     var request = Mockito.mock(MpaActivationRequest.class);
@@ -587,14 +584,13 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA)),
       any()))
-      .thenReturn(EntitlementSet.build((
+      .thenReturn(new EntitlementSet<>((
         new TreeSet<>(Set.of(new Entitlement<>(
           new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/different-role")),
           "-",
           ActivationType.MPA,
           Entitlement.Status.AVAILABLE)))),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
 
     var catalog = new MpaProjectRoleCatalog(
@@ -621,14 +617,13 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA)),
       any()))
-      .thenReturn(EntitlementSet.build((
+      .thenReturn(new EntitlementSet<>((
         new TreeSet<>(Set.of(new Entitlement<>(
           role,
           "-",
           ActivationType.MPA,
           Entitlement.Status.AVAILABLE)))),
-        Set.of(),
-        Set.of(),
+        new TreeSet<>(),
         Set.of()));
     when(policyAnalyzer
       .findEntitlementHolders(

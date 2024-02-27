@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class PolicyAnalyzerRepository implements ProjectRoleRepository {
+public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   private final @NotNull Options options;
   private final @NotNull PolicyAnalyzerClient policyAnalyzerClient;
 
@@ -246,7 +246,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
         .toList());
     }
 
-    var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -262,13 +262,13 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       allActive.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>(
+        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
           new ProjectRoleBinding(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
     }
 
-    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
       //
       // Do the same for conditions that evaluated to FALSE.
@@ -281,7 +281,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
 
       allExpired.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>(
+        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
           new ProjectRoleBinding(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
@@ -292,7 +292,7 @@ public class PolicyAnalyzerRepository implements ProjectRoleRepository {
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    return EntitlementSet.build(allAvailable, allActive, allExpired, warnings);
+    return buildEntitlementSet(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override
