@@ -46,7 +46,7 @@ External approval is handled slightly differently:
     cannot request activation.
 
 In either case:
-*   When soliciting approval, a user can see the list of qualified reviewer, and can choose the reviewer(s)
+*   When soliciting approval, a user can see the list of qualified reviewers, and can choose the reviewer(s)
     to request approval from. It’s sufficient to gain approval from a single reviewer.
 
 The approval process is driven by email, as illustrated by the following example:
