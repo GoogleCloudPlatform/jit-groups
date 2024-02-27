@@ -26,10 +26,11 @@ import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,14 +43,14 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
-  private final ProjectRoleRepository repository;
-  private final ResourceManagerClient resourceManagerClient;
-  private final Options options;
+  private final @NotNull ProjectRoleRepository repository;
+  private final @NotNull ResourceManagerClient resourceManagerClient;
+  private final @NotNull Options options;
 
   public MpaProjectRoleCatalog(
-      ProjectRoleRepository repository,
-      ResourceManagerClient resourceManagerClient,
-      Options options) {
+      @NotNull ProjectRoleRepository repository,
+      @NotNull ResourceManagerClient resourceManagerClient,
+      @NotNull Options options) {
     Preconditions.checkNotNull(repository, "repository");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     Preconditions.checkNotNull(options, "options");
@@ -59,7 +60,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     this.options = options;
   }
 
-  void validateRequest(ActivationRequest<ProjectRoleBinding> request) {
+  void validateRequest(@NotNull ActivationRequest<ProjectRoleBinding> request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
         request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -90,11 +91,10 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   void verifyUserCanActivateRequesterPrivileges(
-      UserId user,
+      UserEmail user,
       ProjectId projectId,
-      ActivationType activationType,
-      Collection<ProjectRoleBinding> privileges) throws AccessException, IOException {
-    //
+      @NotNull ActivationType activationType,
+      @NotNull Collection<ProjectRoleBinding> privileges) throws AccessException, IOException {
     // Verify that the user has eligible role bindings
     // for all privileges.
     //
@@ -108,7 +108,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
             projectId,
             Set.of(activationType),
             EnumSet.of(RequesterPrivilege.Status.INACTIVE))
-        .availableRequesterPrivileges()
+        .available()
         .stream()
         .collect(Collectors.toMap(privilege -> privilege.id(), privilege -> privilege));
 
@@ -137,7 +137,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   void verifyUserCanReviewRequest(
-      UserId user,
+      UserEmail user,
       ProjectId projectId,
       ActivationType activationType,
       ProjectRoleBinding privilege) throws AccessException, IOException {
@@ -166,7 +166,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public SortedSet<ProjectId> listProjects(
-      UserId user) throws AccessException, IOException {
+      UserEmail user) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
       // Find projects for which the user has any role bindings (eligible
@@ -188,7 +188,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
-      UserId user,
+      UserEmail user,
       ProjectId projectId) throws AccessException, IOException {
     return this.repository.findRequesterPrivileges(
         user,
@@ -199,9 +199,9 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   }
 
   @Override
-  public SortedSet<UserId> listReviewers(
-      UserId requestingUser,
-      RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException {
+  public @NotNull SortedSet<UserEmail> listReviewers(
+      UserEmail requestingUser,
+      @NotNull RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException {
 
     //
     // Check that the requesting user is allowed to request approval,
@@ -223,7 +223,7 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public void verifyUserCanRequest(
-      ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
+      @NotNull ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
 
     validateRequest(request);
 
@@ -240,8 +240,8 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
   @Override
   public void verifyUserCanApprove(
-      UserId approvingUser,
-      ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
+      UserEmail approvingUser,
+      @NotNull ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
 
     validateRequest(request);
 

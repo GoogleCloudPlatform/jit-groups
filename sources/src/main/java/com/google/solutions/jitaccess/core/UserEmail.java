@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -23,42 +23,51 @@ package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 /**
- * ID of a Google Cloud organization.
+ * Primary email address of a user.
  */
-public record OrganizationId(String id) implements Comparable<OrganizationId>, ResourceId {
-  public OrganizationId {
-    Preconditions.checkNotNull(id, "id");
-    assert !id.startsWith("//");
-    assert !id.contains("/");
+public class UserEmail implements Comparable<UserEmail> {
+  public final @NotNull String email;
+
+  public UserEmail(@NotNull String email) {
+    Preconditions.checkNotNull(email, "email");
+    this.email = email;
   }
 
   @Override
   public String toString() {
-    return this.id;
+    return this.email;
   }
 
   // -------------------------------------------------------------------------
-  // Comparable.
+  // Equality.
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(@NotNull OrganizationId o) {
-    return this.id.compareTo(o.id);
+  public boolean equals(@Nullable Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    UserEmail userEmail = (UserEmail) o;
+    return email.equals(userEmail.email);
   }
 
-  // -------------------------------------------------------------------------
-  // ResourceId.
-  // -------------------------------------------------------------------------
-
   @Override
-  public @NotNull String type() {
-    return "organization";
+  public int hashCode() {
+    return Objects.hash(email);
   }
 
   @Override
-  public String path() {
-    return String.format("organizations/%s", this.id);
+  public int compareTo(@NotNull UserEmail o) {
+    return this.email.compareTo(o.email);
   }
 }

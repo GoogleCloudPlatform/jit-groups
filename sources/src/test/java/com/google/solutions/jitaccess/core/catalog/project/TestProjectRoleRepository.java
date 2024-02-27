@@ -19,9 +19,14 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog;
+package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.cel.TimeSpan;
+import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
+import com.google.solutions.jitaccess.core.catalog.SelfApproval;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -34,7 +39,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
-public class TestRequesterPrivilegeSet {
+public class TestProjectRoleRepository {
   private class StringId extends PrivilegeId {
     private final String id;
 
@@ -70,13 +75,13 @@ public class TestRequesterPrivilegeSet {
         new SelfApproval(),
         RequesterPrivilege.Status.INACTIVE);
 
-    var set = RequesterPrivilegeSet.build(
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
         Set.of(available1, available2),
         Set.of(),
         Set.of(),
         Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
+    assertEquals(Set.of(available1, available2), set.available());
   }
 
   @Test
@@ -94,10 +99,10 @@ public class TestRequesterPrivilegeSet {
         RequesterPrivilege.Status.INACTIVE);
 
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = RequesterPrivilegeSet.build(
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
         Set.of(available1, available2),
         Set.of(
-            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
                 available1.id(),
                 validity1)),
         Set.of(),
@@ -111,7 +116,7 @@ public class TestRequesterPrivilegeSet {
             selfApproval,
             RequesterPrivilege.Status.ACTIVE,
             validity1)),
-        set.availableRequesterPrivileges());
+        set.available());
   }
 
   @Test
@@ -131,13 +136,13 @@ public class TestRequesterPrivilegeSet {
         RequesterPrivilege.Status.INACTIVE);
 
     var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = RequesterPrivilegeSet.build(
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
         Set.of(available1, available2),
         Set.of(
-            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
                 available1.id(),
                 validity),
-            new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(
+            new ProjectRoleRepository.ActivatedRequesterPrivilege<>(
                 available2.id(),
                 validity)),
         Set.of(),
@@ -156,7 +161,7 @@ public class TestRequesterPrivilegeSet {
             selfApproval2,
             RequesterPrivilege.Status.ACTIVE,
             validity)),
-        set.availableRequesterPrivileges());
+        set.available());
   }
 
   @Test
@@ -175,18 +180,18 @@ public class TestRequesterPrivilegeSet {
 
     var validity1 = new TimeSpan(Instant.now().minus(Duration.ofMinutes(2)), Duration.ofMinutes(1));
     var unavailableId = new StringId("unavailable-1");
-    var set = RequesterPrivilegeSet.build(
+    var set = ProjectRoleRepository.buildRequesterPrivilegeSet(
         Set.of(available1, available2),
         Set.of(),
-        Set.of(new RequesterPrivilegeSet.ActivatedRequesterPrivilege<>(unavailableId, validity1)),
+        Set.of(new ProjectRoleRepository.ActivatedRequesterPrivilege<>(unavailableId, validity1)),
         Set.of());
 
-    assertEquals(Set.of(available1, available2), set.availableRequesterPrivileges());
+    assertEquals(Set.of(available1, available2), set.available());
     assertIterableEquals(List.of(
         available1.id(),
         available2.id()),
-        set.availableRequesterPrivileges().stream().map(privilege -> privilege.id())
+        set.available().stream().map(privilege -> privilege.id())
             .collect(Collectors.toList()));
-    assertEquals(unavailableId, set.expiredRequesterPrivileges().first().id());
+    assertEquals(unavailableId, set.expired().first().id());
   }
 }

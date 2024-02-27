@@ -21,5 +21,6 @@ runs:
       shell: bash
       
     - name: Build
-      run: mvn -P release -B package -Dmaven.test.skip=true --file ${{ inputs.source-dir }}/pom.xml
+      # Run unit tests, but skip integration tests.
+      run: mvn -P release -B test -DskipITs=true --file ${{ inputs.source-dir }}/pom.xml
       shell: bash

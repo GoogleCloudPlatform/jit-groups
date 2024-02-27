@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
 
 import org.junit.jupiter.api.Test;
@@ -41,9 +41,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestRequesterPrivilegeActivator {
-  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
-  private static final UserId SAMPLE_APPROVING_USER = new UserId("peer@example.com");
-  private static final UserId SAMPLE_UNKNOWN_USER = new UserId("unknown@example.com");
+  private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("peer@example.com");
+  private static final UserEmail SAMPLE_UNKNOWN_USER = new UserEmail("unknown@example.com");
 
   private class SampleActivator extends RequesterPrivilegeActivator<SamplePrivilegeId> {
     protected SampleActivator(
@@ -54,7 +54,7 @@ public class TestRequesterPrivilegeActivator {
 
     @Override
     protected void provisionAccess(
-        UserId approvingUser,
+        UserEmail approvingUser,
         ActivationRequest<SamplePrivilegeId> request)
         throws AccessException, AlreadyExistsException, IOException {
     }

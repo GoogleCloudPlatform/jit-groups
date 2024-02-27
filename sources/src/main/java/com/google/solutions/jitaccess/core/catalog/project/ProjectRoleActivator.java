@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.Dependent;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,11 +43,11 @@ import java.util.stream.Collectors;
  */
 @Dependent
 public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRoleBinding> {
-  private final ResourceManagerClient resourceManagerClient;
+  private final @NotNull ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
       RequesterPrivilegeCatalog<ProjectRoleBinding> catalog,
-      ResourceManagerClient resourceManagerClient,
+      @NotNull ResourceManagerClient resourceManagerClient,
       JustificationPolicy policy) {
     super(catalog, policy);
 
@@ -58,10 +59,10 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
   private void provisionTemporaryBinding(
       String bindingDescription,
       ProjectId projectId,
-      UserId user,
-      String role,
-      Instant startTime,
-      Duration duration) throws AccessException, AlreadyExistsException, IOException {
+      UserEmail user,
+      @NotNull String role,
+      @NotNull Instant startTime,
+      @NotNull Duration duration) throws AccessException, AlreadyExistsException, IOException {
 
     //
     // Add time-bound IAM binding.
@@ -93,8 +94,9 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
 
   @Override
   protected void provisionAccess(
-      UserId approvingUser,
-      ActivationRequest<ProjectRoleBinding> request) throws AccessException, AlreadyExistsException, IOException {
+      UserEmail approvingUser,
+      @NotNull ActivationRequest<ProjectRoleBinding> request)
+      throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
 
@@ -122,11 +124,11 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
   }
 
   @Override
-  public JsonWebTokenConverter<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public @NotNull JsonWebTokenConverter<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
       public JsonWebToken.Payload convert(
-          com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request) {
+          @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request) {
         var roleBinding = request.requesterPrivilege().roleBinding();
 
         return new JsonWebToken.Payload()
@@ -141,9 +143,10 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
             .set("end", request.endTime().getEpochSecond());
       }
 
+      @SuppressWarnings("unchecked")
       @Override
-      public com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> convert(
-          JsonWebToken.Payload payload) {
+      public @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> convert(
+          @NotNull JsonWebToken.Payload payload) {
         var roleBinding = new RoleBinding(
             payload.get("resource").toString(),
             payload.get("role").toString());
@@ -153,10 +156,10 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
 
         return new ActivationRequest<ProjectRoleBinding>(
             new ActivationId(payload.getJwtId()),
-            new UserId(payload.get("beneficiary").toString()),
+            new UserEmail(payload.get("beneficiary").toString()),
             ((List<String>) payload.get("reviewers"))
                 .stream()
-                .map(email -> new UserId(email))
+                .map(email -> new UserEmail(email))
                 .collect(Collectors.toSet()),
             new ProjectRoleBinding(roleBinding),
             ActivationTypeFactory.createFromName(payload.get("type").toString()),

@@ -25,13 +25,14 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import org.jetbrains.annotations.NotNull;
 
 public class ProjectRoleBinding extends PrivilegeId {
   static final String CATALOG = "iam";
 
-  private final RoleBinding roleBinding;
+  private final @NotNull RoleBinding roleBinding;
 
-  public ProjectRoleBinding(RoleBinding roleBinding) {
+  public ProjectRoleBinding(@NotNull RoleBinding roleBinding) {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
     assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
@@ -44,7 +45,7 @@ public class ProjectRoleBinding extends PrivilegeId {
   }
 
   @Override
-  public String catalog() {
+  public @NotNull String catalog() {
     return CATALOG;
   }
 
@@ -53,7 +54,7 @@ public class ProjectRoleBinding extends PrivilegeId {
     return this.roleBinding.toString();
   }
 
-  public ProjectId projectId() {
+  public @NotNull ProjectId projectId() {
     return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
   }
 }

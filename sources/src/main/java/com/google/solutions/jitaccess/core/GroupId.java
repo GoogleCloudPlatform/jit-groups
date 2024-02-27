@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,27 +19,36 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.core;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.Objects;
 
 /**
- * Information about the device of a user.
+ * Primary email address and unique ID of a group.
  */
-public record DeviceInfo(String deviceId, List<String> accessLevels) {
-  public static final DeviceInfo UNKNOWN = new DeviceInfo("unknown", List.of());
+public class GroupId extends UserEmail {
+  private static final String GROUPS_PREFIX = "groups/";
 
-  public DeviceInfo {
-    Preconditions.checkNotNull(deviceId, "deviceId");
-    Preconditions.checkNotNull(accessLevels, "accessLevels");
+  public final transient @NotNull String id;
+
+  public GroupId(@NotNull String id, String email) {
+    super(email);
+
+    Preconditions.checkNotNull(id, "id");
+
+    if (id.startsWith(GROUPS_PREFIX)) {
+      id = id.substring(GROUPS_PREFIX.length());
+    }
+
+    this.id = id;
   }
 
-  @Override
-  public String toString() {
-    return this.deviceId;
+  public GroupId(@NotNull String id, @NotNull GroupEmail email) {
+    this(id, email.email);
   }
 
   @Override
@@ -47,10 +56,29 @@ public record DeviceInfo(String deviceId, List<String> accessLevels) {
     if (this == o) {
       return true;
     }
+
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    var that = (DeviceInfo) o;
-    return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
+
+    if (!super.equals(o)) {
+      return false;
+    }
+
+    GroupId GroupId = (GroupId) o;
+    return this.id.equals(GroupId.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), id);
+  }
+
+  /**
+   * @return ID in groups/ID format.
+   */
+  @Override
+  public String toString() {
+    return String.format("%s%s", GROUPS_PREFIX, this.id);
   }
 }

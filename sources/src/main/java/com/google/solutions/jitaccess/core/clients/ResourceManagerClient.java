@@ -33,6 +33,8 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -50,10 +52,10 @@ public class ResourceManagerClient {
 
   private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
+  private final @NotNull GoogleCredentials credentials;
+  private final HttpTransport.@NotNull Options httpOptions;
 
-  private CloudResourceManager createClient() throws IOException {
+  private @NotNull CloudResourceManager createClient() throws IOException {
     try {
       return new CloudResourceManager.Builder(
           HttpTransport.newTransport(),
@@ -66,14 +68,14 @@ public class ResourceManagerClient {
     }
   }
 
-  private static boolean isRoleNotGrantableErrorMessage(String message) {
+  private static boolean isRoleNotGrantableErrorMessage(@Nullable String message) {
     return message != null &&
         (message.contains("not supported") || message.contains("does not exist"));
   }
 
   public ResourceManagerClient(
-      GoogleCredentials credentials,
-      HttpTransport.Options httpOptions) {
+      @NotNull GoogleCredentials credentials,
+      HttpTransport.@NotNull Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -85,9 +87,9 @@ public class ResourceManagerClient {
    * Add an IAM binding using the optimistic concurrency control-mechanism.
    */
   public void addProjectIamBinding(
-      ProjectId projectId,
-      Binding binding,
-      EnumSet<ResourceManagerClient.IamBindingOptions> options,
+      @NotNull ProjectId projectId,
+      @NotNull Binding binding,
+      @NotNull EnumSet<ResourceManagerClient.IamBindingOptions> options,
       String requestReason) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(projectId, "projectId");
     Preconditions.checkNotNull(binding, "binding");
@@ -220,7 +222,7 @@ public class ResourceManagerClient {
   /**
    * Test whether certain permissions have been granted on the project.
    */
-  public List<String> testIamPermissions(
+  public @NotNull List<String> testIamPermissions(
       ProjectId projectId,
       List<String> permissions) throws NotAuthenticatedException, IOException {
     try {
@@ -248,7 +250,7 @@ public class ResourceManagerClient {
   /**
    * Search for projects.
    */
-  public SortedSet<ProjectId> searchProjectIds(
+  public @NotNull SortedSet<ProjectId> searchProjectIds(
       String query) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
@@ -300,8 +302,8 @@ public class ResourceManagerClient {
    *
    * @return list of ancestors, starting with the project itself.
    */
-  public Collection<ResourceId> getAncestry(
-      ProjectId projectId) throws AccessException, IOException {
+  public @NotNull Collection<ResourceId> getAncestry(
+      @NotNull ProjectId projectId) throws AccessException, IOException {
     try {
       var response = new GetAncestry(createClient(), projectId.id(), new GetAncestryRequest()).execute();
       return response.ancestor
@@ -343,7 +345,7 @@ public class ResourceManagerClient {
    * Helper class for using Binding objects.
    */
   public static class Bindings {
-    public static boolean equals(Binding lhs, Binding rhs, boolean compareCondition) {
+    public static boolean equals(@NotNull Binding lhs, @NotNull Binding rhs, boolean compareCondition) {
       if (!lhs.getRole().equals(rhs.getRole())) {
         return false;
       }
@@ -366,9 +368,7 @@ public class ResourceManagerClient {
             return false;
           }
 
-          if (!Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription())) {
-            return false;
-          }
+          return Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription());
         }
       }
 
@@ -412,7 +412,7 @@ public class ResourceManagerClient {
      * Project.
      */
     protected GetAncestry(
-        CloudResourceManager client,
+        @NotNull CloudResourceManager client,
         String projectId,
         GetAncestryRequest content) {
       super(client, "POST", REST_PATH, content, GetAncestryResponse.class);
@@ -486,7 +486,7 @@ public class ResourceManagerClient {
     }
 
     /** Required. The Project ID (for example, `my-project-123`). */
-    public GetAncestry setProjectId(String projectId) {
+    public @NotNull GetAncestry setProjectId(String projectId) {
       this.projectId = projectId;
       return this;
     }
@@ -500,7 +500,7 @@ public class ResourceManagerClient {
   /**
    * The request sent to the GetAncestry method.
    */
-  private final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
+  private static final class GetAncestryRequest extends com.google.api.client.json.GenericJson {
   }
 
   /**
@@ -510,7 +510,7 @@ public class ResourceManagerClient {
     /**
      * Ancestors are ordered from bottom to top of the resource hierarchy. The first
      * ancestor is the
-     * project itself, followed by the project's parent, etc..
+     * project itself, followed by the project's parent, etc.
      * The value may be {@code null}.
      */
     @Key
@@ -534,7 +534,7 @@ public class ResourceManagerClient {
      * 
      * @param ancestor ancestor or {@code null} for none
      */
-    public GetAncestryResponse setAncestor(java.util.List<Ancestor> ancestor) {
+    public @NotNull GetAncestryResponse setAncestor(java.util.List<Ancestor> ancestor) {
       this.ancestor = ancestor;
       return this;
     }
@@ -575,7 +575,7 @@ public class ResourceManagerClient {
      * 
      * @param resourceId resourceId or {@code null} for none
      */
-    public Ancestor setResourceId(AncestryResourceId resourceId) {
+    public @NotNull Ancestor setResourceId(AncestryResourceId resourceId) {
       this.resourceId = resourceId;
       return this;
     }
@@ -628,7 +628,7 @@ public class ResourceManagerClient {
      * 
      * @param id id or {@code null} for none
      */
-    public AncestryResourceId setId(String id) {
+    public @NotNull AncestryResourceId setId(String id) {
       this.id = id;
       return this;
     }
@@ -651,7 +651,7 @@ public class ResourceManagerClient {
      * 
      * @param type type or {@code null} for none
      */
-    public AncestryResourceId setType(String type) {
+    public @NotNull AncestryResourceId setType(String type) {
       this.type = type;
       return this;
     }

@@ -22,8 +22,9 @@
 package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -75,9 +76,9 @@ public abstract class NotificationService {
    * but doesn't define its format.
    */
   public static abstract class Notification {
-    private final Collection<UserId> toRecipients;
-    private final Collection<UserId> ccRecipients;
-    private final String subject;
+    private final @NotNull Collection<UserEmail> toRecipients;
+    private final @NotNull Collection<UserEmail> ccRecipients;
+    private final @NotNull String subject;
 
     protected final Map<String, Object> properties = new HashMap<>();
 
@@ -85,15 +86,15 @@ public abstract class NotificationService {
       return false;
     }
 
-    public Collection<UserId> getToRecipients() {
+    public @NotNull Collection<UserEmail> getToRecipients() {
       return toRecipients;
     }
 
-    public Collection<UserId> getCcRecipients() {
+    public @NotNull Collection<UserEmail> getCcRecipients() {
       return ccRecipients;
     }
 
-    public String getSubject() {
+    public @NotNull String getSubject() {
       return subject;
     }
 
@@ -103,9 +104,9 @@ public abstract class NotificationService {
     public abstract String getType();
 
     protected Notification(
-        Collection<UserId> toRecipients,
-        Collection<UserId> ccRecipients,
-        String subject) {
+        @NotNull Collection<UserEmail> toRecipients,
+        @NotNull Collection<UserEmail> ccRecipients,
+        @NotNull String subject) {
       Preconditions.checkNotNull(toRecipients, "toRecipients");
       Preconditions.checkNotNull(ccRecipients, "ccRecipients");
       Preconditions.checkNotNull(subject, "subject");

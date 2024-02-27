@@ -42,7 +42,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestResourceManagerClient {
+public class ITestResourceManagerClient {
   private static final String REQUEST_REASON = "testing";
 
   // ---------------------------------------------------------------------
@@ -52,13 +52,13 @@ public class TestResourceManagerClient {
   @Test
   public void whenUnauthenticated_ThenAddIamProjectBindingThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         NotAuthenticatedException.class,
         () -> adapter.addProjectIamBinding(
-            IntegrationTestEnvironment.PROJECT_ID,
+            ITestEnvironment.PROJECT_ID,
             new Binding()
                 .setMembers(List.of("user:bob@example.com"))
                 .setRole("roles/resourcemanager.projectIamAdmin"),
@@ -69,13 +69,13 @@ public class TestResourceManagerClient {
   @Test
   public void whenCallerLacksPermission_ThenAddProjectIamBindingThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         AccessDeniedException.class,
         () -> adapter.addProjectIamBinding(
-            IntegrationTestEnvironment.PROJECT_ID,
+            ITestEnvironment.PROJECT_ID,
             new Binding()
                 .setMembers(List.of("user:bob@example.com"))
                 .setRole("roles/resourcemanager.projectIamAdmin"),
@@ -86,13 +86,13 @@ public class TestResourceManagerClient {
   @Test
   public void whenRoleNotGrantableOnProject_ThenAddProjectIamBindingThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         AccessDeniedException.class,
         () -> adapter.addProjectIamBinding(
-            IntegrationTestEnvironment.PROJECT_ID,
+            ITestEnvironment.PROJECT_ID,
             new Binding()
                 .setMembers(List.of("user:bob@example.com"))
                 .setRole("roles/billing.viewer"),
@@ -103,15 +103,15 @@ public class TestResourceManagerClient {
   @Test
   public void whenResourceIsProject_ThenAddIamProjectBindingSucceeds() throws Exception {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     String condition = new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5)).toString();
 
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+            .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
             .setRole("roles/browser")
             .setCondition(new Expr().setExpression(condition)),
         EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
@@ -121,14 +121,14 @@ public class TestResourceManagerClient {
   @Test
   public void whenPurgeExistingTemporaryBindingsFlagIsOn_ThenExistingTemporaryBindingsAreRemoved() throws Exception {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     // Add an "old" temporary IAM binding.
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+            .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
             .setRole("roles/browser")
             .setCondition(new Expr()
                 .setTitle("old binding")
@@ -140,9 +140,9 @@ public class TestResourceManagerClient {
 
     // Add a permanent binding (with some random condition) for the same role.
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+            .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
             .setRole("roles/browser")
             .setCondition(new Expr()
                 .setTitle("permanent binding")
@@ -159,7 +159,7 @@ public class TestResourceManagerClient {
     var oldPolicy = service
         .projects()
         .getIamPolicy(
-            String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
+            String.format("projects/%s", ITestEnvironment.PROJECT_ID),
             new GetIamPolicyRequest()
                 .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
         .execute();
@@ -180,21 +180,20 @@ public class TestResourceManagerClient {
 
     // Add "new" temporary binding, overriding the old one.
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         new Binding()
-            .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+            .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
             .setRole("roles/browser")
             .setCondition(new Expr()
                 .setTitle("new binding")
-                .setExpression(
-                    new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5)).toString())),
+                .setExpression(new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5)).toString())),
         EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
         REQUEST_REASON);
 
     var newPolicy = service
         .projects()
         .getIamPolicy(
-            String.format("projects/%s", IntegrationTestEnvironment.PROJECT_ID),
+            String.format("projects/%s", ITestEnvironment.PROJECT_ID),
             new GetIamPolicyRequest()
                 .setOptions(new GetPolicyOptions().setRequestedPolicyVersion(3)))
         .execute();
@@ -215,20 +214,18 @@ public class TestResourceManagerClient {
         newPolicy
             .getBindings()
             .stream()
-            .anyMatch(b -> b.getCondition() != null
-                && b.getCondition().getTitle().equals("permanent binding")),
+            .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")),
         "permanent binding has been preserved");
   }
 
   @Test
-  public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException()
-      throws Exception {
+  public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException() throws Exception {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     var newBinding = new Binding()
-        .setMembers(List.of("serviceAccount:" + IntegrationTestEnvironment.TEMPORARY_ACCESS_USER.email))
+        .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
         .setRole("roles/browser")
         .setCondition(new Expr()
             .setTitle("temporary binding")
@@ -238,7 +235,7 @@ public class TestResourceManagerClient {
 
     // Add binding -> succeeds as no equivalent binding exists.
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         newBinding,
         EnumSet.of(
             ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
@@ -248,7 +245,17 @@ public class TestResourceManagerClient {
     // Add same binding again -> fails.
     assertThrows(AlreadyExistsException.class,
         () -> adapter.addProjectIamBinding(
-            IntegrationTestEnvironment.PROJECT_ID,
+            ITestEnvironment.PROJECT_ID,
+            newBinding,
+            EnumSet.of(
+                ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
+                ResourceManagerClient.IamBindingOptions.FAIL_IF_BINDING_EXISTS),
+            "Test"));
+
+    // Add same binding again -> fails.
+    assertThrows(AlreadyExistsException.class,
+        () -> adapter.addProjectIamBinding(
+            ITestEnvironment.PROJECT_ID,
             newBinding,
             EnumSet.of(
                 ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS,
@@ -257,7 +264,7 @@ public class TestResourceManagerClient {
 
     // Add binding again, but without flag -> succeeds
     adapter.addProjectIamBinding(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         newBinding,
         EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
         "Test");
@@ -399,24 +406,24 @@ public class TestResourceManagerClient {
   @Test
   public void whenUnauthenticated_ThenTestIamPermissionsThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         NotAuthenticatedException.class,
         () -> adapter.testIamPermissions(
-            IntegrationTestEnvironment.PROJECT_ID,
+            ITestEnvironment.PROJECT_ID,
             List.of("resourcemanager.projects.get")));
   }
 
   @Test
   public void whenAuthorized_ThenTestIamPermissionsSucceeds() throws Exception {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     var heldPermissions = adapter.testIamPermissions(
-        IntegrationTestEnvironment.PROJECT_ID,
+        ITestEnvironment.PROJECT_ID,
         List.of("resourcemanager.projects.get"));
 
     assertNotNull(heldPermissions);
@@ -430,34 +437,34 @@ public class TestResourceManagerClient {
   @Test
   public void whenUnauthenticated_ThenGetAncestryThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         NotAuthenticatedException.class,
-        () -> adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID));
+        () -> adapter.getAncestry(ITestEnvironment.PROJECT_ID));
   }
 
   @Test
   public void whenCallerLacksPermission_ThenGetAncestryThrowsException() {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         AccessDeniedException.class,
-        () -> adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID));
+        () -> adapter.getAncestry(ITestEnvironment.PROJECT_ID));
   }
 
   @Test
   public void whenAuthorized_ThenGetAncestrySucceeds() throws Exception {
     var adapter = new ResourceManagerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
-    var ancestry = adapter.getAncestry(IntegrationTestEnvironment.PROJECT_ID);
+    var ancestry = adapter.getAncestry(ITestEnvironment.PROJECT_ID);
 
     assertTrue(ancestry.size() > 1);
-    assertEquals(IntegrationTestEnvironment.PROJECT_ID, ancestry.stream().findFirst().get());
+    assertEquals(ITestEnvironment.PROJECT_ID, ancestry.stream().findFirst().get());
   }
 }

@@ -30,6 +30,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -41,10 +42,10 @@ import java.security.GeneralSecurityException;
 public class IamCredentialsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
+  private final @NotNull GoogleCredentials credentials;
+  private final HttpTransport.@NotNull Options httpOptions;
 
-  private IAMCredentials createClient() throws IOException {
+  private @NotNull IAMCredentials createClient() throws IOException {
     try {
       return new IAMCredentials.Builder(
           HttpTransport.newTransport(),
@@ -58,8 +59,8 @@ public class IamCredentialsClient {
   }
 
   public IamCredentialsClient(
-      GoogleCredentials credentials,
-      HttpTransport.Options httpOptions) {
+      @NotNull GoogleCredentials credentials,
+      HttpTransport.@NotNull Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
@@ -71,8 +72,8 @@ public class IamCredentialsClient {
    * Sign a JWT using the Google-managed service account key.
    */
   public String signJwt(
-      UserId serviceAccount,
-      JsonWebToken.Payload payload) throws AccessException, IOException {
+      @NotNull UserEmail serviceAccount,
+      JsonWebToken.@NotNull Payload payload) throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
     Preconditions.checkNotNull(payload, "payload");
 
@@ -113,7 +114,7 @@ public class IamCredentialsClient {
   /**
    * Get JWKS location for service account key set.
    */
-  public static String getJwksUrl(UserId serviceAccount) {
+  public static String getJwksUrl(@NotNull UserEmail serviceAccount) {
     return String.format("https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", serviceAccount.email);
   }
 }

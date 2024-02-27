@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -52,7 +52,7 @@ public class TestActivationRequest {
   private class SampleActivationRequest extends ActivationRequest<SamplePrivilegeId> {
     public SampleActivationRequest(
         ActivationId id,
-        UserId user,
+        UserEmail user,
         SamplePrivilegeId requesterPrivilege,
         ActivationType activationType,
         String justification,
@@ -70,7 +70,7 @@ public class TestActivationRequest {
   public void toStringReturnsSummary() {
     var request = new SampleActivationRequest(
         new ActivationId("sample-1"),
-        new UserId("user@example.com"),
+        new UserEmail("user@example.com"),
         new SamplePrivilegeId("1"),
         new SelfApproval(),
         "some justification",

@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
+import org.jetbrains.annotations.NotNull;
 
 class ProjectActivationRequest {
   private ProjectActivationRequest() {
@@ -31,7 +32,7 @@ class ProjectActivationRequest {
   /**
    * @return project ID from request.
    */
-  static ProjectId projectId(ActivationRequest<ProjectRoleBinding> request) {
+  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
     var project = request.requesterPrivilege().roleBinding().fullResourceName();
 
     return ProjectId.fromFullResourceName(project);

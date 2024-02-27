@@ -23,10 +23,10 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.HttpTransport;
+import com.google.solutions.jitaccess.core.clients.ITestEnvironment;
 import com.google.solutions.jitaccess.core.clients.IamCredentialsClient;
-import com.google.solutions.jitaccess.core.clients.IntegrationTestEnvironment;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -34,10 +34,10 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestTokenSigner {
-  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
-  private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
+public class ITestTokenSigner {
+  private static final UserEmail SAMPLE_USER_1 = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
+  private static final UserEmail SAMPLE_USER_3 = new UserEmail("user-3@example.com");
 
   private static class PseudoJsonConverter implements JsonWebTokenConverter<JsonWebToken.Payload> {
     @Override
@@ -53,9 +53,9 @@ public class TestTokenSigner {
   @Test
   public void signAddsObligatoryClaims() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSignerOptions = new TokenSigner.Options(serviceAccount, Duration.ofMinutes(5));
     var tokenSigner = new TokenSigner(
@@ -98,9 +98,9 @@ public class TestTokenSigner {
   @Test
   public void whenJwtMissesAudienceClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
         credentialsAdapter,
@@ -120,9 +120,9 @@ public class TestTokenSigner {
   @Test
   public void whenJwtMissesIssuerClaim_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
         credentialsAdapter,
@@ -143,9 +143,9 @@ public class TestTokenSigner {
   @Test
   public void whenJwtSignedByWrongServiceAccount_ThenVerifyThrowsException() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.TEMPORARY_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
         credentialsAdapter,
@@ -155,7 +155,7 @@ public class TestTokenSigner {
         .setAudience(serviceAccount.email)
         .setIssuer(serviceAccount.email);
 
-    var jwt = credentialsAdapter.signJwt(IntegrationTestEnvironment.NO_ACCESS_USER, payload);
+    var jwt = credentialsAdapter.signJwt(ITestEnvironment.NO_ACCESS_USER, payload);
 
     assertThrows(
         TokenVerifier.VerificationException.class,
@@ -167,9 +167,9 @@ public class TestTokenSigner {
   @Test
   public void whenJwtValid_ThenVerifySucceeds() throws Exception {
     var credentialsAdapter = new IamCredentialsClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
-    var serviceAccount = IntegrationTestEnvironment.NO_ACCESS_USER;
+    var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var tokenSigner = new TokenSigner(
         credentialsAdapter,

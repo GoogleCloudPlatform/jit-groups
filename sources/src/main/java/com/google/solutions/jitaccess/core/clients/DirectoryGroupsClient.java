@@ -30,6 +30,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
 import jakarta.inject.Singleton;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -44,14 +45,14 @@ import java.util.stream.Collectors;
 public class DirectoryGroupsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/admin.directory.group.readonly";
 
-  private final Options options;
-  private final GoogleCredentials credentials;
-  private final HttpTransport.Options httpOptions;
+  private final @NotNull Options options;
+  private final @NotNull GoogleCredentials credentials;
+  private final HttpTransport.@NotNull Options httpOptions;
 
   public DirectoryGroupsClient(
-      GoogleCredentials credentials,
-      Options options,
-      HttpTransport.Options httpOptions) {
+      @NotNull GoogleCredentials credentials,
+      @NotNull Options options,
+      @NotNull HttpTransport.Options httpOptions) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(options, "options");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -61,7 +62,7 @@ public class DirectoryGroupsClient {
     this.httpOptions = httpOptions;
   }
 
-  private Directory createClient() throws IOException {
+  private @NotNull Directory createClient() throws IOException {
     try {
       return new Directory.Builder(
           HttpTransport.newTransport(),
@@ -77,8 +78,8 @@ public class DirectoryGroupsClient {
   /**
    * List all groups a given user is a direct member of.
    */
-  public Collection<Group> listDirectGroupMemberships(
-      UserId user) throws AccessException, IOException {
+  public @NotNull Collection<Group> listDirectGroupMemberships(
+      @NotNull UserEmail user) throws AccessException, IOException {
     try {
       //
       // NB. Using userKey doesn't work for service account,
@@ -117,7 +118,7 @@ public class DirectoryGroupsClient {
   /**
    * List users that are a direct member of the given group.
    */
-  public Collection<Member> listDirectGroupMembers(
+  public @NotNull Collection<Member> listDirectGroupMembers(
       String groupEmail) throws AccessException, IOException {
     try {
       var result = createClient()

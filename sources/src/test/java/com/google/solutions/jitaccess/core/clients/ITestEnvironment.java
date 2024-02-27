@@ -26,7 +26,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,8 +35,8 @@ import java.util.Date;
 import java.util.Properties;
 import java.util.Set;
 
-public class IntegrationTestEnvironment {
-  private IntegrationTestEnvironment() {
+public class ITestEnvironment {
+  private ITestEnvironment() {
   }
 
   private static final String SETTINGS_FILE = "test.properties";
@@ -50,19 +50,40 @@ public class IntegrationTestEnvironment {
   public static final ProjectId PROJECT_ID;
   public static final String REGION;
 
-  public static final GoogleCredentials APPLICATION_CREDENTIALS;
-  public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
-  public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
-
   /**
    * Service account that tests can use to grant temporary access to.
    */
-  public static final UserId TEMPORARY_ACCESS_USER;
+  public static final UserEmail TEMPORARY_ACCESS_USER;
 
   /**
    * Service account that doesn't have access to anything.
    */
-  public static final UserId NO_ACCESS_USER;
+  public static final UserEmail NO_ACCESS_USER;
+
+  /**
+   * Credentials with application-level access.
+   */
+  public static final GoogleCredentials APPLICATION_CREDENTIALS;
+
+  /**
+   * Credentials with no access.
+   */
+  public static final GoogleCredentials NO_ACCESS_CREDENTIALS;
+
+  /**
+   * Credentials used or granting temporary access.
+   */
+  public static final GoogleCredentials TEMPORARY_ACCESS_CREDENTIALS;
+
+  /**
+   * Account/customer ID (Cxxxxx) of a Cloud Identity/Workspace account.
+   */
+  public static final String CLOUD_IDENTITY_ACCOUNT_ID;
+
+  /**
+   * Domain name of the Cloud Identity/Workspace account.
+   */
+  public static final String CLOUD_IDENTITY_DOAMIN;
 
   public static final PubSubTopic PUBSUB_TOPIC;
 
@@ -80,15 +101,23 @@ public class IntegrationTestEnvironment {
       Properties settings = new Properties();
       settings.load(in);
 
+      //
+      // Project, account settings.
+      //
+
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
+      CLOUD_IDENTITY_ACCOUNT_ID = getMandatory(settings, "test.cloudIdentity.accountId");
+      CLOUD_IDENTITY_DOAMIN = getMandatory(settings, "test.cloudIdentity.domain");
       REGION = getOptional(settings, "test.region", null);
 
-      NO_ACCESS_USER = new UserId(
-          "no-access",
+      //
+      // User settings.
+      //
+
+      NO_ACCESS_USER = new UserEmail(
           String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
 
-      TEMPORARY_ACCESS_USER = new UserId(
-          "temporary-access",
+      TEMPORARY_ACCESS_USER = new UserEmail(
           String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
 
       var defaultCredentials = GoogleCredentials
@@ -104,6 +133,10 @@ public class IntegrationTestEnvironment {
 
       NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
       TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
+
+      //
+      // Pub/Sub settings.
+      //
 
       var topicName = getOptional(settings, "test.topic", "");
       if (!Strings.isNullOrEmpty(topicName)) {

@@ -26,7 +26,7 @@ import com.google.api.services.directory.model.Privilege;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ExternalApproval;
 import com.google.solutions.jitaccess.core.catalog.PeerApproval;
 import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
@@ -50,9 +50,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestPolicyAnalyzerRepository {
-  private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
-  private static final UserId SAMPLE_APPROVING_USER_1 = new UserId("approver-1", "approver-1@example.com");
-  private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2", "approver-2@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER_1 = new UserEmail("approver-1@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER_2 = new UserEmail("approver-2@example.com");
   private static final ProjectId SAMPLE_PROJECT_ID_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_ID_2 = new ProjectId("project-2");
   private static final ProjectId SAMPLE_PROJECT_ID_3 = new ProjectId("project-3");
@@ -76,7 +76,7 @@ public class TestPolicyAnalyzerRepository {
   private static IamPolicyAnalysisResult createIamPolicyAnalysisResult(
       String resource,
       String role,
-      UserId user) {
+      UserEmail user) {
     return new IamPolicyAnalysisResult()
         .setAttachedResourceFullName(resource)
         .setAccessControlLists(List.of(new GoogleCloudAssetV1AccessControlList()
@@ -90,7 +90,7 @@ public class TestPolicyAnalyzerRepository {
   private static IamPolicyAnalysisResult createConditionalIamPolicyAnalysisResult(
       String resource,
       String role,
-      UserId user,
+      UserEmail user,
       String condition,
       String conditionTitle,
       String evaluationResult) {
@@ -298,8 +298,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -336,8 +336,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -373,8 +373,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -413,10 +413,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -469,10 +469,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -517,10 +517,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -564,8 +564,8 @@ public class TestPolicyAnalyzerRepository {
 
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -605,8 +605,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -662,24 +662,24 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(3, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new PeerApproval("other_topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -732,10 +732,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -780,10 +780,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -828,8 +828,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -869,8 +869,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -926,24 +926,24 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(3, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
     assertEquals(new ExternalApproval("other_topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -996,10 +996,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(SAMPLE_ROLE_1, privilege.name());
@@ -1061,22 +1061,22 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(3, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(3, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_3, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = privileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_2, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = privileges.availableRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = privileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
@@ -1138,22 +1138,22 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(allPrivileges.warnings());
     assertEquals(0, allPrivileges.warnings().size());
 
-    assertNotNull(allPrivileges.availableRequesterPrivileges());
-    assertEquals(3, allPrivileges.availableRequesterPrivileges().size());
+    assertNotNull(allPrivileges.available());
+    assertEquals(3, allPrivileges.available().size());
 
-    var privilege = allPrivileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = allPrivileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = allPrivileges.availableRequesterPrivileges().stream().skip(1).findFirst().get();
+    privilege = allPrivileges.available().stream().skip(1).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
     assertEquals(RequesterPrivilege.Status.INACTIVE, privilege.status());
 
-    privilege = allPrivileges.availableRequesterPrivileges().stream().skip(2).findFirst().get();
+    privilege = allPrivileges.available().stream().skip(2).findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
@@ -1165,8 +1165,8 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new SelfApproval()),
         EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, selfApprovalPrivilege.availableRequesterPrivileges().size());
-    privilege = selfApprovalPrivilege.availableRequesterPrivileges().stream().findFirst().get();
+    assertEquals(1, selfApprovalPrivilege.available().size());
+    privilege = selfApprovalPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new SelfApproval().name(), privilege.activationType().name());
@@ -1178,8 +1178,8 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new PeerApproval("topic")),
         EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, peerPrivilege.availableRequesterPrivileges().size());
-    privilege = peerPrivilege.availableRequesterPrivileges().stream().findFirst().get();
+    assertEquals(1, peerPrivilege.available().size());
+    privilege = peerPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new PeerApproval("topic").name(), privilege.activationType().name());
@@ -1191,8 +1191,8 @@ public class TestPolicyAnalyzerRepository {
         SAMPLE_PROJECT_ID_1,
         Set.of(new ExternalApproval("topic")),
         EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
-    assertEquals(1, peerPrivilege.availableRequesterPrivileges().size());
-    privilege = requesterPrivilege.availableRequesterPrivileges().stream().findFirst().get();
+    assertEquals(1, peerPrivilege.available().size());
+    privilege = requesterPrivilege.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
     assertEquals(new ExternalApproval("topic").name(), privilege.activationType().name());
@@ -1259,10 +1259,10 @@ public class TestPolicyAnalyzerRepository {
       assertNotNull(privileges.warnings());
       assertEquals(0, privileges.warnings().size());
 
-      assertNotNull(privileges.availableRequesterPrivileges());
-      assertEquals(1, privileges.availableRequesterPrivileges().size());
+      assertNotNull(privileges.available());
+      assertEquals(1, privileges.available().size());
 
-      var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+      var privilege = privileges.available().stream().findFirst().get();
       assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
       assertEquals(SAMPLE_ROLE_1, privilege.id().roleBinding().role());
       assertEquals(new SelfApproval().name(), privilege.activationType().name());
@@ -1283,17 +1283,17 @@ public class TestPolicyAnalyzerRepository {
       assertNotNull(privileges.warnings());
       assertEquals(0, privileges.warnings().size());
 
-      assertNotNull(privileges.availableRequesterPrivileges());
-      assertEquals(1, privileges.availableRequesterPrivileges().size());
-      assertEquals(1, privileges.expiredRequesterPrivileges().size());
+      assertNotNull(privileges.available());
+      assertEquals(1, privileges.available().size());
+      assertEquals(1, privileges.expired().size());
 
-      var active = privileges.availableRequesterPrivileges().stream().findFirst().get();
+      var active = privileges.available().stream().findFirst().get();
       assertEquals(SAMPLE_PROJECT_ID_1, active.id().projectId());
       assertEquals(SAMPLE_ROLE_1, active.id().roleBinding().role());
       assertEquals(new SelfApproval().name(), active.activationType().name());
       assertEquals(RequesterPrivilege.Status.ACTIVE, active.status());
 
-      var expired = privileges.expiredRequesterPrivileges().stream().findFirst().get();
+      var expired = privileges.expired().stream().findFirst().get();
       assertEquals(SAMPLE_PROJECT_ID_1, expired.id().projectId());
       assertEquals(SAMPLE_ROLE_1, expired.id().roleBinding().role());
       assertEquals(new SelfApproval().name(), expired.activationType().name());
@@ -1338,8 +1338,8 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(0, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(0, privileges.available().size());
   }
 
   @Test
@@ -1402,10 +1402,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var first = privileges.availableRequesterPrivileges().first();
+    var first = privileges.available().first();
     assertEquals(new RoleBinding(SAMPLE_PROJECT_ID_1, SAMPLE_ROLE_1), first.id().roleBinding());
     assertEquals(new SelfApproval().name(), first.activationType().name());
   }
@@ -1465,10 +1465,10 @@ public class TestPolicyAnalyzerRepository {
     assertNotNull(privileges.warnings());
     assertEquals(0, privileges.warnings().size());
 
-    assertNotNull(privileges.availableRequesterPrivileges());
-    assertEquals(1, privileges.availableRequesterPrivileges().size());
+    assertNotNull(privileges.available());
+    assertEquals(1, privileges.available().size());
 
-    var privilege = privileges.availableRequesterPrivileges().stream().findFirst().get();
+    var privilege = privileges.available().stream().findFirst().get();
     assertEquals(SAMPLE_PROJECT_ID_1, privilege.id().projectId());
     assertEquals(RequesterPrivilege.Status.ACTIVE, privilege.status());
   }

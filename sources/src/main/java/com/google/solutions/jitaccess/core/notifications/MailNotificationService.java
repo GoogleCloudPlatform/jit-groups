@@ -25,8 +25,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
 import com.google.solutions.jitaccess.core.MailAddressFormatter;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.UserEmail;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -43,16 +45,16 @@ import java.util.stream.Collectors;
  * Concrete class that delivers notifications over SMTP.
  */
 public class MailNotificationService extends NotificationService {
-  private final Options options;
-  private final SmtpClient smtpClient;
-  private final MailAddressFormatter formatter;
+  private final @NotNull Options options;
+  private final @NotNull SmtpClient smtpClient;
+  private final @NotNull MailAddressFormatter formatter;
 
   /**
    * Load a resource from a JAR resource.
    * 
    * @return null if not found.
    */
-  public static String loadResource(String resourceName) throws NotificationException {
+  public static @Nullable String loadResource(String resourceName) throws NotificationException {
     try (var stream = NotificationService.class
         .getClassLoader()
         .getResourceAsStream(resourceName)) {
@@ -81,9 +83,9 @@ public class MailNotificationService extends NotificationService {
   }
 
   public MailNotificationService(
-      SmtpClient smtpClient,
-      Options options,
-      MailAddressFormatter formatter) {
+      @NotNull SmtpClient smtpClient,
+      @NotNull Options options,
+      @NotNull MailAddressFormatter formatter) {
     Preconditions.checkNotNull(smtpClient);
     Preconditions.checkNotNull(options);
     Preconditions.checkNotNull(formatter);
@@ -103,7 +105,7 @@ public class MailNotificationService extends NotificationService {
   }
 
   @Override
-  public void sendNotification(Notification notification) throws NotificationException {
+  public void sendNotification(@NotNull Notification notification) throws NotificationException {
     Preconditions.checkNotNull(notification, "notification");
 
     var htmlTemplate = loadResource(
@@ -124,10 +126,10 @@ public class MailNotificationService extends NotificationService {
     try {
       this.smtpClient.sendMail(
           notification.getToRecipients().stream()
-              .map((recipient) -> new UserId(recipient.id, formatter.format(recipient.email)))
+              .map((recipient) -> new UserEmail(formatter.format(recipient.email)))
               .collect(Collectors.toList()),
           notification.getCcRecipients().stream()
-              .map((recipient) -> new UserId(recipient.id, formatter.format(recipient.email)))
+              .map((recipient) -> new UserEmail(formatter.format(recipient.email)))
               .collect(Collectors.toList()),
           notification.getSubject(),
           formattedMessage,
@@ -147,14 +149,14 @@ public class MailNotificationService extends NotificationService {
    * Template for turning a notification object into some textual representation.
    */
   public static class MessageTemplate {
-    private final String template;
-    private final Escaper escaper;
-    private final ZoneId timezoneId;
+    private final @NotNull String template;
+    private final @NotNull Escaper escaper;
+    private final @NotNull ZoneId timezoneId;
 
     public MessageTemplate(
-        String template,
-        ZoneId timezoneId,
-        Escaper escaper) {
+        @NotNull String template,
+        @NotNull ZoneId timezoneId,
+        @NotNull Escaper escaper) {
       Preconditions.checkNotNull(template, "template");
       Preconditions.checkNotNull(timezoneId, "timezoneId");
       Preconditions.checkNotNull(escaper, "escaper");
@@ -164,7 +166,7 @@ public class MailNotificationService extends NotificationService {
       this.escaper = escaper;
     }
 
-    public String format(NotificationService.Notification notification) {
+    public String format(NotificationService.@NotNull Notification notification) {
       Preconditions.checkNotNull(notification, "notification");
 
       //
@@ -203,9 +205,9 @@ public class MailNotificationService extends NotificationService {
   public static class Options {
     public static final ZoneId DEFAULT_TIMEZONE = ZoneOffset.UTC;
 
-    private final ZoneId timeZone;
+    private final @NotNull ZoneId timeZone;
 
-    public Options(ZoneId timeZone) {
+    public Options(@NotNull ZoneId timeZone) {
       Preconditions.checkNotNull(timeZone);
       this.timeZone = timeZone;
     }

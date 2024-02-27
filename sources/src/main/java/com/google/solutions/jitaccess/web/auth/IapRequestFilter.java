@@ -35,6 +35,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
+import org.jetbrains.annotations.NotNull;
 
 import java.security.Principal;
 
@@ -73,15 +74,14 @@ public class IapRequestFilter implements ContainerRequestFilter {
     } else {
       return String.format(
           "/projects/%s/global/backendServices/%s",
-          this.runtimeEnvironment.getProjectNumber(),
-          this.runtimeEnvironment.getBackendServiceId().toString());
+          this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId());
     }
   }
 
   /**
    * Authenticate request using IAP assertion.
    */
-  private UserPrincipal authenticateIapRequest(ContainerRequestContext requestContext) {
+  private @NotNull UserPrincipal authenticateIapRequest(@NotNull ContainerRequestContext requestContext) {
     //
     // Read IAP assertion header and validate it.
     //
@@ -144,7 +144,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
   /**
    * Pseudo-authenticate request using debug header. Only used in debug mode.
    */
-  private UserPrincipal authenticateDebugRequest(ContainerRequestContext requestContext) {
+  private @NotNull UserPrincipal authenticateDebugRequest(@NotNull ContainerRequestContext requestContext) {
     assert this.runtimeEnvironment.isDebugModeEnabled();
 
     var debugPrincipalName = requestContext.getHeaderString(DEBUG_PRINCIPAL_HEADER);
@@ -154,24 +154,24 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
     return new UserPrincipal() {
       @Override
-      public String getName() {
+      public @NotNull String getName() {
         return debugPrincipalName;
       }
 
       @Override
-      public UserId getId() {
-        return new UserId(debugPrincipalName);
+      public @NotNull UserId getId() {
+        return new UserId("debug", debugPrincipalName);
       }
 
       @Override
-      public DeviceInfo getDevice() {
+      public @NotNull DeviceInfo getDevice() {
         return DeviceInfo.UNKNOWN;
       }
     };
   }
 
   @Override
-  public void filter(ContainerRequestContext requestContext) {
+  public void filter(@NotNull ContainerRequestContext requestContext) {
     Preconditions.checkNotNull(this.log, "log");
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
 
@@ -184,7 +184,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
     requestContext.setSecurityContext(
         new SecurityContext() {
           @Override
-          public Principal getUserPrincipal() {
+          public @NotNull Principal getUserPrincipal() {
             return principal;
           }
 
@@ -199,7 +199,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
           }
 
           @Override
-          public String getAuthenticationScheme() {
+          public @NotNull String getAuthenticationScheme() {
             return "IAP";
           }
         });

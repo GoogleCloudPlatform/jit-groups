@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -66,7 +67,7 @@ public record RequesterPrivilege<TPrivilegeID extends PrivilegeId>(
   }
 
   @Override
-  public int compareTo(RequesterPrivilege<TPrivilegeID> o) {
+  public int compareTo(@NotNull RequesterPrivilege<TPrivilegeID> o) {
     return Comparator
         .comparing((RequesterPrivilege<TPrivilegeID> e) -> e.status)
         .thenComparing(e -> e.activationType.name())

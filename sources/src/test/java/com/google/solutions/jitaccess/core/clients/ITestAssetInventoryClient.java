@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class TestAssetInventoryClient {
+public class ITestAssetInventoryClient {
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
   // -------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public class TestAssetInventoryClient {
   @Test
   public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.INVALID_CREDENTIAL,
+        ITestEnvironment.INVALID_CREDENTIAL,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -52,7 +52,7 @@ public class TestAssetInventoryClient {
   @Test
   public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.NO_ACCESS_CREDENTIALS,
+        ITestEnvironment.NO_ACCESS_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -65,13 +65,13 @@ public class TestAssetInventoryClient {
   @Test
   public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
     var adapter = new PolicyAnalyzerClient(
-        IntegrationTestEnvironment.APPLICATION_CREDENTIALS,
+        ITestEnvironment.APPLICATION_CREDENTIALS,
         HttpTransport.Options.DEFAULT);
 
     assertThrows(
         ResourceNotFoundException.class,
         () -> adapter.getEffectiveIamPolicies(
-            "projects/" + IntegrationTestEnvironment.PROJECT_ID,
+            "projects/" + ITestEnvironment.PROJECT_ID,
             new ProjectId("0")));
   }
 }
