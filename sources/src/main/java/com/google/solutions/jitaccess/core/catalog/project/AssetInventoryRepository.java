@@ -50,7 +50,7 @@ import java.util.stream.Collectors;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class AssetInventoryRepository implements ProjectRoleRepository {
+public class AssetInventoryRepository extends ProjectRoleRepository {
   public static final String GROUP_PREFIX = "group:";
   public static final String USER_PREFIX = "user:";
 

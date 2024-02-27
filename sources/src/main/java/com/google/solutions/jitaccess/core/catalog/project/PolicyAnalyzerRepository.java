@@ -50,7 +50,7 @@ import java.util.stream.Stream;
  * are annotated with a special IAM condition (making the binding
  * "eligible").
  */
-public class PolicyAnalyzerRepository implements ProjectRoleRepository {
+public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   private final @NotNull Options options;
   private final @NotNull PolicyAnalyzerClient policyAnalyzerClient;
 

@@ -15,19 +15,19 @@ import java.util.SortedSet;
 /**
  * Repository for ProjectRoleBinding-based entitlements.
  */
-public interface ProjectRoleRepository {
+public abstract class ProjectRoleRepository {
 
   /**
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
-  SortedSet<ProjectId> findProjectsWithEntitlements(
+  abstract SortedSet<ProjectId> findProjectsWithEntitlements(
     UserEmail user
   ) throws AccessException, IOException;
 
   /**
    * List entitlements for the given user.
    */
-  EntitlementSet<ProjectRoleBinding> findEntitlements(
+  abstract EntitlementSet<ProjectRoleBinding> findEntitlements(
     UserEmail user,
     ProjectId projectId,
     EnumSet<ActivationType> typesToInclude,
@@ -37,7 +37,7 @@ public interface ProjectRoleRepository {
   /**
    * List users that hold an eligible role binding.
    */
-  Set<UserEmail> findEntitlementHolders(
+  abstract Set<UserEmail> findEntitlementHolders(
     ProjectRoleBinding roleBinding,
     ActivationType activationType
   ) throws AccessException, IOException;
