@@ -318,8 +318,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.currentEntitlements().first();
+        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.available().first();
       assertEquals(ActivationType.JIT, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -336,8 +336,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.currentEntitlements().first();
+        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.available().first();
       assertEquals(ActivationType.MPA, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -354,8 +354,8 @@ public class TestAssetInventoryRepository {
 
       assertIterableEquals(
         List.of("roles/for-user"),
-        entitlements.currentEntitlements().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.currentEntitlements().first();
+        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      var jitEntitlement = entitlements.available().first();
       assertEquals(ActivationType.JIT, jitEntitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
     }
@@ -414,10 +414,10 @@ public class TestAssetInventoryRepository {
         EnumSet.of(ActivationType.JIT, ActivationType.MPA),
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
 
-      assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(0, entitlements.expiredEntitlements().size());
+      assertEquals(1, entitlements.available().size());
+      assertEquals(0, entitlements.expired().size());
 
-      var entitlement = entitlements.currentEntitlements().first();
+      var entitlement = entitlements.available().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
     }
@@ -432,16 +432,16 @@ public class TestAssetInventoryRepository {
         EnumSet.of(ActivationType.JIT, ActivationType.MPA),
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
 
-      assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(2, entitlements.expiredEntitlements().size());
+      assertEquals(1, entitlements.available().size());
+      assertEquals(2, entitlements.expired().size());
 
-      var entitlement = entitlements.currentEntitlements().first();
+      var entitlement = entitlements.available().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
       assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
 
       assertEquals(
         "roles/for-user",
-        entitlements.expiredEntitlements().stream().toList().get(0).id().roleBinding().role());
+        entitlements.expired().stream().toList().get(0).id().roleBinding().role());
     }
   }
 
@@ -484,10 +484,10 @@ public class TestAssetInventoryRepository {
         EnumSet.of(ActivationType.JIT, ActivationType.MPA),
         EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
 
-      assertEquals(1, entitlements.currentEntitlements().size());
-      assertEquals(0, entitlements.expiredEntitlements().size());
+      assertEquals(1, entitlements.available().size());
+      assertEquals(0, entitlements.expired().size());
 
-      var entitlement = entitlements.currentEntitlements().first();
+      var entitlement = entitlements.available().first();
       assertEquals(ActivationType.JIT, entitlement.activationType());
       assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
     }

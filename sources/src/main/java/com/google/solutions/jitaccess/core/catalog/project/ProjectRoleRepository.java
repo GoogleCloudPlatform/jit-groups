@@ -76,7 +76,7 @@ public abstract class ProjectRoleRepository {
       @NotNull Set<Entitlement<T>> availableEntitlements,
       @NotNull Set<ActivatedEntitlement<T>> validActivations,// TODO(later): rename to active
       @NotNull Set<ActivatedEntitlement<T>> expiredActivations,
-      Set<String> warnings
+      @NotNull Set<String> warnings
   ) {
     assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
     assert validActivations.stream().noneMatch(id -> expiredActivations.contains(id));

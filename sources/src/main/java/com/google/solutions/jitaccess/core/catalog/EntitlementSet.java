@@ -22,32 +22,30 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Set of entitlements
  *
- * @param currentEntitlements available and active entitlements
- * @param expiredEntitlements previously active entitlements
+ * @param available available and active entitlements
+ * @param expired previously active entitlements
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
-  SortedSet<Entitlement<TId>> currentEntitlements, // TODO(later): rename to available
-  SortedSet<Entitlement<TId>> expiredEntitlements,
-  Set<String> warnings
+  @NotNull SortedSet<Entitlement<TId>> available,
+  @NotNull SortedSet<Entitlement<TId>> expired,
+  @NotNull Set<String> warnings
 ) {
   public EntitlementSet {
-    Preconditions.checkNotNull(currentEntitlements, "currentEntitlements");
+    Preconditions.checkNotNull(available, "available");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    assert currentEntitlements.stream().allMatch(e -> e.status() != Entitlement.Status.EXPIRED);
-    assert expiredEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
+    assert available.stream().allMatch(e -> e.status() != Entitlement.Status.EXPIRED);
+    assert expired.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
   }
 
   public static <TId extends EntitlementId> @NotNull EntitlementSet<TId> empty() {
