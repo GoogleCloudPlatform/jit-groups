@@ -210,8 +210,8 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // Find temporary bindings that reflect activations and sort out which
     // ones are still active and which ones have expired.
     //
-    var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
-    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
 
     for (var binding : allBindings.stream()
       // Only temporary access bindings.
@@ -228,19 +228,19 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       }
 
       if (isValid && statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-        allActive.add(new EntitlementSet.ActivatedEntitlement<>(
+        allActive.add(new ActivatedEntitlement<>(
           new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
 
       if (!isValid && statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
-        allExpired.add(new EntitlementSet.ActivatedEntitlement<>(
+        allExpired.add(new ActivatedEntitlement<>(
           new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
     }
 
-    return EntitlementSet.build(allAvailable, allActive, allExpired, Set.of());
+    return buildEntitlementSet(allAvailable, allActive, allExpired, Set.of());
   }
 
   @Override

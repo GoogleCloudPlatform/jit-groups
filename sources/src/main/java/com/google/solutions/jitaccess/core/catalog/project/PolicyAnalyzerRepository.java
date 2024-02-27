@@ -246,7 +246,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         .toList());
     }
 
-    var allActive = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -262,13 +262,13 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
       allActive.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>(
+        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
           new ProjectRoleBinding(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
     }
 
-    var allExpired = new HashSet<EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
     if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
       //
       // Do the same for conditions that evaluated to FALSE.
@@ -281,7 +281,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
       allExpired.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new EntitlementSet.ActivatedEntitlement<ProjectRoleBinding>(
+        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
           new ProjectRoleBinding(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
@@ -292,7 +292,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    return EntitlementSet.build(allAvailable, allActive, allExpired, warnings);
+    return buildEntitlementSet(allAvailable, allActive, allExpired, warnings);
   }
 
   @Override

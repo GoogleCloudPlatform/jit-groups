@@ -19,9 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog;
+package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.cel.TimeSpan;
+import com.google.solutions.jitaccess.core.catalog.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -31,7 +32,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
-public class TestEntitlementSet {
+public class TestProjectRoleRepository {
   private class StringId extends EntitlementId {
     private final String id;
 
@@ -49,13 +50,13 @@ public class TestEntitlementSet {
       return this.id;
     }
   }
-
+  
   // -------------------------------------------------------------------------
-  // CurrentEntitlements.
+  // buildEntitlementSet.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenActiveIsEmpty_ThenCurrentEntitlementsHaveRightStatus() {
+  public void whenActiveIsEmpty_ThenBuildEntitlementSetReturnsConsolidatedList() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -67,7 +68,7 @@ public class TestEntitlementSet {
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
 
-    var set = EntitlementSet.build(
+    var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
       Set.of(),
       Set.of(),
@@ -79,7 +80,7 @@ public class TestEntitlementSet {
   }
 
   @Test
-  public void whenOneEntitlementActive_ThenCurrentEntitlementsHaveRightStatus() {
+  public void whenOneEntitlementActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -92,27 +93,27 @@ public class TestEntitlementSet {
       Entitlement.Status.AVAILABLE);
 
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = EntitlementSet.build(
+    var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
-      Set.of(new EntitlementSet.ActivatedEntitlement<>(
+      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
         available1.id(),
         validity1)),
       Set.of(),
       Set.of());
 
     assertIterableEquals(List.of(
-      available2,
-      new Entitlement<StringId>(
-        new StringId("available-1"),
-        "available-1",
-        ActivationType.JIT,
-        Entitlement.Status.ACTIVE,
-        validity1)),
+        available2,
+        new Entitlement<StringId>(
+          new StringId("available-1"),
+          "available-1",
+          ActivationType.JIT,
+          Entitlement.Status.ACTIVE,
+          validity1)),
       set.currentEntitlements());
   }
 
   @Test
-  public void whenAllEntitlementsActive_ThenCurrentEntitlementsHaveRightStatus() {
+  public void whenAllEntitlementsActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -125,13 +126,13 @@ public class TestEntitlementSet {
       Entitlement.Status.AVAILABLE);
 
     var validity = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = EntitlementSet.build(
+    var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
       Set.of(
-        new EntitlementSet.ActivatedEntitlement<>(
+        new ProjectRoleRepository.ActivatedEntitlement<>(
           available1.id(),
           validity),
-        new EntitlementSet.ActivatedEntitlement<>(
+        new ProjectRoleRepository.ActivatedEntitlement<>(
           available2.id(),
           validity)),
       Set.of(),
@@ -155,7 +156,7 @@ public class TestEntitlementSet {
   }
 
   @Test
-  public void whenUnavailableEntitlementsIsActive_ThenCurrentEntitlementsHaveRightStatus() {
+  public void whenUnavailableEntitlementsIsActive_ThenBuildEntitlementSetReturnsConsolidatedList() {
     var available1 = new Entitlement<StringId>(
       new StringId("available-1"),
       "available-1",
@@ -168,9 +169,9 @@ public class TestEntitlementSet {
       Entitlement.Status.AVAILABLE);
 
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
-    var set = EntitlementSet.build(
+    var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
-      Set.of(new EntitlementSet.ActivatedEntitlement<>(
+      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
         new StringId("unavailable-1"),
         validity1)),
       Set.of(),
