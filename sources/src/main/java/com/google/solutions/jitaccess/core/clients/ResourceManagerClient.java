@@ -386,9 +386,7 @@ public class ResourceManagerClient {
             return false;
           }
 
-          if (!Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription())) {
-            return false;
-          }
+          return Objects.equals(lhs.getCondition().getDescription(), rhs.getCondition().getDescription());
         }
       }
 

@@ -81,9 +81,14 @@ public class RuntimeEnvironment {
   // Private helpers.
   // -------------------------------------------------------------------------
 
-  private static HttpResponse getMetadata(String path) throws IOException {
-    GenericUrl genericUrl = new GenericUrl(ComputeEngineCredentials.getMetadataServerUrl() + path);
-    HttpRequest request = new NetHttpTransport().createRequestFactory().buildGetRequest(genericUrl);
+  private static HttpResponse getMetadata() throws IOException {
+    var genericUrl = new GenericUrl(
+      ComputeEngineCredentials.getMetadataServerUrl() +
+        "/computeMetadata/v1/project/?recursive=true");
+
+    var request = new NetHttpTransport()
+      .createRequestFactory()
+      .buildGetRequest(genericUrl);
 
     request.setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()));
     request.getHeaders().set("Metadata-Flavor", "Google");
@@ -136,7 +141,7 @@ public class RuntimeEnvironment {
       //
       try {
         GenericData projectMetadata =
-          getMetadata("/computeMetadata/v1/project/?recursive=true").parseAs(GenericData.class);
+          getMetadata().parseAs(GenericData.class);
 
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
