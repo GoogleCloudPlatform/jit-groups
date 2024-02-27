@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -401,11 +402,11 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------
-  // searchDirectGroupMemberships.
+  // listMemberships.
   //---------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenSearchDirectGroupMembershipsThrowsException() {
+  public void whenUnauthenticated_ThenListMembershipsThrowsException() {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.INVALID_CREDENTIAL,
       new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
@@ -413,19 +414,60 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> client.searchDirectGroupMemberships(
-        ITestEnvironment.TEMPORARY_ACCESS_USER));
+      () -> client.listMemberships(TEST_GROUP_EMAIL));
   }
 
   @Test
-  public void searchDirectGroupMemberships() throws Exception {
+  public void listMemberships() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
         ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
-    var memberships = client.searchDirectGroupMemberships(
+    var groupId = client.createGroup(TEST_GROUP_EMAIL, "test group");
+    client.addMembership(
+      groupId,
+      ITestEnvironment.TEMPORARY_ACCESS_USER,
+      Instant.now().plusSeconds(300));
+
+    var memberships = client.listMemberships(TEST_GROUP_EMAIL);
+    assertEquals(2, memberships.size());
+
+    var members = memberships
+      .stream()
+      .map(m -> m.getPreferredMemberKey().getId())
+      .collect(Collectors.toSet());
+
+    assertTrue(members.contains(ITestEnvironment.TEMPORARY_ACCESS_USER.email));
+  }
+
+  //---------------------------------------------------------------------
+  // listMembershipsByUser.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenListMembershipsByUserThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.INVALID_CREDENTIAL,
+      new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> client.listMembershipsByUser(
+        ITestEnvironment.TEMPORARY_ACCESS_USER));
+  }
+
+  @Test
+  public void ListMembershipsByUser() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var memberships = client.listMembershipsByUser(
       ITestEnvironment.TEMPORARY_ACCESS_USER);
     assertEquals(0, memberships.size());
   }
