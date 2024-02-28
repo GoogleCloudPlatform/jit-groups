@@ -56,59 +56,58 @@ public class RestDispatcher<TResource> {
     // Inject @Context objects.
     //
     dispatcher.getDefaultContextObjects().put(
-      SecurityContext.class,
-      new SecurityContext() {
-        @Override
-        public Principal getUserPrincipal() {
-          return new IapPrincipal() {
-            @Override
-            public UserEmail email() {
-              return userEmail;
-            }
+        SecurityContext.class,
+        new SecurityContext() {
+          @Override
+          public Principal getUserPrincipal() {
+            return new IapPrincipal() {
+              @Override
+              public UserEmail email() {
+                return userEmail;
+              }
 
-            @Override
-            public String subjectId() {
-              return "mock";
-            }
+              @Override
+              public String subjectId() {
+                return "mock";
+              }
 
-            @Override
-            public DeviceInfo device() {
-              return DeviceInfo.UNKNOWN;
-            }
+              @Override
+              public DeviceInfo device() {
+                return DeviceInfo.UNKNOWN;
+              }
 
-            @Override
-            public String getName() {
-              return "mock@example.com";
-            }
-          };
-        }
+              @Override
+              public String getName() {
+                return "mock@example.com";
+              }
+            };
+          }
 
-        @Override
-        public boolean isUserInRole(String s) {
-          return false;
-        }
+          @Override
+          public boolean isUserInRole(String s) {
+            return false;
+          }
 
-        @Override
-        public boolean isSecure() {
-          return true;
-        }
+          @Override
+          public boolean isSecure() {
+            return true;
+          }
 
-        @Override
-        public String getAuthenticationScheme() {
-          return "Mock";
-        }
-      });
+          @Override
+          public String getAuthenticationScheme() {
+            return "Mock";
+          }
+        });
   }
 
   private <TResponse> Response<TResponse> invoke(
-    MockHttpRequest request,
-    Class<TResponse> responseType
-  ) {
+      MockHttpRequest request,
+      Class<TResponse> responseType) {
     var response = new MockHttpResponse();
     var synchronousExecutionContext = new SynchronousExecutionContext(
-      (SynchronousDispatcher)dispatcher,
-      request,
-      response);
+        (SynchronousDispatcher) dispatcher,
+        request,
+        response);
 
     request.setAsynchronousContext(synchronousExecutionContext);
     dispatcher.invoke(request, response);
@@ -116,28 +115,25 @@ public class RestDispatcher<TResource> {
   }
 
   public <TResponse> Response<TResponse> get(
-    String path,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
+      String path,
+      Class<TResponse> responseType) throws URISyntaxException {
     return invoke(MockHttpRequest.get(path), responseType);
   }
 
   public <TResponse> Response<TResponse> post(
-    String path,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
+      String path,
+      Class<TResponse> responseType) throws URISyntaxException {
     return invoke(MockHttpRequest.post(path), responseType);
   }
 
   public <TRequest, TResponse> Response<TResponse> post(
-    String path,
-    TRequest request,
-    Class<TResponse> responseType
-  ) throws URISyntaxException {
+      String path,
+      TRequest request,
+      Class<TResponse> responseType) throws URISyntaxException {
     var mockRequest = MockHttpRequest.post(path)
-      .accept(MediaType.APPLICATION_JSON)
-      .contentType(MediaType.APPLICATION_JSON_TYPE)
-      .content(new Gson().toJson(request).getBytes());
+        .accept(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_JSON_TYPE)
+        .content(new Gson().toJson(request).getBytes());
 
     return invoke(mockRequest, responseType);
   }

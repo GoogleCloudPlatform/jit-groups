@@ -135,7 +135,7 @@ public class ActivationRequest<TPrivilegeId extends PrivilegeId> {
   /**
    * @return type of activation.
    */
-  public ActivationType activationType() {
+  public @NotNull ActivationType activationType() {
     return this.activationType;
   }
 

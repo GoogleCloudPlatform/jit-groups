@@ -22,11 +22,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserEmail;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,12 +35,13 @@ import java.util.Set;
 /**
  * Activates requester privileges, for example by modifying IAM policies.
  */
-public abstract class RequesterPrivilegeActivator<TPrivilegeId extends PrivilegeId> {
+public abstract class RequesterPrivilegeActivator<TPrivilegeId extends PrivilegeId, TScopeId extends ResourceId> {
   private final @NotNull JustificationPolicy policy;
-  private final @NotNull RequesterPrivilegeCatalog<TPrivilegeId> catalog;
+
+  private final @NotNull RequesterPrivilegeCatalog<TPrivilegeId, TScopeId> catalog;
 
   protected RequesterPrivilegeActivator(
-      @NotNull RequesterPrivilegeCatalog<TPrivilegeId> catalog,
+      @NotNull RequesterPrivilegeCatalog<TPrivilegeId, TScopeId> catalog,
       @NotNull JustificationPolicy policy) {
     Preconditions.checkNotNull(catalog, "catalog");
     Preconditions.checkNotNull(policy, "policy");

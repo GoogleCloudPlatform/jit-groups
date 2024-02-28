@@ -24,12 +24,14 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege;
+import com.google.solutions.jitaccess.core.catalog.RequesterPrivilegeSet;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.NoActivation;
+import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -40,137 +42,129 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
- * Repository for ProjectRoleBinding-based entitlements.
+ * Repository for ProjectRoleBinding-based privileges.
  */
 public abstract class ProjectRoleRepository {
 
   /**
-   * Find projects that a user has standing, JIT-, or MPA-eligible access to.
+   * Find projects that a user has standing, requester privileges in.
    */
-  abstract SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserEmail user
-  ) throws AccessException, IOException;
+  abstract SortedSet<ProjectId> findProjectsWithRequesterPrivileges(
+      UserEmail user) throws AccessException, IOException;
 
   /**
-   * List entitlements for the given user.
+   * List requester privileges for the given user.
    */
-  abstract EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserEmail user,
-    ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
-  ) throws AccessException, IOException;
+  abstract RequesterPrivilegeSet<ProjectRoleBinding> findRequesterPrivileges(
+      UserEmail user,
+      ProjectId projectId,
+      Set<ActivationType> typesToInclude,
+      EnumSet<RequesterPrivilege.Status> statusesToInclude) throws AccessException, IOException;
 
   /**
-   * List users that hold an eligible role binding.
+   * List users that hold an eligible reviewer privilege for a role binding.
    */
-  abstract Set<UserEmail> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    ActivationType activationType
-  ) throws AccessException, IOException;
+  abstract Set<UserEmail> findReviewerPrivelegeHolders(
+      ProjectRoleBinding roleBinding,
+      ActivationType activationType) throws AccessException, IOException;
 
-  /**
-   * Helper methods for building an EntitlementSet.
-   */
-  static <T extends EntitlementId> @NotNull EntitlementSet<T> buildEntitlementSet(
-      @NotNull Set<Entitlement<T>> availableEntitlements,
-      @NotNull Set<ActivatedEntitlement<T>> validActivations,// TODO(later): rename to active
-      @NotNull Set<ActivatedEntitlement<T>> expiredActivations,
-      @NotNull Set<String> warnings
-  ) {
-    assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
+  static <T extends PrivilegeId> @NotNull RequesterPrivilegeSet<T> buildRequesterPrivilegeSet(
+      @NotNull Set<RequesterPrivilege<T>> availableRequesterPrivileges,
+      @NotNull Set<ActivatedRequesterPrivilege<T>> validActivations, // TODO(later): rename to active
+      @NotNull Set<ActivatedRequesterPrivilege<T>> expiredActivations,
+      @NotNull Set<String> warnings) {
+    assert availableRequesterPrivileges.stream().allMatch(e -> e.status() == RequesterPrivilege.Status.INACTIVE);
     assert validActivations.stream().noneMatch(id -> expiredActivations.contains(id));
     assert expiredActivations.stream().noneMatch(id -> validActivations.contains(id));
 
     //
     // Return a set containing:
     //
-    //  1. Available entitlements
-    //  2. Active entitlements
+    // 1. Available privilegges
+    // 2. Active privileges
     //
     // where (1) and (2) don't overlap.
     //
-    // Expired entitlements are ignored.
+    // Expired privileges are ignored.
     //
-    var availableAndInactive = availableEntitlements
-      .stream()
-      .filter(ent -> validActivations
+    var availableAndInactive = availableRequesterPrivileges
         .stream()
-        .noneMatch(active -> active.entitlementId().equals(ent.id())))
-      .collect(Collectors.toCollection(TreeSet::new));
+        .filter(privilege -> validActivations
+            .stream()
+            .noneMatch(active -> active.privilegeId().equals(privilege.id())))
+        .collect(Collectors.toCollection(TreeSet::new));
 
     assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));
 
-    var current = new TreeSet<Entitlement<T>>(availableAndInactive);
+    var current = new TreeSet<RequesterPrivilege<T>>(availableAndInactive);
     for (var validActivation : validActivations) {
       //
-      // Find the corresponding entitlement to determine
+      // Find the corresponding privilege to determine
       // whether this is JIT or MPA-eligible.
       //
-      var correspondingEntitlement = availableEntitlements
-        .stream()
-        .filter(ent -> ent.id().equals(validActivation.entitlementId()))
-        .findFirst();
-      if (correspondingEntitlement.isPresent()) {
-        current.add(new Entitlement<>(
-          validActivation.entitlementId(),
-          correspondingEntitlement.get().name(),
-          correspondingEntitlement.get().activationType(),
-          Entitlement.Status.ACTIVE,
-          validActivation.validity()));
-      }
-      else {
+      var correspondingPrivilege = availableRequesterPrivileges
+          .stream()
+          .filter(privilege -> privilege.id().equals(validActivation.privilegeId()))
+          .findFirst();
+      if (correspondingPrivilege.isPresent()) {
+        current.add(new RequesterPrivilege<>(
+            validActivation.privilegeId(),
+            correspondingPrivilege.get().name(),
+            correspondingPrivilege.get().activationType(),
+            RequesterPrivilege.Status.ACTIVE,
+            validActivation.validity()));
+      } else {
         //
         // Active, but no longer available for activation.
         //
-        current.add(new Entitlement<>(
-          validActivation.entitlementId(),
-          validActivation.entitlementId().id(),
-          ActivationType.NONE,
-          Entitlement.Status.ACTIVE,
-          validActivation.validity()));
+        current.add(new RequesterPrivilege<>(
+            validActivation.privilegeId(),
+            validActivation.privilegeId().id(),
+            new NoActivation(),
+            RequesterPrivilege.Status.ACTIVE,
+            validActivation.validity()));
       }
     }
 
-    var expired = new TreeSet<Entitlement<T>>();
+    var expired = new TreeSet<RequesterPrivilege<T>>();
     for (var expiredActivation : expiredActivations) {
       //
-      // Find the corresponding entitlement to determine
+      // Find the corresponding privilege to determine
       // whether this is currently (*) JIT or MPA-eligible.
       //
       // (*) it might have changed in the meantime, but that's ok.
       //
-      var correspondingEntitlement = availableEntitlements
-        .stream()
-        .filter(ent -> ent.id().equals(expiredActivation.entitlementId()))
-        .findFirst();
-      if (correspondingEntitlement.isPresent()) {
-        expired.add(new Entitlement<>(
-          expiredActivation.entitlementId(),
-          correspondingEntitlement.get().name(),
-          correspondingEntitlement.get().activationType(),
-          Entitlement.Status.EXPIRED,
-          expiredActivation.validity()));
-      }
-      else {
+      var correspondingPrivilege = availableRequesterPrivileges
+          .stream()
+          .filter(privilege -> privilege.id().equals(expiredActivation.privilegeId()))
+          .findFirst();
+      if (correspondingPrivilege.isPresent()) {
+        expired.add(new RequesterPrivilege<>(
+            expiredActivation.privilegeId(),
+            correspondingPrivilege.get().name(),
+            correspondingPrivilege.get().activationType(),
+            RequesterPrivilege.Status.EXPIRED,
+            expiredActivation.validity()));
+      } else {
         //
         // Active, but no longer available for activation.
         //
-        expired.add(new Entitlement<>(
-          expiredActivation.entitlementId(),
-          expiredActivation.entitlementId().id(),
-          ActivationType.NONE,
-          Entitlement.Status.EXPIRED,
-          expiredActivation.validity()));
+        expired.add(new RequesterPrivilege<>(
+            expiredActivation.privilegeId(),
+            expiredActivation.privilegeId().id(),
+            new NoActivation(),
+            RequesterPrivilege.Status.EXPIRED,
+            expiredActivation.validity()));
       }
     }
 
-    return new EntitlementSet<>(current, expired, warnings);
+    return new RequesterPrivilegeSet<>(current, expired, warnings);
   }
 
-  record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) { //TODO: rename to ActiveEntitlement, id()
-    public ActivatedEntitlement {
-      Preconditions.checkNotNull(entitlementId, "entitlementId");
+  record ActivatedRequesterPrivilege<TId>(TId privilegeId, TimeSpan validity) { // TODO: rename to
+                                                                                // ActiveRequesterPrivilege, id()
+    public ActivatedRequesterPrivilege {
+      Preconditions.checkNotNull(privilegeId, "privilegeId");
       Preconditions.checkNotNull(validity, "validity");
     }
   }

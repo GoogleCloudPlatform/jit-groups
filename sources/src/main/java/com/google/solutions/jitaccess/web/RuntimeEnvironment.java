@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
+import com.google.solutions.jitaccess.core.MailAddressRegexFormatter;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
@@ -58,7 +59,8 @@ import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
 /**
- * Provides access to runtime configuration (AppEngine, local). To be injected using CDI.
+ * Provides access to runtime configuration (AppEngine, local). To be injected
+ * using CDI.
  */
 @Singleton
 public class RuntimeEnvironment {
@@ -82,12 +84,12 @@ public class RuntimeEnvironment {
 
   private static HttpResponse getMetadata() throws IOException {
     var genericUrl = new GenericUrl(
-      ComputeEngineCredentials.getMetadataServerUrl() +
-        "/computeMetadata/v1/project/?recursive=true");
+        ComputeEngineCredentials.getMetadataServerUrl() +
+            "/computeMetadata/v1/project/?recursive=true");
 
     var request = new NetHttpTransport()
-      .createRequestFactory()
-      .buildGetRequest(genericUrl);
+        .createRequestFactory()
+        .buildGetRequest(genericUrl);
 
     request.setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()));
     request.getHeaders().set("Metadata-Flavor", "Google");
@@ -95,11 +97,10 @@ public class RuntimeEnvironment {
 
     try {
       return request.execute();
-    }
-    catch (UnknownHostException exception) {
+    } catch (UnknownHostException exception) {
       throw new IOException(
-        "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
-        exception);
+          "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
+          exception);
     }
   }
 
@@ -128,10 +129,10 @@ public class RuntimeEnvironment {
 
     if (!this.configuration.isSmtpConfigured()) {
       logAdapter
-        .newWarningEntry(
-          LogEvents.RUNTIME_STARTUP,
-          "The SMTP configuration is incomplete")
-        .write();
+          .newWarningEntry(
+              LogEvents.RUNTIME_STARTUP,
+              "The SMTP configuration is incomplete")
+          .write();
     }
 
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
@@ -139,13 +140,12 @@ public class RuntimeEnvironment {
       // Initialize using service account attached to AppEngine or Cloud Run.
       //
       try {
-        GenericData projectMetadata =
-          getMetadata().parseAs(GenericData.class);
+        GenericData projectMetadata = getMetadata().parseAs(GenericData.class);
 
         this.projectId = (String) projectMetadata.get("projectId");
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
-        var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
+        var defaultCredentials = (ComputeEngineCredentials) GoogleCredentials.getApplicationDefault();
         this.applicationPrincipal = new UserEmail(defaultCredentials.getAccount());
 
         if (defaultCredentials.getScopes().containsAll(this.configuration.getRequiredOauthScopes())) {
@@ -153,41 +153,38 @@ public class RuntimeEnvironment {
           // Default credential has all the right scopes, use it as-is.
           //
           this.applicationCredentials = defaultCredentials;
-        }
-        else {
+        } else {
           //
           // Extend the set of scopes to include required non-cloud APIs by
           // letting the service account impersonate itself.
           //
           this.applicationCredentials = ImpersonatedCredentials.create(
-            defaultCredentials,
-            this.applicationPrincipal.email,
-            null,
-            this.configuration.getRequiredOauthScopes().stream().toList(),
-            0);
+              defaultCredentials,
+              this.applicationPrincipal.email,
+              null,
+              this.configuration.getRequiredOauthScopes().stream().toList(),
+              0);
         }
 
         logAdapter
-          .newInfoEntry(
-            LogEvents.RUNTIME_STARTUP,
-            String.format("Running in project %s (%s) as %s, version %s, using %s catalog",
-              this.projectId,
-              this.projectNumber,
-              this.applicationPrincipal,
-              ApplicationVersion.VERSION_STRING,
-              this.configuration.catalog.getValue()))
-          .write();
-      }
-      catch (IOException e) {
+            .newInfoEntry(
+                LogEvents.RUNTIME_STARTUP,
+                String.format("Running in project %s (%s) as %s, version %s, using %s catalog",
+                    this.projectId,
+                    this.projectNumber,
+                    this.applicationPrincipal,
+                    ApplicationVersion.VERSION_STRING,
+                    this.configuration.catalog.getValue()))
+            .write();
+      } catch (IOException e) {
         logAdapter
-          .newErrorEntry(
-            LogEvents.RUNTIME_STARTUP,
-            "Failed to lookup instance metadata", e)
-          .write();
+            .newErrorEntry(
+                LogEvents.RUNTIME_STARTUP,
+                "Failed to lookup instance metadata", e)
+            .write();
         throw new RuntimeException("Failed to initialize runtime environment", e);
       }
-    }
-    else if (isDebugModeEnabled()) {
+    } else if (isDebugModeEnabled()) {
       //
       // Initialize using development settings and credential.
       //
@@ -206,11 +203,11 @@ public class RuntimeEnvironment {
           // with end-user credentials.
           //
           this.applicationCredentials = ImpersonatedCredentials.create(
-            defaultCredentials,
-            impersonateServiceAccount,
-            null,
-            this.configuration.getRequiredOauthScopes().stream().toList(),
-            0);
+              defaultCredentials,
+              impersonateServiceAccount,
+              null,
+              this.configuration.getRequiredOauthScopes().stream().toList(),
+              0);
 
           //
           // If we lack impersonation permissions, ImpersonatedCredentials
@@ -222,36 +219,32 @@ public class RuntimeEnvironment {
           //
           this.applicationCredentials.refresh();
           this.applicationPrincipal = new UserEmail(impersonateServiceAccount);
-        }
-        else if (defaultCredentials instanceof ServiceAccountCredentials) {
+        } else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
           this.applicationPrincipal = new UserEmail(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
-        }
-        else {
+        } else {
           throw new RuntimeException(String.format(
-            "You're using user credentials as application default "
-              + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
-              + "a service account during development",
-            CONFIG_IMPERSONATE_SA));
+              "You're using user credentials as application default "
+                  + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
+                  + "a service account during development",
+              CONFIG_IMPERSONATE_SA));
         }
-      }
-      catch (IOException e) {
+      } catch (IOException e) {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
       logAdapter
-        .newWarningEntry(
-          LogEvents.RUNTIME_STARTUP,
-          String.format("Running in development mode as %s", this.applicationPrincipal))
-        .write();
-    }
-    else {
+          .newWarningEntry(
+              LogEvents.RUNTIME_STARTUP,
+              String.format("Running in development mode as %s", this.applicationPrincipal))
+          .write();
+    } else {
       throw new RuntimeException(
-        "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
+          "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
     }
   }
 
@@ -261,8 +254,8 @@ public class RuntimeEnvironment {
 
   public UriBuilder createAbsoluteUriBuilder(@NotNull UriInfo uriInfo) {
     return uriInfo
-      .getBaseUriBuilder()
-      .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
+        .getBaseUriBuilder()
+        .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
   }
 
   public String getProjectId() {
@@ -294,68 +287,74 @@ public class RuntimeEnvironment {
     // must therefore not exceed the lifetime of the activation itself.
     //
     var effectiveRequestTimeout = Duration.ofSeconds(Math.min(
-      this.configuration.activationRequestTimeout.getValue().getSeconds(),
-      this.configuration.activationTimeout.getValue().getSeconds()));
+        this.configuration.activationRequestTimeout.getValue().getSeconds(),
+        this.configuration.activationTimeout.getValue().getSeconds()));
 
     return new TokenSigner.Options(
-      applicationPrincipal,
-      effectiveRequestTimeout);
+        applicationPrincipal,
+        effectiveRequestTimeout);
   }
 
   @Produces
   @Singleton
+
   public @NotNull NotificationService getPubSubNotificationService(
-    PubSubClient pubSubClient
-  ) {
+      PubSubClient pubSubClient) {
     if (this.configuration.topicName.isValid()) {
       return new PubSubNotificationService(
-        pubSubClient,
-        new PubSubNotificationService.Options(
-          new PubSubTopic(this.projectId, this.configuration.topicName.getValue())));
-    }
-    else {
+          pubSubClient,
+          new PubSubNotificationService.Options(
+              new PubSubTopic(this.projectId, this.configuration.topicName.getValue())));
+    } else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }
   }
 
   @Produces
   @Singleton
+
   public @NotNull NotificationService getEmailNotificationService(
-    SecretManagerClient secretManagerClient
-  ) {
+      SecretManagerClient secretManagerClient) {
     //
     // Configure SMTP if possible, and fall back to a fail-safe
     // configuration if the configuration is incomplete.
     //
     if (this.configuration.isSmtpConfigured()) {
-      var options = new SmtpClient.Options(
-        this.configuration.smtpHost.getValue(),
-        this.configuration.smtpPort.getValue(),
-        this.configuration.smtpSenderName.getValue(),
-        this.configuration.smtpSenderAddress.getValue(),
-        this.configuration.smtpEnableStartTls.getValue(),
-        this.configuration.getSmtpExtraOptionsMap());
+      var smtpOptions = new SmtpClient.Options(
+          this.configuration.smtpHost.getValue(),
+          this.configuration.smtpPort.getValue(),
+          this.configuration.smtpSenderName.getValue(),
+          this.configuration.smtpSenderAddress.getValue(),
+          this.configuration.smtpEnableStartTls.getValue(),
+          this.configuration.getSmtpExtraOptionsMap());
 
       //
       // Lookup credentials from config and/or secret. Use the secret
       // if both are configured.
       //
       if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
-        options.setSmtpSecretCredentials(
-          this.configuration.smtpUsername.getValue(),
-          this.configuration.smtpSecret.getValue());
-      }
-      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
-        options.setSmtpCleartextCredentials(
-          this.configuration.smtpUsername.getValue(),
-          this.configuration.smtpPassword.getValue());
+        smtpOptions.setSmtpSecretCredentials(
+            this.configuration.smtpUsername.getValue(),
+            this.configuration.smtpSecret.getValue());
+      } else if (this.configuration.isSmtpAuthenticationConfigured()
+          && this.configuration.smtpPassword.isValid()) {
+        smtpOptions.setSmtpCleartextCredentials(
+            this.configuration.smtpUsername.getValue(),
+            this.configuration.smtpPassword.getValue());
       }
 
+      var mailAddressFormatOptions = new MailAddressRegexFormatter.Options(
+          Pattern.compile(this.configuration.internalsMailAddressPattern.getValue()),
+          this.configuration.internalsMailAddressTransform.getValue(),
+          this.configuration.externalsMailAddressPattern.getValue() == null ? null
+              : Pattern.compile(this.configuration.externalsMailAddressPattern.getValue()),
+          this.configuration.externalsMailAddressTransform.getValue());
+
       return new MailNotificationService(
-        new SmtpClient(secretManagerClient, options),
-        new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
-    }
-    else {
+          new SmtpClient(secretManagerClient, smtpOptions),
+          new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()),
+          new MailAddressRegexFormatter(mailAddressFormatOptions));
+    } else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }
   }
@@ -363,67 +362,67 @@ public class RuntimeEnvironment {
   @Produces
   public ApiResource.@NotNull Options getApiOptions() {
     return new ApiResource.Options(
-      this.configuration.maxNumberOfEntitlementsPerSelfApproval.getValue());
+        this.configuration.maxNumberOfPrivilegesPerSelfApproval.getValue());
   }
 
   @Produces
   public HttpTransport.@NotNull Options getHttpTransportOptions() {
     return new HttpTransport.Options(
-      this.configuration.backendConnectTimeout.getValue(),
-      this.configuration.backendReadTimeout.getValue(),
-      this.configuration.backendWriteTimeout.getValue());
+        this.configuration.backendConnectTimeout.getValue(),
+        this.configuration.backendReadTimeout.getValue(),
+        this.configuration.backendWriteTimeout.getValue());
   }
 
   @Produces
   public RegexJustificationPolicy.@NotNull Options getRegexJustificationPolicyOptions() {
     return new RegexJustificationPolicy.Options(
-      this.configuration.justificationHint.getValue(),
-      Pattern.compile(this.configuration.justificationPattern.getValue()));
+        this.configuration.justificationHint.getValue(),
+        Pattern.compile(this.configuration.justificationPattern.getValue()));
   }
 
   @Produces
   public MpaProjectRoleCatalog.@NotNull Options getIamPolicyCatalogOptions() {
     return new MpaProjectRoleCatalog.Options(
-      this.configuration.availableProjectsQuery.isValid()
-        ? this.configuration.availableProjectsQuery.getValue()
-        : null,
-      this.configuration.activationTimeout.getValue(),
-      this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
-      this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
+        this.configuration.availableProjectsQuery.isValid()
+            ? this.configuration.availableProjectsQuery.getValue()
+            : null,
+        this.configuration.activationTimeout.getValue(),
+        this.configuration.minNumberOfReviewersPerActivationRequest.getValue(),
+        this.configuration.maxNumberOfReviewersPerActivationRequest.getValue());
   }
 
   @Produces
   public DirectoryGroupsClient.@NotNull Options getDirectoryGroupsClientOptions() {
     return new DirectoryGroupsClient.Options(
-      this.configuration.customerId.getValue());
+        this.configuration.customerId.getValue());
   }
 
   @Produces
   public CloudIdentityGroupsClient.@NotNull Options getCloudIdentityGroupsClientOptions() {
     return new CloudIdentityGroupsClient.Options(
-      this.configuration.customerId.getValue());
+        this.configuration.customerId.getValue());
   }
 
   @Produces
   @Singleton
+
   public @NotNull ProjectRoleRepository getProjectRoleRepository(
-    Executor executor,
-    @NotNull Instance<DirectoryGroupsClient> groupsClient,
-    PolicyAnalyzerClient policyAnalyzerClient
-  ) {
+      Executor executor,
+      @NotNull Instance<DirectoryGroupsClient> groupsClient,
+      PolicyAnalyzerClient policyAnalyzerClient) {
     switch (this.configuration.catalog.getValue()) {
       case ASSETINVENTORY:
         return new AssetInventoryRepository(
-          executor,
-          groupsClient.get(),
-          (AssetInventoryClient)policyAnalyzerClient,
-          new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
+            executor,
+            groupsClient.get(),
+            (AssetInventoryClient) policyAnalyzerClient,
+            new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
 
       case POLICYANALYZER:
       default:
         return new PolicyAnalyzerRepository(
-          policyAnalyzerClient,
-          new PolicyAnalyzerRepository.Options(this.configuration.scope.getValue()));
+            policyAnalyzerClient,
+            new PolicyAnalyzerRepository.Options(this.configuration.scope.getValue()));
     }
   }
 }

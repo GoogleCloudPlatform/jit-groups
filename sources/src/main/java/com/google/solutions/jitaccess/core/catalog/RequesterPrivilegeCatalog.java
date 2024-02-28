@@ -23,54 +23,45 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 
 import java.io.IOException;
 import java.util.SortedSet;
 
 /**
- * A catalog of entitlement that can be browsed by the user.
- *
- * The catalog is scoped to a project.
+ * A catalog of requester privileges that can be browsed by the user.
  */
-public interface EntitlementCatalog
-  <TEntitlementId extends EntitlementId, TScopeId extends ResourceId> {
-
+public interface RequesterPrivilegeCatalog<TPrivilegeId extends PrivilegeId, TScopeId extends ResourceId> {
   /**
    * Verify if a user is allowed to make the given request.
    */
   void verifyUserCanRequest(
-    ActivationRequest<TEntitlementId> request
-  ) throws AccessException, IOException;
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
   /**
    * Verify if a user is allowed to approve a given request.
    */
   void verifyUserCanApprove(
-    UserEmail approvingUser,
-    MpaActivationRequest<TEntitlementId> request
-  ) throws AccessException, IOException;
+      UserEmail approvingUser,
+      ActivationRequest<TPrivilegeId> request) throws AccessException, IOException;
 
   /**
-   * List scopes that the user has any entitlements for.
+   * List scopes that the user has any privileges for.
    */
   SortedSet<TScopeId> listScopes(
-    UserEmail user
-  ) throws AccessException, IOException;
+      UserEmail user) throws AccessException, IOException;
 
   /**
-   * List available reviewers for (MPA-) activating an entitlement.
+   * List available reviewers for (MPA-) activating a privilege.
    */
   SortedSet<UserEmail> listReviewers(
-    UserEmail requestingUser,
-    TEntitlementId entitlement
-  ) throws AccessException, IOException;
-
+      UserEmail requestingUser,
+      RequesterPrivilege<TPrivilegeId> privilege) throws AccessException, IOException;
 
   /**
-   * List available entitlements.
+   * List available privileges.
    */
-  EntitlementSet<TEntitlementId> listEntitlements(
-    UserEmail user,
-    TScopeId scope
-  ) throws AccessException, IOException;
+  RequesterPrivilegeSet<TPrivilegeId> listRequesterPrivileges(
+      UserEmail user,
+      TScopeId scope) throws AccessException, IOException;
 }

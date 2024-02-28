@@ -21,11 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.RequesterPrivilege.Status;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,9 +42,9 @@ public class TestRequesterPrivilegeActivator {
   private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("peer@example.com");
   private static final UserEmail SAMPLE_UNKNOWN_USER = new UserEmail("unknown@example.com");
 
-  private class SampleActivator extends RequesterPrivilegeActivator<SamplePrivilegeId> {
+  private class SampleActivator extends RequesterPrivilegeActivator<SamplePrivilegeId, ResourceId> {
     protected SampleActivator(
-        RequesterPrivilegeCatalog<SamplePrivilegeId> catalog,
+        RequesterPrivilegeCatalog<SamplePrivilegeId, ResourceId> catalog,
         JustificationPolicy policy) {
       super(catalog, policy);
     }
@@ -71,7 +68,7 @@ public class TestRequesterPrivilegeActivator {
 
   @Test
   public void createActivationRequestChecksAccess() throws Exception {
-    RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
+    RequesterPrivilegeCatalog<SamplePrivilegeId, ResourceId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
 
     var activator = new SampleActivator(
         catalog,
@@ -82,7 +79,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
         Set.of(SAMPLE_APPROVING_USER),
@@ -115,7 +112,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     assertThrows(
         AccessDeniedException.class,
@@ -149,7 +146,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -166,7 +163,7 @@ public class TestRequesterPrivilegeActivator {
 
   @Test
   public void whenUserNotAllowedToRequest_ThenApproveRequestThrowsException() throws Exception {
-    RequesterPrivilegeCatalog<SamplePrivilegeId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
+    RequesterPrivilegeCatalog<SamplePrivilegeId, ResourceId> catalog = Mockito.mock(RequesterPrivilegeCatalog.class);
 
     Mockito.doThrow(new AccessDeniedException("mock"))
         .when(catalog)
@@ -181,7 +178,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var request = new ActivationRequest<SamplePrivilegeId>(
         ActivationId.newId(requesterPrivilege.activationType()),
@@ -209,7 +206,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -237,7 +234,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
@@ -268,7 +265,7 @@ public class TestRequesterPrivilegeActivator {
         privilege,
         privilege.id(),
         new ExternalApproval("topic"),
-        Status.INACTIVE);
+        RequesterPrivilege.Status.INACTIVE);
 
     var request = activator.createActivationRequest(
         SAMPLE_REQUESTING_USER,
