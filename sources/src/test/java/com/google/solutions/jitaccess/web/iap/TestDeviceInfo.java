@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.web.iap;
 
 import org.junit.jupiter.api.Test;
 

@@ -26,6 +26,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.Dependent;
@@ -36,33 +37,35 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Activator for project roles.
  */
 @Dependent
-public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRoleBinding> {
+public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBinding, ProjectId> {
   private final @NotNull ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
-      RequesterPrivilegeCatalog<ProjectRoleBinding> catalog,
-      @NotNull ResourceManagerClient resourceManagerClient,
-      JustificationPolicy policy) {
+    EntitlementCatalog<ProjectRoleBinding, ProjectId> catalog,
+    @NotNull ResourceManagerClient resourceManagerClient,
+    @NotNull JustificationPolicy policy
+  ) {
     super(catalog, policy);
 
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
-
     this.resourceManagerClient = resourceManagerClient;
   }
 
   private void provisionTemporaryBinding(
-      String bindingDescription,
-      ProjectId projectId,
-      UserEmail user,
-      @NotNull String role,
-      @NotNull Instant startTime,
-      @NotNull Duration duration) throws AccessException, AlreadyExistsException, IOException {
+    String bindingDescription,
+    ProjectId projectId,
+    UserEmail user,
+    @NotNull Set<String> roles,
+    @NotNull Instant startTime,
+    @NotNull Duration duration
+  ) throws AccessException, AlreadyExistsException, IOException {
 
     //
     // Add time-bound IAM binding.
@@ -71,21 +74,23 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
-    var binding = new Binding()
+    for (var role : roles) {
+      var binding = new Binding()
         .setMembers(List.of("user:" + user))
         .setRole(role)
         .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
-            .setTitle(PrivilegeFactory.ACTIVATION_CONDITION_TITLE)
-            .setDescription(bindingDescription)
-            .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
+          .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+          .setDescription(bindingDescription)
+          .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
 
-    // TODO(later): Add bindings in a single request.
+      //TODO(later): Add bindings in a single request.
 
-    this.resourceManagerClient.addProjectIamBinding(
+      this.resourceManagerClient.addProjectIamBinding(
         projectId,
         binding,
         EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS),
         bindingDescription);
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -94,78 +99,105 @@ public class ProjectRoleActivator extends RequesterPrivilegeActivator<ProjectRol
 
   @Override
   protected void provisionAccess(
-      UserEmail approvingUser,
-      @NotNull ActivationRequest<ProjectRoleBinding> request)
-      throws AccessException, AlreadyExistsException, IOException {
+    @NotNull JitActivationRequest<ProjectRoleBinding> request
+  ) throws AccessException, AlreadyExistsException, IOException {
+    Preconditions.checkNotNull(request, "request");
+
+    var bindingDescription = String.format(
+      "Self-approved, justification: %s",
+      request.justification());
+
+    provisionTemporaryBinding(
+      bindingDescription,
+      ProjectActivationRequest.projectId(request),
+      request.requestingUser(),
+      request.entitlements()
+        .stream()
+        .map(e -> e.roleBinding().role())
+        .collect(Collectors.toSet()),
+      request.startTime(),
+      request.duration());
+  }
+
+  @Override
+  protected void provisionAccess(
+    @NotNull UserEmail approvingUser,
+    @NotNull MpaActivationRequest<ProjectRoleBinding> request
+  ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
 
     var bindingDescription = String.format(
-        "Approved by %s, justification: %s",
-        approvingUser.email,
-        request.justification());
+      "Approved by %s, justification: %s",
+      approvingUser.email,
+      request.justification());
 
     //
-    // NB. The start/end time for the binding is derived from the approval token. If
-    // multiple
-    // reviewers try to approve the same token, the resulting condition (and
-    // binding) will
-    // be the same. This is important so that we can use the FAIL_IF_BINDING_EXISTS
-    // flag.
+    // NB. The start/end time for the binding is derived from the approval token. If multiple
+    // reviewers try to approve the same token, the resulting condition (and binding) will
+    // be the same.
     //
 
     provisionTemporaryBinding(
-        bindingDescription,
-        ProjectActivationRequest.projectId(request),
-        request.requestingUser(),
-        request.requesterPrivilege().roleBinding().role(),
-        request.startTime(),
-        request.duration());
+      bindingDescription,
+      ProjectActivationRequest.projectId(request),
+      request.requestingUser(),
+      request.entitlements()
+        .stream()
+        .map(e -> e.roleBinding().role())
+        .collect(Collectors.toSet()),
+      request.startTime(),
+      request.duration());
   }
 
   @Override
-  public @NotNull JsonWebTokenConverter<com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public @NotNull JsonWebTokenConverter<MpaActivationRequest<ProjectRoleBinding>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(
-          @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> request) {
-        var roleBinding = request.requesterPrivilege().roleBinding();
+      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRoleBinding> request) {
+        var roleBindings = request.entitlements()
+          .stream()
+          .map(ent -> ent.roleBinding())
+          .toList();
+
+        if (roleBindings.size() != 1) {
+          throw new IllegalArgumentException("Request must have exactly one entitlement");
+        }
+
+        var roleBinding = roleBindings.get(0);
 
         return new JsonWebToken.Payload()
-            .setJwtId(request.id().toString())
-            .set("beneficiary", request.requestingUser().email)
-            .set("reviewers", request.reviewers().stream().map(id -> id.email).collect(Collectors.toList()))
-            .set("resource", roleBinding.fullResourceName())
-            .set("role", roleBinding.role())
-            .set("type", request.activationType().name())
-            .set("justification", request.justification())
-            .set("start", request.startTime().getEpochSecond())
-            .set("end", request.endTime().getEpochSecond());
+          .setJwtId(request.id().toString())
+          .set("beneficiary", request.requestingUser().email)
+          .set("reviewers", request.reviewers().stream().map(id -> id.email).collect(Collectors.toList()))
+          .set("resource", roleBinding.fullResourceName())
+          .set("role", roleBinding.role())
+          .set("justification", request.justification())
+          .set("start", request.startTime().getEpochSecond())
+          .set("end", request.endTime().getEpochSecond());
       }
 
       @SuppressWarnings("unchecked")
       @Override
-      public @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<ProjectRoleBinding> convert(
-          @NotNull JsonWebToken.Payload payload) {
+      public @NotNull MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.@NotNull Payload payload) {
         var roleBinding = new RoleBinding(
-            payload.get("resource").toString(),
-            payload.get("role").toString());
+          payload.get("resource").toString(),
+          payload.get("role").toString());
 
-        var startTime = ((Number) payload.get("start")).longValue();
-        var endTime = ((Number) payload.get("end")).longValue();
+        var startTime = ((Number)payload.get("start")).longValue();
+        var endTime = ((Number)payload.get("end")).longValue();
 
-        return new ActivationRequest<ProjectRoleBinding>(
-            new ActivationId(payload.getJwtId()),
-            new UserEmail(payload.get("beneficiary").toString()),
-            ((List<String>) payload.get("reviewers"))
-                .stream()
-                .map(email -> new UserEmail(email))
-                .collect(Collectors.toSet()),
-            new ProjectRoleBinding(roleBinding),
-            ActivationTypeFactory.createFromName(payload.get("type").toString()),
-            payload.get("justification").toString(),
-            Instant.ofEpochSecond(startTime),
-            Duration.ofSeconds(endTime - startTime));
+        return new MpaRequest<>(
+          new ActivationId(payload.getJwtId()),
+          new UserEmail(payload.get("beneficiary").toString()),
+          Set.of(new ProjectRoleBinding(roleBinding)),
+          ((List<String>)payload.get("reviewers"))
+            .stream()
+            .map(email -> new UserEmail(email))
+            .collect(Collectors.toSet()),
+          payload.get("justification").toString(),
+          Instant.ofEpochSecond(startTime),
+          Duration.ofSeconds(endTime - startTime));
       }
     };
   }

@@ -22,9 +22,9 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.gson.Gson;
-import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;
@@ -41,7 +41,7 @@ import java.security.Principal;
 public class RestDispatcher<TResource> {
   private final Dispatcher dispatcher;
 
-  public RestDispatcher(TResource resource, final UserId userId) {
+  public RestDispatcher(TResource resource, final UserEmail userEmail) {
     dispatcher = MockDispatcherFactory.createDispatcher();
     dispatcher.getRegistry().addSingletonResource(resource);
 
@@ -56,53 +56,59 @@ public class RestDispatcher<TResource> {
     // Inject @Context objects.
     //
     dispatcher.getDefaultContextObjects().put(
-        SecurityContext.class,
-        new SecurityContext() {
-          @Override
-          public Principal getUserPrincipal() {
-            return new UserPrincipal() {
-              @Override
-              public UserId getId() {
-                return userId;
-              }
+      SecurityContext.class,
+      new SecurityContext() {
+        @Override
+        public Principal getUserPrincipal() {
+          return new IapPrincipal() {
+            @Override
+            public UserEmail email() {
+              return userEmail;
+            }
 
-              @Override
-              public DeviceInfo getDevice() {
-                return DeviceInfo.UNKNOWN;
-              }
+            @Override
+            public String subjectId() {
+              return "mock";
+            }
 
-              @Override
-              public String getName() {
-                return "mock@example.com";
-              }
-            };
-          }
+            @Override
+            public DeviceInfo device() {
+              return DeviceInfo.UNKNOWN;
+            }
 
-          @Override
-          public boolean isUserInRole(String s) {
-            return false;
-          }
+            @Override
+            public String getName() {
+              return "mock@example.com";
+            }
+          };
+        }
 
-          @Override
-          public boolean isSecure() {
-            return true;
-          }
+        @Override
+        public boolean isUserInRole(String s) {
+          return false;
+        }
 
-          @Override
-          public String getAuthenticationScheme() {
-            return "Mock";
-          }
-        });
+        @Override
+        public boolean isSecure() {
+          return true;
+        }
+
+        @Override
+        public String getAuthenticationScheme() {
+          return "Mock";
+        }
+      });
   }
 
   private <TResponse> Response<TResponse> invoke(
-      MockHttpRequest request,
-      Class<TResponse> responseType) {
+    MockHttpRequest request,
+    Class<TResponse> responseType
+  ) {
     var response = new MockHttpResponse();
     var synchronousExecutionContext = new SynchronousExecutionContext(
-        (SynchronousDispatcher) dispatcher,
-        request,
-        response);
+      (SynchronousDispatcher)dispatcher,
+      request,
+      response);
 
     request.setAsynchronousContext(synchronousExecutionContext);
     dispatcher.invoke(request, response);
@@ -110,25 +116,28 @@ public class RestDispatcher<TResource> {
   }
 
   public <TResponse> Response<TResponse> get(
-      String path,
-      Class<TResponse> responseType) throws URISyntaxException {
+    String path,
+    Class<TResponse> responseType
+  ) throws URISyntaxException {
     return invoke(MockHttpRequest.get(path), responseType);
   }
 
   public <TResponse> Response<TResponse> post(
-      String path,
-      Class<TResponse> responseType) throws URISyntaxException {
+    String path,
+    Class<TResponse> responseType
+  ) throws URISyntaxException {
     return invoke(MockHttpRequest.post(path), responseType);
   }
 
   public <TRequest, TResponse> Response<TResponse> post(
-      String path,
-      TRequest request,
-      Class<TResponse> responseType) throws URISyntaxException {
+    String path,
+    TRequest request,
+    Class<TResponse> responseType
+  ) throws URISyntaxException {
     var mockRequest = MockHttpRequest.post(path)
-        .accept(MediaType.APPLICATION_JSON)
-        .contentType(MediaType.APPLICATION_JSON_TYPE)
-        .content(new Gson().toJson(request).getBytes());
+      .accept(MediaType.APPLICATION_JSON)
+      .contentType(MediaType.APPLICATION_JSON_TYPE)
+      .content(new Gson().toJson(request).getBytes());
 
     return invoke(mockRequest, responseType);
   }

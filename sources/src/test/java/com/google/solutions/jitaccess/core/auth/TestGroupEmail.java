@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,47 +19,21 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestOrganizationId {
-
-  @Test
-  public void toStringReturnsId() {
-    assertEquals("111", new OrganizationId("111").toString());
-  }
-
+public class TestGroupEmail {
   // -------------------------------------------------------------------------
-  // Type.
+  // toString.
   // -------------------------------------------------------------------------
 
   @Test
-  public void type() {
-    assertEquals("organization", new OrganizationId("111").type());
-  }
-
-  // -------------------------------------------------------------------------
-  // ID.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void id() {
-    assertEquals("111", new OrganizationId("111").id());
-  }
-
-  // -------------------------------------------------------------------------
-  // Path.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void path() {
-    assertEquals("organizations/111", new OrganizationId("111").path());
+  public void toStringReturnsEmail() {
+    Assertions.assertEquals("test@example.com", new GroupEmail("test@example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -68,8 +42,8 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("111");
+    GroupEmail id1 = new GroupEmail("group@example.com");
+    GroupEmail id2 = new GroupEmail("group@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -77,15 +51,15 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("222");
+    GroupEmail id1 = new GroupEmail("alice@example.com");
+    GroupEmail id2 = new GroupEmail("group@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -93,34 +67,26 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    GroupEmail id1 = new GroupEmail("group@example.com");
 
     assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------
-  // Comparable.
+  // PrincipalIdentifier.
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-    var organizations = List.of(
-        new OrganizationId("333"),
-        new OrganizationId("111"),
-        new OrganizationId("222"));
-
-    assertIterableEquals(
-        List.of(
-            new OrganizationId("111"),
-            new OrganizationId("222"),
-            new OrganizationId("333")),
-        new TreeSet<>(organizations));
+  public void value() {
+    assertEquals(
+      "group@example.com",
+      new GroupEmail("group@example.com").value());
   }
 }

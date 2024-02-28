@@ -19,22 +19,26 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog.project;
+package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
-import org.jetbrains.annotations.NotNull;
-
-class ProjectActivationRequest {
-  private ProjectActivationRequest() {
-  }
+/**
+ * Identifier for a Resource Manager resource.
+ */
+public interface ResourceId {
+  /**
+   * Type of resource, for example project, folder, organization.
+   */
+  String type();
 
   /**
-   * @return project ID from request.
+   * Unique ID of the resource, without prefix.
    */
-  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
-    var project = request.requesterPrivilege().roleBinding().fullResourceName();
+  String id();
 
-    return ProjectId.fromFullResourceName(project);
-  }
+  /**
+   * Path, in notation type/id.
+   *
+   * For example, projects/test-123 folders/234, organizations/345.
+   */
+  String path();
 }

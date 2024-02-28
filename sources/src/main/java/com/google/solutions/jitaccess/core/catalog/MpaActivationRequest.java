@@ -21,22 +21,27 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Set;
 
 /**
- * Request for "JIT-activating" an entitlement.
+ * Request for "MPA-activating" an entitlement.
  */
-public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
+public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
-  protected JitActivationRequest(
+  private final @NotNull Collection<UserEmail> reviewers;
+
+  protected MpaActivationRequest(
     @NotNull ActivationId id,
     @NotNull UserEmail requestingUser,
     @NotNull Set<TEntitlementId> entitlements,
+    @NotNull Set<UserEmail> reviewers,
     @NotNull String justification,
     @NotNull Instant startTime,
     @NotNull Duration duration) {
@@ -47,10 +52,18 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
       justification,
       startTime,
       duration);
+
+    Preconditions.checkNotNull(reviewers, "reviewers");
+    Preconditions.checkArgument(!reviewers.isEmpty());
+    this.reviewers = reviewers;
+  }
+
+  public Collection<UserEmail> reviewers() {
+    return this.reviewers;
   }
 
   @Override
   public final @NotNull ActivationType type() {
-    return ActivationType.JIT;
+    return ActivationType.MPA;
   }
 }

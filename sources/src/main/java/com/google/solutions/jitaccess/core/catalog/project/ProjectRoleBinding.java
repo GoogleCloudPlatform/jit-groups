@@ -22,12 +22,15 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.catalog.PrivilegeId;
+import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import org.jetbrains.annotations.NotNull;
 
-public class ProjectRoleBinding extends PrivilegeId {
+/**
+ * Identifies a project role binding as an entitlement.
+ */
+public class ProjectRoleBinding extends EntitlementId { // TODO: Rename to ProjectRole
   static final String CATALOG = "iam";
 
   private final @NotNull RoleBinding roleBinding;

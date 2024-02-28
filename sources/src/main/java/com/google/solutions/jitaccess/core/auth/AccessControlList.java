@@ -19,48 +19,25 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.auth;
 
-import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
+import java.util.Set;
 
 /**
- * Primary email address and unique ID of a user.
+ * Allows access to a defined set of principals.
+ * @param allowedPrincipals allowed principals
  */
-public class UserId extends UserEmail {
-  public final transient @NotNull String id;
-
-  public UserId(@NotNull String id, String email) {
-    super(email);
-
-    Preconditions.checkNotNull(id, "id");
-
-    this.id = id;
-  }
-
-  @Override
-  public boolean equals(@Nullable Object o) {
-    if (this == o) {
-      return true;
-    }
-
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    if (!super.equals(o)) {
-      return false;
-    }
-
-    UserId userId = (UserId) o;
-    return this.id.equals(userId.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), id);
+public record AccessControlList(
+  @NotNull Set<PrincipalIdentifier> allowedPrincipals
+){
+  /**
+   * Check whether a subject is allowed access.
+   */
+  public boolean isAllowed(@NotNull Subject subject) {
+    return this.allowedPrincipals
+      .stream()
+      .anyMatch(id -> subject.principals().contains(id));
   }
 }

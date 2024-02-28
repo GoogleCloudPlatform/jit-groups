@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.web.iap;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
 import org.junit.jupiter.api.Test;
@@ -40,8 +40,8 @@ public class TestIapAssertion {
         .setSubject("subject-1")
         .set("email", "email-1"));
 
-    assertEquals("subject-1", assertion.getUserId().id);
-    assertEquals("email-1", assertion.getUserId().email);
+    assertEquals("subject-1", assertion.subjectId());
+    assertEquals("email-1", assertion.email().email);
   }
 
   // -------------------------------------------------------------------------
@@ -52,7 +52,7 @@ public class TestIapAssertion {
   public void whenGoogleClaimMissing_ThenGetDeviceInfoReturnsUnknownDevice() {
     var assertion = new IapAssertion(new JsonWebToken.Payload());
 
-    assertEquals(DeviceInfo.UNKNOWN, assertion.getDeviceInfo());
+    assertEquals(DeviceInfo.UNKNOWN, assertion.device());
   }
 
   @Test
@@ -60,7 +60,7 @@ public class TestIapAssertion {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
         .set("google", Map.of()));
 
-    assertEquals(DeviceInfo.UNKNOWN, assertion.getDeviceInfo());
+    assertEquals(DeviceInfo.UNKNOWN, assertion.device());
   }
 
   @Test
@@ -68,8 +68,8 @@ public class TestIapAssertion {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
         .set("google", Map.of("device_id", "device-1")));
 
-    assertEquals("device-1", assertion.getDeviceInfo().deviceId());
-    assertEquals(List.of(), assertion.getDeviceInfo().accessLevels());
+    assertEquals("device-1", assertion.device().deviceId());
+    assertEquals(List.of(), assertion.device().accessLevels());
   }
 
   @Test
@@ -79,7 +79,7 @@ public class TestIapAssertion {
             "device_id", "device-1",
             "access_levels", List.of("level-1", "level-2"))));
 
-    assertEquals("device-1", assertion.getDeviceInfo().deviceId());
-    assertEquals(List.of("level-1", "level-2"), assertion.getDeviceInfo().accessLevels());
+    assertEquals("device-1", assertion.device().deviceId());
+    assertEquals(List.of("level-1", "level-2"), assertion.device().accessLevels());
   }
 }

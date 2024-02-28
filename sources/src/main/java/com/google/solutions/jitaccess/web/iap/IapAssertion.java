@@ -19,11 +19,11 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.web.iap;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class IapAssertion {
+public class IapAssertion implements IapPrincipal {
   private final JsonWebToken.Payload payload;
 
   public IapAssertion(JsonWebToken.Payload payload) {
@@ -45,16 +45,19 @@ public class IapAssertion {
   /**
    * Extract user information
    */
-  public @NotNull UserId getUserId() {
-    return new UserId(
-        this.payload.get("sub").toString(),
-        this.payload.get("email").toString());
+  public @NotNull UserEmail email() {
+    return new UserEmail(this.payload.get("email").toString());
+  }
+
+  @Override
+  public String subjectId() {
+    return this.payload.get("sub").toString();
   }
 
   /**
    * Extract device information (if available)
    */
-  public @NotNull DeviceInfo getDeviceInfo() {
+  public @NotNull DeviceInfo device() {
     String deviceId = "unknown";
     List<String> accessLevels = List.of();
 
@@ -67,12 +70,17 @@ public class IapAssertion {
 
       if (googleClaim.containsKey("access_levels")) {
         accessLevels = ((Collection<?>) googleClaim.get("access_levels"))
-            .stream()
-            .map(Object::toString)
-            .collect(Collectors.toList());
+          .stream()
+          .map(Object::toString)
+          .collect(Collectors.toList());
       }
     }
 
     return new DeviceInfo(deviceId, accessLevels);
+  }
+
+  @Override
+  public String getName() {
+    return email().toString();
   }
 }

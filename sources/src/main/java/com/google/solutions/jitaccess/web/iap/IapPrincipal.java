@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,26 +19,19 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.web.iap;
+
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+
+import java.security.Principal;
 
 /**
- * Identifier for a Resource Manager resource.
+ * Represents a logged-in user.
  */
-public interface ResourceId {
-  /**
-   * Type of resource, for example project, folder, organization.
-   */
-  String type();
+public interface IapPrincipal extends Principal {
+  UserEmail email();
 
-  /**
-   * Unique ID of the resource, without prefix.
-   */
-  String id();
+  String subjectId();
 
-  /**
-   * Path, in notation type/id.
-   *
-   * For example, projects/test-123 folders/234, organizations/345.
-   */
-  String path();
+  DeviceInfo device();
 }

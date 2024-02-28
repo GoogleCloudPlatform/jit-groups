@@ -25,8 +25,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
@@ -38,19 +38,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Catalog that implements self approval and MPA based
- * activation for project role-based privileges.
+ * Catalog that implements JIT and peer-approval based
+ * MPA activation for project role-based entitlements.
  */
 @Singleton
-public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
+public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBinding, ProjectId> {
   private final @NotNull ProjectRoleRepository repository;
   private final @NotNull ResourceManagerClient resourceManagerClient;
   private final @NotNull Options options;
 
   public MpaProjectRoleCatalog(
-      @NotNull ProjectRoleRepository repository,
-      @NotNull ResourceManagerClient resourceManagerClient,
-      @NotNull Options options) {
+    @NotNull ProjectRoleRepository repository,
+    @NotNull ResourceManagerClient resourceManagerClient,
+    @NotNull Options options
+  ) {
     Preconditions.checkNotNull(repository, "repository");
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     Preconditions.checkNotNull(options, "options");
@@ -63,96 +64,67 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
   void validateRequest(@NotNull ActivationRequest<ProjectRoleBinding> request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
-        request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
-        String.format(
-            "The activation duration must be no shorter than %d minutes",
-            this.options.minActivationDuration().toMinutes()));
+      request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no shorter than %d minutes",
+        this.options.minActivationDuration().toMinutes()));
     Preconditions.checkArgument(
-        request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
-        String.format(
-            "The activation duration must be no longer than %d minutes",
-            this.options.maxActivationDuration().toMinutes()));
+      request.duration().toSeconds() <= this.options.maxActivationDuration().toSeconds(),
+      String.format(
+        "The activation duration must be no longer than %d minutes",
+        this.options.maxActivationDuration().toMinutes()));
 
-    if (request.activationType() instanceof PeerApproval
-        || request.activationType() instanceof ExternalApproval) {
+    if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
       Preconditions.checkArgument(
-          request.reviewers() != null &&
-              request.reviewers()
-                  .size() >= this.options.minNumberOfReviewersPerActivationRequest,
-          String.format(
-              "At least %d reviewers must be specified",
-              this.options.minNumberOfReviewersPerActivationRequest));
+        mpaRequest.reviewers() != null &&
+          mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
+        String.format(
+          "At least %d reviewers must be specified",
+          this.options.minNumberOfReviewersPerActivationRequest ));
       Preconditions.checkArgument(
-          request.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
-          String.format(
-              "The number of reviewers must not exceed %s",
-              this.options.maxNumberOfReviewersPerActivationRequest));
+        mpaRequest.reviewers().size() <= this.options.maxNumberOfReviewersPerActivationRequest,
+        String.format(
+          "The number of reviewers must not exceed %s",
+          this.options.maxNumberOfReviewersPerActivationRequest));
     }
   }
 
-  void verifyUserCanActivateRequesterPrivileges(
-      UserEmail user,
-      ProjectId projectId,
-      @NotNull ActivationType activationType,
-      @NotNull Collection<ProjectRoleBinding> privileges) throws AccessException, IOException {
+  void verifyUserCanActivateEntitlements(
+    @NotNull UserEmail user,
+    @NotNull ProjectId projectId,
+    @NotNull ActivationType activationType,
+    @NotNull Collection<ProjectRoleBinding> entitlements
+  ) throws AccessException, IOException {
+    //
     // Verify that the user has eligible role bindings
-    // for all privileges.
+    // for all entitlements.
     //
     // NB. It doesn't matter whether the user has already
     // activated the role.
     //
+    var userEntitlements = this.repository
+      .findEntitlements(
+        user,
+        projectId,
+        EnumSet.of(activationType),
+        EnumSet.of(Entitlement.Status.AVAILABLE))
+      .available()
+      .stream()
+      .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
 
-    var userPrivileges = this.repository
-        .findRequesterPrivileges(
+    assert userEntitlements.values().stream().allMatch(e -> e.activationType() == activationType);
+    assert userEntitlements.values().stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
+
+    for (var requestedEntitlement : entitlements) {
+      var grantedEntitlement = userEntitlements.get(requestedEntitlement);
+      if (grantedEntitlement == null) {
+        throw new AccessDeniedException(
+          String.format(
+            "The user %s is not allowed to activate %s using %s",
             user,
-            projectId,
-            Set.of(activationType),
-            EnumSet.of(RequesterPrivilege.Status.INACTIVE))
-        .available()
-        .stream()
-        .collect(Collectors.toMap(privilege -> privilege.id(), privilege -> privilege));
-
-    assert userPrivileges.values().stream().allMatch(e -> e.status() == RequesterPrivilege.Status.INACTIVE);
-
-    for (var requestedPrivilege : privileges) {
-      var grantedPrivilege = userPrivileges.get(requestedPrivilege);
-      if (grantedPrivilege == null) {
-        throw new AccessDeniedException(
-            String.format(
-                "The user %s is not allowed to activate %s using %s",
-                user,
-                requestedPrivilege.id(),
-                activationType.name()));
+            requestedEntitlement.id(),
+            activationType));
       }
-      var grantedPrivilegeType = grantedPrivilege.activationType();
-      if (!grantedPrivilegeType.isParentTypeOf(activationType)) {
-        throw new AccessDeniedException(
-            String.format(
-                "The user %s is not allowed to activate %s using %s",
-                user,
-                requestedPrivilege.id(),
-                activationType.name()));
-      }
-    }
-  }
-
-  void verifyUserCanReviewRequest(
-      UserEmail user,
-      ProjectId projectId,
-      ActivationType activationType,
-      ProjectRoleBinding privilege) throws AccessException, IOException {
-
-    var reviewers = this.repository
-        .findReviewerPrivelegeHolders(
-            privilege,
-            activationType);
-
-    if (!reviewers.contains(user)) {
-      throw new AccessDeniedException(String.format(
-          "The user %s is not allowed to review %s activation request of type %s",
-          user,
-          privilege.id(),
-          activationType));
     }
   }
 
@@ -160,119 +132,113 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
     return this.options;
   }
 
-  // ---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
   // Overrides.
-  // ---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
 
   @Override
-  public SortedSet<ProjectId> listProjects(
-      UserEmail user) throws AccessException, IOException {
+  public SortedSet<ProjectId> listScopes(
+    UserEmail user
+  ) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.repository.findProjectsWithRequesterPrivileges(user);
-    } else {
+      return this.repository.findProjectsWithEntitlements(user);
+    }
+    else {
       //
       // List all projects that the application's service account
       // can enumerate. This method is fast, but almost certainly
       // returns some projects that the user doesn't have any
-      // privileges for. Depending on the nature of the projects,
+      // entitlements for. Depending on the nature of the projects,
       // this might be acceptable or considered information disclosure.
       //
       return this.resourceManagerClient.searchProjectIds(
-          this.options.availableProjectsQuery);
+        this.options.availableProjectsQuery);
     }
   }
 
   @Override
-  public RequesterPrivilegeSet<ProjectRoleBinding> listRequesterPrivileges(
-      UserEmail user,
-      ProjectId projectId) throws AccessException, IOException {
-    return this.repository.findRequesterPrivileges(
-        user,
-        projectId,
-        Set.of(new SelfApproval(), new PeerApproval(""),
-            new ExternalApproval("")),
-        EnumSet.of(RequesterPrivilege.Status.INACTIVE, RequesterPrivilege.Status.ACTIVE));
+  public EntitlementSet<ProjectRoleBinding> listEntitlements(
+    UserEmail user,
+    ProjectId projectId
+  ) throws AccessException, IOException {
+    return this.repository.findEntitlements(
+      user,
+      projectId,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
+      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
   }
 
   @Override
   public @NotNull SortedSet<UserEmail> listReviewers(
-      UserEmail requestingUser,
-      @NotNull RequesterPrivilege<ProjectRoleBinding> privilege) throws AccessException, IOException {
+    UserEmail requestingUser,
+    @NotNull ProjectRoleBinding entitlement
+  ) throws AccessException, IOException {
 
     //
     // Check that the requesting user is allowed to request approval,
     // and isn't just trying to do enumeration.
     //
 
-    verifyUserCanActivateRequesterPrivileges(
-        requestingUser,
-        privilege.id().projectId(),
-        privilege.activationType(),
-        List.of(privilege.id()));
+    verifyUserCanActivateEntitlements(
+      requestingUser,
+      entitlement.projectId(),
+      ActivationType.MPA,
+      List.of(entitlement));
 
+    //
+    // All users that hold the same entitlement can
+    // act as reviewers, except for the requesting user
+    // themselves.
+    //
     return this.repository
-        .findReviewerPrivelegeHolders(privilege.id(), privilege.activationType())
-        .stream()
-        .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
-        .collect(Collectors.toCollection(TreeSet::new));
+      .findEntitlementHolders(entitlement, ActivationType.MPA)
+      .stream()
+      .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
+      .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Override
   public void verifyUserCanRequest(
-      @NotNull ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
+    @NotNull ActivationRequest<ProjectRoleBinding> request
+  ) throws AccessException, IOException {
 
     validateRequest(request);
 
     //
     // Check if the requesting user is allowed to activate this
-    // privilege.
+    // entitlement.
     //
-    verifyUserCanActivateRequesterPrivileges(
-        request.requestingUser(),
-        ProjectActivationRequest.projectId(request),
-        request.activationType(),
-        Set.of(request.requesterPrivilege()));
+    verifyUserCanActivateEntitlements(
+      request.requestingUser(),
+      ProjectActivationRequest.projectId(request),
+      request.type(),
+      request.entitlements());
   }
 
   @Override
   public void verifyUserCanApprove(
-      UserEmail approvingUser,
-      @NotNull ActivationRequest<ProjectRoleBinding> request) throws AccessException, IOException {
+    UserEmail approvingUser,
+    @NotNull MpaActivationRequest<ProjectRoleBinding> request
+  ) throws AccessException, IOException {
 
     validateRequest(request);
 
     //
     // Check if the approving user (!) is allowed to activate this
-    // privilege.
+    // entitlement.
     //
     // NB. The base class already checked that the requesting user
     // is allowed.
     //
-    switch (request.activationType().name()) {
-      case "NONE":
-        throw new IllegalArgumentException("Activation request of type none cannot be approved.");
-      case "SELF_APPROVAL":
-        if (request.requestingUser() != approvingUser) {
-          throw new AccessDeniedException(
-              String.format(
-                  "%s is not allowed to approve self-approval activation request created by %s.",
-                  approvingUser,
-                  request.requestingUser()));
-        }
-        break;
-      default:
-        verifyUserCanReviewRequest(
-            approvingUser,
-            ProjectActivationRequest.projectId(request),
-            request.activationType(),
-            request.requesterPrivilege());
-        ;
-    }
-
+    verifyUserCanActivateEntitlements(
+      approvingUser,
+      ProjectActivationRequest.projectId(request),
+      request.type(),
+      request.entitlements());
   }
 
   // -------------------------------------------------------------------------
@@ -285,15 +251,15 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
    * but results in non-personalized results.
    *
    * @param availableProjectsQuery optional, search query, for example:
-   *                               - parent:folders/{folder_id}
-   * @param maxActivationDuration  maximum duration for an activation
+   *      - parent:folders/{folder_id}
+   * @param maxActivationDuration maximum duration for an activation
    */
   public record Options(
-      String availableProjectsQuery,
-      Duration maxActivationDuration,
-      int minNumberOfReviewersPerActivationRequest,
-      int maxNumberOfReviewersPerActivationRequest) {
-
+    String availableProjectsQuery,
+    Duration maxActivationDuration,
+    int minNumberOfReviewersPerActivationRequest,
+    int maxNumberOfReviewersPerActivationRequest
+  ) {
     static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
 
     public Options {
@@ -301,14 +267,14 @@ public class MpaProjectRoleCatalog extends ProjectRoleCatalog {
 
       Preconditions.checkArgument(!maxActivationDuration.isNegative());
       Preconditions.checkArgument(
-          maxActivationDuration.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
-          "Activation timeout must be at least 5 minutes");
+        maxActivationDuration.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
+        "Activation timeout must be at least 5 minutes");
       Preconditions.checkArgument(
-          minNumberOfReviewersPerActivationRequest > 0,
-          "The minimum number of reviewers cannot be 0");
+        minNumberOfReviewersPerActivationRequest > 0,
+        "The minimum number of reviewers cannot be 0");
       Preconditions.checkArgument(
-          minNumberOfReviewersPerActivationRequest <= maxNumberOfReviewersPerActivationRequest,
-          "The minimum number of reviewers must not exceed the maximum");
+        minNumberOfReviewersPerActivationRequest <= maxNumberOfReviewersPerActivationRequest,
+        "The minimum number of reviewers must not exceed the maximum");
     }
 
     public Duration minActivationDuration() {

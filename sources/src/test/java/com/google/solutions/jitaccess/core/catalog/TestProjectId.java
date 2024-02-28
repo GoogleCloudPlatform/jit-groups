@@ -19,8 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

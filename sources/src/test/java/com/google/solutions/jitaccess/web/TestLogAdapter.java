@@ -21,9 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -37,30 +37,35 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-        new UserPrincipal() {
-          @Override
-          public UserId getId() {
-            return new UserId("id", "email");
-          }
+      new IapPrincipal() {
+        @Override
+        public UserEmail email() {
+          return new UserEmail("email");
+        }
 
-          @Override
-          public DeviceInfo getDevice() {
-            return new DeviceInfo("device-id", List.of());
-          }
+        @Override
+        public String subjectId() {
+          return "id";
+        }
 
-          @Override
-          public String getName() {
-            return "-";
-          }
-        });
+        @Override
+        public DeviceInfo device() {
+          return new DeviceInfo("device-id", List.of());
+        }
+
+        @Override
+        public String getName() {
+          return "-";
+        }
+      });
 
     adapter.newInfoEntry("event-1", "message-1").write();
 
     assertEquals(
-        "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
-            "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
-            "\"email\",\"device_access_levels\":\"\"},\"logging.googleapis.com/trace\":\"trace-1\"}\n",
-        buffer.toString());
+      "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
+        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
+        "\"email\",\"device_access_levels\":\"\"},\"logging.googleapis.com/trace\":\"trace-1\"}\n",
+      buffer.toString());
   }
 
   @Test
@@ -69,31 +74,36 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-        new UserPrincipal() {
-          @Override
-          public UserId getId() {
-            return new UserId("id", "email");
-          }
+      new IapPrincipal() {
+        @Override
+        public UserEmail email() {
+          return new UserEmail("email");
+        }
 
-          @Override
-          public DeviceInfo getDevice() {
-            return new DeviceInfo("device-id", List.of("level-1", "level-2"));
-          }
+        @Override
+        public String subjectId() {
+          return "id";
+        }
 
-          @Override
-          public String getName() {
-            return "-";
-          }
-        });
+        @Override
+        public DeviceInfo device() {
+          return new DeviceInfo("device-id", List.of("level-1", "level-2"));
+        }
+
+        @Override
+        public String getName() {
+          return "-";
+        }
+      });
 
     adapter.newInfoEntry("event-1", "message-1").write();
 
     assertEquals(
-        "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
-            "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
-            "\"email\",\"device_access_levels\":\"level-1, level-2\"}," +
-            "\"logging.googleapis.com/trace\":\"trace-1\"}\n",
-        buffer.toString());
+      "{\"severity\":\"INFO\",\"message\":\"message-1\",\"logging.googleapis.com/labels\":" +
+        "{\"device_id\":\"device-id\",\"user_id\":\"id\",\"event\":\"event-1\",\"user\":" +
+        "\"email\",\"device_access_levels\":\"level-1, level-2\"}," +
+        "\"logging.googleapis.com/trace\":\"trace-1\"}\n",
+      buffer.toString());
   }
 
   @Test
@@ -103,8 +113,8 @@ public class TestLogAdapter {
     adapter.newErrorEntry("event-1", "message-1").write();
 
     assertEquals(
-        "{\"severity\":\"ERROR\",\"message\":\"message-1\",\"logging.googleapis.com/labels\"" +
-            ":{\"event\":\"event-1\"},\"logging.googleapis.com/trace\":null}\n",
-        buffer.toString());
+      "{\"severity\":\"ERROR\",\"message\":\"message-1\",\"logging.googleapis.com/labels\"" +
+        ":{\"event\":\"event-1\"},\"logging.googleapis.com/trace\":null}\n",
+      buffer.toString());
   }
 }

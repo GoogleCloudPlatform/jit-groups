@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,22 +19,19 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog.project;
+package com.google.solutions.jitaccess.core.auth;
 
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
-import org.jetbrains.annotations.NotNull;
-
-class ProjectActivationRequest {
-  private ProjectActivationRequest() {
-  }
+/**
+ * Identifier for a principal such as a user or group.
+ */
+public interface PrincipalIdentifier {
+  /**
+   * Type of principal, for example user, serviceAccount, group.
+   */
+  String type();
 
   /**
-   * @return project ID from request.
+   * Name of principal.
    */
-  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
-    var project = request.requesterPrivilege().roleBinding().fullResourceName();
-
-    return ProjectId.fromFullResourceName(project);
-  }
+  String value();
 }

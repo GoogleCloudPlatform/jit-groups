@@ -28,6 +28,8 @@ import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.GroupEmail;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.NotFoundException;
 import org.jetbrains.annotations.NotNull;
@@ -114,7 +116,7 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a group ID by email.
    */
-  private @NotNull GroupId lookupGroup(
+  private @NotNull GroupKey lookupGroup(
     @NotNull CloudIdentity client,
     @NotNull GroupEmail email
   ) throws AccessException, IOException {
@@ -126,7 +128,7 @@ public class CloudIdentityGroupsClient {
         .execute()
         .getName();
 
-      return new GroupId(id, email);
+      return new GroupKey(id);
     }
     catch (GoogleJsonResponseException e) {
       translateAndThrowApiException(e);
@@ -139,12 +141,12 @@ public class CloudIdentityGroupsClient {
    */
   private @NotNull Group getGroup(
     @NotNull CloudIdentity client,
-    @NotNull GroupId groupId
+    @NotNull GroupKey groupKey
   ) throws AccessException, IOException {
     try {
       return client
         .groups()
-        .get(groupId.toString())
+        .get(groupKey.toString())
         .execute();
     }
     catch (GoogleJsonResponseException e) {
@@ -157,9 +159,9 @@ public class CloudIdentityGroupsClient {
    * Get details for an existing group.
    */
   public @NotNull Group getGroup(
-    @NotNull GroupId groupId
+    @NotNull GroupKey groupKey
   ) throws AccessException, IOException {
-    return getGroup(createClient(), groupId);
+    return getGroup(createClient(), groupKey);
   }
 
   /**
@@ -175,7 +177,7 @@ public class CloudIdentityGroupsClient {
   /**
    * Create group in an idempotent way.
    */
-  public @NotNull GroupId createGroup(
+  public @NotNull GroupKey createGroup(
     @NotNull GroupEmail emailAddress,
     String description
   ) throws AccessException, IOException {
@@ -192,7 +194,7 @@ public class CloudIdentityGroupsClient {
       // Try to create the group. This might fail if it already exists.
       //
 
-      GroupId groupId;
+      GroupKey groupKey;
       try {
         var createOperation = client
           .groups()
@@ -207,9 +209,7 @@ public class CloudIdentityGroupsClient {
               group.getGroupKey().getId()));
         }
 
-        groupId = new GroupId(
-          (String)createOperation.getResponse().get("name"),
-          emailAddress);
+        groupKey = new GroupKey((String)createOperation.getResponse().get("name"));
       }
       catch (GoogleJsonResponseException e) {
         if (isAlreadyExistsError(e)) {
@@ -217,7 +217,7 @@ public class CloudIdentityGroupsClient {
           // Group already exists. That's ok, but we need to find out
           // its ID.
           //
-          groupId = lookupGroup(client, emailAddress);
+          groupKey = lookupGroup(client, emailAddress);
         }
         else {
           throw (GoogleJsonResponseException)e.fillInStackTrace();
@@ -231,7 +231,7 @@ public class CloudIdentityGroupsClient {
       var updateOperation = client
         .groups()
         .updateSecuritySettings(
-          String.format("%s/securitySettings", groupId),
+          String.format("%s/securitySettings", groupKey),
           new SecuritySettings()
             .setMemberRestriction(new MemberRestriction()
               .setQuery(LOCAL_USERS_AND_SERVICEACCOUNTS_ONLY)))
@@ -245,7 +245,7 @@ public class CloudIdentityGroupsClient {
             group.getGroupKey().getId()));
       }
 
-      return groupId;
+      return groupKey;
     }
     catch (GoogleJsonResponseException e) {
       translateAndThrowApiException(e);
@@ -257,19 +257,19 @@ public class CloudIdentityGroupsClient {
    * Delete a group.
    */
   public void deleteGroup(
-    @NotNull GroupId groupId
+    @NotNull GroupKey groupKey
   ) throws AccessException, IOException {
     try {
       var createOperation = createClient()
         .groups()
-        .delete(groupId.toString())
+        .delete(groupKey.toString())
         .execute();
 
       if (!createOperation.getDone()) {
         throw new IncompleteOperationException(
           String.format(
             "Deletion of group '%s' was initiated, but hasn't completed",
-            groupId.email));
+            groupKey));
       }
     }
     catch (GoogleJsonResponseException e) {
@@ -286,14 +286,14 @@ public class CloudIdentityGroupsClient {
    */
   private @NotNull MembershipId lookupGroupMembership(
     @NotNull CloudIdentity client,
-    @NotNull GroupId groupId,
+    @NotNull GroupKey groupKey,
     @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     try {
       return new MembershipId(client
         .groups()
         .memberships()
-        .lookup(groupId.toString())
+        .lookup(groupKey.toString())
         .setMemberKeyId(userEmail.email)
         .execute()
         .getName());
@@ -312,11 +312,23 @@ public class CloudIdentityGroupsClient {
     @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
-      return client
+      var membership = client
         .groups()
         .memberships()
         .get(membershipId.id)
         .execute();
+
+      //
+      // The API automatically filters out expired memberships.
+      //
+      assert membership
+        .getRoles()
+        .stream()
+        .allMatch(
+          r -> r.getExpiryDetail() == null ||
+            Instant.parse(r.getExpiryDetail().getExpireTime()).isAfter(Instant.now()));
+
+      return membership;
     }
     catch (GoogleJsonResponseException e) {
       translateAndThrowApiException(e);
@@ -337,11 +349,11 @@ public class CloudIdentityGroupsClient {
    * Get details for an existing group membership.
    */
   public @NotNull Membership getMembership(
-    @NotNull GroupId groupId,
+    @NotNull GroupKey groupKey,
     @NotNull UserEmail userEmail
   ) throws AccessException, IOException {
     var client = createClient();
-    var id = lookupGroupMembership(client, groupId, userEmail);
+    var id = lookupGroupMembership(client, groupKey, userEmail);
     return getMembership(client, id);
   }
 
@@ -372,11 +384,11 @@ public class CloudIdentityGroupsClient {
 
   private @NotNull MembershipId updateMembership(
     @NotNull CloudIdentity client,
-    @NotNull GroupId groupId,
+    @NotNull GroupKey groupKey,
     @NotNull UserEmail userEmail,
     MembershipRole role
   ) throws AccessException, IOException {
-    var membershipId = lookupGroupMembership(client, groupId, userEmail);
+    var membershipId = lookupGroupMembership(client, groupKey, userEmail);
     try {
       client
         .groups()
@@ -401,13 +413,12 @@ public class CloudIdentityGroupsClient {
   /**
    * Add a member to a group in an idempotent way.
    */
-  public @NotNull MembershipId addMembership(
-    @NotNull GroupId groupId,
+  private @NotNull MembershipId addMembership(
+    @NotNull CloudIdentity client,
+    @NotNull GroupKey groupKey,
     @NotNull UserEmail userEmail,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
-    var client = createClient();
-
     var role = new MembershipRole()
       .setName("MEMBER")
       .setExpiryDetail(new ExpiryDetail()
@@ -424,7 +435,7 @@ public class CloudIdentityGroupsClient {
         .groups()
         .memberships()
         .create(
-          groupId.toString(),
+          groupKey.toString(),
           new Membership()
             .setPreferredMemberKey(new EntityKey().setId(userEmail.email))
             .setRoles(List.of(role)))
@@ -434,7 +445,7 @@ public class CloudIdentityGroupsClient {
         throw new IncompleteOperationException(
           String.format(
             "Adding membership to group '%s' was initiated, but hasn't completed",
-            groupId.email));
+            groupKey));
       }
 
       return new MembershipId((String)operation.getResponse().get("name"));
@@ -444,7 +455,7 @@ public class CloudIdentityGroupsClient {
         //
         // Membership exists, but the expiry might be incorrect.
         //
-        return updateMembership(client, groupId, userEmail, role);
+        return updateMembership(client, groupKey, userEmail, role);
       }
       else {
         translateAndThrowApiException(e);
@@ -454,11 +465,38 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
+   * Add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addMembership(
+    @NotNull GroupKey groupKey,
+    @NotNull UserEmail userEmail,
+    @NotNull Instant expiry
+  ) throws AccessException, IOException {
+    return addMembership(createClient(), groupKey, userEmail, expiry);
+  }
+
+  /**
+   * Add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addMembership(
+    @NotNull GroupEmail groupEmail,
+    @NotNull UserEmail userEmail,
+    @NotNull Instant expiry
+  ) throws AccessException, IOException {
+    var client = createClient();
+    return addMembership(
+      client,
+      lookupGroup(client, groupEmail),
+      userEmail,
+      expiry);
+  }
+
+  /**
    * List members of a group.
    */
   private @NotNull List<Membership> listMemberships(
     @NotNull CloudIdentity client,
-    @NotNull GroupId groupId
+    @NotNull GroupKey groupKey
   ) throws AccessException, IOException {
     try {
       var result = new ArrayList<Membership>();
@@ -467,7 +505,8 @@ public class CloudIdentityGroupsClient {
         var page = client
           .groups()
           .memberships()
-          .list(groupId.toString())
+          .list(groupKey.toString())
+          .setView("FULL") // Include expiry details
           .setPageToken(pageToken)
           .setPageSize(SEARCH_PAGE_SIZE)
           .execute();
@@ -477,6 +516,17 @@ public class CloudIdentityGroupsClient {
         }
 
         pageToken = page.getNextPageToken();
+
+        //
+        // The API automatically filters out expired memberships.
+        //
+        assert page.getMemberships()
+          .stream()
+          .flatMap(m -> m.getRoles().stream())
+          .allMatch(
+            r -> r.getExpiryDetail() == null ||
+            Instant.parse(r.getExpiryDetail().getExpireTime()).isAfter(Instant.now()));
+
       } while (pageToken != null);
 
       return Collections.unmodifiableList(result);
@@ -522,6 +572,15 @@ public class CloudIdentityGroupsClient {
         if (page.getMemberships() != null) {
           result.addAll(page.getMemberships());
         }
+
+        //
+        // The API does **NOT** include expiry details.
+        //
+        assert page.getMemberships() == null || page
+          .getMemberships()
+          .stream()
+          .flatMap(m -> m.getRoles().stream())
+          .allMatch(r -> r.getExpiryDetail() == null);
 
         pageToken = page.getNextPageToken();
       } while (pageToken != null);
