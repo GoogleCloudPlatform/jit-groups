@@ -54,7 +54,7 @@ public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
       return true;
     }
 
-    if (o == null || getClass() != o.getClass()) { // TODO: equal GroupId
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
 

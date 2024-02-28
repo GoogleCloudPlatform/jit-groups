@@ -55,7 +55,7 @@ public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
       return true;
     }
 
-    if (o == null || getClass() != o.getClass()) { // TODO: equal UserId
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
 

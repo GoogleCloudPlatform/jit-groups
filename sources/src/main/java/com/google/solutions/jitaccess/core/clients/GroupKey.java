@@ -57,17 +57,13 @@ public class GroupKey {
       return false;
     }
 
-    if (!super.equals(o)) {
-      return false;
-    }
-
-    GroupKey GroupKey = (GroupKey) o;
-    return this.id.equals(GroupKey.id);
+    GroupKey other = (GroupKey) o;
+    return this.id.equals(other.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), id);
+    return Objects.hash(this.id);
   }
 
   /**
