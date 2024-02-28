@@ -151,7 +151,7 @@ public class ApiResource {
     var options = this.mpaCatalog.options();
     return new PolicyResponse(
       justificationPolicy.hint(),
-      iapPrincipal.getId(),
+      iapPrincipal.email(),
       ApplicationVersion.VERSION_STRING,
       (int)options.maxActivationDuration().toMinutes(),
       Math.min(60, (int)options.maxActivationDuration().toMinutes()));
@@ -171,7 +171,7 @@ public class ApiResource {
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
 
     try {
-      var projects = this.mpaCatalog.listScopes(iapPrincipal.getId());
+      var projects = this.mpaCatalog.listScopes(iapPrincipal.email());
 
       this.logAdapter
         .newInfoEntry(
@@ -216,7 +216,7 @@ public class ApiResource {
 
     try {
       var entitlements = this.mpaCatalog.listEntitlements(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         projectId);
 
       return new ProjectRolesResponse(
@@ -269,10 +269,10 @@ public class ApiResource {
 
     try {
       var peers = this.mpaCatalog.listReviewers(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         new ProjectRoleBinding(roleBinding));
 
-      assert !peers.contains(iapPrincipal.getId());
+      assert !peers.contains(iapPrincipal.email());
 
       return new ProjectRolePeersResponse(peers);
     }
@@ -330,7 +330,7 @@ public class ApiResource {
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
     var activationRequest = this.projectRoleActivator.createJitRequest(
-      iapPrincipal.getId(),
+      iapPrincipal.email(),
       request.roles
         .stream()
         .map(r -> new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), r)))
@@ -362,7 +362,7 @@ public class ApiResource {
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
             "User %s activated roles %s on '%s' for themselves for %d minutes",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
               .collect(Collectors.joining(", ")),
@@ -372,7 +372,7 @@ public class ApiResource {
         .write();
 
       return new ActivationStatusResponse(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         activation.request(),
         Entitlement.Status.ACTIVE);
     }
@@ -382,7 +382,7 @@ public class ApiResource {
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
             "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             activationRequest.entitlements().stream()
               .map(ent -> String.format("'%s'", ent.roleBinding().role()))
               .collect(Collectors.joining(", ")),
@@ -465,7 +465,7 @@ public class ApiResource {
 
     try {
       activationRequest = this.projectRoleActivator.createMpaRequest(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         Set.of(new ProjectRoleBinding(roleBinding)),
         request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
         request.justification,
@@ -478,7 +478,7 @@ public class ApiResource {
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
             "Received invalid activation request from user '%s' for role '%s' on '%s': %s",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             roleBinding,
             projectId.getFullResourceName(),
             Exceptions.getFullMessage(e)))
@@ -539,7 +539,7 @@ public class ApiResource {
           LogEvents.API_REQUEST_ROLE,
           String.format(
             "User %s requested role '%s' on '%s' for %d minutes",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             roleBinding.role(),
             roleBinding.fullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
@@ -548,7 +548,7 @@ public class ApiResource {
         .write();
 
       return new ActivationStatusResponse(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         activationRequest,
         Entitlement.Status.ACTIVATION_PENDING);
     }
@@ -558,7 +558,7 @@ public class ApiResource {
           LogEvents.API_REQUEST_ROLE,
           String.format(
             "User %s failed to request role '%s' on '%s' for %d minutes: %s",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             roleBinding.role(),
             roleBinding.fullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
@@ -602,13 +602,13 @@ public class ApiResource {
         this.projectRoleActivator.createTokenConverter(),
         activationToken);
 
-      if (!activationRequest.requestingUser().equals(iapPrincipal.getId()) &&
-          !activationRequest.reviewers().contains(iapPrincipal.getId())) {
+      if (!activationRequest.requestingUser().equals(iapPrincipal.email()) &&
+          !activationRequest.reviewers().contains(iapPrincipal.email())) {
         throw new AccessDeniedException("The calling user is not authorized to access this approval request");
       }
 
       return new ActivationStatusResponse(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         activationRequest,
         Entitlement.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
     }
@@ -674,7 +674,7 @@ public class ApiResource {
 
     try {
       var activation = this.projectRoleActivator.approve(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         activationRequest);
 
       assert activation != null;
@@ -687,7 +687,7 @@ public class ApiResource {
         service.sendNotification(new ActivationApprovedNotification(
           projectId,
           activation,
-          iapPrincipal.getId(),
+          iapPrincipal.email(),
           createActivationRequestUrl(uriInfo, projectId, activationToken)));
       }
 
@@ -699,7 +699,7 @@ public class ApiResource {
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
             "User %s approved role '%s' on '%s' for %s",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             roleBinding.role(),
             roleBinding.fullResourceName(),
             activationRequest.requestingUser()))
@@ -707,7 +707,7 @@ public class ApiResource {
         .write();
 
       return new ActivationStatusResponse(
-        iapPrincipal.getId(),
+        iapPrincipal.email(),
         activationRequest,
         Entitlement.Status.ACTIVE);
     }
@@ -717,7 +717,7 @@ public class ApiResource {
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
             "User %s failed to activate role '%s' on '%s' for %s: %s",
-            iapPrincipal.getId(),
+            iapPrincipal.email(),
             roleBinding.role(),
             roleBinding.fullResourceName(),
             activationRequest.requestingUser(),

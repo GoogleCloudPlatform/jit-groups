@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.iap;
 
-import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 
 import java.security.Principal;
 
@@ -29,7 +29,9 @@ import java.security.Principal;
  * Represents a logged-in user.
  */
 public interface IapPrincipal extends Principal {
-  UserId getId();
+  UserEmail email();
 
-  DeviceInfo getDevice();
+  String subjectId();
+
+  DeviceInfo device();
 }

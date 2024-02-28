@@ -123,11 +123,11 @@ public class LogAdapter {
       this.labels.put("event", eventId);
 
       if (principal != null) {
-        this.labels.put("user", principal.getId().email);
-        this.labels.put("user_id", principal.getId().id);
-        this.labels.put("device_id", principal.getDevice().deviceId());
+        this.labels.put("user", principal.email().email);
+        this.labels.put("user_id", principal.subjectId());
+        this.labels.put("device_id", principal.device().deviceId());
         this.labels.put("device_access_levels",
-          String.join(", ", principal.getDevice().accessLevels()));
+          String.join(", ", principal.device().accessLevels()));
       }
     }
 

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
@@ -39,12 +40,17 @@ public class TestLogAdapter {
     adapter.setPrincipal(
       new IapPrincipal() {
         @Override
-        public UserId getId() {
-          return new UserId("id", "email");
+        public UserEmail email() {
+          return new UserEmail("email");
         }
 
         @Override
-        public DeviceInfo getDevice() {
+        public String subjectId() {
+          return "id";
+        }
+
+        @Override
+        public DeviceInfo device() {
           return new DeviceInfo("device-id", List.of());
         }
 
@@ -71,12 +77,17 @@ public class TestLogAdapter {
     adapter.setPrincipal(
       new IapPrincipal() {
         @Override
-        public UserId getId() {
-          return new UserId("id", "email");
+        public UserEmail email() {
+          return new UserEmail("email");
         }
 
         @Override
-        public DeviceInfo getDevice() {
+        public String subjectId() {
+          return "id";
+        }
+
+        @Override
+        public DeviceInfo device() {
           return new DeviceInfo("device-id", List.of("level-1", "level-2"));
         }
 

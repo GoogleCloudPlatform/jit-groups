@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.iap;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -45,16 +45,19 @@ public class IapAssertion implements IapPrincipal {
   /**
    * Extract user information
    */
-  public @NotNull UserId getId() {
-    return new UserId(
-      this.payload.get("sub").toString(),
-      this.payload.get("email").toString());
+  public @NotNull UserEmail email() {
+    return new UserEmail(this.payload.get("email").toString());
+  }
+
+  @Override
+  public String subjectId() {
+    return this.payload.get("sub").toString();
   }
 
   /**
    * Extract device information (if available)
    */
-  public @NotNull DeviceInfo getDevice() {
+  public @NotNull DeviceInfo device() {
     String deviceId = "unknown";
     List<String> accessLevels = List.of();
 
@@ -78,6 +81,6 @@ public class IapAssertion implements IapPrincipal {
 
   @Override
   public String getName() {
-    return getId().toString();
+    return email().toString();
   }
 }

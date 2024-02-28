@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.iap;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import jakarta.annotation.Priority;
@@ -142,12 +142,17 @@ public class IapRequestFilter implements ContainerRequestFilter {
       }
 
       @Override
-      public @NotNull UserId getId() {
-        return new UserId("debug", debugPrincipalName);
+      public @NotNull UserEmail email() {
+        return new UserEmail(debugPrincipalName);
       }
 
       @Override
-      public @NotNull DeviceInfo getDevice() {
+      public String subjectId() {
+        return "debug";
+      }
+
+      @Override
+      public @NotNull DeviceInfo device() {
         return DeviceInfo.UNKNOWN;
       }
     };
