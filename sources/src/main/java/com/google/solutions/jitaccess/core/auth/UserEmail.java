@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * Primary email address of a user.
  */
-public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier { // TODO: Rename to UserPrincipal, move to auth
+public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier { 
   public static final String TYPE = "user";
 
   public final @NotNull String email;

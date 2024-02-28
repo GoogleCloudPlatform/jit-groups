@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * Email address of a group.
  */
-public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {// TODO: Rename to GroupPrincipal, move to auth
+public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
   public static final String TYPE = "group";
   public final @NotNull String email;
 
