@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.GroupEmail;
-import com.google.solutions.jitaccess.core.auth.GroupId;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,9 +48,7 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     try {
-      var groupId = new GroupId(
-        client.getGroup(TEST_GROUP_EMAIL).getName(),
-        TEST_GROUP_EMAIL);
+      var groupId = new GroupKey(client.getGroup(TEST_GROUP_EMAIL).getName());
       client.deleteGroup(groupId);
     }
     catch (AccessDeniedException ignored) {
@@ -191,7 +188,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> client.deleteGroup(new GroupId("1", "test@example.com")));
+      () -> client.deleteGroup(new GroupKey("1")));
   }
 
   @Test
@@ -204,7 +201,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> client.deleteGroup(new GroupId("1", "doesnotexist@google.com")));
+      () -> client.deleteGroup(new GroupKey("doesnotexist")));
   }
 
   //---------------------------------------------------------------------
@@ -222,7 +219,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       IllegalArgumentException.class,
       () -> client.getMembership(
-        new GroupId("1", "doesnotexist@google.com"),
+        new GroupKey("doesnotexist"),
         ITestEnvironment.NO_ACCESS_USER));
   }
 
@@ -265,7 +262,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       NotAuthenticatedException.class,
       () -> client.addMembership(
-        new GroupId("1", "test@example.com"),
+        new GroupKey("test"),
         new UserEmail("user@example.com"),
         Instant.now().plusSeconds(300)));
   }
@@ -281,7 +278,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       IllegalArgumentException.class,
       () -> client.addMembership(
-        new GroupId("1", "doesnotexist@google.com"),
+        new GroupKey("invalid"),
         new UserEmail("user@example.com"),
         Instant.now().plusSeconds(300)));
   }

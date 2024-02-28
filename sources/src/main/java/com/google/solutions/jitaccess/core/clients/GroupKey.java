@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.auth;
+package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
@@ -28,16 +28,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Primary email address and unique ID of a group.
+ * Unique group key as used by the Cloud Identity Groups API.
+ *
+ * Group keys are not email addresses, and also aren't GAIA IDs.
  */
-public class GroupId extends UserEmail {
+public class GroupKey {
   private static final String GROUPS_PREFIX = "groups/";
 
   public final transient @NotNull String id;
 
-  public GroupId(@NotNull String id, String email) {
-    super(email);
-
+  public GroupKey(@NotNull String id) {
     Preconditions.checkNotNull(id, "id");
 
     if (id.startsWith(GROUPS_PREFIX)) {
@@ -45,10 +45,6 @@ public class GroupId extends UserEmail {
     }
 
     this.id = id;
-  }
-
-  public GroupId(@NotNull String id, @NotNull GroupEmail email) {
-    this(id, email.email);
   }
 
   @Override
@@ -65,8 +61,8 @@ public class GroupId extends UserEmail {
       return false;
     }
 
-    GroupId GroupId = (GroupId) o;
-    return this.id.equals(GroupId.id);
+    GroupKey GroupKey = (GroupKey) o;
+    return this.id.equals(GroupKey.id);
   }
 
   @Override
