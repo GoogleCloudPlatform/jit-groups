@@ -34,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 /**
- * Expands
+ * Expands groups in access control lists.
  */
 public class GroupExpander {
   private final @NotNull CloudIdentityGroupsClient groupsClient;
