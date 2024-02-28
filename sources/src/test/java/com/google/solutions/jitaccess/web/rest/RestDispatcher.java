@@ -23,8 +23,8 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.auth.UserId;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.IapPrincipal;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;

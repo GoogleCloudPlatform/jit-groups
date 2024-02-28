@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.web.iap;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.Nullable;

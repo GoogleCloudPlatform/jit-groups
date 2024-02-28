@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.web.auth.IapPrincipal;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.RequestScoped;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

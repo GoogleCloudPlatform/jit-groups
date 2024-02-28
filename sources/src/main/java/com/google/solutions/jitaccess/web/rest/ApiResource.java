@@ -33,7 +33,7 @@ import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
-import com.google.solutions.jitaccess.web.auth.IapPrincipal;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
