@@ -21,10 +21,11 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.ThrowingCompletableFuture;
-import com.google.solutions.jitaccess.core.clients.Diagnosable;
-import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.LogEvents;
+import com.google.solutions.jitaccess.apis.clients.Diagnosable;
+import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.catalog.ThrowingCompletableFuture;
+import com.google.solutions.jitaccess.web.Application;
+import com.google.solutions.jitaccess.web.EventIds;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -32,7 +33,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -55,7 +55,10 @@ public class HealthResource {
   Instance<Diagnosable> diagnosables;
 
   @Inject
-  LogAdapter logAdapter;
+  Logger logger;
+
+  @Inject
+  Application application;
 
   /**
    * Check if the application is alive.
@@ -63,7 +66,7 @@ public class HealthResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("alive")
-  public @NotNull ResponseEntity checkLiveness() {
+  public @NotNull HealthResource.HealthInfo checkLiveness() {
     //
     // The fact that this class received a request is sufficient
     // indication that the application initialized successfully
@@ -72,7 +75,7 @@ public class HealthResource {
     // Restarting the application would serve no purpose at this
     // point.
     //
-    return new ResponseEntity(true, Map.of());
+    return new HealthInfo(true, Map.of());
   }
 
   /**
@@ -81,7 +84,7 @@ public class HealthResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("ready")
-  public @NotNull Response checkReadiness() throws ExecutionException, InterruptedException {
+  public @NotNull jakarta.ws.rs.core.Response checkReadiness() {
     //
     // Diagnose all services that support self-diagnosis.
     //
@@ -108,15 +111,11 @@ public class HealthResource {
 
     for (var result : results) {
       if (!result.successful()) {
-        this.logAdapter
-          .newWarningEntry(
-            LogEvents.API_HEALTH,
-            result.toString())
-          .write();
+        this.logger.warn(EventIds.API_CHECK_HEALTH, result.toString());
       }
     }
 
-    var response =  new ResponseEntity(
+    var response =  new HealthInfo(
       results
         .stream()
         .allMatch(r -> r.successful()), // AND-combine results.
@@ -128,24 +127,28 @@ public class HealthResource {
       //
       // Return a 200/OK.
       //
-      return Response.ok(response).build();
+      return jakarta.ws.rs.core.Response.ok(response).build();
     }
     else {
       //
       // Return a 503/Service unavailable.
       //
-      return Response
-        .status(Response.Status.SERVICE_UNAVAILABLE)
+      return jakarta.ws.rs.core.Response
+        .status(jakarta.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE)
         .entity(response)
         .build();
     }
   }
 
+  //---------------------------------------------------------------------------
+  // Payload records.
+  //---------------------------------------------------------------------------
+
   /**
    * @param healthy overall status
    * @param details status of individual services
    */
-  public record ResponseEntity(
+  public record HealthInfo(
     boolean healthy,
     Map<String, Boolean> details
   ) {}

@@ -2,12 +2,31 @@ body {
     margin: 0;
     padding: 0;
     font-family: Roboto;
-    --mdc-typography-body2-font-size: 13px;
+    --mdc-typography-body2-font-size: 14px;
     --mdc-text-button-label-text-size: 14px;
 }
 
-h1, h2 {
+h1 {
+    color: #000000a8;
     font-weight: normal;
+    font-size: 20px;
+}
+
+h1 a {
+    text-decoration: none;
+}
+h1 a:hover {
+    text-decoration: underline;
+}
+
+h2 {
+    color: #000000a8;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+a {
+    color: #3367d6;
 }
 
 .activated {
@@ -15,6 +34,7 @@ h1, h2 {
     color: #fff;
     border-radius: 4px;
     padding: 4px;
+    padding-right: 6px;
     display: inline;
 }
 
@@ -40,7 +60,7 @@ h1, h2 {
     margin-right: 10px;
 }
         
-#jit-projectselector {
+#jit-environmentselector {
     margin-left: 25px;
 }
       
@@ -71,10 +91,47 @@ h1, h2 {
     color: #9e9e9e;
 }
 
+.jit-card-header {
+    line-height: 22px;
+    margin-right: 15px;
+    margin-top: 30px;
+    font-size: 12px;
+    color: #9e9e9e;
+    width: 600px;
+}
+
+.jit-card {
+    line-height: 22px;
+    margin-right: 15px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
+    width: 600px;
+}
+
 .jit-card-subsection {
     line-height: 22px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    margin-right: 15px;
+    margin: 5px;
+    padding: 15px;
+    margin-top: 15px;
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
+    width: 600px;
+    border: 1px solid #f2f2f2;
+    border-radius: 4px;
+}
+
+div.jit-card-subsection[title]:not(:empty)::before {
+    content: attr(title);
+    margin-bottom: 20px;
+    color: #000000a8;
+    font-weight: normal;
+    font-size: 16px;
+    display: block;
+}
+
+.jit-card-subsection .mdc-list-item__primary-text  {
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
 }
 
 .jit-card-divider {
@@ -90,9 +147,35 @@ h1, h2 {
     color: #006CBE;
 }
 
-.mdc-text-field {
+.jit-material-icons {
+    font-family: 'Material Icons';
+    vertical-align: text-bottom;
+}
+
+.jit-policy-editor {
+    width: 80vh;
+    height: 70vh;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.jit-policy-editor-issues {
+    padding-top: 20px;
+    width: 80vh;
+}
+
+.mdc-text-field, .mdc-select {
     margin-top: 10px !important;
     width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.mdc-list {
+    margin-bottom: 10px;
+}
+
+.mdc-list-item__primary-text {
+    overflow: unset;
 }
 
 .tabulated-list {
@@ -111,54 +194,27 @@ h1, h2 {
     width: 130px;
 }
 
-/* ==== jQuery UI === */
 
-.ui-autocomplete-loading {
-    background: url(/spinner.gif) no-repeat right center
+
+ul[title]:not(:empty)::before {
+    content: attr(title);
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
 }
 
-.ui-autocomplete {
-    z-index: 100 !important;
+form[title]:has(input)::before {
+    content: attr(title);
+    font-size: var(--mdc-typography-body2-font-size, 0.875rem);
 }
 
-.ui-widget {
-    font-family: "Roboto",sans-serif;
-}
 
-.ui-menu {
-    background-color: white;
-    font-size: 14px;
-    //box-shadow: 0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%);
-}
-
-ul.ui-menu  {
-    list-style: none;
-    margin: 0 0 0 -0.8125em;
-    padding-left: 0;
-}
-
-.ui-menu-item  {
-    border: 0px;
-}
-
-.ui-menu-item-wrapper {
-    padding: 10px;
-}
-
-.ui-menu-item .ui-menu-item-wrapper.ui-state-active {
-    background: #f0f0f0 !important;
-}
-
-.ui-helper-hidden-accessible{
-    display:none;
-}
+/* ==== MDC Overrides === */
 
 .material-symbols-outlined {
     vertical-align: middle;
     padding-right: 10px;
+    font-size: revert;
 }
 
-/* ==== MDC Overrides === */
 .mdc-data-table {
     width: 100%;
 }
@@ -181,7 +237,6 @@ ul.ui-menu  {
     background-color: #FFFDE7;
 }
 
-            
 .mdc-top-app-bar--fixed-adjust {
     padding-top: 48px;
 }
@@ -191,8 +246,13 @@ ul.ui-menu  {
 }
 
 main .mdc-button {
-    margin-top: 8px;
+    margin-top: 20px;
     margin-right: 0;
+}
+
+.mdc-icon-button {
+    vertical-align: middle;
+    color: #3367d6;
 }
 
 .mdc-card {
@@ -204,6 +264,15 @@ main .mdc-button {
 .mdc-dialog .mdc-dialog__content{
     font-size: var(--mdc-typography-body2-font-size, 0.875rem);
     color: rgba(0,0,0,.8);
+}
+
+.mdc-text-field__input::-webkit-calendar-picker-indicator {
+    display: block !important;
+}
+
+.mdc-data-table__cell {
+    white-space: normal; 
+    word-wrap: break-word; 
 }
 
 /* ==== Debug === */
