@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.junit.jupiter.api.Test;

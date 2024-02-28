@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -56,8 +55,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class TestApiResource {
-  private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2", "user-2@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
 
   private static final String SAMPLE_TOKEN = "eySAMPLE";
   private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile("pattern");
@@ -950,7 +949,7 @@ public class TestApiResource {
 
     var response = new RestDispatcher<>(
       this.resource,
-      new UserId("other-party", "other-party@example.com"))
+      new UserEmail("other-party@example.com"))
       .get(
         "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
         ExceptionMappers.ErrorEntity.class);
