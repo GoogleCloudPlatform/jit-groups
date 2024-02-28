@@ -48,7 +48,7 @@ public class TestThrowingCompletableFuture {
   public void whenFutureThrowsIoException_ThenAwaitAndRethrowPropagatesException() {
     var future = ThrowingCompletableFuture.<String>submit(
       () -> { throw new IOException("IO!"); },
-      new TestAssetInventoryRepository.SynchronousExecutor());
+      new SynchronousExecutor());
 
     assertThrows(
       IOException.class,
@@ -59,7 +59,7 @@ public class TestThrowingCompletableFuture {
   public void whenFutureThrowsAccessException_ThenAwaitAndRethrowPropagatesException() {
     var future = ThrowingCompletableFuture.<String>submit(
       () -> { throw new AccessDeniedException("Access!"); },
-      new TestAssetInventoryRepository.SynchronousExecutor());
+      new SynchronousExecutor());
 
     assertThrows(
       AccessException.class,
@@ -69,7 +69,7 @@ public class TestThrowingCompletableFuture {
   public void whenFutureThrowsOtherException_ThenAwaitAndRethrowWrapsException() {
     var future = ThrowingCompletableFuture.<String>submit(
       () -> { throw new RuntimeException("Runtime!"); },
-      new TestAssetInventoryRepository.SynchronousExecutor());
+      new SynchronousExecutor());
 
     assertThrows(
       IOException.class,
