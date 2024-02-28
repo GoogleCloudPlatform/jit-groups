@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.web.auth.AuthenticationContext;
 import jakarta.enterprise.context.RequestScoped;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +42,7 @@ public class LogAdapter {
   private final @NotNull Appendable output;
 
   private String traceId;
-  private UserPrincipal principal;
+  private AuthenticationContext principal;
 
   public LogAdapter(@NotNull Appendable output) {
     Preconditions.checkNotNull(output);
@@ -63,7 +63,7 @@ public class LogAdapter {
   /**
    * Set principal for current request.
    */
-  public void setPrincipal(UserPrincipal principal) {
+  public void setPrincipal(AuthenticationContext principal) {
     this.principal = principal;
   }
 
@@ -112,7 +112,7 @@ public class LogAdapter {
       String severity,
       String eventId,
       String message,
-      @Nullable UserPrincipal principal,
+      @Nullable AuthenticationContext principal,
       String traceId
     ) {
       this.severity = severity;

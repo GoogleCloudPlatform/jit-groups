@@ -28,7 +28,7 @@ import java.security.Principal;
 /**
  * Represents a logged-in user.
  */
-public interface UserPrincipal extends Principal { //TODO: Rename to AuthenticationContext, remove implements, Consolidate with Subject
+public interface AuthenticationContext extends Principal {
   UserId getId();
 
   DeviceInfo getDevice();

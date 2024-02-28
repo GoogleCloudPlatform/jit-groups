@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.web.auth.AuthenticationContext;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -37,7 +37,7 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-      new UserPrincipal() {
+      new AuthenticationContext() {
         @Override
         public UserId getId() {
           return new UserId("id", "email");
@@ -69,7 +69,7 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-      new UserPrincipal() {
+      new AuthenticationContext() {
         @Override
         public UserId getId() {
           return new UserId("id", "email");

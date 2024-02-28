@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.gson.Gson;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.web.auth.AuthenticationContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.SecurityContext;
 import org.jboss.resteasy.core.SynchronousDispatcher;
@@ -60,7 +60,7 @@ public class RestDispatcher<TResource> {
       new SecurityContext() {
         @Override
         public Principal getUserPrincipal() {
-          return new UserPrincipal() {
+          return new AuthenticationContext() {
             @Override
             public UserId getId() {
               return userId;
