@@ -21,16 +21,20 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.ResourceNotFoundException;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.solutions.jitaccess.apis.clients.AccessException;
+import com.google.solutions.jitaccess.apis.clients.NotAuthenticatedException;
+import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
+import com.google.solutions.jitaccess.util.Exceptions;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAcceptableException;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
+import jakarta.ws.rs.ext.Providers;
 import org.jboss.resteasy.spi.UnhandledException;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,7 +53,9 @@ public class ExceptionMappers {
     UnhandledExceptionMapper.class,
     NotAllowedExceptionMapper.class,
     NotAcceptableExceptionMapper.class,
-    NotFoundExceptionMapper.class
+    NotFoundExceptionMapper.class,
+    UnsupportedOperationExceptionMapper.class,
+    UncheckedExecutionExceptionMapper.class
   };
 
   @Provider
@@ -173,6 +179,17 @@ public class ExceptionMappers {
   }
 
   @Provider
+  public static class UnsupportedOperationExceptionMapper implements ExceptionMapper<UnsupportedOperationException> {
+    @Override
+    public Response toResponse(@NotNull UnsupportedOperationException exception) {
+      return Response
+        .status(Response.Status.NOT_IMPLEMENTED)
+        .entity(new ErrorEntity(exception))
+        .build();
+    }
+  }
+
+  @Provider
   public static class UnhandledExceptionMapper implements ExceptionMapper<UnhandledException> {
     @Override
     public Response toResponse(@NotNull UnhandledException exception) {
@@ -180,6 +197,27 @@ public class ExceptionMappers {
         .status(Response.Status.INTERNAL_SERVER_ERROR)
         .entity(new ErrorEntity(exception))
         .build();
+    }
+  }
+
+  @Provider
+  public static class UncheckedExecutionExceptionMapper implements ExceptionMapper<UncheckedExecutionException> {
+    @Context
+    private Providers providers;
+
+    @SuppressWarnings("unchecked")
+    public Response toResponse(@NotNull UncheckedExecutionException exception) {
+      var cause = Exceptions.unwrap(exception);
+      ExceptionMapper mapper = providers.getExceptionMapper(cause.getClass());
+      if (mapper != null) {
+        return mapper.toResponse(cause);
+      }
+      else {
+        return Response
+          .status(Response.Status.INTERNAL_SERVER_ERROR)
+          .entity(new ErrorEntity(exception))
+          .build();
+      }
     }
   }
 
@@ -192,6 +230,11 @@ public class ExceptionMappers {
 
     public String getMessage() {
       return message;
+    }
+
+    @Override
+    public String toString() {
+      return this.message;
     }
   }
 }
