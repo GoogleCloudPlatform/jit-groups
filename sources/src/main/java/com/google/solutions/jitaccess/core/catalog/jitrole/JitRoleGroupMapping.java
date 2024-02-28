@@ -19,23 +19,26 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.auth;
+package com.google.solutions.jitaccess.core.catalog.jitrole;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Set;
+import com.google.solutions.jitaccess.core.auth.GroupId;
 
 /**
- * Represents an entity such as a user.
+ * Defines the mapping between JIT roles and Google group email addresses.
  */
-public interface Subject {
+public interface JitRoleGroupMapping {
   /**
-   * @return Primary id.
+   * Check if a group email corresponds to a JIT Role.
    */
-  @NotNull UserId user();
+  boolean isJitRole(GroupId group);
 
   /**
-   * @return full set of principals, including groups.
+   * Determine JIT role corresponding to a group email.
    */
-  @NotNull Set<PrincipalId> principals();
+  JitRole jitRoleFromGroup(GroupId email);
+
+  /**
+   * Determine group email corresponding to a JIT role.
+   */
+  GroupId groupFromJitRole(JitRole role);
 }

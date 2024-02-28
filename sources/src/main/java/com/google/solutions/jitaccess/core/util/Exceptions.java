@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Exceptions {
+public class Exceptions { // TODO: Move to util package
   private Exceptions() {}
 
   public static @NotNull String getFullMessage(@Nullable Throwable e) {

@@ -19,23 +19,24 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.auth;
+package com.google.solutions.jitaccess.core.catalog.policy;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
+import java.util.List;
 
-/**
- * Represents an entity such as a user.
- */
-public interface Subject {
-  /**
-   * @return Primary id.
-   */
-  @NotNull UserId user();
+public class PolicyException extends Exception {
+  private final @NotNull List<PolicyIssue> issues;
 
-  /**
-   * @return full set of principals, including groups.
-   */
-  @NotNull Set<PrincipalId> principals();
+  public @NotNull List<PolicyIssue> getIssues() {
+    return issues;
+  }
+
+  PolicyException(
+    @NotNull String message,
+    @NotNull List<PolicyIssue> issues
+  ) {
+    super(message);
+    this.issues = issues;
+  }
 }

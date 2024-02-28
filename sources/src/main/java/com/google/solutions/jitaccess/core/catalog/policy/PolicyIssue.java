@@ -19,23 +19,41 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.auth;
+package com.google.solutions.jitaccess.core.catalog.policy;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Set;
-
 /**
- * Represents an entity such as a user.
+ * Warning or error affecting a policy.
+ * @param error indicates if this is a fatal error
+ * @param code unique code for the issue
+ * @param description textual description
  */
-public interface Subject {
-  /**
-   * @return Primary id.
-   */
-  @NotNull UserId user();
+public record PolicyIssue(
+  boolean error,
+  @NotNull Code code,
+  @NotNull String details) {
 
-  /**
-   * @return full set of principals, including groups.
-   */
-  @NotNull Set<PrincipalId> principals();
+  public enum Code {
+    FILE_INVALID_SYNTAX,
+    POLICY_INVALID_ID,
+    POLICY_DUPLICATE_ID,
+    POLICY_MISSING_NAME,
+    POLICY_MISSING_ROLES,
+
+    ROLE_INVALID_ID,
+    ROLE_MISSING_NAME,
+    ROLE_MISSING_ACCESS,
+
+    ACCESS_INVALID_PRINCIPAL,
+    ACCESS_INVALID_EFFECT,
+    ACCESS_INVALID_ACTION,
+
+    CONSTRAINT_DURATION_CONSTRAINTS_MISSING,
+    CONSTRAINT_DURATION_CONSTRAINT_EMPTY,
+    CONSTRAINT_DURATION_CONSTRAINT_INVALID,
+    CONSTRAINT_APPROVAL_CONSTRAINTS_MISSING,
+    CONSTRAINT_APPROVAL_LIMITS_MISSING,
+    CONSTRAINT_APPROVAL_LIMITS_INVALID
+  }
 }

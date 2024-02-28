@@ -40,6 +40,7 @@ public class UserId implements Comparable<UserId>, PrincipalId {
 
   public UserId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
+    Preconditions.checkArgument(!email.isBlank());
 
     //
     // Use lower-case as canonical format.
@@ -53,7 +54,7 @@ public class UserId implements Comparable<UserId>, PrincipalId {
   }
 
   // -------------------------------------------------------------------------
-  // PrincipalIdentifier.
+  // PrincipalId.
   // -------------------------------------------------------------------------
 
   @Override

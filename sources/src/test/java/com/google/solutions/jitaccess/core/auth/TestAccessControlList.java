@@ -25,54 +25,216 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAccessControlList {
-  private static final UserId TEST_USER_1 = new UserId("test-1@example.com");
-  private static final UserId TEST_USER_2 = new UserId("test-2@example.com");
+
+  private static final UserId TEST_USER = new UserId("test-1@example.com");
+  private static final UserId TEST_USER_OTHER = new UserId("test-2@example.com");
   private static final GroupId TEST_GROUP_1 = new GroupId("group-1@example.com");
 
   private record TestSubject(
-    PrincipalId id,
+    UserId user,
     Set<PrincipalId> principals) implements Subject {
   }
 
+  private class Rights {
+    public static final int READ = 1;
+    public static final int WRITE = 2;
+    public static final int EXECUTE = 4;
+  }
+
+  //---------------------------------------------------------------------------
+  // isAllowed - Allow ACEs.
+  //---------------------------------------------------------------------------
+
   @Test
-  public void emptyAcl() {
+  public void whenAclEmpty_ThenIsAllowedReturnsFalse() {
     var acl = new AccessControlList(Set.of());
-    var subject = new TestSubject(TEST_USER_1, Set.of());
+    var subject = new TestSubject(TEST_USER, Set.of());
 
-    assertFalse(acl.isAllowed(subject));
+    assertFalse(acl.isAllowed(subject, Rights.READ));
+    assertFalse(acl.isAllowed(subject, Rights.WRITE));
   }
 
   @Test
-  public void aclWithNoMatches() {
-    var acl = new AccessControlList(Set.of(TEST_GROUP_1, TEST_USER_2));
-    var subject = new TestSubject(
-      TEST_USER_1,
-      Set.of(TEST_USER_1));
+  public void whenAclDoesNotIncludeAnyEntriesForSubject_ThenIsAllowedReturnsFalse() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER_OTHER, Rights.READ | Rights.WRITE | Rights.EXECUTE)
+      .allow(TEST_GROUP_1, Rights.READ | Rights.WRITE | Rights.EXECUTE)
+      .build();
 
-    assertFalse(acl.isAllowed(subject));
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER));
+
+    assertFalse(acl.isAllowed(subject, Rights.READ));
+    assertFalse(acl.isAllowed(subject, Rights.WRITE));
+    assertFalse(acl.isAllowed(subject, Rights.EXECUTE));
   }
 
   @Test
-  public void aclWithSingleMatch() {
-    var acl = new AccessControlList(Set.of(TEST_GROUP_1));
-    var subject = new TestSubject(
-      TEST_USER_1,
-      Set.of(TEST_USER_1, TEST_GROUP_1));
+  public void whenAclHasRightsSpreadOverMultipleEntries_ThenIsAllowedReturnsTrue() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ)
+      .allow(TEST_USER, Rights.WRITE)
+      .build();
 
-    assertTrue(acl.isAllowed(subject));
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER));
+
+    assertTrue(acl.isAllowed(subject, Rights.READ));
+    assertTrue(acl.isAllowed(subject, Rights.WRITE));
+    assertTrue(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
+    assertFalse(acl.isAllowed(subject, Rights.EXECUTE));
   }
 
   @Test
-  public void aclWithMultipleMatches() {
-    var acl = new AccessControlList(Set.of(TEST_USER_1, TEST_GROUP_1));
-    var subject = new TestSubject(
-      TEST_USER_1,
-      Set.of(TEST_USER_1, TEST_GROUP_1));
+  public void whenAclHasRightsSpreadOverMultiplePrincipals_ThenIsAllowedReturnsTrue() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ)
+      .allow(TEST_GROUP_1, Rights.WRITE | Rights.EXECUTE)
+      .build();
 
-    assertTrue(acl.isAllowed(subject));
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER, TEST_GROUP_1));
+
+    assertTrue(acl.isAllowed(subject, Rights.READ));
+    assertTrue(acl.isAllowed(subject, Rights.WRITE));
+    assertTrue(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
+    assertTrue(acl.isAllowed(subject, Rights.EXECUTE));
+  }
+
+  @Test
+  public void whenAclOnlyHasSubsetOfRights_ThenIsAllowedReturnsFalse() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ)
+      .build();
+
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER, TEST_GROUP_1));
+
+    assertFalse(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
+  }
+
+  //---------------------------------------------------------------------------
+  // isAllowed - Deny ACEs.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenAclDeniesAllRights_ThenIsAllowedReturnsFalse() {
+    var acl = new AccessControlList.Builder()
+      .deny(TEST_USER, Rights.READ | Rights.WRITE)
+      .deny(TEST_USER, Rights.EXECUTE)
+      .build();
+
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER, TEST_GROUP_1));
+
+    assertFalse(acl.isAllowed(subject, Rights.READ));
+    assertFalse(acl.isAllowed(subject, Rights.WRITE));
+    assertFalse(acl.isAllowed(subject, Rights.EXECUTE));
+  }
+
+  @Test
+  public void whenAclDeniesSomeRights_ThenIsAllowedReturnsFalse() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ | Rights.WRITE | Rights.EXECUTE)
+      .deny(TEST_GROUP_1, Rights.EXECUTE)
+      .build();
+
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER, TEST_GROUP_1));
+
+    assertTrue(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
+    assertFalse(acl.isAllowed(subject, Rights.EXECUTE));
+    assertFalse(acl.isAllowed(subject, Rights.READ | Rights.WRITE | Rights.EXECUTE));
+  }
+
+  @Test
+  public void whenAllowEntryShadowedByDenyEntry_ThenIsAllowedReturnsFalse() {
+    var acl = new AccessControlList.Builder()
+      .deny(TEST_USER, Rights.READ)
+      .allow(TEST_USER, Rights.READ)
+      .build();
+
+    var subject = new TestSubject(
+      TEST_USER,
+      Set.of(TEST_USER));
+
+    assertFalse(acl.isAllowed(subject, Rights.READ));
+  }
+
+  //---------------------------------------------------------------------------
+  // allowedPrincipals - Allow ACEs.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenAclEmpty_ThenAllowedPrincipalsIsEmpty() {
+    var acl = new AccessControlList.Builder().build();
+
+    assertEquals(0, acl.allowedPrincipals(Rights.READ).size());
+  }
+
+  @Test
+  public void whenNoPrincipalHasRequiredRights_ThenAllowedPrincipalsIsEmpty() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ | Rights.WRITE)
+      .allow(TEST_USER_OTHER, Rights.READ)
+      .build();
+
+    assertEquals(0, acl.allowedPrincipals(Rights.EXECUTE).size());
+  }
+
+  @Test
+  public void whenPrincipalHasRightsSpreadOverMultipleEntries_ThenAllowedPrincipalReturnsPrincipal() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ)
+      .allow(TEST_USER, Rights.WRITE)
+      .build();
+
+    var allowed = acl.allowedPrincipals(Rights.READ | Rights.WRITE);
+    assertEquals(1, allowed.size());
+    assertTrue(allowed.contains(TEST_USER));
+  }
+
+  @Test
+  public void whenPrincipalsHaveSubsetOfRights_ThenAllowedPrincipalsIsEmpty() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ)
+      .allow(TEST_GROUP_1, Rights.READ | Rights.WRITE)
+      .build();
+
+    assertEquals(0, acl.allowedPrincipals(Rights.READ | Rights.WRITE | Rights.EXECUTE).size());
+  }
+
+  //---------------------------------------------------------------------------
+  // allowedPrincipals - Deny ACEs.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenAclDeniesSomeRights_ThenAllowedPrincipalsIsEmpty() {
+    var acl = new AccessControlList.Builder()
+      .allow(TEST_USER, Rights.READ | Rights.WRITE | Rights.EXECUTE)
+      .deny(TEST_USER, Rights.EXECUTE)
+      .build();
+
+    assertEquals(0, acl.allowedPrincipals(Rights.READ | Rights.WRITE | Rights.EXECUTE).size());
+    assertEquals(1, acl.allowedPrincipals(Rights.READ | Rights.WRITE).size());
+  }
+
+  @Test
+  public void whenAllowEntryShadowedByDenyEntry_ThenAllowedPrincipalsIsEmpty() {
+    var acl = new AccessControlList.Builder()
+      .deny(TEST_USER, Rights.READ)
+      .allow(TEST_USER, Rights.READ)
+      .build();
+
+    assertEquals(0, acl.allowedPrincipals(Rights.READ).size());
   }
 }

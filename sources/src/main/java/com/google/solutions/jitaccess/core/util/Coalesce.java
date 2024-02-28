@@ -19,23 +19,38 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.auth;
+package com.google.solutions.jitaccess.core.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Set;
-
-/**
- * Represents an entity such as a user.
- */
-public interface Subject {
-  /**
-   * @return Primary id.
-   */
-  @NotNull UserId user();
+public class Coalesce {
+  private static final String EMPTY = "";
 
   /**
-   * @return full set of principals, including groups.
+   * @return first non-null object
    */
-  @NotNull Set<PrincipalId> principals();
+  public  static <T> T objects(
+    @Nullable T one,
+    @Nullable T two
+  ) {
+    return one != null ? one : two;
+  }
+
+  /**
+   * @return first non-null, non-blank string.
+   */
+  public static String nonEmpty(
+    @Nullable String one,
+    @Nullable String two
+  ) {
+    if (one != null && !one.isEmpty()) {
+      return one;
+    }
+    else if (two != null && !two.isEmpty()) {
+      return two;
+    }
+    else {
+      return EMPTY;
+    }
+  }
 }
