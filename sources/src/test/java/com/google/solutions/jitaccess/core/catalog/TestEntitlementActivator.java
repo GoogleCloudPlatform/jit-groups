@@ -21,10 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -44,9 +42,9 @@ public class TestEntitlementActivator {
   private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("peer@example.com");
   private static final UserEmail SAMPLE_UNKNOWN_USER = new UserEmail("unknown@example.com");
 
-  private class SampleActivator extends EntitlementActivator<SampleEntitlementId> {
+  private class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId> {
     protected SampleActivator(
-      EntitlementCatalog<SampleEntitlementId> catalog,
+      EntitlementCatalog<SampleEntitlementId, ResourceId> catalog,
       JustificationPolicy policy
     ) {
       super(catalog, policy);

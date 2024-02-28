@@ -29,8 +29,10 @@ import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import org.junit.jupiter.api.Test;
@@ -62,42 +64,6 @@ public class TestAssetInventoryRepository {
     public void execute(Runnable command) {
       command.run();
     }
-  }
-
-  //---------------------------------------------------------------------------
-  // awaitAndRethrow.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void whenFutureThrowsIoException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new IOException("IO!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-
-  @Test
-  public void whenFutureThrowsAccessException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new AccessDeniedException("Access!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      AccessException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-  @Test
-  public void whenFutureThrowsOtherException_ThenAwaitAndRethrowWrapsException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new RuntimeException("Runtime!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
   }
 
   //---------------------------------------------------------------------------

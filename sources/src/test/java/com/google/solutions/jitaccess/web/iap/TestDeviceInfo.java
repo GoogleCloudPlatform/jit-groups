@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,31 +19,18 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.web.iap;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupId {
-
-  // -------------------------------------------------------------------------
-  // Constructor.
-  // -------------------------------------------------------------------------
-
+public class TestDeviceInfo {
   @Test
-  public void whenIdHasPrefix_ThenConstructorStripsPrefix() {
-    assertEquals("1", new GroupId("1", "group-1@example.com").id);
-    assertEquals("1", new GroupId("groups/1", "group-1@example.com").id);
-  }
-
-  // -------------------------------------------------------------------------
-  // toString.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void toStringReturnsPrefixedId() {
-    assertEquals("groups/1", new GroupId("1", "test@example.com").toString());
+  public void toStringReturnsDeviceId() {
+    assertEquals("device-1", new DeviceInfo("device-1", List.of()).toString());
   }
 
   // -------------------------------------------------------------------------
@@ -52,8 +39,8 @@ public class TestGroupId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
-    GroupId id2 = new GroupId("group-1", "group-1@example.com");
+    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    DeviceInfo id2 = new DeviceInfo("device-1", List.of());
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -61,15 +48,15 @@ public class TestGroupId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
+    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    GroupId id1 = new GroupId("id-1", "group-1@example.com");
-    GroupId id2 = new GroupId("id-2", "group-1@example.com");
+    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    DeviceInfo id2 = new DeviceInfo("device-1", List.of("level-1"));
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -77,16 +64,15 @@ public class TestGroupId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    GroupId id1 = new GroupId("group-1", "group-1@example.com");
+    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    var id = new GroupId("group-1", "group-1@example.com");
-    var email = new UserEmail("group-1@example.com");
+    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
 
-    assertFalse(id.equals(email));
+    assertFalse(id1.equals(""));
   }
 }

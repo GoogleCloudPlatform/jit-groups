@@ -27,9 +27,11 @@ import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
@@ -76,23 +78,6 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     this.options = options;
   }
 
-  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException {
-    try {
-      return future.get();
-    }
-    catch (InterruptedException | ExecutionException e) {
-      if (e.getCause() instanceof AccessException) {
-        throw (AccessException)e.getCause().fillInStackTrace();
-      }
-
-      if (e.getCause() instanceof IOException) {
-        throw (IOException)e.getCause().fillInStackTrace();
-      }
-
-      throw new IOException("Awaiting executor tasks failed", e);
-    }
-  }
-
   @NotNull List<Binding> findProjectBindings(
     @NotNull UserEmail user,
     ProjectId projectId
@@ -114,8 +99,10 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
         projectId),
       this.executor);
 
-    var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
-    return awaitAndRethrow(effectivePoliciesFuture)
+    var principalSetForUser = new PrincipalSet(
+      user,
+      ThrowingCompletableFuture.awaitAndRethrow(listMembershipsFuture));
+    return ThrowingCompletableFuture.awaitAndRethrow(effectivePoliciesFuture)
       .stream()
 
       // All bindings, across all resources in the ancestry.
@@ -303,7 +290,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     var allMembers = new HashSet<>(allUserMembers);
 
     for (var listMembersFuture : listMembersFutures) {
-      var members = awaitAndRethrow(listMembersFuture)
+      var members = ThrowingCompletableFuture.awaitAndRethrow(listMembersFuture)
         .stream()
         .map(m -> new UserEmail(m.getEmail())).toList();
       allMembers.addAll(members);
@@ -336,7 +323,6 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
         .anyMatch(member -> this.principalIdentifiers.contains(member));
     }
   }
-
 
   /**
    * @param scope Scope to use for queries.

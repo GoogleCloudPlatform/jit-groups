@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,18 +19,21 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.core.auth;
 
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestDeviceInfo {
+public class TestUserEmail {
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
-  public void toStringReturnsDeviceId() {
-    assertEquals("device-1", new DeviceInfo("device-1", List.of()).toString());
+  public void toStringReturnsEmail() {
+    assertEquals("test@example.com", new UserEmail("test@example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -39,8 +42,8 @@ public class TestDeviceInfo {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
-    DeviceInfo id2 = new DeviceInfo("device-1", List.of());
+    UserEmail id1 = new UserEmail("bob@example.com");
+    UserEmail id2 = new UserEmail("bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -48,15 +51,15 @@ public class TestDeviceInfo {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    UserEmail id1 = new UserEmail("bob@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
-    DeviceInfo id2 = new DeviceInfo("device-1", List.of("level-1"));
+    UserEmail id1 = new UserEmail("alice@example.com");
+    UserEmail id2 = new UserEmail("bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -64,15 +67,26 @@ public class TestDeviceInfo {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    UserEmail id1 = new UserEmail("bob@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    DeviceInfo id1 = new DeviceInfo("device-1", List.of());
+    UserEmail id1 = new UserEmail("bob@example.com");
 
     assertFalse(id1.equals(""));
+  }
+
+  // -------------------------------------------------------------------------
+  // PrincipalIdentifier.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void value() {
+    assertEquals(
+      "bob@example.com",
+      new UserEmail("bob@example.com").value());
   }
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,8 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -28,11 +29,41 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestOrganizationId {
+public class TestProjectId {
+  private final String SAMPLE_PROJECT_FULLRESOURCENAME =
+    "//cloudresourcemanager.googleapis.com/projects/project-1";
 
   @Test
   public void toStringReturnsId() {
-    assertEquals("111", new OrganizationId("111").toString());
+    assertEquals("project-1", new ProjectId("project-1").toString());
+  }
+
+  // -------------------------------------------------------------------------
+  // Full resource name conversion.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void getFullResourceNameReturnsFullyQualifiedName() {
+    assertEquals(
+      "//cloudresourcemanager.googleapis.com/projects/project-1",
+      new ProjectId("project-1").getFullResourceName());
+  }
+
+  @Test
+  public void fromFullResourceNameReturnsProjectId() {
+    assertEquals(
+      new ProjectId("project-1"),
+      ProjectId.fromFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1"));
+  }
+
+  @Test
+  public void whenResourceIsProject_TheIsSupportedResourceReturnsTrue() {
+    assertTrue(ProjectId.isProjectFullResourceName(SAMPLE_PROJECT_FULLRESOURCENAME));
+  }
+
+  @Test
+  public void whenResourceIsNotAProject_TheIsSupportedResourceReturnsTrue() {
+    assertFalse(ProjectId.isProjectFullResourceName(SAMPLE_PROJECT_FULLRESOURCENAME + "/foo/bar"));
   }
 
   // -------------------------------------------------------------------------
@@ -41,7 +72,7 @@ public class TestOrganizationId {
 
   @Test
   public void type() {
-    assertEquals("organization", new OrganizationId("111").type());
+    assertEquals("project", new ProjectId("project-1").type());
   }
 
   // -------------------------------------------------------------------------
@@ -50,7 +81,7 @@ public class TestOrganizationId {
 
   @Test
   public void id() {
-    assertEquals("111", new OrganizationId("111").id());
+    assertEquals("project-1", new ProjectId("project-1").id());
   }
 
   // -------------------------------------------------------------------------
@@ -59,7 +90,7 @@ public class TestOrganizationId {
 
   @Test
   public void path() {
-    assertEquals("organizations/111", new OrganizationId("111").path());
+    assertEquals("projects/project-1", new ProjectId("project-1").path());
   }
 
   // -------------------------------------------------------------------------
@@ -68,8 +99,8 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("111");
+    ProjectId id1 = new ProjectId("project-1");
+    ProjectId id2 = new ProjectId("project-1");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -77,15 +108,15 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    OrganizationId id1 = new OrganizationId("111");
+    ProjectId id1 = new ProjectId("project-1");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
-    OrganizationId id2 = new OrganizationId("222");
+    ProjectId id1 = new ProjectId("project-1");
+    ProjectId id2 = new ProjectId("project-2");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -93,14 +124,14 @@ public class TestOrganizationId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    ProjectId id1 = new ProjectId("project-1");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    OrganizationId id1 = new OrganizationId("111");
+    ProjectId id1 = new ProjectId("project-1");
 
     assertFalse(id1.equals(""));
   }
@@ -111,16 +142,16 @@ public class TestOrganizationId {
 
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-    var organizations = List.of(
-      new OrganizationId("333"),
-      new OrganizationId("111"),
-      new OrganizationId("222"));
+    var projects = List.of(
+      new ProjectId("project-3"),
+      new ProjectId("project-1"),
+      new ProjectId("project-2"));
 
     assertIterableEquals(
       List.of(
-        new OrganizationId("111"),
-        new OrganizationId("222"),
-        new OrganizationId("333")),
-      new TreeSet<>(organizations));
+        new ProjectId("project-1"),
+        new ProjectId("project-2"),
+        new ProjectId("project-3")),
+      new TreeSet<>(projects));
   }
 }

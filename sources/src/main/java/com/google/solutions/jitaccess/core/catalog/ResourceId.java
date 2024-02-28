@@ -21,36 +21,24 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import org.jetbrains.annotations.NotNull;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Set;
-
 /**
- * Request for "JIT-activating" an entitlement.
+ * Identifier for a Resource Manager resource.
  */
-public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
-  protected JitActivationRequest(
-    @NotNull ActivationId id,
-    @NotNull UserEmail requestingUser,
-    @NotNull Set<TEntitlementId> entitlements,
-    @NotNull String justification,
-    @NotNull Instant startTime,
-    @NotNull Duration duration) {
-    super(
-      id,
-      requestingUser,
-      entitlements,
-      justification,
-      startTime,
-      duration);
-  }
+public interface ResourceId {
+  /**
+   * Type of resource, for example project, folder, organization.
+   */
+  String type();
 
-  @Override
-  public final @NotNull ActivationType type() {
-    return ActivationType.JIT;
-  }
+  /**
+   * Unique ID of the resource, without prefix.
+   */
+  String id();
+
+  /**
+   * Path, in notation type/id.
+   *
+   * For example, projects/test-123 folders/234, organizations/345.
+   */
+   String path();
 }

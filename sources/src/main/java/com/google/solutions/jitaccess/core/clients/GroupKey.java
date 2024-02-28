@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
@@ -28,24 +28,24 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Email address of a group.
+ * Unique group key as used by the Cloud Identity Groups API.
+ *
+ * Group keys are not email addresses, and also aren't GAIA IDs.
  */
-public class GroupEmail implements Comparable<GroupEmail> {
-  public final @NotNull String email;
+public class GroupKey {
+  private static final String GROUPS_PREFIX = "groups/";
 
-  public GroupEmail(@NotNull String email) {
-    Preconditions.checkNotNull(email, "email");
-    this.email = email;
+  public final transient @NotNull String id;
+
+  public GroupKey(@NotNull String id) {
+    Preconditions.checkNotNull(id, "id");
+
+    if (id.startsWith(GROUPS_PREFIX)) {
+      id = id.substring(GROUPS_PREFIX.length());
+    }
+
+    this.id = id;
   }
-
-  @Override
-  public String toString() {
-    return this.email;
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
 
   @Override
   public boolean equals(@Nullable Object o) {
@@ -57,17 +57,20 @@ public class GroupEmail implements Comparable<GroupEmail> {
       return false;
     }
 
-    GroupEmail GroupEmail = (GroupEmail) o;
-    return email.equals(GroupEmail.email);
+    GroupKey other = (GroupKey) o;
+    return this.id.equals(other.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(email);
+    return Objects.hash(this.id);
   }
 
+  /**
+   * @return ID in groups/ID format.
+   */
   @Override
-  public int compareTo(@NotNull GroupEmail o) {
-    return this.email.compareTo(o.email);
+  public String toString() {
+    return String.format("%s%s", GROUPS_PREFIX, this.id);
   }
 }

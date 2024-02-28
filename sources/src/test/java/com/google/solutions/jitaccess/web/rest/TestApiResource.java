@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -54,8 +55,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class TestApiResource {
-  private static final UserId SAMPLE_USER = new UserId("user-1", "user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2", "user-2@example.com");
+  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
 
   private static final String SAMPLE_TOKEN = "eySAMPLE";
   private static final Pattern DEFAULT_JUSTIFICATION_PATTERN = Pattern.compile("pattern");
@@ -167,7 +168,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -181,7 +182,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -195,7 +196,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
       .thenReturn(new TreeSet<>());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -210,7 +211,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
       .thenReturn(new TreeSet<>(Set.of(
         new ProjectId("project-1"),
         new ProjectId("project-2"),
@@ -329,7 +330,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listProjects(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -948,7 +949,7 @@ public class TestApiResource {
 
     var response = new RestDispatcher<>(
       this.resource,
-      new UserId("other-party", "other-party@example.com"))
+      new UserEmail("other-party@example.com"))
       .get(
         "/api/activation-request?activation=" + TokenObfuscator.encode(SAMPLE_TOKEN),
         ExceptionMappers.ErrorEntity.class);

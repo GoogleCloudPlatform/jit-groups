@@ -21,9 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.core.UserId;
-import com.google.solutions.jitaccess.web.auth.DeviceInfo;
-import com.google.solutions.jitaccess.web.auth.UserPrincipal;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -37,14 +37,19 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-      new UserPrincipal() {
+      new IapPrincipal() {
         @Override
-        public UserId getId() {
-          return new UserId("id", "email");
+        public UserEmail email() {
+          return new UserEmail("email");
         }
 
         @Override
-        public DeviceInfo getDevice() {
+        public String subjectId() {
+          return "id";
+        }
+
+        @Override
+        public DeviceInfo device() {
           return new DeviceInfo("device-id", List.of());
         }
 
@@ -69,14 +74,19 @@ public class TestLogAdapter {
     var adapter = new LogAdapter(buffer);
     adapter.setTraceId("trace-1");
     adapter.setPrincipal(
-      new UserPrincipal() {
+      new IapPrincipal() {
         @Override
-        public UserId getId() {
-          return new UserId("id", "email");
+        public UserEmail email() {
+          return new UserEmail("email");
         }
 
         @Override
-        public DeviceInfo getDevice() {
+        public String subjectId() {
+          return "id";
+        }
+
+        @Override
+        public DeviceInfo device() {
           return new DeviceInfo("device-id", List.of("level-1", "level-2"));
         }
 

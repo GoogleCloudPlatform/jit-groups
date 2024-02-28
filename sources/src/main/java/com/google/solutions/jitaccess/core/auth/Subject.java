@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,17 +19,23 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.core.auth;
 
-import com.google.solutions.jitaccess.core.UserId;
+import org.jetbrains.annotations.NotNull;
 
-import java.security.Principal;
+import java.util.Set;
 
 /**
- * Represents a logged-in user.
+ * Represents an entity such as a user.
  */
-public interface UserPrincipal extends Principal {
-  UserId getId();
+public interface Subject {
+  /**
+   * @return Primary id.
+   */
+  @NotNull PrincipalIdentifier id();
 
-  DeviceInfo getDevice();
+  /**
+   * @return full set of principals, including groups.
+   */
+  @NotNull Set<PrincipalIdentifier> principals();
 }

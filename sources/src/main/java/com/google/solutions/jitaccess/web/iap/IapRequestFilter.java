@@ -19,11 +19,11 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.auth;
+package com.google.solutions.jitaccess.web.iap;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.UserId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import jakarta.annotation.Priority;
@@ -79,7 +79,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
   /**
    * Authenticate request using IAP assertion.
    */
-  private @NotNull UserPrincipal authenticateIapRequest(@NotNull ContainerRequestContext requestContext) {
+  private @NotNull IapPrincipal authenticateIapRequest(@NotNull ContainerRequestContext requestContext) {
     //
     // Read IAP assertion header and validate it.
     //
@@ -107,22 +107,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
       // Associate the token with the request so that controllers
       // can access it.
       //
-      return new UserPrincipal() {
-        @Override
-        public String getName() {
-          return getId().toString();
-        }
-
-        @Override
-        public UserId getId() {
-          return verifiedAssertion.getUserId();
-        }
-
-        @Override
-        public DeviceInfo getDevice() {
-          return verifiedAssertion.getDeviceInfo();
-        }
-      };
+      return verifiedAssertion;
     }
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       this.log
@@ -142,7 +127,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
   /**
    * Pseudo-authenticate request using debug header. Only used in debug mode.
    */
-  private @NotNull UserPrincipal authenticateDebugRequest(@NotNull ContainerRequestContext requestContext) {
+  private @NotNull IapPrincipal authenticateDebugRequest(@NotNull ContainerRequestContext requestContext) {
     assert this.runtimeEnvironment.isDebugModeEnabled();
 
     var debugPrincipalName = requestContext.getHeaderString(DEBUG_PRINCIPAL_HEADER);
@@ -150,19 +135,24 @@ public class IapRequestFilter implements ContainerRequestFilter {
       throw new ForbiddenException(DEBUG_PRINCIPAL_HEADER + " not set");
     }
 
-    return new UserPrincipal() {
+    return new IapPrincipal() {
       @Override
       public @NotNull String getName() {
         return debugPrincipalName;
       }
 
       @Override
-      public @NotNull UserId getId() {
-        return new UserId("debug", debugPrincipalName);
+      public @NotNull UserEmail email() {
+        return new UserEmail(debugPrincipalName);
       }
 
       @Override
-      public @NotNull DeviceInfo getDevice() {
+      public String subjectId() {
+        return "debug";
+      }
+
+      @Override
+      public @NotNull DeviceInfo device() {
         return DeviceInfo.UNKNOWN;
       }
     };

@@ -19,8 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.catalog;
 
+import com.google.solutions.jitaccess.core.catalog.OrganizationId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -28,11 +29,11 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestFolderId {
+public class TestOrganizationId {
 
   @Test
   public void toStringReturnsId() {
-    assertEquals("111", new FolderId("111").toString());
+    assertEquals("111", new OrganizationId("111").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -41,7 +42,7 @@ public class TestFolderId {
 
   @Test
   public void type() {
-    assertEquals("folder", new FolderId("111").type());
+    assertEquals("organization", new OrganizationId("111").type());
   }
 
   // -------------------------------------------------------------------------
@@ -50,7 +51,7 @@ public class TestFolderId {
 
   @Test
   public void id() {
-    assertEquals("111", new FolderId("111").id());
+    assertEquals("111", new OrganizationId("111").id());
   }
 
   // -------------------------------------------------------------------------
@@ -59,7 +60,7 @@ public class TestFolderId {
 
   @Test
   public void path() {
-    assertEquals("folders/111", new FolderId("111").path());
+    assertEquals("organizations/111", new OrganizationId("111").path());
   }
 
   // -------------------------------------------------------------------------
@@ -68,8 +69,8 @@ public class TestFolderId {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    FolderId id1 = new FolderId("111");
-    FolderId id2 = new FolderId("111");
+    OrganizationId id1 = new OrganizationId("111");
+    OrganizationId id2 = new OrganizationId("111");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -77,15 +78,15 @@ public class TestFolderId {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    FolderId id1 = new FolderId("111");
+    OrganizationId id1 = new OrganizationId("111");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    FolderId id1 = new FolderId("111");
-    FolderId id2 = new FolderId("222");
+    OrganizationId id1 = new OrganizationId("111");
+    OrganizationId id2 = new OrganizationId("222");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -93,34 +94,34 @@ public class TestFolderId {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    FolderId id1 = new FolderId("111");
+    OrganizationId id1 = new OrganizationId("111");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    FolderId id1 = new FolderId("111");
+    OrganizationId id1 = new OrganizationId("111");
 
     assertFalse(id1.equals(""));
   }
-  
+
   // -------------------------------------------------------------------------
   // Comparable.
   // -------------------------------------------------------------------------
 
   @Test
   public void whenInTreeSet_ThenReturnsInExpectedOrder() {
-    var folders = List.of(
-      new FolderId("333"),
-      new FolderId("111"),
-      new FolderId("222"));
+    var organizations = List.of(
+      new OrganizationId("333"),
+      new OrganizationId("111"),
+      new OrganizationId("222"));
 
     assertIterableEquals(
       List.of(
-        new FolderId("111"),
-        new FolderId("222"),
-        new FolderId("333")),
-      new TreeSet<>(folders));
+        new OrganizationId("111"),
+        new OrganizationId("222"),
+        new OrganizationId("333")),
+      new TreeSet<>(organizations));
   }
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,26 +19,19 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog;
-
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+package com.google.solutions.jitaccess.core.auth;
 
 /**
- * Policy for verifying justification messages.
+ * Identifier for a principal such as a user or group.
  */
-public interface JustificationPolicy {
+public interface PrincipalIdentifier {
   /**
-   * Check that a justification meets criteria.
+   * Type of principal, for example user, serviceAccount, group.
    */
-  void checkJustification(
-    @NotNull UserEmail user,
-    @Nullable String justification
-  ) throws InvalidJustificationException;
+  String type();
 
   /**
-   * @return hint indicating what kind of justification is expected.
+   * Name of principal.
    */
-  String hint();
+  String value();
 }

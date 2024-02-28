@@ -24,8 +24,8 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.ProjectId;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
@@ -168,7 +168,7 @@ public abstract class ProjectRoleRepository {
     return new EntitlementSet<>(current, expired, warnings);
   }
 
-  record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) {
+  record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) { //TODO: rename to ActiveEntitlement, id()
     public ActivatedEntitlement {
       Preconditions.checkNotNull(entitlementId, "entitlementId");
       Preconditions.checkNotNull(validity, "validity");

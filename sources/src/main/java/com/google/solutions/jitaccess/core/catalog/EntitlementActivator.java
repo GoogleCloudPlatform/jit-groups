@@ -22,10 +22,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.AlreadyExistsException;
-import com.google.solutions.jitaccess.core.UserEmail;
+import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -36,12 +34,14 @@ import java.util.Set;
 /**
  * Activates entitlements, for example by modifying IAM policies.
  */
-public abstract class EntitlementActivator<TEntitlementId extends EntitlementId> {
+public abstract class EntitlementActivator
+  <TEntitlementId extends EntitlementId, TScopeId extends ResourceId> {
+
   private final @NotNull JustificationPolicy policy;
-  private final @NotNull EntitlementCatalog<TEntitlementId> catalog;
+  private final @NotNull EntitlementCatalog<TEntitlementId, TScopeId> catalog;
 
   protected EntitlementActivator(
-    @NotNull EntitlementCatalog<TEntitlementId> catalog,
+    @NotNull EntitlementCatalog<TEntitlementId, TScopeId> catalog,
     @NotNull JustificationPolicy policy
   ) {
     Preconditions.checkNotNull(catalog, "catalog");
