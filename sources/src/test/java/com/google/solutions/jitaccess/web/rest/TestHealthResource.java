@@ -21,13 +21,14 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.auth.UserId;
-import com.google.solutions.jitaccess.core.clients.DiagnosticsResult;
-import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.apis.clients.DiagnosticsResult;
+import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.web.MockitoUtils;
 import com.google.solutions.jitaccess.web.RestDispatcher;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.List;
 import java.util.Map;
@@ -43,9 +44,9 @@ public class TestHealthResource {
   //---------------------------------------------------------------------------
 
   @Test
-  public void checkLivenessReturns200() throws Exception {
+  public void alive() throws Exception {
     var response = new RestDispatcher<>(new HealthResource(), SAMPLE_USER)
-      .get("/health/alive", HealthResource.ResponseEntity.class);
+      .get("/health/alive", HealthResource.HealthInfo.class);
 
     assertEquals(200, response.getStatus());
     assertTrue(response.getBody().healthy());
@@ -56,9 +57,9 @@ public class TestHealthResource {
   //---------------------------------------------------------------------------
 
   @Test
-  public void whenChecksSucceed_thenCheckReadinessReturns200() throws Exception {
+  public void ready_whenChecksSucceed() throws Exception {
     var resource = new HealthResource();
-    resource.logAdapter = new LogAdapter();
+    resource.logger = Mockito.mock(Logger.class);
     resource.executor = new Executor() {
       @Override
       public void execute(@NotNull Runnable command) {
@@ -70,7 +71,7 @@ public class TestHealthResource {
       () -> List.of(new DiagnosticsResult("Sample-1")));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/health/ready", HealthResource.ResponseEntity.class);
+      .get("/health/ready", HealthResource.HealthInfo.class);
 
     assertEquals(200, response.getStatus());
     assertTrue(response.getBody().healthy());
@@ -78,9 +79,9 @@ public class TestHealthResource {
   }
 
   @Test
-  public void whenAnyCheckFails_thenCheckReadinessReturns503() throws Exception {
+  public void ready_whenAnyCheckFails() throws Exception {
     var resource = new HealthResource();
-    resource.logAdapter = new LogAdapter();
+    resource.logger = Mockito.mock(Logger.class);
     resource.executor = new Executor() {
       @Override
       public void execute(@NotNull Runnable command) {
@@ -94,7 +95,7 @@ public class TestHealthResource {
         new DiagnosticsResult("Sample-2", false, "error")));
 
     var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/health/ready", HealthResource.ResponseEntity.class);
+      .get("/health/ready", HealthResource.HealthInfo.class);
 
     assertEquals(503, response.getStatus());
     assertFalse(response.getBody().healthy());

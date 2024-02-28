@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.cel;
 import dev.cel.common.CelFunctionDecl;
 import dev.cel.common.CelOverloadDecl;
 import dev.cel.common.types.SimpleType;
-import dev.cel.runtime.CelEvaluationException;
 import dev.cel.runtime.CelRuntime;
 
 import java.util.List;
@@ -50,7 +49,7 @@ public class ExtractFunction  {
       ExtractFunction::execute
     );
 
-  static String execute(String value, String template) throws CelEvaluationException {
+  static String execute(String value, String template) {
     var openingBraceIndex = template.indexOf('{');
     var closingBraceIndex = template.indexOf('}');
 

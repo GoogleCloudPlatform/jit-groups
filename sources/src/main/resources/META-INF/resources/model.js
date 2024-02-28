@@ -1,23 +1,31 @@
 "use strict"
 
-/** Manage browser-local storage */
+/** 
+ * Browser-local storage 
+ */
 class LocalSettings {
-    get lastProjectId() {
+    /* get last-used environment */
+    get environment() {
         if (typeof (Storage) !== "undefined") {
-            return localStorage.getItem("projectId");
+            return localStorage.getItem("environment");
         }
         else {
             return null;
         }
     }
 
-    set lastProjectId(projectId) {
+    /* save last-used environment */
+    set environment(value) {
         if (typeof (Storage) !== "undefined") {
-            localStorage.setItem("projectId", projectId);
+            localStorage.setItem("environment", value);
         }
     }
 }
 
+/**
+ * Model backing the current view. There's a 1:1:1 mapping between
+ * views, models, and REST resources.
+ */
 class Model {
     _getHeaders() {
         return { "X-JITACCESS": "1" };
@@ -30,16 +38,42 @@ class Model {
         return `${message} (HTTP ${error.status}: ${error.statusText})`;
     }
 
-    get policy() {
-        console.assert(this._policy);
-        return this._policy;
+    get context() {
+        console.assert(this._context);
+        return this._context;
     }
 
-    async fetchPolicy() {
+    async initialize(environment, resource) {
+        console.assert(environment);
+        console.assert(resource);
+
+        this.environment = environment;
+        this.resource = resource;
+
         try {
-            await new Promise(r => setTimeout(r, 200));
-            this._policy = await $.ajax({
-                url: "/api/policy",
+            const contextCall = $.ajax({
+                url: "/api/user",
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+            const contentCall = $.ajax({
+                url: `/api${resource}`,
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+
+            this._context = await contextCall;
+            this.content = await contentCall;
+        }
+        catch (error) {
+            throw this._formatError(error);
+        }
+    }
+
+    async listEnvironments() {
+        try {
+            return await $.ajax({
+                url: "/api/environments",
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -49,147 +83,16 @@ class Model {
         }
     }
 
-    async listProjects() {
+    /**
+     * POST back to the resource this model was loaded from.
+     */
+    async postback(data, resource = null) {
         try {
             return await $.ajax({
-                url: "/api/projects",
+                url: `/api${resource ? resource : this.resource}`,
+                type: 'POST',
+                data: data,
                 dataType: "json",
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    async searchProjects(projectIdPrefix) {
-        console.assert(projectIdPrefix);
-
-        // Avoid kicking off multiple requests in parallel.
-        if (!this._listProjectsPromise) {
-            this._listProjectsPromise = this.listProjects();
-        }
-
-        let projectsResult = await this._listProjectsPromise;
-        if (!projectsResult.projects) {
-            return [];
-        }
-
-        return projectsResult.projects.filter(
-            projectId => projectId.toLowerCase().includes(projectIdPrefix.trim().toLowerCase()));
-    }
-
-    /** List eligible roles */
-    async listRoles(projectId) {
-        console.assert(projectId);
-
-        try {
-            return await $.ajax({
-                url: `/api/projects/${projectId}/roles`,
-                dataType: "json",
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    /** List peers that can approve a request */
-    async listPeers(projectId, entitlementId) {
-        console.assert(projectId);
-        console.assert(entitlementId);
-
-        try {
-            return await $.ajax({
-                url: `/api/projects/${projectId}/peers?id=${encodeURIComponent(entitlementId)}`,
-                dataType: "json",
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    /** Activate entitlements without peer approval */
-    async selfApproveActivation(projectId, entitlementIds, justification, activationTimeout) {
-        console.assert(projectId);
-        console.assert(entitlementIds.length > 0);
-        console.assert(justification)
-        console.assert(activationTimeout)
-
-        try {
-            return await $.ajax({
-                type: "POST",
-                url: `/api/projects/${projectId}/roles/self-activate`,
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({
-                    entitlementIds: entitlementIds,
-                    justification: justification,
-                    activationTimeout: activationTimeout
-                }),
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    /** Activate a role with peer approval */
-    async requestActivation(projectId, entitlementId, peers, justification, activationTimeout) {
-        console.assert(projectId);
-        console.assert(entitlementId);
-        console.assert(peers.length > 0);
-        console.assert(justification)
-        console.assert(activationTimeout)
-
-        try {
-            return await $.ajax({
-                type: "POST",
-                url: `/api/projects/${projectId}/roles/request`,
-                dataType: "json",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({
-                    entitlementId: entitlementId,
-                    justification: justification,
-                    peers: peers,
-                    activationTimeout: activationTimeout
-                }),
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    /** Get details for an activation request */
-    async getActivationRequest(activationToken) {
-        console.assert(activationToken);
-
-        try {
-            return await $.ajax({
-                url: `/api/activation-request?activation=${encodeURIComponent(activationToken)}`,
-                dataType: "json",
-                headers: this._getHeaders()
-            });
-        }
-        catch (error) {
-            throw this._formatError(error);
-        }
-    }
-
-    /** Approve an activation request */
-    async approveActivationRequest(activationToken) {
-        console.assert(activationToken);
-
-        try {
-            return await $.ajax({
-                type: "POST",
-                url: `/api/activation-request?activation=${encodeURIComponent(activationToken)}`,
                 headers: this._getHeaders()
             });
         }
@@ -205,69 +108,17 @@ class DebugModel extends Model {
         $("body").append(`
             <div id="debug-pane">
                 <div>
-                Principal: <input type="text" id="debug-principal"/>
+                User: <input type="text" id="debug-principal"/>
                 </div>
                 <hr/>
                 <div>
-                    listProjects:
-                    <select id="debug-listProjects">
+                    listEnvironments:
+                    <select id="debug-listEnvironments">
                         <option value="">(default)</option>
                         <option value="error">Simulate error</option>
                         <option value="0">Simulate 0 results</option>
                         <option value="10">Simulate 10 result</option>
                         <option value="100">Simulate 100 results</option>
-                    </select>
-                </div>
-                <div>
-                    listRoles:
-                    <select id="debug-listRoles">
-                        <option value="">(default)</option>
-                        <option value="error">Simulate error</option>
-                        <option value="0">Simulate 0 results</option>
-                        <option value="1">Simulate 1 result</option>
-                        <option value="10">Simulate 10 results</option>
-                    </select>
-                </div>
-                <div>
-                    listPeers:
-                    <select id="debug-listPeers">
-                        <option value="">(default)</option>
-                        <option value="error">Simulate error</option>
-                        <option value="0">Simulate 0 results</option>
-                        <option value="1">Simulate 1 result</option>
-                        <option value="10">Simulate 10 results</option>
-                    </select>
-                </div>
-                <div>
-                    selfApproveActivation:
-                    <select id="debug-selfApproveActivation">
-                        <option value="">(default)</option>
-                        <option value="success">Simulate success</option>
-                        <option value="error">Simulate error</option>
-                    </select>
-                </div>
-                <div>
-                    requestActivation:
-                    <select id="debug-requestActivation">
-                        <option value="">(default)</option>
-                        <option value="success">Simulate success</option>
-                        <option value="error">Simulate error</option>
-                    </select>
-                </div>
-                <div>
-                    getActivationRequest:
-                    <select id="debug-getActivationRequest">
-                        <option value="">(default)</option>
-                        <option value="success">Simulate success</option>
-                        <option value="error">Simulate error</option>
-                    </select>
-                </div>
-                <div>
-                    approveActivationRequest:
-                    <select id="debug-approveActivationRequest">
-                        <option value="">(default)</option>
-                        <option value="success">Simulate success</option>
-                        <option value="error">Simulate error</option>
                     </select>
                 </div>
             </div>
@@ -278,15 +129,8 @@ class DebugModel extends Model {
         //
         [
             "debug-principal",
-            "debug-listProjects",
-            "debug-listRoles",
-            "debug-listPeers",
-            "debug-selfApproveActivation",
-            "debug-requestActivation",
-            "debug-getActivationRequest",
-            "debug-approveActivationRequest"
+            "debug-listEnvironments"
         ].forEach(setting => {
-
             $("#" + setting).val(localStorage.getItem(setting))
             $("#" + setting).change(() => {
                 localStorage.setItem(setting, $("#" + setting).val());
@@ -296,9 +140,9 @@ class DebugModel extends Model {
 
     _getHeaders() {
         const headers = super._getHeaders();
-        const principal = $("#debug-principal").val();
-        if (principal) {
-            headers["X-Debug-Principal"] = principal;
+        const user = $("#debug-principal").val();
+        if (user) {
+            headers["X-debug-principal"] = user;
         }
         return headers;
     }
@@ -308,70 +152,10 @@ class DebugModel extends Model {
         return Promise.reject("Simulated error");
     }
 
-    async _simulateActivationResponse(projectId, justification, entitlementIds, status, forSelf, activationTimeout) {
-        await new Promise(r => setTimeout(r, 1000));
-        return Promise.resolve({
-            isBeneficiary: forSelf,
-            isReviewer: (!forSelf),
-            justification: justification,
-            beneficiary: { email: "user" },
-            reviewers: forSelf ? [] : [{ email: "reviewer"}],
-            entitlements: entitlementIds.map(id => ({
-                activationId: "sim-1",
-                projectId: projectId,
-                id: id,
-                name: `Name of ${id}`,
-                resourceCondition: 'test()',
-                status: status,
-                startTime: Math.floor(Date.now() / 1000),
-                endTime: Math.floor(Date.now() / 1000) + activationTimeout * 60
-            }))
-        });
-    }
-
-    get policy() {
-        return {
-            justificationHint: "simulated hint",
-            signedInUser: {
-                email: "user@example.com"
-            },
-            defaultActivationTimeout: 60,
-            maxActivationTimeout: 120,
-            applicationVersion: 'debug'
-        };
-    }
-
-    async fetchPolicy() { }
-
-    async listRoles(projectId) {
-        var setting = $("#debug-listRoles").val();
+    async listEnvironments() {
+        var setting = $("#debug-listEnvironments").val();
         if (!setting) {
-            return super.listRoles(projectId);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            await new Promise(r => setTimeout(r, 2000));
-            const activationTypes = ["JIT", "MPA", "NONE"];
-            const statuses = ["ACTIVE", "AVAILABLE"];
-            return Promise.resolve({
-                warnings: ["This is a simulated result"],
-                entitlements: Array.from({ length: setting }, (e, i) => ({
-                    id: `${projectId}:roles/simulated-role-${i}`,
-                    name: `roles/simulated-role-${i}`,
-                    resourceCondition: 'test()',
-                    activationType: activationTypes[i % activationTypes.length],
-                    status: statuses[i % statuses.length]
-                }))
-            });
-        }
-    }
-
-    async listProjects() {
-        var setting = $("#debug-listProjects").val();
-        if (!setting) {
-            return super.listProjects();
+            return super.listEnvironments();
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -379,102 +163,16 @@ class DebugModel extends Model {
         else {
             await new Promise(r => setTimeout(r, 2000));
             return Promise.resolve({
-                projects: Array.from({ length: setting }, (e, i) => "project-" + i)
+                environments: Array.from(
+                    { length: setting },
+                    (e, i) => {
+                        return {
+                            name: `environment-${i}`,
+                            description: `Debug environment-${i}`
+                        };
+                    })
             });
         }
     }
 
-    async listPeers(projectId, entitlementId) {
-        var setting = $("#debug-listPeers").val();
-        if (!setting) {
-            return super.listPeers(projectId, entitlementId);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            await new Promise(r => setTimeout(r, 1000));
-            return Promise.resolve({
-                peers: Array.from({ length: setting }, (e, i) => ({
-                    email: `user-${i}@example.com`
-                }))
-            });
-        }
-    }
-
-    async selfApproveActivation(projectId, entitlementIds, justification, activationTimeout) {
-        var setting = $("#debug-selfApproveActivation").val();
-        if (!setting) {
-            return super.selfApproveActivation(projectId, entitlementIds, justification, activationTimeout);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            return await this._simulateActivationResponse(
-                projectId,
-                justification,
-                entitlementIds,
-                "ACTIVE",
-                true,
-                activationTimeout);
-        }
-    }
-
-    async requestActivation(projectId, entitlementId, peers, justification, activationTimeout) {
-        var setting = $("#debug-requestActivation").val();
-        if (!setting) {
-            return super.requestActivation(projectId, entitlementId, peers, justification, activationTimeout);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            return await this._simulateActivationResponse(
-                projectId,
-                justification,
-                [entitlementId],
-                "ACTIVATION_PENDING",
-                true,
-                activationTimeout);
-        }
-    }
-
-    async getActivationRequest(activationToken) {
-        var setting = $("#debug-getActivationRequest").val();
-        if (!setting) {
-            return super.getActivationRequest(activationToken);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            return await this._simulateActivationResponse(
-                "project-1",
-                "a justification",
-                ["roles/role-1"],
-                "ACTIVATION_PENDING",
-                false,
-                60);
-        }
-    }
-
-    async approveActivationRequest(activationToken) {
-        var setting = $("#debug-approveActivationRequest").val();
-        if (!setting) {
-            return super.approveActivationRequest(activationToken);
-        }
-        else if (setting === "error") {
-            await this._simulateError();
-        }
-        else {
-            return await this._simulateActivationResponse(
-                "project-1",
-                "a justification",
-                ["roles/role-1"],
-                "ACTIVE",
-                false,
-                60);
-        }
-    }
 }
