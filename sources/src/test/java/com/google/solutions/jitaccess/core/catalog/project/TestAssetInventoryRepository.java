@@ -67,42 +67,6 @@ public class TestAssetInventoryRepository {
   }
 
   //---------------------------------------------------------------------------
-  // awaitAndRethrow.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void whenFutureThrowsIoException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new IOException("IO!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-
-  @Test
-  public void whenFutureThrowsAccessException_ThenAwaitAndRethrowPropagatesException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new AccessDeniedException("Access!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      AccessException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-  @Test
-  public void whenFutureThrowsOtherException_ThenAwaitAndRethrowWrapsException() {
-    var future = ThrowingCompletableFuture.<String>submit(
-      () -> { throw new RuntimeException("Runtime!"); },
-      new SynchronousExecutor());
-
-    assertThrows(
-      IOException.class,
-      () -> AssetInventoryRepository.awaitAndRethrow(future));
-  }
-
-  //---------------------------------------------------------------------------
   // findProjectBindings.
   //---------------------------------------------------------------------------
 

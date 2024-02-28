@@ -30,7 +30,7 @@ import java.util.Objects;
 /**
  * Primary email address of a user.
  */
-public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier { 
+public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
   public static final String TYPE = "user";
 
   public final @NotNull String email;
@@ -46,7 +46,7 @@ public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
   }
 
   // -------------------------------------------------------------------------
-  // Equality.
+  // PrincipalIdentifier.
   // -------------------------------------------------------------------------
 
   @Override

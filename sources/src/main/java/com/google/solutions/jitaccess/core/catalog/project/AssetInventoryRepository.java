@@ -78,23 +78,6 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     this.options = options;
   }
 
-  static <T> T awaitAndRethrow(@NotNull CompletableFuture<T> future) throws AccessException, IOException { //TODO: remove
-    try {
-      return future.get();
-    }
-    catch (InterruptedException | ExecutionException e) {
-      if (e.getCause() instanceof AccessException) {
-        throw (AccessException)e.getCause().fillInStackTrace();
-      }
-
-      if (e.getCause() instanceof IOException) {
-        throw (IOException)e.getCause().fillInStackTrace();
-      }
-
-      throw new IOException("Awaiting executor tasks failed", e);
-    }
-  }
-
   @NotNull List<Binding> findProjectBindings(
     @NotNull UserEmail user,
     ProjectId projectId
@@ -116,8 +99,10 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
         projectId),
       this.executor);
 
-    var principalSetForUser = new PrincipalSet(user, awaitAndRethrow(listMembershipsFuture));
-    return awaitAndRethrow(effectivePoliciesFuture)
+    var principalSetForUser = new PrincipalSet(
+      user,
+      ThrowingCompletableFuture.awaitAndRethrow(listMembershipsFuture));
+    return ThrowingCompletableFuture.awaitAndRethrow(effectivePoliciesFuture)
       .stream()
 
       // All bindings, across all resources in the ancestry.
@@ -305,7 +290,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     var allMembers = new HashSet<>(allUserMembers);
 
     for (var listMembersFuture : listMembersFutures) {
-      var members = awaitAndRethrow(listMembersFuture)
+      var members = ThrowingCompletableFuture.awaitAndRethrow(listMembersFuture)
         .stream()
         .map(m -> new UserEmail(m.getEmail())).toList();
       allMembers.addAll(members);

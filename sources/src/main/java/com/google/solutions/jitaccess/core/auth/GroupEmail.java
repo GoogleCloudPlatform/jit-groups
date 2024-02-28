@@ -73,7 +73,7 @@ public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
   }
 
   // -------------------------------------------------------------------------
-  // Principal.
+  // PrincipalIdentifier.
   // -------------------------------------------------------------------------
 
   @Override
