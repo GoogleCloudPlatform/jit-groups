@@ -28,7 +28,7 @@ import java.security.Principal;
 /**
  * Represents a logged-in user.
  */
-public interface AuthenticationContext extends Principal {
+public interface IapPrincipal extends Principal {
   UserId getId();
 
   DeviceInfo getDevice();

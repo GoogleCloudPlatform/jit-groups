@@ -33,7 +33,7 @@ import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
-import com.google.solutions.jitaccess.web.auth.AuthenticationContext;
+import com.google.solutions.jitaccess.web.auth.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -146,7 +146,7 @@ public class ApiResource {
   public @NotNull PolicyResponse getPolicy(
     @Context @NotNull SecurityContext securityContext
   ) {
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
 
     var options = this.mpaCatalog.options();
     return new PolicyResponse(
@@ -168,7 +168,7 @@ public class ApiResource {
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
 
     try {
       var projects = this.mpaCatalog.listScopes(iapPrincipal.getId());
@@ -211,7 +211,7 @@ public class ApiResource {
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
 
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
 
     try {
@@ -263,7 +263,7 @@ public class ApiResource {
       role != null && !role.trim().isEmpty(),
       "A role is required");
 
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, role);
 
@@ -322,7 +322,7 @@ public class ApiResource {
       request.justification != null && request.justification.length() < 100,
       "The justification is too long");
 
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
 
     //
@@ -453,7 +453,7 @@ public class ApiResource {
         this.runtimeEnvironment.isDebugModeEnabled(),
       "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
 
@@ -595,7 +595,7 @@ public class ApiResource {
       "An activation token is required");
 
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
 
     try {
       var activationRequest = this.tokenSigner.verify(
@@ -645,7 +645,7 @@ public class ApiResource {
       "An activation token is required");
 
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
-    var iapPrincipal = (AuthenticationContext) securityContext.getUserPrincipal();
+    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
 
     MpaActivationRequest<ProjectRoleBinding> activationRequest;
     try {
