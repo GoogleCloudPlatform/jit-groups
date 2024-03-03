@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
+import io.vertx.ext.auth.User;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -42,9 +43,13 @@ public class TestEntitlementActivator {
   private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("peer@example.com");
   private static final UserEmail SAMPLE_UNKNOWN_USER = new UserEmail("unknown@example.com");
 
-  private class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId> {
+  private record UserContext(
+    @NotNull UserEmail user
+  ) implements CatalogUserContext {}
+
+  private static class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId, UserContext> {
     protected SampleActivator(
-      EntitlementCatalog<SampleEntitlementId, ResourceId> catalog,
+      Catalog<SampleEntitlementId, ResourceId, UserContext> catalog,
       JustificationPolicy policy
     ) {
       super(catalog, policy);
@@ -75,15 +80,17 @@ public class TestEntitlementActivator {
 
   @Test
   public void createJitRequestDoesNotCheckAccess() throws Exception {
-    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var catalog = Mockito.mock(Catalog.class);
 
     var activator = new SampleActivator(
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
     var entitlements = Set.of(new SampleEntitlementId("cat", "1"));
+
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createJitRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       entitlements,
       "justification",
       Instant.now(),
@@ -93,7 +100,9 @@ public class TestEntitlementActivator {
     assertEquals(SAMPLE_REQUESTING_USER, request.requestingUser());
     assertIterableEquals(entitlements, request.entitlements());
 
-    verify(catalog, times(0)).verifyUserCanRequest(request);
+    verify(catalog, times(0)).verifyUserCanRequest(
+      eq(requestingUserContext),
+      eq(request));
   }
 
   // -------------------------------------------------------------------------
@@ -102,11 +111,12 @@ public class TestEntitlementActivator {
 
   @Test
   public void  whenUserNotAllowedToRequest_ThenCreateMpaRequestThrowsException() throws Exception {
-    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var catalog = Mockito.mock(Catalog.class);
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .verifyUserCanRequest(any());
+      .verifyUserCanRequest(eq(requestingUserContext), any());
 
     var activator = new SampleActivator(
       catalog,
@@ -115,7 +125,7 @@ public class TestEntitlementActivator {
     assertThrows(
       AccessDeniedException.class,
       () -> activator.createMpaRequest(
-        SAMPLE_REQUESTING_USER,
+        requestingUserContext,
         Set.of(new SampleEntitlementId("cat", "1")),
         Set.of(SAMPLE_APPROVING_USER),
         "justification",
@@ -136,11 +146,12 @@ public class TestEntitlementActivator {
       .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
 
     var activator = new SampleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       justificationPolicy);
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createJitRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
       Instant.now(),
@@ -148,23 +159,24 @@ public class TestEntitlementActivator {
 
     assertThrows(
       InvalidJustificationException.class,
-      () -> activator.activate(request));
+      () -> activator.activate(requestingUserContext, request));
   }
 
   @Test
   public void whenUserNotAllowedToRequest_ThenActivateJitRequestThrowsException() throws Exception {
-    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var catalog = Mockito.mock(Catalog.class);
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
 
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .verifyUserCanRequest(any());
+      .verifyUserCanRequest(eq(requestingUserContext), any());
 
     var activator = new SampleActivator(
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
     var request = activator.createJitRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       "justification",
       Instant.now(),
@@ -172,7 +184,7 @@ public class TestEntitlementActivator {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.activate(request));
+      () -> activator.activate(requestingUserContext, request));
   }
 
   // -------------------------------------------------------------------------
@@ -182,11 +194,12 @@ public class TestEntitlementActivator {
   @Test
   public void whenApprovingUserSameAsRequestingUser_ThenApproveMpaRequestThrowsException() throws Exception {
     var activator = new SampleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
@@ -195,26 +208,28 @@ public class TestEntitlementActivator {
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> activator.approve(SAMPLE_REQUESTING_USER, request));
+      () -> activator.approve(requestingUserContext, request));
   }
 
   @Test
   public void whenApprovingUserUnknown_ThenApproveMpaRequestThrowsException() throws Exception {
     var activator = new SampleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
 
+    var approvingUserContext = new UserContext(SAMPLE_UNKNOWN_USER);
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.approve(SAMPLE_UNKNOWN_USER, request));
+      () -> activator.approve(approvingUserContext, request));
   }
 
   @Test
@@ -226,67 +241,73 @@ public class TestEntitlementActivator {
       .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
 
     var activator = new SampleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       justificationPolicy);
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
 
+    var approvingUserContext = new UserContext(SAMPLE_APPROVING_USER);
     assertThrows(
       InvalidJustificationException.class,
-      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+      () -> activator.approve(approvingUserContext, request));
   }
 
   @Test
   public void whenRequestingUserNotAllowedToRequestAnymore_ThenApproveMpaRequestThrowsException() throws Exception {
-    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var catalog = Mockito.mock(Catalog.class);
     var activator = new SampleActivator(
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
 
+    var approvingUserContext = new UserContext(SAMPLE_APPROVING_USER);
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .verifyUserCanRequest(any());
+      .verifyUserCanRequest(any(), any());
 
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+      () -> activator.approve(approvingUserContext, request));
   }
 
   @Test
   public void whenApprovingUserNotAllowedToApprove_ThenApproveMpaRequestThrowsException() throws Exception {
-    var catalog = Mockito.mock(EntitlementCatalog.class);
+    var catalog = Mockito.mock(Catalog.class);
     var activator = new SampleActivator(
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new SampleEntitlementId("cat", "1")),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
 
+    var approvingUserContext = new UserContext(SAMPLE_APPROVING_USER);
     Mockito.doThrow(new AccessDeniedException("mock"))
       .when(catalog)
-      .verifyUserCanApprove(eq(SAMPLE_APPROVING_USER), any());
+      .verifyUserCanApprove(eq(approvingUserContext), any());
 
     assertThrows(
       AccessDeniedException.class,
-      () -> activator.approve(SAMPLE_APPROVING_USER, request));
+      () -> activator.approve(approvingUserContext, request));
   }
 }

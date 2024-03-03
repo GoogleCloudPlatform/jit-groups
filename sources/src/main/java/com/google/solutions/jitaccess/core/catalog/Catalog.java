@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.SortedSet;
@@ -32,37 +33,49 @@ import java.util.SortedSet;
  *
  * The catalog is scoped to a project.
  */
-public interface EntitlementCatalog
-  <TEntitlementId extends EntitlementId, TScopeId extends ResourceId> {
+public interface Catalog<
+  TEntitlementId extends EntitlementId,
+  TScopeId extends ResourceId,
+  TUserContext extends CatalogUserContext
+  > {
+
+  /**
+   * Capture context information for the user interacting
+   * with the catalog.
+   */
+  @NotNull TUserContext createContext(
+    @NotNull UserEmail user
+  ) throws AccessException, IOException;
 
   /**
    * Verify if a user is allowed to make the given request.
    */
   void verifyUserCanRequest(
-    ActivationRequest<TEntitlementId> request
+    @NotNull TUserContext userContext,
+    @NotNull ActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 
   /**
    * Verify if a user is allowed to approve a given request.
    */
   void verifyUserCanApprove(
-    UserEmail approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+    @NotNull TUserContext userContext,
+    @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 
   /**
    * List scopes that the user has any entitlements for.
    */
   SortedSet<TScopeId> listScopes(
-    UserEmail user
-  ) throws AccessException, IOException;
+    @NotNull TUserContext userContext
+    ) throws AccessException, IOException;
 
   /**
    * List available reviewers for (MPA-) activating an entitlement.
    */
   SortedSet<UserEmail> listReviewers(
-    UserEmail requestingUser,
-    TEntitlementId entitlement
+    @NotNull TUserContext userContext,
+    @NotNull TEntitlementId entitlement
   ) throws AccessException, IOException;
 
 
@@ -70,7 +83,7 @@ public interface EntitlementCatalog
    * List available entitlements.
    */
   EntitlementSet<TEntitlementId> listEntitlements(
-    UserEmail user,
+    TUserContext userContext,
     TScopeId scope
   ) throws AccessException, IOException;
 }

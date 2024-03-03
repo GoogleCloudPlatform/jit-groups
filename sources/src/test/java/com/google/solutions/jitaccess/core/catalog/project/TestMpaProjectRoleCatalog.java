@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
 public class TestMpaProjectRoleCatalog {
 
   private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
-  private static final UserEmail SAMPLE_APPROVIING_USER = new UserEmail("approver@example.com");
+  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("approver@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE = "roles/resourcemanager.role1";
 
@@ -253,9 +253,10 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     when(policyAnalyzer
       .findEntitlements(
-        eq(SAMPLE_REQUESTING_USER),
+        eq(requestingUserContext.user()),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
@@ -264,7 +265,7 @@ public class TestMpaProjectRoleCatalog {
     assertThrows(
       AccessDeniedException.class,
       () -> catalog.listReviewers(
-        SAMPLE_REQUESTING_USER,
+        requestingUserContext,
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
   }
 
@@ -298,10 +299,11 @@ public class TestMpaProjectRoleCatalog {
       .findEntitlementHolders(
         eq(mpaEntitlement.id()),
         eq(ActivationType.MPA)))
-      .thenReturn(Set.of(SAMPLE_REQUESTING_USER, SAMPLE_APPROVIING_USER));
+      .thenReturn(Set.of(SAMPLE_REQUESTING_USER, SAMPLE_APPROVING_USER));
 
-    var reviewers = catalog.listReviewers(SAMPLE_REQUESTING_USER, mpaEntitlement.id());
-    assertIterableEquals(Set.of(SAMPLE_APPROVIING_USER), reviewers);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var reviewers = catalog.listReviewers(requestingUserContext, mpaEntitlement.id());
+    assertIterableEquals(Set.of(SAMPLE_APPROVING_USER), reviewers);
   }
 
   //---------------------------------------------------------------------------
@@ -337,9 +339,10 @@ public class TestMpaProjectRoleCatalog {
     when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
     when(request.entitlements()).thenReturn(Set.of(jitEntitlement.id()));
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     assertThrows(
       AccessDeniedException.class,
-      () -> catalog.verifyUserCanRequest(request));
+      () -> catalog.verifyUserCanRequest(requestingUserContext, request));
   }
 
   @Test
@@ -374,7 +377,8 @@ public class TestMpaProjectRoleCatalog {
     when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
     when(request.entitlements()).thenReturn(Set.of(jitEntitlement.id()));
 
-    catalog.verifyUserCanRequest(request);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    catalog.verifyUserCanRequest(requestingUserContext, request);
   }
 
   //---------------------------------------------------------------------------
@@ -398,7 +402,7 @@ public class TestMpaProjectRoleCatalog {
 
     when(policyAnalyzer
       .findEntitlements(
-        eq(SAMPLE_APPROVIING_USER),
+        eq(SAMPLE_APPROVING_USER),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
@@ -408,12 +412,13 @@ public class TestMpaProjectRoleCatalog {
     when(request.duration()).thenReturn(catalog.options().minActivationDuration());
     when(request.type()).thenReturn(ActivationType.MPA);
     when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
-    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVIING_USER));
+    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVING_USER));
     when(request.entitlements()).thenReturn(Set.of(mpaEntitlement.id()));
 
+    var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
     assertThrows(
       AccessDeniedException.class,
-      () -> catalog.verifyUserCanApprove(SAMPLE_APPROVIING_USER, request));
+      () -> catalog.verifyUserCanApprove(approvingUserContext, request));
   }
 
   @Test
@@ -433,7 +438,7 @@ public class TestMpaProjectRoleCatalog {
 
     when(policyAnalyzer
       .findEntitlements(
-        eq(SAMPLE_APPROVIING_USER),
+        eq(SAMPLE_APPROVING_USER),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA)),
         eq(EnumSet.of(Entitlement.Status.AVAILABLE))))
@@ -446,10 +451,11 @@ public class TestMpaProjectRoleCatalog {
     when(request.duration()).thenReturn(catalog.options().minActivationDuration());
     when(request.type()).thenReturn(ActivationType.MPA);
     when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
-    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVIING_USER));
+    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVING_USER));
     when(request.entitlements()).thenReturn(Set.of(mpaEntitlement.id()));
 
-    catalog.verifyUserCanApprove(SAMPLE_APPROVIING_USER, request);
+    var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
+    catalog.verifyUserCanApprove(approvingUserContext, request);
   }
 
   //---------------------------------------------------------------------------
@@ -475,7 +481,8 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var projects = catalog.listScopes(SAMPLE_REQUESTING_USER);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var projects = catalog.listScopes(requestingUserContext);
     assertIterableEquals(
       List.of( // Sorted
         new ProjectId("project-1"),
@@ -503,7 +510,8 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var projects = catalog.listScopes(SAMPLE_REQUESTING_USER);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var projects = catalog.listScopes(requestingUserContext);
     assertIterableEquals(
       List.of( // Sorted
         new ProjectId("project-1"),
@@ -536,7 +544,8 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var entitlements = catalog.listEntitlements(SAMPLE_REQUESTING_USER, SAMPLE_PROJECT);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var entitlements = catalog.listEntitlements(requestingUserContext, SAMPLE_PROJECT);
     assertNotNull(entitlements);
 
     verify(policyAnalyzer, times(1)).findEntitlements(
@@ -570,9 +579,12 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     assertThrows(
       AccessDeniedException.class,
-      () -> catalog.listReviewers(SAMPLE_REQUESTING_USER, new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
+      () -> catalog.listReviewers(
+        requestingUserContext,
+        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
   }
 
   @Test
@@ -603,9 +615,10 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     assertThrows(
       AccessDeniedException.class,
-      () -> catalog.listReviewers(SAMPLE_REQUESTING_USER, role));
+      () -> catalog.listReviewers(requestingUserContext, role));
   }
 
   @Test
@@ -629,7 +642,7 @@ public class TestMpaProjectRoleCatalog {
       .findEntitlementHolders(
         eq(role),
         eq(ActivationType.MPA)))
-      .thenReturn(Set.of(SAMPLE_APPROVIING_USER, SAMPLE_REQUESTING_USER));
+      .thenReturn(Set.of(SAMPLE_APPROVING_USER, SAMPLE_REQUESTING_USER));
 
     var catalog = new MpaProjectRoleCatalog(
       policyAnalyzer,
@@ -641,9 +654,10 @@ public class TestMpaProjectRoleCatalog {
         1)
     );
 
-    var reviewers = catalog.listReviewers(SAMPLE_REQUESTING_USER, role);
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var reviewers = catalog.listReviewers(requestingUserContext, role);
     assertIterableEquals(
-      Set.of(SAMPLE_APPROVIING_USER),
+      Set.of(SAMPLE_APPROVING_USER),
       reviewers);
   }
 }

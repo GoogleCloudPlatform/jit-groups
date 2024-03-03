@@ -34,14 +34,16 @@ import java.util.Set;
 /**
  * Activates entitlements, for example by modifying IAM policies.
  */
-public abstract class EntitlementActivator
-  <TEntitlementId extends EntitlementId, TScopeId extends ResourceId> {
+public abstract class EntitlementActivator<
+  TEntitlementId extends EntitlementId,
+  TScopeId extends ResourceId,
+  TUserContext extends CatalogUserContext> {
 
   private final @NotNull JustificationPolicy policy;
-  private final @NotNull EntitlementCatalog<TEntitlementId, TScopeId> catalog;
+  private final @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog;
 
   protected EntitlementActivator(
-    @NotNull EntitlementCatalog<TEntitlementId, TScopeId> catalog,
+    @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog,
     @NotNull JustificationPolicy policy
   ) {
     Preconditions.checkNotNull(catalog, "catalog");
@@ -55,7 +57,7 @@ public abstract class EntitlementActivator
    * Create a new request to activate an entitlement that permits self-approval.
    */
   public final @NotNull JitActivationRequest<TEntitlementId> createJitRequest(
-    UserEmail requestingUser,
+    TUserContext requestingUserContext,
     Set<TEntitlementId> entitlements,
     String justification,
     @NotNull Instant startTime,
@@ -70,7 +72,7 @@ public abstract class EntitlementActivator
     //
     return new JitRequest<>(
       ActivationId.newId(ActivationType.JIT),
-      requestingUser,
+      requestingUserContext.user(),
       entitlements,
       justification,
       startTime,
@@ -82,7 +84,7 @@ public abstract class EntitlementActivator
    * multi-party approval.
    */
   public @NotNull MpaActivationRequest<TEntitlementId> createMpaRequest(
-    UserEmail requestingUser,
+    TUserContext requestingUserContext,
     @NotNull Set<TEntitlementId> entitlements,
     Set<UserEmail> reviewers,
     String justification,
@@ -96,7 +98,7 @@ public abstract class EntitlementActivator
 
     var request = new MpaRequest<>(
       ActivationId.newId(ActivationType.MPA),
-      requestingUser,
+      requestingUserContext.user(),
       entitlements,
       reviewers,
       justification,
@@ -107,7 +109,9 @@ public abstract class EntitlementActivator
     // Pre-verify access to avoid sending an MPA requests for which
     // the access check will fail later.
     //
-    this.catalog.verifyUserCanRequest(request);
+    this.catalog.verifyUserCanRequest(
+      requestingUserContext,
+      request);
 
     return request;
   }
@@ -116,6 +120,7 @@ public abstract class EntitlementActivator
    * Activate an entitlement that permits self-approval.
    */
   public final @NotNull Activation<TEntitlementId> activate(
+    TUserContext userContext,
     @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
@@ -129,7 +134,7 @@ public abstract class EntitlementActivator
     //
     // Check that the user is (still) allowed to activate this entitlement.
     //
-    this.catalog.verifyUserCanRequest(request);
+    this.catalog.verifyUserCanRequest(userContext, request);
 
     //
     // Request is legit, apply it.
@@ -143,20 +148,20 @@ public abstract class EntitlementActivator
    * Approve another user's request.
    */
   public final @NotNull Activation<TEntitlementId> approve(
-    @NotNull UserEmail approvingUser,
+    TUserContext userContext,
     @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
     Preconditions.checkNotNull(policy, "policy");
 
-    if (approvingUser.equals(request.requestingUser())) {
+    if (userContext.user().equals(request.requestingUser())) {
       throw new IllegalArgumentException(
         "MPA activation requires the caller and beneficiary to be the different");
     }
 
-    if (!request.reviewers().contains(approvingUser)) {
+    if (!request.reviewers().contains(userContext.user())) {
       throw new AccessDeniedException(
-        String.format("The request does not permit approval by %s", approvingUser));
+        String.format("The request does not permit approval by %s", userContext.user()));
     }
 
     //
@@ -167,17 +172,17 @@ public abstract class EntitlementActivator
     //
     // Check that the user is (still) allowed to request this entitlement.
     //
-    this.catalog.verifyUserCanRequest(request);
+    this.catalog.verifyUserCanRequest(userContext, request);
 
     //
     // Check that the approving user is (still) allowed to approve this entitlement.
     //
-    this.catalog.verifyUserCanApprove(approvingUser, request);
+    this.catalog.verifyUserCanApprove(userContext, request);
 
     //
     // Request is legit, apply it.
     //
-    provisionAccess(approvingUser, request);
+    provisionAccess(userContext.user(), request);
 
     return new Activation<>(request);
   }
