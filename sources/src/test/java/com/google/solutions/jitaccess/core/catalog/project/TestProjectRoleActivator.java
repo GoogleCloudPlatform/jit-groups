@@ -22,10 +22,10 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.core.catalog.Catalog;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.EntitlementCatalog;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
@@ -58,12 +58,13 @@ public class TestProjectRoleActivator {
   public void provisionAccessForJitRequest() throws Exception {
     var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
     var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       resourceManagerClient,
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createJitRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
         new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_2))),
@@ -71,7 +72,7 @@ public class TestProjectRoleActivator {
       Instant.now(),
       Duration.ofMinutes(5));
 
-    var activation = activator.activate(request);
+    var activation = activator.activate(requestingUserContext, request);
 
     assertNotNull(activation);
     assertSame(request, activation.request());
@@ -94,20 +95,22 @@ public class TestProjectRoleActivator {
   public void provisionAccessForMpaRequest() throws Exception {
     var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
     var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       resourceManagerClient,
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
 
+    var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
     var activation = activator.approve(
-      SAMPLE_APPROVING_USER,
+      approvingUserContext,
       request);
 
     assertNotNull(activation);
@@ -130,12 +133,13 @@ public class TestProjectRoleActivator {
   @Test
   public void createTokenConverter() throws Exception {
     var activator = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class));
 
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var inputRequest = activator.createMpaRequest(
-      SAMPLE_REQUESTING_USER,
+      requestingUserContext,
       Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",

@@ -81,6 +81,9 @@ public class TestApiResource {
     this.resource.logAdapter = new LogAdapter();
     this.resource.runtimeEnvironment = Mockito.mock(RuntimeEnvironment.class);
     this.resource.mpaCatalog = Mockito.mock(MpaProjectRoleCatalog.class);
+    when (this.resource.mpaCatalog.createContext(any()))
+      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+
     this.resource.projectRoleActivator = Mockito.mock(ProjectRoleActivator.class);
     this.resource.justificationPolicy = Mockito.mock(JustificationPolicy.class);
     this.resource.tokenSigner = Mockito.mock(TokenSigner.class);
@@ -168,7 +171,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsAccessDeniedException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -182,7 +185,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryThrowsIOException_ThenListProjectsReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -196,7 +199,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>());
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -211,7 +214,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>(Set.of(
         new ProjectId("project-1"),
         new ProjectId("project-2"),
@@ -254,7 +257,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listReviewers(eq(SAMPLE_USER), any()))
+    when(this.resource.mpaCatalog.listReviewers(argThat(ctx -> ctx.user().equals(SAMPLE_USER)), any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -268,7 +271,7 @@ public class TestApiResource {
 
   @Test
   public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listReviewers(eq(SAMPLE_USER), any()))
+    when(this.resource.mpaCatalog.listReviewers(argThat(ctx -> ctx.user().equals(SAMPLE_USER)), any()))
       .thenThrow(new IOException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -284,7 +287,7 @@ public class TestApiResource {
   public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
     when(this.resource.mpaCatalog
       .listReviewers(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
       .thenReturn(new TreeSet());
 
@@ -302,7 +305,7 @@ public class TestApiResource {
   public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
     when(this.resource.mpaCatalog
       .listReviewers(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
       .thenReturn(new TreeSet(Set.of(new UserEmail("peer-1@example.com"), new UserEmail("peer-2@example.com"))));
 
@@ -330,7 +333,7 @@ public class TestApiResource {
 
   @Test
   public void whenProjectIsEmpty_ThenListRolesReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(eq(SAMPLE_USER)))
+    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenThrow(new AccessDeniedException("mock"));
 
     var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
@@ -347,7 +350,7 @@ public class TestApiResource {
   public void whenCatalogThrowsAccessDeniedException_ThenListRolesReturnsError() throws Exception {
     when(this.resource.mpaCatalog
       .listEntitlements(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -364,7 +367,7 @@ public class TestApiResource {
   public void whenCatalogThrowsIOException_ThenListRolesReturnsError() throws Exception {
     when(this.resource.mpaCatalog
       .listEntitlements(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
       .thenThrow(new IOException("mock"));
 
@@ -381,7 +384,7 @@ public class TestApiResource {
   public void whenCatalogReturnsNoRoles_ThenListRolesReturnsEmptyList() throws Exception {
     when(this.resource.mpaCatalog
       .listEntitlements(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of()),
@@ -416,7 +419,7 @@ public class TestApiResource {
 
     when(this.resource.mpaCatalog
       .listEntitlements(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(role1, role2)),
@@ -531,7 +534,9 @@ public class TestApiResource {
       .createJitRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
     when(this.resource.projectRoleActivator
-      .activate(any()))
+      .activate(
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
+        any()))
       .thenThrow(new AccessDeniedException("mock"));
 
     var request = new ApiResource.SelfActivationRequest();
@@ -557,8 +562,10 @@ public class TestApiResource {
       .createJitRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
     when(this.resource.projectRoleActivator
-      .activate(argThat(r -> r.entitlements().size() == 1)))
-      .then(r -> new Activation<>((ActivationRequest<ProjectRoleBinding>) r.getArguments()[0]));
+      .activate(
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
+        argThat(r -> r.entitlements().size() == 1)))
+      .then(r -> new Activation<>((ActivationRequest<ProjectRoleBinding>) r.getArguments()[1]));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
@@ -793,7 +800,7 @@ public class TestApiResource {
 
     when(this.resource.projectRoleActivator
       .createMpaRequest(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         any(),
         any(),
         any(),
@@ -930,11 +937,11 @@ public class TestApiResource {
   @Test
   public void whenCallerNotInvolvedInRequest_ThenGetActivationRequestReturnsError() throws Exception {
     var request = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
-        SAMPLE_USER,
+        new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
@@ -963,11 +970,11 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenGetActivationRequestSucceeds() throws Exception {
     var request = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
-        SAMPLE_USER,
+        new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
@@ -1038,11 +1045,11 @@ public class TestApiResource {
   @Test
   public void whenActivatorThrowsException_ThenApproveActivationRequestReturnsError() throws Exception {
     var request = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
-        SAMPLE_USER,
+        new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
@@ -1057,7 +1064,7 @@ public class TestApiResource {
 
     when(this.resource.projectRoleActivator
       .approve(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(request)))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -1076,11 +1083,11 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenApproveActivationSendsNotification() throws Exception {
     var request = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
-        SAMPLE_USER,
+        new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
@@ -1095,7 +1102,7 @@ public class TestApiResource {
 
     when(this.resource.projectRoleActivator
       .approve(
-        eq(SAMPLE_USER),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(request)))
       .thenReturn(new Activation<>(request));
 
@@ -1113,11 +1120,11 @@ public class TestApiResource {
   @Test
   public void whenTokenValid_ThenApproveActivationRequestSucceeds() throws Exception {
     var request = new ProjectRoleActivator(
-      Mockito.mock(EntitlementCatalog.class),
+      Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
-        SAMPLE_USER,
+        new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
@@ -1132,7 +1139,7 @@ public class TestApiResource {
 
     when(this.resource.projectRoleActivator
       .approve(
-        eq(SAMPLE_USER_2),
+        argThat(ctx -> ctx.user().equals(SAMPLE_USER_2)),
         eq(request)))
       .thenReturn(new Activation<>(request));
 
