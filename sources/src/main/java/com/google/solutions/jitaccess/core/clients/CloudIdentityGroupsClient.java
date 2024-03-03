@@ -557,7 +557,7 @@ public class CloudIdentityGroupsClient {
 
     try {
       var client = createClient();
-      var result = new ArrayList<MembershipRelation>();
+      var result = new LinkedList<MembershipRelation>();
       String pageToken = null;
       do {
         var page = client
@@ -591,6 +591,55 @@ public class CloudIdentityGroupsClient {
       translateAndThrowApiException(e);
       return null;
     }
+  }
+
+  /**
+   * Search for groups that match a certain CEL query.
+   */
+  public @NotNull List<Group> searchGroups(
+    @NotNull String query,
+    boolean fullDetails
+  ) throws AccessException, IOException {
+    try {
+      var client = createClient();
+      var result = new LinkedList<Group>();
+      String pageToken = null;
+      do {
+        var page = client
+          .groups()
+          .search()
+          .setQuery(query)
+          .setPageToken(pageToken)
+          .setPageSize(SEARCH_PAGE_SIZE)
+          .setView(fullDetails ? "FULL" : "BASIC")
+          .execute();
+
+        if (page.getGroups() != null) {
+          result.addAll(page.getGroups());
+        }
+
+        pageToken = page.getNextPageToken();
+      } while (pageToken != null);
+
+      return Collections.unmodifiableList(result);
+    }
+    catch (GoogleJsonResponseException e) {
+      translateAndThrowApiException(e);
+      return null;
+    }
+  }
+
+  /**
+   * Create a CEL query that filters based on the account ID and group prefix.
+   */
+  public @NotNull String createSearchQueryForPrefix(
+    @NotNull String groupNamePrefix
+  ) {
+    Preconditions.checkArgument(groupNamePrefix.indexOf('\'') < 0);
+
+    return String.format("parent == 'customers/%s' && group_key.startsWith('%s')",
+      this.options.customerId,
+      groupNamePrefix);
   }
 
   //---------------------------------------------------------------------------
