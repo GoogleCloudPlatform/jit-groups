@@ -44,11 +44,14 @@ import java.util.stream.Collectors;
  * Activator for project roles.
  */
 @Dependent
-public class ProjectRoleActivator extends EntitlementActivator<ProjectRoleBinding, ProjectId> {
+public class ProjectRoleActivator extends EntitlementActivator<
+  ProjectRoleBinding,
+  ProjectId,
+  MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
-    EntitlementCatalog<ProjectRoleBinding, ProjectId> catalog,
+    @NotNull Catalog<ProjectRoleBinding, ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
     @NotNull ResourceManagerClient resourceManagerClient,
     @NotNull JustificationPolicy policy
   ) {

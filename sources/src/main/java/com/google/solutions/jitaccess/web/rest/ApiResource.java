@@ -169,9 +169,10 @@ public class ApiResource {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
 
     try {
-      var projects = this.mpaCatalog.listScopes(iapPrincipal.email());
+      var projects = this.mpaCatalog.listScopes(userContext);
 
       this.logAdapter
         .newInfoEntry(
@@ -212,12 +213,11 @@ public class ApiResource {
       "A projectId is required");
 
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
     var projectId = new ProjectId(projectIdString);
 
     try {
-      var entitlements = this.mpaCatalog.listEntitlements(
-        iapPrincipal.email(),
-        projectId);
+      var entitlements = this.mpaCatalog.listEntitlements(userContext, projectId);
 
       return new ProjectRolesResponse(
         entitlements.available()
@@ -264,12 +264,14 @@ public class ApiResource {
       "A role is required");
 
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
+
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, role);
 
     try {
       var peers = this.mpaCatalog.listReviewers(
-        iapPrincipal.email(),
+        userContext,
         new ProjectRoleBinding(roleBinding));
 
       assert !peers.contains(iapPrincipal.email());
@@ -323,6 +325,8 @@ public class ApiResource {
       "The justification is too long");
 
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
+
     var projectId = new ProjectId(projectIdString);
 
     //
@@ -330,7 +334,7 @@ public class ApiResource {
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
     var activationRequest = this.projectRoleActivator.createJitRequest(
-      iapPrincipal.email(),
+      userContext,
       request.roles
         .stream()
         .map(r -> new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), r)))
@@ -343,7 +347,9 @@ public class ApiResource {
       //
       // Activate the request.
       //
-      var activation = this.projectRoleActivator.activate(activationRequest);
+      var activation = this.projectRoleActivator.activate(
+        userContext,
+        activationRequest);
 
       assert activation != null;
 
@@ -454,6 +460,8 @@ public class ApiResource {
       "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
+
     var projectId = new ProjectId(projectIdString);
     var roleBinding = new RoleBinding(projectId, request.role);
 
@@ -465,7 +473,7 @@ public class ApiResource {
 
     try {
       activationRequest = this.projectRoleActivator.createMpaRequest(
-        iapPrincipal.email(),
+        userContext,
         Set.of(new ProjectRoleBinding(roleBinding)),
         request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
         request.justification,
@@ -646,6 +654,7 @@ public class ApiResource {
 
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
+    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
 
     MpaActivationRequest<ProjectRoleBinding> activationRequest;
     try {
@@ -673,9 +682,7 @@ public class ApiResource {
       .roleBinding();
 
     try {
-      var activation = this.projectRoleActivator.approve(
-        iapPrincipal.email(),
-        activationRequest);
+      var activation = this.projectRoleActivator.approve(userContext, activationRequest);
 
       assert activation != null;
 

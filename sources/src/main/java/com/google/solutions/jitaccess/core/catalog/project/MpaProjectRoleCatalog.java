@@ -42,7 +42,10 @@ import java.util.stream.Collectors;
  * MPA activation for project role-based entitlements.
  */
 @Singleton
-public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBinding, ProjectId> {
+public class MpaProjectRoleCatalog implements Catalog<
+  ProjectRoleBinding,
+  ProjectId,
+  MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ProjectRoleRepository repository;
   private final @NotNull ResourceManagerClient resourceManagerClient;
   private final @NotNull Options options;
@@ -133,19 +136,26 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
   }
 
   //---------------------------------------------------------------------------
-  // Overrides.
+  // Catalog.
   //---------------------------------------------------------------------------
 
   @Override
+  public @NotNull UserContext createContext(
+    @NotNull UserEmail user
+  ) {
+    return new UserContext(user);
+  }
+
+  @Override
   public SortedSet<ProjectId> listScopes(
-    UserEmail user
+    @NotNull UserContext userContext
   ) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.repository.findProjectsWithEntitlements(user);
+      return this.repository.findProjectsWithEntitlements(userContext.user());
     }
     else {
       //
@@ -162,11 +172,11 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
 
   @Override
   public EntitlementSet<ProjectRoleBinding> listEntitlements(
-    UserEmail user,
-    ProjectId projectId
+    @NotNull UserContext userContext,
+    @NotNull ProjectId projectId
   ) throws AccessException, IOException {
     return this.repository.findEntitlements(
-      user,
+      userContext.user(),
       projectId,
       EnumSet.of(ActivationType.JIT, ActivationType.MPA),
       EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
@@ -174,7 +184,7 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
 
   @Override
   public @NotNull SortedSet<UserEmail> listReviewers(
-    UserEmail requestingUser,
+    @NotNull UserContext userContext,
     @NotNull ProjectRoleBinding entitlement
   ) throws AccessException, IOException {
 
@@ -184,7 +194,7 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
     //
 
     verifyUserCanActivateEntitlements(
-      requestingUser,
+      userContext.user(),
       entitlement.projectId(),
       ActivationType.MPA,
       List.of(entitlement));
@@ -197,14 +207,17 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
     return this.repository
       .findEntitlementHolders(entitlement, ActivationType.MPA)
       .stream()
-      .filter(u -> !u.equals(requestingUser)) // Exclude requesting user
+      .filter(u -> !u.equals(userContext.user())) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
   }
 
   @Override
   public void verifyUserCanRequest(
+    @NotNull UserContext userContext,
     @NotNull ActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
+
+    assert userContext.user().equals(request.requestingUser());
 
     validateRequest(request);
 
@@ -221,7 +234,7 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
 
   @Override
   public void verifyUserCanApprove(
-    UserEmail approvingUser,
+    UserContext userContext,
     @NotNull MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
@@ -235,7 +248,7 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
     // is allowed.
     //
     verifyUserCanActivateEntitlements(
-      approvingUser,
+      userContext.user(),
       ProjectActivationRequest.projectId(request),
       request.type(),
       request.entitlements());
@@ -244,6 +257,11 @@ public class MpaProjectRoleCatalog implements EntitlementCatalog<ProjectRoleBind
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
+
+  public record UserContext(
+    @NotNull UserEmail user
+  ) implements CatalogUserContext {
+  }
 
   /**
    * If a query is provided, the class performs a Resource Manager project
