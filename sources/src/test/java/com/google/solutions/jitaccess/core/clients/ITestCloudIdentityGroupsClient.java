@@ -481,4 +481,55 @@ public class ITestCloudIdentityGroupsClient {
       ITestEnvironment.TEMPORARY_ACCESS_USER);
     assertEquals(0, memberships.size());
   }
+
+  //---------------------------------------------------------------------
+  // searchGroups.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void whenUnauthenticated_ThenSearchGroupsThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.INVALID_CREDENTIAL,
+      new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> client.searchGroups("", false));
+  }
+
+  @Test
+  public void whenQueryInvalid_ThenSearchGroupsThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> client.searchGroups("invalid", false));
+  }
+
+  @Test
+  public void searchGroups() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    client.createGroup(TEST_GROUP_EMAIL, "test group");
+    var groups = client.searchGroups(
+      client.createSearchQueryForPrefix("jitaccess-"),
+      true);
+
+    var foundGroup = groups.stream()
+      .filter(g -> g.getGroupKey().getId().equals(TEST_GROUP_EMAIL.email))
+      .findFirst();
+
+    assertTrue(foundGroup.isPresent());
+    assertNotNull(foundGroup.get().getDescription());
+    assertNotEquals("", foundGroup.get().getDescription());
+  }
 }
