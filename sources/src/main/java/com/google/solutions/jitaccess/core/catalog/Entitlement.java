@@ -84,7 +84,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
     /**
      * Entitlement can be activated.
      */
-    AVAILABLE, //TODO(later): Rename to inactive
+    AVAILABLE,
 
     /**
      * Entitlement is active.

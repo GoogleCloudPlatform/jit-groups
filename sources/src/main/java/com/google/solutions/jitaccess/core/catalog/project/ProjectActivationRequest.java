@@ -34,7 +34,7 @@ class ProjectActivationRequest {
   /**
    * @return common project ID for all requested entitlements.
    */
-  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRoleBinding> request) {
+  static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRole> request) {
     var projects = request.entitlements().stream()
       .map(e -> e.roleBinding().fullResourceName())
       .collect(Collectors.toSet());

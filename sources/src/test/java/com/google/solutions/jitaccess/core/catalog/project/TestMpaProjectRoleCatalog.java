@@ -205,7 +205,7 @@ public class TestMpaProjectRoleCatalog {
         SAMPLE_REQUESTING_USER,
         SAMPLE_PROJECT,
         ActivationType.JIT,
-        List.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)))));
+        List.of(new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)))));
   }
 
   @Test
@@ -218,7 +218,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.MPA,
       Entitlement.Status.AVAILABLE);
@@ -266,7 +266,7 @@ public class TestMpaProjectRoleCatalog {
       AccessDeniedException.class,
       () -> catalog.listReviewers(
         requestingUserContext,
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
+        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
   }
 
   @Test
@@ -279,7 +279,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.MPA,
       Entitlement.Status.AVAILABLE);
@@ -320,7 +320,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var jitEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
@@ -355,7 +355,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var jitEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
@@ -395,7 +395,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.MPA,
       Entitlement.Status.AVAILABLE);
@@ -431,7 +431,7 @@ public class TestMpaProjectRoleCatalog {
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
     var mpaEntitlement = new Entitlement<>(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE)),
       "-",
       ActivationType.MPA,
       Entitlement.Status.AVAILABLE);
@@ -584,13 +584,13 @@ public class TestMpaProjectRoleCatalog {
       AccessDeniedException.class,
       () -> catalog.listReviewers(
         requestingUserContext,
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
+        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE))));
   }
 
   @Test
   public void whenUserAllowedToActivateRoleWithoutMpa_ThenListReviewersReturnsList() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzerRepository.class);
-    var role = new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
+    var role = new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
@@ -598,7 +598,7 @@ public class TestMpaProjectRoleCatalog {
       any()))
       .thenReturn(new EntitlementSet<>((
         new TreeSet<>(Set.of(new Entitlement<>(
-          new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/different-role")),
+          new ProjectRole(new RoleBinding(SAMPLE_PROJECT, "roles/different-role")),
           "-",
           ActivationType.MPA,
           Entitlement.Status.AVAILABLE)))),
@@ -624,7 +624,7 @@ public class TestMpaProjectRoleCatalog {
   @Test
   public void whenUserAllowedToActivateRole_ThenListReviewersReturnsList() throws Exception {
     var policyAnalyzer = Mockito.mock(PolicyAnalyzerRepository.class);
-    var role = new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
+    var role = new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE));
     when(policyAnalyzer.findEntitlements(
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),

@@ -156,7 +156,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
+  public @NotNull EntitlementSet<ProjectRole> findEntitlements(
     @NotNull UserEmail user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude,
@@ -186,7 +186,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       Optional.of(projectId.getFullResourceName()),
       false);
 
-    var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
+    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
 
       //
@@ -194,15 +194,15 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> jitEligible;
+      Set<Entitlement<ProjectRole>> jitEligible;
       if (typesToInclude.contains(ActivationType.JIT)) {
         jitEligible = findRoleBindings(
           analysisResult,
           condition -> JitConstraints.isJitAccessConstraint(condition),
           evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
           .stream()
-          .map(conditionalBinding -> new Entitlement<ProjectRoleBinding>(
-            new ProjectRoleBinding(conditionalBinding.binding),
+          .map(conditionalBinding -> new Entitlement<ProjectRole>(
+            new ProjectRole(conditionalBinding.binding),
             conditionalBinding.binding.role(),
             ActivationType.JIT,
             Entitlement.Status.AVAILABLE))
@@ -217,15 +217,15 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> mpaEligible;
+      Set<Entitlement<ProjectRole>> mpaEligible;
       if (typesToInclude.contains(ActivationType.MPA)) {
         mpaEligible = findRoleBindings(
           analysisResult,
           condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
           evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
           .stream()
-          .map(conditionalBinding -> new Entitlement<ProjectRoleBinding>(
-            new ProjectRoleBinding(conditionalBinding.binding),
+          .map(conditionalBinding -> new Entitlement<ProjectRole>(
+            new ProjectRole(conditionalBinding.binding),
             conditionalBinding.binding.role(),
             ActivationType.MPA,
             Entitlement.Status.AVAILABLE))
@@ -246,7 +246,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         .toList());
     }
 
-    var allActive = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ActiveEntitlement<ProjectRole>>();
     if (statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
       //
       // Find role bindings which have already been activated.
@@ -262,13 +262,13 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
       allActive.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
-          new ProjectRoleBinding(conditionalBinding.binding),
+        .map(conditionalBinding -> new ActiveEntitlement<ProjectRole>(
+          new ProjectRole(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
     }
 
-    var allExpired = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
+    var allExpired = new HashSet<ActiveEntitlement<ProjectRole>>();
     if (statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
       //
       // Do the same for conditions that evaluated to FALSE.
@@ -281,8 +281,8 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
       allExpired.addAll(activeBindings
         .stream()
-        .map(conditionalBinding -> new ActivatedEntitlement<ProjectRoleBinding>(
-          new ProjectRoleBinding(conditionalBinding.binding),
+        .map(conditionalBinding -> new ActiveEntitlement<ProjectRole>(
+          new ProjectRole(conditionalBinding.binding),
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity()))
         .collect(Collectors.toSet()));
     }
@@ -297,7 +297,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull Set<UserEmail> findEntitlementHolders(
-    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException {
 

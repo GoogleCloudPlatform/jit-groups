@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
@@ -406,13 +406,13 @@ public class TestApiResource {
 
   @Test
   public void whenCatalogReturnsRoles_ThenListRolesReturnsList() throws Exception {
-    var role1 = new Entitlement<ProjectRoleBinding>(
-      new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
+    var role1 = new Entitlement<ProjectRole>(
+      new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
       "ent-1",
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
-    var role2 = new Entitlement<ProjectRoleBinding>(
-      new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
+    var role2 = new Entitlement<ProjectRole>(
+      new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
       "ent-2",
       ActivationType.JIT,
       Entitlement.Status.AVAILABLE);
@@ -565,7 +565,7 @@ public class TestApiResource {
       .activate(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         argThat(r -> r.entitlements().size() == 1)))
-      .then(r -> new Activation<>((ActivationRequest<ProjectRoleBinding>) r.getArguments()[1]));
+      .then(r -> new Activation<>((ActivationRequest<ProjectRole>) r.getArguments()[1]));
 
     var request = new ApiResource.SelfActivationRequest();
     request.roles = List.of("roles/browser", "roles/browser");
@@ -942,7 +942,7 @@ public class TestApiResource {
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -975,7 +975,7 @@ public class TestApiResource {
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -1050,7 +1050,7 @@ public class TestApiResource {
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -1088,7 +1088,7 @@ public class TestApiResource {
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -1125,7 +1125,7 @@ public class TestApiResource {
       Mockito.mock(JustificationPolicy.class))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRoleBinding(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
