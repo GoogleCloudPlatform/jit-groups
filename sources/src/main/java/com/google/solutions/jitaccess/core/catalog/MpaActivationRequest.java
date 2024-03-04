@@ -58,7 +58,7 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
     this.reviewers = reviewers;
   }
 
-  public Collection<UserEmail> reviewers() {
+  public @NotNull Collection<UserEmail> reviewers() {
     return this.reviewers;
   }
 

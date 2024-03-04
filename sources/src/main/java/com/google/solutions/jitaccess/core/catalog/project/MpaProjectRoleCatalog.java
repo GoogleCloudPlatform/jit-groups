@@ -30,7 +30,9 @@ import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
+import jakarta.validation.constraints.Null;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -64,7 +66,9 @@ public class MpaProjectRoleCatalog implements Catalog<
     this.options = options;
   }
 
-  void validateRequest(@NotNull ActivationRequest<ProjectRoleBinding> request) {
+  void validateRequest(
+    @NotNull ActivationRequest<ProjectRoleBinding> request
+  ) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -131,7 +135,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     }
   }
 
-  public Options options() {
+  public @NotNull Options options() {
     return this.options;
   }
 
@@ -234,7 +238,7 @@ public class MpaProjectRoleCatalog implements Catalog<
 
   @Override
   public void verifyUserCanApprove(
-    UserContext userContext,
+    @NotNull UserContext userContext,
     @NotNull MpaActivationRequest<ProjectRoleBinding> request
   ) throws AccessException, IOException {
 
@@ -273,10 +277,10 @@ public class MpaProjectRoleCatalog implements Catalog<
    * @param maxActivationDuration maximum duration for an activation
    */
   public record Options(
-    String availableProjectsQuery,
-    Duration maxActivationDuration,
-    int minNumberOfReviewersPerActivationRequest,
-    int maxNumberOfReviewersPerActivationRequest
+    @Nullable String availableProjectsQuery,
+    @NotNull Duration maxActivationDuration,
+    @NotNull int minNumberOfReviewersPerActivationRequest,
+    @NotNull int maxNumberOfReviewersPerActivationRequest
   ) {
     static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
 
@@ -295,7 +299,7 @@ public class MpaProjectRoleCatalog implements Catalog<
         "The minimum number of reviewers must not exceed the maximum");
     }
 
-    public Duration minActivationDuration() {
+    public @NotNull Duration minActivationDuration() {
       return Duration.ofMinutes(MIN_ACTIVATION_TIMEOUT_MINUTES);
     }
   }

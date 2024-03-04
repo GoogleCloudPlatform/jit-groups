@@ -22,9 +22,12 @@
 package com.google.solutions.jitaccess.core.clients;
 
 import com.google.common.base.Preconditions;
+import org.jetbrains.annotations.NotNull;
 
-public record PubSubTopic(String projectId, String topicName) {
-
+public record PubSubTopic(
+  @NotNull String projectId,
+  @NotNull String topicName
+) {
   public PubSubTopic {
     Preconditions.checkNotNull(projectId, "projectId");
     Preconditions.checkNotNull(topicName, "topicName");
@@ -35,7 +38,7 @@ public record PubSubTopic(String projectId, String topicName) {
     return getFullResourceName();
   }
 
-  public String getFullResourceName() {
+  public @NotNull String getFullResourceName() {
     return String.format("projects/%s/topics/%s", this.projectId, this.topicName);
   }
 }

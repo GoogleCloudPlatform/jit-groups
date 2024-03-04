@@ -57,11 +57,11 @@ public abstract class EntitlementActivator<
    * Create a new request to activate an entitlement that permits self-approval.
    */
   public final @NotNull JitActivationRequest<TEntitlementId> createJitRequest(
-    TUserContext requestingUserContext,
-    Set<TEntitlementId> entitlements,
-    String justification,
+    @NotNull TUserContext requestingUserContext,
+    @NotNull Set<TEntitlementId> entitlements,
+    @NotNull String justification,
     @NotNull Instant startTime,
-    Duration duration
+    @NotNull Duration duration
   ) {
     Preconditions.checkArgument(
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
@@ -84,12 +84,12 @@ public abstract class EntitlementActivator<
    * multi-party approval.
    */
   public @NotNull MpaActivationRequest<TEntitlementId> createMpaRequest(
-    TUserContext requestingUserContext,
+    @NotNull TUserContext requestingUserContext,
     @NotNull Set<TEntitlementId> entitlements,
-    Set<UserEmail> reviewers,
-    String justification,
+    @NotNull Set<UserEmail> reviewers,
+    @NotNull String justification,
     @NotNull Instant startTime,
-    Duration duration
+    @NotNull Duration duration
   ) throws AccessException, IOException {
 
     Preconditions.checkArgument(
@@ -120,7 +120,7 @@ public abstract class EntitlementActivator<
    * Activate an entitlement that permits self-approval.
    */
   public final @NotNull Activation<TEntitlementId> activate(
-    TUserContext userContext,
+    @NotNull TUserContext userContext,
     @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
@@ -148,7 +148,7 @@ public abstract class EntitlementActivator<
    * Approve another user's request.
    */
   public final @NotNull Activation<TEntitlementId> approve(
-    TUserContext userContext,
+    @NotNull TUserContext userContext,
     @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
@@ -191,7 +191,7 @@ public abstract class EntitlementActivator<
    * Apply a request.
    */
   protected abstract void provisionAccess(
-    JitActivationRequest<TEntitlementId> request
+    @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
 
@@ -199,8 +199,8 @@ public abstract class EntitlementActivator<
    * Apply a request.
    */
   protected abstract void provisionAccess(
-    UserEmail approvingUser,
-    MpaActivationRequest<TEntitlementId> request
+    @NotNull UserEmail approvingUser,
+    @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
   /**
@@ -216,12 +216,12 @@ public abstract class EntitlementActivator<
   protected static class JitRequest<TEntitlementId extends EntitlementId>
     extends JitActivationRequest<TEntitlementId> {
     public JitRequest(
-      ActivationId id,
-      UserEmail requestingUser,
-      Set<TEntitlementId> entitlements,
-      String justification,
-      Instant startTime,
-      Duration duration
+      @NotNull ActivationId id,
+      @NotNull UserEmail requestingUser,
+      @NotNull Set<TEntitlementId> entitlements,
+      @NotNull String justification,
+      @NotNull Instant startTime,
+      @NotNull Duration duration
     ) {
       super(id, requestingUser, entitlements, justification, startTime, duration);
     }
@@ -230,13 +230,13 @@ public abstract class EntitlementActivator<
   protected static class MpaRequest<TEntitlementId extends EntitlementId>
     extends MpaActivationRequest<TEntitlementId> {
     public MpaRequest(
-      ActivationId id,
-      UserEmail requestingUser,
+      @NotNull ActivationId id,
+      @NotNull UserEmail requestingUser,
       @NotNull Set<TEntitlementId> entitlements,
-      Set<UserEmail> reviewers,
-      String justification,
-      Instant startTime,
-      Duration duration
+      @NotNull Set<UserEmail> reviewers,
+      @NotNull String justification,
+      @NotNull Instant startTime,
+      @NotNull Duration duration
     ) {
       super(id, requestingUser, entitlements, reviewers, justification, startTime, duration);
 

@@ -112,7 +112,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserEmail user
+    @NotNull UserEmail user
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
@@ -157,7 +157,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserEmail user,
+    @NotNull UserEmail user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude,
     @NotNull EnumSet<Entitlement.Status> statusesToInclude
@@ -333,7 +333,8 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
    * @param scope Scope to use for queries.
    */
   public record Options(
-    String scope) {
+    @NotNull String scope
+  ) {
 
     public Options {
       Preconditions.checkNotNull(scope, "scope");

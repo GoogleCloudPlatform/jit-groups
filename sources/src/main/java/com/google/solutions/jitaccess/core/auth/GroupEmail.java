@@ -77,12 +77,12 @@ public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
   // -------------------------------------------------------------------------
 
   @Override
-  public String type() {
+  public @NotNull String type() {
     return TYPE;
   }
 
   @Override
-  public String value() {
+  public @NotNull String value() {
     return this.email;
   }
 }

@@ -43,7 +43,7 @@ public class TokenSigner {
   private final TokenVerifier tokenVerifier;
 
   public TokenSigner(
-    IamCredentialsClient iamCredentialsClient,
+    @NotNull IamCredentialsClient iamCredentialsClient,
     @NotNull Options options
   ) {
     this.options = options;
@@ -65,7 +65,7 @@ public class TokenSigner {
    */
   public <T> @NotNull TokenWithExpiry sign(
     @NotNull JsonWebTokenConverter<T> converter,
-    T payload
+    @NotNull T payload
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(converter, "converter");
@@ -93,7 +93,7 @@ public class TokenSigner {
    */
   public <T> T verify(
     @NotNull JsonWebTokenConverter<T> converter,
-    String token
+    @NotNull String token
   ) throws TokenVerifier.VerificationException {
 
     Preconditions.checkNotNull(converter, "converter");
@@ -119,9 +119,10 @@ public class TokenSigner {
   // -------------------------------------------------------------------------
 
   public record TokenWithExpiry(
-    String token,
-    Instant issueTime,
-    Instant expiryTime) {
+    @NotNull String token,
+    @NotNull Instant issueTime,
+    @NotNull Instant expiryTime
+  ) {
     public TokenWithExpiry {
       Preconditions.checkNotNull(token, "token");
       Preconditions.checkArgument(expiryTime.isAfter(issueTime));
@@ -129,7 +130,10 @@ public class TokenSigner {
     }
   }
 
-  public record Options(UserEmail serviceAccount, Duration tokenValidity) {
+  public record Options(
+    @NotNull UserEmail serviceAccount,
+    @NotNull Duration tokenValidity
+  ) {
     public Options {
       Preconditions.checkNotNull(serviceAccount);
       Preconditions.checkArgument(!tokenValidity.isNegative());

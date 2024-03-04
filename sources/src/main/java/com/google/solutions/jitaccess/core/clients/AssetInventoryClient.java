@@ -41,11 +41,11 @@ import java.util.List;
 public class AssetInventoryClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private final @NotNull GoogleCredentials credentials;
-  protected final HttpTransport.@NotNull Options httpOptions;
+  protected final @NotNull HttpTransport.Options httpOptions;
 
   public AssetInventoryClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -72,7 +72,7 @@ public class AssetInventoryClient {
    * Get effective set of IAM policies for a project.
    */
   public List<PolicyInfo> getEffectiveIamPolicies(
-    String scope,
+    @NotNull String scope,
     @NotNull ProjectId projectId
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");

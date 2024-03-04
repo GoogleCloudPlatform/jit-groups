@@ -68,7 +68,7 @@ public interface Catalog<
    */
   SortedSet<TScopeId> listScopes(
     @NotNull TUserContext userContext
-    ) throws AccessException, IOException;
+  ) throws AccessException, IOException;
 
   /**
    * List available reviewers for (MPA-) activating an entitlement.

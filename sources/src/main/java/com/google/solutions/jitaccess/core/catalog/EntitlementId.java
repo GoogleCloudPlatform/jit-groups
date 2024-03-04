@@ -33,12 +33,12 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
   /**
    * @return the catalog the entitlement belongs to
    */
-  public abstract String catalog();
+  public abstract @NotNull String catalog();
 
   /**
    * @return the ID within the catalog
    */
-  public abstract String id();
+  public abstract @NotNull String id();
 
   @Override
   public String toString() {

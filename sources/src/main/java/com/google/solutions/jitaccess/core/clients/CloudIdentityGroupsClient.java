@@ -54,12 +54,12 @@ public class CloudIdentityGroupsClient {
 
   private final @NotNull Options options;
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   public CloudIdentityGroupsClient(
     @NotNull GoogleCredentials credentials,
     @NotNull Options options,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(options, "options");
@@ -386,7 +386,7 @@ public class CloudIdentityGroupsClient {
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
     @NotNull UserEmail userEmail,
-    MembershipRole role
+    @NotNull MembershipRole role
   ) throws AccessException, IOException {
     var membershipId = lookupGroupMembership(client, groupKey, userEmail);
     try {
@@ -649,7 +649,7 @@ public class CloudIdentityGroupsClient {
   public record MembershipId(String id) {}
 
   public record Options(
-    String customerId
+    @NotNull String customerId
   ) {
     public Options {
       Preconditions.checkNotNull(customerId, "customerId");

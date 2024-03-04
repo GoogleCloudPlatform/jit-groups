@@ -40,5 +40,5 @@ public interface JustificationPolicy {
   /**
    * @return hint indicating what kind of justification is expected.
    */
-  String hint();
+  @NotNull String hint();
 }

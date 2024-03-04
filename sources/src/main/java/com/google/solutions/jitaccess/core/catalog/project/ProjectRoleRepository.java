@@ -47,26 +47,26 @@ public abstract class ProjectRoleRepository {
   /**
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
-  abstract SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserEmail user
+  abstract @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
+    @NotNull UserEmail user
   ) throws AccessException, IOException;
 
   /**
    * List entitlements for the given user.
    */
-  abstract EntitlementSet<ProjectRoleBinding> findEntitlements(
-    UserEmail user,
-    ProjectId projectId,
-    EnumSet<ActivationType> typesToInclude,
-    EnumSet<Entitlement.Status> statusesToInclude
+  abstract @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
+    @NotNull UserEmail user,
+    @NotNull ProjectId projectId,
+    @NotNull EnumSet<ActivationType> typesToInclude,
+    @NotNull EnumSet<Entitlement.Status> statusesToInclude
   ) throws AccessException, IOException;
 
   /**
    * List users that hold an eligible role binding.
    */
-  abstract Set<UserEmail> findEntitlementHolders(
-    ProjectRoleBinding roleBinding,
-    ActivationType activationType
+  abstract @NotNull Set<UserEmail> findEntitlementHolders(
+    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ActivationType activationType
   ) throws AccessException, IOException;
 
   /**
@@ -168,7 +168,10 @@ public abstract class ProjectRoleRepository {
     return new EntitlementSet<>(current, expired, warnings);
   }
 
-  record ActivatedEntitlement<TId>(TId entitlementId, TimeSpan validity) { //TODO: rename to ActiveEntitlement, id()
+  record ActivatedEntitlement<TId>(
+    @NotNull TId entitlementId,
+    @NotNull TimeSpan validity
+  ) { //TODO: rename to ActiveEntitlement, projectRole()
     public ActivatedEntitlement {
       Preconditions.checkNotNull(entitlementId, "entitlementId");
       Preconditions.checkNotNull(validity, "validity");

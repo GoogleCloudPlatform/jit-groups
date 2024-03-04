@@ -46,7 +46,7 @@ import java.util.Optional;
 public class PolicyAnalyzerClient extends AssetInventoryClient {
   public PolicyAnalyzerClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     super(credentials, httpOptions);
   }
@@ -122,7 +122,7 @@ public class PolicyAnalyzerClient extends AssetInventoryClient {
    */
   public IamPolicyAnalysis findPermissionedPrincipalsByResource(
     @NotNull String scope,
-    String fullResourceName,
+    @NotNull String fullResourceName,
     @NotNull String role
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(scope, "scope");

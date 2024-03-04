@@ -43,11 +43,11 @@ public class SecretManagerClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   public SecretManagerClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");

@@ -367,7 +367,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public HttpTransport.@NotNull Options getHttpTransportOptions() {
+  public @NotNull HttpTransport.Options getHttpTransportOptions() {
     return new HttpTransport.Options(
       this.configuration.backendConnectTimeout.getValue(),
       this.configuration.backendReadTimeout.getValue(),

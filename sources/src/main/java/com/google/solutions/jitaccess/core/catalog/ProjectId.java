@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 /**
  * ID of a Google Cloud project.
  */
-public record ProjectId(String id) implements Comparable<ProjectId>, ResourceId {
+public record ProjectId(
+  @NotNull String id
+) implements Comparable<ProjectId>, ResourceId {
   private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
   public ProjectId {

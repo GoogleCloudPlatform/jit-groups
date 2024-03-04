@@ -43,7 +43,7 @@ public class ProjectRoleBinding extends EntitlementId { // TODO: Rename to Proje
     this.roleBinding = roleBinding;
   }
 
-  public RoleBinding roleBinding() {
+  public @NotNull RoleBinding roleBinding() {
     return this.roleBinding;
   }
 
@@ -53,7 +53,7 @@ public class ProjectRoleBinding extends EntitlementId { // TODO: Rename to Proje
   }
 
   @Override
-  public String id() {
+  public @NotNull String id() {
     return this.roleBinding.toString();
   }
 

@@ -49,7 +49,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     @NotNull String justification,
     @NotNull Instant startTime,
     @NotNull Duration duration
-    ) {
+  ) {
 
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(requestingUser, "user");
@@ -77,53 +77,53 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   /**
    * @return unique ID of the request.
    */
-  public ActivationId id() {
+  public @NotNull ActivationId id() {
     return this.id;
   }
 
   /**
    * @return start time for requested access.
    */
-  public Instant startTime() {
+  public @NotNull Instant startTime() {
     return this.startTime;
   }
 
   /**
    * @return duration of requested activation.
    */
-  public Duration duration() {
+  public @NotNull Duration duration() {
     return this.duration;
   }
 
   /**
    * @return end time for requested access.
    */
-  public Instant endTime() {
+  public @NotNull Instant endTime() {
     return this.startTime.plus(this.duration);
   }
 
   /**
    * @return user that requested access.
    */
-  public UserEmail requestingUser() {
+  public @NotNull UserEmail requestingUser() {
     return this.requestingUser;
   }
 
   /**
    * @return one or more entitlements.
    */
-  public Collection<TEntitlementId> entitlements() {
+  public @NotNull Collection<TEntitlementId> entitlements() {
     return this.entitlements;
   }
 
   /**
    * @return user-provided justification for the request.
    */
-  public String justification() {
+  public @NotNull String justification() {
     return this.justification;
   }
 
-  public abstract ActivationType type();
+  public abstract @NotNull ActivationType type();
 
   @Override
   public String toString() {
