@@ -103,7 +103,7 @@ public class CloudIdentityGroupsClient {
       case 403:
         throw new AccessDeniedException("Not found or access denied", e);
       case 404:
-        throw new NotFoundException("Not found", e);
+        throw new ResourceNotFoundException("Not found", e);
       default:
         throw (GoogleJsonResponseException)e.fillInStackTrace();
     }
@@ -588,7 +588,17 @@ public class CloudIdentityGroupsClient {
       return Collections.unmodifiableList(result);
     }
     catch (GoogleJsonResponseException e) {
-      translateAndThrowApiException(e);
+      if (e.getStatusCode() == 500) {
+        //
+        // The API returns a 500 if the user is invalid,
+        // treat as a 404 instead.
+        //
+        throw new ResourceNotFoundException("Not found", e);
+      }
+      else {
+        translateAndThrowApiException(e);
+      }
+
       return null;
     }
   }
