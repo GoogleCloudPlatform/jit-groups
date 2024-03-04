@@ -27,7 +27,6 @@ import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleBinding;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
@@ -272,7 +271,7 @@ public class ApiResource {
     try {
       var peers = this.mpaCatalog.listReviewers(
         userContext,
-        new ProjectRoleBinding(roleBinding));
+        new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding));
 
       assert !peers.contains(iapPrincipal.email());
 
@@ -337,7 +336,7 @@ public class ApiResource {
       userContext,
       request.roles
         .stream()
-        .map(r -> new ProjectRoleBinding(new RoleBinding(projectId.getFullResourceName(), r)))
+        .map(r -> new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(new RoleBinding(projectId.getFullResourceName(), r)))
         .collect(Collectors.toSet()),
       request.justification,
       Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -469,12 +468,12 @@ public class ApiResource {
     // Create an MPA activation request.
     //
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    MpaActivationRequest<ProjectRoleBinding> activationRequest;
+    MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activationRequest;
 
     try {
       activationRequest = this.projectRoleActivator.createMpaRequest(
         userContext,
-        Set.of(new ProjectRoleBinding(roleBinding)),
+        Set.of(new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding)),
         request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -618,7 +617,7 @@ public class ApiResource {
       return new ActivationStatusResponse(
         iapPrincipal.email(),
         activationRequest,
-        Entitlement.Status.ACTIVATION_PENDING); // TODO(later): Could check if's been activated already.
+        Entitlement.Status.ACTIVATION_PENDING);
     }
     catch (Exception e) {
       this.logAdapter
@@ -656,7 +655,7 @@ public class ApiResource {
     var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
     var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
 
-    MpaActivationRequest<ProjectRoleBinding> activationRequest;
+    MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
         this.projectRoleActivator.createTokenConverter(),
@@ -910,7 +909,7 @@ public class ApiResource {
 
     private ActivationStatusResponse(
       UserEmail caller,
-      com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<ProjectRoleBinding> request,
+      com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> request,
       Entitlement.Status status
     ) {
       Preconditions.checkNotNull(request);
@@ -929,7 +928,7 @@ public class ApiResource {
           request.endTime()))
         .collect(Collectors.toList());
 
-      if (request instanceof MpaActivationRequest<ProjectRoleBinding> mpaRequest) {
+      if (request instanceof MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> mpaRequest) {
         this.reviewers = mpaRequest.reviewers();
         this.isReviewer = mpaRequest.reviewers().contains(caller);
       }
@@ -978,7 +977,7 @@ public class ApiResource {
   {
     protected RequestActivationNotification(
       @NotNull ProjectId projectId,
-      @NotNull MpaActivationRequest<ProjectRoleBinding> request,
+      @NotNull MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> request,
       Instant requestExpiryTime,
       @NotNull URL activationRequestUrl) throws MalformedURLException
     {
@@ -1022,19 +1021,19 @@ public class ApiResource {
   public static class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
       ProjectId projectId,
-      @NotNull Activation<ProjectRoleBinding> activation,
+      @NotNull Activation<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activation,
       @NotNull UserEmail approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
         List.of(activation.request().requestingUser()),
-        ((MpaActivationRequest<ProjectRoleBinding>)activation.request()).reviewers(), // Move reviewers to CC.
+        ((MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request()).reviewers(), // Move reviewers to CC.
         String.format(
           "%s requests access to project %s",
           activation.request().requestingUser(),
           projectId));
 
-      var request = (MpaActivationRequest<ProjectRoleBinding>)activation.request();
+      var request = (MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request();
       assert request.entitlements().size() == 1;
 
       this.properties.put("APPROVER", approver.email);
@@ -1071,7 +1070,7 @@ public class ApiResource {
   public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
-      @NotNull Activation<ProjectRoleBinding> activation)
+      @NotNull Activation<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activation)
     {
       super(
         List.of(activation.request().requestingUser()),

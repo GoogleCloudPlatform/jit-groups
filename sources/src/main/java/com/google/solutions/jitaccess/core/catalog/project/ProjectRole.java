@@ -30,12 +30,12 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Identifies a project role binding as an entitlement.
  */
-public class ProjectRoleBinding extends EntitlementId { // TODO: Rename to ProjectRole
+public class ProjectRole extends EntitlementId {
   static final String CATALOG = "iam";
 
   private final @NotNull RoleBinding roleBinding;
 
-  public ProjectRoleBinding(@NotNull RoleBinding roleBinding) {
+  public ProjectRole(@NotNull RoleBinding roleBinding) {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
     assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());

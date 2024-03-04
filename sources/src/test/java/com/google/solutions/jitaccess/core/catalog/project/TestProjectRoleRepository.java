@@ -95,7 +95,7 @@ public class TestProjectRoleRepository {
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
     var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
-      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
+      Set.of(new ProjectRoleRepository.ActiveEntitlement<>(
         available1.id(),
         validity1)),
       Set.of(),
@@ -129,10 +129,10 @@ public class TestProjectRoleRepository {
     var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
       Set.of(
-        new ProjectRoleRepository.ActivatedEntitlement<>(
+        new ProjectRoleRepository.ActiveEntitlement<>(
           available1.id(),
           validity),
-        new ProjectRoleRepository.ActivatedEntitlement<>(
+        new ProjectRoleRepository.ActiveEntitlement<>(
           available2.id(),
           validity)),
       Set.of(),
@@ -171,7 +171,7 @@ public class TestProjectRoleRepository {
     var validity1 = new TimeSpan(Instant.now(), Duration.ofMinutes(1));
     var set = ProjectRoleRepository.buildEntitlementSet(
       Set.of(available1, available2),
-      Set.of(new ProjectRoleRepository.ActivatedEntitlement<>(
+      Set.of(new ProjectRoleRepository.ActiveEntitlement<>(
         new StringId("unavailable-1"),
         validity1)),
       Set.of(),

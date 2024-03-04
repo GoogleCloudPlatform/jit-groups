@@ -45,13 +45,13 @@ import java.util.stream.Collectors;
  */
 @Dependent
 public class ProjectRoleActivator extends EntitlementActivator<
-  ProjectRoleBinding,
+  ProjectRole,
   ProjectId,
   MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ResourceManagerClient resourceManagerClient;
 
   public ProjectRoleActivator(
-    @NotNull Catalog<ProjectRoleBinding, ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
+    @NotNull Catalog<ProjectRole, ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
     @NotNull ResourceManagerClient resourceManagerClient,
     @NotNull JustificationPolicy policy
   ) {
@@ -86,8 +86,6 @@ public class ProjectRoleActivator extends EntitlementActivator<
           .setDescription(bindingDescription)
           .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
 
-      //TODO(later): Add bindings in a single request.
-
       this.resourceManagerClient.addProjectIamBinding(
         projectId,
         binding,
@@ -102,7 +100,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
   @Override
   protected void provisionAccess(
-    @NotNull JitActivationRequest<ProjectRoleBinding> request
+    @NotNull JitActivationRequest<ProjectRole> request
   ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(request, "request");
 
@@ -125,7 +123,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
   @Override
   protected void provisionAccess(
     @NotNull UserEmail approvingUser,
-    @NotNull MpaActivationRequest<ProjectRoleBinding> request
+    @NotNull MpaActivationRequest<ProjectRole> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
@@ -154,10 +152,10 @@ public class ProjectRoleActivator extends EntitlementActivator<
   }
 
   @Override
-  public @NotNull JsonWebTokenConverter<MpaActivationRequest<ProjectRoleBinding>> createTokenConverter() {
+  public @NotNull JsonWebTokenConverter<MpaActivationRequest<ProjectRole>> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRoleBinding> request) {
+      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRole> request) {
         var roleBindings = request.entitlements()
           .stream()
           .map(ent -> ent.roleBinding())
@@ -182,7 +180,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
       @SuppressWarnings("unchecked")
       @Override
-      public @NotNull MpaActivationRequest<ProjectRoleBinding> convert(JsonWebToken.@NotNull Payload payload) {
+      public @NotNull MpaActivationRequest<ProjectRole> convert(JsonWebToken.@NotNull Payload payload) {
         var roleBinding = new RoleBinding(
           payload.get("resource").toString(),
           payload.get("role").toString());
@@ -193,7 +191,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
         return new MpaRequest<>(
           new ActivationId(payload.getJwtId()),
           new UserEmail(payload.get("beneficiary").toString()),
-          Set.of(new ProjectRoleBinding(roleBinding)),
+          Set.of(new ProjectRole(roleBinding)),
           ((List<String>)payload.get("reviewers"))
             .stream()
             .map(email -> new UserEmail(email))

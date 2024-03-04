@@ -40,7 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -129,7 +128,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
+  public @NotNull EntitlementSet<ProjectRole> findEntitlements(
     @NotNull UserEmail user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude,
@@ -138,7 +137,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
     List<Binding> allBindings = findProjectBindings(user, projectId);
 
-    var allAvailable = new TreeSet<Entitlement<ProjectRoleBinding>>();
+    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
     if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
 
       //
@@ -146,11 +145,11 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> jitEligible;
+      Set<Entitlement<ProjectRole>> jitEligible;
       if (typesToInclude.contains(ActivationType.JIT)) {
         jitEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+          .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
           .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
@@ -167,11 +166,11 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       // conditional and have a special condition that serves
       // as marker.
       //
-      Set<Entitlement<ProjectRoleBinding>> mpaEligible;
+      Set<Entitlement<ProjectRole>> mpaEligible;
       if (typesToInclude.contains(ActivationType.MPA)) {
         mpaEligible = allBindings.stream()
           .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
-          .map(binding -> new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())))
+          .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
           .map(roleBinding -> new Entitlement<>(
             roleBinding,
             roleBinding.roleBinding().role(),
@@ -197,8 +196,8 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // Find temporary bindings that reflect activations and sort out which
     // ones are still active and which ones have expired.
     //
-    var allActive = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
-    var allExpired = new HashSet<ActivatedEntitlement<ProjectRoleBinding>>();
+    var allActive = new HashSet<ActiveEntitlement<ProjectRole>>();
+    var allExpired = new HashSet<ActiveEntitlement<ProjectRole>>();
 
     for (var binding : allBindings.stream()
       // Only temporary access bindings.
@@ -215,14 +214,14 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       }
 
       if (isValid && statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-        allActive.add(new ActivatedEntitlement<>(
-          new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+        allActive.add(new ActiveEntitlement<>(
+          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
 
       if (!isValid && statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
-        allExpired.add(new ActivatedEntitlement<>(
-          new ProjectRoleBinding(new RoleBinding(projectId, binding.getRole())),
+        allExpired.add(new ActiveEntitlement<>(
+          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
           condition.getValidity()));
       }
     }
@@ -232,7 +231,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull Set<UserEmail> findEntitlementHolders(
-    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException {
 

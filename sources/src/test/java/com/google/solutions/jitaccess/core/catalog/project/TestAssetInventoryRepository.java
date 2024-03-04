@@ -38,7 +38,6 @@ import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -492,7 +491,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
+      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
       ActivationType.MPA);
 
     assertNotNull(holders);
@@ -531,7 +530,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role),
+      new ProjectRole(role),
       ActivationType.MPA);
 
     assertNotNull(holders);
@@ -581,7 +580,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRoleBinding(role),
+      new ProjectRole(role),
       ActivationType.MPA);
 
     assertNotNull(holders);

@@ -54,7 +54,7 @@ public abstract class ProjectRoleRepository {
   /**
    * List entitlements for the given user.
    */
-  abstract @NotNull EntitlementSet<ProjectRoleBinding> findEntitlements(
+  abstract @NotNull EntitlementSet<ProjectRole> findEntitlements(
     @NotNull UserEmail user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude,
@@ -65,7 +65,7 @@ public abstract class ProjectRoleRepository {
    * List users that hold an eligible role binding.
    */
   abstract @NotNull Set<UserEmail> findEntitlementHolders(
-    @NotNull ProjectRoleBinding roleBinding,
+    @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException;
 
@@ -73,14 +73,14 @@ public abstract class ProjectRoleRepository {
    * Helper methods for building an EntitlementSet.
    */
   static <T extends EntitlementId> @NotNull EntitlementSet<T> buildEntitlementSet(
-      @NotNull Set<Entitlement<T>> availableEntitlements,
-      @NotNull Set<ActivatedEntitlement<T>> validActivations,// TODO(later): rename to active
-      @NotNull Set<ActivatedEntitlement<T>> expiredActivations,
-      @NotNull Set<String> warnings
+    @NotNull Set<Entitlement<T>> availableEntitlements,
+    @NotNull Set<ActiveEntitlement<T>> activeEntitlements,
+    @NotNull Set<ActiveEntitlement<T>> expiredEntitlements,
+    @NotNull Set<String> warnings
   ) {
     assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
-    assert validActivations.stream().noneMatch(id -> expiredActivations.contains(id));
-    assert expiredActivations.stream().noneMatch(id -> validActivations.contains(id));
+    assert activeEntitlements.stream().noneMatch(id -> expiredEntitlements.contains(id));
+    assert expiredEntitlements.stream().noneMatch(id -> activeEntitlements.contains(id));
 
     //
     // Return a set containing:
@@ -94,15 +94,15 @@ public abstract class ProjectRoleRepository {
     //
     var availableAndInactive = availableEntitlements
       .stream()
-      .filter(ent -> validActivations
+      .filter(ent -> activeEntitlements
         .stream()
         .noneMatch(active -> active.entitlementId().equals(ent.id())))
       .collect(Collectors.toCollection(TreeSet::new));
 
-    assert availableAndInactive.stream().noneMatch(e -> validActivations.contains(e.id()));
+    assert availableAndInactive.stream().noneMatch(e -> activeEntitlements.contains(e.id()));
 
     var current = new TreeSet<Entitlement<T>>(availableAndInactive);
-    for (var validActivation : validActivations) {
+    for (var validActivation : activeEntitlements) {
       //
       // Find the corresponding entitlement to determine
       // whether this is JIT or MPA-eligible.
@@ -133,7 +133,7 @@ public abstract class ProjectRoleRepository {
     }
 
     var expired = new TreeSet<Entitlement<T>>();
-    for (var expiredActivation : expiredActivations) {
+    for (var expiredActivation : expiredEntitlements) {
       //
       // Find the corresponding entitlement to determine
       // whether this is currently (*) JIT or MPA-eligible.
@@ -168,11 +168,11 @@ public abstract class ProjectRoleRepository {
     return new EntitlementSet<>(current, expired, warnings);
   }
 
-  record ActivatedEntitlement<TId>(
+  record ActiveEntitlement<TId>(
     @NotNull TId entitlementId,
     @NotNull TimeSpan validity
-  ) { //TODO: rename to ActiveEntitlement, projectRole()
-    public ActivatedEntitlement {
+  ) {
+    public ActiveEntitlement {
       Preconditions.checkNotNull(entitlementId, "entitlementId");
       Preconditions.checkNotNull(validity, "validity");
     }

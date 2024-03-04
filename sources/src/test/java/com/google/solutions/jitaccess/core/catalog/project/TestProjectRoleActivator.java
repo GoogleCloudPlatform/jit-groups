@@ -66,8 +66,8 @@ public class TestProjectRoleActivator {
     var request = activator.createJitRequest(
       requestingUserContext,
       Set.of(
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
-        new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_2))),
+        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
+        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_2))),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
@@ -102,7 +102,7 @@ public class TestProjectRoleActivator {
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
       requestingUserContext,
-      Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
+      Set.of(new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
@@ -140,7 +140,7 @@ public class TestProjectRoleActivator {
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var inputRequest = activator.createMpaRequest(
       requestingUserContext,
-      Set.of(new ProjectRoleBinding(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
+      Set.of(new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
