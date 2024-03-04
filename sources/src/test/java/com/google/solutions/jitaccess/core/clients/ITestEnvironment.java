@@ -82,7 +82,7 @@ public class ITestEnvironment {
   /**
    * Domain name of the Cloud Identity/Workspace account.
    */
-  public static final String CLOUD_IDENTITY_DOAMIN;
+  public static final String CLOUD_IDENTITY_DOMAIN;
 
   public static final PubSubTopic PUBSUB_TOPIC;
 
@@ -106,7 +106,7 @@ public class ITestEnvironment {
 
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
       CLOUD_IDENTITY_ACCOUNT_ID = getMandatory(settings, "test.cloudIdentity.accountId");
-      CLOUD_IDENTITY_DOAMIN = getMandatory(settings, "test.cloudIdentity.domain");
+      CLOUD_IDENTITY_DOMAIN = getMandatory(settings, "test.cloudIdentity.domain");
 
       //
       // User settings.

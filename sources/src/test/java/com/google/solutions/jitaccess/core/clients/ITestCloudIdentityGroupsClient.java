@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.clients;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.GroupEmail;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import jakarta.ws.rs.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +37,7 @@ public class ITestCloudIdentityGroupsClient {
   private static final GroupEmail TEST_GROUP_EMAIL = new GroupEmail(
     String.format(
       "jitaccess-test@%s",
-      ITestEnvironment.CLOUD_IDENTITY_DOAMIN));
+      ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -99,7 +98,7 @@ public class ITestCloudIdentityGroupsClient {
       AccessDeniedException.class,
       () -> client.getGroup(new GroupEmail(String.format(
         "jitaccess-doesnotexist@%s",
-        ITestEnvironment.CLOUD_IDENTITY_DOAMIN))));
+        ITestEnvironment.CLOUD_IDENTITY_DOMAIN))));
   }
 
   @Test
@@ -401,7 +400,7 @@ public class ITestCloudIdentityGroupsClient {
     // Check deletion was effective.
     //
     assertThrows(
-      NotFoundException.class,
+      ResourceNotFoundException.class,
       () -> client.getMembership(id));
   }
 
@@ -467,6 +466,20 @@ public class ITestCloudIdentityGroupsClient {
       NotAuthenticatedException.class,
       () -> client.listMembershipsByUser(
         ITestEnvironment.TEMPORARY_ACCESS_USER));
+  }
+
+  @Test
+  public void whenUserNotFound_ThenListMembershipsByUserThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> client.listMembershipsByUser(
+      new UserEmail("doesnotexist@" + ITestEnvironment.CLOUD_IDENTITY_DOMAIN)));
   }
 
   @Test
