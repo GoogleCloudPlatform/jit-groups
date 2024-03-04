@@ -22,7 +22,9 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * ID of a Google Cloud project.
@@ -82,8 +84,11 @@ public record ProjectId(
   /**
    * Check if the string is a well-formed project ID and can be parsed.
    */
-  public static boolean canParse(@NotNull String s) {
-    if (s.startsWith(ABSOLUTE_PREFIX) && s.indexOf('/', ABSOLUTE_PREFIX.length()) == -1) {
+  public static boolean canParse(@Nullable String s) {
+    if (Strings.isNullOrEmpty(s)) {
+      return false;
+    }
+    else if (s.startsWith(ABSOLUTE_PREFIX) && s.indexOf('/', ABSOLUTE_PREFIX.length()) == -1) {
       return true;
     }
     else if (s.startsWith(RELATIVE_PREFIX) && s.indexOf('/', RELATIVE_PREFIX.length()) == -1) {

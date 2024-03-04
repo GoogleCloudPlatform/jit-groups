@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.TreeSet;
@@ -73,10 +75,10 @@ public class TestProjectId {
     assertThrows(IllegalArgumentException.class, () -> ProjectId.parse(s).id());
   }
 
-  @Test
-  public void whenResourceIdHasNoPrefix_ThenParseThrowsException() {
-    var s = "project-1";
-
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "project-1", "foo/bar", "project-1/"})
+  public void whenResourceIdInvalid_ThenParseThrowsException(String s) {
+    assertFalse(ProjectId.canParse(null));
     assertFalse(ProjectId.canParse(s));
     assertThrows(IllegalArgumentException.class, () -> ProjectId.parse(s).id());
   }
