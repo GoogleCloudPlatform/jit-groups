@@ -49,7 +49,10 @@ class JitConstraints {
   private JitConstraints() {
   }
 
-  private static boolean isConstraint(@Nullable Expr iamCondition, @NotNull Pattern pattern) {
+  private static boolean isConstraint(
+    @Nullable Expr iamCondition,
+    @NotNull Pattern pattern
+  ) {
     if (iamCondition == null) {
       return false;
     }

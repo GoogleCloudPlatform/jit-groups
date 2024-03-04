@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core.auth;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Identifier for a principal such as a user or group.
  */
@@ -28,10 +30,10 @@ public interface PrincipalIdentifier {
   /**
    * Type of principal, for example user, serviceAccount, group.
    */
-  String type();
+  @NotNull String type();
 
   /**
    * Name of principal.
    */
-  String value();
+  @NotNull String value();
 }

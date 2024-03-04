@@ -62,9 +62,9 @@ public class ProjectRoleActivator extends EntitlementActivator<
   }
 
   private void provisionTemporaryBinding(
-    String bindingDescription,
-    ProjectId projectId,
-    UserEmail user,
+    @NotNull String bindingDescription,
+    @NotNull ProjectId projectId,
+    @NotNull UserEmail user,
     @NotNull Set<String> roles,
     @NotNull Instant startTime,
     @NotNull Duration duration

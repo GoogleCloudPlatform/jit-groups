@@ -44,7 +44,7 @@ public class IamCredentialsClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   private @NotNull IAMCredentials createClient() throws IOException
   {
@@ -64,7 +64,7 @@ public class IamCredentialsClient {
 
   public IamCredentialsClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   )  {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -78,7 +78,7 @@ public class IamCredentialsClient {
    */
   public String signJwt(
     @NotNull UserEmail serviceAccount,
-    JsonWebToken.@NotNull Payload payload
+    @NotNull JsonWebToken.Payload payload
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
     Preconditions.checkNotNull(payload, "payload");
@@ -121,6 +121,8 @@ public class IamCredentialsClient {
    * Get JWKS location for service account key set.
    */
   public static String getJwksUrl(@NotNull UserEmail serviceAccount) {
-    return String.format("https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", serviceAccount.email);
+    return String.format(
+      "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", 
+      serviceAccount.email);
   }
 }

@@ -42,11 +42,11 @@ import java.util.Arrays;
 @Singleton
 public class PubSubClient {
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   public PubSubClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions)
+    @NotNull HttpTransport.Options httpOptions)
   {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -71,7 +71,7 @@ public class PubSubClient {
 
   public String publish(
     @NotNull PubSubTopic topic,
-    PubsubMessage message
+    @NotNull PubsubMessage message
   ) throws AccessException, IOException {
     var client = createClient();
 

@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -34,11 +35,11 @@ import java.util.Comparator;
  * period of time has elapsed.
  */
 public record Entitlement<TEntitlementId extends EntitlementId> (
-  TEntitlementId id,
-  String name,
-  ActivationType activationType,
-  Status status,
-  TimeSpan validity
+  @NotNull TEntitlementId id,
+  @NotNull String name,
+  @NotNull ActivationType activationType,
+  @NotNull Status status,
+  @Nullable TimeSpan validity
 ) implements Comparable<Entitlement<TEntitlementId>> {
   public Entitlement {
     Preconditions.checkNotNull(id, "id");
@@ -53,10 +54,11 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   }
 
   public Entitlement(
-    TEntitlementId id,
-    String name,
-    ActivationType activationType,
-    Status status) {
+    @NotNull TEntitlementId id,
+    @NotNull String name,
+    @NotNull ActivationType activationType,
+    @NotNull Status status
+  ) {
     this(id, name, activationType, status, null);
   }
 

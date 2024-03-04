@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 /**
  * ID of a Google Cloud folder.
  */
-public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
+public record FolderId(
+  @NotNull String id
+) implements Comparable<FolderId>, ResourceId {
   public FolderId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
@@ -58,7 +60,7 @@ public record FolderId(String id) implements Comparable<FolderId>, ResourceId {
   }
 
   @Override
-  public String path() {
+  public @NotNull String path() {
     return String.format("folders/%s", this.id);
   }
 }

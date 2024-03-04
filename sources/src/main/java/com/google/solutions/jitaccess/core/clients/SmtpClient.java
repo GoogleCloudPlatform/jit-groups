@@ -61,8 +61,8 @@ public class SmtpClient {
   public void sendMail(
     @NotNull Collection<UserEmail> toRecipients,
     @NotNull Collection<UserEmail> ccRecipients,
-    String subject,
-    Multipart content,
+    @NotNull String subject,
+    @NotNull Multipart content,
     @NotNull EnumSet<Flags> flags
   ) throws MailException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");
@@ -129,8 +129,8 @@ public class SmtpClient {
   public void sendMail(
     @NotNull Collection<UserEmail> toRecipients,
     @NotNull Collection<UserEmail> ccRecipients,
-    String subject,
-    String htmlContent,
+    @NotNull String subject,
+    @NotNull String htmlContent,
     @NotNull EnumSet<Flags> flags
   ) throws MailException {
     Preconditions.checkNotNull(toRecipients, "toRecipients");

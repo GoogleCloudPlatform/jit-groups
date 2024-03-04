@@ -26,7 +26,10 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 import java.time.Instant;
 
-public record TimeSpan(Instant start, Instant end) implements Comparable<TimeSpan> {
+public record TimeSpan(
+  @NotNull Instant start,
+  @NotNull Instant end
+) implements Comparable<TimeSpan> {
   public TimeSpan {
     assert !start.isAfter(end);
   }

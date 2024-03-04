@@ -30,7 +30,7 @@ import java.util.Base64;
 /**
  * Unique ID of an activation.
  */
-public record ActivationId(String id) {
+public record ActivationId(@NotNull String id) {
   public ActivationId {
     Preconditions.checkNotNull(id);
   }

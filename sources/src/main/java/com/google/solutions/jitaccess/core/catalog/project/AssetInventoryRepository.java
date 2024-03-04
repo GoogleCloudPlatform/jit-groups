@@ -118,8 +118,8 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   //---------------------------------------------------------------------------
 
   @Override
-  public SortedSet<ProjectId> findProjectsWithEntitlements(
-    UserEmail user
+  public @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
+    @NotNull UserEmail user
   ) {
     //
     // Not supported.
@@ -328,7 +328,8 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
    * @param scope Scope to use for queries.
    */
   public record Options(
-    String scope) {
+    @NotNull String scope
+  ) {
 
     public Options {
       Preconditions.checkNotNull(scope, "scope");

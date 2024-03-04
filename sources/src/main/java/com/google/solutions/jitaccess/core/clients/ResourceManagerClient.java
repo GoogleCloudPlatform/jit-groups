@@ -57,7 +57,7 @@ public class ResourceManagerClient {
   private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   private @NotNull CloudResourceManager createClient() throws IOException
   {
@@ -83,7 +83,7 @@ public class ResourceManagerClient {
 
   public ResourceManagerClient(
     @NotNull GoogleCredentials credentials,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
@@ -238,8 +238,8 @@ public class ResourceManagerClient {
    * Test whether certain permissions have been granted on the project.
    */
   public @NotNull List<String> testIamPermissions(
-    ProjectId projectId,
-    List<String> permissions
+    @NotNull ProjectId projectId,
+    @NotNull List<String> permissions
   ) throws NotAuthenticatedException, IOException {
     try
     {
@@ -269,17 +269,17 @@ public class ResourceManagerClient {
    * Search for projects.
    */
   public @NotNull SortedSet<ProjectId> searchProjectIds(
-    String query
+    @NotNull String query
   ) throws NotAuthenticatedException, IOException {
     try {
       var client = createClient();
 
       var response = client
-              .projects()
-              .search()
-              .setQuery(query)
-              .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
-              .execute();
+        .projects()
+        .search()
+        .setQuery(query)
+        .setPageSize(SEARCH_PROJECTS_PAGE_SIZE)
+        .execute();
 
       ArrayList<Project> allProjects = new ArrayList<>();
       if(response.getProjects() != null) {

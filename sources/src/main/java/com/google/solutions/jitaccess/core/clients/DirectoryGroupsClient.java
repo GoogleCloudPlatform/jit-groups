@@ -48,12 +48,12 @@ public class DirectoryGroupsClient {
 
   private final @NotNull Options options;
   private final @NotNull GoogleCredentials credentials;
-  private final HttpTransport.@NotNull Options httpOptions;
+  private final @NotNull HttpTransport.Options httpOptions;
 
   public DirectoryGroupsClient(
     @NotNull GoogleCredentials credentials,
     @NotNull Options options,
-    HttpTransport.@NotNull Options httpOptions
+    @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(options, "options");
@@ -124,7 +124,7 @@ public class DirectoryGroupsClient {
    * List users that are a direct member of the given group.
    */
   public @NotNull Collection<Member> listDirectGroupMembers(
-    String groupEmail
+    @NotNull String groupEmail
   ) throws AccessException, IOException {
     try {
       var result = createClient()
@@ -162,7 +162,7 @@ public class DirectoryGroupsClient {
   //---------------------------------------------------------------------------
 
   public record Options(
-    String customerId
+    @NotNull String customerId
   ) {
     public Options {
       Preconditions.checkNotNull(customerId, "customerId");

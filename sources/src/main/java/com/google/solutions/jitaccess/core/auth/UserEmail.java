@@ -78,12 +78,12 @@ public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
   // -------------------------------------------------------------------------
 
   @Override
-  public String type() {
+  public @NotNull String type() {
     return TYPE;
   }
 
   @Override
-  public String value() {
+  public @NotNull String value() {
     return this.email;
   }
 }

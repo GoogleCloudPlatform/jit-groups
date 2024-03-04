@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 /**
  * ID of a Google Cloud organization.
  */
-public record OrganizationId(String id) implements Comparable<OrganizationId>, ResourceId {
+public record OrganizationId(
+  @NotNull String id
+) implements Comparable<OrganizationId>, ResourceId {
   public OrganizationId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
