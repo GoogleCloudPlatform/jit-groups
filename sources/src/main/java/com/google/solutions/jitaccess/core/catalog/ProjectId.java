@@ -30,7 +30,8 @@ import org.jetbrains.annotations.NotNull;
 public record ProjectId(
   @NotNull String id
 ) implements Comparable<ProjectId>, ResourceId {
-  private static final String PROJECT_RESOURCE_NAME_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
+  static final String RELATIVE_PREFIX = "projects/";
+  static final String ABSOLUTE_PREFIX = "//cloudresourcemanager.googleapis.com/projects/";
 
   public ProjectId {
     Preconditions.checkNotNull(id, "id");
@@ -51,23 +52,46 @@ public record ProjectId(
    * Return a full resource name as used by the Asset API.
    */
   public @NotNull String getFullResourceName() {
-    return PROJECT_RESOURCE_NAME_PREFIX + this.id;
+    return ABSOLUTE_PREFIX + this.id;
   }
 
   /**
-   * Parse a full resource name (as used by the Asset API).
+   * Parse a project ID from one of the following formats:
+   *
+   * - projects/123
+   * - //cloudresourcemanager.googleapis.com/projects/123
+   *
+   * The following are not project IDs:
+   *
+   * - projects/123/foo/123
+   * - //cloudresourcemanager.googleapis.com/projects/123/foo/123
+   *
    */
-  public static @NotNull ProjectId fromFullResourceName(@NotNull String fullResourceName) {
-    return new ProjectId(fullResourceName.substring(PROJECT_RESOURCE_NAME_PREFIX.length()));
+  public static @NotNull ProjectId parse(@NotNull String s) {
+    if (s.startsWith(ABSOLUTE_PREFIX) && s.indexOf('/', ABSOLUTE_PREFIX.length()) == -1) {
+      return new ProjectId(s.substring(ABSOLUTE_PREFIX.length()));
+    }
+    else if (s.startsWith(RELATIVE_PREFIX) && s.indexOf('/', RELATIVE_PREFIX.length()) == -1) {
+      return new ProjectId(s.substring(RELATIVE_PREFIX.length()));
+    }
+    else {
+      throw new IllegalArgumentException("Invalid project ID");
+    }
   }
 
   /**
-   * Check if a full resource name identifies a project and can be used for
-   * a ProjectRole.
+   * Check if the string is a well-formed project ID and can be parsed.
    */
-  public static boolean isProjectFullResourceName(@NotNull String fullResourceName) {
-    return fullResourceName.startsWith(PROJECT_RESOURCE_NAME_PREFIX)
-      && fullResourceName.indexOf('/', PROJECT_RESOURCE_NAME_PREFIX.length()) == -1;
+  public static boolean canParse(@NotNull String s) {
+    if (s.startsWith(ABSOLUTE_PREFIX) && s.indexOf('/', ABSOLUTE_PREFIX.length()) == -1) {
+      return true;
+    }
+    else if (s.startsWith(RELATIVE_PREFIX) && s.indexOf('/', RELATIVE_PREFIX.length()) == -1) {
+      return true;
+    }
+    else {
+      return false;
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -90,6 +114,6 @@ public record ProjectId(
 
   @Override
   public String path() {
-    return String.format("projects/%s", this.id);
+    return RELATIVE_PREFIX + this.id;
   }
 }

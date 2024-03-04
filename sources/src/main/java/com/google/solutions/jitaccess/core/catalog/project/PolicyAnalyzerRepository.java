@@ -97,7 +97,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         // Collect all (supported) resources covered by these bindings/ACLs.
         .flatMap(acl -> acl.getResources()
           .stream()
-          .filter(res -> ProjectId.isProjectFullResourceName(res.getFullResourceName()))
+          .filter(res -> ProjectId.canParse(res.getFullResourceName()))
           .map(res -> new ConditionalRoleBinding(
             new RoleBinding(
               res.getFullResourceName(),
@@ -151,7 +151,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
     return roleBindings
       .stream()
-      .map(b -> ProjectId.fromFullResourceName(b.binding.fullResourceName()))
+      .map(b -> ProjectId.parse(b.binding.fullResourceName()))
       .collect(Collectors.toCollection(TreeSet::new));
   }
 
@@ -302,7 +302,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
-    assert ProjectId.isProjectFullResourceName(roleBinding.roleBinding().fullResourceName());
+    assert ProjectId.canParse(roleBinding.roleBinding().fullResourceName());
 
     var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
       this.options.scope,

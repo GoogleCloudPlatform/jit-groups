@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,31 +38,47 @@ public class TestProjectId {
   }
 
   // -------------------------------------------------------------------------
-  // Full resource name conversion.
+  // parse.
   // -------------------------------------------------------------------------
 
   @Test
-  public void getFullResourceNameReturnsFullyQualifiedName() {
-    assertEquals(
-      "//cloudresourcemanager.googleapis.com/projects/project-1",
-      new ProjectId("project-1").getFullResourceName());
+  public void whenProjectIdHasAbsolutePrefix_ThenParseSucceeds() {
+    var s = ProjectId.ABSOLUTE_PREFIX + "project-1";
+
+    assertTrue(ProjectId.canParse(s));
+    assertEquals("project-1", ProjectId.parse(s).id());
   }
 
   @Test
-  public void fromFullResourceNameReturnsProjectId() {
-    assertEquals(
-      new ProjectId("project-1"),
-      ProjectId.fromFullResourceName("//cloudresourcemanager.googleapis.com/projects/project-1"));
+  public void whenProjectIdHasRelativePrefix_ThenParseSucceeds() {
+    var s = ProjectId.RELATIVE_PREFIX + "project-1";
+
+    assertTrue(ProjectId.canParse(s));
+    assertEquals("project-1", ProjectId.parse(s).id());
   }
 
   @Test
-  public void whenResourceIsProject_TheIsSupportedResourceReturnsTrue() {
-    assertTrue(ProjectId.isProjectFullResourceName(SAMPLE_PROJECT_FULLRESOURCENAME));
+  public void whenResourceIdHasAbsolutePrefix_ThenParseThrowsException() {
+    var s = ProjectId.ABSOLUTE_PREFIX + "project-1/resources/1";
+
+    assertFalse(ProjectId.canParse(s));
+    assertThrows(IllegalArgumentException.class, () -> ProjectId.parse(s).id());
   }
 
   @Test
-  public void whenResourceIsNotAProject_TheIsSupportedResourceReturnsTrue() {
-    assertFalse(ProjectId.isProjectFullResourceName(SAMPLE_PROJECT_FULLRESOURCENAME + "/foo/bar"));
+  public void whenResourceIdHasRelativePrefix_ThenParseSucceeds() {
+    var s = ProjectId.RELATIVE_PREFIX + "project-1/resources/1";
+
+    assertFalse(ProjectId.canParse(s));
+    assertThrows(IllegalArgumentException.class, () -> ProjectId.parse(s).id());
+  }
+
+  @Test
+  public void whenResourceIdHasNoPrefix_ThenParseThrowsException() {
+    var s = "project-1";
+
+    assertFalse(ProjectId.canParse(s));
+    assertThrows(IllegalArgumentException.class, () -> ProjectId.parse(s).id());
   }
 
   // -------------------------------------------------------------------------
