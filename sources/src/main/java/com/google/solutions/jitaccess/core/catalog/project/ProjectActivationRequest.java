@@ -43,6 +43,6 @@ class ProjectActivationRequest {
       throw new IllegalArgumentException("Entitlements must be part of the same project");
     }
 
-    return ProjectId.fromFullResourceName(projects.stream().findFirst().get());
+    return ProjectId.parse(projects.stream().findFirst().get());
   }
 }

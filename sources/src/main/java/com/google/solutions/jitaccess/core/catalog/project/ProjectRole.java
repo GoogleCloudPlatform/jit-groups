@@ -38,7 +38,7 @@ public class ProjectRole extends EntitlementId {
   public ProjectRole(@NotNull RoleBinding roleBinding) {
     Preconditions.checkNotNull(roleBinding, "roleBinding");
 
-    assert ProjectId.isProjectFullResourceName(roleBinding.fullResourceName());
+    assert ProjectId.canParse(roleBinding.fullResourceName());
 
     this.roleBinding = roleBinding;
   }
@@ -58,6 +58,6 @@ public class ProjectRole extends EntitlementId {
   }
 
   public @NotNull ProjectId projectId() {
-    return ProjectId.fromFullResourceName(this.roleBinding.fullResourceName());
+    return ProjectId.parse(this.roleBinding.fullResourceName());
   }
 }

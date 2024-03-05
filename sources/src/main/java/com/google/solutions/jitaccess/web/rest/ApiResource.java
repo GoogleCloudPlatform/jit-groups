@@ -688,7 +688,7 @@ public class ApiResource {
       //
       // Notify listeners.
       //
-      var projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName());
+      var projectId = ProjectId.parse(roleBinding.fullResourceName());
       for (var service : this.notificationServices) {
         service.sendNotification(new ActivationApprovedNotification(
           projectId,
@@ -774,7 +774,7 @@ public class ApiResource {
     return entry
       .addLabel("role", roleBinding.role())
       .addLabel("resource", roleBinding.fullResourceName())
-      .addLabel("project_id", ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id());
+      .addLabel("project_id", ProjectId.parse(roleBinding.fullResourceName()).id());
   }
 
   private static LogAdapter.LogEntry addLabels(
@@ -956,7 +956,7 @@ public class ApiResource {
         assert endTime.isAfter(startTime);
 
         this.activationId = activationId.toString();
-        this.projectId = ProjectId.fromFullResourceName(roleBinding.fullResourceName()).id();
+        this.projectId = ProjectId.parse(roleBinding.fullResourceName()).id();
         this.roleBinding = roleBinding;
         this.status = status;
         this.startTime = startTime.getEpochSecond();
