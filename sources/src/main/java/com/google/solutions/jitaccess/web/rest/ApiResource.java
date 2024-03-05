@@ -62,6 +62,14 @@ import java.util.stream.Collectors;
 public class ApiResource {
 
   @Inject
+  MetadataResource metadataResource;
+
+  @Inject
+  ProjectsResource projectsResource;
+
+  // TODO: remove below.
+
+  @Inject
   MpaProjectRoleCatalog mpaCatalog;
 
   @Inject
@@ -137,24 +145,17 @@ public class ApiResource {
   }
 
   /**
-   * Get information about configured policies.
+   * Get information about this instance of JIT Access.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public @NotNull PolicyResponse getPolicy(
-    @Context @NotNull SecurityContext securityContext
+  public @NotNull MetadataResource.ResponseEntity getPolicy( //TODO: rename to metadata
+   @Context @NotNull SecurityContext securityContext
   ) {
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-
-    var options = this.mpaCatalog.options();
-    return new PolicyResponse(
-      justificationPolicy.hint(),
-      iapPrincipal.email(),
-      ApplicationVersion.VERSION_STRING,
-      (int)options.maxActivationDuration().toMinutes(),
-      Math.min(60, (int)options.maxActivationDuration().toMinutes()));
+   return this.metadataResource.get((IapPrincipal)securityContext.getUserPrincipal());
   }
+
 
   /**
    * List projects that the calling user can access.
@@ -162,37 +163,10 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
-  public @NotNull ProjectsResponse listProjects(
+  public @NotNull ProjectsResource.ResponseEntity listProjects(
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
-
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-
-    try {
-      var projects = this.mpaCatalog.listScopes(userContext);
-
-      this.logAdapter
-        .newInfoEntry(
-          LogEvents.API_LIST_PROJECTS,
-          String.format("Found %d available projects", projects.size()))
-        .write();
-
-      return new ProjectsResponse(projects
-        .stream()
-        .map(ProjectId::id)
-        .collect(Collectors.toCollection(TreeSet::new)));
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_LIST_PROJECTS,
-          String.format("Listing available projects failed: %s", Exceptions.getFullMessage(e)))
-        .write();
-
-      throw new AccessDeniedException("Listing available projects failed, see logs for details");
-    }
+    return this.projectsResource.get((IapPrincipal)securityContext.getUserPrincipal());
   }
 
   /**
@@ -742,104 +716,9 @@ public class ApiResource {
   }
 
   // -------------------------------------------------------------------------
-  // Logging helper methods.
-  // -------------------------------------------------------------------------
-
-  private static <T extends  EntitlementId> LogAdapter.@NotNull LogEntry addLabels(
-    LogAdapter.@NotNull LogEntry entry,
-    com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<T> request
-  ) {
-    entry
-      .addLabel("activation_id", request.id().toString())
-      .addLabel("activation_start", request.startTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabel("activation_end", request.endTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabel("justification", request.justification())
-      .addLabels(e -> addLabels(e, request.entitlements()));
-
-    if (request instanceof MpaActivationRequest<T> mpaRequest) {
-      entry.addLabel("reviewers", mpaRequest
-        .reviewers()
-        .stream()
-        .map(u -> u.email)
-        .collect(Collectors.joining(", ")));
-    }
-
-    return entry;
-  }
-
-  private static LogAdapter.LogEntry addLabels(
-    LogAdapter.@NotNull LogEntry entry,
-    @NotNull RoleBinding roleBinding
-  ) {
-    return entry
-      .addLabel("role", roleBinding.role())
-      .addLabel("resource", roleBinding.fullResourceName())
-      .addLabel("project_id", ProjectId.parse(roleBinding.fullResourceName()).id());
-  }
-
-  private static LogAdapter.LogEntry addLabels(
-    LogAdapter.@NotNull LogEntry entry,
-    @NotNull Collection<? extends EntitlementId> entitlements
-  ) {
-    return entry.addLabel(
-      "entitlements",
-      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining(", ")));
-  }
-
-  private static LogAdapter.LogEntry addLabels(
-    LogAdapter.@NotNull LogEntry entry,
-    @NotNull Exception exception
-  ) {
-    return entry.addLabel("error", exception.getClass().getSimpleName());
-  }
-
-  private static LogAdapter.LogEntry addLabels(
-    LogAdapter.@NotNull LogEntry entry,
-    @NotNull ProjectId project
-  ) {
-    return entry.addLabel("project", project.id());
-  }
-
-  // -------------------------------------------------------------------------
   // Request/response classes.
   // -------------------------------------------------------------------------
 
-  public static class PolicyResponse {
-    public final @NotNull String justificationHint;
-    public final @NotNull UserEmail signedInUser;
-    public final String applicationVersion;
-    public final int defaultActivationTimeout; // in minutes.
-    public final int maxActivationTimeout;     // in minutes.
-
-    private PolicyResponse(
-      @NotNull String justificationHint,
-      @NotNull UserEmail signedInUser,
-      String applicationVersion,
-      int maxActivationTimeoutInMinutes,
-      int defaultActivationTimeoutInMinutes
-    ) {
-      Preconditions.checkNotNull(justificationHint, "justificationHint");
-      Preconditions.checkNotNull(signedInUser, "signedInUser");
-      Preconditions.checkArgument(defaultActivationTimeoutInMinutes > 0, "defaultActivationTimeoutInMinutes");
-      Preconditions.checkArgument(maxActivationTimeoutInMinutes > 0, "maxActivationTimeoutInMinutes");
-      Preconditions.checkArgument(maxActivationTimeoutInMinutes >= defaultActivationTimeoutInMinutes, "maxActivationTimeoutInMinutes");
-
-      this.justificationHint = justificationHint;
-      this.signedInUser = signedInUser;
-      this.applicationVersion = applicationVersion;
-      this.defaultActivationTimeout = defaultActivationTimeoutInMinutes;
-      this.maxActivationTimeout = maxActivationTimeoutInMinutes;
-    }
-  }
-
-  public static class ProjectsResponse {
-    public final @NotNull Set<String> projects;
-
-    private ProjectsResponse(@NotNull SortedSet<String> projects) {
-      Preconditions.checkNotNull(projects, "projects");
-      this.projects = projects;
-    }
-  }
 
   public static class ProjectRolesResponse {
     public final Set<String> warnings;
@@ -1103,6 +982,66 @@ public class ApiResource {
     public @NotNull String getType() {
       return "ActivationSelfApproved";
     }
+  }
+
+
+  // -------------------------------------------------------------------------
+  // TODO: remove Logging helper methods.
+  // -------------------------------------------------------------------------
+
+  protected static <T extends EntitlementId> @NotNull LogAdapter.LogEntry addLabels(
+    @NotNull LogAdapter.LogEntry entry,
+    @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<T> request
+  ) {
+    entry
+      .addLabel("activation_id", request.id().toString())
+      .addLabel("activation_start", request.startTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabel("activation_end", request.endTime().atOffset(ZoneOffset.UTC).toString())
+      .addLabel("justification", request.justification())
+      .addLabels(e -> addLabels(e, request.entitlements()));
+
+    if (request instanceof MpaActivationRequest<T> mpaRequest) {
+      entry.addLabel("reviewers", mpaRequest
+        .reviewers()
+        .stream()
+        .map(u -> u.email)
+        .collect(Collectors.joining(", ")));
+    }
+
+    return entry;
+  }
+
+  protected static LogAdapter.LogEntry addLabels(
+    @NotNull LogAdapter.LogEntry entry,
+    @NotNull RoleBinding roleBinding
+  ) {
+    return entry
+      .addLabel("role", roleBinding.role())
+      .addLabel("resource", roleBinding.fullResourceName())
+      .addLabel("project_id", ProjectId.parse(roleBinding.fullResourceName()).id());
+  }
+
+  protected static LogAdapter.LogEntry addLabels(
+    @NotNull LogAdapter.LogEntry entry,
+    @NotNull Collection<? extends EntitlementId> entitlements
+  ) {
+    return entry.addLabel(
+      "entitlements",
+      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining(", ")));
+  }
+
+  protected static LogAdapter.LogEntry addLabels(
+    @NotNull LogAdapter.LogEntry entry,
+    @NotNull Exception exception
+  ) {
+    return entry.addLabel("error", exception.getClass().getSimpleName());
+  }
+
+  protected static LogAdapter.LogEntry addLabels(
+    @NotNull LogAdapter.LogEntry entry,
+    @NotNull ProjectId project
+  ) {
+    return entry.addLabel("project", project.id());
   }
 
   // -------------------------------------------------------------------------

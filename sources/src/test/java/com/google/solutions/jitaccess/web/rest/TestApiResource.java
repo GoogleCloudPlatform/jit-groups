@@ -19,6 +19,8 @@
 // under the License.
 //
 
+//TODO: add test for exception mappers
+
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.auth.oauth2.TokenVerifier;
@@ -63,7 +65,6 @@ public class TestApiResource {
   private static final int DEFAULT_MIN_NUMBER_OF_REVIEWERS = 1;
   private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
   private static final int DEFAULT_MAX_NUMBER_OF_ROLES = 3;
-  private static final String DEFAULT_HINT = "hint";
   private static final Duration DEFAULT_ACTIVATION_DURATION = Duration.ofMinutes(5);
   private static final TokenSigner.TokenWithExpiry SAMPLE_TOKEN_WITH_EXPIRY =
     new TokenSigner.TokenWithExpiry(
@@ -115,48 +116,6 @@ public class TestApiResource {
   // getPolicy.
   // -------------------------------------------------------------------------
 
-  @Test
-  public void getPolicyReturnsJustificationHint() throws Exception {
-    when(this.resource.justificationPolicy.hint())
-      .thenReturn(DEFAULT_HINT);
-    when(this.resource.mpaCatalog.options())
-      .thenReturn(new MpaProjectRoleCatalog.Options(
-        null,
-        DEFAULT_ACTIVATION_DURATION,
-        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
-
-    var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/api/policy", ApiResource.PolicyResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body);
-    assertEquals(DEFAULT_HINT, body.justificationHint);
-  }
-
-  @Test
-  public void getPolicyReturnsSignedInUser() throws Exception {
-    when(this.resource.justificationPolicy.hint())
-      .thenReturn(DEFAULT_HINT);
-    when(this.resource.mpaCatalog.options())
-      .thenReturn(new MpaProjectRoleCatalog.Options(
-        null,
-        DEFAULT_ACTIVATION_DURATION,
-        DEFAULT_MIN_NUMBER_OF_REVIEWERS,
-        DEFAULT_MAX_NUMBER_OF_REVIEWERS));
-
-    var response = new RestDispatcher<>(resource, SAMPLE_USER)
-      .get("/api/policy", ApiResource.PolicyResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body);
-    assertEquals(SAMPLE_USER.email, body.signedInUser.email);
-  }
-
   // -------------------------------------------------------------------------
   // listProjects.
   // -------------------------------------------------------------------------
@@ -195,44 +154,6 @@ public class TestApiResource {
 
     var body = response.getBody();
     assertNotNull(body.getMessage());
-  }
-
-  @Test
-  public void whenProjectDiscoveryReturnsNoProjects_ThenListProjectsReturnsEmptyList() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
-      .thenReturn(new TreeSet<>());
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.projects);
-    assertEquals(0, body.projects.size());
-  }
-
-  @Test
-  public void whenProjectDiscoveryReturnsProjects_ThenListProjectsReturnsList() throws Exception {
-    when(this.resource.mpaCatalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
-      .thenReturn(new TreeSet<>(Set.of(
-        new ProjectId("project-1"),
-        new ProjectId("project-2"),
-        new ProjectId("project-3"))));
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects", ApiResource.ProjectsResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.projects);
-    assertIterableEquals(
-      List.of(
-        "project-1",
-        "project-2",
-        "project-3"),
-      body.projects);
   }
 
   // -------------------------------------------------------------------------
