@@ -5,7 +5,7 @@ import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.jetbrains.annotations.NotNull;
 
-public class MockIapPrincipal implements IapPrincipal {
+public class MockIapPrincipal implements IapPrincipal { // TODO: Merge into mocks
   private final @NotNull UserEmail userEmail;
 
   public MockIapPrincipal(@NotNull UserEmail userEmail) {

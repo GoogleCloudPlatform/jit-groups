@@ -22,10 +22,10 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
-import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -35,12 +35,7 @@ import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 /**
  * REST API controller.
@@ -100,7 +95,7 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public @NotNull MetadataAction.ResponseEntity getPolicy( //TODO: rename to metadata
+  public @NotNull MetadataAction.ResponseEntity getMetadata(
     @Context @NotNull SecurityContext securityContext
   ) {
    return this.metadataAction.execute(
