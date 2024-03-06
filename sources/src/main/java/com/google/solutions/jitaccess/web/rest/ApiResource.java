@@ -29,9 +29,7 @@ import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
-import com.google.solutions.jitaccess.web.TokenObfuscator;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
@@ -44,13 +42,10 @@ import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -72,6 +67,18 @@ public class ApiResource {
 
   @Inject
   ListPeersAction listPeersAction;
+
+  @Inject
+  RequestAndSelfApproveAction requestAndSelfApproveAction;
+
+  @Inject
+  RequestActivationAction requestActivationAction;
+
+  @Inject
+  IntrospectActivationRequestAction introspectActivationRequestAction;
+
+  @Inject
+  ApproveActivationRequestAction approveActivationRequestAction;
 
 
   // TODO: remove below.
@@ -100,35 +107,6 @@ public class ApiResource {
   @Inject
   Options options;
 
-  private @NotNull URL createActivationRequestUrl(
-    @NotNull UriInfo uriInfo,
-    @NotNull ProjectId projectId,
-    String activationToken
-  ) throws MalformedURLException {
-    Preconditions.checkNotNull(uriInfo);
-    Preconditions.checkNotNull(activationToken);
-
-    //
-    // NB. Embedding the token verbatim can trigger overzealous phishing filters
-    // to assume that we're embedding an access token (or some other form of
-    // credential in the URL). But activation tokens aren't credentials, they
-    // don't grant access to anything and the embedded information isn't
-    // confidential.
-    //
-    // Obfuscate the token to avoid such false-flagging.
-    //
-    // NB. We include the project ID to force the approver into
-    // the right scope. This isn't strictly necessary, but it
-    // improves user experience.
-    //
-    return this.runtimeEnvironment
-      .createAbsoluteUriBuilder(uriInfo)
-      .path("/")
-      .queryParam("activation", TokenObfuscator.encode(activationToken))
-      .queryParam("projectId", projectId.id())
-      .build()
-      .toURL();
-  }
 
   // -------------------------------------------------------------------------
   // REST resources.
@@ -215,115 +193,17 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/self-activate")
-  public @NotNull ActivationStatusResponse selfApproveActivation(
+  public @NotNull AbstractActivationAction.ResponseEntity requestAndSelfApprove(
     @PathParam("projectId") @Nullable String projectIdString,
-    @NotNull SelfActivationRequest request,
+    @NotNull RequestAndSelfApproveAction.RequestEntity request,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
-
-    Preconditions.checkArgument(
-      projectIdString != null && !projectIdString.trim().isEmpty(),
-      "You must provide a projectId");
-    Preconditions.checkArgument(
-      request != null && request.roles != null && request.roles.size() > 0,
-      "Specify one or more roles to activate");
-    Preconditions.checkArgument(
-      request != null && request.roles != null && request.roles.size() <= this.options.maxNumberOfJitRolesPerSelfApproval,
-      String.format(
-        "The number of roles exceeds the allowed maximum of %d",
-        this.options.maxNumberOfJitRolesPerSelfApproval));
-    Preconditions.checkArgument(
-      request.justification != null && request.justification.trim().length() > 0,
-      "Provide a justification");
-    Preconditions.checkArgument(
-      request.justification != null && request.justification.length() < 100,
-      "The justification is too long");
-
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-
-    var projectId = new ProjectId(projectIdString);
-
-    //
-    // Create a JIT activation request.
-    //
-    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    var activationRequest = this.projectRoleActivator.createJitRequest(
-      userContext,
-      request.roles
-        .stream()
-        .map(r -> new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(new RoleBinding(projectId.getFullResourceName(), r)))
-        .collect(Collectors.toSet()),
-      request.justification,
-      Instant.now().truncatedTo(ChronoUnit.SECONDS),
-      requestedRoleBindingDuration);
-
-    try {
-      //
-      // Activate the request.
-      //
-      var activation = this.projectRoleActivator.activate(
-        userContext,
-        activationRequest);
-
-      assert activation != null;
-
-      //
-      // Notify listeners, if any.
-      //
-      for (var service : this.notificationServices) {
-        service.sendNotification(new ActivationSelfApprovedNotification(projectId, activation));
-      }
-
-      //
-      // Leave an audit log trail.
-      //
-      this.logAdapter
-        .newInfoEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format(
-            "User %s activated roles %s on '%s' for themselves for %d minutes",
-            iapPrincipal.email(),
-            activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
-              .collect(Collectors.joining(", ")),
-            projectId.getFullResourceName(),
-            requestedRoleBindingDuration.toMinutes()))
-        .addLabels(le -> addLabels(le, activationRequest))
-        .write();
-
-      return new ActivationStatusResponse(
-        iapPrincipal.email(),
-        activation.request(),
-        Entitlement.Status.ACTIVE);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format(
-            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
-            iapPrincipal.email(),
-            activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
-              .collect(Collectors.joining(", ")),
-            projectId.getFullResourceName(),
-            requestedRoleBindingDuration.toMinutes(),
-            Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, activationRequest))
-        .addLabels(le -> addLabels(le, e))
-        .write();
-
-      if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
-        throw new AccessDeniedException("Activating role failed", e);
-      }
-    }
+    return this.requestAndSelfApproveAction.execute(
+    (IapPrincipal)securityContext.getUserPrincipal(),
+      projectIdString,
+      request);
   }
+
 
   /**
    * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
@@ -332,174 +212,17 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles/request")
-  public @NotNull ActivationStatusResponse requestActivation(
+  public @NotNull AbstractActivationAction.ResponseEntity requestActivation(
     @PathParam("projectId") @Nullable String projectIdString,
-    @NotNull ActivationRequest request,
+    @NotNull RequestActivationAction.RequestEntity request,
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
   ) throws AccessDeniedException {
-    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
-    assert this.tokenSigner != null;
-    assert this.notificationServices != null;
-
-    var minReviewers = this.mpaCatalog.options().minNumberOfReviewersPerActivationRequest();
-    var maxReviewers = this.mpaCatalog.options().maxNumberOfReviewersPerActivationRequest();
-
-    Preconditions.checkArgument(
-      projectIdString != null && !projectIdString.trim().isEmpty(),
-      "You must provide a projectId");
-    Preconditions.checkArgument(request != null);
-    Preconditions.checkArgument(
-      request.role != null && !request.role.isEmpty(),
-      "Specify a role to activate");
-    Preconditions.checkArgument(
-      request.peers != null && request.peers.size() >= minReviewers,
-      String.format("You must select at least %d reviewers", minReviewers));
-    Preconditions.checkArgument(
-      request.peers.size() <= maxReviewers,
-      String.format("The number of reviewers exceeds the allowed maximum of %d", maxReviewers));
-    Preconditions.checkArgument(
-      request.justification != null && request.justification.trim().length() > 0,
-      "Provide a justification");
-    Preconditions.checkArgument(
-      request.justification != null && request.justification.length() < 100,
-      "The justification is too long");
-
-    //
-    // For MPA to work, we need at least one functional notification service.
-    //
-    Preconditions.checkState(
-      this.notificationServices
-        .stream()
-        .anyMatch(s -> s.canSendNotifications()) ||
-        this.runtimeEnvironment.isDebugModeEnabled(),
-      "The multi-party approval feature is not available because the server-side configuration is incomplete");
-
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-
-    var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, request.role);
-
-    //
-    // Create an MPA activation request.
-    //
-    var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
-    MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activationRequest;
-
-    try {
-      activationRequest = this.projectRoleActivator.createMpaRequest(
-        userContext,
-        Set.of(new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding)),
-        request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
-        request.justification,
-        Instant.now().truncatedTo(ChronoUnit.SECONDS),
-        requestedRoleBindingDuration);
-    }
-    catch (AccessException | IOException e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format(
-            "Received invalid activation request from user '%s' for role '%s' on '%s': %s",
-            iapPrincipal.email(),
-            roleBinding,
-            projectId.getFullResourceName(),
-            Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, e))
-        .write();
-
-      if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
-        throw new AccessDeniedException("Invalid request", e);
-      }
-    }
-
-    try
-    {
-      //
-      // Create an activation token and pass it to reviewers.
-      //
-      // An activation token is a signed activation request that is passed to reviewers.
-      // It contains all information necessary to review (and approve) the activation
-      // request.
-      //
-      // We must ensure that the information that reviewers see (and base their approval
-      // on) is authentic. Therefore, activation tokens are signed, using the service account
-      // as signing authority.
-      //
-      // Although activation tokens are JWTs, and might look like credentials, they aren't
-      // credentials: They don't grant access to any information, and possession alone is
-      // insufficient to approve an activation request.
-      //
-
-      var activationToken = this.tokenSigner.sign(
-        this.projectRoleActivator.createTokenConverter(),
-        activationRequest);
-
-      //
-      // Notify reviewers, listeners.
-      //
-      for (var service : this.notificationServices) {
-        var activationRequestUrl = createActivationRequestUrl(
-          uriInfo,
-          projectId,
-          activationToken.token());
-        service.sendNotification(new RequestActivationNotification(
-          projectId,
-          activationRequest,
-          activationToken.expiryTime(),
-          activationRequestUrl));
-      }
-
-      //
-      // Leave an audit log trail.
-      //
-      this.logAdapter
-        .newInfoEntry(
-          LogEvents.API_REQUEST_ROLE,
-          String.format(
-            "User %s requested role '%s' on '%s' for %d minutes",
-            iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.fullResourceName(),
-            requestedRoleBindingDuration.toMinutes()))
-        .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, activationRequest))
-        .write();
-
-      return new ActivationStatusResponse(
-        iapPrincipal.email(),
-        activationRequest,
-        Entitlement.Status.ACTIVATION_PENDING);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_REQUEST_ROLE,
-          String.format(
-            "User %s failed to request role '%s' on '%s' for %d minutes: %s",
-            iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.fullResourceName(),
-            requestedRoleBindingDuration.toMinutes(),
-            Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, roleBinding))
-        .addLabels(le -> addLabels(le, e))
-        .addLabel("justification", request.justification)
-        .write();
-
-      if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
-        throw new AccessDeniedException("Requesting access failed", e);
-      }
-    }
+    return requestActivationAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal(),
+      projectIdString,
+      request,
+      uriInfo);
   }
 
   /**
@@ -508,44 +231,13 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public @NotNull ActivationStatusResponse getActivationRequest(
+  public @NotNull AbstractActivationAction.ResponseEntity getActivationRequest(
     @QueryParam("activation") @Nullable String obfuscatedActivationToken,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    assert this.tokenSigner != null;
-
-    Preconditions.checkArgument(
-      obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
-      "An activation token is required");
-
-    var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-
-    try {
-      var activationRequest = this.tokenSigner.verify(
-        this.projectRoleActivator.createTokenConverter(),
-        activationToken);
-
-      if (!activationRequest.requestingUser().equals(iapPrincipal.email()) &&
-          !activationRequest.reviewers().contains(iapPrincipal.email())) {
-        throw new AccessDeniedException("The calling user is not authorized to access this approval request");
-      }
-
-      return new ActivationStatusResponse(
-        iapPrincipal.email(),
-        activationRequest,
-        Entitlement.Status.ACTIVATION_PENDING);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_GET_REQUEST,
-          String.format("Accessing the activation request failed: %s", Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, e))
-        .write();
-
-      throw new AccessDeniedException("Accessing the activation request failed");
-    }
+    return introspectActivationRequestAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal(),
+      obfuscatedActivationToken);
   }
 
   /**
@@ -555,190 +247,15 @@ public class ApiResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("activation-request")
-  public @NotNull ActivationStatusResponse approveActivationRequest(
+  public @NotNull AbstractActivationAction.ResponseEntity approveActivationRequest(
     @QueryParam("activation") @Nullable String obfuscatedActivationToken,
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
   ) throws AccessException {
-    assert this.tokenSigner != null;
-    assert this.mpaCatalog != null;
-    assert this.notificationServices != null;
-
-    Preconditions.checkArgument(
-      obfuscatedActivationToken != null && !obfuscatedActivationToken.trim().isEmpty(),
-      "An activation token is required");
-
-    var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-
-    MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activationRequest;
-    try {
-      activationRequest = this.tokenSigner.verify(
-        this.projectRoleActivator.createTokenConverter(),
-        activationToken);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format("Accessing the activation request failed: %s", Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, e))
-        .write();
-
-      throw new AccessDeniedException("Accessing the activation request failed");
-    }
-
-    assert activationRequest.entitlements().size() == 1;
-    var roleBinding = activationRequest
-      .entitlements()
-      .stream()
-      .findFirst()
-      .get()
-      .roleBinding();
-
-    try {
-      var activation = this.projectRoleActivator.approve(userContext, activationRequest);
-
-      assert activation != null;
-
-      //
-      // Notify listeners.
-      //
-      var projectId = ProjectId.parse(roleBinding.fullResourceName());
-      for (var service : this.notificationServices) {
-        service.sendNotification(new ActivationApprovedNotification(
-          projectId,
-          activation,
-          iapPrincipal.email(),
-          createActivationRequestUrl(uriInfo, projectId, activationToken)));
-      }
-
-      //
-      // Leave an audit trail.
-      //
-      this.logAdapter
-        .newInfoEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format(
-            "User %s approved role '%s' on '%s' for %s",
-            iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.fullResourceName(),
-            activationRequest.requestingUser()))
-        .addLabels(le -> addLabels(le, activationRequest))
-        .write();
-
-      return new ActivationStatusResponse(
-        iapPrincipal.email(),
-        activationRequest,
-        Entitlement.Status.ACTIVE);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_ACTIVATE_ROLE,
-          String.format(
-            "User %s failed to activate role '%s' on '%s' for %s: %s",
-            iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.fullResourceName(),
-            activationRequest.requestingUser(),
-            Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, activationRequest))
-        .addLabels(le -> addLabels(le, e))
-        .write();
-
-      if (e instanceof AccessDeniedException) {
-        throw (AccessDeniedException)e.fillInStackTrace();
-      }
-      else {
-        throw new AccessDeniedException("Approving the activation request failed", e);
-      }
-    }
-  }
-
-  // -------------------------------------------------------------------------
-  // Request/response classes.
-  // -------------------------------------------------------------------------
-
-  public static class SelfActivationRequest {
-    public List<String> roles;
-    public String justification;
-    public int activationTimeout; // in minutes.
-  }
-
-  public static class ActivationRequest {
-    public @Nullable String role;
-    public String justification;
-    public List<String> peers;
-    public int activationTimeout; // in minutes.
-  }
-
-  public static class ActivationStatusResponse {
-    public final UserEmail beneficiary;
-    public final Collection<UserEmail> reviewers;
-    public final boolean isBeneficiary;
-    public final boolean isReviewer;
-    public final String justification;
-    public final @NotNull List<ActivationStatus> items;
-
-    private ActivationStatusResponse(
-      UserEmail caller,
-      com.google.solutions.jitaccess.core.catalog.@NotNull ActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> request,
-      Entitlement.Status status
-    ) {
-      Preconditions.checkNotNull(request);
-
-      this.beneficiary = request.requestingUser();
-      this.isBeneficiary = request.requestingUser().equals(caller);
-      this.justification = request.justification();
-      this.items = request
-        .entitlements()
-        .stream()
-        .map(ent -> new ActivationStatusResponse.ActivationStatus(
-          request.id(),
-          ent.roleBinding(),
-          status,
-          request.startTime(),
-          request.endTime()))
-        .collect(Collectors.toList());
-
-      if (request instanceof MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> mpaRequest) {
-        this.reviewers = mpaRequest.reviewers();
-        this.isReviewer = mpaRequest.reviewers().contains(caller);
-      }
-      else {
-        this.reviewers = Set.of();
-        this.isReviewer = false;
-      }
-    }
-
-    public static class ActivationStatus {
-      public final String activationId;
-      public final String projectId;
-      public final @NotNull RoleBinding roleBinding;
-      public final Entitlement.Status status;
-      public final long startTime;
-      public final long endTime;
-
-      private ActivationStatus(
-        @NotNull ActivationId activationId,
-        @NotNull RoleBinding roleBinding,
-        Entitlement.Status status,
-        @NotNull Instant startTime,
-        @NotNull Instant endTime
-      ) {
-        assert endTime.isAfter(startTime);
-
-        this.activationId = activationId.toString();
-        this.projectId = ProjectId.parse(roleBinding.fullResourceName()).id();
-        this.roleBinding = roleBinding;
-        this.status = status;
-        this.startTime = startTime.getEpochSecond();
-        this.endTime = endTime.getEpochSecond();
-      }
-    }
+    return approveActivationRequestAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal(),
+      obfuscatedActivationToken,
+      uriInfo);
   }
 
   // -------------------------------------------------------------------------
@@ -879,66 +396,6 @@ public class ApiResource {
     public @NotNull String getType() {
       return "ActivationSelfApproved";
     }
-  }
-
-
-  // -------------------------------------------------------------------------
-  // TODO: remove Logging helper methods.
-  // -------------------------------------------------------------------------
-
-  protected static <T extends EntitlementId> @NotNull LogAdapter.LogEntry addLabels(
-    @NotNull LogAdapter.LogEntry entry,
-    @NotNull com.google.solutions.jitaccess.core.catalog.ActivationRequest<T> request
-  ) {
-    entry
-      .addLabel("activation_id", request.id().toString())
-      .addLabel("activation_start", request.startTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabel("activation_end", request.endTime().atOffset(ZoneOffset.UTC).toString())
-      .addLabel("justification", request.justification())
-      .addLabels(e -> addLabels(e, request.entitlements()));
-
-    if (request instanceof MpaActivationRequest<T> mpaRequest) {
-      entry.addLabel("reviewers", mpaRequest
-        .reviewers()
-        .stream()
-        .map(u -> u.email)
-        .collect(Collectors.joining(", ")));
-    }
-
-    return entry;
-  }
-
-  protected static LogAdapter.LogEntry addLabels(
-    @NotNull LogAdapter.LogEntry entry,
-    @NotNull RoleBinding roleBinding
-  ) {
-    return entry
-      .addLabel("role", roleBinding.role())
-      .addLabel("resource", roleBinding.fullResourceName())
-      .addLabel("project_id", ProjectId.parse(roleBinding.fullResourceName()).id());
-  }
-
-  protected static LogAdapter.LogEntry addLabels(
-    @NotNull LogAdapter.LogEntry entry,
-    @NotNull Collection<? extends EntitlementId> entitlements
-  ) {
-    return entry.addLabel(
-      "entitlements",
-      entitlements.stream().map(s -> s.toString()).collect(Collectors.joining(", ")));
-  }
-
-  protected static LogAdapter.LogEntry addLabels(
-    @NotNull LogAdapter.LogEntry entry,
-    @NotNull Exception exception
-  ) {
-    return entry.addLabel("error", exception.getClass().getSimpleName());
-  }
-
-  protected static LogAdapter.LogEntry addLabels(
-    @NotNull LogAdapter.LogEntry entry,
-    @NotNull ProjectId project
-  ) {
-    return entry.addLabel("project", project.id());
   }
 
   // -------------------------------------------------------------------------

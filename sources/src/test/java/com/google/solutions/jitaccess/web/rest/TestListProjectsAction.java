@@ -21,9 +21,7 @@ public class TestListProjectsAction {
 
   @Test
   public void whenCatalogReturnsNoProjects_ThenResponseContainsEmptyList() throws Exception {
-    var catalog = Mockito.mock(MpaProjectRoleCatalog.class);
-    when (catalog.createContext(any()))
-      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+    var catalog = Mocks.createMpaProjectRoleCatalogMock();
     when(catalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>());
 
@@ -35,9 +33,7 @@ public class TestListProjectsAction {
 
   @Test
   public void whenCatalogReturnsProjects_ThenResponseContainsProjects() throws Exception {
-    var catalog = Mockito.mock(MpaProjectRoleCatalog.class);
-    when (catalog.createContext(any()))
-      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+    var catalog = Mocks.createMpaProjectRoleCatalogMock();
     when(catalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>(Set.of(
         new ProjectId("project-1"),

@@ -21,9 +21,7 @@ public class TestListPeersAction {
 
   @Test
   public void whenCatalogThrowsAccessDeniedException_ThenActionThrowsException() throws Exception {
-    var catalog = Mockito.mock(MpaProjectRoleCatalog.class);
-    when (catalog.createContext(any()))
-      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+    var catalog = Mocks.createMpaProjectRoleCatalogMock();
     when(catalog.listReviewers(argThat(ctx -> ctx.user().equals(SAMPLE_USER)), any()))
       .thenThrow(new AccessDeniedException("mock"));
 
@@ -36,9 +34,7 @@ public class TestListPeersAction {
 
   @Test
   public void whenCatalogReturnsNoPeers_ThenActionReturnsEmptyList() throws Exception {
-    var catalog = Mockito.mock(MpaProjectRoleCatalog.class);
-    when (catalog.createContext(any()))
-      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+    var catalog = Mocks.createMpaProjectRoleCatalogMock();
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
@@ -54,9 +50,7 @@ public class TestListPeersAction {
 
   @Test
   public void whenCatalogReturnsProjects_ThenActionReturnsList() throws Exception {
-    var catalog = Mockito.mock(MpaProjectRoleCatalog.class);
-    when (catalog.createContext(any()))
-      .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
+    var catalog = Mocks.createMpaProjectRoleCatalogMock();
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
