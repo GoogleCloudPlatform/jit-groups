@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.Exceptions;
 import com.google.solutions.jitaccess.core.RoleBinding;
+import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
@@ -99,7 +100,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       // Notify listeners, if any.
       //
       for (var service : this.notificationServices) {
-        service.sendNotification(new ApiResource.ActivationSelfApprovedNotification(projectId, activation));
+        service.sendNotification(new ActivationSelfApprovedNotification(projectId, activation));
       }
 
       //
@@ -157,4 +158,44 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
     public int activationTimeout; // in minutes.
   }
 
+  /**
+   * Notification indicating that a self-approval was performed.
+   */
+  public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
+    protected ActivationSelfApprovedNotification(
+      ProjectId projectId,
+      @NotNull Activation<ProjectRole> activation)
+    {
+      super(
+        List.of(activation.request().requestingUser()),
+        List.of(),
+        String.format(
+          "Activated roles %s on '%s'",
+          activation.request().entitlements().stream()
+            .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+            .collect(Collectors.joining(", ")),
+          projectId));
+
+      this.properties.put("BENEFICIARY", activation.request().requestingUser());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", activation.request()
+        .entitlements()
+        .stream()
+        .map(ent -> ent.roleBinding().role())
+        .collect(Collectors.joining(", ")));
+      this.properties.put("START_TIME", activation.request().startTime());
+      this.properties.put("END_TIME", activation.request().endTime());
+      this.properties.put("JUSTIFICATION", activation.request().justification());
+    }
+
+    @Override
+    protected boolean isReply() {
+      return true;
+    }
+
+    @Override
+    public @NotNull String getType() {
+      return "ActivationSelfApproved";
+    }
+  }
 }

@@ -23,13 +23,6 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.*;
-import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
-import com.google.solutions.jitaccess.core.notifications.NotificationService;
-import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
@@ -80,34 +73,6 @@ public class ApiResource {
   @Inject
   ApproveActivationRequestAction approveActivationRequestAction;
 
-
-  // TODO: remove below.
-
-  @Inject
-  MpaProjectRoleCatalog mpaCatalog;
-
-  @Inject
-  ProjectRoleActivator projectRoleActivator;
-
-  @Inject
-  Instance<NotificationService> notificationServices;
-
-  @Inject
-  RuntimeEnvironment runtimeEnvironment;
-
-  @Inject
-  JustificationPolicy justificationPolicy;
-
-  @Inject
-  TokenSigner tokenSigner;
-
-  @Inject
-  LogAdapter logAdapter;
-
-  @Inject
-  Options options;
-
-
   // -------------------------------------------------------------------------
   // REST resources.
   // -------------------------------------------------------------------------
@@ -138,9 +103,9 @@ public class ApiResource {
   public @NotNull MetadataAction.ResponseEntity getPolicy( //TODO: rename to metadata
     @Context @NotNull SecurityContext securityContext
   ) {
-   return this.metadataAction.execute((IapPrincipal)securityContext.getUserPrincipal());
+   return this.metadataAction.execute(
+     (IapPrincipal)securityContext.getUserPrincipal());
   }
-
 
   /**
    * List projects that the calling user can access.
@@ -151,7 +116,8 @@ public class ApiResource {
   public @NotNull ListProjectsAction.ResponseEntity listProjects(
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listProjectsAction.execute((IapPrincipal)securityContext.getUserPrincipal());
+    return this.listProjectsAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal());
   }
 
   /**
@@ -199,14 +165,14 @@ public class ApiResource {
     @Context @NotNull SecurityContext securityContext
   ) throws AccessDeniedException {
     return this.requestAndSelfApproveAction.execute(
-    (IapPrincipal)securityContext.getUserPrincipal(),
+      (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString,
       request);
   }
 
-
   /**
-   * Request approval to activate one or more project roles. Only allowed for MPA-eligible roles.
+   * Request approval to activate one or more project roles.
+   * Only allowed for MPA-eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
@@ -256,146 +222,6 @@ public class ApiResource {
       (IapPrincipal)securityContext.getUserPrincipal(),
       obfuscatedActivationToken,
       uriInfo);
-  }
-
-  // -------------------------------------------------------------------------
-  // Notifications.
-  // -------------------------------------------------------------------------
-
-  /**
-   * Notification indicating that a multi-party approval request has been made
-   * and is pending approval.
-   */
-  public static class RequestActivationNotification extends NotificationService.Notification
-  {
-    protected RequestActivationNotification(
-      @NotNull ProjectId projectId,
-      @NotNull MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> request,
-      Instant requestExpiryTime,
-      @NotNull URL activationRequestUrl) throws MalformedURLException
-    {
-      super(
-        request.reviewers(),
-        List.of(request.requestingUser()),
-        String.format(
-          "%s requests access to project %s",
-          request.requestingUser(),
-          projectId.id()));
-
-      assert request.entitlements().size() == 1;
-
-      this.properties.put("BENEFICIARY", request.requestingUser());
-      this.properties.put("REVIEWERS", request.reviewers());
-      this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", request
-        .entitlements()
-        .stream()
-        .findFirst()
-        .get()
-        .roleBinding()
-        .role());
-      this.properties.put("START_TIME", request.startTime());
-      this.properties.put("END_TIME", request.endTime());
-      this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
-      this.properties.put("JUSTIFICATION", request.justification());
-      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
-      this.properties.put("ACTION_URL", activationRequestUrl.toString());
-    }
-
-    @Override
-    public @NotNull String getType() {
-      return "RequestActivation";
-    }
-  }
-
-  /**
-   * Notification indicating that a multi-party approval was granted.
-   */
-  public static class ActivationApprovedNotification extends NotificationService.Notification {
-    protected ActivationApprovedNotification(
-      ProjectId projectId,
-      @NotNull Activation<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activation,
-      @NotNull UserEmail approver,
-      URL activationRequestUrl) throws MalformedURLException
-    {
-      super(
-        List.of(activation.request().requestingUser()),
-        ((MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request()).reviewers(), // Move reviewers to CC.
-        String.format(
-          "%s requests access to project %s",
-          activation.request().requestingUser(),
-          projectId));
-
-      var request = (MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request();
-      assert request.entitlements().size() == 1;
-
-      this.properties.put("APPROVER", approver.email);
-      this.properties.put("BENEFICIARY", request.requestingUser());
-      this.properties.put("REVIEWERS", request.reviewers());
-      this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", activation.request()
-        .entitlements()
-        .stream()
-        .findFirst()
-        .get()
-        .roleBinding()
-        .role());
-      this.properties.put("START_TIME", request.startTime());
-      this.properties.put("END_TIME", request.endTime());
-      this.properties.put("JUSTIFICATION", request.justification());
-      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
-    }
-
-    @Override
-    protected boolean isReply() {
-      return true;
-    }
-
-    @Override
-    public @NotNull String getType() {
-      return "ActivationApproved";
-    }
-  }
-
-  /**
-   * Notification indicating that a self-approval was performed.
-   */
-  public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
-    protected ActivationSelfApprovedNotification(
-      ProjectId projectId,
-      @NotNull Activation<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> activation)
-    {
-      super(
-        List.of(activation.request().requestingUser()),
-        List.of(),
-        String.format(
-          "Activated roles %s on '%s'",
-          activation.request().entitlements().stream()
-            .map(ent -> String.format("'%s'", ent.roleBinding().role()))
-            .collect(Collectors.joining(", ")),
-          projectId));
-
-      this.properties.put("BENEFICIARY", activation.request().requestingUser());
-      this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", activation.request()
-        .entitlements()
-        .stream()
-        .map(ent -> ent.roleBinding().role())
-        .collect(Collectors.joining(", ")));
-      this.properties.put("START_TIME", activation.request().startTime());
-      this.properties.put("END_TIME", activation.request().endTime());
-      this.properties.put("JUSTIFICATION", activation.request().justification());
-    }
-
-    @Override
-    protected boolean isReply() {
-      return true;
-    }
-
-    @Override
-    public @NotNull String getType() {
-      return "ActivationSelfApproved";
-    }
   }
 
   // -------------------------------------------------------------------------

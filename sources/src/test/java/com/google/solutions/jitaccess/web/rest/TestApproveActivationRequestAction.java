@@ -147,7 +147,7 @@ public class TestApproveActivationRequestAction {
       Mocks.createUriInfoMock());
 
     verify(notificationService, times(1))
-      .sendNotification(argThat(n -> n instanceof ApiResource.ActivationApprovedNotification));
+      .sendNotification(argThat(n -> n instanceof ApproveActivationRequestAction.ActivationApprovedNotification));
   }
 
   @Test

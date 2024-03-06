@@ -24,6 +24,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -159,7 +161,7 @@ public class RequestActivationAction extends AbstractActivationAction {
           uriInfo,
           projectId,
           activationToken.token());
-        service.sendNotification(new ApiResource.RequestActivationNotification(
+        service.sendNotification(new RequestActivationNotification(
           projectId,
           activationRequest,
           activationToken.expiryTime(),
@@ -221,4 +223,49 @@ public class RequestActivationAction extends AbstractActivationAction {
     public int activationTimeout; // in minutes.
   }
 
+  /**
+   * Notification indicating that a multi-party approval request has been made
+   * and is pending approval.
+   */
+  public static class RequestActivationNotification extends NotificationService.Notification
+  {
+    protected RequestActivationNotification(
+      @NotNull ProjectId projectId,
+      @NotNull MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole> request,
+      Instant requestExpiryTime,
+      @NotNull URL activationRequestUrl) throws MalformedURLException
+    {
+      super(
+        request.reviewers(),
+        List.of(request.requestingUser()),
+        String.format(
+          "%s requests access to project %s",
+          request.requestingUser(),
+          projectId.id()));
+
+      assert request.entitlements().size() == 1;
+
+      this.properties.put("BENEFICIARY", request.requestingUser());
+      this.properties.put("REVIEWERS", request.reviewers());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", request
+        .entitlements()
+        .stream()
+        .findFirst()
+        .get()
+        .roleBinding()
+        .role());
+      this.properties.put("START_TIME", request.startTime());
+      this.properties.put("END_TIME", request.endTime());
+      this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
+      this.properties.put("JUSTIFICATION", request.justification());
+      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
+      this.properties.put("ACTION_URL", activationRequestUrl.toString());
+    }
+
+    @Override
+    public @NotNull String getType() {
+      return "RequestActivation";
+    }
+  }
 }

@@ -4,10 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.Exceptions;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.catalog.TokenSigner;
+import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -24,6 +22,10 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 
 public class ApproveActivationRequestAction extends AbstractActivationAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
@@ -89,7 +91,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       //
       var projectId = ProjectId.parse(roleBinding.fullResourceName());
       for (var service : this.notificationServices) {
-        service.sendNotification(new ApiResource.ActivationApprovedNotification(
+        service.sendNotification(new ActivationApprovedNotification(
           projectId,
           activation,
           iapPrincipal.email(),
@@ -137,6 +139,55 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       else {
         throw new AccessDeniedException("Approving the activation request failed", e);
       }
+    }
+  }
+
+  /**
+   * Notification indicating that a multi-party approval was granted.
+   */
+  public static class ActivationApprovedNotification extends NotificationService.Notification {
+    protected ActivationApprovedNotification(
+      ProjectId projectId,
+      @NotNull Activation<ProjectRole> activation,
+      @NotNull UserEmail approver,
+      URL activationRequestUrl) throws MalformedURLException
+    {
+      super(
+        List.of(activation.request().requestingUser()),
+        ((MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request()).reviewers(), // Move reviewers to CC.
+        String.format(
+          "%s requests access to project %s",
+          activation.request().requestingUser(),
+          projectId));
+
+      var request = (MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request();
+      assert request.entitlements().size() == 1;
+
+      this.properties.put("APPROVER", approver.email);
+      this.properties.put("BENEFICIARY", request.requestingUser());
+      this.properties.put("REVIEWERS", request.reviewers());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", activation.request()
+        .entitlements()
+        .stream()
+        .findFirst()
+        .get()
+        .roleBinding()
+        .role());
+      this.properties.put("START_TIME", request.startTime());
+      this.properties.put("END_TIME", request.endTime());
+      this.properties.put("JUSTIFICATION", request.justification());
+      this.properties.put("BASE_URL", new URL(activationRequestUrl, "/").toString());
+    }
+
+    @Override
+    protected boolean isReply() {
+      return true;
+    }
+
+    @Override
+    public @NotNull String getType() {
+      return "ActivationApproved";
     }
   }
 }
