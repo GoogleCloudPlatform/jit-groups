@@ -124,69 +124,6 @@ public class TestApiResource {
   // listPeers.
   // -------------------------------------------------------------------------
 
-  @Test
-  public void whenPeerDiscoveryThrowsAccessDeniedException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listReviewers(argThat(ctx -> ctx.user().equals(SAMPLE_USER)), any()))
-      .thenThrow(new AccessDeniedException("mock"));
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
-
-    assertEquals(403, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.getMessage());
-  }
-
-  @Test
-  public void whenPeerDiscoveryThrowsIOException_ThenListPeersReturnsError() throws Exception {
-    when(this.resource.mpaCatalog.listReviewers(argThat(ctx -> ctx.user().equals(SAMPLE_USER)), any()))
-      .thenThrow(new IOException("mock"));
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/peers?role=roles/browser", ExceptionMappers.ErrorEntity.class);
-
-    assertEquals(403, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.getMessage());
-  }
-
-  @Test
-  public void whenPeerDiscoveryReturnsNoPeers_ThenListPeersReturnsEmptyList() throws Exception {
-    when(this.resource.mpaCatalog
-      .listReviewers(
-        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
-      .thenReturn(new TreeSet());
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.peers);
-    assertEquals(0, body.peers.size());
-  }
-
-  @Test
-  public void whenPeerDiscoveryReturnsProjects_ThenListPeersReturnsList() throws Exception {
-    when(this.resource.mpaCatalog
-      .listReviewers(
-        argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
-      .thenReturn(new TreeSet(Set.of(new UserEmail("peer-1@example.com"), new UserEmail("peer-2@example.com"))));
-
-    var response = new RestDispatcher<>(this.resource, SAMPLE_USER)
-      .get("/api/projects/project-1/peers?role=roles/browser", ApiResource.ProjectRolePeersResponse.class);
-
-    assertEquals(200, response.getStatus());
-
-    var body = response.getBody();
-    assertNotNull(body.peers);
-    assertEquals(2, body.peers.size());
-  }
 
   // -------------------------------------------------------------------------
   // listRoles.

@@ -37,8 +37,6 @@ public class ListRolesAction extends AbstractAction {
     @NotNull IapPrincipal iapPrincipal,
     @Nullable String projectIdString
   ) throws AccessException {
-    Preconditions.checkNotNull(this.catalog, "catalog");
-
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");

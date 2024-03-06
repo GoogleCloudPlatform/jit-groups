@@ -70,6 +70,10 @@ public class ApiResource {
   @Inject
   ListRolesAction listRolesAction;
 
+  @Inject
+  ListPeersAction listPeersAction;
+
+
   // TODO: remove below.
 
   @Inject
@@ -182,8 +186,6 @@ public class ApiResource {
     @PathParam("projectId") @Nullable String projectIdString,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
-
     return this.listRolesAction.execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString);
@@ -195,47 +197,15 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/peers")
-  public @NotNull ProjectRolePeersResponse listPeers(
+  public @NotNull ListPeersAction.ResponseEntity listPeers(
     @PathParam("projectId") @Nullable String projectIdString,
     @QueryParam("role") @Nullable String role,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
-
-    Preconditions.checkArgument(
-      projectIdString != null && !projectIdString.trim().isEmpty(),
-      "A projectId is required");
-    Preconditions.checkArgument(
-      role != null && !role.trim().isEmpty(),
-      "A role is required");
-
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-
-    var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, role);
-
-    try {
-      var peers = this.mpaCatalog.listReviewers(
-        userContext,
-        new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding));
-
-      assert !peers.contains(iapPrincipal.email());
-
-      return new ProjectRolePeersResponse(peers);
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_LIST_PEERS,
-          String.format("Listing peers failed: %s", Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, e))
-        .addLabels(le -> addLabels(le, roleBinding))
-        .addLabels(le -> addLabels(le, projectId))
-        .write();
-
-      throw new AccessDeniedException("Listing peers failed, see logs for details");
-    }
+    return this.listPeersAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal(),
+      projectIdString,
+      role);
   }
 
   /**
@@ -691,17 +661,6 @@ public class ApiResource {
   // -------------------------------------------------------------------------
   // Request/response classes.
   // -------------------------------------------------------------------------
-
-
-
-  public static class ProjectRolePeersResponse {
-    public final @NotNull Set<UserEmail> peers;
-
-    private ProjectRolePeersResponse(@NotNull Set<UserEmail> peers) {
-      Preconditions.checkNotNull(peers);
-      this.peers = peers;
-    }
-  }
 
   public static class SelfActivationRequest {
     public List<String> roles;

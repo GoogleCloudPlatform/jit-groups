@@ -35,8 +35,6 @@ public class ListProjectsAction extends AbstractAction { //TODO: rename to scope
   public @NotNull ListProjectsAction.ResponseEntity execute(
     @NotNull IapPrincipal iapPrincipal
   ) throws AccessException {
-    Preconditions.checkNotNull(this.mpaCatalog, "catalog");
-
     var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
 
     try {
