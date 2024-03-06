@@ -340,7 +340,8 @@ public class TestRequestActivationAction {
     var activator = new ProjectRoleActivator(
       catalog,
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class));
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1));
 
     var tokenSigner =  Mockito.mock(TokenSigner.class);
     when(tokenSigner
@@ -386,7 +387,8 @@ public class TestRequestActivationAction {
     var activator = new ProjectRoleActivator(
       catalog,
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class));
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1));
 
     var tokenSigner =  Mockito.mock(TokenSigner.class);
     when(tokenSigner

@@ -35,10 +35,7 @@ import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
-import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
-import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
-import com.google.solutions.jitaccess.core.catalog.project.PolicyAnalyzerRepository;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleRepository;
+import com.google.solutions.jitaccess.core.catalog.project.*;
 import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -361,8 +358,8 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public ApiResource.@NotNull Options getApiOptions() {
-    return new ApiResource.Options(
+  public @NotNull ProjectRoleActivator.Options getProjectRoleActivatorOptions() {
+    return new ProjectRoleActivator.Options(
       this.configuration.maxNumberOfEntitlementsPerSelfApproval.getValue());
   }
 

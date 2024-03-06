@@ -42,6 +42,11 @@ public abstract class EntitlementActivator<
   private final @NotNull JustificationPolicy policy;
   private final @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog;
 
+  /**
+   * @return maximum number of roles that can be requested at once.
+   */
+  public abstract int maximumNumberOfEntitlementsPerJitRequest();
+
   protected EntitlementActivator(
     @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog,
     @NotNull JustificationPolicy policy
@@ -63,6 +68,11 @@ public abstract class EntitlementActivator<
     @NotNull Instant startTime,
     @NotNull Duration duration
   ) {
+    Preconditions.checkArgument(
+      entitlements.size() <= this.maximumNumberOfEntitlementsPerJitRequest(),
+      String.format(
+        "The number of roles exceeds the allowed maximum of %d",
+        this.maximumNumberOfEntitlementsPerJitRequest()));
     Preconditions.checkArgument(
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
       "Start time must not be in the past");

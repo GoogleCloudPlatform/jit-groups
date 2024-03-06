@@ -77,13 +77,6 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
     Preconditions.checkArgument(
       request != null && request.roles != null && request.roles.size() > 0,
       "Specify one or more roles to activate");
-
-    // TODO: Move check to EntitlementActivator
-    //    Preconditions.checkArgument(
-//      request != null && request.roles != null && request.roles.size() <= this.options.maxNumberOfJitRolesPerSelfApproval,
-//      String.format(
-//        "The number of roles exceeds the allowed maximum of %d",
-//        this.options.maxNumberOfJitRolesPerSelfApproval));
     Preconditions.checkArgument(
       request.justification != null && request.justification.trim().length() > 0,
       "Provide a justification");

@@ -218,16 +218,4 @@ public class ApiResource {
       obfuscatedActivationToken,
       uriInfo);
   }
-
-  // -------------------------------------------------------------------------
-  // Options.
-  // -------------------------------------------------------------------------
-
-  public record Options(int maxNumberOfJitRolesPerSelfApproval) {
-    public Options {
-      Preconditions.checkArgument(
-        maxNumberOfJitRolesPerSelfApproval > 0,
-        "The maximum number of JIT roles per self-approval must exceed 1");
-    }
-  }
 }

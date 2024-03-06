@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
 
 public class TestRequestAndSelfApproveAction {
   private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
-  private static final int DEFAULT_MAX_NUMBER_OF_ROLES = 3;
 
   @Test
   public void whenProjectIsNull_ThenActionThrowsException() throws Exception {
@@ -89,33 +88,6 @@ public class TestRequestAndSelfApproveAction {
   }
 
   @Test
-  public void whenRolesExceedsLimit_ThenActionThrowsException() throws Exception {
-    var action = new RequestAndSelfApproveAction(
-      new LogAdapter(),
-      Mockito.mock(RuntimeEnvironment.class),
-      Mockito.mock(ProjectRoleActivator.class),
-      Mockito.mock(Instance.class),
-      Mocks.createMpaProjectRoleCatalogMock());
-
-    var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.justification = "test";
-    request.roles = Stream
-      .generate(() -> "roles/role-x")
-      .limit(DEFAULT_MAX_NUMBER_OF_ROLES + 1)
-      .collect(Collectors.toList());
-
-    var exception = assertThrows(
-      IllegalArgumentException.class,
-      () -> action.execute(
-        Mocks.createIapPrincipalMock(SAMPLE_USER),
-        "project-1",
-        request));
-    assertEquals("x", exception.getMessage());
-
-    assertTrue(exception.getMessage().contains("projectId"));
-  }
-
-  @Test
   public void whenJustificationMissing_ThenActionThrowsException() throws Exception {
     var action = new RequestAndSelfApproveAction(
       new LogAdapter(),
@@ -140,6 +112,7 @@ public class TestRequestAndSelfApproveAction {
   @Test
   public void whenActivatorThrowsException_ThenActionThrowsException() throws Exception {
     var activator = Mockito.mock(ProjectRoleActivator.class);
+    when(activator.maximumNumberOfEntitlementsPerJitRequest()).thenReturn(1);
     when(activator
       .createJitRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
@@ -174,6 +147,7 @@ public class TestRequestAndSelfApproveAction {
     var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
 
     var activator = Mockito.mock(ProjectRoleActivator.class);
+    when(activator.maximumNumberOfEntitlementsPerJitRequest()).thenReturn(1);
     when(activator
       .createJitRequest(any(), any(), any(), any(), any()))
       .thenCallRealMethod();
@@ -195,7 +169,10 @@ public class TestRequestAndSelfApproveAction {
     request.justification = "justification";
     request.activationTimeout = 5;
 
-    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", request);
+    var response = action.execute(
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
+      "project-1",
+      request);
 
     assertEquals(SAMPLE_USER.email, response.beneficiary.email);
     assertEquals(0, response.reviewers.size());

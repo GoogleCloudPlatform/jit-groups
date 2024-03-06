@@ -126,7 +126,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     try {
       activationRequest = this.activator.createMpaRequest(
         userContext,
-        Set.of(new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding)),
+        Set.of(new ProjectRole(roleBinding)),
         request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),

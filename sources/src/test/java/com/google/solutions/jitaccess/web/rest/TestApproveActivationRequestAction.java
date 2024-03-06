@@ -82,7 +82,8 @@ public class TestApproveActivationRequestAction {
     var request = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class))
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
@@ -126,7 +127,8 @@ public class TestApproveActivationRequestAction {
     var request = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class))
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
@@ -174,7 +176,8 @@ public class TestApproveActivationRequestAction {
     var request = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class))
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
         Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
