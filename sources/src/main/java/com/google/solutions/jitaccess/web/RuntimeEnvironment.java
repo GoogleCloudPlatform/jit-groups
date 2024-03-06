@@ -40,7 +40,6 @@ import com.google.solutions.jitaccess.core.clients.*;
 import com.google.solutions.jitaccess.core.notifications.MailNotificationService;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.core.notifications.PubSubNotificationService;
-import com.google.solutions.jitaccess.web.rest.ApiResource;
 import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;

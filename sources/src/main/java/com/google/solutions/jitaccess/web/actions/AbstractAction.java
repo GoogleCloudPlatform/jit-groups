@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.rest;
+package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
@@ -34,7 +34,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Base class for REST actions.
+ * Base class for API actions.
  */
 public abstract class AbstractAction {
   protected final @NotNull LogAdapter logAdapter;

@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.rest;
+package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.RoleBinding;
@@ -43,12 +43,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Base class for approval-related API actions.
+ */
 public abstract class AbstractActivationAction extends AbstractAction {
   protected final @NotNull Instance<NotificationService> notificationServices;
   protected final @NotNull RuntimeEnvironment runtimeEnvironment;
   protected final @NotNull ProjectRoleActivator activator;
 
-  public AbstractActivationAction(
+  protected AbstractActivationAction(
     @NotNull LogAdapter logAdapter,
     @NotNull RuntimeEnvironment runtimeEnvironment,
     @NotNull ProjectRoleActivator activator,

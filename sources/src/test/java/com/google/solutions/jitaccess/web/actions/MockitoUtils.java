@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.rest;
+package com.google.solutions.jitaccess.web.actions;
 
 import jakarta.enterprise.inject.Instance;
 import org.mockito.Mockito;

@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.rest;
+package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
