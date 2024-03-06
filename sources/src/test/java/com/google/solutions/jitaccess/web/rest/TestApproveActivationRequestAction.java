@@ -72,7 +72,7 @@ public class TestApproveActivationRequestAction {
     assertThrows(
       AccessDeniedException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         TokenObfuscator.encode(SAMPLE_TOKEN),
         Mockito.mock(UriInfo.class)));
   }
@@ -116,7 +116,7 @@ public class TestApproveActivationRequestAction {
     assertThrows(
       AccessDeniedException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         TokenObfuscator.encode(SAMPLE_TOKEN),
         Mockito.mock(UriInfo.class)));
   }
@@ -161,7 +161,7 @@ public class TestApproveActivationRequestAction {
       tokenSigner);
 
     var response = action.execute(
-      new MockIapPrincipal(SAMPLE_USER),
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
       TokenObfuscator.encode(SAMPLE_TOKEN),
       Mocks.createUriInfoMock());
 
@@ -206,7 +206,7 @@ public class TestApproveActivationRequestAction {
       tokenSigner);
 
     var response = action.execute(
-      new MockIapPrincipal(SAMPLE_USER_2),
+      Mocks.createIapPrincipalMock(SAMPLE_USER_2),
       TokenObfuscator.encode(SAMPLE_TOKEN),
       Mocks.createUriInfoMock());
 

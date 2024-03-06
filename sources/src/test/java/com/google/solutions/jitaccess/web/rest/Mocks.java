@@ -21,12 +21,16 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
 import org.jboss.resteasy.specimpl.ResteasyUriInfo;
+import org.jetbrains.annotations.NotNull;
 import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -56,5 +60,29 @@ abstract class Mocks {
     when(environment.createAbsoluteUriBuilder(any(UriInfo.class)))
       .thenReturn(UriBuilder.fromUri("https://example.com/"));
     return environment;
+  }
+
+  static IapPrincipal createIapPrincipalMock(@NotNull UserEmail userEmail) {
+    return new IapPrincipal() {
+      @Override
+      public UserEmail email() {
+        return userEmail;
+      }
+
+      @Override
+      public String subjectId() {
+        return "mock";
+      }
+
+      @Override
+      public DeviceInfo device() {
+        return DeviceInfo.UNKNOWN;
+      }
+
+      @Override
+      public String getName() {
+        return "mock@example.com";
+      }
+    };
   }
 }

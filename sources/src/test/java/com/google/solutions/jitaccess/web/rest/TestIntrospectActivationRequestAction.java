@@ -69,7 +69,7 @@ public class TestIntrospectActivationRequestAction {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> action.execute(new MockIapPrincipal(
+      () -> action.execute(Mocks.createIapPrincipalMock(
         SAMPLE_USER),
         TokenObfuscator.encode(SAMPLE_TOKEN)));
   }
@@ -106,7 +106,7 @@ public class TestIntrospectActivationRequestAction {
     assertThrows(
       AccessDeniedException.class,
       () -> action.execute(
-        new MockIapPrincipal(new UserEmail("other-party@example.com")),
+        Mocks.createIapPrincipalMock(new UserEmail("other-party@example.com")),
         TokenObfuscator.encode(SAMPLE_TOKEN)));
   }
 
@@ -139,7 +139,7 @@ public class TestIntrospectActivationRequestAction {
       tokenSigner);
 
     var response =  action.execute(
-      new MockIapPrincipal(SAMPLE_USER),
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
       TokenObfuscator.encode(SAMPLE_TOKEN));
 
     assertEquals(request.requestingUser().email, response.beneficiary.email);

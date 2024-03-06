@@ -83,7 +83,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "",
         request,
         Mocks.createUriInfoMock()));
@@ -114,7 +114,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -145,7 +145,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -176,7 +176,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -209,7 +209,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -240,7 +240,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -272,7 +272,7 @@ public class TestRequestActivationAction {
     assertThrows(
       IllegalStateException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -316,7 +316,7 @@ public class TestRequestActivationAction {
     assertThrows(
       AccessDeniedException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
@@ -359,7 +359,7 @@ public class TestRequestActivationAction {
     request.activationTimeout = 5;
 
     var response = action.execute(
-      new MockIapPrincipal(SAMPLE_USER),
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
       "project-1",
       request,
       Mocks.createUriInfoMock());
@@ -405,7 +405,7 @@ public class TestRequestActivationAction {
     request.activationTimeout = 5;
 
     var response = action.execute(
-      new MockIapPrincipal(SAMPLE_USER),
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
       "project-1",
       request,
       Mocks.createUriInfoMock());

@@ -61,7 +61,7 @@ public class TestMetadataAction {
       catalog,
       justificationPolicy);
 
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER));
     assertEquals(DEFAULT_HINT, response.justificationHint);
     assertEquals(SAMPLE_USER.email, response.signedInUser.email);
   }

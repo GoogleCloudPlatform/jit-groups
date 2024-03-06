@@ -56,7 +56,7 @@ public class TestListRolesAction {
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> action.execute(new MockIapPrincipal(SAMPLE_USER), " "));
+      () -> action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), " "));
   }
 
   @Test
@@ -74,7 +74,7 @@ public class TestListRolesAction {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1"));
+      () -> action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1"));
   }
 
   @Test
@@ -92,7 +92,7 @@ public class TestListRolesAction {
         Set.of("warning")));
 
     var action = new ListRolesAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1");
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1");
 
     assertNotNull(response.roles);
     assertEquals(0, response.roles.size());
@@ -128,7 +128,7 @@ public class TestListRolesAction {
         Set.of()));
 
     var action = new ListRolesAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1");
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1");
 
     assertNotNull(response.roles);
     assertEquals(2, response.roles.size());

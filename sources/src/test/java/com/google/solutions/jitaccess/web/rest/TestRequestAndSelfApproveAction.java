@@ -61,7 +61,7 @@ public class TestRequestAndSelfApproveAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         " ",
         new RequestAndSelfApproveAction.RequestEntity()));
   }
@@ -80,7 +80,7 @@ public class TestRequestAndSelfApproveAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
   }
@@ -104,7 +104,7 @@ public class TestRequestAndSelfApproveAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
   }
@@ -125,7 +125,7 @@ public class TestRequestAndSelfApproveAction {
     assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
   }
@@ -157,7 +157,7 @@ public class TestRequestAndSelfApproveAction {
     assertThrows(
       AccessDeniedException.class,
       () -> action.execute(
-        new MockIapPrincipal(SAMPLE_USER),
+        Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
   }
@@ -188,7 +188,7 @@ public class TestRequestAndSelfApproveAction {
     request.justification = "justification";
     request.activationTimeout = 5;
 
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1", request);
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", request);
 
     assertEquals(SAMPLE_USER.email, response.beneficiary.email);
     assertEquals(0, response.reviewers.size());

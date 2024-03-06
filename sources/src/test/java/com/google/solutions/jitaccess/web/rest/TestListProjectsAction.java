@@ -44,7 +44,7 @@ public class TestListProjectsAction {
       .thenReturn(new TreeSet<>());
 
     var action = new ListProjectsAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER));
 
     assertEquals(0, response.projects.size());
   }
@@ -59,7 +59,7 @@ public class TestListProjectsAction {
         new ProjectId("project-3"))));
 
     var action = new ListProjectsAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER));
 
     assertNotNull(response.projects);
     assertIterableEquals(

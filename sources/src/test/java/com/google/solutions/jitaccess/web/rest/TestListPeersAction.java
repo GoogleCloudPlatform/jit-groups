@@ -47,7 +47,7 @@ public class TestListPeersAction {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1", "roles/browser"));
+      () -> action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser"));
   }
 
   @Test
@@ -60,7 +60,7 @@ public class TestListPeersAction {
       .thenReturn(new TreeSet());
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1", "roles/browser");
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser");
 
     assertNotNull(response.peers);
     assertEquals(0, response.peers.size());
@@ -76,7 +76,7 @@ public class TestListPeersAction {
       .thenReturn(new TreeSet(Set.of(new UserEmail("peer-1@example.com"), new UserEmail("peer-2@example.com"))));
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
-    var response = action.execute(new MockIapPrincipal(SAMPLE_USER), "project-1", "roles/browser");
+    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser");
 
     assertNotNull(response.peers);
     assertEquals(2, response.peers.size());
