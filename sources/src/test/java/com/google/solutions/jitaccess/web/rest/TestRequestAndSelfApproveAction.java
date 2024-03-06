@@ -58,12 +58,13 @@ public class TestRequestAndSelfApproveAction {
       Mockito.mock(Instance.class),
       Mocks.createMpaProjectRoleCatalogMock());
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         " ",
         new RequestAndSelfApproveAction.RequestEntity()));
+    assertTrue(exception.getMessage().contains("projectId"));
   }
 
   @Test
@@ -77,12 +78,14 @@ public class TestRequestAndSelfApproveAction {
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
     request.roles = List.of();
-    assertThrows(
+
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
+    assertTrue(exception.getMessage().contains("one or more roles"));
   }
 
   @Test
@@ -101,12 +104,15 @@ public class TestRequestAndSelfApproveAction {
       .limit(DEFAULT_MAX_NUMBER_OF_ROLES + 1)
       .collect(Collectors.toList());
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
+    assertEquals("x", exception.getMessage());
+
+    assertTrue(exception.getMessage().contains("projectId"));
   }
 
   @Test
@@ -122,12 +128,13 @@ public class TestRequestAndSelfApproveAction {
     request.roles = List.of("roles/browser");
     request.justification = "";
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request));
+    assertTrue(exception.getMessage().contains("justification"));
   }
 
   @Test

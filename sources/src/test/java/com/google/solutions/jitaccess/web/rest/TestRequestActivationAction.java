@@ -79,14 +79,14 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("projectId"));
   }
 
   @Test
@@ -111,13 +111,14 @@ public class TestRequestActivationAction {
     request.peers = List.of(SAMPLE_USER.email);
     request.role = null;
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("role"));
   }
 
   @Test
@@ -142,13 +143,14 @@ public class TestRequestActivationAction {
     request.role = "roles/mock";
     request.peers = List.of();
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("at least 1"));
   }
 
   @Test
@@ -173,13 +175,14 @@ public class TestRequestActivationAction {
     request.role = "roles/mock";
     request.peers = List.of("peer@example.com");
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("at least 2"));
   }
 
   @Test
@@ -206,13 +209,14 @@ public class TestRequestActivationAction {
       .limit(DEFAULT_MAX_NUMBER_OF_REVIEWERS + 1)
       .collect(Collectors.toList());
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("exceeds"));
   }
 
   @Test
@@ -237,13 +241,14 @@ public class TestRequestActivationAction {
     request.peers = List.of(SAMPLE_USER.email);
     request.role = "roles/mock";
 
-    assertThrows(
+    var exception = assertThrows(
       IllegalArgumentException.class,
       () -> action.execute(
         Mocks.createIapPrincipalMock(SAMPLE_USER),
         "project-1",
         request,
         Mocks.createUriInfoMock()));
+    assertTrue(exception.getMessage().contains("justification"));
   }
 
   @Test

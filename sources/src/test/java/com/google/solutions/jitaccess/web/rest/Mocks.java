@@ -37,7 +37,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 abstract class Mocks {
-
   static NotificationService createNotificationServiceMock(boolean canSend) {
     var service = Mockito.mock(NotificationService.class);
     when(service.canSendNotifications()).thenReturn(canSend);
