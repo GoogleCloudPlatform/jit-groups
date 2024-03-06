@@ -7,13 +7,18 @@ import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
+import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
-public class MetadataResource extends AbstractResource {
+/**
+ * Get information about this instance of JIT Access.
+ */
+@Dependent
+public class MetadataAction extends AbstractAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
   private final @NotNull JustificationPolicy justificationPolicy;
 
-  public MetadataResource(
+  public MetadataAction(
     @NotNull LogAdapter logAdapter,
     @NotNull MpaProjectRoleCatalog catalog,
     @NotNull JustificationPolicy justificationPolicy
@@ -23,10 +28,7 @@ public class MetadataResource extends AbstractResource {
     this.justificationPolicy = justificationPolicy;
   }
 
-  /**
-   * Get information about this instance of JIT Access.
-   */
-  public @NotNull MetadataResource.ResponseEntity get(
+  public @NotNull MetadataAction.ResponseEntity execute(
     @NotNull IapPrincipal iapPrincipal
   ) {
     var options = this.catalog.options();

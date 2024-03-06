@@ -62,10 +62,10 @@ import java.util.stream.Collectors;
 public class ApiResource {
 
   @Inject
-  MetadataResource metadataResource;
+  MetadataAction metadataAction;
 
   @Inject
-  ProjectsResource projectsResource;
+  ListProjectsAction listProjectsAction;
 
   // TODO: remove below.
 
@@ -150,10 +150,10 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("policy")
-  public @NotNull MetadataResource.ResponseEntity getPolicy( //TODO: rename to metadata
-   @Context @NotNull SecurityContext securityContext
+  public @NotNull MetadataAction.ResponseEntity getPolicy( //TODO: rename to metadata
+    @Context @NotNull SecurityContext securityContext
   ) {
-   return this.metadataResource.get((IapPrincipal)securityContext.getUserPrincipal());
+   return this.metadataAction.execute((IapPrincipal)securityContext.getUserPrincipal());
   }
 
 
@@ -163,10 +163,10 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
-  public @NotNull ProjectsResource.ResponseEntity listProjects(
+  public @NotNull ListProjectsAction.ResponseEntity listProjects(
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.projectsResource.get((IapPrincipal)securityContext.getUserPrincipal());
+    return this.listProjectsAction.execute((IapPrincipal)securityContext.getUserPrincipal());
   }
 
   /**

@@ -13,13 +13,12 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Base class for resource classes. A resource class models a REST
- * resource, but is independent of JAX-RS.
+ * Base class for REST actions.
  */
-public abstract class AbstractResource {
+public abstract class AbstractAction {
   protected final @NotNull LogAdapter logAdapter;
 
-  protected AbstractResource(@NotNull LogAdapter logAdapter) {
+  protected AbstractAction(@NotNull LogAdapter logAdapter) {
     this.logAdapter = logAdapter;
   }
 

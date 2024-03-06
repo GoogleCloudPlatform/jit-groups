@@ -4,8 +4,6 @@ import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.iap.DeviceInfo;
-import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -14,7 +12,7 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class TestMetadataResource {
+public class TestMetadataAction {
   private static final String DEFAULT_HINT = "hint";
   private static final int DEFAULT_MIN_NUMBER_OF_REVIEWERS = 1;
   private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
@@ -37,12 +35,12 @@ public class TestMetadataResource {
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var resource = new MetadataResource(
+    var resource = new MetadataAction(
       new LogAdapter(),
       catalog,
       justificationPolicy);
 
-    var response = resource.get(new MockIapPrincipal(SAMPLE_USER));
+    var response = resource.execute(new MockIapPrincipal(SAMPLE_USER));
     assertEquals(DEFAULT_HINT, response.justificationHint);
     assertEquals(SAMPLE_USER.email, response.signedInUser.email);
   }

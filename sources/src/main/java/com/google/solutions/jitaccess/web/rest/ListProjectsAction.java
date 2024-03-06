@@ -9,6 +9,7 @@ import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
+import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -16,10 +17,14 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-public class ProjectsResource extends AbstractResource { //TODO: rename to scopes
+/**
+ * List projects that the calling user can access.
+ */
+@Dependent
+public class ListProjectsAction extends AbstractAction { //TODO: rename to scopes
   private final @NotNull MpaProjectRoleCatalog mpaCatalog;
 
-  public ProjectsResource(
+  public ListProjectsAction(
     @NotNull LogAdapter logAdapter,
     @NotNull MpaProjectRoleCatalog mpaCatalog
   ) {
@@ -27,10 +32,7 @@ public class ProjectsResource extends AbstractResource { //TODO: rename to scope
     this.mpaCatalog = mpaCatalog;
   }
 
-  /**
-   * List projects that the calling user can access.
-   */
-  public @NotNull ProjectsResource.ResponseEntity get(
+  public @NotNull ListProjectsAction.ResponseEntity execute(
     @NotNull IapPrincipal iapPrincipal
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "catalog");

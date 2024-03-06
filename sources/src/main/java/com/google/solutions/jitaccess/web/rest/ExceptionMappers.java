@@ -21,8 +21,9 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
+import com.google.solutions.jitaccess.core.ResourceNotFoundException;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAcceptableException;
 import jakarta.ws.rs.NotAllowedException;
@@ -38,7 +39,8 @@ import java.io.IOException;
 public class ExceptionMappers {
   public static final Class<?>[] ALL = new Class<?>[] {
     NotAuthenticatedExceptionMapper.class,
-    AccessDeniedExceptionExceptionMapper.class,
+    ResourceNotFoundExceptionMapper.class,
+    AccessExceptionMapper.class,
     ForbiddenExceptionMapper.class,
     IllegalArgumentExceptionMapper.class,
     IllegalStateExceptionMapper.class,
@@ -62,12 +64,23 @@ public class ExceptionMappers {
   }
 
   @Provider
-  public static class AccessDeniedExceptionExceptionMapper
-    implements ExceptionMapper<AccessDeniedException> {
+  public static class AccessExceptionMapper
+    implements ExceptionMapper<AccessException> {
     @Override
-    public Response toResponse(@NotNull AccessDeniedException exception) {
+    public Response toResponse(@NotNull AccessException exception) {
       return Response
         .status(Response.Status.FORBIDDEN)
+        .entity(new ErrorEntity(exception)).build();
+    }
+  }
+
+  @Provider
+  public static class ResourceNotFoundExceptionMapper
+    implements ExceptionMapper<ResourceNotFoundException> {
+    @Override
+    public Response toResponse(@NotNull ResourceNotFoundException exception) {
+      return Response
+        .status(Response.Status.NOT_FOUND)
         .entity(new ErrorEntity(exception)).build();
     }
   }
