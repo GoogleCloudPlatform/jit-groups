@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import io.vertx.ext.auth.User;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,6 +31,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -48,6 +50,11 @@ public class TestEntitlementActivator {
   ) implements CatalogUserContext {}
 
   private static class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId, UserContext> {
+    @Override
+    public int maximumNumberOfEntitlementsPerJitRequest() {
+      return 10;
+    }
+
     protected SampleActivator(
       Catalog<SampleEntitlementId, ResourceId, UserContext> catalog,
       JustificationPolicy policy
@@ -103,6 +110,27 @@ public class TestEntitlementActivator {
     verify(catalog, times(0)).verifyUserCanRequest(
       eq(requestingUserContext),
       eq(request));
+  }
+
+  @Test
+  public void whenEntitlementsExceedsLimit_ThenCreateJitRequestThrowsException() throws Exception {
+    var activator = new SampleActivator(
+      Mockito.mock(Catalog.class),
+      Mockito.mock(JustificationPolicy.class));
+
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
+    var exception = assertThrows(
+      IllegalArgumentException.class,
+      () -> activator.createJitRequest(
+        requestingUserContext,
+        Stream
+          .generate(() -> new SampleEntitlementId("roles/" + UUID.randomUUID()))
+          .limit(activator.maximumNumberOfEntitlementsPerJitRequest() + 1)
+          .collect(Collectors.toSet()),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+    assertTrue(exception.getMessage().contains("exceeds"));
   }
 
   // -------------------------------------------------------------------------

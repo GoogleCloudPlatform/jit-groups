@@ -50,15 +50,19 @@ public class ProjectRoleActivator extends EntitlementActivator<
   MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ResourceManagerClient resourceManagerClient;
 
+  private final Options options;
+
   public ProjectRoleActivator(
     @NotNull Catalog<ProjectRole, ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
     @NotNull ResourceManagerClient resourceManagerClient,
-    @NotNull JustificationPolicy policy
+    @NotNull JustificationPolicy policy,
+    @NotNull Options options
   ) {
     super(catalog, policy);
 
     Preconditions.checkNotNull(resourceManagerClient, "resourceManagerClient");
     this.resourceManagerClient = resourceManagerClient;
+    this.options = options;
   }
 
   private void provisionTemporaryBinding(
@@ -97,6 +101,11 @@ public class ProjectRoleActivator extends EntitlementActivator<
   // -------------------------------------------------------------------------
   // Overrides.
   // -------------------------------------------------------------------------
+
+  @Override
+  public int maximumNumberOfEntitlementsPerJitRequest() {
+    return this.options.maxNumberOfEntitlementsPerJitRequest;
+  }
 
   @Override
   protected void provisionAccess(
@@ -201,5 +210,17 @@ public class ProjectRoleActivator extends EntitlementActivator<
           Duration.ofSeconds(endTime - startTime));
       }
     };
+  }
+
+  // -------------------------------------------------------------------------
+  // Options.
+  // -------------------------------------------------------------------------
+
+  public record Options(int maxNumberOfEntitlementsPerJitRequest) {
+    public Options {
+      Preconditions.checkArgument(
+        maxNumberOfEntitlementsPerJitRequest > 0,
+        "The maximum number of entitlements per request must be greater than zero");
+    }
   }
 }

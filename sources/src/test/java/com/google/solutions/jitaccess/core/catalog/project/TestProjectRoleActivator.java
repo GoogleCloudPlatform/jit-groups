@@ -60,7 +60,8 @@ public class TestProjectRoleActivator {
     var activator = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       resourceManagerClient,
-      Mockito.mock(JustificationPolicy.class));
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(2));
 
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createJitRequest(
@@ -97,7 +98,8 @@ public class TestProjectRoleActivator {
     var activator = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       resourceManagerClient,
-      Mockito.mock(JustificationPolicy.class));
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1));
 
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
@@ -135,7 +137,8 @@ public class TestProjectRoleActivator {
     var activator = new ProjectRoleActivator(
       Mockito.mock(Catalog.class),
       Mockito.mock(ResourceManagerClient.class),
-      Mockito.mock(JustificationPolicy.class));
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1));
 
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var inputRequest = activator.createMpaRequest(
