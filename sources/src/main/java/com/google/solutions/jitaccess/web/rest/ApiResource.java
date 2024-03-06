@@ -67,6 +67,9 @@ public class ApiResource {
   @Inject
   ListProjectsAction listProjectsAction;
 
+  @Inject
+  ListRolesAction listRolesAction;
+
   // TODO: remove below.
 
   @Inject
@@ -175,45 +178,15 @@ public class ApiResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects/{projectId}/roles")
-  public @NotNull ProjectRolesResponse listRoles(
+  public @NotNull ListRolesAction.ResponseEntity listRoles(
     @PathParam("projectId") @Nullable String projectIdString,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.mpaCatalog, "iamPolicyCatalog");
 
-    Preconditions.checkArgument(
-      projectIdString != null && !projectIdString.trim().isEmpty(),
-      "A projectId is required");
-
-    var iapPrincipal = (IapPrincipal) securityContext.getUserPrincipal();
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
-    var projectId = new ProjectId(projectIdString);
-
-    try {
-      var entitlements = this.mpaCatalog.listEntitlements(userContext, projectId);
-
-      return new ProjectRolesResponse(
-        entitlements.available()
-          .stream()
-          .map(ent -> new ProjectRole(
-            ent.id().roleBinding(),
-            ent.activationType(),
-            ent.status(),
-            ent.validity() != null ? ent.validity().end().getEpochSecond() : null))
-          .collect(Collectors.toList()),
-        entitlements.warnings());
-    }
-    catch (Exception e) {
-      this.logAdapter
-        .newErrorEntry(
-          LogEvents.API_LIST_ROLES,
-          String.format("Listing project roles failed: %s", Exceptions.getFullMessage(e)))
-        .addLabels(le -> addLabels(le, e))
-        .addLabels(le -> addLabels(le, projectId))
-        .write();
-
-      throw new AccessDeniedException("Listing project roles failed, see logs for details");
-    }
+    return this.listRolesAction.execute(
+      (IapPrincipal)securityContext.getUserPrincipal(),
+      projectIdString);
   }
 
   /**
@@ -720,41 +693,6 @@ public class ApiResource {
   // -------------------------------------------------------------------------
 
 
-  public static class ProjectRolesResponse {
-    public final Set<String> warnings;
-    public final @NotNull List<ProjectRole> roles;
-
-    private ProjectRolesResponse(
-      @NotNull List<ProjectRole> roles,
-      Set<String> warnings
-    ) {
-      Preconditions.checkNotNull(roles, "roles");
-
-      this.warnings = warnings;
-      this.roles = roles;
-    }
-  }
-
-  public static class ProjectRole {
-    public final @NotNull RoleBinding roleBinding;
-    public final ActivationType activationType;
-    public final Entitlement.Status status;
-    public final Long /* optional */ validUntil;
-
-    public ProjectRole(
-      @NotNull RoleBinding roleBinding,
-      ActivationType activationType,
-      Entitlement.Status status,
-      Long validUntil) {
-
-      Preconditions.checkNotNull(roleBinding, "roleBinding");
-
-      this.roleBinding = roleBinding;
-      this.activationType = activationType;
-      this.status = status;
-      this.validUntil = validUntil;
-    }
-  }
 
   public static class ProjectRolePeersResponse {
     public final @NotNull Set<UserEmail> peers;

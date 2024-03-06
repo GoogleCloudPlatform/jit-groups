@@ -27,8 +27,8 @@ public class TestListProjectsAction {
     when(catalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>());
 
-    var resource = new ListProjectsAction(new LogAdapter(), catalog);
-    var response = resource.execute(new MockIapPrincipal(SAMPLE_USER));
+    var action = new ListProjectsAction(new LogAdapter(), catalog);
+    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
 
     assertEquals(0, response.projects.size());
   }
@@ -44,8 +44,8 @@ public class TestListProjectsAction {
         new ProjectId("project-2"),
         new ProjectId("project-3"))));
 
-    var resource = new ListProjectsAction(new LogAdapter(), catalog);
-    var response = resource.execute(new MockIapPrincipal(SAMPLE_USER));
+    var action = new ListProjectsAction(new LogAdapter(), catalog);
+    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
 
     assertNotNull(response.projects);
     assertIterableEquals(

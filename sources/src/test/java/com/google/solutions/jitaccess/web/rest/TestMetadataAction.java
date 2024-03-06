@@ -35,12 +35,12 @@ public class TestMetadataAction {
         DEFAULT_MIN_NUMBER_OF_REVIEWERS,
         DEFAULT_MAX_NUMBER_OF_REVIEWERS));
 
-    var resource = new MetadataAction(
+    var action = new MetadataAction(
       new LogAdapter(),
       catalog,
       justificationPolicy);
 
-    var response = resource.execute(new MockIapPrincipal(SAMPLE_USER));
+    var response = action.execute(new MockIapPrincipal(SAMPLE_USER));
     assertEquals(DEFAULT_HINT, response.justificationHint);
     assertEquals(SAMPLE_USER.email, response.signedInUser.email);
   }
