@@ -160,7 +160,7 @@ public class MailNotificationService extends NotificationService {
       this.escaper = escaper;
     }
 
-    public String format(NotificationService.@NotNull Notification notification) {
+    public String format(@NotNull NotificationService.Notification notification) {
       Preconditions.checkNotNull(notification, "notification");
 
       //

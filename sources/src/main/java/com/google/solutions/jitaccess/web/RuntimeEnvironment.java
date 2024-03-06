@@ -283,7 +283,7 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public TokenSigner.@NotNull Options getTokenServiceOptions() {
+  public @NotNull TokenSigner.Options getTokenServiceOptions() {
     //
     // NB. The clock for activations "starts ticking" when the activation was
     // requested. The time allotted for reviewers to approve the request
@@ -317,7 +317,7 @@ public class RuntimeEnvironment {
   @Produces
   @Singleton
   public @NotNull NotificationService getEmailNotificationService(
-    SecretManagerClient secretManagerClient
+    @NotNull SecretManagerClient secretManagerClient
   ) {
     //
     // Configure SMTP if possible, and fall back to a fail-safe
@@ -371,14 +371,14 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public RegexJustificationPolicy.@NotNull Options getRegexJustificationPolicyOptions() {
+  public @NotNull RegexJustificationPolicy.Options getRegexJustificationPolicyOptions() {
     return new RegexJustificationPolicy.Options(
       this.configuration.justificationHint.getValue(),
       Pattern.compile(this.configuration.justificationPattern.getValue()));
   }
 
   @Produces
-  public MpaProjectRoleCatalog.@NotNull Options getIamPolicyCatalogOptions() {
+  public @NotNull MpaProjectRoleCatalog.Options getIamPolicyCatalogOptions() {
     return new MpaProjectRoleCatalog.Options(
       this.configuration.availableProjectsQuery.isValid()
         ? this.configuration.availableProjectsQuery.getValue()
@@ -389,13 +389,13 @@ public class RuntimeEnvironment {
   }
 
   @Produces
-  public DirectoryGroupsClient.@NotNull Options getDirectoryGroupsClientOptions() {
+  public @NotNull DirectoryGroupsClient.Options getDirectoryGroupsClientOptions() {
     return new DirectoryGroupsClient.Options(
       this.configuration.customerId.getValue());
   }
 
   @Produces
-  public CloudIdentityGroupsClient.@NotNull Options getCloudIdentityGroupsClientOptions() {
+  public @NotNull CloudIdentityGroupsClient.Options getCloudIdentityGroupsClientOptions() {
     return new CloudIdentityGroupsClient.Options(
       this.configuration.customerId.getValue());
   }
@@ -403,9 +403,9 @@ public class RuntimeEnvironment {
   @Produces
   @Singleton
   public @NotNull ProjectRoleRepository getProjectRoleRepository(
-    Executor executor,
+    @NotNull Executor executor,
     @NotNull Instance<DirectoryGroupsClient> groupsClient,
-    PolicyAnalyzerClient policyAnalyzerClient
+    @NotNull PolicyAnalyzerClient policyAnalyzerClient
   ) {
     switch (this.configuration.catalog.getValue()) {
       case ASSETINVENTORY:
