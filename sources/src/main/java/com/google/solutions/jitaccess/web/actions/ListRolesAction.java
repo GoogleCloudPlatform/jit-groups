@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.Exceptions;
+import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
