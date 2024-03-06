@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,32 +19,26 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core;
+package com.google.solutions.jitaccess.core.util;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.util.Exceptions;
+import org.junit.jupiter.api.Test;
 
-public class Exceptions {
-  private Exceptions() {}
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  public static @NotNull String getFullMessage(@Nullable Throwable e) {
-    var buffer = new StringBuilder();
+public class TestExceptions {
+  @Test
+  public void getFullMessageConcatenatesCauses()
+  {
+    var exception = new AccessDeniedException(
+      "Access denied",
+      new IllegalStateException(
+        "Illegal state",
+        new NullPointerException()));
 
-    for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
-
-        if (e.getMessage() != null) {
-          buffer.append(": ");
-          buffer.append(e.getMessage());
-        }
-      }
-      else {
-        buffer.append(e.getMessage());
-      }
-    }
-
-    return buffer.toString();
+    assertEquals(
+      "Access denied, caused by IllegalStateException: Illegal state, caused by NullPointerException",
+      Exceptions.getFullMessage(exception));
   }
 }
