@@ -22,5 +22,8 @@
 package com.google.solutions.jitaccess.core.clients;
 
 public interface Diagnosable {
+  /**
+   * Perform a self-check.
+   */
   DiagnosticsResult diagnose();
 }

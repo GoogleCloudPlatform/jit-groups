@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @Path("/health")
 public class HealthResource {
 
-  // TODO: exclude from filters
+  // TODO: exclude from filters (@RequireXsrfHeader, @RequireIapAssertion)
   // TODO: implement Diagnosable
 
   @Inject
