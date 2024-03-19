@@ -50,6 +50,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
@@ -426,16 +428,21 @@ public class RuntimeEnvironment {
   @Produces
   @Singleton
   public @NotNull Diagnosable verifyDevModeIsDisabled() {
+    final String name = "DevModeIsDisabled";
     return new Diagnosable() {
       @Override
-      public DiagnosticsResult diagnose() {
+      public Collection<DiagnosticsResult> diagnose() {
         if (!isDebugModeEnabled()) {
-          return DiagnosticsResult.SUCCESS;
+          return List.of(new DiagnosticsResult(name));
         }
         else {
-          return new DiagnosticsResult(false, "Application is running in development mode");
+          return List.of(
+            new DiagnosticsResult(
+              name,
+              false,
+              "Application is running in development mode"));
         }
       }
-    }
+    };
   }
 }

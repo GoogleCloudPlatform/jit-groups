@@ -21,9 +21,29 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * @param name name of the check that was performed
+ * @param successful result of the check
+ * @param details error message in case the check failed
+ */
 public record DiagnosticsResult(
+  @NotNull String name,
   boolean successful,
   String details
 ) {
-  public static final DiagnosticsResult SUCCESS = new DiagnosticsResult(true, null);
+  public DiagnosticsResult(@NotNull String name) {
+    this(name, true, null);
+  }
+
+  @Override
+  public String toString() {
+    if (this.successful) {
+      return String.format("%s: OK", this.name);
+    }
+    else {
+      return String.format("%s: %s", this.name, this.details);
+    }
+  }
 }

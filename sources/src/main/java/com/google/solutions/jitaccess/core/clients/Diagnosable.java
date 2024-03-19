@@ -21,9 +21,11 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
+import java.util.Collection;
+
 public interface Diagnosable {
   /**
    * Perform a self-check.
    */
-  DiagnosticsResult diagnose();
+  Collection<DiagnosticsResult> diagnose();
 }

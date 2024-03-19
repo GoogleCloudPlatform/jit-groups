@@ -50,10 +50,6 @@ import java.util.stream.Collectors;
 @Dependent
 @Path("/health")
 public class HealthResource {
-
-  // TODO: exclude from filters (@RequireXsrfHeader, @RequireIapAssertion)
-  // TODO: implement Diagnosable
-
   @Inject
   Executor executor;
 
@@ -91,44 +87,44 @@ public class HealthResource {
     //
     // Diagnose all services that support self-diagnosis.
     //
-    var diagnosticsFuturesByService = this.diagnosables
+    var diagnosticsFutures = this.diagnosables
       .stream()
-      .map(d -> new AbstractMap.SimpleEntry<>(
-        d,
-        ThrowingCompletableFuture.submit(() -> d.diagnose(), this.executor)))
+      .map(d -> ThrowingCompletableFuture.submit(() -> d.diagnose(), this.executor))
       .toList();
 
     //
     // Consolidate results. The response only contains a summary,
     // any errors only go to the log.
     //
-    var results = new HashMap<Diagnosable, DiagnosticsResult>();
-    for (var future : diagnosticsFuturesByService) {
-      var result = future.getValue().get();
-      results.put(future.getKey(), result);
+    var results = diagnosticsFutures
+      .stream()
+      .flatMap(f -> {
+        try {
+          return f.get().stream();
+        }
+        catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+      })
+      .toList();
 
+    for (var result : results) {
       if (!result.successful()) {
         this.logAdapter
           .newWarningEntry(
             LogEvents.API_HEALTH,
-            String.format(
-              "%s is in an unhealthy state: %s",
-              future.getKey().getClass().getSimpleName(),
-              result.details()))
+            result.toString())
           .write();
       }
     }
 
-    var resultsByService = results
-      .entrySet()
-      .stream()
-      .collect(Collectors.toMap(
-        e -> e.getKey().getClass().getSimpleName(),
-        e -> e.getValue().successful()));
-
     return new ResponseEntity(
-      resultsByService.values().stream().allMatch(v -> v), // AND-combine results.
-      resultsByService);
+      results
+        .stream()
+        .allMatch(r -> r.successful()), // AND-combine results.
+      results
+        .stream()
+        .collect(Collectors.toMap(r -> r.name(), r -> r.successful())));
   }
 
   /**
