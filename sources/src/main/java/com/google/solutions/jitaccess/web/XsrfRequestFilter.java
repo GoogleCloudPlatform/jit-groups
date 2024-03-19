@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 @Dependent
 @Provider
 @Priority(Priorities.AUTHENTICATION - 200)
+@RequireXsrfHeader
 public class XsrfRequestFilter implements ContainerRequestFilter {
 
   public static final String XSRF_HEADER_NAME = "X-JITACCESS";

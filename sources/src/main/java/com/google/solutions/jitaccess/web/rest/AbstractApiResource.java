@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ResourceNotFoundException;
 import com.google.solutions.jitaccess.core.catalog.ResourceId;

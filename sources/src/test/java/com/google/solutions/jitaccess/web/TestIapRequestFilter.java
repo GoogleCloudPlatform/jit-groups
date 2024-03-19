@@ -19,10 +19,8 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.iap;
+package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import org.junit.jupiter.api.Test;
