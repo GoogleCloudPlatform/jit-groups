@@ -25,4 +25,5 @@ public record DiagnosticsResult(
   boolean successful,
   String details
 ) {
+  public static final DiagnosticsResult SUCCESS = new DiagnosticsResult(true, null);
 }

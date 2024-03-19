@@ -422,4 +422,20 @@ public class RuntimeEnvironment {
           new PolicyAnalyzerRepository.Options(this.configuration.scope.getValue()));
     }
   }
+
+  @Produces
+  @Singleton
+  public @NotNull Diagnosable verifyDevModeIsDisabled() {
+    return new Diagnosable() {
+      @Override
+      public DiagnosticsResult diagnose() {
+        if (!isDebugModeEnabled()) {
+          return DiagnosticsResult.SUCCESS;
+        }
+        else {
+          return new DiagnosticsResult(false, "Application is running in development mode");
+        }
+      }
+    }
+  }
 }

@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 
 /**
  * REST API controller for health checks.
+ *
+ * This controller allows anonymous requests.
  */
 @Dependent
 @Path("/health")
