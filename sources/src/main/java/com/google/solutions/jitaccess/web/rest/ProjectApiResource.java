@@ -1,6 +1,8 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.web.actions.*;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -11,7 +13,10 @@ import jakarta.ws.rs.Path;
 public class ProjectApiResource extends AbstractApiResource<ProjectId> {
 
   @Inject
-  MetadataAction metadataAction;
+  MetadataAction<
+    ProjectRole,
+    ProjectId,
+    MpaProjectRoleCatalog.UserContext> metadataAction;
 
   @Inject
   ListProjectsAction listProjectsAction;

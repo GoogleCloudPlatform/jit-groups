@@ -24,7 +24,10 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.catalog.CatalogUserContext;
+import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
+import com.google.solutions.jitaccess.core.catalog.ResourceId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
@@ -35,7 +38,12 @@ import org.jetbrains.annotations.NotNull;
  * Get information about this instance of JIT Access.
  */
 @Dependent
-public class MetadataAction extends AbstractAction {
+public class MetadataAction<
+  TEntitlementId extends EntitlementId,
+  TScopeId extends ResourceId,
+  TUserContext extends CatalogUserContext
+  > extends AbstractAction {
+
   private final @NotNull MpaProjectRoleCatalog catalog;
   private final @NotNull JustificationPolicy justificationPolicy;
 
@@ -57,7 +65,7 @@ public class MetadataAction extends AbstractAction {
       justificationPolicy.hint(),
       iapPrincipal.email(),
       ApplicationVersion.VERSION_STRING,
-      (int)options.maxActivationDuration().toMinutes(),
+      (int)options.maxActivationDuration().toMinutes(), // TODO: move to roles resource
       Math.min(60, (int)options.maxActivationDuration().toMinutes()));
   }
 
