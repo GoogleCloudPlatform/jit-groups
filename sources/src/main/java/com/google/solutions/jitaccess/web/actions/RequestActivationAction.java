@@ -55,7 +55,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Dependent
 public class RequestActivationAction extends AbstractActivationAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
   private final @NotNull TokenSigner tokenSigner;

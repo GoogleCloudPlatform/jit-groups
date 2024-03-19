@@ -51,7 +51,6 @@ import java.util.stream.Collectors;
  * Request and self-approve one or more project roles.
  * Only allowed for JIT-eligible roles.
  */
-@Dependent
 public class RequestAndSelfApproveAction extends AbstractActivationAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
 

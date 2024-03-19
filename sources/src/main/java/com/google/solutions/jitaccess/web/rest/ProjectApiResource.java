@@ -1,77 +1,106 @@
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
+import com.google.solutions.jitaccess.core.notifications.NotificationService;
+import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.actions.*;
 import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Path;
 
+/**
+ * REST API controller that uses a project-based catalog.
+ */
 @Dependent
 @Path("/api/")
 public class ProjectApiResource extends AbstractApiResource<ProjectId> {
 
   @Inject
-  MetadataAction<
-    ProjectRole,
-    ProjectId,
-    MpaProjectRoleCatalog.UserContext> metadataAction;
+  LogAdapter logAdapter;
 
   @Inject
-  ListProjectsAction listProjectsAction;
+  MpaProjectRoleCatalog catalog;
 
   @Inject
-  ListRolesAction listRolesAction;
+  JustificationPolicy justificationPolicy;
 
   @Inject
-  ListPeersAction listPeersAction;
+  RuntimeEnvironment runtimeEnvironment;
 
   @Inject
-  RequestAndSelfApproveAction requestAndSelfApproveAction;
+  ProjectRoleActivator activator;
 
   @Inject
-  RequestActivationAction requestActivationAction;
+  Instance<NotificationService> notificationServices;
 
   @Inject
-  IntrospectActivationRequestAction introspectActivationRequestAction;
-
-  @Inject
-  ApproveActivationRequestAction approveActivationRequestAction;
+  TokenSigner tokenSigner;
 
   // -------------------------------------------------------------------------
   // Overrides.
   // -------------------------------------------------------------------------
 
   public MetadataAction metadataAction() {
-    return metadataAction;
+    return new MetadataAction(
+      this.logAdapter,
+      this.catalog,
+      this.justificationPolicy);
   }
 
-  public ListProjectsAction listScopesAction() {
-    return listProjectsAction;
+  public ListScopesAction listScopesAction() {
+    return new ListScopesAction(this.logAdapter, this.catalog);
   }
 
   public ListRolesAction listRolesAction() {
-    return listRolesAction;
+    return new ListRolesAction(this.logAdapter, this.catalog);
   }
 
   public ListPeersAction listPeersAction() {
-    return listPeersAction;
+    return new ListPeersAction(this.logAdapter, this.catalog);
   }
 
   public RequestAndSelfApproveAction requestAndSelfApproveAction() {
-    return requestAndSelfApproveAction;
+    return new RequestAndSelfApproveAction(
+      this.logAdapter,
+      this.runtimeEnvironment,
+      this.activator,
+      this.notificationServices,
+      this.catalog);
   }
 
   public RequestActivationAction requestActivationAction() {
-    return requestActivationAction;
+    return new RequestActivationAction(
+      this.logAdapter,
+      this.runtimeEnvironment,
+      this.activator,
+      this.notificationServices,
+      this.catalog,
+      this.tokenSigner);
   }
 
   public IntrospectActivationRequestAction introspectActivationRequestAction() {
-    return introspectActivationRequestAction;
+    return new IntrospectActivationRequestAction(
+      this.logAdapter,
+      this.runtimeEnvironment,
+      this.activator,
+      this.notificationServices,
+      this.tokenSigner);
   }
 
   public ApproveActivationRequestAction approveActivationRequestAction() {
-    return approveActivationRequestAction;
+    return new ApproveActivationRequestAction(
+      this.logAdapter,
+      this.runtimeEnvironment,
+      this.activator,
+      this.notificationServices,
+      this.catalog,
+      this.tokenSigner);
   }
 }

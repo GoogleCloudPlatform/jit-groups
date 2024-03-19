@@ -34,6 +34,7 @@ import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -42,7 +43,7 @@ import java.util.UUID;
 public abstract class AbstractApiResource<TScope extends ResourceId> {
   protected abstract MetadataAction metadataAction();
 
-  protected abstract ListProjectsAction listScopesAction();
+  protected abstract ListScopesAction listScopesAction();
 
   protected abstract ListRolesAction listRolesAction();
 
@@ -96,9 +97,9 @@ public abstract class AbstractApiResource<TScope extends ResourceId> {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("projects")
-  public @NotNull ListProjectsAction.ResponseEntity listProjects(
+  public @NotNull ListScopesAction.ResponseEntity listProjects(
     @Context @NotNull SecurityContext securityContext
-  ) throws AccessException {
+  ) throws AccessException, IOException {
     return this.listScopesAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal());
   }

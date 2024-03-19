@@ -24,8 +24,8 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -41,25 +42,29 @@ import java.util.stream.Collectors;
 /**
  * List projects that the calling user can access.
  */
-@Dependent
-public class ListProjectsAction extends AbstractAction {
-  private final @NotNull MpaProjectRoleCatalog mpaCatalog;
+public class ListScopesAction<
+  TEntitlementId extends EntitlementId,
+  TScopeId extends ResourceId,
+  TUserContext extends CatalogUserContext
+  > extends AbstractAction {
 
-  public ListProjectsAction(
+  private final @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog;
+
+  public ListScopesAction(
     @NotNull LogAdapter logAdapter,
-    @NotNull MpaProjectRoleCatalog mpaCatalog
+    @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog
   ) {
     super(logAdapter);
-    this.mpaCatalog = mpaCatalog;
+    this.catalog = catalog;
   }
 
-  public @NotNull ListProjectsAction.ResponseEntity execute(
+  public @NotNull ListScopesAction.ResponseEntity execute(
     @NotNull IapPrincipal iapPrincipal
-  ) throws AccessException {
-    var userContext = this.mpaCatalog.createContext(iapPrincipal.email());
+  ) throws AccessException, IOException {
+    var userContext = this.catalog.createContext(iapPrincipal.email());
 
     try {
-      var projects = this.mpaCatalog.listScopes(userContext);
+      var projects = this.catalog.listScopes(userContext);
 
       this.logAdapter
         .newInfoEntry(
@@ -69,7 +74,7 @@ public class ListProjectsAction extends AbstractAction {
 
       return new ResponseEntity(projects
         .stream()
-        .map(ProjectId::id)
+        .map(ResourceId::id)
         .collect(Collectors.toCollection(TreeSet::new)));
     }
     catch (Exception e) {
