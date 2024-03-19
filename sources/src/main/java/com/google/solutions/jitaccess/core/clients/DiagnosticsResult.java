@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,18 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.core.clients;
 
-public class LogEvents {
-  public static final String API_LIST_PROJECTS = "api.listProjects";
-  public static final String API_LIST_ROLES = "api.listEligibleRoles";
-  public static final String API_LIST_PEERS = "api.listPeers";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
-  public static final String API_REQUEST_ROLE = "api.requestRole";
-  public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String API_HEALTH = "api.health";
-  public static final String RUNTIME_STARTUP = "runtime.startup";
-
-  private LogEvents() {
-  }
+public record DiagnosticsResult(
+  boolean successful,
+  String details
+) {
 }
