@@ -103,4 +103,9 @@ public class ProjectApiResource extends AbstractApiResource<ProjectId> {
       this.catalog,
       this.tokenSigner);
   }
+
+  @Override
+  protected String scopeType() {
+    return "projects";
+  }
 }
