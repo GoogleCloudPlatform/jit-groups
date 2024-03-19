@@ -33,6 +33,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.AbstractMap;
@@ -83,7 +84,7 @@ public class HealthResource {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("ready")
-  public @NotNull ResponseEntity checkReadiness() throws ExecutionException, InterruptedException {
+  public @NotNull Response checkReadiness() throws ExecutionException, InterruptedException {
     //
     // Diagnose all services that support self-diagnosis.
     //
@@ -118,13 +119,29 @@ public class HealthResource {
       }
     }
 
-    return new ResponseEntity(
+    var response =  new ResponseEntity(
       results
         .stream()
         .allMatch(r -> r.successful()), // AND-combine results.
       results
         .stream()
         .collect(Collectors.toMap(r -> r.name(), r -> r.successful())));
+
+    if (response.healthy) {
+      //
+      // Return a 200/OK.
+      //
+      return Response.ok(response).build();
+    }
+    else {
+      //
+      // Return a 503/Service unavailable.
+      //
+      return Response
+        .status(Response.Status.SERVICE_UNAVAILABLE)
+        .entity(response)
+        .build();
+    }
   }
 
   /**
