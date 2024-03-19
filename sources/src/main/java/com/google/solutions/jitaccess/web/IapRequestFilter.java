@@ -19,13 +19,17 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.iap;
+package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.web.iap.DeviceInfo;
+import com.google.solutions.jitaccess.web.iap.IapAssertion;
+import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
@@ -46,6 +50,7 @@ import java.security.Principal;
 @Dependent
 @Provider
 @Priority(Priorities.AUTHENTICATION)
+@RequireIapPrincipal
 public class IapRequestFilter implements ContainerRequestFilter {
   private static final String EVENT_AUTHENTICATE = "iap.authenticate";
 

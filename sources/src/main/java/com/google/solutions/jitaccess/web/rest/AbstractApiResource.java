@@ -21,11 +21,9 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.ResourceNotFoundException;
 import com.google.solutions.jitaccess.core.catalog.ResourceId;
-import com.google.solutions.jitaccess.web.RequiresXsrfHeader;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import com.google.solutions.jitaccess.web.actions.*;
 import jakarta.ws.rs.*;

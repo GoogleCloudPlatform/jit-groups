@@ -7,7 +7,8 @@ import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.RequiresXsrfHeader;
+import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.RequireXsrfHeader;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.actions.*;
 import jakarta.enterprise.context.Dependent;
@@ -20,7 +21,8 @@ import jakarta.ws.rs.Path;
  */
 @Dependent
 @Path("/api/")
-@RequiresXsrfHeader
+@RequireXsrfHeader
+@RequireIapPrincipal
 public class ProjectApiResource extends AbstractApiResource<ProjectId> {
 
   @Inject

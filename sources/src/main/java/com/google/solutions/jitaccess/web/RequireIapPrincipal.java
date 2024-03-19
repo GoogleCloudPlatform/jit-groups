@@ -29,11 +29,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicate that a resource class requires that requests
- * contain an XSRF header.
+ * Indicate that a resource class requires requests to
+ * contain a valid IAP assertion.
  */
 @NameBinding
 @Target({ ElementType.METHOD, ElementType.TYPE})
 @Retention(value = RetentionPolicy.RUNTIME)
-public @interface RequiresXsrfHeader {
+public @interface RequireIapPrincipal {
 }
