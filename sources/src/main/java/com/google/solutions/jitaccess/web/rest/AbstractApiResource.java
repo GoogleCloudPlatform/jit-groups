@@ -19,14 +19,13 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.catalog.ResourceId;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import com.google.solutions.jitaccess.web.actions.*;
-import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -40,33 +39,22 @@ import java.util.UUID;
 /**
  * REST API controller.
  */
-@Dependent
-@Path("/api/")
-public class ApiResource {
+public abstract class AbstractApiResource<TScope extends ResourceId> {
+  protected abstract MetadataAction metadataAction();
 
-  @Inject
-  MetadataAction metadataAction;
+  protected abstract ListProjectsAction listScopesAction();
 
-  @Inject
-  ListProjectsAction listProjectsAction;
+  protected abstract ListRolesAction listRolesAction();
 
-  @Inject
-  ListRolesAction listRolesAction;
+  protected abstract ListPeersAction listPeersAction();
 
-  @Inject
-  ListPeersAction listPeersAction;
+  protected abstract RequestAndSelfApproveAction requestAndSelfApproveAction();
 
-  @Inject
-  RequestAndSelfApproveAction requestAndSelfApproveAction;
+  protected abstract RequestActivationAction requestActivationAction();
 
-  @Inject
-  RequestActivationAction requestActivationAction;
+  protected abstract IntrospectActivationRequestAction introspectActivationRequestAction();
 
-  @Inject
-  IntrospectActivationRequestAction introspectActivationRequestAction;
-
-  @Inject
-  ApproveActivationRequestAction approveActivationRequestAction;
+  protected abstract ApproveActivationRequestAction approveActivationRequestAction();
 
   // -------------------------------------------------------------------------
   // REST resources.
@@ -98,7 +86,7 @@ public class ApiResource {
   public @NotNull MetadataAction.ResponseEntity getMetadata(
     @Context @NotNull SecurityContext securityContext
   ) {
-   return this.metadataAction.execute(
+   return this.metadataAction().execute(
      (IapPrincipal)securityContext.getUserPrincipal());
   }
 
@@ -111,7 +99,7 @@ public class ApiResource {
   public @NotNull ListProjectsAction.ResponseEntity listProjects(
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listProjectsAction.execute(
+    return this.listScopesAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal());
   }
 
@@ -125,7 +113,7 @@ public class ApiResource {
     @PathParam("projectId") @Nullable String projectIdString,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listRolesAction.execute(
+    return this.listRolesAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString);
   }
@@ -141,7 +129,7 @@ public class ApiResource {
     @QueryParam("role") @Nullable String role,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listPeersAction.execute(
+    return this.listPeersAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString,
       role);
@@ -159,7 +147,7 @@ public class ApiResource {
     @NotNull RequestAndSelfApproveAction.RequestEntity request,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessDeniedException {
-    return this.requestAndSelfApproveAction.execute(
+    return this.requestAndSelfApproveAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString,
       request);
@@ -179,7 +167,7 @@ public class ApiResource {
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
   ) throws AccessDeniedException {
-    return requestActivationAction.execute(
+    return requestActivationAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       projectIdString,
       request,
@@ -196,7 +184,7 @@ public class ApiResource {
     @QueryParam("activation") @Nullable String obfuscatedActivationToken,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return introspectActivationRequestAction.execute(
+    return introspectActivationRequestAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       obfuscatedActivationToken);
   }
@@ -213,7 +201,7 @@ public class ApiResource {
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
   ) throws AccessException {
-    return approveActivationRequestAction.execute(
+    return approveActivationRequestAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       obfuscatedActivationToken,
       uriInfo);
