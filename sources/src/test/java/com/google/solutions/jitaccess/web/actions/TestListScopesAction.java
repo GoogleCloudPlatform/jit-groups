@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
-public class TestListProjectsAction {
+public class TestListScopesAction {
   private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
 
   @Test
@@ -43,7 +43,7 @@ public class TestListProjectsAction {
     when(catalog.listScopes(argThat(ctx -> ctx.user().equals(SAMPLE_USER))))
       .thenReturn(new TreeSet<>());
 
-    var action = new ListProjectsAction(new LogAdapter(), catalog);
+    var action = new ListScopesAction(new LogAdapter(), catalog);
     var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER));
 
     assertEquals(0, response.projects.size());
@@ -58,7 +58,7 @@ public class TestListProjectsAction {
         new ProjectId("project-2"),
         new ProjectId("project-3"))));
 
-    var action = new ListProjectsAction(new LogAdapter(), catalog);
+    var action = new ListScopesAction(new LogAdapter(), catalog);
     var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER));
 
     assertNotNull(response.projects);

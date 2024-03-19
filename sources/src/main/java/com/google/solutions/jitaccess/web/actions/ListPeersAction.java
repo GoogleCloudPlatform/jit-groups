@@ -41,7 +41,6 @@ import java.util.Set;
 /**
  * List peers that are qualified to approve the activation of a role.
  */
-@Dependent
 public class ListPeersAction extends AbstractAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
 

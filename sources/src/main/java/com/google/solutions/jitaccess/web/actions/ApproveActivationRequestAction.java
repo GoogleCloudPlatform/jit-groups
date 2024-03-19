@@ -36,7 +36,6 @@ import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.TokenObfuscator;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +45,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-@Dependent
 public class ApproveActivationRequestAction extends AbstractActivationAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
   private final @NotNull TokenSigner tokenSigner;

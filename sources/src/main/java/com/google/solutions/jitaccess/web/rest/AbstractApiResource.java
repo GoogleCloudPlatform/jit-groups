@@ -19,14 +19,14 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.ResourceNotFoundException;
+import com.google.solutions.jitaccess.core.catalog.ResourceId;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import com.google.solutions.jitaccess.web.actions.*;
-import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
@@ -35,38 +35,38 @@ import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.UUID;
 
 /**
  * REST API controller.
  */
-@Dependent
-@Path("/api/")
-public class ApiResource {
+public abstract class AbstractApiResource<TScope extends ResourceId> {
+  protected abstract MetadataAction metadataAction();
 
-  @Inject
-  MetadataAction metadataAction;
+  protected abstract ListScopesAction listScopesAction();
 
-  @Inject
-  ListProjectsAction listProjectsAction;
+  protected abstract ListRolesAction listRolesAction();
 
-  @Inject
-  ListRolesAction listRolesAction;
+  protected abstract ListPeersAction listPeersAction();
 
-  @Inject
-  ListPeersAction listPeersAction;
+  protected abstract RequestAndSelfApproveAction requestAndSelfApproveAction();
 
-  @Inject
-  RequestAndSelfApproveAction requestAndSelfApproveAction;
+  protected abstract RequestActivationAction requestActivationAction();
 
-  @Inject
-  RequestActivationAction requestActivationAction;
+  protected abstract IntrospectActivationRequestAction introspectActivationRequestAction();
 
-  @Inject
-  IntrospectActivationRequestAction introspectActivationRequestAction;
+  protected abstract ApproveActivationRequestAction approveActivationRequestAction();
 
-  @Inject
-  ApproveActivationRequestAction approveActivationRequestAction;
+  protected abstract String scopeType();
+
+  private void checkScopeType(
+    @Nullable String scopeType
+  ) throws ResourceNotFoundException {
+    if (!scopeType.equals(this.scopeType())) {
+      throw new ResourceNotFoundException(scopeType);
+    }
+  }
 
   // -------------------------------------------------------------------------
   // REST resources.
@@ -98,36 +98,42 @@ public class ApiResource {
   public @NotNull MetadataAction.ResponseEntity getMetadata(
     @Context @NotNull SecurityContext securityContext
   ) {
-   return this.metadataAction.execute(
+   return this.metadataAction().execute(
      (IapPrincipal)securityContext.getUserPrincipal());
   }
 
   /**
-   * List projects that the calling user can access.
+   * List scopes that the calling user can access.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects")
-  public @NotNull ListProjectsAction.ResponseEntity listProjects(
+  @Path("{scopeType}")
+  public @NotNull ListScopesAction.ResponseEntity listScopes(
+    @PathParam("scopeType") @Nullable String scopeType,
     @Context @NotNull SecurityContext securityContext
-  ) throws AccessException {
-    return this.listProjectsAction.execute(
+  ) throws AccessException, IOException {
+    checkScopeType(scopeType);
+
+    return this.listScopesAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal());
   }
 
   /**
-   * List roles (within a project) that the user can activate.
+   * List roles (within a scope) that the user can activate.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/roles")
+  @Path("{scopeType}/{scope}/roles")
   public @NotNull ListRolesAction.ResponseEntity listRoles(
-    @PathParam("projectId") @Nullable String projectIdString,
+    @PathParam("scopeType") @Nullable String scopeType,
+    @PathParam("scope") @Nullable String scope,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listRolesAction.execute(
+    checkScopeType(scopeType);
+
+    return this.listRolesAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
-      projectIdString);
+      scope);
   }
 
   /**
@@ -135,53 +141,62 @@ public class ApiResource {
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/peers")
+  @Path("{scopeType}/{scope}/peers")
   public @NotNull ListPeersAction.ResponseEntity listPeers(
-    @PathParam("projectId") @Nullable String projectIdString,
+    @PathParam("scopeType") @Nullable String scopeType,
+    @PathParam("scope") @Nullable String scope,
     @QueryParam("role") @Nullable String role,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return this.listPeersAction.execute(
+    checkScopeType(scopeType);
+
+    return this.listPeersAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
-      projectIdString,
+      scope,
       role);
   }
 
   /**
-   * Self-activate one or more project roles. Only allowed for JIT-eligible roles.
+   * Self-activate one or more roles. Only allowed for JIT-eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/roles/self-activate")
+  @Path("{scopeType}/{scope}/roles/self-activate")
   public @NotNull AbstractActivationAction.ResponseEntity requestAndSelfApprove(
-    @PathParam("projectId") @Nullable String projectIdString,
+    @PathParam("scopeType") @Nullable String scopeType,
+    @PathParam("scope") @Nullable String scope,
     @NotNull RequestAndSelfApproveAction.RequestEntity request,
     @Context @NotNull SecurityContext securityContext
-  ) throws AccessDeniedException {
-    return this.requestAndSelfApproveAction.execute(
+  ) throws AccessException {
+    checkScopeType(scopeType);
+
+    return this.requestAndSelfApproveAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
-      projectIdString,
+      scope,
       request);
   }
 
   /**
-   * Request approval to activate one or more project roles.
+   * Request approval to activate one or more roles.
    * Only allowed for MPA-eligible roles.
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("projects/{projectId}/roles/request")
+  @Path("{scopeType}/{scope}/roles/request")
   public @NotNull AbstractActivationAction.ResponseEntity requestActivation(
-    @PathParam("projectId") @Nullable String projectIdString,
+    @PathParam("scopeType") @Nullable String scopeType,
+    @PathParam("scope") @Nullable String scope,
     @NotNull RequestActivationAction.RequestEntity request,
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
-  ) throws AccessDeniedException {
-    return requestActivationAction.execute(
+  ) throws AccessException {
+    checkScopeType(scopeType);
+
+    return requestActivationAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
-      projectIdString,
+      scope,
       request,
       uriInfo);
   }
@@ -196,7 +211,7 @@ public class ApiResource {
     @QueryParam("activation") @Nullable String obfuscatedActivationToken,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
-    return introspectActivationRequestAction.execute(
+    return introspectActivationRequestAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       obfuscatedActivationToken);
   }
@@ -213,7 +228,7 @@ public class ApiResource {
     @Context @NotNull SecurityContext securityContext,
     @Context @NotNull UriInfo uriInfo
   ) throws AccessException {
-    return approveActivationRequestAction.execute(
+    return approveActivationRequestAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       obfuscatedActivationToken,
       uriInfo);

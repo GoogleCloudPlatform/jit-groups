@@ -39,7 +39,6 @@ import jakarta.enterprise.inject.Instance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Dependent
 public class IntrospectActivationRequestAction extends AbstractActivationAction {
   private final @NotNull TokenSigner tokenSigner;
 

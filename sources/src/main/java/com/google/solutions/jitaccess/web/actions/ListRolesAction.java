@@ -44,7 +44,6 @@ import java.util.stream.Collectors;
 /**
  * List roles (within a project) that the user can activate.
  */
-@Dependent
 public class ListRolesAction extends AbstractAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
 

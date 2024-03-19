@@ -34,7 +34,6 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Get information about this instance of JIT Access.
  */
-@Dependent
 public class MetadataAction extends AbstractAction {
   private final @NotNull MpaProjectRoleCatalog catalog;
   private final @NotNull JustificationPolicy justificationPolicy;
