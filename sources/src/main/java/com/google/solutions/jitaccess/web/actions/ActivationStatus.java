@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,12 +19,22 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.core.catalog;
+package com.google.solutions.jitaccess.web.actions;
 
-public enum ActivationType {
-  /** Entitlement can be activated using self-approval */
-  JIT,
+public enum ActivationStatus {
+  /**
+   * There's currently no activation for this entitlement.
+   */
+  INACTIVE,
 
-  /** Entitlement can be activated using multi-party approval.  */
-  MPA,
+  /**
+   * This entitlement has been activated and the activation
+   * is still valid.
+   */
+  ACTIVE,
+
+  /**
+   * Approval pending.
+   */
+  ACTIVATION_PENDING
 }

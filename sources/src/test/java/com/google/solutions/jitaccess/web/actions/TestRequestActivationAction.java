@@ -426,7 +426,7 @@ public class TestRequestActivationAction {
     assertEquals(1, response.items.size());
     assertEquals("project-1", response.items.get(0).projectId);
     assertEquals(roleBinding, response.items.get(0).roleBinding);
-    assertEquals(Entitlement.Status.ACTIVATION_PENDING, response.items.get(0).status);
+    assertEquals(ActivationStatus.ACTIVATION_PENDING, response.items.get(0).status);
     assertNotNull(response.items.get(0).activationId);
   }
 }

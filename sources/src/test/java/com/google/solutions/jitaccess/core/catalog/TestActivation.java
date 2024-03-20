@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.cel;
+package com.google.solutions.jitaccess.core.catalog;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,8 +27,9 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TestTimeSpan {
+public class TestActivation {
 
   //---------------------------------------------------------------------------
   // equals.
@@ -36,8 +37,8 @@ public class TestTimeSpan {
 
   @Test
   public void whenSameOrEquivalent_ThenEqualsReturnsTrue() {
-    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
-    var rhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
+    var lhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
+    var rhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
 
     assertTrue((lhs.equals(lhs)));
     assertTrue((lhs.equals(rhs)));
@@ -45,10 +46,10 @@ public class TestTimeSpan {
 
   @Test
   public void whenNotEquivalent_ThenEqualsReturnsFalse() {
-    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
+    var lhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
 
-    assertFalse(lhs.equals(new TimeSpan(Instant.now(), Duration.ofMinutes(1))));
-    assertFalse(lhs.equals(new TimeSpan(Instant.EPOCH, Duration.ofMinutes(2))));
+    assertFalse(lhs.equals(new Activation(Instant.now(), Duration.ofMinutes(1))));
+    assertFalse(lhs.equals(new Activation(Instant.EPOCH, Duration.ofMinutes(2))));
     assertFalse(lhs.equals(null));
   }
 
@@ -58,17 +59,35 @@ public class TestTimeSpan {
 
   @Test
   public void whenEndsBefore_ThenCompareToReturnsNegative() {
-    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
-    var rhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(2));
+    var lhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
+    var rhs = new Activation(Instant.EPOCH, Duration.ofMinutes(2));
 
     assertTrue(lhs.compareTo(rhs) < 0);
   }
 
   @Test
   public void whenEndsAtSameTime_ThenCompareToReturnsZero() {
-    var lhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
-    var rhs = new TimeSpan(Instant.EPOCH, Duration.ofMinutes(1));
+    var lhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
+    var rhs = new Activation(Instant.EPOCH, Duration.ofMinutes(1));
 
     assertEquals(0, lhs.compareTo(rhs));
+  }
+
+  //---------------------------------------------------------------------------
+  // isValid.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenCurrentInstantInRange_ThenIsValidReturnsTrue() {
+    var now = Instant.now();
+    assertTrue(new Activation(now, Duration.ofSeconds(1)).isValid(now));
+    assertTrue(new Activation(now.minusSeconds(1), Duration.ofSeconds(1)).isValid(now));
+  }
+
+  @Test
+  public void whenCurrentInstantNotInRange_ThenIsValidReturnsFalse() {
+    var now = Instant.now();
+    assertFalse(new Activation(now.plusSeconds(1), Duration.ofSeconds(1)).isValid(now));
+    assertFalse(new Activation(now.minusSeconds(2), Duration.ofSeconds(1)).isValid(now));
   }
 }

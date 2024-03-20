@@ -183,7 +183,7 @@ public class TestRequestAndSelfApproveAction {
     assertEquals(1, response.items.size());
     assertEquals("project-1", response.items.get(0).projectId);
     assertEquals(roleBinding, response.items.get(0).roleBinding);
-    assertEquals(Entitlement.Status.ACTIVE, response.items.get(0).status);
+    assertEquals(ActivationStatus.ACTIVE, response.items.get(0).status);
     assertNotNull(response.items.get(0).activationId);
   }
 }

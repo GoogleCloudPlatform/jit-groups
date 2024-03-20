@@ -139,7 +139,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       return new ResponseEntity(
         iapPrincipal.email(),
         activationRequest,
-        Entitlement.Status.ACTIVE);
+        ActivationStatus.ACTIVE);
     }
     catch (Exception e) {
       this.logAdapter

@@ -72,11 +72,23 @@ public class ListRolesAction extends AbstractAction {
       return new ResponseEntity(
         entitlements.available()
           .stream()
-          .map(ent -> new ResponseEntity.Item(
-            ent.id().roleBinding(),
-            ent.activationType(),
-            ent.status(),
-            ent.validity() != null ? ent.validity().end().getEpochSecond() : null))
+          .map(ent -> {
+            var currentActivation = entitlements.currentActivations().get(ent.id());
+            if (currentActivation != null) {
+              return new ResponseEntity.Item(
+                ent.id().roleBinding(),
+                ent.activationType(),
+                ActivationStatus.ACTIVE,
+                currentActivation.validity().end().getEpochSecond());
+            }
+            else {
+              return new ResponseEntity.Item(
+                ent.id().roleBinding(),
+                ent.activationType(),
+                ActivationStatus.INACTIVE,
+                null);
+            }
+          })
           .collect(Collectors.toList()),
         entitlements.warnings());
     }
@@ -109,14 +121,14 @@ public class ListRolesAction extends AbstractAction {
 
     public static class Item {
       public final @NotNull RoleBinding roleBinding;
-      public final ActivationType activationType;
-      public final Entitlement.Status status;
+      public final @NotNull ActivationType activationType;
+      public final @NotNull ActivationStatus status;
       public final Long /* optional */ validUntil;
 
       public Item(
         @NotNull RoleBinding roleBinding,
-        ActivationType activationType,
-        Entitlement.Status status,
+        @NotNull ActivationType activationType,
+        @NotNull ActivationStatus status,
         Long validUntil) {
 
         Preconditions.checkNotNull(roleBinding, "roleBinding");

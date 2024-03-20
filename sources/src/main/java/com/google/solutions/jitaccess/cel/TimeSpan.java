@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 
 public record TimeSpan(
   @NotNull Instant start,
@@ -41,5 +42,22 @@ public record TimeSpan(
   @Override
   public int compareTo(@NotNull TimeSpan o) {
     return (int)(this.end.getEpochSecond() - o.end.getEpochSecond());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    TimeSpan timeSpan = (TimeSpan) o;
+    return start.equals(timeSpan.start) && end.equals(timeSpan.end);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(start, end);
   }
 }
