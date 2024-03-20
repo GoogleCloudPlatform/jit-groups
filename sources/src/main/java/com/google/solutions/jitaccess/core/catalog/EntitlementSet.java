@@ -33,6 +33,9 @@ import java.util.TreeSet;
 /**
  * Set of entitlements and associated activations.
  *
+ * NB. The current/expired activations might refer to
+ *     entitlements that are no longer available.
+ *
  * @param available entitlements available to the user
  * @param currentActivations currently active entitlements
  * @param expiredActivations previously active (but now expired) entitlements

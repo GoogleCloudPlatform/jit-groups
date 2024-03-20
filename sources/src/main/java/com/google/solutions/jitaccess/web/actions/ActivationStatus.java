@@ -23,19 +23,15 @@ package com.google.solutions.jitaccess.web.actions;
 
 public enum ActivationStatus {
   /**
-   * Entitlement is inactive.
+   * There's currently no activation for this entitlement.
    */
-  INACTIVE, // TODO: rename in UI
+  INACTIVE,
 
   /**
-   * Entitlement is active.
+   * This entitlement has been activated and the activation
+   * is still valid.
    */
   ACTIVE,
-
-  /**
-   * Entitlement was active, but has no expired.
-   */
-  EXPIRED,
 
   /**
    * Approval pending.
