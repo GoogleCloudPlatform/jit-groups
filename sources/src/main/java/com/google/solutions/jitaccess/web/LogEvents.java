@@ -28,7 +28,7 @@ public class LogEvents {
   public static final String API_ACTIVATE_ROLE = "api.activateRole";
   public static final String API_REQUEST_ROLE = "api.requestRole";
   public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String API_HEALTH = "api.health";
+  public static final String API_HEALTH = "api.checkHealth";
   public static final String RUNTIME_STARTUP = "runtime.startup";
 
   private LogEvents() {
