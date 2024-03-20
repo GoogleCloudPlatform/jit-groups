@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.PubSubClient;
 import com.google.solutions.jitaccess.core.clients.PubSubTopic;
 import org.junit.jupiter.api.Test;
@@ -45,8 +45,8 @@ public class TestPubSubNotificationService {
   private class SampleNotification extends NotificationService.Notification {
 
     protected SampleNotification(
-      Collection<UserEmail> toRecipients,
-      Collection<UserEmail> ccRecipients,
+      Collection<UserId> toRecipients,
+      Collection<UserId> ccRecipients,
       String subject) {
       super(toRecipients, ccRecipients, subject);
 
@@ -54,7 +54,7 @@ public class TestPubSubNotificationService {
       this.properties.put("instant", Instant.ofEpochSecond(0));
       this.properties.put(
         "user_list",
-        List.of(new UserEmail("alice@example.com"), new UserEmail("bob@example.com")));
+        List.of(new UserId("alice@example.com"), new UserId("bob@example.com")));
     }
 
     @Override
@@ -73,8 +73,8 @@ public class TestPubSubNotificationService {
 
     service.sendNotification(
       new SampleNotification(
-        List.of(new UserEmail("to@example.com")),
-        List.of(new UserEmail("cc@example.com")),
+        List.of(new UserId("to@example.com")),
+        List.of(new UserId("cc@example.com")),
         "subject"));
 
     var expectedMessage =

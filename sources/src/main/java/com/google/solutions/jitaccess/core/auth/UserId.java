@@ -28,14 +28,17 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Primary email address of a user.
+ * Principal identifier for a user.
+ *
+ * NB. The ID looks like an email address, but it might not
+ *     be a route-able email address.
  */
-public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
+public class UserId implements Comparable<UserId>, PrincipalId {
   public static final String TYPE = "user";
 
   public final @NotNull String email;
 
-  public UserEmail(@NotNull String email) {
+  public UserId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     this.email = email;
   }
@@ -59,8 +62,8 @@ public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
       return false;
     }
 
-    UserEmail userEmail = (UserEmail) o;
-    return email.equals(userEmail.email);
+    UserId userId = (UserId) o;
+    return email.equals(userId.email);
   }
 
   @Override
@@ -69,7 +72,7 @@ public class UserEmail implements Comparable<UserEmail>, PrincipalIdentifier {
   }
 
   @Override
-  public int compareTo(@NotNull UserEmail o) {
+  public int compareTo(@NotNull UserId o) {
     return this.email.compareTo(o.email);
   }
 

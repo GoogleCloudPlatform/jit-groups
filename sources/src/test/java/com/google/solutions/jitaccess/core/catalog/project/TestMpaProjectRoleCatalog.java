@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
@@ -39,8 +39,8 @@ import static org.mockito.Mockito.*;
 
 public class TestMpaProjectRoleCatalog {
 
-  private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
-  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("approver@example.com");
+  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
+  private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE = "roles/resourcemanager.role1";
 
@@ -124,9 +124,9 @@ public class TestMpaProjectRoleCatalog {
     var request = Mockito.mock(MpaActivationRequest.class);
     when(request.duration()).thenReturn(catalog.options().minActivationDuration());
     when(request.reviewers()).thenReturn(Set.of(
-      new UserEmail("user-1@example.com"),
-      new UserEmail("user-2@example.com"),
-      new UserEmail("user-3@example.com")));
+      new UserId("user-1@example.com"),
+      new UserId("user-2@example.com"),
+      new UserId("user-3@example.com")));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -148,7 +148,7 @@ public class TestMpaProjectRoleCatalog {
     var request = Mockito.mock(MpaActivationRequest.class);
     when(request.duration()).thenReturn(catalog.options().minActivationDuration());
     when(request.reviewers()).thenReturn(Set.of(
-      new UserEmail("user-1@example.com")));
+      new UserId("user-1@example.com")));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -170,7 +170,7 @@ public class TestMpaProjectRoleCatalog {
     var request = Mockito.mock(MpaActivationRequest.class);
     when(request.duration()).thenReturn(catalog.options().minActivationDuration());
     when(request.reviewers()).thenReturn(Set.of(
-      new UserEmail("user-1@example.com")));
+      new UserId("user-1@example.com")));
 
     catalog.validateRequest(request);
   }

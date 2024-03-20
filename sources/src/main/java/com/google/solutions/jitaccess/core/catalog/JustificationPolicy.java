@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +33,7 @@ public interface JustificationPolicy {
    * Check that a justification meets criteria.
    */
   void checkJustification(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @Nullable String justification
   ) throws InvalidJustificationException;
 

@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -32,5 +32,5 @@ public interface CatalogUserContext {
   /**
    * @return ID of the user.
    */
-  @NotNull UserEmail user();
+  @NotNull UserId user();
 }

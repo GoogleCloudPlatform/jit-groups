@@ -26,7 +26,7 @@ import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.inject.Singleton;
@@ -96,7 +96,7 @@ public class MpaProjectRoleCatalog implements Catalog<
   }
 
   void verifyUserCanActivateEntitlements(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull ActivationType activationType,
     @NotNull Collection<ProjectRole> entitlements
@@ -142,7 +142,7 @@ public class MpaProjectRoleCatalog implements Catalog<
 
   @Override
   public @NotNull UserContext createContext(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) {
     return new UserContext(user);
   }
@@ -183,7 +183,7 @@ public class MpaProjectRoleCatalog implements Catalog<
   }
 
   @Override
-  public @NotNull SortedSet<UserEmail> listReviewers(
+  public @NotNull SortedSet<UserId> listReviewers(
     @NotNull UserContext userContext,
     @NotNull ProjectRole entitlement
   ) throws AccessException, IOException {
@@ -259,7 +259,7 @@ public class MpaProjectRoleCatalog implements Catalog<
   // -------------------------------------------------------------------------
 
   public record UserContext(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) implements CatalogUserContext {
   }
 

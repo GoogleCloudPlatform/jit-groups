@@ -29,7 +29,7 @@ import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -109,7 +109,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(user, "user");
@@ -154,7 +154,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull EntitlementSet<ProjectRole> findEntitlements(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude
   ) throws AccessException, IOException {
@@ -275,7 +275,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull Set<UserEmail> findEntitlementHolders(
+  public @NotNull Set<UserId> findEntitlementHolders(
     @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException {
@@ -299,7 +299,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       .filter(result -> result.getIdentityList() != null)
       .flatMap(result -> result.getIdentityList().getIdentities().stream()
         .filter(id -> id.getName().startsWith("user:"))
-        .map(id -> new UserEmail(id.getName().substring("user:".length()))))
+        .map(id -> new UserId(id.getName().substring("user:".length()))))
 
       .collect(Collectors.toCollection(TreeSet::new));
   }

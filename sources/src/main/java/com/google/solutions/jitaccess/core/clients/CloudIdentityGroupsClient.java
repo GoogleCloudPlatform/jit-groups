@@ -28,10 +28,9 @@ import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.GroupEmail;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.GroupId;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.NotFoundException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -118,7 +117,7 @@ public class CloudIdentityGroupsClient {
    */
   private @NotNull GroupKey lookupGroup(
     @NotNull CloudIdentity client,
-    @NotNull GroupEmail email
+    @NotNull GroupId email
   ) throws AccessException, IOException {
     try {
       var id = client
@@ -168,17 +167,17 @@ public class CloudIdentityGroupsClient {
    * Get details for an existing group.
    */
   public @NotNull Group getGroup(
-    @NotNull GroupEmail groupEmail
+    @NotNull GroupId groupId
   ) throws AccessException, IOException {
     var client = createClient();
-    return getGroup(client, lookupGroup(client, groupEmail));
+    return getGroup(client, lookupGroup(client, groupId));
   }
 
   /**
    * Create group in an idempotent way.
    */
   public @NotNull GroupKey createGroup(
-    @NotNull GroupEmail emailAddress,
+    @NotNull GroupId emailAddress,
     String description
   ) throws AccessException, IOException {
     try {
@@ -287,14 +286,14 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId lookupGroupMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserEmail userEmail
+    @NotNull UserId userId
   ) throws AccessException, IOException {
     try {
       return new MembershipId(client
         .groups()
         .memberships()
         .lookup(groupKey.toString())
-        .setMemberKeyId(userEmail.email)
+        .setMemberKeyId(userId.email)
         .execute()
         .getName());
     }
@@ -350,10 +349,10 @@ public class CloudIdentityGroupsClient {
    */
   public @NotNull Membership getMembership(
     @NotNull GroupKey groupKey,
-    @NotNull UserEmail userEmail
+    @NotNull UserId userId
   ) throws AccessException, IOException {
     var client = createClient();
-    var id = lookupGroupMembership(client, groupKey, userEmail);
+    var id = lookupGroupMembership(client, groupKey, userId);
     return getMembership(client, id);
   }
 
@@ -385,10 +384,10 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId updateMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserEmail userEmail,
+    @NotNull UserId userId,
     @NotNull MembershipRole role
   ) throws AccessException, IOException {
-    var membershipId = lookupGroupMembership(client, groupKey, userEmail);
+    var membershipId = lookupGroupMembership(client, groupKey, userId);
     try {
       client
         .groups()
@@ -416,7 +415,7 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId addMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserEmail userEmail,
+    @NotNull UserId userId,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
     var role = new MembershipRole()
@@ -437,7 +436,7 @@ public class CloudIdentityGroupsClient {
         .create(
           groupKey.toString(),
           new Membership()
-            .setPreferredMemberKey(new EntityKey().setId(userEmail.email))
+            .setPreferredMemberKey(new EntityKey().setId(userId.email))
             .setRoles(List.of(role)))
         .execute();
 
@@ -455,7 +454,7 @@ public class CloudIdentityGroupsClient {
         //
         // Membership exists, but the expiry might be incorrect.
         //
-        return updateMembership(client, groupKey, userEmail, role);
+        return updateMembership(client, groupKey, userId, role);
       }
       else {
         translateAndThrowApiException(e);
@@ -469,25 +468,25 @@ public class CloudIdentityGroupsClient {
    */
   public @NotNull MembershipId addMembership(
     @NotNull GroupKey groupKey,
-    @NotNull UserEmail userEmail,
+    @NotNull UserId userId,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
-    return addMembership(createClient(), groupKey, userEmail, expiry);
+    return addMembership(createClient(), groupKey, userId, expiry);
   }
 
   /**
    * Add a member to a group in an idempotent way.
    */
   public @NotNull MembershipId addMembership(
-    @NotNull GroupEmail groupEmail,
-    @NotNull UserEmail userEmail,
+    @NotNull GroupId groupId,
+    @NotNull UserId userId,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
     var client = createClient();
     return addMembership(
       client,
-      lookupGroup(client, groupEmail),
-      userEmail,
+      lookupGroup(client, groupId),
+      userId,
       expiry);
   }
 
@@ -541,19 +540,19 @@ public class CloudIdentityGroupsClient {
    * List members of a group.
    */
   public @NotNull List<Membership> listMemberships(
-    @NotNull GroupEmail groupEmail
+    @NotNull GroupId groupId
   ) throws AccessException, IOException {
     var client = createClient();
-    return listMemberships(client, lookupGroup(client, groupEmail));
+    return listMemberships(client, lookupGroup(client, groupId));
   }
 
   /**
    * List groups a user is a member of.
    */
   public @NotNull List<MembershipRelation> listMembershipsByUser(
-    @NotNull UserEmail userEmail
+    @NotNull UserId userId
   ) throws AccessException, IOException {
-    Preconditions.checkArgument(userEmail.email.indexOf('\'') < 0);
+    Preconditions.checkArgument(userId.email.indexOf('\'') < 0);
 
     try {
       var client = createClient();
@@ -564,7 +563,7 @@ public class CloudIdentityGroupsClient {
           .groups()
           .memberships()
           .searchDirectGroups("groups/-")
-          .setQuery(String.format("member_key_id=='%s'", userEmail.email))
+          .setQuery(String.format("member_key_id=='%s'", userId.email))
           .setPageToken(pageToken)
           .setPageSize(SEARCH_PAGE_SIZE)
           .execute();

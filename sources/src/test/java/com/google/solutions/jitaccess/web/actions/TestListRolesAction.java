@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
@@ -43,7 +43,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class TestListRolesAction {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
   @Test
   public void whenProjectIsEmpty_ThenActionThrowsException() throws Exception {

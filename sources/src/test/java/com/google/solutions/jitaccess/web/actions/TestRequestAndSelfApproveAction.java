@@ -23,12 +23,9 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.Activation;
-import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
@@ -46,7 +43,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 public class TestRequestAndSelfApproveAction {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
   @Test
   public void whenProjectIsNull_ThenActionThrowsException() throws Exception {

@@ -27,7 +27,7 @@ import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
@@ -75,7 +75,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   }
 
   @NotNull List<Binding> findProjectBindings(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     ProjectId projectId
   ) throws AccessException, IOException {
     //
@@ -115,7 +115,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) {
     //
     // Not supported.
@@ -126,7 +126,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull EntitlementSet<ProjectRole> findEntitlements(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude
   ) throws AccessException, IOException {
@@ -221,7 +221,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull Set<UserEmail> findEntitlementHolders(
+  public @NotNull Set<UserId> findEntitlementHolders(
     @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException {
@@ -251,7 +251,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       .filter(p -> p.startsWith(USER_PREFIX))
       .map(p -> p.substring(USER_PREFIX.length()))
       .distinct()
-      .map(email -> new UserEmail(email))
+      .map(email -> new UserId(email))
       .collect(Collectors.toSet());
 
     //
@@ -282,7 +282,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     for (var listMembersFuture : listMembersFutures) {
       var members = ThrowingCompletableFuture.awaitAndRethrow(listMembersFuture)
         .stream()
-        .map(m -> new UserEmail(m.getEmail())).toList();
+        .map(m -> new UserId(m.getEmail())).toList();
       allMembers.addAll(members);
     }
 
@@ -297,7 +297,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     private final @NotNull Set<String> principalIdentifiers;
 
     public PrincipalSet(
-      @NotNull UserEmail user,
+      @NotNull UserId user,
       @NotNull Collection<Group> groups
     ) {
       this.principalIdentifiers = groups

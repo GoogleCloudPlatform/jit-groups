@@ -21,8 +21,7 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.clients.GroupKey;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,7 +86,7 @@ public class TestGroupKey {
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
     var id = new GroupKey("group-1");
-    var email = new UserEmail("group-1@example.com");
+    var email = new UserId("group-1@example.com");
 
     assertFalse(id.equals(email));
   }

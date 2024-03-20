@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -41,12 +41,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestEntitlementActivator {
-  private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
-  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("peer@example.com");
-  private static final UserEmail SAMPLE_UNKNOWN_USER = new UserEmail("unknown@example.com");
+  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
+  private static final UserId SAMPLE_APPROVING_USER = new UserId("peer@example.com");
+  private static final UserId SAMPLE_UNKNOWN_USER = new UserId("unknown@example.com");
 
   private record UserContext(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) implements CatalogUserContext {}
 
   private static class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId, UserContext> {
@@ -71,7 +71,7 @@ public class TestEntitlementActivator {
 
     @Override
     protected Activation provisionAccess(
-      UserEmail approvingUser,
+      UserId approvingUser,
       MpaActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
       return new Activation(request.startTime(), request.duration());

@@ -26,13 +26,12 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,9 +93,9 @@ public class ListPeersAction extends AbstractAction {
 
 
   public static class ResponseEntity {
-    public final @NotNull Set<UserEmail> peers;
+    public final @NotNull Set<UserId> peers;
 
-    private ResponseEntity(@NotNull Set<UserEmail> peers) {
+    private ResponseEntity(@NotNull Set<UserId> peers) {
       Preconditions.checkNotNull(peers);
       this.peers = peers;
     }

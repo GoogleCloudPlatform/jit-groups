@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -35,7 +35,7 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
   extends ActivationRequest<TEntitlementId> {
   protected JitActivationRequest(
     @NotNull ActivationId id,
-    @NotNull UserEmail requestingUser,
+    @NotNull UserId requestingUser,
     @NotNull Set<TEntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,

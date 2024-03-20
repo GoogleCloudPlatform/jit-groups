@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.actions;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
@@ -61,11 +61,11 @@ abstract class Mocks {
     return environment;
   }
 
-  static IapPrincipal createIapPrincipalMock(@NotNull UserEmail userEmail) {
+  static IapPrincipal createIapPrincipalMock(@NotNull UserId userId) {
     return new IapPrincipal() {
       @Override
-      public UserEmail email() {
-        return userEmail;
+      public UserId email() {
+        return userId;
       }
 
       @Override
