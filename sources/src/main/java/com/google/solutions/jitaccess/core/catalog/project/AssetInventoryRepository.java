@@ -28,10 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
 import dev.cel.common.CelException;
@@ -136,98 +133,91 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
     List<Binding> allBindings = findProjectBindings(user, projectId);
 
-    throw new RuntimeException("NIY"); //TODO: refactor!
-//
-//    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
-//    if (statusesToInclude.contains(Entitlement.Status.AVAILABLE)) {
-//
-//      //
-//      // Find all JIT-eligible role bindings. The bindings are
-//      // conditional and have a special condition that serves
-//      // as marker.
-//      //
-//      Set<Entitlement<ProjectRole>> jitEligible;
-//      if (typesToInclude.contains(ActivationType.JIT)) {
-//        jitEligible = allBindings.stream()
-//          .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
-//          .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
-//          .map(roleBinding -> new Entitlement<>(
-//            roleBinding,
-//            roleBinding.roleBinding().role(),
-//            ActivationType.JIT,
-//            Entitlement.Status.AVAILABLE))
-//          .collect(Collectors.toSet());
-//      }
-//      else {
-//        jitEligible = Set.of();
-//      }
-//
-//      //
-//      // Find all MPA-eligible role bindings. The bindings are
-//      // conditional and have a special condition that serves
-//      // as marker.
-//      //
-//      Set<Entitlement<ProjectRole>> mpaEligible;
-//      if (typesToInclude.contains(ActivationType.MPA)) {
-//        mpaEligible = allBindings.stream()
-//          .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
-//          .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
-//          .map(roleBinding -> new Entitlement<>(
-//            roleBinding,
-//            roleBinding.roleBinding().role(),
-//            ActivationType.MPA,
-//            Entitlement.Status.AVAILABLE))
-//          .collect(Collectors.toSet());
-//      }
-//      else {
-//        mpaEligible = Set.of();
-//      }
-//
-//      //
-//      // Determine effective set of eligible roles. If a role is both JIT- and
-//      // MPA-eligible, only retain the JIT-eligible one.
-//      //
-//      allAvailable.addAll(jitEligible);
-//      allAvailable.addAll(mpaEligible
-//        .stream()
-//        .filter(r -> jitEligible.stream().noneMatch(a -> a.id().equals(r.id()))).toList());
-//    }
-//
-//    //
-//    // Find temporary bindings that reflect activations and sort out which
-//    // ones are still active and which ones have expired.
-//    //
-//    var allActive = new HashSet<ActiveEntitlement<ProjectRole>>();
-//    var allExpired = new HashSet<ActiveEntitlement<ProjectRole>>();
-//
-//    for (var binding : allBindings.stream()
-//      // Only temporary access bindings.
-//      .filter(binding -> JitConstraints.isActivated(binding.getCondition())).toList())
-//    {
-//      var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
-//      boolean isValid;
-//
-//      try {
-//        isValid = condition.evaluate();
-//      }
-//      catch (CelException e) {
-//        isValid = false;
-//      }
-//
-//      if (isValid && statusesToInclude.contains(Entitlement.Status.ACTIVE)) {
-//        allActive.add(new ActiveEntitlement<>(
-//          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
-//          condition.getValidity()));
-//      }
-//
-//      if (!isValid && statusesToInclude.contains(Entitlement.Status.EXPIRED)) {
-//        allExpired.add(new ActiveEntitlement<>(
-//          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
-//          condition.getValidity()));
-//      }
-//    }
-//
-//    return buildEntitlementSet(allAvailable, allActive, allExpired, Set.of());
+    //
+    // Find all JIT-eligible role bindings. The bindings are
+    // conditional and have a special condition that serves
+    // as marker.
+    //
+    Set<Entitlement<ProjectRole>> jitEligible;
+    if (typesToInclude.contains(ActivationType.JIT)) {
+      jitEligible = allBindings.stream()
+        .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
+        .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
+        .map(roleBinding -> new Entitlement<>(
+          roleBinding,
+          roleBinding.roleBinding().role(),
+          ActivationType.JIT))
+        .collect(Collectors.toSet());
+    }
+    else {
+      jitEligible = Set.of();
+    }
+
+    //
+    // Find all MPA-eligible role bindings. The bindings are
+    // conditional and have a special condition that serves
+    // as marker.
+    //
+    Set<Entitlement<ProjectRole>> mpaEligible;
+    if (typesToInclude.contains(ActivationType.MPA)) {
+      mpaEligible = allBindings.stream()
+        .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
+        .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
+        .map(roleBinding -> new Entitlement<>(
+          roleBinding,
+          roleBinding.roleBinding().role(),
+          ActivationType.MPA))
+        .collect(Collectors.toSet());
+    }
+    else {
+      mpaEligible = Set.of();
+    }
+
+    //
+    // Determine effective set of eligible roles. If a role is both JIT- and
+    // MPA-eligible, only retain the JIT-eligible one.
+    //
+    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
+
+    allAvailable.addAll(jitEligible);
+    allAvailable.addAll(mpaEligible
+      .stream()
+      .filter(r -> jitEligible.stream().noneMatch(a -> a.id().equals(r.id()))).toList());
+
+    //
+    // Find temporary bindings that reflect activations and sort out which
+    // ones are still active and which ones have expired.
+    //
+    var currentActivations = new HashMap<ProjectRole, Activation>();
+    var expiredActivations = new HashMap<ProjectRole, Activation>();
+
+    for (var binding : allBindings.stream()
+      // Only temporary access bindings.
+      .filter(binding -> JitConstraints.isActivated(binding.getCondition())).toList())
+    {
+      var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
+      boolean isValid;
+
+      try {
+        isValid = condition.evaluate();
+      }
+      catch (CelException e) {
+        isValid = false;
+      }
+
+      if (isValid) {
+        currentActivations.put(
+          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
+          new Activation(condition.getValidity()));
+      }
+      else {
+        expiredActivations.put(
+          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
+          new Activation(condition.getValidity()));
+      }
+    }
+
+    return new EntitlementSet<>(allAvailable, currentActivations, expiredActivations, Set.of());
   }
 
   @Override

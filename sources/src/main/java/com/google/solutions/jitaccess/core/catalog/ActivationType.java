@@ -27,7 +27,4 @@ public enum ActivationType {
 
   /** Entitlement can be activated using multi-party approval.  */
   MPA,
-
-  /** Entitlement can no longer be activated. */
-  NONE
 }

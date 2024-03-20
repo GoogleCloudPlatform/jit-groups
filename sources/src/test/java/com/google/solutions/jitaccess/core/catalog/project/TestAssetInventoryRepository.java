@@ -31,7 +31,6 @@ import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
@@ -340,13 +339,11 @@ public class TestAssetInventoryRepository {
 
     assertEquals(1, entitlements.available().size());
 
-    assertTrue(entitlements.currentActivations().isEmpty());
-    assertTrue(entitlements.expiredActivations().isEmpty());
-
     var entitlement = entitlements.available().first();
     assertEquals(ActivationType.JIT, entitlement.activationType());
 
-    assertTrue(entitlements.currentActivations().containsKey(entitlement.id()));
+    assertTrue(entitlements.currentActivations().isEmpty());
+    assertTrue(entitlements.expiredActivations().containsKey(entitlement.id()));
   }
 
   @Test

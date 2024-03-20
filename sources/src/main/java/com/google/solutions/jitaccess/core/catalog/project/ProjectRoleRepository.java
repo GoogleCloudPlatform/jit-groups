@@ -21,14 +21,10 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
-import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,14 +61,4 @@ public abstract class ProjectRoleRepository {
     @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException;
-
-  record ActiveEntitlement<TId>(
-    @NotNull TId entitlementId,
-    @NotNull TimeSpan validity
-  ) {
-    public ActiveEntitlement {
-      Preconditions.checkNotNull(entitlementId, "entitlementId");
-      Preconditions.checkNotNull(validity, "validity");
-    }
-  }
 }
