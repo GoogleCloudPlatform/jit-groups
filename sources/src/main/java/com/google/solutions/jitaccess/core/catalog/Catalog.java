@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -44,7 +44,7 @@ public interface Catalog<
    * with the catalog.
    */
   @NotNull TUserContext createContext(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) throws AccessException, IOException;
 
   /**
@@ -73,7 +73,7 @@ public interface Catalog<
   /**
    * List available reviewers for (MPA-) activating an entitlement.
    */
-  SortedSet<UserEmail> listReviewers(
+  SortedSet<UserId> listReviewers(
     @NotNull TUserContext userContext,
     @NotNull TEntitlementId entitlement
   ) throws AccessException, IOException;

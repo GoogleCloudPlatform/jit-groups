@@ -25,9 +25,8 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
-import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import jakarta.enterprise.context.Dependent;
@@ -69,7 +68,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
   private void provisionTemporaryBinding(
     @NotNull String bindingDescription,
     @NotNull ProjectId projectId,
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @NotNull Set<String> roles,
     @NotNull Instant startTime,
     @NotNull Duration duration
@@ -136,7 +135,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
   @Override
   protected Activation provisionAccess(
-    @NotNull UserEmail approvingUser,
+    @NotNull UserId approvingUser,
     @NotNull MpaActivationRequest<ProjectRole> request
   ) throws AccessException, AlreadyExistsException, IOException {
 
@@ -208,11 +207,11 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
         return new MpaRequest<>(
           new ActivationId(payload.getJwtId()),
-          new UserEmail(payload.get("beneficiary").toString()),
+          new UserId(payload.get("beneficiary").toString()),
           Set.of(new ProjectRole(roleBinding)),
           ((List<String>)payload.get("reviewers"))
             .stream()
-            .map(email -> new UserEmail(email))
+            .map(email -> new UserId(email))
             .collect(Collectors.toSet()),
           payload.get("justification").toString(),
           Instant.ofEpochSecond(startTime),

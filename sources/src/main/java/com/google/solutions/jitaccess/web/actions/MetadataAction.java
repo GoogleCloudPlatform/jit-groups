@@ -23,12 +23,11 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -62,14 +61,14 @@ public class MetadataAction extends AbstractAction {
 
   public static class ResponseEntity {
     public final @NotNull String justificationHint;
-    public final @NotNull UserEmail signedInUser;
+    public final @NotNull UserId signedInUser;
     public final @NotNull String applicationVersion;
     public final int defaultActivationTimeout; // in minutes.
     public final int maxActivationTimeout;     // in minutes.
 
     private ResponseEntity(
       @NotNull String justificationHint,
-      @NotNull UserEmail signedInUser,
+      @NotNull UserId signedInUser,
       @NotNull String applicationVersion,
       int maxActivationTimeoutInMinutes,
       int defaultActivationTimeoutInMinutes

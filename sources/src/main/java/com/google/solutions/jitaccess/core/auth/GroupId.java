@@ -28,13 +28,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Email address of a group.
+ * Principal identifier for a group.
+ *
+ * NB. The ID looks like an email address, but it might not
+ *     be a route-able email address.
  */
-public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
+public class GroupId implements Comparable<GroupId>, PrincipalId {
   public static final String TYPE = "group";
   public final @NotNull String email;
 
-  public GroupEmail(@NotNull String email) {
+  public GroupId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     this.email = email;
   }
@@ -58,8 +61,8 @@ public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
       return false;
     }
 
-    GroupEmail GroupEmail = (GroupEmail) o;
-    return email.equals(GroupEmail.email);
+    GroupId groupId = (GroupId) o;
+    return email.equals(groupId.email);
   }
 
   @Override
@@ -68,7 +71,7 @@ public class GroupEmail implements Comparable<GroupEmail>, PrincipalIdentifier {
   }
 
   @Override
-  public int compareTo(@NotNull GroupEmail o) {
+  public int compareTo(@NotNull GroupId o) {
     return this.email.compareTo(o.email);
   }
 

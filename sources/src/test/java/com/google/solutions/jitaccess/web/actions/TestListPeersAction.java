@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +35,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 public class TestListPeersAction {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
   @Test
   public void whenCatalogThrowsAccessDeniedException_ThenActionThrowsException() throws Exception {
@@ -73,7 +73,7 @@ public class TestListPeersAction {
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         argThat(r -> r.roleBinding().role().equals("roles/browser"))))
-      .thenReturn(new TreeSet(Set.of(new UserEmail("peer-1@example.com"), new UserEmail("peer-2@example.com"))));
+      .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
     var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser");

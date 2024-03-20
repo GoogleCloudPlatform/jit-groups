@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
@@ -76,8 +76,8 @@ public abstract class NotificationService {
    * but doesn't define its format.
    */
   public static abstract class Notification {
-    private final @NotNull Collection<UserEmail> toRecipients;
-    private final @NotNull Collection<UserEmail> ccRecipients;
+    private final @NotNull Collection<UserId> toRecipients;
+    private final @NotNull Collection<UserId> ccRecipients;
     private final @NotNull String subject;
 
     protected final Map<String, Object> properties = new HashMap<>();
@@ -86,11 +86,11 @@ public abstract class NotificationService {
       return false;
     }
 
-    public @NotNull Collection<UserEmail> getToRecipients() {
+    public @NotNull Collection<UserId> getToRecipients() {
       return toRecipients;
     }
 
-    public @NotNull Collection<UserEmail> getCcRecipients() {
+    public @NotNull Collection<UserId> getCcRecipients() {
       return ccRecipients;
     }
 
@@ -104,8 +104,8 @@ public abstract class NotificationService {
     public abstract String getType();
 
     protected Notification(
-      @NotNull Collection<UserEmail> toRecipients,
-      @NotNull Collection<UserEmail> ccRecipients,
+      @NotNull Collection<UserId> toRecipients,
+      @NotNull Collection<UserId> ccRecipients,
       @NotNull String subject
     ) {
       Preconditions.checkNotNull(toRecipients, "toRecipients");

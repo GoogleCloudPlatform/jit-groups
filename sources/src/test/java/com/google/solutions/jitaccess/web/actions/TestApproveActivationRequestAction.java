@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
@@ -48,8 +48,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class TestApproveActivationRequestAction {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
-  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
   private static final String SAMPLE_TOKEN = "eySAMPLE";
 
   @Test

@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
 import org.jetbrains.annotations.NotNull;
@@ -42,14 +42,14 @@ public abstract class ProjectRoleRepository {
    * Find projects that a user has standing, JIT-, or MPA-eligible access to.
    */
   abstract @NotNull SortedSet<ProjectId> findProjectsWithEntitlements(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) throws AccessException, IOException;
 
   /**
    * List entitlements for the given user.
    */
   abstract @NotNull EntitlementSet<ProjectRole> findEntitlements(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude
   ) throws AccessException, IOException;
@@ -57,7 +57,7 @@ public abstract class ProjectRoleRepository {
   /**
    * List users that hold an eligible role binding.
    */
-  abstract @NotNull Set<UserEmail> findEntitlementHolders(
+  abstract @NotNull Set<UserId> findEntitlementHolders(
     @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException;

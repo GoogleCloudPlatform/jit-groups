@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -38,13 +38,13 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final @NotNull ActivationId id;
   private final @NotNull Instant startTime;
   private final @NotNull Duration duration;
-  private final @NotNull UserEmail requestingUser;
+  private final @NotNull UserId requestingUser;
   private final @NotNull Set<TEntitlementId> entitlements;
   private final @NotNull String justification;
 
   protected ActivationRequest(
     @NotNull ActivationId id,
-    @NotNull UserEmail requestingUser,
+    @NotNull UserId requestingUser,
     @NotNull Set<TEntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
@@ -105,7 +105,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   /**
    * @return user that requested access.
    */
-  public @NotNull UserEmail requestingUser() {
+  public @NotNull UserId requestingUser() {
     return this.requestingUser;
   }
 

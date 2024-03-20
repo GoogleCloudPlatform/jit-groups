@@ -29,7 +29,7 @@ import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
@@ -77,7 +77,7 @@ public class IamCredentialsClient {
    * Sign a JWT using the Google-managed service account key.
    */
   public String signJwt(
-    @NotNull UserEmail serviceAccount,
+    @NotNull UserId serviceAccount,
     @NotNull JsonWebToken.Payload payload
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
@@ -120,7 +120,7 @@ public class IamCredentialsClient {
   /**
    * Get JWKS location for service account key set.
    */
-  public static String getJwksUrl(@NotNull UserEmail serviceAccount) {
+  public static String getJwksUrl(@NotNull UserId serviceAccount) {
     return String.format(
       "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", 
       serviceAccount.email);

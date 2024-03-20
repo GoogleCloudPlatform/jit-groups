@@ -28,13 +28,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Set;
 
 public class TestAccessControlList {
-  private static final UserEmail TEST_USER_1 = new UserEmail("test-1@example.com");
-  private static final UserEmail TEST_USER_2 = new UserEmail("test-2@example.com");
-  private static final GroupEmail TEST_GROUP_1 = new GroupEmail("group-1@example.com");
+  private static final UserId TEST_USER_1 = new UserId("test-1@example.com");
+  private static final UserId TEST_USER_2 = new UserId("test-2@example.com");
+  private static final GroupId TEST_GROUP_1 = new GroupId("group-1@example.com");
 
   private record TestSubject(
-    PrincipalIdentifier id,
-    Set<PrincipalIdentifier> principals) implements Subject {
+    PrincipalId id,
+    Set<PrincipalId> principals) implements Subject {
   }
 
   @Test

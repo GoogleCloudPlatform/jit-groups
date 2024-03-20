@@ -26,8 +26,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
@@ -39,7 +38,6 @@ import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
@@ -126,7 +124,7 @@ public class RequestActivationAction extends AbstractActivationAction {
       activationRequest = this.activator.createMpaRequest(
         userContext,
         Set.of(new ProjectRole(roleBinding)),
-        request.peers.stream().map(email -> new UserEmail(email)).collect(Collectors.toSet()),
+        request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
         requestedRoleBindingDuration);

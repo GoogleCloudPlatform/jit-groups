@@ -30,7 +30,7 @@ import java.util.Set;
  * @param allowedPrincipals allowed principals
  */
 public record AccessControlList(
-  @NotNull Set<PrincipalIdentifier> allowedPrincipals
+  @NotNull Set<PrincipalId> allowedPrincipals
 ){
   /**
    * Check whether a subject is allowed access.

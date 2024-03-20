@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.Catalog;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
@@ -44,8 +44,8 @@ import static org.mockito.Mockito.verify;
 
 public class TestProjectRoleActivator {
 
-  private static final UserEmail SAMPLE_REQUESTING_USER = new UserEmail("user@example.com");
-  private static final UserEmail SAMPLE_APPROVING_USER = new UserEmail("approver@example.com");
+  private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
+  private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
   private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";

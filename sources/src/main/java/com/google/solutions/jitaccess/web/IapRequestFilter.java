@@ -23,10 +23,7 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.web.LogAdapter;
-import com.google.solutions.jitaccess.web.RequireIapPrincipal;
-import com.google.solutions.jitaccess.web.RuntimeEnvironment;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapAssertion;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
@@ -147,8 +144,8 @@ public class IapRequestFilter implements ContainerRequestFilter {
       }
 
       @Override
-      public @NotNull UserEmail email() {
-        return new UserEmail(debugPrincipalName);
+      public @NotNull UserId email() {
+        return new UserId(debugPrincipalName);
       }
 
       @Override

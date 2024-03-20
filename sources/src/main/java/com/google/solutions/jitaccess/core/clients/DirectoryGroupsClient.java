@@ -29,7 +29,7 @@ import com.google.api.services.directory.model.Member;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
@@ -82,7 +82,7 @@ public class DirectoryGroupsClient {
    * List all groups a given user is a direct member of.
    */
   public @NotNull Collection<Group> listDirectGroupMemberships(
-    @NotNull UserEmail user
+    @NotNull UserId user
   ) throws AccessException, IOException {
     try {
       //

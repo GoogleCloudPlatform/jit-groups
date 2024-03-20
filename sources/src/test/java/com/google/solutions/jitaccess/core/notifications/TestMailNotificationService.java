@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -42,7 +42,7 @@ public class TestMailNotificationService {
     private final String templateId;
 
     protected TestNotification(
-      UserEmail recipient,
+      UserId recipient,
       String subject,
       Map<String, Object> properties,
       String templateId
@@ -72,7 +72,7 @@ public class TestMailNotificationService {
       mailAdapter,
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
-    var to = new UserEmail("user@example.com");
+    var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
       to,
       "Test email",
@@ -94,7 +94,7 @@ public class TestMailNotificationService {
       mailAdapter,
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
-    var to = new UserEmail("user@example.com");
+    var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
       to,
       "Test email",

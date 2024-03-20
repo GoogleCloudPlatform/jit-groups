@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import org.junit.jupiter.api.Test;
@@ -39,8 +39,8 @@ public class TestLogAdapter {
     adapter.setPrincipal(
       new IapPrincipal() {
         @Override
-        public UserEmail email() {
-          return new UserEmail("email");
+        public UserId email() {
+          return new UserId("email");
         }
 
         @Override
@@ -76,8 +76,8 @@ public class TestLogAdapter {
     adapter.setPrincipal(
       new IapPrincipal() {
         @Override
-        public UserEmail email() {
-          return new UserEmail("email");
+        public UserId email() {
+          return new UserId("email");
         }
 
         @Override

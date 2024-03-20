@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.core.notifications;
 
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -39,7 +39,7 @@ public class TestMessageTemplate {
     private final String templateId;
 
     protected TestNotification(
-      UserEmail recipient,
+      UserId recipient,
       String subject,
       Map<String, Object> properties,
       String templateId
@@ -69,7 +69,7 @@ public class TestMessageTemplate {
     properties.put("TEST-2", "<value2/>");
 
     var notification = new TestNotification(
-      new UserEmail("user@example.com"),
+      new UserId("user@example.com"),
       "Test email",
       properties,
       "ignored-templateid");
@@ -94,7 +94,7 @@ public class TestMessageTemplate {
     properties.put("TEST-1", Instant.ofEpochSecond(86400));
 
     var notification = new TestNotification(
-      new UserEmail("user@example.com"),
+      new UserId("user@example.com"),
       "Test email",
       properties,
       "ignored-templateid");

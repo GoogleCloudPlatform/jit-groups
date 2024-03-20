@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
@@ -167,7 +167,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
     protected ActivationApprovedNotification(
       ProjectId projectId,
       @NotNull MpaActivationRequest<ProjectRole> request,
-      @NotNull UserEmail approver,
+      @NotNull UserId approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(

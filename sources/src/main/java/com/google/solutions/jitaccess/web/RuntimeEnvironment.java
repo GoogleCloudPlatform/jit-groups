@@ -32,7 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.*;
@@ -64,7 +64,7 @@ public class RuntimeEnvironment {
 
   private final String projectId;
   private final String projectNumber;
-  private final @NotNull UserEmail applicationPrincipal;
+  private final @NotNull UserId applicationPrincipal;
   private final GoogleCredentials applicationCredentials;
 
   /**
@@ -142,7 +142,7 @@ public class RuntimeEnvironment {
         this.projectNumber = projectMetadata.get("numericProjectId").toString();
 
         var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserEmail(defaultCredentials.getAccount());
+        this.applicationPrincipal = new UserId(defaultCredentials.getAccount());
 
         if (defaultCredentials.getScopes().containsAll(this.configuration.getRequiredOauthScopes())) {
           //
@@ -217,14 +217,14 @@ public class RuntimeEnvironment {
           // refresh fails, fail application startup.
           //
           this.applicationCredentials.refresh();
-          this.applicationPrincipal = new UserEmail(impersonateServiceAccount);
+          this.applicationPrincipal = new UserId(impersonateServiceAccount);
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           this.applicationCredentials = defaultCredentials;
-          this.applicationPrincipal = new UserEmail(
+          this.applicationPrincipal = new UserId(
               ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
         }
         else {
@@ -269,7 +269,7 @@ public class RuntimeEnvironment {
     return projectNumber;
   }
 
-  public @NotNull UserEmail getApplicationPrincipal() {
+  public @NotNull UserId getApplicationPrincipal() {
     return applicationPrincipal;
   }
 

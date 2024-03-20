@@ -23,8 +23,7 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
@@ -48,8 +47,8 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 public class TestRequestActivationAction {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
-  private static final UserEmail SAMPLE_USER_2 = new UserEmail("user-2@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
   private static final Duration DEFAULT_ACTIVATION_DURATION = Duration.ofMinutes(5);
   private static final int DEFAULT_MIN_NUMBER_OF_REVIEWERS = 1;
   private static final int DEFAULT_MAX_NUMBER_OF_REVIEWERS = 10;
@@ -418,7 +417,7 @@ public class TestRequestActivationAction {
       Mocks.createUriInfoMock());
 
     assertEquals(SAMPLE_USER.email, response.beneficiary.email);
-    assertIterableEquals(Set.of(new UserEmail(SAMPLE_USER_2.email)), response.reviewers);
+    assertIterableEquals(Set.of(new UserId(SAMPLE_USER_2.email)), response.reviewers);
     assertTrue(response.isBeneficiary);
     assertFalse(response.isReviewer);
     assertEquals("justification", response.justification);

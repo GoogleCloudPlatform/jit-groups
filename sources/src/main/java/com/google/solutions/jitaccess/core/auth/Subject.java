@@ -32,10 +32,10 @@ public interface Subject {
   /**
    * @return Primary id.
    */
-  @NotNull PrincipalIdentifier id();
+  @NotNull PrincipalId id();
 
   /**
    * @return full set of principals, including groups.
    */
-  @NotNull Set<PrincipalIdentifier> principals();
+  @NotNull Set<PrincipalId> principals();
 }

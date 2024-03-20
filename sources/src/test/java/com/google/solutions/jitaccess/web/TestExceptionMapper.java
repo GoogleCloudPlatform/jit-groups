@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
 import com.google.solutions.jitaccess.core.ResourceNotFoundException;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
@@ -38,7 +38,7 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestExceptionMapper {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
   @Path("/api/")
   public class Resource {

@@ -22,8 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.gson.Gson;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
-import com.google.solutions.jitaccess.web.ExceptionMappers;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.ws.rs.core.MediaType;
@@ -42,7 +41,7 @@ import java.security.Principal;
 public class RestDispatcher<TResource> {
   private final Dispatcher dispatcher;
 
-  public RestDispatcher(TResource resource, final UserEmail userEmail) {
+  public RestDispatcher(TResource resource, final UserId userId) {
     dispatcher = MockDispatcherFactory.createDispatcher();
     dispatcher.getRegistry().addSingletonResource(resource);
 
@@ -63,8 +62,8 @@ public class RestDispatcher<TResource> {
         public Principal getUserPrincipal() {
           return new IapPrincipal() {
             @Override
-            public UserEmail email() {
-              return userEmail;
+            public UserId email() {
+              return userId;
             }
 
             @Override

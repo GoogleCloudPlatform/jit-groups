@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.*;
-import com.google.solutions.jitaccess.core.auth.GroupEmail;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.GroupId;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestCloudIdentityGroupsClient {
   private final String INVALID_CUSTOMER_ID = "Cinvalid";
-  private static final GroupEmail TEST_GROUP_EMAIL = new GroupEmail(
+  private static final GroupId TEST_GROUP_EMAIL = new GroupId(
     String.format(
       "jitaccess-test@%s",
       ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
@@ -70,7 +70,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> client.getGroup(new GroupEmail("test@example.com")));
+      () -> client.getGroup(new GroupId("test@example.com")));
   }
 
   @Test
@@ -83,7 +83,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> client.getGroup(new GroupEmail("test@example.com")));
+      () -> client.getGroup(new GroupId("test@example.com")));
   }
 
   @Test
@@ -96,7 +96,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> client.getGroup(new GroupEmail(String.format(
+      () -> client.getGroup(new GroupId(String.format(
         "jitaccess-doesnotexist@%s",
         ITestEnvironment.CLOUD_IDENTITY_DOMAIN))));
   }
@@ -129,7 +129,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       NotAuthenticatedException.class,
       () -> client.createGroup(
-        new GroupEmail("test@example.com"),
+        new GroupId("test@example.com"),
         "test group"));
   }
 
@@ -144,7 +144,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       IllegalArgumentException.class,
       () -> client.createGroup(
-        new GroupEmail("doesnotexist@google.com"),
+        new GroupId("doesnotexist@google.com"),
         "test group"));
   }
 
@@ -262,7 +262,7 @@ public class ITestCloudIdentityGroupsClient {
       NotAuthenticatedException.class,
       () -> client.addMembership(
         new GroupKey("test"),
-        new UserEmail("user@example.com"),
+        new UserId("user@example.com"),
         Instant.now().plusSeconds(300)));
   }
 
@@ -278,7 +278,7 @@ public class ITestCloudIdentityGroupsClient {
       IllegalArgumentException.class,
       () -> client.addMembership(
         new GroupKey("invalid"),
-        new UserEmail("user@example.com"),
+        new UserId("user@example.com"),
         Instant.now().plusSeconds(300)));
   }
 
@@ -479,7 +479,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       ResourceNotFoundException.class,
       () -> client.listMembershipsByUser(
-      new UserEmail("doesnotexist@" + ITestEnvironment.CLOUD_IDENTITY_DOMAIN)));
+      new UserId("doesnotexist@" + ITestEnvironment.CLOUD_IDENTITY_DOMAIN)));
   }
 
   @Test

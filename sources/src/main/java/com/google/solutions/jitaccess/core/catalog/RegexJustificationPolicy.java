@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +44,7 @@ public class RegexJustificationPolicy implements JustificationPolicy {
 
   @Override
   public void checkJustification(
-    @NotNull UserEmail user,
+    @NotNull UserId user,
     @Nullable String justification
   ) throws InvalidJustificationException {
     if (

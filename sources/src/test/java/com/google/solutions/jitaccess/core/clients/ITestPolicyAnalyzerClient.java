@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.core.clients;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.NotAuthenticatedException;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import org.junit.jupiter.api.Test;
 
 import java.net.SocketTimeoutException;
@@ -48,7 +48,7 @@ public class ITestPolicyAnalyzerClient {
       NotAuthenticatedException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserEmail("bob@example.com"),
+        new UserId("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -64,7 +64,7 @@ public class ITestPolicyAnalyzerClient {
       AccessDeniedException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserEmail("bob@example.com"),
+        new UserId("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -83,7 +83,7 @@ public class ITestPolicyAnalyzerClient {
       SocketTimeoutException.class,
       () -> adapter.findAccessibleResourcesByUser(
         "projects/0",
-        new UserEmail("bob@example.com"),
+        new UserId("bob@example.com"),
         Optional.empty(),
         Optional.empty(),
         true));
@@ -97,7 +97,7 @@ public class ITestPolicyAnalyzerClient {
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + ITestEnvironment.PROJECT_ID,
-      new UserEmail("bob@example.com"),
+      new UserId("bob@example.com"),
       Optional.of("invalid.invalid.invalid"),
       Optional.empty(),
       true);
@@ -114,7 +114,7 @@ public class ITestPolicyAnalyzerClient {
 
     var result = adapter.findAccessibleResourcesByUser(
       "projects/" + ITestEnvironment.PROJECT_ID,
-      new UserEmail("bob@example.com"),
+      new UserId("bob@example.com"),
       Optional.empty(),
       Optional.of("//cloudresourcemanager.googleapis.com/projects/000-invalid"),
       true);

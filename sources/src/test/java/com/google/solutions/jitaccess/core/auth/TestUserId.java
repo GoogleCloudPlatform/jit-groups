@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,19 +21,18 @@
 
 package com.google.solutions.jitaccess.core.auth;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupEmail {
+public class TestUserId {
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
 
   @Test
   public void toStringReturnsEmail() {
-    Assertions.assertEquals("test@example.com", new GroupEmail("test@example.com").toString());
+    assertEquals("test@example.com", new UserId("test@example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -42,8 +41,8 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectAreEquivalent_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob@example.com");
+    UserId id2 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -51,15 +50,15 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectAreSame_ThenEqualsReturnsTrue() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void whenObjectAreMotEquivalent_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("alice@example.com");
-    GroupEmail id2 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("alice@example.com");
+    UserId id2 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -67,14 +66,14 @@ public class TestGroupEmail {
 
   @Test
   public void whenObjectIsNull_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void whenObjectIsDifferentType_ThenEqualsReturnsFalse() {
-    GroupEmail id1 = new GroupEmail("group@example.com");
+    UserId id1 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(""));
   }
@@ -86,7 +85,7 @@ public class TestGroupEmail {
   @Test
   public void value() {
     assertEquals(
-      "group@example.com",
-      new GroupEmail("group@example.com").value());
+      "bob@example.com",
+      new UserId("bob@example.com").value());
   }
 }

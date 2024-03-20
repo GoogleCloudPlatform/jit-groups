@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
@@ -94,15 +94,15 @@ public abstract class AbstractActivationAction extends AbstractAction {
   }
 
   public static class ResponseEntity {
-    public final UserEmail beneficiary;
-    public final Collection<UserEmail> reviewers;
+    public final UserId beneficiary;
+    public final Collection<UserId> reviewers;
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
     public final @NotNull List<Item> items;
 
     public ResponseEntity(
-      @NotNull UserEmail caller,
+      @NotNull UserId caller,
       @NotNull ActivationRequest<ProjectRole> request,
       ActivationStatus status
     ) {

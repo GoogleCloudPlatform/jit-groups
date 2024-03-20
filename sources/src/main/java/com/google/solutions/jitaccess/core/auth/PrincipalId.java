@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Identifier for a principal such as a user or group.
  */
-public interface PrincipalIdentifier {
+public interface PrincipalId {
   /**
    * Type of principal, for example user, serviceAccount, group.
    */
