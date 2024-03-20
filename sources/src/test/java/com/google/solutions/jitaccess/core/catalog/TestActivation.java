@@ -72,4 +72,22 @@ public class TestActivation {
 
     assertEquals(0, lhs.compareTo(rhs));
   }
+
+  //---------------------------------------------------------------------------
+  // isValid.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenCurrentInstantInRange_ThenIsValidReturnsTrue() {
+    var now = Instant.now();
+    assertTrue(new Activation(now, Duration.ofSeconds(1)).isValid(now));
+    assertTrue(new Activation(now.minusSeconds(1), Duration.ofSeconds(1)).isValid(now));
+  }
+
+  @Test
+  public void whenCurrentInstantNotInRange_ThenIsValidReturnsFalse() {
+    var now = Instant.now();
+    assertFalse(new Activation(now.plusSeconds(1), Duration.ofSeconds(1)).isValid(now));
+    assertFalse(new Activation(now.minusSeconds(2), Duration.ofSeconds(1)).isValid(now));
+  }
 }
