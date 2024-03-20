@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.MockitoUtils;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.Test;

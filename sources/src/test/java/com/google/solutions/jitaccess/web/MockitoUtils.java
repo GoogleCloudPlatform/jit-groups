@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,16 +21,22 @@
 
 package com.google.solutions.jitaccess.web;
 
-public class LogEvents {
-  public static final String API_LIST_PROJECTS = "api.listProjects";
-  public static final String API_LIST_ROLES = "api.listEligibleRoles";
-  public static final String API_LIST_PEERS = "api.listPeers";
-  public static final String API_ACTIVATE_ROLE = "api.activateRole";
-  public static final String API_REQUEST_ROLE = "api.requestRole";
-  public static final String API_GET_REQUEST = "api.getActivationRequest";
-  public static final String API_HEALTH = "api.checkHealth";
-  public static final String RUNTIME_STARTUP = "runtime.startup";
+import jakarta.enterprise.inject.Instance;
+import org.mockito.Mockito;
 
-  private LogEvents() {
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+
+public class MockitoUtils {
+  /**
+   * Create an Instance for a given object.
+   */
+  public static <T> Instance<T> toCdiInstance(T obj) {
+    var instance = Mockito.mock(Instance.class);
+    when(instance.stream()).thenReturn(List.of(obj).stream());
+    when(instance.iterator()).thenReturn(List.of(obj).iterator());
+
+    return instance;
   }
 }

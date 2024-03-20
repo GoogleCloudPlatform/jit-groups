@@ -31,6 +31,7 @@ import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.web.LogAdapter;
+import com.google.solutions.jitaccess.web.MockitoUtils;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
