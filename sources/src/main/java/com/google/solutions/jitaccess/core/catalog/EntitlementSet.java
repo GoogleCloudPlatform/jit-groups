@@ -24,31 +24,40 @@ package com.google.solutions.jitaccess.core.catalog;
 import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Set of entitlements
+ * Set of entitlements and associated activations.
  *
- * @param available available and active entitlements
- * @param expired previously active entitlements
+ * @param available entitlements available to the user
+ * @param currentActivations currently active entitlements
+ * @param expiredActivations previously active (but now expired) entitlements
  * @param warnings encountered warnings, if any.
  */
 public record EntitlementSet<TId extends EntitlementId>(
   @NotNull SortedSet<Entitlement<TId>> available,
-  @NotNull SortedSet<Entitlement<TId>> expired,
+  @NotNull Map<Entitlement<TId>, Activation> currentActivations,
+  @NotNull Map<Entitlement<TId>, Activation> expiredActivations,
   @NotNull Set<String> warnings
 ) {
   public EntitlementSet {
     Preconditions.checkNotNull(available, "available");
+    Preconditions.checkNotNull(currentActivations, "currentActivations");
+    Preconditions.checkNotNull(expiredActivations, "expiredActivations");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    assert available.stream().allMatch(e -> e.status() != Entitlement.Status.EXPIRED);
-    assert expired.stream().allMatch(e -> e.status() == Entitlement.Status.EXPIRED);
+    Preconditions.checkArgument(currentActivations.keySet().stream().allMatch(id -> available.contains(id)));
+    Preconditions.checkArgument(expiredActivations.keySet().stream().allMatch(id -> available.contains(id)));
+
+    Preconditions.checkArgument(currentActivations.values().stream().allMatch(a -> a.isValid(Instant.now())));
+    Preconditions.checkArgument(expiredActivations.values().stream().allMatch(a -> !a.isValid(Instant.now())));
   }
 
   public static <TId extends EntitlementId> @NotNull EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), new TreeSet<>(), Set.of());
+    return new EntitlementSet<TId>(new TreeSet<>(), Map.of(), Map.of(), Set.of());
   }
 }

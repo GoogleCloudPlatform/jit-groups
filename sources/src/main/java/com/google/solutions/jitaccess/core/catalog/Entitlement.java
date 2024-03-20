@@ -22,11 +22,8 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TimeSpan;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.time.Instant;
 import java.util.Comparator;
 
 /**
@@ -37,29 +34,11 @@ import java.util.Comparator;
 public record Entitlement<TEntitlementId extends EntitlementId> (
   @NotNull TEntitlementId id,
   @NotNull String name,
-  @NotNull ActivationType activationType,
-  @NotNull Status status,
-  @Nullable TimeSpan validity
+  @NotNull ActivationType activationType
 ) implements Comparable<Entitlement<TEntitlementId>> {
   public Entitlement {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(name, "name");
-
-    Preconditions.checkArgument(
-      validity == null || (status == Status.ACTIVE || status == Status.EXPIRED));
-    Preconditions.checkArgument(
-      status != Status.ACTIVE || validity.end().isAfter(Instant.now()));
-    Preconditions.checkArgument(
-      status != Status.EXPIRED || validity.end().isBefore(Instant.now()));
-  }
-
-  public Entitlement(
-    @NotNull TEntitlementId id,
-    @NotNull String name,
-    @NotNull ActivationType activationType,
-    @NotNull Status status
-  ) {
-    this(id, name, activationType, status, null);
   }
 
   @Override
@@ -70,35 +49,7 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   @Override
   public int compareTo(@NotNull Entitlement<TEntitlementId> o) {
     return Comparator
-      .comparing((Entitlement<TEntitlementId> e) -> e.status)
-      .thenComparing(e -> e.id)
-      .thenComparing(e -> e.validity, Comparator.nullsLast(Comparator.naturalOrder()))
+      .comparing((Entitlement<TEntitlementId> e) -> e.id)
       .compare(this, o);
-  }
-
-  //---------------------------------------------------------------------------
-  // Inner classes.
-  //---------------------------------------------------------------------------
-
-  public enum Status {
-    /**
-     * Entitlement can be activated.
-     */
-    AVAILABLE,
-
-    /**
-     * Entitlement is active.
-     */
-    ACTIVE,
-
-    /**
-     * Entitlement was active, but has no expired.
-     */
-    EXPIRED,
-
-    /**
-     * Approval pending.
-     */
-    ACTIVATION_PENDING
   }
 }
