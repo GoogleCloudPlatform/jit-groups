@@ -149,7 +149,7 @@ public class TestApproveActivationRequestAction {
       .approve(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(request)))
-      .thenReturn(new Activation<>(request));
+      .thenReturn(new Activation(request.startTime(), request.duration()));
 
     var notificationService = Mockito.mock(NotificationService.class);
     when(notificationService.canSendNotifications()).thenReturn(true);
@@ -198,7 +198,7 @@ public class TestApproveActivationRequestAction {
       .approve(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER_2)),
         eq(request)))
-      .thenReturn(new Activation<>(request));
+      .thenReturn(new Activation(request.startTime(), request.duration()));
 
     var action = new ApproveActivationRequestAction(
       new LogAdapter(),

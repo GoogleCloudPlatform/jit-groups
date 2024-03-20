@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
+import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
 import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.Activation;
@@ -115,7 +116,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       // Notify listeners, if any.
       //
       for (var service : this.notificationServices) {
-        service.sendNotification(new ActivationSelfApprovedNotification(projectId, activation));
+        service.sendNotification(new ActivationSelfApprovedNotification(projectId, activationRequest));
       }
 
       //
@@ -137,7 +138,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
 
       return new ResponseEntity(
         iapPrincipal.email(),
-        activation.request(),
+        activationRequest,
         Entitlement.Status.ACTIVE);
     }
     catch (Exception e) {
@@ -179,28 +180,28 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
   public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
-      @NotNull Activation<ProjectRole> activation)
+      @NotNull ActivationRequest<ProjectRole> request)
     {
       super(
-        List.of(activation.request().requestingUser()),
+        List.of(request.requestingUser()),
         List.of(),
         String.format(
           "Activated roles %s on '%s'",
-          activation.request().entitlements().stream()
+          request.entitlements().stream()
             .map(ent -> String.format("'%s'", ent.roleBinding().role()))
             .collect(Collectors.joining(", ")),
           projectId));
 
-      this.properties.put("BENEFICIARY", activation.request().requestingUser());
+      this.properties.put("BENEFICIARY", request.requestingUser());
       this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", activation.request()
+      this.properties.put("ROLE", request
         .entitlements()
         .stream()
         .map(ent -> ent.roleBinding().role())
         .collect(Collectors.joining(", ")));
-      this.properties.put("START_TIME", activation.request().startTime());
-      this.properties.put("END_TIME", activation.request().endTime());
-      this.properties.put("JUSTIFICATION", activation.request().justification());
+      this.properties.put("START_TIME", request.startTime());
+      this.properties.put("END_TIME", request.endTime());
+      this.properties.put("JUSTIFICATION", request.justification());
     }
 
     @Override

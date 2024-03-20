@@ -63,16 +63,18 @@ public class TestEntitlementActivator {
     }
 
     @Override
-    protected void provisionAccess(
+    protected Activation provisionAccess(
       JitActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
+      return new Activation(request.startTime(), request.duration());
     }
 
     @Override
-    protected void provisionAccess(
+    protected Activation provisionAccess(
       UserEmail approvingUser,
       MpaActivationRequest<SampleEntitlementId> request
     ) throws AccessException, AlreadyExistsException, IOException {
+      return new Activation(request.startTime(), request.duration());
     }
 
     @Override

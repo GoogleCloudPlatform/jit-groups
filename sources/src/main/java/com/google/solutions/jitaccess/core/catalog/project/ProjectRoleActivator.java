@@ -25,6 +25,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserEmail;
 import com.google.solutions.jitaccess.core.catalog.*;
@@ -108,7 +109,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
   }
 
   @Override
-  protected void provisionAccess(
+  protected Activation provisionAccess(
     @NotNull JitActivationRequest<ProjectRole> request
   ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(request, "request");
@@ -127,10 +128,14 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
+
+    return new Activation(
+      request.startTime(),
+      request.duration());
   }
 
   @Override
-  protected void provisionAccess(
+  protected Activation provisionAccess(
     @NotNull UserEmail approvingUser,
     @NotNull MpaActivationRequest<ProjectRole> request
   ) throws AccessException, AlreadyExistsException, IOException {
@@ -156,6 +161,10 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .stream()
         .map(e -> e.roleBinding().role())
         .collect(Collectors.toSet()),
+      request.startTime(),
+      request.duration());
+
+    return new Activation(
       request.startTime(),
       request.duration());
   }

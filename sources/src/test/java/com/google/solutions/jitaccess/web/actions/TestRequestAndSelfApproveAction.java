@@ -36,6 +36,8 @@ import jakarta.enterprise.inject.Instance;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -153,7 +155,7 @@ public class TestRequestAndSelfApproveAction {
       .activate(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         argThat(r -> r.entitlements().size() == 1)))
-      .then(r -> new Activation<>((ActivationRequest<ProjectRole>) r.getArguments()[1]));
+      .then(r -> new Activation(Instant.MIN, Duration.ZERO));
 
     var action = new RequestAndSelfApproveAction(
       new LogAdapter(),

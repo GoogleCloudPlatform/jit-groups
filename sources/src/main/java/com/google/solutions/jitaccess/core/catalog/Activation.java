@@ -22,15 +22,25 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.TimeSpan;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
+import java.time.Instant;
 
 /**
- * Represents a successful activation of one or more entitlements.
+ * Represents a successful activation of an entitlement.
+ *
+ * @param validity validity of the activation.
  */
-public record Activation<TEntitlementId extends EntitlementId>(
-  ActivationRequest<TEntitlementId> request
+public record Activation(
+  @NotNull TimeSpan validity
 ) {
   public Activation {
-    Preconditions.checkNotNull(request, "request");
-    Preconditions.checkArgument(!request.entitlements().isEmpty());
+    Preconditions.checkNotNull(validity, "validity");
+  }
+
+  public Activation(@NotNull Instant start, @NotNull Duration duration) {
+    this(new TimeSpan(start, start.plus(duration)));
   }
 }

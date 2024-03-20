@@ -129,7 +129,7 @@ public abstract class EntitlementActivator<
   /**
    * Activate an entitlement that permits self-approval.
    */
-  public final @NotNull Activation<TEntitlementId> activate(
+  public final @NotNull Activation activate(
     @NotNull TUserContext userContext,
     @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
@@ -149,15 +149,13 @@ public abstract class EntitlementActivator<
     //
     // Request is legit, apply it.
     //
-    provisionAccess(request);
-
-    return new Activation<>(request);
+    return provisionAccess(request);
   }
 
   /**
    * Approve another user's request.
    */
-  public final @NotNull Activation<TEntitlementId> approve(
+  public final @NotNull Activation approve(
     @NotNull TUserContext userContext,
     @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
@@ -192,15 +190,13 @@ public abstract class EntitlementActivator<
     //
     // Request is legit, apply it.
     //
-    provisionAccess(userContext.user(), request);
-
-    return new Activation<>(request);
+    return provisionAccess(userContext.user(), request);
   }
 
   /**
    * Apply a request.
    */
-  protected abstract void provisionAccess(
+  protected abstract Activation provisionAccess(
     @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
 
@@ -208,7 +204,7 @@ public abstract class EntitlementActivator<
   /**
    * Apply a request.
    */
-  protected abstract void provisionAccess(
+  protected abstract Activation provisionAccess(
     @NotNull UserEmail approvingUser,
     @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException;
