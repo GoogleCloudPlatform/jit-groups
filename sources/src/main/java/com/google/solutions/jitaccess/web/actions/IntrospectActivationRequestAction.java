@@ -77,7 +77,7 @@ public class IntrospectActivationRequestAction extends AbstractActivationAction 
       return new ResponseEntity(
         iapPrincipal.email(),
         activationRequest,
-        Entitlement.Status.ACTIVATION_PENDING);
+        ActivationStatus.ACTIVATION_PENDING);
     }
     catch (Exception e) {
       this.logAdapter

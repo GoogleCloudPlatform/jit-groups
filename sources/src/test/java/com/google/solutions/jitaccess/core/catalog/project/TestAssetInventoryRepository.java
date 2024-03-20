@@ -272,58 +272,22 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     //
-    // JIT only.
+    // Only JIT binding is retained.
     //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
 
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.available().first();
-      assertEquals(ActivationType.JIT, jitEntitlement.activationType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
-    }
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
 
-    //
-    // MPA only.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.MPA),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
+    assertTrue(entitlements.currentActivations().isEmpty());
+    assertTrue(entitlements.expiredActivations().isEmpty());
 
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.available().first();
-      assertEquals(ActivationType.MPA, jitEntitlement.activationType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
-    }
-
-    //
-    // JIT + MPA.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-        EnumSet.of(Entitlement.Status.AVAILABLE));
-
-      assertIterableEquals(
-        List.of("roles/for-user"),
-        entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
-      var jitEntitlement = entitlements.available().first();
-      assertEquals(ActivationType.JIT, jitEntitlement.activationType());
-      assertEquals(Entitlement.Status.AVAILABLE, jitEntitlement.status());
-    }
+    assertIterableEquals(
+      List.of("roles/for-user"),
+      entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+    var jitEntitlement = entitlements.available().first();
+    assertEquals(ActivationType.JIT, jitEntitlement.activationType());
   }
 
   @Test
@@ -369,45 +333,20 @@ public class TestAssetInventoryRepository {
       caiClient,
       new AssetInventoryRepository.Options("organization/0"));
 
-    //
-    // AVAILABLE + ACTIVE.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
 
-      assertEquals(1, entitlements.available().size());
-      assertEquals(0, entitlements.expired().size());
+    assertEquals(1, entitlements.available().size());
 
-      var entitlement = entitlements.available().first();
-      assertEquals(ActivationType.JIT, entitlement.activationType());
-      assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
-    }
+    assertTrue(entitlements.currentActivations().isEmpty());
+    assertTrue(entitlements.expiredActivations().isEmpty());
 
-    //
-    // AVAILABLE + ACTIVE + EXPIRED.
-    //
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
+    var entitlement = entitlements.available().first();
+    assertEquals(ActivationType.JIT, entitlement.activationType());
 
-      assertEquals(1, entitlements.available().size());
-      assertEquals(2, entitlements.expired().size());
-
-      var entitlement = entitlements.available().first();
-      assertEquals(ActivationType.JIT, entitlement.activationType());
-      assertEquals(Entitlement.Status.AVAILABLE, entitlement.status());
-
-      assertEquals(
-        "roles/for-user",
-        entitlements.expired().stream().toList().get(0).id().roleBinding().role());
-    }
+    assertTrue(entitlements.currentActivations().containsKey(entitlement.id()));
   }
 
   @Test
@@ -442,20 +381,18 @@ public class TestAssetInventoryRepository {
       caiClient,
       new AssetInventoryRepository.Options("organization/0"));
 
-    {
-      var entitlements = repository.findEntitlements(
-        SAMPLE_USER,
-        SAMPLE_PROJECT,
-        EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-        EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE, Entitlement.Status.EXPIRED));
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
 
-      assertEquals(1, entitlements.available().size());
-      assertEquals(0, entitlements.expired().size());
+    assertEquals(1, entitlements.available().size());
 
-      var entitlement = entitlements.available().first();
-      assertEquals(ActivationType.JIT, entitlement.activationType());
-      assertEquals(Entitlement.Status.ACTIVE, entitlement.status());
-    }
+    var entitlement = entitlements.available().first();
+    assertEquals(ActivationType.JIT, entitlement.activationType());
+
+    assertTrue(entitlements.currentActivations().containsKey(entitlement.id()));
+    assertTrue(entitlements.expiredActivations().isEmpty());
   }
 
   //---------------------------------------------------------------------------

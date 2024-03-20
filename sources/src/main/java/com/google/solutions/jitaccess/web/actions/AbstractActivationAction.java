@@ -102,9 +102,9 @@ public abstract class AbstractActivationAction extends AbstractAction {
     public final @NotNull List<Item> items;
 
     public ResponseEntity(
-      UserEmail caller,
+      @NotNull UserEmail caller,
       @NotNull ActivationRequest<ProjectRole> request,
-      Entitlement.Status status
+      ActivationStatus status
     ) {
       Preconditions.checkNotNull(request);
 
@@ -133,17 +133,17 @@ public abstract class AbstractActivationAction extends AbstractAction {
     }
 
     public static class Item {
-      public final String activationId;
-      public final String projectId;
+      public final @NotNull String activationId;
+      public final @NotNull String projectId;
       public final @NotNull RoleBinding roleBinding;
-      public final Entitlement.Status status;
+      public final @NotNull ActivationStatus status;
       public final long startTime;
       public final long endTime;
 
       private Item(
         @NotNull ActivationId activationId,
         @NotNull RoleBinding roleBinding,
-        Entitlement.Status status,
+        @NotNull ActivationStatus status,
         @NotNull Instant startTime,
         @NotNull Instant endTime
       ) {
@@ -157,5 +157,6 @@ public abstract class AbstractActivationAction extends AbstractAction {
         this.endTime = endTime.getEpochSecond();
       }
     }
+
   }
 }

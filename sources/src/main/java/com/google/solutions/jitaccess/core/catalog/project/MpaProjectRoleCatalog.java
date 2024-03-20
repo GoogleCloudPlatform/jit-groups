@@ -112,14 +112,12 @@ public class MpaProjectRoleCatalog implements Catalog<
       .findEntitlements(
         user,
         projectId,
-        EnumSet.of(activationType),
-        EnumSet.of(Entitlement.Status.AVAILABLE))
+        EnumSet.of(activationType))
       .available()
       .stream()
       .collect(Collectors.toMap(ent -> ent.id(), ent -> ent));
 
     assert userEntitlements.values().stream().allMatch(e -> e.activationType() == activationType);
-    assert userEntitlements.values().stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
 
     for (var requestedEntitlement : entitlements) {
       var grantedEntitlement = userEntitlements.get(requestedEntitlement);
@@ -181,8 +179,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     return this.repository.findEntitlements(
       userContext.user(),
       projectId,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA),
-      EnumSet.of(Entitlement.Status.AVAILABLE, Entitlement.Status.ACTIVE));
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
   }
 
   @Override

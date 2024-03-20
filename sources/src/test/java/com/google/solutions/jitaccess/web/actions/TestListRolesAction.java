@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.web.LogAdapter;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -88,7 +89,8 @@ public class TestListRolesAction {
         eq(new ProjectId("project-1"))))
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of()),
-        new TreeSet<>(Set.of()),
+        Map.of(),
+        Map.of(),
         Set.of("warning")));
 
     var action = new ListRolesAction(new LogAdapter(), catalog);
@@ -110,13 +112,11 @@ public class TestListRolesAction {
     var role1 = new Entitlement<ProjectRole>(
       new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
       "ent-1",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+      ActivationType.JIT);
     var role2 = new Entitlement<ProjectRole>(
       new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
       "ent-2",
-      ActivationType.JIT,
-      Entitlement.Status.AVAILABLE);
+      ActivationType.JIT);
 
     when(catalog
       .listEntitlements(
@@ -124,7 +124,8 @@ public class TestListRolesAction {
         eq(new ProjectId("project-1"))))
       .thenReturn(new EntitlementSet<>(
         new TreeSet<>(Set.of(role1, role2)),
-        new TreeSet<>(),
+        Map.of(),
+        Map.of(),
         Set.of()));
 
     var action = new ListRolesAction(new LogAdapter(), catalog);

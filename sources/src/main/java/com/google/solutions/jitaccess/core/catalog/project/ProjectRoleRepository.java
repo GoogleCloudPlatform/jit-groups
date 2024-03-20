@@ -36,8 +36,6 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Repository for ProjectRoleBinding-based entitlements.
@@ -57,8 +55,7 @@ public abstract class ProjectRoleRepository {
   abstract @NotNull EntitlementSet<ProjectRole> findEntitlements(
     @NotNull UserEmail user,
     @NotNull ProjectId projectId,
-    @NotNull EnumSet<ActivationType> typesToInclude,
-    @NotNull EnumSet<Entitlement.Status> statusesToInclude
+    @NotNull EnumSet<ActivationType> typesToInclude
   ) throws AccessException, IOException;
 
   /**
@@ -68,105 +65,6 @@ public abstract class ProjectRoleRepository {
     @NotNull ProjectRole roleBinding,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException;
-
-  /**
-   * Helper methods for building an EntitlementSet.
-   */
-  static <T extends EntitlementId> @NotNull EntitlementSet<T> buildEntitlementSet(
-    @NotNull Set<Entitlement<T>> availableEntitlements,
-    @NotNull Set<ActiveEntitlement<T>> activeEntitlements,
-    @NotNull Set<ActiveEntitlement<T>> expiredEntitlements,
-    @NotNull Set<String> warnings
-  ) {
-    assert availableEntitlements.stream().allMatch(e -> e.status() == Entitlement.Status.AVAILABLE);
-    assert activeEntitlements.stream().noneMatch(id -> expiredEntitlements.contains(id));
-    assert expiredEntitlements.stream().noneMatch(id -> activeEntitlements.contains(id));
-
-    //
-    // Return a set containing:
-    //
-    //  1. Available entitlements
-    //  2. Active entitlements
-    //
-    // where (1) and (2) don't overlap.
-    //
-    // Expired entitlements are ignored.
-    //
-    var availableAndInactive = availableEntitlements
-      .stream()
-      .filter(ent -> activeEntitlements
-        .stream()
-        .noneMatch(active -> active.entitlementId().equals(ent.id())))
-      .collect(Collectors.toCollection(TreeSet::new));
-
-    assert availableAndInactive.stream().noneMatch(e -> activeEntitlements.contains(e.id()));
-
-    var current = new TreeSet<Entitlement<T>>(availableAndInactive);
-    for (var validActivation : activeEntitlements) {
-      //
-      // Find the corresponding entitlement to determine
-      // whether this is JIT or MPA-eligible.
-      //
-      var correspondingEntitlement = availableEntitlements
-        .stream()
-        .filter(ent -> ent.id().equals(validActivation.entitlementId()))
-        .findFirst();
-      if (correspondingEntitlement.isPresent()) {
-        current.add(new Entitlement<>(
-          validActivation.entitlementId(),
-          correspondingEntitlement.get().name(),
-          correspondingEntitlement.get().activationType(),
-          Entitlement.Status.ACTIVE,
-          validActivation.validity()));
-      }
-      else {
-        //
-        // Active, but no longer available for activation.
-        //
-        current.add(new Entitlement<>(
-          validActivation.entitlementId(),
-          validActivation.entitlementId().id(),
-          ActivationType.NONE,
-          Entitlement.Status.ACTIVE,
-          validActivation.validity()));
-      }
-    }
-
-    var expired = new TreeSet<Entitlement<T>>();
-    for (var expiredActivation : expiredEntitlements) {
-      //
-      // Find the corresponding entitlement to determine
-      // whether this is currently (*) JIT or MPA-eligible.
-      //
-      // (*) it might have changed in the meantime, but that's ok.
-      //
-      var correspondingEntitlement = availableEntitlements
-        .stream()
-        .filter(ent -> ent.id().equals(expiredActivation.entitlementId()))
-        .findFirst();
-      if (correspondingEntitlement.isPresent()) {
-        expired.add(new Entitlement<>(
-          expiredActivation.entitlementId(),
-          correspondingEntitlement.get().name(),
-          correspondingEntitlement.get().activationType(),
-          Entitlement.Status.EXPIRED,
-          expiredActivation.validity()));
-      }
-      else {
-        //
-        // Active, but no longer available for activation.
-        //
-        expired.add(new Entitlement<>(
-          expiredActivation.entitlementId(),
-          expiredActivation.entitlementId().id(),
-          ActivationType.NONE,
-          Entitlement.Status.EXPIRED,
-          expiredActivation.validity()));
-      }
-    }
-
-    return new EntitlementSet<>(current, expired, warnings);
-  }
 
   record ActiveEntitlement<TId>(
     @NotNull TId entitlementId,

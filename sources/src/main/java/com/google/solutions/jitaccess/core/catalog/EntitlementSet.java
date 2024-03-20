@@ -50,9 +50,6 @@ public record EntitlementSet<TId extends EntitlementId>(
     Preconditions.checkNotNull(expiredActivations, "expiredActivations");
     Preconditions.checkNotNull(warnings, "warnings");
 
-    Preconditions.checkArgument(currentActivations.keySet().stream().allMatch(id -> available.contains(id)));
-    Preconditions.checkArgument(expiredActivations.keySet().stream().allMatch(id -> available.contains(id)));
-
     Preconditions.checkArgument(currentActivations.values().stream().allMatch(a -> a.isValid(Instant.now())));
     Preconditions.checkArgument(expiredActivations.values().stream().allMatch(a -> !a.isValid(Instant.now())));
   }
