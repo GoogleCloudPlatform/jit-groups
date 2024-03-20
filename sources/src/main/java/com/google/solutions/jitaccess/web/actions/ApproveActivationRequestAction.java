@@ -111,7 +111,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       for (var service : this.notificationServices) {
         service.sendNotification(new ActivationApprovedNotification(
           projectId,
-          activation,
+          activationRequest,
           iapPrincipal.email(),
           createActivationRequestUrl(uriInfo, projectId, activationToken)));
       }
@@ -166,26 +166,25 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
   public static class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
       ProjectId projectId,
-      @NotNull Activation<ProjectRole> activation,
+      @NotNull MpaActivationRequest<ProjectRole> request,
       @NotNull UserEmail approver,
       URL activationRequestUrl) throws MalformedURLException
     {
       super(
-        List.of(activation.request().requestingUser()),
-        ((MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request()).reviewers(), // Move reviewers to CC.
+        List.of(request.requestingUser()),
+        request.reviewers(), // Move reviewers to CC.
         String.format(
           "%s requests access to project %s",
-          activation.request().requestingUser(),
+          request.requestingUser(),
           projectId));
 
-      var request = (MpaActivationRequest<com.google.solutions.jitaccess.core.catalog.project.ProjectRole>)activation.request();
       assert request.entitlements().size() == 1;
 
       this.properties.put("APPROVER", approver.email);
       this.properties.put("BENEFICIARY", request.requestingUser());
       this.properties.put("REVIEWERS", request.reviewers());
       this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", activation.request()
+      this.properties.put("ROLE", request
         .entitlements()
         .stream()
         .findFirst()
