@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.core.ThrowingCompletableFuture;
 import com.google.solutions.jitaccess.core.clients.Diagnosable;
-import com.google.solutions.jitaccess.core.clients.DiagnosticsResult;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import jakarta.enterprise.context.Dependent;
@@ -36,8 +35,6 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
