@@ -40,8 +40,8 @@ import java.util.TreeSet;
  */
 public record EntitlementSet<TId extends EntitlementId>(
   @NotNull SortedSet<Entitlement<TId>> available,
-  @NotNull Map<Entitlement<TId>, Activation> currentActivations,
-  @NotNull Map<Entitlement<TId>, Activation> expiredActivations,
+  @NotNull Map<TId, Activation> currentActivations,
+  @NotNull Map<TId, Activation> expiredActivations,
   @NotNull Set<String> warnings
 ) {
   public EntitlementSet {
