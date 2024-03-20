@@ -163,7 +163,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
-        throw new AccessDeniedException("Activating role failed", e);
+        throw new AccessDeniedException("Activating role failed, see logs for details", e);
       }
     }
   }

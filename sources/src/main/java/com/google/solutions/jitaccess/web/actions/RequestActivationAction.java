@@ -230,7 +230,7 @@ public class RequestActivationAction extends AbstractActivationAction {
         throw (AccessDeniedException)e.fillInStackTrace();
       }
       else {
-        throw new AccessDeniedException("Requesting access failed", e);
+        throw new AccessDeniedException("Requesting access failed, see logs for details", e);
       }
     }
   }

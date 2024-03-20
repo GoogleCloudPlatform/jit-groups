@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.core.ApplicationVersion;
+import com.google.solutions.jitaccess.core.auth.EmailMapping;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.RegexJustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
@@ -319,7 +320,8 @@ public class RuntimeEnvironment {
   @Produces
   @Singleton
   public @NotNull NotificationService getEmailNotificationService(
-    @NotNull SecretManagerClient secretManagerClient
+    @NotNull SecretManagerClient secretManagerClient,
+    @NotNull EmailMapping emailMapping
   ) {
     //
     // Configure SMTP if possible, and fall back to a fail-safe
@@ -330,7 +332,7 @@ public class RuntimeEnvironment {
         this.configuration.smtpHost.getValue(),
         this.configuration.smtpPort.getValue(),
         this.configuration.smtpSenderName.getValue(),
-        this.configuration.smtpSenderAddress.getValue(),
+        new EmailAddress(this.configuration.smtpSenderAddress.getValue()),
         this.configuration.smtpEnableStartTls.getValue(),
         this.configuration.getSmtpExtraOptionsMap());
 
@@ -351,11 +353,17 @@ public class RuntimeEnvironment {
 
       return new MailNotificationService(
         new SmtpClient(secretManagerClient, options),
+        emailMapping,
         new MailNotificationService.Options(this.configuration.timeZoneForNotifications.getValue()));
     }
     else {
       return new NotificationService.SilentNotificationService(isDebugModeEnabled());
     }
+  }
+
+  @Produces
+  public @NotNull EmailMapping getEmailMapping() {
+    return new EmailMapping(this.configuration.smtpAddressMapping.getValue());
   }
 
   @Produces

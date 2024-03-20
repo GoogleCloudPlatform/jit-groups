@@ -110,6 +110,7 @@ class RuntimeConfiguration {
     //
     // SMTP settings.
     //
+    this.smtpAddressMapping = new StringSetting(List.of("SMTP_ADDRESS_MAPPING"), null);
     this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
     this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
     this.smtpEnableStartTls = new BooleanSetting(List.of("SMTP_ENABLE_STARTTLS"), true);
@@ -189,6 +190,11 @@ class RuntimeConfiguration {
    * Zone to apply to dates when sending notifications.
    */
   public final @NotNull ZoneIdSetting timeZoneForNotifications;
+
+  /**
+   * CEL expression for mapping userIDs to email addresses.
+   */
+  public final @NotNull StringSetting smtpAddressMapping;
 
   /**
    * SMTP server for sending notifications.
