@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.core.auth.UserEmail;
+import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.DiagnosticsResult;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.RestDispatcher;
@@ -36,7 +36,7 @@ import java.util.concurrent.Executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestHealthResource {
-  private static final UserEmail SAMPLE_USER = new UserEmail("user-1@example.com");
+  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
   //---------------------------------------------------------------------------
   // /health/alive
