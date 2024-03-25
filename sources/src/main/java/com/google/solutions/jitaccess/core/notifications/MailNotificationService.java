@@ -129,11 +129,11 @@ public class MailNotificationService extends NotificationService {
         notification.getToRecipients()
           .stream()
           .map(id -> this.emailMapping.emailFromUserId(id))
-          .collect(Collectors.toSet()),
+          .collect(Collectors.toList()),
         notification.getCcRecipients()
           .stream()
           .map(id -> this.emailMapping.emailFromUserId(id))
-          .collect(Collectors.toSet()),
+          .collect(Collectors.toList()),
         notification.getSubject(),
         formattedMessage,
         notification.isReply()
