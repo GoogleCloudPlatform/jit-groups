@@ -77,6 +77,7 @@ nav:
       - 'Configure notifications': configure-pubsub-notifications.md
       - 'Configure catalogs': configure-catalogs.md
       - 'Access VPC service perimeters': configure-vpcsc.md
+      - 'Use health checks': health-checks.md
     - 'Customize JIT Access':
       - 'Configuration options': configuration-options.md
     - 'Extend JIT Access':
