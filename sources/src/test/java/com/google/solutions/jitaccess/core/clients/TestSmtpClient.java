@@ -37,7 +37,13 @@ public class TestSmtpClient {
 
   @Test
   public void whenOptionsContainPassword_ThenCreateAuthenticatorUsesPassword() throws Exception {
-    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+    var options = new SmtpClient.Options(
+      "host",
+      2525,
+      "sender",
+      new EmailAddress("sender@example.com"),
+      true,
+      Map.of())
       .setSmtpCleartextCredentials("user", "password");
 
     var secretManager = Mockito.mock(SecretManagerClient.class);
@@ -48,7 +54,13 @@ public class TestSmtpClient {
 
   @Test
   public void whenOptionsContainSecretPath_ThenCreateAuthenticatorUsesPasswordFromSecret() throws Exception {
-    var options = new SmtpClient.Options("host", 2525, "sender", "sender@example.com", true, Map.of())
+    var options = new SmtpClient.Options(
+      "host",
+      2525,
+      "sender",
+      new EmailAddress("sender@example.com"),
+      true,
+      Map.of())
       .setSmtpSecretCredentials("user", "path/to/secret");
 
     var secretManager = Mockito.mock(SecretManagerClient.class);

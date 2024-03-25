@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.notifications;
 import com.google.common.base.Preconditions;
 import com.google.common.escape.Escaper;
 import com.google.common.html.HtmlEscapers;
+import com.google.solutions.jitaccess.core.auth.EmailMapping;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  */
 public class MailNotificationService extends NotificationService {
   private final @NotNull Options options;
+  private final @NotNull EmailMapping emailMapping;
   private final @NotNull SmtpClient smtpClient;
 
   /**
@@ -82,12 +84,15 @@ public class MailNotificationService extends NotificationService {
 
   public MailNotificationService(
     @NotNull SmtpClient smtpClient,
+    @NotNull EmailMapping emailMapping,
     @NotNull Options options
   ) {
     Preconditions.checkNotNull(smtpClient);
+    Preconditions.checkNotNull(emailMapping);
     Preconditions.checkNotNull(options);
 
     this.smtpClient = smtpClient;
+    this.emailMapping = emailMapping;
     this.options = options;
   }
 
@@ -121,16 +126,27 @@ public class MailNotificationService extends NotificationService {
 
     try {
       this.smtpClient.sendMail(
-        notification.getToRecipients(),
-        notification.getCcRecipients(),
+        notification.getToRecipients()
+          .stream()
+          .map(id -> this.emailMapping.emailFromUserId(id))
+          .collect(Collectors.toList()),
+        notification.getCcRecipients()
+          .stream()
+          .map(id -> this.emailMapping.emailFromUserId(id))
+          .collect(Collectors.toList()),
         notification.getSubject(),
         formattedMessage,
         notification.isReply()
           ? EnumSet.of(SmtpClient.Flags.REPLY)
           : EnumSet.of(SmtpClient.Flags.NONE));
     }
+    catch (EmailMapping.MappingException e) {
+      throw new NotificationException(
+        "The notification could not be sent because of an invalid email address", e);
+    }
     catch (SmtpClient.MailException e) {
-      throw new NotificationException("The notification could not be sent", e);
+      throw new NotificationException(
+        "The notification could not be sent", e);
     }
   }
 

@@ -59,8 +59,8 @@ public class SmtpClient {
   }
 
   public void sendMail(
-    @NotNull Collection<UserId> toRecipients,
-    @NotNull Collection<UserId> ccRecipients,
+    @NotNull Collection<EmailAddress> toRecipients,
+    @NotNull Collection<EmailAddress> ccRecipients,
     @NotNull String subject,
     @NotNull Multipart content,
     @NotNull EnumSet<Flags> flags
@@ -91,18 +91,20 @@ public class SmtpClient {
       var message = new MimeMessage(session);
       message.setContent(content);
 
-      message.setFrom(new InternetAddress(this.options.senderAddress, this.options.senderName));
+      message.setFrom(new InternetAddress(
+        this.options.senderAddress.value(),
+        this.options.senderName));
 
       for (var recipient : toRecipients){
         message.addRecipient(
           Message.RecipientType.TO,
-          new InternetAddress(recipient.email, recipient.email));
+          new InternetAddress(recipient.value(), recipient.value()));
       }
 
       for (var recipient : ccRecipients){
         message.addRecipient(
           Message.RecipientType.CC,
-          new InternetAddress(recipient.email, recipient.email));
+          new InternetAddress(recipient.value(), recipient.value()));
       }
 
       //
@@ -127,8 +129,8 @@ public class SmtpClient {
   }
 
   public void sendMail(
-    @NotNull Collection<UserId> toRecipients,
-    @NotNull Collection<UserId> ccRecipients,
+    @NotNull Collection<EmailAddress> toRecipients,
+    @NotNull Collection<EmailAddress> ccRecipients,
     @NotNull String subject,
     @NotNull String htmlContent,
     @NotNull EnumSet<Flags> flags
@@ -169,17 +171,17 @@ public class SmtpClient {
   public static class Options {
     private @Nullable PasswordAuthentication cachedAuthentication = null;
     private final @NotNull String senderName;
-    private final @NotNull String senderAddress;
+    private final @NotNull EmailAddress senderAddress;
     private final @NotNull Properties smtpProperties;
     private String smtpUsername;
     private String smtpPassword;
     private String smtpSecretPath;
 
     public Options(
-      String smtpHost,
+      @NotNull String smtpHost,
       int smtpPort,
       @NotNull String senderName,
-      @NotNull String senderAddress,
+      @NotNull EmailAddress senderAddress,
       boolean enableStartTls,
       @Nullable Map<String, String> extraOptions
     ) {

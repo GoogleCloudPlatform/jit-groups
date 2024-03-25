@@ -21,8 +21,11 @@
 
 package com.google.solutions.jitaccess.core.notifications;
 
+import com.google.solutions.jitaccess.core.auth.EmailMapping;
 import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.clients.EmailAddress;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
+import jakarta.validation.constraints.Email;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -70,17 +73,17 @@ public class TestMailNotificationService {
     var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
       mailAdapter,
+      new EmailMapping(),
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
-    var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      to,
+      new UserId("user@example.com"),
       "Test email",
       new HashMap<String, Object>(),
       "unknown-templateid"));
 
     verify(mailAdapter, times(0)).sendMail(
-      eq(List.of(to)),
+      eq(List.of(new EmailAddress("user@example.com"))),
       eq(List.of()),
       eq("Test email"),
       anyString(),
@@ -92,17 +95,17 @@ public class TestMailNotificationService {
     var mailAdapter = Mockito.mock(SmtpClient.class);
     var service = new MailNotificationService(
       mailAdapter,
+      new EmailMapping(),
       new MailNotificationService.Options(MailNotificationService.Options.DEFAULT_TIMEZONE));
 
-    var to = new UserId("user@example.com");
     service.sendNotification(new TestNotification(
-      to,
+      new UserId("user@example.com"),
       "Test email",
       new HashMap<String, Object>(),
       "RequestActivation"));
 
     verify(mailAdapter, times(1)).sendMail(
-      eq(List.of(to)),
+      eq(List.of(new EmailAddress("user@example.com"))),
       eq(List.of()),
       eq("Test email"),
       anyString(),

@@ -287,6 +287,43 @@ The following table lists all available configuration options.
     <td></td>
     <td>1.2</td>
   </tr>
+  <tr>
+    <td><code>SMTP_ADDRESS_MAPPING</code></td>
+    <td>
+        <p>
+            <a href="https://github.com/google/cel-spec/blob/master/doc/intro.md">CEL expression</a> for deriving
+            a user's email address from their Cloud Identity/Workspace user ID.
+        </p>
+        <p>
+            By default, JIT Accesses uses the Cloud Identity/Workspace user ID (such as alice@example.com) as
+            email address to deliver notifications to. If some or all of your Cloud Identity/Workspace user IDs 
+            do not correspond to valid email addresses, use this setting to specify a CEL expression that derives a valid email address.
+        </p>
+        <p>
+            CEL expressions can use <a href="https://github.com/google/cel-spec/blob/master/doc/langdef.md#list-of-standard-definitions">standard functions</a>
+            and the <a href="https://cloud.google.com/iam/docs/conditions-attribute-reference#extract"><code>extract()</code></a> function.
+        </p>
+        <p>
+            For example, the following expression replaces the domain <code>example.com</code> with <code>test.example.com</code> for all users:
+        </p>
+        <p>
+            <code>user.email.extract('{handle}@example.com') + '@test.example.com'</code>
+        </p>
+        <p>
+            If you're using multiple domains and only need to substitute one of them, you can use conditional
+            statements. For example:
+        </p>
+        <p>
+            <code>user.email.endsWith('@external.example.com') 
+                ? user.email.extract('{handle}@external.example.com') + '@otherdomain.example' 
+                : user.email
+            </code>
+        </p>
+    </td>
+    <td>Optional</td>
+    <td></td>
+    <td>1.7</td>
+  </tr>
 </table>
 
 ## Notifications
