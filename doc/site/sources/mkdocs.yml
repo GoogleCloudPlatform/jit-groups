@@ -39,6 +39,8 @@ theme:
         info: fontawesome/solid/user-shield
 extra:
   generator: false
+    provider: google
+    property: G-V2SJXHS47L
     
 extra_css:
   - stylesheets/extra.css
