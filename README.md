@@ -19,8 +19,8 @@ without having to grant them permanent access. This type of just-in-time privile
 
 ## Activate roles on demand
 
-<a href='doc/Screencast-JIT.gif?raw=true'>
-<img src='doc/JIT-Activation_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-access/images/JIT-Activation-Screencast.gif?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-access/images/JIT-Activation_350.png' align='right'>
 </a>
 
 As a user, you can activate a role in three steps:
@@ -39,11 +39,11 @@ to the project.
 
 ## Request approval to activate a role
 
-<a href='doc/Screencast-MPA.gif?raw=true'>
-<img src='doc/MPA-Activation_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-access/images/MPA-Activation-Screencast.gif?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-access/images/MPA-Activation_350.png' align='right'>
 </a>
 
-For roles that require [multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval), 
+For roles that require [multi-party approval](https://googlecloudplatform.github.io/jit-access/multi-party-approval/), 
 you can request access in four steps:
 
 1. Select the project you need to access
@@ -62,14 +62,14 @@ and notifies you via email.
 
 ## Grant access
 
-<a href='doc/Condition.png?raw=true'>
-<img src='doc/Condition_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-access/images/Condition.png?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-access/images/Condition_350.png' align='right'>
 </a>
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
 * `has({}.jitAccessConstraint)` (no approval required)
-* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://googlecloudplatform.github.io/jit-access/multi-party-approval/) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
@@ -80,8 +80,8 @@ access to individual users, you can also use groups.
 
 ## Audit access
 
-<a href='doc/AuditLog.png?raw=true'>
-<img src='doc/AuditLog_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-access/images/AuditLog.png?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-access/images/AuditLog_350.png' align='right'>
 </a>
 
 As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users. 
