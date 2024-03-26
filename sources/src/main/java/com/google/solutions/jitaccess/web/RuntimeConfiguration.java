@@ -110,7 +110,7 @@ class RuntimeConfiguration {
     //
     // SMTP settings.
     //
-    this.smtpAddressMapping = new StringSetting(List.of("SMTP_ADDRESS_MAPPING"), null);
+    this.smtpAddressMapping = new StringSetting(List.of("SMTP_ADDRESS_MAPPING"), "");
     this.smtpHost = new StringSetting(List.of("SMTP_HOST"), "smtp.gmail.com");
     this.smtpPort = new IntSetting(List.of("SMTP_PORT"), 587);
     this.smtpEnableStartTls = new BooleanSetting(List.of("SMTP_ENABLE_STARTTLS"), true);
