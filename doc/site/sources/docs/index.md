@@ -17,8 +17,8 @@ without having to grant them permanent access. This type of just-in-time privile
 
 ## Activate roles on demand
 
-<a href='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/Screencast-JIT.gif?raw=true'>
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/JIT-Activation_350.png' align='right'>
+<a href='images/JIT-Activation-Screencast.gif?raw=true'>
+<img src='images/JIT-Activation_350.png' align='right'>
 </a>
 
 As a user, you can activate a role in three steps:
@@ -31,16 +31,16 @@ After validating your request, the application then
 [grants you temporary access :octicons-link-external-16:](https://cloud.google.com/iam/docs/configuring-temporary-access)
 to the project.
 
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/pix.gif' style='width: 100%; height: 1px'>
+<img src='images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Request approval to activate a role
 
-<a href='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/Screencast-MPA.gif?raw=true'>
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/MPA-Activation_350.png' align='right'>
+<a href='images/MPA-Activation-Screencast.gif?raw=true'>
+<img src='images/MPA-Activation_350.png' align='right'>
 </a>
 
-For roles that require [multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval), 
+For roles that require [multi-party approval](multi-party-approval.md), 
 you can request access in four steps:
 
 1. Select the project you need to access
@@ -52,30 +52,30 @@ Your selected peers are notified via email and can approve your request. Once ap
 [grants you temporary access :octicons-link-external-16:](https://cloud.google.com/iam/docs/configuring-temporary-access) to the project
 and notifies you via email.
 
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/pix.gif' style='width: 100%; height: 1px'>
+<img src='images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Grant access
 
-<a href='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/Condition.png?raw=true'>
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/Condition_350.png' align='right'>
+<a href='images/Condition.png?raw=true'>
+<img src='images/Condition_350.png' align='right'>
 </a>
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
 * `has({}.jitAccessConstraint)` (no approval required)
-* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://github.com/GoogleCloudPlatform/jit-access/wiki/Multi-Party-Approval) required) 
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](multi-party-approval.md) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
 
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/pix.gif' style='width: 100%; height: 1px'>
+<img src='images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Audit access
 
-<a href='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/AuditLog.png?raw=true'>
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/AuditLog_350.png' align='right'>
+<a href='images/AuditLog.png?raw=true'>
+<img src='images/AuditLog_350.png' align='right'>
 </a>
 
 As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users. 
@@ -86,7 +86,7 @@ For each activation, the Just-In-Time application writes an audit log entry that
 * the project and role for which access was requested
 * the justification provided by the user
 
-<img src='https://github.com/GoogleCloudPlatform/jit-access/raw/master/doc/pix.gif' style='width: 100%; height: 1px'>
+<img src='images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Deploy the application
