@@ -302,14 +302,15 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     ) {
       this.principalIdentifiers = groups
         .stream()
-        .map(g -> String.format("group:%s", g.getEmail()))
+        .map(g -> String.format("group:%s", g.getEmail().toLowerCase()))
         .collect(Collectors.toSet());
-      this.principalIdentifiers.add(String.format("user:%s", user.email));
+      this.principalIdentifiers.add(String.format("user:%s", user.email).toLowerCase());
     }
 
     public boolean isMember(@NotNull Binding binding) {
       return binding.getMembers()
         .stream()
+        .map(String::toLowerCase)
         .anyMatch(member -> this.principalIdentifiers.contains(member));
     }
   }
