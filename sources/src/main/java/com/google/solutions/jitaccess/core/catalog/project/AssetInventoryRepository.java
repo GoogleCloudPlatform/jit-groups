@@ -27,6 +27,7 @@ import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.auth.GroupId;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
@@ -97,7 +98,12 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
     var principalSetForUser = new PrincipalSet(
       user,
-      ThrowingCompletableFuture.awaitAndRethrow(listMembershipsFuture));
+      ThrowingCompletableFuture
+        .awaitAndRethrow(listMembershipsFuture)
+        .stream()
+        .map(g -> new GroupId(g.getEmail()))
+        .collect(Collectors.toList()));
+
     return ThrowingCompletableFuture.awaitAndRethrow(effectivePoliciesFuture)
       .stream()
 
@@ -294,15 +300,22 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   // -------------------------------------------------------------------------
 
   static class PrincipalSet {
+    /**
+     * Principal identifiers in the format
+     *   user:email
+     *   group:email
+     *
+     * Where the email is in canonical format (i.e., lower-case).
+     */
     private final @NotNull Set<String> principalIdentifiers;
 
     public PrincipalSet(
       @NotNull UserId user,
-      @NotNull Collection<Group> groups
+      @NotNull Collection<GroupId> groups
     ) {
       this.principalIdentifiers = groups
         .stream()
-        .map(g -> String.format("group:%s", g.getEmail()))
+        .map(g -> String.format("group:%s", g.email))
         .collect(Collectors.toSet());
       this.principalIdentifiers.add(String.format("user:%s", user.email));
     }
@@ -310,6 +323,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     public boolean isMember(@NotNull Binding binding) {
       return binding.getMembers()
         .stream()
+        .map(String::toLowerCase)
         .anyMatch(member -> this.principalIdentifiers.contains(member));
     }
   }

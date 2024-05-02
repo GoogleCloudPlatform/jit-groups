@@ -40,7 +40,7 @@ public class UserId implements Comparable<UserId>, PrincipalId {
 
   public UserId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
-    this.email = email;
+    this.email = email.toLowerCase();
   }
 
   @Override

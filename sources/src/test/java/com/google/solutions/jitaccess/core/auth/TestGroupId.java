@@ -32,8 +32,9 @@ public class TestGroupId {
   // -------------------------------------------------------------------------
 
   @Test
-  public void toStringReturnsEmail() {
+  public void toStringReturnsEmailInLowerCase() {
     Assertions.assertEquals("test@example.com", new GroupId("test@example.com").toString());
+    Assertions.assertEquals("test@example.com", new GroupId("Test@Example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -47,6 +48,17 @@ public class TestGroupId {
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
+    assertEquals(0, id1.compareTo(id2));
+  }
+
+  @Test
+  public void whenObjectAreEquivalentButDifferInCasing_ThenEqualsReturnsTrue() {
+    GroupId id1 = new GroupId("Group@Example.com");
+    GroupId id2 = new GroupId("group@example.com");
+
+    assertTrue(id1.equals(id2));
+    assertEquals(id1.hashCode(), id2.hashCode());
+    assertEquals(0, id1.compareTo(id2));
   }
 
   @Test
@@ -54,6 +66,7 @@ public class TestGroupId {
     GroupId id1 = new GroupId("group@example.com");
 
     assertTrue(id1.equals(id1));
+    assertEquals(0, id1.compareTo(id1));
   }
 
   @Test
@@ -63,6 +76,7 @@ public class TestGroupId {
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
+    assertNotEquals(0, id1.compareTo(id2));
   }
 
   @Test

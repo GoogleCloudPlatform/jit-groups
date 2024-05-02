@@ -39,7 +39,7 @@ public class GroupId implements Comparable<GroupId>, PrincipalId {
 
   public GroupId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
-    this.email = email;
+    this.email = email.toLowerCase();
   }
 
   @Override

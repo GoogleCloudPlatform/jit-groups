@@ -31,8 +31,9 @@ public class TestUserId {
   // -------------------------------------------------------------------------
 
   @Test
-  public void toStringReturnsEmail() {
+  public void toStringReturnsEmailInLowerCase() {
     assertEquals("test@example.com", new UserId("test@example.com").toString());
+    assertEquals("test@example.com", new UserId("Test@Example.com").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -46,6 +47,17 @@ public class TestUserId {
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
+    assertEquals(0, id1.compareTo(id2));
+  }
+
+  @Test
+  public void whenObjectAreEquivalentButDifferInCasing_ThenEqualsReturnsTrue() {
+    UserId id1 = new UserId("Bob@Example.Com");
+    UserId id2 = new UserId("bob@example.com");
+
+    assertTrue(id1.equals(id2));
+    assertEquals(id1.hashCode(), id2.hashCode());
+    assertEquals(0, id1.compareTo(id2));
   }
 
   @Test
@@ -53,6 +65,7 @@ public class TestUserId {
     UserId id1 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id1));
+    assertEquals(0, id1.compareTo(id1));
   }
 
   @Test
@@ -62,6 +75,7 @@ public class TestUserId {
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
+    assertNotEquals(0, id1.compareTo(id2));
   }
 
   @Test

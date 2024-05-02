@@ -141,11 +141,15 @@ public class TestAssetInventoryRepository {
       .setMembers(List.of("serviceAccount:other@example.iam.gserviceaccount.com"));
     var permanentBindingForUser = new Binding()
       .setRole("roles/for-user-permanent")
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+      .setMembers(List.of(
+        "user:" + SAMPLE_USER.email.toLowerCase(),  // Usernames are case-insensitive
+        "user:other@example.com"));
     var conditionalBindingForUser = new Binding()
       .setRole("roles/for-user-conditional")
       .setCondition(new Expr().setExpression("true"))
-      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+      .setMembers(List.of(
+        "user:" + SAMPLE_USER.email.toUpperCase(),   // Usernames are case-insensitive
+        "user:other@example.com"));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
     when(caiClient
@@ -197,7 +201,7 @@ public class TestAssetInventoryRepository {
     when(groupsClient
       .listDirectGroupMemberships(eq(SAMPLE_USER)))
       .thenReturn(List.of(
-        new Group().setEmail("group-1@example.com"),
+        new Group().setEmail("GROUP-1@EXAMPLE.COM"), // Group names are case-insensitive
         new Group().setEmail("group-2@example.com"),
         new Group().setEmail("junk@example.com")));
 
