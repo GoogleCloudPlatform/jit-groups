@@ -39,6 +39,10 @@ public class GroupId implements Comparable<GroupId>, PrincipalId {
 
   public GroupId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
+
+    //
+    // Use lower-case as canonical format.
+    //
     this.email = email.toLowerCase();
   }
 
