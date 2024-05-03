@@ -32,14 +32,13 @@ import java.util.Comparator;
  */
 public record RoleBinding (
   String fullResourceName,
-  String role
+  String role,
   String additionalConditions
 ) implements Comparable<RoleBinding> {
 
   public RoleBinding {
     Preconditions.checkNotNull(fullResourceName, "fullResourceName");
     Preconditions.checkNotNull(role, "role");
-    //Preconditions.checkArgument(additionalConditions != null || additionalConditions.isEmpty())
   }
 
   public RoleBinding(@NotNull ProjectId project, String role) {
