@@ -180,7 +180,7 @@ public class TestRequestAndSelfApproveAction {
     assertNotNull(response.items);
     assertEquals(1, response.items.size());
     assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals(roleBinding, response.items.get(0).roleBinding);
+    assertEquals(roleBinding.role(), response.items.get(0).role);
     assertEquals(ActivationStatus.ACTIVE, response.items.get(0).status);
     assertNotNull(response.items.get(0).activationId);
   }

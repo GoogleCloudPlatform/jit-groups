@@ -134,7 +134,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
     public static class Item {
       public final @NotNull String activationId;
       public final @NotNull String projectId;
-      public final @NotNull ProjectRole roleBinding;
+      public final @NotNull String role;
       public final @NotNull ActivationStatus status;
       public final long startTime;
       public final long endTime;
@@ -150,7 +150,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
 
         this.activationId = activationId.toString();
         this.projectId = roleBinding.projectId().id();
-        this.roleBinding = roleBinding;
+        this.role = roleBinding.role();
         this.status = status;
         this.startTime = startTime.getEpochSecond();
         this.endTime = endTime.getEpochSecond();

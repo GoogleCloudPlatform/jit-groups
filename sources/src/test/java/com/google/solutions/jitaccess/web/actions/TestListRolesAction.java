@@ -132,8 +132,8 @@ public class TestListRolesAction {
 
     assertNotNull(response.roles);
     assertEquals(2, response.roles.size());
-    assertEquals(role1.id(), response.roles.get(0).roleBinding);
-    assertEquals(role2.id(), response.roles.get(1).roleBinding);
+    assertEquals(role1.id().role(), response.roles.get(0).role);
+    assertEquals(role2.id().role(), response.roles.get(1).role);
     assertTrue(response.warnings.isEmpty());
   }
 }

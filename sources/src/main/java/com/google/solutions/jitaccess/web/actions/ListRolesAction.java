@@ -118,7 +118,7 @@ public class ListRolesAction extends AbstractAction {
     }
 
     public static class Item {
-      public final @NotNull ProjectRole roleBinding;
+      public final @NotNull String role;
       public final @NotNull ActivationType activationType;
       public final @NotNull ActivationStatus status;
       public final Long /* optional */ validUntil;
@@ -131,7 +131,7 @@ public class ListRolesAction extends AbstractAction {
 
         Preconditions.checkNotNull(roleBinding, "roleBinding");
 
-        this.roleBinding = roleBinding;
+        this.role = roleBinding.role();
         this.activationType = activationType;
         this.status = status;
         this.validUntil = validUntil;
