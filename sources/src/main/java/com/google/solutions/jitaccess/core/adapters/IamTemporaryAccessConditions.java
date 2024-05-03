@@ -58,7 +58,7 @@ public class IamTemporaryAccessConditions {
     assert (isTemporaryAccessCondition(clause));
 
     // Assuming additionalConditions has the format "&& <other-conditions>"
-    if ( !additionalConditions.isEmpty() ) {
+    if ( additionalConditions!=null && !additionalConditions.isEmpty() ) {
 
       clause += additionalConditions;
 

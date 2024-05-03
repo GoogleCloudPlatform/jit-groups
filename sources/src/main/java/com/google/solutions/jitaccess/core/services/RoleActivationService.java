@@ -467,7 +467,8 @@ public class RoleActivationService {
           .collect(Collectors.toSet()),
         new RoleBinding(
           payload.get("resource").toString(),
-          payload.get("role").toString()),
+          payload.get("role").toString(),
+          payload.get("additionalConditions").toString()),
         payload.get("justification").toString(),
         Instant.ofEpochSecond(((Number)payload.get("start")).longValue()),
         Instant.ofEpochSecond(((Number)payload.get("end")).longValue()));
@@ -480,6 +481,7 @@ public class RoleActivationService {
         .set("reviewers", this.reviewers.stream().map(id -> id.email).collect(Collectors.toList()))
         .set("resource", this.roleBinding.fullResourceName)
         .set("role", this.roleBinding.role)
+        .set("additionalConditions", this.roleBinding.additionalConditions)
         .set("justification", this.justification)
         .set("start", this.startTime.getEpochSecond())
         .set("end", this.endTime.getEpochSecond());

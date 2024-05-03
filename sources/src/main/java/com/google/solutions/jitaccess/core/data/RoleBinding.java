@@ -41,7 +41,7 @@ public class RoleBinding {
 
     this.fullResourceName = fullResourceName;
     this.role = role;
-    this.additionalConditions = additionalConditions;
+    this.additionalConditions = additionalConditions != null? additionalConditions : "";
     this.isConditional = !this.additionalConditions.isEmpty();
 
   }
@@ -87,11 +87,17 @@ public class RoleBinding {
     var that = (RoleBinding) o;
     return this.fullResourceName.equals(that.fullResourceName) &&
            this.role.equals(that.role) &&
-           this.additionalConditions.equals(that.additionalConditions);
+           this.additionalConditions
+               .toLowerCase()
+               .replace(" ", "").equals(that.additionalConditions
+                                             .toLowerCase()
+                                             .replace(" ", ""));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.fullResourceName, this.role, this.additionalConditions);
+    return Objects.hash(this.fullResourceName, this.role, this.additionalConditions
+                                                              .toLowerCase()
+                                                              .replace(" ", ""));
   }
 }

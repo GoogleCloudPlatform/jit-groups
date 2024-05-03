@@ -227,6 +227,7 @@ public class ApiResource {
   public ProjectRolePeersResponse listPeers(
     @PathParam("projectId") String projectIdString,
     @QueryParam("role") String role,
+    @QueryParam("additionalConditions") String additionalConditions,
     @Context SecurityContext securityContext
   ) throws AccessException {
     Preconditions.checkNotNull(this.roleDiscoveryService, "roleDiscoveryService");
@@ -240,7 +241,7 @@ public class ApiResource {
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, role);
+    var roleBinding = new RoleBinding(projectId, role, additionalConditions);
 
     try {
       var peers = this.roleDiscoveryService.listEligibleUsersForProjectRole(
@@ -423,7 +424,7 @@ public class ApiResource {
 
     var iapPrincipal = (UserPrincipal) securityContext.getUserPrincipal();
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, request.role);
+    var roleBinding = new RoleBinding(projectId, request.role, request.additionalConditions);
 
     try
     {
@@ -450,10 +451,11 @@ public class ApiResource {
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s requested role '%s' on '%s'",
+            "User %s requested role '%s' on '%s' with the additional conditions '%s'",
             iapPrincipal.getId(),
             roleBinding.role,
-            roleBinding.fullResourceName))
+            roleBinding.fullResourceName,
+            roleBinding.additionalConditions))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -468,10 +470,11 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s failed to request role '%s' on '%s': %s",
+            "User %s failed to request role '%s' on '%s' with the additional conditions '%s': %s",
             iapPrincipal.getId(),
             roleBinding.role,
             roleBinding.fullResourceName,
+            roleBinding.additionalConditions,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, roleBinding))
@@ -607,11 +610,12 @@ public class ApiResource {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s failed to activate role '%s' on '%s' for %s: %s",
+            "User %s failed to activate role '%s' on '%s' for %s with the additional conditions '%s': %s",
             iapPrincipal.getId(),
             activationRequest.roleBinding.role,
             activationRequest.roleBinding.fullResourceName,
             activationRequest.beneficiary,
+            activationRequest.roleBinding.additionalConditions,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
         .addLabels(le -> addLabels(le, e))
@@ -756,6 +760,7 @@ public class ApiResource {
 
   public static class ActivationRequest {
     public String role;
+    public String additionalConditions;
     public String justification;
     public List<String> peers;
     public int activationTimeout; // in minutes.

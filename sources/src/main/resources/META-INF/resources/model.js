@@ -96,13 +96,13 @@ class Model {
     }
 
     /** List peers that can approve a request */
-    async listPeers(projectId, role) {
+    async listPeers(projectId, role, additionalConditions) {
         console.assert(projectId);
         console.assert(role);
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}`,
+                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}&additionalConditions=${encodeURIComponent(additionalConditions)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -141,12 +141,14 @@ class Model {
     }
 
     /** Activate a role with peer approval */
-    async requestActivation(projectId, role, peers, justification, activationTimeout) {
+    async requestActivation(projectId, role, additionalConditions, peers, justification, activationTimeout) {
         console.assert(projectId);
         console.assert(role);
         console.assert(peers.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
+
+       additionalConditions = additionalConditions? additionalConditions : "";
 
         try {
             return await $.ajax({
@@ -156,6 +158,7 @@ class Model {
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
                     role: role,
+                    additionalConditions: additionalConditions,
                     justification: justification,
                     peers: peers,
                     activationTimeout: activationTimeout
