@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
+import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.RoleBinding;
@@ -46,6 +47,31 @@ public class ProjectRole extends EntitlementId {
   public @NotNull RoleBinding roleBinding() {
     return this.roleBinding;
   }
+
+
+
+
+  public static boolean isJitEligibleProjectRole(Binding binding) {
+    throw new RuntimeException("NIY");
+  }
+
+  public static boolean isMpaEligibleProjectRole(Binding binding) {
+    throw new RuntimeException("NIY");
+  }
+
+  public static boolean isActivatedProjectRole(Binding binding) {
+    throw new RuntimeException("NIY");
+  }
+
+  public static ProjectRole create(Binding binding) {
+
+    // extract extra condition, canonicalize
+    throw new RuntimeException("NIY");
+  }
+
+  //---------------------------------------------------------------------------
+  // Overrides.
+  //---------------------------------------------------------------------------
 
   @Override
   public @NotNull String catalog() {
