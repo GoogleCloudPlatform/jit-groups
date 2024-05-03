@@ -29,6 +29,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.regex.Pattern;
 
+import java.util.regex.Matcher;
+
 /**
  * Helper class for creating and parsing JIT constraints.
  *
@@ -104,12 +106,17 @@ class JitConstraints {
 
   // Get the extra conditions that should be added in the final
   // constraints (when the role is activated using JIT)
-  private static String getAdditionalConditions(
+  public static String getAdditionalConditions(
     String conditionExpression
   ) {
 
-    return ADDITIONAL_CONDITIONS_PATTERN.matcher(conditionExpression).group();
+    Matcher matcher = ADDITIONAL_CONDITIONS_PATTERN.matcher(conditionExpression);
 
+    if (matcher.find()) {
+      return matcher.group();
+    } else {
+      return "";
+    }
   }
 
 }

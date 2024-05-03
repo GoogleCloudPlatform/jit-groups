@@ -259,7 +259,7 @@ public class RoleActivationService {
         .setExpression(IamTemporaryAccessConditions.createExpression(
           request.startTime,
           request.endTime,
-          roleBinding.additionalConditions)));
+          request.roleBinding.additionalConditions)));
 
     this.resourceManagerAdapter.addProjectIamBinding(
       ProjectId.fromFullResourceName(request.roleBinding.fullResourceName),
