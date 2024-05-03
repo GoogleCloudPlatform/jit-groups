@@ -48,25 +48,25 @@ public class ProjectRole extends EntitlementId {
     return this.roleBinding;
   }
 
-
-
-
+  /**
+   * Check if the binding represents a JIT-eligible project role.
+   */
   public static boolean isJitEligibleProjectRole(Binding binding) {
-    throw new RuntimeException("NIY");
+    return JitConstraints.isJitAccessConstraint(binding.getCondition());
   }
 
+  /**
+   * Check if the binding represents a MPA-eligible project role.
+   */
   public static boolean isMpaEligibleProjectRole(Binding binding) {
-    throw new RuntimeException("NIY");
+    return JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition());
   }
 
+  /**
+   * Check if the binding represents an activated project role.
+   */
   public static boolean isActivatedProjectRole(Binding binding) {
-    throw new RuntimeException("NIY");
-  }
-
-  public static ProjectRole create(Binding binding) {
-
-    // extract extra condition, canonicalize
-    throw new RuntimeException("NIY");
+    return JitConstraints.isActivated(binding.getCondition());
   }
 
   //---------------------------------------------------------------------------
