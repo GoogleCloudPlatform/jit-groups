@@ -41,6 +41,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   private final @NotNull UserId requestingUser;
   private final @NotNull Set<TEntitlementId> entitlements;
   private final @NotNull String justification;
+  private final @Nullable String additionalConditions;
 
   protected ActivationRequest(
     @NotNull ActivationId id,
@@ -48,8 +49,9 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     @NotNull Set<TEntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
-    @NotNull Duration duration
-  ) {
+    @NotNull Duration duration,
+    @Nullable String additionalConditions) 
+    {
 
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(requestingUser, "user");
@@ -72,6 +74,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     this.requestingUser = requestingUser;
     this.entitlements = entitlements;
     this.justification = justification;
+    this.additionalConditions = additionalConditions;
   }
 
   /**
@@ -121,6 +124,13 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
    */
   public @NotNull String justification() {
     return this.justification;
+  }
+
+  /**
+   * @return additional conditions for the request.
+  */
+  public @Nullable String additionalConditions() {
+    return this.additionalConditions;
   }
 
   public abstract @NotNull ActivationType type();

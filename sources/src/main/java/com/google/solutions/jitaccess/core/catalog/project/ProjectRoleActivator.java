@@ -71,7 +71,8 @@ public class ProjectRoleActivator extends EntitlementActivator<
     @NotNull UserId user,
     @NotNull Set<String> roles,
     @NotNull Instant startTime,
-    @NotNull Duration duration
+    @NotNull Duration duration,
+    @Nullable String additionalConditions
   ) throws AccessException, AlreadyExistsException, IOException {
 
     //
@@ -88,7 +89,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
           .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
           .setDescription(bindingDescription)
-          .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
+          .setExpression(new TemporaryIamCondition(startTime, duration, additionalConditions).toString()));
 
       this.resourceManagerClient.addProjectIamBinding(
         projectId,
@@ -126,7 +127,8 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .map(e -> e.roleBinding().role())
         .collect(Collectors.toSet()),
       request.startTime(),
-      request.duration());
+      request.duration(),
+      request.additionalConditions());
 
     return new Activation(
       request.startTime(),
@@ -161,7 +163,8 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .map(e -> e.roleBinding().role())
         .collect(Collectors.toSet()),
       request.startTime(),
-      request.duration());
+      request.duration(),
+      request.additionalConditions());
 
     return new Activation(
       request.startTime(),

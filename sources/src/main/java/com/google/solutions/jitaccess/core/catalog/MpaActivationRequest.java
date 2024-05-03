@@ -44,14 +44,16 @@ public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
     @NotNull Set<UserId> reviewers,
     @NotNull String justification,
     @NotNull Instant startTime,
-    @NotNull Duration duration) {
+    @NotNull Duration duration,
+    @Nullable String additionalConditions) {
     super(
       id,
       requestingUser,
       entitlements,
       justification,
       startTime,
-      duration);
+      duration,
+      additionalConditions);
 
     Preconditions.checkNotNull(reviewers, "reviewers");
     Preconditions.checkArgument(!reviewers.isEmpty());

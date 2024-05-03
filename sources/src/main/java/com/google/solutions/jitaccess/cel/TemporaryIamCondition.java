@@ -43,21 +43,35 @@ public class TemporaryIamCondition extends IamCondition {
     "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
       + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
 
+      private static final String CONDITION_PATTERN =
+      "^\\s*\\(request.time >= timestamp\\(\\\".*\\\"\\) && "
+        + "request.time < timestamp\\(\\\".*\\\"\\)\\)\\s*$";
+
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
   //---------------------------------------------------------------------------
   // Constructors.
   //---------------------------------------------------------------------------
 
-  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Instant endTime) {
-    super(String.format(
-      CONDITION_TEMPLATE,
-      startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
-      endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
+  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Instant endTime, @Nullable String additionalConditions) {
+    
+    // Assuming additionalConditions has the format "&& <other-conditions>"
+    if ( additionalConditions != null && !additionalConditions.isEmpty() ) {
+      super(String.format(
+        CONDITION_TEMPLATE,
+        startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+        endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)) +  additionalConditions);
+    } else {
+      super(String.format(
+        CONDITION_TEMPLATE,
+        startTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME),
+        endTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_DATE_TIME)));
+    }
+
   }
 
-  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Duration duration) {
-   this(startTime, startTime.plus(duration));
+  public TemporaryIamCondition(@NotNull Instant startTime, @NotNull Duration duration, @Nullable String additionalConditions) {
+   this(startTime, startTime.plus(duration), additionalConditions);
   }
 
   public TemporaryIamCondition(@NotNull String condition) {

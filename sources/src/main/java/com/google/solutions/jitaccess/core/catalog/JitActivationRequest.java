@@ -39,14 +39,16 @@ public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
     @NotNull Set<TEntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
-    @NotNull Duration duration) {
+    @NotNull Duration duration,
+    @Nullable String additionalConditions) {
     super(
       id,
       requestingUser,
       entitlements,
       justification,
       startTime,
-      duration);
+      duration,
+      additionalConditions);
   }
 
   @Override
