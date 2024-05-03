@@ -211,10 +211,13 @@ public class CloudIdentityGroupsClient {
         groupKey = new GroupKey((String)createOperation.getResponse().get("name"));
       }
       catch (GoogleJsonResponseException e) {
-        if (isAlreadyExistsError(e)) {
+        if (isAlreadyExistsError(e) || e.getStatusCode() == 403) {
           //
           // Group already exists. That's ok, but we need to find out
           // its ID.
+          //
+          // NB. A 403 could also be a permission-denied error. If that's
+          // the case, the following call will fail.
           //
           groupKey = lookupGroup(client, emailAddress);
         }
