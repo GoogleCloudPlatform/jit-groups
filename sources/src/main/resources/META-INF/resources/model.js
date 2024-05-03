@@ -113,9 +113,10 @@ class Model {
     }
 
     /** Activate roles without peer approval */
-    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
+    async selfApproveActivation(projectId, roles, additionalConditions, justification, activationTimeout) {
         console.assert(projectId);
         console.assert(roles.length > 0);
+        console.assert(additionalConditions.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
 
@@ -127,6 +128,7 @@ class Model {
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
                     roles: roles,
+                    additionalConditions: additionalConditions,
                     justification: justification,
                     activationTimeout: activationTimeout
                 }),
@@ -404,10 +406,10 @@ class DebugModel extends Model {
         }
     }
 
-    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
+    async selfApproveActivation(projectId, roles, additionalConditions, justification, activationTimeout) {
         var setting = $("#debug-selfApproveActivation").val();
         if (!setting) {
-            return super.selfApproveActivation(projectId, roles, justification, activationTimeout);
+            return super.selfApproveActivation(projectId, roles, additionalConditions, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
