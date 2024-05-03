@@ -25,9 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.RoleBinding;
-import com.google.solutions.jitaccess.core.catalog.Activation;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
@@ -37,7 +34,6 @@ import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,7 +92,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       userContext,
       request.roles
         .stream()
-        .map(r -> new ProjectRole(new RoleBinding(projectId.getFullResourceName(), r)))
+        .map(r -> new ProjectRole(projectId, r))
         .collect(Collectors.toSet()),
       request.justification,
       Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -129,7 +125,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
             "User %s activated roles %s on '%s' for themselves for %d minutes",
             iapPrincipal.email(),
             activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+              .map(ent -> String.format("'%s'", ent.role()))
               .collect(Collectors.joining(", ")),
             projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
@@ -149,7 +145,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
             "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
             iapPrincipal.email(),
             activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+              .map(ent -> String.format("'%s'", ent.role()))
               .collect(Collectors.joining(", ")),
             projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
@@ -188,7 +184,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
         String.format(
           "Activated roles %s on '%s'",
           request.entitlements().stream()
-            .map(ent -> String.format("'%s'", ent.roleBinding().role()))
+            .map(ent -> String.format("'%s'", ent.role()))
             .collect(Collectors.joining(", ")),
           projectId));
 
@@ -197,7 +193,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       this.properties.put("ROLE", request
         .entitlements()
         .stream()
-        .map(ent -> ent.roleBinding().role())
+        .map(ent -> ent.role())
         .collect(Collectors.joining(", ")));
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());

@@ -141,11 +141,11 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = allBindings.stream()
-        .filter(binding -> JitConstraints.isJitAccessConstraint(binding.getCondition()))
-        .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
+        .filter(binding -> ProjectRole.isJitEligibleProjectRole(binding))
+        .map(binding -> new ProjectRole(projectId, binding.getRole()))
         .map(roleBinding -> new Entitlement<>(
           roleBinding,
-          roleBinding.roleBinding().role(),
+          roleBinding.role(),
           ActivationType.JIT))
         .collect(Collectors.toSet());
     }
@@ -161,11 +161,11 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = allBindings.stream()
-        .filter(binding -> JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition()))
-        .map(binding -> new ProjectRole(new RoleBinding(projectId, binding.getRole())))
+        .filter(binding -> ProjectRole.isMpaEligibleProjectRole(binding))
+        .map(binding -> new ProjectRole(projectId, binding.getRole()))
         .map(roleBinding -> new Entitlement<>(
           roleBinding,
-          roleBinding.roleBinding().role(),
+          roleBinding.role(),
           ActivationType.MPA))
         .collect(Collectors.toSet());
     }
@@ -207,12 +207,12 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
       if (isValid) {
         currentActivations.put(
-          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
+          new ProjectRole(projectId, binding.getRole()),
           new Activation(condition.getValidity()));
       }
       else {
         expiredActivations.put(
-          new ProjectRole(new RoleBinding(projectId, binding.getRole())),
+          new ProjectRole(projectId, binding.getRole()),
           new Activation(condition.getValidity()));
       }
     }
@@ -237,7 +237,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       .flatMap(policy -> policy.getPolicy().getBindings().stream())
 
       // Only consider requested role.
-      .filter(binding -> binding.getRole().equals(roleBinding.roleBinding().role()))
+      .filter(binding -> binding.getRole().equals(roleBinding.role()))
 
       // Only consider eligible bindings.
       .filter(binding -> JitConstraints.isApprovalConstraint(

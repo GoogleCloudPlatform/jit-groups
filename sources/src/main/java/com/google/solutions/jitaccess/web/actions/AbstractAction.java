@@ -21,11 +21,11 @@
 
 package com.google.solutions.jitaccess.web.actions;
 
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,12 +71,12 @@ public abstract class AbstractAction {
 
   protected static LogAdapter.LogEntry addLabels(
     @NotNull LogAdapter.LogEntry entry,
-    @NotNull RoleBinding roleBinding
+    @NotNull ProjectRole roleBinding
   ) {
     return entry
       .addLabel("role", roleBinding.role())
-      .addLabel("resource", roleBinding.fullResourceName())
-      .addLabel("project_id", ProjectId.parse(roleBinding.fullResourceName()).id());
+      .addLabel("resource", roleBinding.projectId().getFullResourceName())
+      .addLabel("project_id", roleBinding.projectId().id());
   }
 
   protected static LogAdapter.LogEntry addLabels(

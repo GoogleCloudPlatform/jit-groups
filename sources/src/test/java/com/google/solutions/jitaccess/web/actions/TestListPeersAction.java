@@ -56,7 +56,7 @@ public class TestListPeersAction {
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+        argThat(r -> r.role().equals("roles/browser"))))
       .thenReturn(new TreeSet());
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
@@ -72,7 +72,7 @@ public class TestListPeersAction {
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.roleBinding().role().equals("roles/browser"))))
+        argThat(r -> r.role().equals("roles/browser"))))
       .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var action = new ListPeersAction(new LogAdapter(), catalog);

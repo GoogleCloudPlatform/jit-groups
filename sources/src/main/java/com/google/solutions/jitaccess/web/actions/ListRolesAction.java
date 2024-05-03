@@ -24,16 +24,14 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,14 +74,14 @@ public class ListRolesAction extends AbstractAction {
             var currentActivation = entitlements.currentActivations().get(ent.id());
             if (currentActivation != null) {
               return new ResponseEntity.Item(
-                ent.id().roleBinding(),
+                ent.id(),
                 ent.activationType(),
                 ActivationStatus.ACTIVE,
                 currentActivation.validity().end().getEpochSecond());
             }
             else {
               return new ResponseEntity.Item(
-                ent.id().roleBinding(),
+                ent.id(),
                 ent.activationType(),
                 ActivationStatus.INACTIVE,
                 null);
@@ -120,13 +118,13 @@ public class ListRolesAction extends AbstractAction {
     }
 
     public static class Item {
-      public final @NotNull RoleBinding roleBinding;
+      public final @NotNull ProjectRole roleBinding;
       public final @NotNull ActivationType activationType;
       public final @NotNull ActivationStatus status;
       public final Long /* optional */ validUntil;
 
       public Item(
-        @NotNull RoleBinding roleBinding,
+        @NotNull ProjectRole roleBinding,
         @NotNull ActivationType activationType,
         @NotNull ActivationStatus status,
         Long validUntil) {

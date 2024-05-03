@@ -22,9 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Binding;
-import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,19 +32,39 @@ import org.jetbrains.annotations.NotNull;
 public class ProjectRole extends EntitlementId {
   static final String CATALOG = "iam";
 
-  private final @NotNull RoleBinding roleBinding;
+  private final @NotNull ProjectId projectId;
+  private final @NotNull String role;
 
-  public ProjectRole(@NotNull RoleBinding roleBinding) {
-    Preconditions.checkNotNull(roleBinding, "roleBinding");
-
-    assert ProjectId.canParse(roleBinding.fullResourceName());
-
-    this.roleBinding = roleBinding;
+  public ProjectRole(@NotNull ProjectId projectId, @NotNull String role) {
+    this.projectId = projectId;
+    this.role = role;
   }
 
-  public @NotNull RoleBinding roleBinding() {
-    return this.roleBinding;
+  public @NotNull ProjectId projectId() {
+    return this.projectId;
   }
+
+  public @NotNull String role() {
+    return this.role;
+  }
+
+  //---------------------------------------------------------------------------
+  // Overrides.
+  //---------------------------------------------------------------------------
+
+  @Override
+  public @NotNull String catalog() {
+    return CATALOG;
+  }
+
+  @Override
+  public @NotNull String id() { //TODO: test, consider condition
+    return String.format("%s:%s", this.projectId, this.role);
+  }
+
+  //---------------------------------------------------------------------------
+  // Factory methods.
+  //---------------------------------------------------------------------------
 
   /**
    * Check if the binding represents a JIT-eligible project role.
@@ -67,23 +85,5 @@ public class ProjectRole extends EntitlementId {
    */
   public static boolean isActivatedProjectRole(Binding binding) {
     return JitConstraints.isActivated(binding.getCondition());
-  }
-
-  //---------------------------------------------------------------------------
-  // Overrides.
-  //---------------------------------------------------------------------------
-
-  @Override
-  public @NotNull String catalog() {
-    return CATALOG;
-  }
-
-  @Override
-  public @NotNull String id() {
-    return this.roleBinding.toString();
-  }
-
-  public @NotNull ProjectId projectId() {
-    return ProjectId.parse(this.roleBinding.fullResourceName());
   }
 }

@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
@@ -87,7 +86,7 @@ public class TestApproveActivationRequestAction {
       new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new ProjectId("project-1"), "roles/mock")),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -132,7 +131,7 @@ public class TestApproveActivationRequestAction {
       new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new ProjectId("project-1"), "roles/mock")),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),
@@ -181,7 +180,7 @@ public class TestApproveActivationRequestAction {
       new ProjectRoleActivator.Options(1))
       .createMpaRequest(
         new MpaProjectRoleCatalog.UserContext(SAMPLE_USER),
-        Set.of(new ProjectRole(new RoleBinding(new ProjectId("project-1"), "roles/mock"))),
+        Set.of(new ProjectRole(new ProjectId("project-1"), "roles/mock")),
         Set.of(SAMPLE_USER_2),
         "a justification",
         Instant.now(),

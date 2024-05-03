@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.catalog.*;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +61,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     this.options = options;
   }
 
-  private record ConditionalRoleBinding(RoleBinding binding, Expr condition) {}
+  private record ConditionalRoleBinding(
+    ProjectId projectId,
+    String role,
+    Expr condition) {}
 
   static @NotNull List<ConditionalRoleBinding> findRoleBindings(
     @NotNull IamPolicyAnalysis analysisResult,
@@ -96,9 +98,8 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
           .stream()
           .filter(res -> ProjectId.canParse(res.getFullResourceName()))
           .map(res -> new ConditionalRoleBinding(
-            new RoleBinding(
-              res.getFullResourceName(),
-              result.getIamBinding().getRole()),
+            ProjectId.parse(res.getFullResourceName()),
+            result.getIamBinding().getRole(),
             getIamCondition.apply(result)))))
       .collect(Collectors.toList());
   }
@@ -148,7 +149,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
     return roleBindings
       .stream()
-      .map(b -> ProjectId.parse(b.binding.fullResourceName()))
+      .map(b -> b.projectId())
       .collect(Collectors.toCollection(TreeSet::new));
   }
 
@@ -194,9 +195,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         condition -> JitConstraints.isJitAccessConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(conditionalBinding -> new Entitlement<ProjectRole>(
-          new ProjectRole(conditionalBinding.binding),
-          conditionalBinding.binding.role(),
+        .map(conditionalBinding -> new Entitlement<>(
+          new ProjectRole(conditionalBinding.projectId(), conditionalBinding.role()),
+          conditionalBinding.role(),
           ActivationType.JIT))
         .collect(Collectors.toSet());
     }
@@ -216,9 +217,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(conditionalBinding -> new Entitlement<ProjectRole>(
-          new ProjectRole(conditionalBinding.binding),
-          conditionalBinding.binding.role(),
+        .map(conditionalBinding -> new Entitlement<>(
+          new ProjectRole(conditionalBinding.projectId(), conditionalBinding.role()),
+          conditionalBinding.role(),
           ActivationType.MPA))
         .collect(Collectors.toSet());
     }
@@ -249,7 +250,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
       .stream()
       .collect(Collectors.toMap(
-        conditionalBinding -> new ProjectRole(conditionalBinding.binding),
+        conditionalBinding -> new ProjectRole(
+          conditionalBinding.projectId(),
+          conditionalBinding.role()),
         conditionalBinding -> new Activation(
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity())));
 
@@ -262,7 +265,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         evalResult -> "FALSE".equalsIgnoreCase(evalResult))
       .stream()
       .collect(Collectors.toMap(
-        conditionalBinding -> new ProjectRole(conditionalBinding.binding),
+        conditionalBinding -> new ProjectRole(
+          conditionalBinding.projectId(),
+          conditionalBinding.role()),
         conditionalBinding -> new Activation(
           new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity())));
 
@@ -281,12 +286,11 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   ) throws AccessException, IOException {
 
     Preconditions.checkNotNull(roleBinding, "roleBinding");
-    assert ProjectId.canParse(roleBinding.roleBinding().fullResourceName());
 
     var analysisResult = this.policyAnalyzerClient.findPermissionedPrincipalsByResource(
       this.options.scope,
-      roleBinding.roleBinding().fullResourceName(),
-      roleBinding.roleBinding().role());
+      roleBinding.projectId().getFullResourceName(),
+      roleBinding.role());
 
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)

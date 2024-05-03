@@ -25,7 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
@@ -112,7 +111,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     var userContext = this.catalog.createContext(iapPrincipal.email());
 
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, request.role);
+    var roleBinding = new ProjectRole(projectId, request.role);
 
     //
     // Create an MPA activation request.
@@ -123,7 +122,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     try {
       activationRequest = this.activator.createMpaRequest(
         userContext,
-        Set.of(new ProjectRole(roleBinding)),
+        Set.of(roleBinding),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -198,7 +197,7 @@ public class RequestActivationAction extends AbstractActivationAction {
             "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.email(),
             roleBinding.role(),
-            roleBinding.fullResourceName(),
+            roleBinding.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -217,7 +216,7 @@ public class RequestActivationAction extends AbstractActivationAction {
             "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.email(),
             roleBinding.role(),
-            roleBinding.fullResourceName(),
+            roleBinding.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
@@ -273,7 +272,6 @@ public class RequestActivationAction extends AbstractActivationAction {
         .stream()
         .findFirst()
         .get()
-        .roleBinding()
         .role());
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());

@@ -96,8 +96,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       .entitlements()
       .stream()
       .findFirst()
-      .get()
-      .roleBinding();
+      .get();
 
     try {
       var activation = this.activator.approve(userContext, activationRequest);
@@ -107,13 +106,12 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       //
       // Notify listeners.
       //
-      var projectId = ProjectId.parse(roleBinding.fullResourceName());
       for (var service : this.notificationServices) {
         service.sendNotification(new ActivationApprovedNotification(
-          projectId,
+          roleBinding.projectId(),
           activationRequest,
           iapPrincipal.email(),
-          createActivationRequestUrl(uriInfo, projectId, activationToken)));
+          createActivationRequestUrl(uriInfo, roleBinding.projectId(), activationToken)));
       }
 
       //
@@ -126,7 +124,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
             "User %s approved role '%s' on '%s' for %s",
             iapPrincipal.email(),
             roleBinding.role(),
-            roleBinding.fullResourceName(),
+            roleBinding.projectId().getFullResourceName(),
             activationRequest.requestingUser()))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -144,7 +142,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
             "User %s failed to activate role '%s' on '%s' for %s: %s",
             iapPrincipal.email(),
             roleBinding.role(),
-            roleBinding.fullResourceName(),
+            roleBinding.projectId().getFullResourceName(),
             activationRequest.requestingUser(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -189,7 +187,6 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
         .stream()
         .findFirst()
         .get()
-        .roleBinding()
         .role());
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());
