@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
@@ -116,7 +115,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
         .stream()
         .map(ent -> new Item(
           request.id(),
-          ent.roleBinding(),
+          ent,
           status,
           request.startTime(),
           request.endTime()))
@@ -135,14 +134,14 @@ public abstract class AbstractActivationAction extends AbstractAction {
     public static class Item {
       public final @NotNull String activationId;
       public final @NotNull String projectId;
-      public final @NotNull RoleBinding roleBinding;
+      public final @NotNull String role;
       public final @NotNull ActivationStatus status;
       public final long startTime;
       public final long endTime;
 
       private Item(
         @NotNull ActivationId activationId,
-        @NotNull RoleBinding roleBinding,
+        @NotNull ProjectRole roleBinding,
         @NotNull ActivationStatus status,
         @NotNull Instant startTime,
         @NotNull Instant endTime
@@ -150,13 +149,12 @@ public abstract class AbstractActivationAction extends AbstractAction {
         assert endTime.isAfter(startTime);
 
         this.activationId = activationId.toString();
-        this.projectId = ProjectId.parse(roleBinding.fullResourceName()).id();
-        this.roleBinding = roleBinding;
+        this.projectId = roleBinding.projectId().id();
+        this.role = roleBinding.role();
         this.status = status;
         this.startTime = startTime.getEpochSecond();
         this.endTime = endTime.getEpochSecond();
       }
     }
-
   }
 }

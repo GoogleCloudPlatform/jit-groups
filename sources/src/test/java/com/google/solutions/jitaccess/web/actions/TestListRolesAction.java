@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.Entitlement;
@@ -110,11 +109,11 @@ public class TestListRolesAction {
       .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
 
     var role1 = new Entitlement<ProjectRole>(
-      new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/browser")),
+      new ProjectRole(new ProjectId("project-1"), "roles/browser"),
       "ent-1",
       ActivationType.JIT);
     var role2 = new Entitlement<ProjectRole>(
-      new ProjectRole(new RoleBinding(new ProjectId("project-1").getFullResourceName(), "roles/janitor")),
+      new ProjectRole(new ProjectId("project-1"), "roles/janitor"),
       "ent-2",
       ActivationType.JIT);
 
@@ -133,8 +132,8 @@ public class TestListRolesAction {
 
     assertNotNull(response.roles);
     assertEquals(2, response.roles.size());
-    assertEquals(role1.id().roleBinding(), response.roles.get(0).roleBinding);
-    assertEquals(role2.id().roleBinding(), response.roles.get(1).roleBinding);
+    assertEquals(role1.id().role(), response.roles.get(0).role);
+    assertEquals(role2.id().role(), response.roles.get(1).role);
     assertTrue(response.warnings.isEmpty());
   }
 }

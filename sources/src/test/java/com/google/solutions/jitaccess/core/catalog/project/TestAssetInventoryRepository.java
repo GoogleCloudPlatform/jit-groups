@@ -284,7 +284,7 @@ public class TestAssetInventoryRepository {
 
     assertIterableEquals(
       List.of("roles/for-user"),
-      entitlements.available().stream().map(e -> e.id().roleBinding().role()).collect(Collectors.toList()));
+      entitlements.available().stream().map(e -> e.id().role()).collect(Collectors.toList()));
     var jitEntitlement = entitlements.available().first();
     assertEquals(ActivationType.JIT, jitEntitlement.activationType());
   }
@@ -425,7 +425,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRole(new RoleBinding(SAMPLE_PROJECT, "roles/role-1")),
+      new ProjectRole(SAMPLE_PROJECT, "roles/role-1"),
       ActivationType.MPA);
 
     assertNotNull(holders);
@@ -434,7 +434,7 @@ public class TestAssetInventoryRepository {
 
   @Test
   public void whenEffectiveIamPoliciesContainUsers_ThenFindEntitlementHoldersReturnsList() throws Exception {
-    var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+    var role = new ProjectRole(SAMPLE_PROJECT, "roles/role-1");
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);
     when(caiClient
@@ -464,7 +464,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRole(role),
+      role,
       ActivationType.MPA);
 
     assertNotNull(holders);
@@ -475,7 +475,7 @@ public class TestAssetInventoryRepository {
 
   @Test
   public void whenEffectiveIamPoliciesContainsGroups_ThenFindEntitlementHoldersReturnsList() throws Exception {
-    var role = new RoleBinding(SAMPLE_PROJECT, "roles/role-1");
+    var role = new ProjectRole(SAMPLE_PROJECT, "roles/role-1");
 
     var groupBinding = new Binding()
       .setRole(role.role())
@@ -514,7 +514,7 @@ public class TestAssetInventoryRepository {
       new AssetInventoryRepository.Options("organization/0"));
 
     var holders = repository.findEntitlementHolders(
-      new ProjectRole(role),
+      role,
       ActivationType.MPA);
 
     assertNotNull(holders);

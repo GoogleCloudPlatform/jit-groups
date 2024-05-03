@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.Catalog;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
@@ -67,8 +66,8 @@ public class TestProjectRoleActivator {
     var request = activator.createJitRequest(
       requestingUserContext,
       Set.of(
-        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
-        new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_2))),
+        new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1),
+        new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_2)),
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
@@ -105,7 +104,7 @@ public class TestProjectRoleActivator {
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createMpaRequest(
       requestingUserContext,
-      Set.of(new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
+      Set.of(new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),
@@ -145,7 +144,7 @@ public class TestProjectRoleActivator {
     var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
     var inputRequest = activator.createMpaRequest(
       requestingUserContext,
-      Set.of(new ProjectRole(new RoleBinding(SAMPLE_PROJECT, SAMPLE_ROLE_1))),
+      Set.of(new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
       Instant.now(),

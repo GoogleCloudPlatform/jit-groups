@@ -22,12 +22,12 @@
 package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.JustificationPolicy;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.web.LogAdapter;
@@ -395,7 +395,7 @@ public class TestRequestActivationAction {
       .sign(any(), any()))
       .thenReturn(SAMPLE_TOKEN_WITH_EXPIRY);
 
-    var roleBinding = new RoleBinding(new ProjectId("project-1"), "roles/browser");
+    var roleBinding = new ProjectRole(new ProjectId("project-1"), "roles/browser");
 
     var action = new RequestActivationAction(
       new LogAdapter(),
@@ -425,7 +425,7 @@ public class TestRequestActivationAction {
     assertNotNull(response.items);
     assertEquals(1, response.items.size());
     assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals(roleBinding, response.items.get(0).roleBinding);
+    assertEquals(roleBinding.role(), response.items.get(0).role);
     assertEquals(ActivationStatus.ACTIVATION_PENDING, response.items.get(0).status);
     assertNotNull(response.items.get(0).activationId);
   }

@@ -123,7 +123,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
-        .map(e -> e.roleBinding().role())
+        .map(e -> e.role())
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
@@ -158,7 +158,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
-        .map(e -> e.roleBinding().role())
+        .map(e -> e.role())
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
@@ -175,7 +175,6 @@ public class ProjectRoleActivator extends EntitlementActivator<
       public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRole> request) {
         var roleBindings = request.entitlements()
           .stream()
-          .map(ent -> ent.roleBinding())
           .toList();
 
         if (roleBindings.size() != 1) {
@@ -188,7 +187,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
           .setJwtId(request.id().toString())
           .set("beneficiary", request.requestingUser().email)
           .set("reviewers", request.reviewers().stream().map(id -> id.email).collect(Collectors.toList()))
-          .set("resource", roleBinding.fullResourceName())
+          .set("resource", roleBinding.projectId().getFullResourceName())
           .set("role", roleBinding.role())
           .set("justification", request.justification())
           .set("start", request.startTime().getEpochSecond())
@@ -198,8 +197,8 @@ public class ProjectRoleActivator extends EntitlementActivator<
       @SuppressWarnings("unchecked")
       @Override
       public @NotNull MpaActivationRequest<ProjectRole> convert(@NotNull JsonWebToken.Payload payload) {
-        var roleBinding = new RoleBinding(
-          payload.get("resource").toString(),
+        var roleBinding = new ProjectRole(
+          ProjectId.parse(payload.get("resource").toString()),
           payload.get("role").toString());
 
         var startTime = ((Number)payload.get("start")).longValue();
@@ -208,7 +207,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
         return new MpaRequest<>(
           new ActivationId(payload.getJwtId()),
           new UserId(payload.get("beneficiary").toString()),
-          Set.of(new ProjectRole(roleBinding)),
+          Set.of(roleBinding),
           ((List<String>)payload.get("reviewers"))
             .stream()
             .map(email -> new UserId(email))

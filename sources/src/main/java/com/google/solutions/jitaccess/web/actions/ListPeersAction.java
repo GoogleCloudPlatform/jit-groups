@@ -24,8 +24,8 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.RoleBinding;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
@@ -66,12 +66,12 @@ public class ListPeersAction extends AbstractAction {
     var userContext = this.catalog.createContext(iapPrincipal.email());
 
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new RoleBinding(projectId, role);
+    var roleBinding = new ProjectRole(projectId, role);
 
     try {
       var peers = this.catalog.listReviewers(
         userContext,
-        new com.google.solutions.jitaccess.core.catalog.project.ProjectRole(roleBinding));
+        roleBinding);
 
       assert !peers.contains(iapPrincipal.email());
 

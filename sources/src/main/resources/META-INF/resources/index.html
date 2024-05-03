@@ -353,9 +353,9 @@
                     if (entitlements.roles && entitlements.roles.length > 0) {
                         entitlements.roles.forEach(item => {
                             this._table.addRow(
-                                item.roleBinding.role,
+                                item.role,
                                 [
-                                    { text: item.roleBinding.role },
+                                    { text: item.role },
                                     { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                                     { text: (this.statusCaptions[item.status] ?? item.status) + 
                                             (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
@@ -374,7 +374,7 @@
                     //
                     const onSelectionChanged = e => {
                         const selected = this._table.getSelectedRowIds();
-                        selectedEntitlements = entitlements.roles.filter(i => selected.includes(i.roleBinding.role));
+                        selectedEntitlements = entitlements.roles.filter(i => selected.includes(i.role));
 
                         if (selectedEntitlements.length > 1 && selectedEntitlements.some(i => i.activationType === "MPA")) {
                             $('#jit-listentitlements-warning').text('You can only request peer approval for a single role at a time');
@@ -415,7 +415,7 @@
                         if (activationType == 'MPA') {
                             activationStatus = await this.model.requestActivation(
                                 document.appbar.scope,
-                                selectedEntitlements[0].roleBinding.role,
+                                selectedEntitlements[0].role,
                                 request.peers,
                                 request.justification,
                                 request.duration);
@@ -423,7 +423,7 @@
                         else {
                             activationStatus = await this.model.selfApproveActivation(
                                 document.appbar.scope,
-                                selectedEntitlements.map(e => e.roleBinding.role),
+                                selectedEntitlements.map(e => e.role),
                                 request.justification,
                                 request.duration);
                         }
@@ -502,7 +502,7 @@
 
                     if (this.activationType == 'MPA') {
                         $('#jit-requestdialog-peers').show();
-                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].roleBinding.role);
+                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].role);
                         
                         peersResult.peers.forEach(item => {
                             this._table.addRow(
@@ -623,10 +623,10 @@
                     this._table.clearRows();
                     this.activationStatus.items.forEach((item) => {
                         this._table.addRow(
-                            item.roleBinding.role,
+                            item.role,
                             [
                                 { text: item.projectId },
-                                { text: item.roleBinding.role },
+                                { text: item.role },
                                 { text: this.statusCaptions[item.status] ?? item.status, 
                                   class: item.status === "ACTIVE" ? "activated" : null }
                             ],

@@ -319,10 +319,7 @@ class DebugModel extends Model {
             items: roles.map(r => ({
                 activationId: "sim-1",
                 projectId: projectId,
-                roleBinding: {
-                    fullResourceName: "//simulated",
-                    role: r
-                },
+                role: r,
                 status: status,
                 startTime: Math.floor(Date.now() / 1000),
                 endTime: Math.floor(Date.now() / 1000) + activationTimeout * 60
@@ -359,10 +356,7 @@ class DebugModel extends Model {
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
                 roles: Array.from({ length: setting }, (e, i) => ({
-                    roleBinding: {
-                        fullResourceName: "//simulated",
-                        role: "roles/simulated-role-" + i
-                    },
+                    role: "roles/simulated-role-" + i,
                     activationType: activationTypes[i % activationTypes.length],
                     status: statuses[i % statuses.length]
                 }))

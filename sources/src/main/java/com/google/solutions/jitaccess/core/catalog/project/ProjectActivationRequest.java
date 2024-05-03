@@ -36,13 +36,13 @@ class ProjectActivationRequest {
    */
   static @NotNull ProjectId projectId(@NotNull ActivationRequest<ProjectRole> request) {
     var projects = request.entitlements().stream()
-      .map(e -> e.roleBinding().fullResourceName())
-      .collect(Collectors.toSet());
+      .map(e -> e.projectId())
+      .collect(Collectors.toSet()); // Remove duplicates
 
     if (projects.size() != 1) {
       throw new IllegalArgumentException("Entitlements must be part of the same project");
     }
 
-    return ProjectId.parse(projects.stream().findFirst().get());
+    return projects.stream().findFirst().get();
   }
 }
