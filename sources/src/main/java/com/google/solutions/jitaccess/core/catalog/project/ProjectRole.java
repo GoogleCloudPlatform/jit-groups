@@ -26,6 +26,9 @@ import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.text.html.Option;
+import java.util.Optional;
+
 /**
  * Identifies a project role binding as an entitlement.
  */
@@ -67,23 +70,59 @@ public class ProjectRole extends EntitlementId {
   //---------------------------------------------------------------------------
 
   /**
-   * Check if the binding represents a JIT-eligible project role.
+   * Try to create a ProjectRole from a JIT-eligible role binding.
+   *
+   * @param binding
+   * @return ProjectRole or empty if the binding doesn't represent a
+   *         JIT-eligible role binding.
    */
-  public static boolean isJitEligibleProjectRole(Binding binding) {
-    return JitConstraints.isJitAccessConstraint(binding.getCondition());
+  public static Optional<ProjectRole> fromJitEligibleRoleBinding( // TODO: test
+    @NotNull ProjectId projectId,
+    @NotNull Binding binding
+  ) {
+    if (JitConstraints.isJitAccessConstraint(binding.getCondition())) {
+      return Optional.of(new ProjectRole(projectId, binding.getRole()));
+    }
+    else {
+      return Optional.empty();
+    }
   }
 
   /**
-   * Check if the binding represents a MPA-eligible project role.
+   * Try to create a ProjectRole from an MPA-eligible role binding.
+   *
+   * @param binding
+   * @return ProjectRole or empty if the binding doesn't represent an
+   *         MPA-eligible role binding.
    */
-  public static boolean isMpaEligibleProjectRole(Binding binding) {
-    return JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition());
+  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(
+    @NotNull ProjectId projectId,
+    @NotNull Binding binding
+  ) {
+    if (JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition())) {
+      return Optional.of(new ProjectRole(projectId, binding.getRole()));
+    }
+    else {
+      return Optional.empty();
+    }
   }
 
   /**
-   * Check if the binding represents an activated project role.
+   * Try to create a ProjectRole from an activation binding.
+   *
+   * @param binding
+   * @return ProjectRole or empty if the binding doesn't represent an
+   *         activation binding.
    */
-  public static boolean isActivatedProjectRole(Binding binding) {
-    return JitConstraints.isActivated(binding.getCondition());
+  public static Optional<ProjectRole> fromActivationRoleBinding(
+    @NotNull ProjectId projectId,
+    @NotNull Binding binding
+  ) {
+    if (JitConstraints.isActivated(binding.getCondition())) {
+      return Optional.of(new ProjectRole(projectId, binding.getRole()));
+    }
+    else {
+      return Optional.empty();
+    }
   }
 }
