@@ -36,6 +36,7 @@ import dev.cel.common.CelException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -199,29 +200,18 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     var currentActivations = new HashMap<ProjectRole, Activation>();
     var expiredActivations = new HashMap<ProjectRole, Activation>();
 
-    for (var binding : allBindings.stream()
-      // Only temporary access bindings.
-      .filter(binding -> JitConstraints.isActivated(binding.getCondition())).toList())
-    {
-      var condition = new TemporaryIamCondition(binding.getCondition().getExpression());
-      boolean isValid;
+    for (var activatedProjectRole : allBindings.stream()
+      .map(binding -> ProjectRole.fromActivationRoleBinding(projectId, binding))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .toList()) {
 
-      try {
-        isValid = condition.evaluate();
-      }
-      catch (CelException e) {
-        isValid = false;
-      }
-
-      if (isValid) {
-        currentActivations.put(
-          new ProjectRole(projectId, binding.getRole()),
-          new Activation(condition.getValidity()));
+      var now = Instant.now();
+      if (activatedProjectRole.activation().isValid(now)) {
+        currentActivations.put(activatedProjectRole.projectRole(), activatedProjectRole.activation());
       }
       else {
-        expiredActivations.put(
-          new ProjectRole(projectId, binding.getRole()),
-          new Activation(condition.getValidity()));
+        expiredActivations.put(activatedProjectRole.projectRole(), activatedProjectRole.activation());
       }
     }
 

@@ -22,8 +22,11 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
+import dev.cel.common.CelException;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.text.html.Option;
@@ -95,7 +98,7 @@ public class ProjectRole extends EntitlementId {
    * @return ProjectRole or empty if the binding doesn't represent an
    *         MPA-eligible role binding.
    */
-  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(
+  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(// TODO: test
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
@@ -114,15 +117,21 @@ public class ProjectRole extends EntitlementId {
    * @return ProjectRole or empty if the binding doesn't represent an
    *         activation binding.
    */
-  public static Optional<ProjectRole> fromActivationRoleBinding(
+  public static Optional<ActivatedProjectRole> fromActivationRoleBinding(// TODO: test
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
     if (JitConstraints.isActivated(binding.getCondition())) {
-      return Optional.of(new ProjectRole(projectId, binding.getRole()));
+      return Optional.of(new ActivatedProjectRole(
+        new ProjectRole(projectId, binding.getRole()),
+        new Activation(new TemporaryIamCondition(binding.getCondition().getExpression()).getValidity())));
     }
     else {
       return Optional.empty();
     }
   }
+
+  record ActivatedProjectRole(
+    @NotNull ProjectRole projectRole,
+    @NotNull Activation activation) {}
 }
