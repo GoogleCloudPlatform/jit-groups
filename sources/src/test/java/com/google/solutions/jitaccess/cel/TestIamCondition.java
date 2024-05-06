@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.cel;
 
 import dev.cel.common.CelValidationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -87,5 +89,56 @@ public class TestIamCondition {
 
     assertFalse(new IamCondition("request.time <= timestamp(\"2024-01-01T01:02:03Z\")").evaluate());
     assertFalse(new IamCondition("request.time >= timestamp(\"2034-01-01T01:02:03Z\")").evaluate());
+  }
+
+  //-------------------------------------------------------------------------
+  // reformat.
+  //-------------------------------------------------------------------------
+
+  @Test
+  public void whenExpressionContainsExcessWhitespace_ThenReformatCleansWhitespace() throws Exception {
+    var condition = new IamCondition("\r\n   1<2    &&\n2<3\n ");
+    assertEquals("1 < 2 && 2 < 3", condition.reformat().condition);
+  }
+
+  //-------------------------------------------------------------------------
+  // andClauses.
+  //-------------------------------------------------------------------------
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "1<2", "true || false", "a=='&'"})
+  public void whenExpressionHasSingleClause_ThenAndClausesReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).andClauses();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).condition);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"(a && b && (c || d))"})
+  public void whenExpressionHasSingleNesedClause_ThenAndClausesReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).andClauses();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).condition);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"s == '&&' || s==\"&&\""})
+  public void whenExpressionContainsQuotedOperators_ThenAndClausesReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).andClauses();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).condition);
+  }
+
+  @Test
+  public void whenExpressionHasMultipleClauses_ThenAndClausesReturnsClauses() {
+    var clauses = new IamCondition("a || b && c&&(d&&e) ").andClauses();
+
+    assertEquals(3, clauses.size());
+    assertEquals("a || b ", clauses.get(0).condition);
+    assertEquals(" c", clauses.get(1).condition);
+    assertEquals("(d&&e) ", clauses.get(2).condition);
   }
 }
