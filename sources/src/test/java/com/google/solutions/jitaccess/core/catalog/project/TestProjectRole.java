@@ -21,12 +21,22 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
+import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProjectRole {
+  private static final String JIT_CONDITION = "has({}.jitAccessConstraint)";
+  private static final String MPA_CONDITION = "has({}.multiPartyApprovalConstraint)";
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
   // -------------------------------------------------------------------------
@@ -86,5 +96,122 @@ public class TestProjectRole {
     var ref1 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
 
     assertFalse(ref1.equals(null));
+  }
+
+  // -------------------------------------------------------------------------
+  // fromJitEligibleRoleBinding.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenConditionNull_ThenFromJitEligibleRoleBindingReturnsEmpty() {
+    var projectRole = ProjectRole.fromJitEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(null));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", ""})
+  public void whenConditionEmpty_ThenFromJitEligibleRoleBindingReturnsEmpty(String condition) {
+    var projectRole = ProjectRole.fromJitEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(condition)));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @Test
+  public void whenConditionIsJitConstraint_ThenFromJitEligibleRoleBindingReturnsRole() {
+    var projectRole = ProjectRole.fromJitEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(JIT_CONDITION)));
+    assertTrue(projectRole.isPresent());
+    assertEquals(SAMPLE_PROJECT, projectRole.get().projectId());
+    assertEquals("roles/test", projectRole.get().role());
+  }
+
+  // -------------------------------------------------------------------------
+  // fromMpaEligibleRoleBinding.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenConditionNull_ThenFromMpaEligibleRoleBindingReturnsEmpty() {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(null));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", ""})
+  public void whenConditionEmpty_ThenFromMpaEligibleRoleBindingReturnsEmpty(String condition) {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(condition)));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @Test
+  public void whenConditionIsMpaConstraint_ThenFromMpaEligibleRoleBindingReturnsRole() {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(MPA_CONDITION)));
+    assertTrue(projectRole.isPresent());
+    assertEquals(SAMPLE_PROJECT, projectRole.get().projectId());
+    assertEquals("roles/test", projectRole.get().role());
+  }
+
+  // -------------------------------------------------------------------------
+  // fromActivationRoleBinding.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void whenConditionNull_ThenFromActivationRoleBindingReturnsEmpty() {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(null));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", ""})
+  public void whenConditionEmpty_ThenFromActivationRoleBindingReturnsEmpty(String value) {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr()
+          .setExpression(value)
+          .setTitle(value)));
+    assertFalse(projectRole.isPresent());
+  }
+
+  @Test
+  public void whenConditionIsActivationConstraint_henFromActivationRoleBindingReturnsRole() {
+    var tempCondition = new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5));
+    var activatedRole = ProjectRole.fromActivationRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr()
+          .setExpression(tempCondition.toString())
+          .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)));
+    assertTrue(activatedRole.isPresent());
+    assertEquals(SAMPLE_PROJECT, activatedRole.get().projectRole().projectId());
+    assertEquals("roles/test", activatedRole.get().projectRole().role());
+    assertEquals(tempCondition.getValidity(), activatedRole.get().activation().validity());
   }
 }

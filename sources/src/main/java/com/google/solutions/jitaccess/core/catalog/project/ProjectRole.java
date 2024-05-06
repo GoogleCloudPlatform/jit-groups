@@ -26,10 +26,8 @@ import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
-import dev.cel.common.CelException;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 /**
@@ -64,7 +62,7 @@ public class ProjectRole extends EntitlementId {
   }
 
   @Override
-  public @NotNull String id() { //TODO: test, consider condition
+  public @NotNull String id() {
     return String.format("%s:%s", this.projectId, this.role);
   }
 
@@ -75,11 +73,12 @@ public class ProjectRole extends EntitlementId {
   /**
    * Try to create a ProjectRole from a JIT-eligible role binding.
    *
-   * @param binding
+   * @param projectId Project
+   * @param binding IAM binding
    * @return ProjectRole or empty if the binding doesn't represent a
    *         JIT-eligible role binding.
    */
-  public static Optional<ProjectRole> fromJitEligibleRoleBinding( // TODO: test
+  public static Optional<ProjectRole> fromJitEligibleRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
@@ -94,11 +93,12 @@ public class ProjectRole extends EntitlementId {
   /**
    * Try to create a ProjectRole from an MPA-eligible role binding.
    *
-   * @param binding
+   * @param projectId Project
+   * @param binding IAM binding
    * @return ProjectRole or empty if the binding doesn't represent an
    *         MPA-eligible role binding.
    */
-  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(// TODO: test
+  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
@@ -113,11 +113,12 @@ public class ProjectRole extends EntitlementId {
   /**
    * Try to create a ProjectRole from an activation binding.
    *
-   * @param binding
+   * @param projectId Project
+   * @param binding IAM binding
    * @return ProjectRole or empty if the binding doesn't represent an
    *         activation binding.
    */
-  public static Optional<ActivatedProjectRole> fromActivationRoleBinding(// TODO: test
+  public static Optional<ActivatedProjectRole> fromActivationRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {

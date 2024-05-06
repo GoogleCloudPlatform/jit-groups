@@ -22,17 +22,14 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Binding;
-import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.GroupId;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.core.clients.DirectoryGroupsClient;
-import dev.cel.common.CelException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -220,13 +217,13 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
 
   @Override
   public @NotNull Set<UserId> findEntitlementHolders(
-    @NotNull ProjectRole roleBinding,
+    @NotNull ProjectRole projectRole,
     @NotNull ActivationType activationType
   ) throws AccessException, IOException {
 
     var policies = this.assetInventoryClient.getEffectiveIamPolicies(
       this.options.scope,
-      roleBinding.projectId());
+      projectRole.projectId());
 
     var principals = policies
       .stream()
@@ -235,12 +232,17 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       .flatMap(policy -> policy.getPolicy().getBindings().stream())
 
       // Only consider requested role.
-      .filter(binding -> binding.getRole().equals(roleBinding.role()))
+      .filter(binding -> binding.getRole().equals(projectRole.role()))
 
-      // Only consider eligible bindings.
-      .filter(binding -> JitConstraints.isApprovalConstraint(
-        binding.getCondition(),
-        activationType))
+      // Only consider eligible, equivalent bindings.
+      .filter(binding -> {
+          var heldProjectRole = switch (activationType) {
+            case JIT -> ProjectRole.fromJitEligibleRoleBinding(projectRole.projectId(), binding);
+            case MPA -> ProjectRole.fromMpaEligibleRoleBinding(projectRole.projectId(), binding);
+          };
+
+          return heldProjectRole.isPresent() && heldProjectRole.get().equals(projectRole);
+        })
 
       .flatMap(binding -> binding.getMembers().stream())
       .collect(Collectors.toSet());
