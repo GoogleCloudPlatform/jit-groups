@@ -67,7 +67,7 @@ public record Activation(
     return Objects.hash(validity);
   }
 
-  boolean isValid(Instant now) {
+  public boolean isValid(Instant now) {
     return !this.validity.start().isAfter(now) && !this.validity.end().isBefore(now);
   }
 }
