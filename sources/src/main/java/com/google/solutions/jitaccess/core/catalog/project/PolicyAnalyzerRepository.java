@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
+import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysisResult;
@@ -63,8 +64,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
 
   private record ConditionalRoleBinding(
     ProjectId projectId,
-    String role,
-    Expr condition) {}
+    Binding binding) {}
 
   static @NotNull List<ConditionalRoleBinding> findRoleBindings(
     @NotNull IamPolicyAnalysis analysisResult,
@@ -99,8 +99,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
           .filter(res -> ProjectId.canParse(res.getFullResourceName()))
           .map(res -> new ConditionalRoleBinding(
             ProjectId.parse(res.getFullResourceName()),
-            result.getIamBinding().getRole(),
-            getIamCondition.apply(result)))))
+            new Binding()
+              .setRole(result.getIamBinding().getRole())
+              .setCondition(getIamCondition.apply(result))))))
       .collect(Collectors.toList());
   }
 
@@ -197,8 +198,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(conditionalBinding -> new Entitlement<>(
-          new ProjectRole(conditionalBinding.projectId(), conditionalBinding.role()),
-          conditionalBinding.role(),
+          ProjectRole.fromJitEligibleRoleBinding(
+            conditionalBinding.projectId,
+            conditionalBinding.binding).get(),
+          conditionalBinding.binding.getRole(),
           ActivationType.JIT))
         .collect(Collectors.toSet());
     }
@@ -222,8 +225,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(conditionalBinding -> new Entitlement<>(
-          new ProjectRole(conditionalBinding.projectId(), conditionalBinding.role()),
-          conditionalBinding.role(),
+          ProjectRole.fromMpaEligibleRoleBinding(
+            conditionalBinding.projectId,
+            conditionalBinding.binding).get(),
+          conditionalBinding.binding.getRole(),
           ActivationType.MPA))
         .collect(Collectors.toSet());
     }
@@ -253,12 +258,14 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
       .stream()
+      .map(conditionalBinding -> ProjectRole.fromActivationRoleBinding(
+        conditionalBinding.projectId,
+        conditionalBinding.binding))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
       .collect(Collectors.toMap(
-        conditionalBinding -> new ProjectRole(
-          conditionalBinding.projectId(),
-          conditionalBinding.role()),
-        conditionalBinding -> new Activation(
-          new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity())));
+        activatedRole -> activatedRole.projectRole(),
+        activatedRole -> activatedRole.activation()));
 
     //
     // Do the same for conditions that evaluated to FALSE.
@@ -268,12 +275,14 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
         evalResult -> "FALSE".equalsIgnoreCase(evalResult))
       .stream()
+      .map(conditionalBinding -> ProjectRole.fromActivationRoleBinding(
+        conditionalBinding.projectId,
+        conditionalBinding.binding))
+      .filter(Optional::isPresent)
+      .map(Optional::get)
       .collect(Collectors.toMap(
-        conditionalBinding -> new ProjectRole(
-          conditionalBinding.projectId(),
-          conditionalBinding.role()),
-        conditionalBinding -> new Activation(
-          new TemporaryIamCondition(conditionalBinding.condition.getExpression()).getValidity())));
+        activatedRole -> activatedRole.projectRole(),
+        activatedRole -> activatedRole.activation()));
 
     var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
       .flatMap(Collection::stream)
