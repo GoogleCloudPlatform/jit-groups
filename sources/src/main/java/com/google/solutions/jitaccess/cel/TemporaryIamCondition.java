@@ -69,7 +69,7 @@ public class TemporaryIamCondition extends IamCondition {
   //---------------------------------------------------------------------------
 
   public @NotNull TimeSpan getValidity() {
-    var matcher = CONDITION.matcher(this.condition);
+    var matcher = CONDITION.matcher(this.expression);
     if (matcher.find()) {
       try {
         return new TimeSpan(
@@ -95,6 +95,6 @@ public class TemporaryIamCondition extends IamCondition {
 
   @Override
   public Boolean evaluate() throws CelException {
-    return isTemporaryAccessCondition(this.condition) && super.evaluate();
+    return isTemporaryAccessCondition(this.expression) && super.evaluate();
   }
 }

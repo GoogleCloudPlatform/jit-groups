@@ -50,7 +50,7 @@ public class TestJitConstraints {
   @Test
   public void whenConditionIsEmpty_ThenIsJitAccessConstraintReturnsFalse() {
     assertFalse(JitConstraints.isJitAccessConstraint(new Expr().setExpression("")));
-    assertFalse(JitConstraints.isJitAccessConstraint(null));
+    assertFalse(JitConstraints.isJitAccessConstraint((Expr)null));
   }
 
   @Test
@@ -80,7 +80,7 @@ public class TestJitConstraints {
   @Test
   public void whenConditionIsEmpty_ThenIsMultiPartyApprovalConstraintReturnsFalse() {
     assertFalse(JitConstraints.isMultiPartyApprovalConstraint(new Expr().setExpression("")));
-    assertFalse(JitConstraints.isMultiPartyApprovalConstraint(null));
+    assertFalse(JitConstraints.isMultiPartyApprovalConstraint((Expr)null));
   }
 
   @Test
