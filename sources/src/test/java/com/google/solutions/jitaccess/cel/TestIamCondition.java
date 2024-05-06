@@ -23,6 +23,10 @@ package com.google.solutions.jitaccess.cel;
 
 import dev.cel.common.CelValidationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -87,5 +91,69 @@ public class TestIamCondition {
 
     assertFalse(new IamCondition("request.time <= timestamp(\"2024-01-01T01:02:03Z\")").evaluate());
     assertFalse(new IamCondition("request.time >= timestamp(\"2034-01-01T01:02:03Z\")").evaluate());
+  }
+
+  //-------------------------------------------------------------------------
+  // reformat.
+  //-------------------------------------------------------------------------
+
+  @Test
+  public void whenExpressionContainsExcessWhitespace_ThenReformatCleansWhitespace() throws Exception {
+    var condition = new IamCondition("\r\n   1<2    &&\n2<3\n ");
+    assertEquals("1 < 2 && 2 < 3", condition.reformat().expression);
+  }
+
+  //-------------------------------------------------------------------------
+  // splitAnd.
+  //-------------------------------------------------------------------------
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "1<2", "true || false", "a=='&'"})
+  public void whenExpressionHasSingleClause_ThenSplitAndReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).splitAnd();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).expression);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"(a && b && (c || d))"})
+  public void whenExpressionHasSingleNesedClause_ThenSplitAndReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).splitAnd();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).expression);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"s == '&&' || s==\"&&\""})
+  public void whenExpressionContainsQuotedOperators_ThenSplitAndReturnsClause(String expression) {
+    var clauses = new IamCondition(expression).splitAnd();
+
+    assertEquals(1, clauses.size());
+    assertEquals(expression, clauses.get(0).expression);
+  }
+
+  @Test
+  public void whenExpressionHasMultipleClauses_ThenSplitAndReturnsClauses() {
+    var clauses = new IamCondition("a || b && c&&(d&&e) ").splitAnd();
+
+    assertEquals(3, clauses.size());
+    assertEquals("a || b ", clauses.get(0).expression);
+    assertEquals(" c", clauses.get(1).expression);
+    assertEquals("(d&&e) ", clauses.get(2).expression);
+  }
+
+  //-------------------------------------------------------------------------
+  // and.
+  //-------------------------------------------------------------------------
+
+  @Test
+  public void andCombinesClauses() {
+    var condition = IamCondition.and(List.of(
+      new IamCondition("a"),
+      new IamCondition("b && c"),
+      new IamCondition("d && (e||f)")));
+    assertEquals("(a) && (b && c) && (d && (e||f))", condition.toString());
   }
 }

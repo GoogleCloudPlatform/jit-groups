@@ -30,14 +30,19 @@ import dev.cel.common.types.CelTypes;
 import dev.cel.compiler.CelCompiler;
 import dev.cel.compiler.CelCompilerFactory;
 import dev.cel.parser.CelStandardMacro;
+import dev.cel.parser.CelUnparserFactory;
 import dev.cel.runtime.CelRuntime;
 import dev.cel.runtime.CelRuntimeFactory;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * @param condition the CEL condition.
+ * A CEL condition.
  */
 public class IamCondition implements CelExpression<Boolean> {
   private static final CelCompiler COMPILER =
@@ -51,11 +56,11 @@ public class IamCondition implements CelExpression<Boolean> {
       .standardCelRuntimeBuilder()
       .build();
 
-  protected final @NotNull String condition;
+  protected final @NotNull String expression;
 
-  public IamCondition(@NotNull String condition) {
-    Preconditions.checkNotNull(condition, "condition");
-    this.condition = condition;
+  public IamCondition(@NotNull String expression) {
+    Preconditions.checkNotNull(expression, "condition");
+    this.expression = expression;
   }
 
   //---------------------------------------------------------------------------
@@ -64,14 +69,14 @@ public class IamCondition implements CelExpression<Boolean> {
 
   @Override
   public String toString() {
-    return this.condition;
+    return this.expression;
   }
 
   @Override
   public boolean equals(Object obj) {
     return obj instanceof IamCondition other &&
       other != null &&
-      other.condition.equals(this.condition);
+      other.expression.equals(this.expression);
   }
 
   //---------------------------------------------------------------------------
@@ -90,9 +95,98 @@ public class IamCondition implements CelExpression<Boolean> {
     var request = new GenericJson()
       .set("time", time);
 
-    var ast = COMPILER.compile(this.condition).getAst();
+    var ast = COMPILER.compile(this.expression).getAst();
     return (Boolean)CEL_RUNTIME
       .createProgram(ast)
       .eval(Map.of("request", request));
+  }
+
+  /**
+   * @return condition using canonical formatting.
+   */
+  public IamCondition reformat() {
+    try {
+      var ast = COMPILER.compile(this.expression).getAst();
+      return new IamCondition(CelUnparserFactory.newUnparser().unparse(ast));
+    }
+    catch (CelException ignored) {
+      return this;
+    }
+  }
+
+  /**
+   * Split a condition that consists of multiple AND clauses
+   * into its parts.
+   */
+  public List<IamCondition> splitAnd() {
+    //
+    // The CEL library doesn't lend itself well for this, so
+    // we have to parse the expression manually.
+    //
+
+    var clauses = new LinkedList<IamCondition>();
+    var currentClause = new StringBuilder();
+
+    var bracesDepth = 0;
+    var singleQuotes = 0;
+    var doubleQuotes = 0;
+    for (int i = 0; i < this.expression.length(); i++)
+    {
+      var c = this.expression.charAt(i);
+      switch (c) {
+        case '&':
+          if (bracesDepth == 0 && // not inside a nested clause
+            (singleQuotes % 2) == 0 && // quotes are balanced
+            (doubleQuotes % 2) == 0 && // quotes are balanced
+            i + 1 < this.expression.length() &&
+            this.expression.charAt(i + 1) == '&') {
+
+            //
+            // We've encountered a top-level "&&".
+            //
+            clauses.addLast(new IamCondition(currentClause.toString()));
+            currentClause.setLength(0);
+
+            i++; // Skip the next "&".
+            break;
+          }
+
+        case '(':
+          bracesDepth++;
+
+        case ')':
+          bracesDepth--;
+
+        case '\'':
+          singleQuotes++;
+
+        case '"':
+          doubleQuotes++;
+
+        default:
+          currentClause.append(c);
+          break;
+      }
+    }
+
+    if (currentClause.length() > 0) {
+      clauses.addLast(new IamCondition(currentClause.toString()));
+    }
+
+    return clauses;
+  }
+
+  /**
+   * Combine multiple condition clauses into one by AND-combining them.
+   */
+  public static @NotNull IamCondition and(
+    @NotNull Collection<IamCondition> conditions
+  ) {
+    return new IamCondition(
+      String.join(
+        " && ", conditions
+          .stream()
+          .map(c -> String.format("(%s)", c.expression))
+          .collect(Collectors.toList())));
   }
 }
