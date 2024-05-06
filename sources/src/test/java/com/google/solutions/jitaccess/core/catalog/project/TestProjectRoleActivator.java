@@ -83,7 +83,7 @@ public class TestProjectRoleActivator {
         eq(SAMPLE_PROJECT),
         argThat(b ->
             TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
-            b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
+            b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Self-approved, justification: justification"));
   }
@@ -124,7 +124,7 @@ public class TestProjectRoleActivator {
         eq(SAMPLE_PROJECT),
         argThat(b ->
           TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
-            b.getCondition().getTitle().equals(JitConstraints.ACTIVATION_CONDITION_TITLE)),
+            b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Approved by approver@example.com, justification: justification"));
   }

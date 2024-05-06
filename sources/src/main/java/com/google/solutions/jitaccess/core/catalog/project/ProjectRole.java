@@ -182,6 +182,10 @@ public class ProjectRole extends EntitlementId {
       this.activationType = activationType;
     }
 
+    public ActivationType activationType() {
+      return this.activationType;
+    }
+
     public boolean isJitEligible() {
       return this.activationType == ActivationType.JIT;
     }
@@ -227,7 +231,7 @@ public class ProjectRole extends EntitlementId {
    */
   static class ActivationCondition extends Condition {
     /** Condition title for activated role bindings */
-    public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
+    public static final String TITLE = "JIT access activation";
 
     private final @NotNull TimeSpan validity;
 
@@ -247,7 +251,7 @@ public class ProjectRole extends EntitlementId {
      */
     static Optional<ActivationCondition> parse(@Nullable Expr condition) {
       if (condition != null &&
-        ACTIVATION_CONDITION_TITLE.equals(condition.getTitle()) &&
+        TITLE.equals(condition.getTitle()) &&
         TemporaryIamCondition.isTemporaryAccessCondition(condition.getExpression())) {
 
         return Optional.of(new ActivationCondition(
