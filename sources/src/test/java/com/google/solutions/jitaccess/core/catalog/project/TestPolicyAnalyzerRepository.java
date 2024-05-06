@@ -652,7 +652,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_ROLE_1,
       SAMPLE_USER,
       VALID_TEMPORARY_CONDITION,
-      JitConstraints.ACTIVATION_CONDITION_TITLE,
+      ProjectRole.ActivationCondition.TITLE,
       "TRUE");
 
     var activatedExpiredBinding = createConditionalIamPolicyAnalysisResult(
@@ -660,7 +660,7 @@ public class TestPolicyAnalyzerRepository {
       SAMPLE_ROLE_1,
       SAMPLE_USER,
       EXPIRED_TEMPORARY_CONDITION,
-      JitConstraints.ACTIVATION_CONDITION_TITLE,
+      ProjectRole.ActivationCondition.TITLE,
       "FALSE");
 
     when(assetAdapter

@@ -302,7 +302,7 @@ public class TestAssetInventoryRepository {
     var expiredActivationForUser1 = new Binding()
       .setRole("roles/for-user")
       .setCondition(new Expr()
-        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
         .setExpression(new TemporaryIamCondition(
           Instant.now().minus(2, ChronoUnit.HOURS),
           Duration.ofHours(1)).toString()))
@@ -310,7 +310,7 @@ public class TestAssetInventoryRepository {
     var expiredActivationForUser2 = new Binding()
       .setRole("roles/for-user")
       .setCondition(new Expr()
-        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
         .setExpression(new TemporaryIamCondition(
           Instant.now().minus(2, ChronoUnit.DAYS),
           Duration.ofHours(1)).toString()))
@@ -359,7 +359,7 @@ public class TestAssetInventoryRepository {
     var expiredActivationForUser = new Binding()
       .setRole("roles/for-user")
       .setCondition(new Expr()
-        .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
         .setExpression(new TemporaryIamCondition(
           Instant.now().minus(1, ChronoUnit.HOURS),
           Instant.now().plus(1, ChronoUnit.HOURS)).toString()))

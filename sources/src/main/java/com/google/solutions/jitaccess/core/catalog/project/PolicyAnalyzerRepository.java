@@ -140,9 +140,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     //
     var roleBindings = findRoleBindings(
       analysisResult,
-      condition -> condition == null ||
-        JitConstraints.isJitAccessConstraint(condition) ||
-        JitConstraints.isMultiPartyApprovalConstraint(condition),
+      condition -> condition == null || ProjectRole.EligibilityCondition.parse(condition).isPresent(),
       evalResult -> evalResult == null ||
         "TRUE".equalsIgnoreCase(evalResult) ||
         "CONDITIONAL".equalsIgnoreCase(evalResult));
@@ -192,7 +190,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = findRoleBindings(
         analysisResult,
-        condition -> JitConstraints.isJitAccessConstraint(condition),
+        condition -> ProjectRole.EligibilityCondition
+          .parse(condition)
+          .filter(ProjectRole.EligibilityCondition::isJitEligible)
+          .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(conditionalBinding -> new Entitlement<>(
@@ -214,7 +215,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = findRoleBindings(
         analysisResult,
-        condition -> JitConstraints.isMultiPartyApprovalConstraint(condition),
+        condition -> ProjectRole.EligibilityCondition
+          .parse(condition)
+          .filter(ProjectRole.EligibilityCondition::isMpaEligible)
+          .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
         .map(conditionalBinding -> new Entitlement<>(
@@ -246,7 +250,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     //
     var currentActivations = findRoleBindings(
         analysisResult,
-        condition -> JitConstraints.isActivated(condition),
+        condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
       .stream()
       .collect(Collectors.toMap(
@@ -261,7 +265,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     //
     var expiredActivations = findRoleBindings(
         analysisResult,
-        condition -> JitConstraints.isActivated(condition),
+      condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
         evalResult -> "FALSE".equalsIgnoreCase(evalResult))
       .stream()
       .collect(Collectors.toMap(
@@ -295,9 +299,12 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     return Stream.ofNullable(analysisResult.getAnalysisResults())
       .flatMap(Collection::stream)
 
-      // Narrow down to IAM bindings with an MPA constraint.
+      // Narrow down to IAM bindings that are equally eligible.
       .filter(result -> result.getIamBinding() != null &&
-        JitConstraints.isApprovalConstraint(result.getIamBinding().getCondition(), activationType))
+        ProjectRole.EligibilityCondition
+          .parse(result.getIamBinding().getCondition())
+          .filter(c -> c.activationType() == activationType)
+          .isPresent())
 
       // Collect identities (users and group members)
       .filter(result -> result.getIdentityList() != null)

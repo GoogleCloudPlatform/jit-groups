@@ -208,7 +208,7 @@ public class TestProjectRole {
         .setRole("roles/test")
         .setCondition(new Expr()
           .setExpression(tempCondition.toString())
-          .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)));
+          .setTitle(ProjectRole.ActivationCondition.TITLE)));
     assertTrue(activatedRole.isPresent());
     assertEquals(SAMPLE_PROJECT, activatedRole.get().projectRole().projectId());
     assertEquals("roles/test", activatedRole.get().projectRole().role());

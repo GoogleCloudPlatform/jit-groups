@@ -86,7 +86,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
         .setMembers(List.of("user:" + user))
         .setRole(role)
         .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
-          .setTitle(JitConstraints.ACTIVATION_CONDITION_TITLE)
+          .setTitle(ProjectRole.ActivationCondition.TITLE)
           .setDescription(bindingDescription)
           .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
 
