@@ -22,13 +22,20 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.common.base.Strings;
+import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
+import com.google.solutions.jitaccess.cel.TimeSpan;
 import com.google.solutions.jitaccess.core.catalog.Activation;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Identifies a project role binding as an entitlement.
@@ -78,16 +85,13 @@ public class ProjectRole extends EntitlementId {
    * @return ProjectRole or empty if the binding doesn't represent a
    *         JIT-eligible role binding.
    */
-  public static Optional<ProjectRole> fromJitEligibleRoleBinding(
+  static Optional<ProjectRole> fromJitEligibleRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
-    if (JitConstraints.isJitAccessConstraint(binding.getCondition())) {
-      return Optional.of(new ProjectRole(projectId, binding.getRole()));
-    }
-    else {
-      return Optional.empty();
-    }
+    return EligibilityCondition.parse(binding.getCondition())
+      .filter(EligibilityCondition::isJitEligible)
+      .map(c -> new ProjectRole(projectId, binding.getRole()));
   }
 
   /**
@@ -98,16 +102,13 @@ public class ProjectRole extends EntitlementId {
    * @return ProjectRole or empty if the binding doesn't represent an
    *         MPA-eligible role binding.
    */
-  public static Optional<ProjectRole> fromMpaEligibleRoleBinding(
+  static Optional<ProjectRole> fromMpaEligibleRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
-    if (JitConstraints.isMultiPartyApprovalConstraint(binding.getCondition())) {
-      return Optional.of(new ProjectRole(projectId, binding.getRole()));
-    }
-    else {
-      return Optional.empty();
-    }
+    return EligibilityCondition.parse(binding.getCondition())
+      .filter(EligibilityCondition::isMpaEligible)
+      .map(c -> new ProjectRole(projectId, binding.getRole()));
   }
 
   /**
@@ -118,21 +119,144 @@ public class ProjectRole extends EntitlementId {
    * @return ProjectRole or empty if the binding doesn't represent an
    *         activation binding.
    */
-  public static Optional<ActivatedProjectRole> fromActivationRoleBinding(
+  static Optional<ActivatedProjectRole> fromActivationRoleBinding(
     @NotNull ProjectId projectId,
     @NotNull Binding binding
   ) {
-    if (JitConstraints.isActivated(binding.getCondition())) {
-      return Optional.of(new ActivatedProjectRole(
+    return ActivationCondition.parse(binding.getCondition())
+      .map(c -> new ActivatedProjectRole(
         new ProjectRole(projectId, binding.getRole()),
-        new Activation(new TemporaryIamCondition(binding.getCondition().getExpression()).getValidity())));
-    }
-    else {
-      return Optional.empty();
-    }
+        c.toActivation()));
   }
 
   record ActivatedProjectRole(
     @NotNull ProjectRole projectRole,
     @NotNull Activation activation) {}
+
+
+  //---------------------------------------------------------------------------
+  // Conditions.
+  //---------------------------------------------------------------------------
+
+  static abstract class Condition extends IamCondition {
+    protected Condition(@NotNull String expression) {
+      super(expression);
+    }
+
+    protected static boolean matches(
+      @Nullable String expression,
+      @NotNull Pattern pattern
+    ) {
+      if (Strings.isNullOrEmpty(expression)) {
+        return false;
+      }
+
+      // Strip all whitespace to simplify expression matching.
+      expression = expression
+        .toLowerCase()
+        .replace(" ", "");
+
+      return pattern.matcher(expression).matches();
+    }
+  }
+
+  /**
+   * Condition that marks a role binding as eligible.
+   */
+  static class EligibilityCondition extends Condition {
+    /** Condition that marks a role binding as eligible for JIT access */
+    private static final Pattern JIT_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.jitaccessconstraint\\s*\\)\\s*$");
+
+    /** Condition that marks a role binding as eligible for MPA */
+    private static final Pattern MPA_CONDITION_PATTERN = Pattern
+      .compile("^\\s*has\\(\\s*\\{\\s*\\}.multipartyapprovalconstraint\\s*\\)\\s*$");
+
+    private final ActivationType activationType;
+
+    private EligibilityCondition(
+      @NotNull String expression,
+      ActivationType activationType
+    ) {
+      super(expression);
+      this.activationType = activationType;
+    }
+
+    public boolean isJitEligible() {
+      return this.activationType == ActivationType.JIT;
+    }
+
+    public boolean isMpaEligible() {
+      return this.activationType == ActivationType.MPA;
+    }
+
+    /**
+     * Try to parse condition
+     *
+     * @return condition or empty if the expression doesn't represent an eligibility condition
+     */
+    static Optional<EligibilityCondition> parse(String expression) {
+      if (matches(expression, JIT_CONDITION_PATTERN)) {
+        return Optional.of(new EligibilityCondition(expression, ActivationType.JIT));
+      }
+      else if (matches(expression, MPA_CONDITION_PATTERN)) {
+        return Optional.of(new EligibilityCondition(expression, ActivationType.MPA));
+      }
+      else {
+        return Optional.empty();
+      }
+    }
+
+    /**
+     * Try to parse condition
+     *
+     * @return condition or empty if the expression doesn't represent an eligibility condition
+     */
+    static Optional<EligibilityCondition> parse(@Nullable Expr condition) {
+      if (condition == null || condition.getExpression() == null) {
+        return Optional.empty();
+      }
+      else {
+        return parse(condition.getExpression());
+      }
+    }
+  }
+
+  /**
+   * Condition that marks a role binding as activated.
+   */
+  static class ActivationCondition extends Condition {
+    /** Condition title for activated role bindings */
+    public static final String ACTIVATION_CONDITION_TITLE = "JIT access activation";
+
+    private final @NotNull TimeSpan validity;
+
+    private ActivationCondition(@NotNull String expression, @NotNull TimeSpan validity) {
+      super(expression);
+      this.validity = validity;
+    }
+
+    public Activation toActivation() {
+      return new Activation(this.validity);
+    }
+
+    /**
+     * Try to parse condition
+     *
+     * @return condition or empty if the expression doesn't represent an activation condition
+     */
+    static Optional<ActivationCondition> parse(@Nullable Expr condition) {
+      if (condition != null &&
+        ACTIVATION_CONDITION_TITLE.equals(condition.getTitle()) &&
+        TemporaryIamCondition.isTemporaryAccessCondition(condition.getExpression())) {
+
+        return Optional.of(new ActivationCondition(
+          condition.getExpression(),
+          new TemporaryIamCondition(condition.getExpression()).getValidity()));
+      }
+      else {
+        return Optional.empty();
+      }
+    }
+  }
 }
