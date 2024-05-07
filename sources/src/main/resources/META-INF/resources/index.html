@@ -278,7 +278,7 @@
                           </div>
                           <div class="mdc-slider__thumb">
                             <div class="mdc-slider__thumb-knob"></div>
-                            <input class="mdc-slider__input" id="jit-requestdialog-duration-input" type="range" min="5" max="100" value="50" name="Duration">
+                            <input class="mdc-slider__input" id="jit-requestdialog-duration-input" type="range" min="1" max="100" value="1" name="Duration">
                           </div>
                         </div>
                         <span id="jit-requestdialog-duration-value"></span> minutes.
@@ -459,7 +459,10 @@
                 // Duration.
                 //
                 $('#jit-requestdialog-duration-input').prop('max', model.policy.maxActivationTimeout);
-                $('#jit-requestdialog-duration-value').text( model.policy.defaultActivationTimeout);
+                $('#jit-requestdialog-duration-input').prop('value', model.policy.maxActivationTimeout);
+                $('#jit-requestdialog-duration-value').text(model.policy.defaultActivationTimeout);
+
+                console.log($('#jit-requestdialog-duration-input').prop('value'));
 
                 this.slider = new mdc.slider.MDCSlider(document.querySelector('#jit-requestdialog-duration'));
                 setTimeout(() => this.slider.layout(), 100);
