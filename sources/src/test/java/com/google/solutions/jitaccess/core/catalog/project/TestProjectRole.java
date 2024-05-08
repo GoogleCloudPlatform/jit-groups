@@ -45,8 +45,12 @@ public class TestProjectRole {
 
   @Test
   public void toStringReturnsResourceAndRole() {
-    var role = new ProjectRole(SAMPLE_PROJECT, "role/sample");
-    assertEquals("iam:project-1:role/sample", role.toString());
+    assertEquals(
+      "iam:project-1:role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample").toString());
+    assertEquals(
+      "iam:project-1:role/sample[condition]",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "condition").toString());
   }
 
 
@@ -89,6 +93,16 @@ public class TestProjectRole {
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
     var role1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
     var role2 = new ProjectRole(new ProjectId("project-1"), "roles/other");
+
+    assertFalse(role1.equals(role2));
+    assertFalse(role1.equals((Object) role2));
+    assertNotEquals(role1.hashCode(), role2.hashCode());
+  }
+
+  @Test
+  public void whenResourceConditionsDiffer_ThenEqualsReturnsFalse() {
+    var role1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
+    var role2 = new ProjectRole(new ProjectId("project-2"), "roles/test", "true || false");
 
     assertFalse(role1.equals(role2));
     assertFalse(role1.equals((Object) role2));
