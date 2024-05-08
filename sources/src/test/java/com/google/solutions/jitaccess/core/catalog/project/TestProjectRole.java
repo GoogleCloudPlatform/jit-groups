@@ -99,6 +99,24 @@ public class TestProjectRole {
   }
 
   // -------------------------------------------------------------------------
+  // parse.
+  // -------------------------------------------------------------------------
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "", " :x", "x: ", "xx" })
+  public void whenIdNullOrEmptyOrMalformed_ThenParseThrowsException(String id) {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> ProjectRole.parse(id));
+  }
+
+  @Test
+  public void whenIdValid_ThenParseReturnsRole() {
+    var role = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    assertEquals(role, ProjectRole.parse(role.id()));
+  }
+
+  // -------------------------------------------------------------------------
   // fromJitEligibleRoleBinding.
   // -------------------------------------------------------------------------
 

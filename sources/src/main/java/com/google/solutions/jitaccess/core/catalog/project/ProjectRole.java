@@ -78,6 +78,20 @@ public class ProjectRole extends EntitlementId {
   //---------------------------------------------------------------------------
 
   /**
+   * Try to create a ProjectRole from its ID.
+   */
+  public static ProjectRole parse(@NotNull String id) {
+    var parts = id.split(":");
+    if (parts.length != 2 ||
+      parts[0].isBlank() ||
+      parts[1].isBlank()) {
+      throw new IllegalArgumentException("Invalid ProjectRole ID");
+    }
+
+    return new ProjectRole(new ProjectId(parts[0]), parts[1]);
+  }
+
+  /**
    * Try to create a ProjectRole from a JIT-eligible role binding.
    *
    * @param projectId Project
