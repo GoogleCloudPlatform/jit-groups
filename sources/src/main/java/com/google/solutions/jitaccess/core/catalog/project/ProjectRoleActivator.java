@@ -194,7 +194,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
       @SuppressWarnings("unchecked")
       @Override
       public @NotNull MpaActivationRequest<ProjectRole> convert(@NotNull JsonWebToken.Payload payload) {
-        var entitlement = ProjectRole.parse(payload.get("entitlement").toString());
+        var entitlement = ProjectRole.fromId(payload.get("entitlement").toString());
         var startTime = ((Number)payload.get("start")).longValue();
         var endTime = ((Number)payload.get("end")).longValue();
 

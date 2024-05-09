@@ -92,7 +92,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       userContext,
       request.entitlementIds
         .stream()
-        .map(id -> ProjectRole.parse(id))
+        .map(id -> ProjectRole.fromId(id))
         .filter(id -> id.projectId().equals(projectId))
         .collect(Collectors.toSet()),
       request.justification,

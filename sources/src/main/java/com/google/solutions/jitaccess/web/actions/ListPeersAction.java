@@ -66,7 +66,7 @@ public class ListPeersAction extends AbstractAction {
     var userContext = this.catalog.createContext(iapPrincipal.email());
     var projectId = new ProjectId(projectIdString);
 
-    var role = ProjectRole.parse(entitlementId);
+    var role = ProjectRole.fromId(entitlementId);
 
     Preconditions.checkArgument(
       role.projectId().equals(projectId),

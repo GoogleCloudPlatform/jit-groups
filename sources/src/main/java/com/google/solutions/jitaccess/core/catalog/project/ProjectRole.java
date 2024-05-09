@@ -80,7 +80,7 @@ public class ProjectRole extends EntitlementId {
   /**
    * Try to create a ProjectRole from its ID.
    */
-  public static ProjectRole parse(@NotNull String id) {
+  public static ProjectRole fromId(@NotNull String id) {
     var parts = id.split(":");
     if (parts.length != 2 ||
       parts[0].isBlank() ||

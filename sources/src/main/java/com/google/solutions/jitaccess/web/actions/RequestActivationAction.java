@@ -110,7 +110,7 @@ public class RequestActivationAction extends AbstractActivationAction {
 
     var userContext = this.catalog.createContext(iapPrincipal.email());
     var projectId = new ProjectId(projectIdString);
-    var role = ProjectRole.parse(request.entitlementId);
+    var role = ProjectRole.fromId(request.entitlementId);
 
     Preconditions.checkArgument(
       role.projectId().equals(projectId),
