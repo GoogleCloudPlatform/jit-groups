@@ -30,6 +30,8 @@ import com.google.api.services.cloudresourcemanager.v3.CloudResourceManagerReque
 import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.catalog.FolderId;
@@ -151,13 +153,30 @@ public class ResourceManagerClient {
           // have the same principal and role. Removing existing bindings
           // helps avoid hitting this limit.
           //
-          // NB. This check detects temporary bindings that we created, but it might not
-          // detect other temporary bindings (which might use a slightly different
-          // condition)
-          //
-          Predicate<Binding> isObsolete = b -> Bindings.equals(b, binding, false)
-            && b.getCondition() != null
-            && TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression());
+          Predicate<Binding> isObsolete = b -> {
+            if (!Bindings.equals(b, binding, false)) {
+              //
+              // Different role.
+              //
+              return false;
+            }
+
+            if (b.getCondition() == null || Strings.isNullOrEmpty(b.getCondition().getExpression())) {
+              //
+              // Not a conditional binding.
+              //
+              return false;
+            }
+
+            //
+            // Check if one of the condition clauses (there could be multiple)
+            // is a temporary condition.
+            //
+            return new IamCondition(b.getCondition().getExpression())
+              .splitAnd()
+              .stream()
+              .anyMatch(c -> TemporaryIamCondition.isTemporaryAccessCondition(c.toString()));
+          };
 
           var nonObsoleteBindings =
             policy.getBindings().stream()

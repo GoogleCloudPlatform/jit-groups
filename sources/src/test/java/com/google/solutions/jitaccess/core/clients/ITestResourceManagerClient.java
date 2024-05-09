@@ -29,6 +29,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest
 import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AlreadyExistsException;
@@ -142,6 +143,22 @@ public class ITestResourceManagerClient {
       EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
       REQUEST_REASON);
 
+    // Add another "old" temporary IAM binding that has an extra resource condition.
+    adapter.addProjectIamBinding(
+      ITestEnvironment.PROJECT_ID,
+      new Binding()
+        .setMembers(List.of("serviceAccount:" + ITestEnvironment.TEMPORARY_ACCESS_USER.email))
+        .setRole("roles/browser")
+        .setCondition(new Expr()
+          .setTitle("old binding with resource condition")
+          .setExpression(IamCondition.and(List.of(
+            new TemporaryIamCondition(
+              Instant.now().minus(Duration.ofDays(1)),
+              Duration.ofMinutes(5)),
+            new IamCondition("resource.name=='test'"))).toString())),
+      EnumSet.of(ResourceManagerClient.IamBindingOptions.NONE),
+      REQUEST_REASON);
+
     // Add a permanent binding (with some random condition) for the same role.
     adapter.addProjectIamBinding(
       ITestEnvironment.PROJECT_ID,
@@ -207,6 +224,12 @@ public class ITestResourceManagerClient {
         .stream()
         .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding")),
       "old binding has been removed");
+    assertFalse(
+      newPolicy
+        .getBindings()
+        .stream()
+        .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("old binding with resource condition")),
+      "old binding with resource condition has been removed");
     assertTrue(
       newPolicy
         .getBindings()
@@ -220,7 +243,6 @@ public class ITestResourceManagerClient {
         .anyMatch(b -> b.getCondition() != null && b.getCondition().getTitle().equals("permanent binding")),
       "permanent binding has been preserved");
   }
-
 
   @Test
   public void whenFailIfBindingExistsFlagIsOnAndBindingExists_ThenAddProjectBindingThrowsException() throws Exception {
