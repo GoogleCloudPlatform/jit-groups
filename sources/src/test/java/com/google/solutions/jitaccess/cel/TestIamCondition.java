@@ -103,6 +103,19 @@ public class TestIamCondition {
     assertEquals("1 < 2 && 2 < 3", condition.reformat().expression);
   }
 
+  @Test
+  public void whenExpressionContainsUnknownSymbols_ThenReformatSucceeds() throws Exception {
+    var condition = new IamCondition("\r\n  a<foo() ");
+    assertEquals("a < foo()", condition.reformat().expression);
+  }
+
+  @Test
+  public void whenExpressionMalformed_ThenReformatThrowsException() throws Exception {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new IamCondition("\r\n  a<foo(' ").reformat());
+  }
+
   //-------------------------------------------------------------------------
   // splitAnd.
   //-------------------------------------------------------------------------
