@@ -71,7 +71,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "You must provide a projectId");
     Preconditions.checkArgument(
-      request != null && request.roles != null && request.roles.size() > 0,
+      request != null && request.entitlementIds != null && request.entitlementIds.size() > 0,
       "Specify one or more roles to activate");
     Preconditions.checkArgument(
       request.justification != null && request.justification.trim().length() > 0,
@@ -90,9 +90,10 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
     var requestedRoleBindingDuration = Duration.ofMinutes(request.activationTimeout);
     var activationRequest = this.activator.createJitRequest(
       userContext,
-      request.roles
+      request.entitlementIds
         .stream()
-        .map(r -> new ProjectRole(projectId, r))
+        .map(id -> ProjectRole.fromId(id))
+        .filter(id -> id.projectId().equals(projectId))
         .collect(Collectors.toSet()),
       request.justification,
       Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -165,7 +166,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
   }
 
   public static class RequestEntity {
-    public List<String> roles;
+    public List<String> entitlementIds;
     public String justification;
     public int activationTimeout; // in minutes.
   }

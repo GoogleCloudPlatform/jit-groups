@@ -218,11 +218,11 @@ public class TestApproveActivationRequestAction {
     assertFalse(response.isBeneficiary);
     assertTrue(response.isReviewer);
     assertEquals(request.justification(), response.justification);
-    assertEquals(1, response.items.size());
-    assertEquals(request.id().toString(), response.items.get(0).activationId);
-    assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals("ACTIVE", response.items.get(0).status.name());
-    assertEquals(request.startTime().getEpochSecond(), response.items.get(0).startTime);
-    assertEquals(request.endTime().getEpochSecond(), response.items.get(0).endTime);
+    assertEquals(1, response.entitlements.size());
+    assertEquals(request.id().toString(), response.entitlements.get(0).activationId);
+    assertEquals("project-1", response.entitlements.get(0).projectId);
+    assertEquals("ACTIVE", response.entitlements.get(0).status.name());
+    assertEquals(request.startTime().getEpochSecond(), response.entitlements.get(0).startTime);
+    assertEquals(request.endTime().getEpochSecond(), response.entitlements.get(0).endTime);
   }
 }

@@ -49,19 +49,21 @@ public class TestProjectRole {
     assertEquals("iam:project-1:role/sample", role.toString());
   }
 
+
   // -------------------------------------------------------------------------
   // equals.
   // -------------------------------------------------------------------------
 
   @Test
   public void whenValueIsEquivalent_ThenEqualsReturnsTrue() {
-    var ref1 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
-    var ref2 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    var role1 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    var role2 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
 
-    assertTrue(ref1.equals(ref2));
-    assertTrue(ref1.equals((Object) ref2));
-    assertEquals(ref1.hashCode(), ref2.hashCode());
-    assertEquals(ref1.toString(), ref2.toString());
+    assertTrue(role1.equals(role2));
+    assertTrue(role1.equals((Object) role2));
+    assertEquals(role1.hashCode(), role2.hashCode());
+    assertEquals(role1.toString(), role2.toString());
+    assertEquals(role1.hashCode(), role1.hashCode());
   }
 
   @Test
@@ -74,21 +76,23 @@ public class TestProjectRole {
   }
 
   @Test
+  public void whenProjectsDiffer_ThenEqualsReturnsFalse() {
+    var role1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
+    var role2 = new ProjectRole(new ProjectId("project-2"), "roles/test");
+
+    assertFalse(role1.equals(role2));
+    assertFalse(role1.equals((Object) role2));
+    assertNotEquals(role1.hashCode(), role2.hashCode());
+  }
+
+  @Test
   public void whenRolesDiffer_ThenEqualsReturnsFalse() {
     var role1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
     var role2 = new ProjectRole(new ProjectId("project-1"), "roles/other");
 
     assertFalse(role1.equals(role2));
     assertFalse(role1.equals((Object) role2));
-  }
-
-  @Test
-  public void whenResourcesDiffer_ThenEqualsReturnsFalse() {
-    var ref1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
-    var ref2 = new ProjectRole(new ProjectId("project-2"), "roles/test");
-
-    assertFalse(ref1.equals(ref2));
-    assertFalse(ref1.equals((Object) ref2));
+    assertNotEquals(role1.hashCode(), role2.hashCode());
   }
 
   @Test
@@ -96,6 +100,24 @@ public class TestProjectRole {
     var ref1 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
 
     assertFalse(ref1.equals(null));
+  }
+
+  // -------------------------------------------------------------------------
+  // fromId.
+  // -------------------------------------------------------------------------
+
+  @ParameterizedTest
+  @ValueSource(strings = {" ", "", " :x", "x: ", "xx" })
+  public void whenIdNullOrEmptyOrMalformed_ThenFromIdThrowsException(String id) {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> ProjectRole.fromId(id));
+  }
+
+  @Test
+  public void whenIdValid_ThenFromIdReturns() {
+    var role = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    assertEquals(role, ProjectRole.fromId(role.id()));
   }
 
   // -------------------------------------------------------------------------

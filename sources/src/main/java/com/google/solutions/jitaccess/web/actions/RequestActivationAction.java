@@ -83,7 +83,7 @@ public class RequestActivationAction extends AbstractActivationAction {
       "You must provide a projectId");
     Preconditions.checkArgument(request != null);
     Preconditions.checkArgument(
-      request.role != null && !request.role.isEmpty(),
+      request.entitlementId != null && !request.entitlementId.isEmpty(),
       "Specify a role to activate");
     Preconditions.checkArgument(
       request.peers != null && request.peers.size() >= minReviewers,
@@ -109,9 +109,12 @@ public class RequestActivationAction extends AbstractActivationAction {
       "The multi-party approval feature is not available because the server-side configuration is incomplete");
 
     var userContext = this.catalog.createContext(iapPrincipal.email());
-
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new ProjectRole(projectId, request.role);
+    var role = ProjectRole.fromId(request.entitlementId);
+
+    Preconditions.checkArgument(
+      role.projectId().equals(projectId),
+      "The project ID does not match the current project");
 
     //
     // Create an MPA activation request.
@@ -122,7 +125,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     try {
       activationRequest = this.activator.createMpaRequest(
         userContext,
-        Set.of(roleBinding),
+        Set.of(role),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -135,7 +138,7 @@ public class RequestActivationAction extends AbstractActivationAction {
           String.format(
             "Received invalid activation request from user '%s' for role '%s' on '%s': %s",
             iapPrincipal.email(),
-            roleBinding,
+            role,
             projectId.getFullResourceName(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
@@ -196,8 +199,8 @@ public class RequestActivationAction extends AbstractActivationAction {
           String.format(
             "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.projectId().getFullResourceName(),
+            role.role(),
+            role.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -215,12 +218,12 @@ public class RequestActivationAction extends AbstractActivationAction {
           String.format(
             "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.projectId().getFullResourceName(),
+            role.role(),
+            role.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, role))
         .addLabels(le -> addLabels(le, e))
         .addLabel("justification", request.justification)
         .write();
@@ -236,7 +239,7 @@ public class RequestActivationAction extends AbstractActivationAction {
 
 
   public static class RequestEntity {
-    public @Nullable String role;
+    public @Nullable String entitlementId;
     public String justification;
     public List<String> peers;
     public int activationTimeout; // in minutes.

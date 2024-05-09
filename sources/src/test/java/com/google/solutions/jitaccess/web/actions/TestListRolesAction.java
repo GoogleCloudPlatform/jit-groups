@@ -95,8 +95,8 @@ public class TestListRolesAction {
     var action = new ListRolesAction(new LogAdapter(), catalog);
     var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1");
 
-    assertNotNull(response.roles);
-    assertEquals(0, response.roles.size());
+    assertNotNull(response.entitlements);
+    assertEquals(0, response.entitlements.size());
     assertNotNull(response.warnings);
     assertEquals(1, response.warnings.size());
     assertEquals("warning", response.warnings.stream().findFirst().get());
@@ -130,10 +130,15 @@ public class TestListRolesAction {
     var action = new ListRolesAction(new LogAdapter(), catalog);
     var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1");
 
-    assertNotNull(response.roles);
-    assertEquals(2, response.roles.size());
-    assertEquals(role1.id().role(), response.roles.get(0).role);
-    assertEquals(role2.id().role(), response.roles.get(1).role);
+    assertNotNull(response.entitlements);
+    assertEquals(2, response.entitlements.size());
+
+    assertEquals(role1.id().id(), response.entitlements.get(0).id);
+    assertEquals("ent-1", response.entitlements.get(0).name);
+
+    assertEquals(role2.id().id(), response.entitlements.get(1).id);
+    assertEquals("ent-2", response.entitlements.get(1).name);
+
     assertTrue(response.warnings.isEmpty());
   }
 }

@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 public class TestRequestAndSelfApproveAction {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
   @Test
   public void whenProjectIsNull_ThenActionThrowsException() throws Exception {
@@ -74,7 +75,7 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of();
+    request.entitlementIds = List.of();
 
     var exception = assertThrows(
       IllegalArgumentException.class,
@@ -95,7 +96,7 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser");
+    request.entitlementIds = List.of(new ProjectRole(SAMPLE_PROJECT, "roles/browser").toString());
     request.justification = "";
 
     var exception = assertThrows(
@@ -128,7 +129,9 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser", "roles/browser");
+    request.entitlementIds = List.of(
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id(),
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id());
     request.justification = "justification";
     request.activationTimeout = 5;
 
@@ -163,7 +166,9 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser", "roles/browser");
+    request.entitlementIds = List.of(
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id(),
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id());
     request.justification = "justification";
     request.activationTimeout = 5;
 
@@ -177,11 +182,11 @@ public class TestRequestAndSelfApproveAction {
     assertTrue(response.isBeneficiary);
     assertFalse(response.isReviewer);
     assertEquals("justification", response.justification);
-    assertNotNull(response.items);
-    assertEquals(1, response.items.size());
-    assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals(roleBinding.role(), response.items.get(0).role);
-    assertEquals(ActivationStatus.ACTIVE, response.items.get(0).status);
-    assertNotNull(response.items.get(0).activationId);
+    assertNotNull(response.entitlements);
+    assertEquals(1, response.entitlements.size());
+    assertEquals("project-1", response.entitlements.get(0).projectId);
+    assertEquals(roleBinding.role(), response.entitlements.get(0).name);
+    assertEquals(ActivationStatus.ACTIVE, response.entitlements.get(0).status);
+    assertNotNull(response.entitlements.get(0).activationId);
   }
 }

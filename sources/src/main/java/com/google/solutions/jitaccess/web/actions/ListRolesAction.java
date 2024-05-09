@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
@@ -74,14 +73,16 @@ public class ListRolesAction extends AbstractAction {
             var currentActivation = entitlements.currentActivations().get(ent.id());
             if (currentActivation != null) {
               return new ResponseEntity.Item(
-                ent.id(),
+                ent.id().id(),
+                ent.name(),
                 ent.activationType(),
                 ActivationStatus.ACTIVE,
                 currentActivation.validity().end().getEpochSecond());
             }
             else {
               return new ResponseEntity.Item(
-                ent.id(),
+                ent.id().id(),
+                ent.name(),
                 ent.activationType(),
                 ActivationStatus.INACTIVE,
                 null);
@@ -105,33 +106,34 @@ public class ListRolesAction extends AbstractAction {
 
   public static class ResponseEntity {
     public final Set<String> warnings;
-    public final @NotNull List<Item> roles;
+    public final @NotNull List<Item> entitlements;
 
     private ResponseEntity(
-      @NotNull List<Item> roles,
+      @NotNull List<Item> entitlements,
       Set<String> warnings
     ) {
-      Preconditions.checkNotNull(roles, "roles");
+      Preconditions.checkNotNull(entitlements, "roles");
 
       this.warnings = warnings;
-      this.roles = roles;
+      this.entitlements = entitlements;
     }
 
     public static class Item {
-      public final @NotNull String role;
+      public final @NotNull String id;
+      public final @NotNull String name;
       public final @NotNull ActivationType activationType;
       public final @NotNull ActivationStatus status;
       public final Long /* optional */ validUntil;
 
       public Item(
-        @NotNull ProjectRole roleBinding,
+        @NotNull String id,
+        @NotNull String name,
         @NotNull ActivationType activationType,
         @NotNull ActivationStatus status,
         Long validUntil) {
 
-        Preconditions.checkNotNull(roleBinding, "roleBinding");
-
-        this.role = roleBinding.role();
+        this.id = id;
+        this.name = name;
         this.activationType = activationType;
         this.status = status;
         this.validUntil = validUntil;
