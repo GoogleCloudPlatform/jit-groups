@@ -106,11 +106,11 @@ public class IamCondition implements CelExpression<Boolean> {
    */
   public IamCondition reformat() {
     try {
-      var ast = COMPILER.compile(this.expression).getAst();
+      var ast = COMPILER.parse(this.expression).getAst();
       return new IamCondition(CelUnparserFactory.newUnparser().unparse(ast));
     }
-    catch (CelException ignored) {
-      return this;
+    catch (CelException e) {
+      throw new  IllegalArgumentException("The CEL expression is invalid", e);
     }
   }
 
@@ -150,18 +150,30 @@ public class IamCondition implements CelExpression<Boolean> {
             i++; // Skip the next "&".
             break;
           }
+          else {
+            currentClause.append(c);
+            break;
+          }
 
         case '(':
           bracesDepth++;
+          currentClause.append(c);
+          break;
 
         case ')':
           bracesDepth--;
+          currentClause.append(c);
+          break;
 
         case '\'':
           singleQuotes++;
+          currentClause.append(c);
+          break;
 
         case '"':
           doubleQuotes++;
+          currentClause.append(c);
+          break;
 
         default:
           currentClause.append(c);
