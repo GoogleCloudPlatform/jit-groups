@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.core.catalog.project;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserId;
@@ -69,7 +70,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
     @NotNull String bindingDescription,
     @NotNull ProjectId projectId,
     @NotNull UserId user,
-    @NotNull Set<String> roles,
+    @NotNull Set<ProjectRole> roles,
     @NotNull Instant startTime,
     @NotNull Duration duration
   ) throws AccessException, AlreadyExistsException, IOException {
@@ -81,14 +82,24 @@ public class ProjectRoleActivator extends EntitlementActivator<
     // accumulating junk, and to prevent hitting the binding limit.
     //
 
+    var temporaryCondition = new TemporaryIamCondition(startTime, duration);
+
     for (var role : roles) {
+      //
+      // Combine temporary condition clause with resource condition,
+      // if any.
+      //
+      var condition = role.resourceCondition() != null
+        ? IamCondition.and(List.of(temporaryCondition, new IamCondition(role.resourceCondition())))
+        : temporaryCondition;
+
       var binding = new Binding()
         .setMembers(List.of("user:" + user))
-        .setRole(role)
+        .setRole(role.role())
         .setCondition(new com.google.api.services.cloudresourcemanager.v3.model.Expr()
           .setTitle(ProjectRole.ActivationCondition.TITLE)
           .setDescription(bindingDescription)
-          .setExpression(new TemporaryIamCondition(startTime, duration).toString()));
+          .setExpression(condition.toString()));
 
       this.resourceManagerClient.addProjectIamBinding(
         projectId,
@@ -123,7 +134,6 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
-        .map(e -> e.role())
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
@@ -158,7 +168,6 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
-        .map(e -> e.role())
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
