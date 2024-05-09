@@ -101,6 +101,10 @@ public class ProjectRoleActivator extends EntitlementActivator<
           .setDescription(bindingDescription)
           .setExpression(condition.toString()));
 
+      //
+      // NB. To limit clutter, purge existing temporary bindings for the
+      // same user and role, even if their resource condition differs.
+      //
       this.resourceManagerClient.addProjectIamBinding(
         projectId,
         binding,
