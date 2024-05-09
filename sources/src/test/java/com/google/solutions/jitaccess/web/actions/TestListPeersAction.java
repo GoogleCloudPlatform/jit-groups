@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +38,7 @@ import static org.mockito.Mockito.when;
 
 public class TestListPeersAction {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final ProjectId PROJECT = new ProjectId("project-1");
 
   @Test
   public void whenCatalogThrowsAccessDeniedException_ThenActionThrowsException() throws Exception {
@@ -47,7 +50,10 @@ public class TestListPeersAction {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser"));
+      () -> action.execute(Mocks.createIapPrincipalMock(
+        SAMPLE_USER),
+        PROJECT.id(),
+        new ProjectRole(PROJECT, "roles/browser").id()));
   }
 
   @Test
@@ -60,7 +66,10 @@ public class TestListPeersAction {
       .thenReturn(new TreeSet());
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
-    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser");
+    var response = action.execute(
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
+      PROJECT.id(),
+      new ProjectRole(PROJECT, "roles/browser").id());
 
     assertNotNull(response.peers);
     assertEquals(0, response.peers.size());
@@ -76,7 +85,10 @@ public class TestListPeersAction {
       .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
-    var response = action.execute(Mocks.createIapPrincipalMock(SAMPLE_USER), "project-1", "roles/browser");
+    var response = action.execute(
+      Mocks.createIapPrincipalMock(SAMPLE_USER),
+      PROJECT.id(),
+      new ProjectRole(PROJECT, "roles/browser").id());
 
     assertNotNull(response.peers);
     assertEquals(2, response.peers.size());

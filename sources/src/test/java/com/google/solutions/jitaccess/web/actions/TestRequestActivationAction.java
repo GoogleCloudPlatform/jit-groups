@@ -48,6 +48,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 public class TestRequestActivationAction {
+  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
   private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
   private static final Duration DEFAULT_ACTIVATION_DURATION = Duration.ofMinutes(5);
@@ -109,7 +110,7 @@ public class TestRequestActivationAction {
 
     var request = new RequestActivationAction.RequestEntity();
     request.peers = List.of(SAMPLE_USER.email);
-    request.role = null;
+    request.entitlementId = null;
 
     var exception = assertThrows(
       IllegalArgumentException.class,
@@ -140,7 +141,7 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").toString();
     request.peers = List.of();
 
     var exception = assertThrows(
@@ -172,7 +173,7 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").toString();
     request.peers = List.of("peer@example.com");
 
     var exception = assertThrows(
@@ -204,7 +205,7 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").toString();
     request.peers = Stream.generate(() -> "peer@example.com")
       .limit(DEFAULT_MAX_NUMBER_OF_REVIEWERS + 1)
       .collect(Collectors.toList());
@@ -239,7 +240,7 @@ public class TestRequestActivationAction {
 
     var request = new RequestActivationAction.RequestEntity();
     request.peers = List.of(SAMPLE_USER.email);
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").toString();
 
     var exception = assertThrows(
       IllegalArgumentException.class,
@@ -270,7 +271,7 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").toString();
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
 
@@ -313,7 +314,7 @@ public class TestRequestActivationAction {
       Mockito.mock(TokenSigner.class));
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").id();
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
     request.activationTimeout = 5;
@@ -359,7 +360,7 @@ public class TestRequestActivationAction {
       tokenSigner);
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = "roles/mock";
+    request.entitlementId = new ProjectRole(SAMPLE_PROJECT, "roles/mock").id();
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
     request.activationTimeout = 5;
@@ -406,7 +407,7 @@ public class TestRequestActivationAction {
       tokenSigner);
 
     var request = new RequestActivationAction.RequestEntity();
-    request.role = roleBinding.role();
+    request.entitlementId = roleBinding.id();
     request.peers = List.of(SAMPLE_USER_2.email, SAMPLE_USER_2.email);
     request.justification = "justification";
     request.activationTimeout = 5;

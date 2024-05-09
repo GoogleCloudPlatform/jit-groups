@@ -113,7 +113,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     var role = ProjectRole.parse(request.entitlementId);
 
     Preconditions.checkArgument(
-      projectId.id().equals(projectIdString),
+      role.projectId().equals(projectId),
       "The project ID does not match the current project");
 
     //

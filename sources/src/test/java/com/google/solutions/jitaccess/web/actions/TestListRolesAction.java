@@ -132,8 +132,13 @@ public class TestListRolesAction {
 
     assertNotNull(response.entitlements);
     assertEquals(2, response.entitlements.size());
-    assertEquals(role1.id().role(), response.entitlements.get(0).role);
-    assertEquals(role2.id().role(), response.entitlements.get(1).role);
+
+    assertEquals(role1.id().id(), response.entitlements.get(0).id);
+    assertEquals("ent-1", response.entitlements.get(0).name);
+
+    assertEquals(role2.id().id(), response.entitlements.get(1).id);
+    assertEquals("ent-2", response.entitlements.get(1).name);
+
     assertTrue(response.warnings.isEmpty());
   }
 }

@@ -66,11 +66,11 @@ public class ListPeersAction extends AbstractAction {
     var userContext = this.catalog.createContext(iapPrincipal.email());
     var projectId = new ProjectId(projectIdString);
 
-    Preconditions.checkArgument(
-      projectId.id().equals(projectIdString),
-      "The project ID does not match the current project");
-
     var role = ProjectRole.parse(entitlementId);
+
+    Preconditions.checkArgument(
+      role.projectId().equals(projectId),
+      "The project ID does not match the current project");
 
     try {
       var peers = this.catalog.listReviewers(

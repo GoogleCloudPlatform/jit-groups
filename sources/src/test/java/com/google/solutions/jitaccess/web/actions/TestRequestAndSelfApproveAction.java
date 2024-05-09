@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 public class TestRequestAndSelfApproveAction {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
   @Test
   public void whenProjectIsNull_ThenActionThrowsException() throws Exception {
@@ -74,7 +75,7 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of();
+    request.entitlementIds = List.of();
 
     var exception = assertThrows(
       IllegalArgumentException.class,
@@ -95,7 +96,7 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser");
+    request.entitlementIds = List.of(new ProjectRole(SAMPLE_PROJECT, "roles/browser").toString());
     request.justification = "";
 
     var exception = assertThrows(
@@ -128,7 +129,9 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser", "roles/browser");
+    request.entitlementIds = List.of(
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id(),
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id());
     request.justification = "justification";
     request.activationTimeout = 5;
 
@@ -163,7 +166,9 @@ public class TestRequestAndSelfApproveAction {
       Mocks.createMpaProjectRoleCatalogMock());
 
     var request = new RequestAndSelfApproveAction.RequestEntity();
-    request.roles = List.of("roles/browser", "roles/browser");
+    request.entitlementIds = List.of(
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id(),
+      new ProjectRole(SAMPLE_PROJECT, "roles/browser").id());
     request.justification = "justification";
     request.activationTimeout = 5;
 
