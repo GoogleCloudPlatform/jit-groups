@@ -350,12 +350,12 @@
                     //
                     const entitlements = await this.model.listRoles(document.appbar.scope);
                         
-                    if (entitlements.roles && entitlements.roles.length > 0) {
-                        entitlements.roles.forEach(item => {
+                    if (entitlements.entitlements && entitlements.entitlements.length > 0) {
+                        entitlements.entitlements.forEach(item => {
                             this._table.addRow(
-                                item.role,
+                                item.id,
                                 [
-                                    { text: item.role },
+                                    { text: item.name },
                                     { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                                     { text: (this.statusCaptions[item.status] ?? item.status) + 
                                             (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
@@ -374,7 +374,7 @@
                     //
                     const onSelectionChanged = e => {
                         const selected = this._table.getSelectedRowIds();
-                        selectedEntitlements = entitlements.roles.filter(i => selected.includes(i.role));
+                        selectedEntitlements = entitlements.entitlements.filter(i => selected.includes(i.id));
 
                         if (selectedEntitlements.length > 1 && selectedEntitlements.some(i => i.activationType === "MPA")) {
                             $('#jit-listentitlements-warning').text('You can only request peer approval for a single role at a time');
@@ -415,7 +415,7 @@
                         if (activationType == 'MPA') {
                             activationStatus = await this.model.requestActivation(
                                 document.appbar.scope,
-                                selectedEntitlements[0].role,
+                                selectedEntitlements[0].id,
                                 request.peers,
                                 request.justification,
                                 request.duration);
@@ -423,7 +423,7 @@
                         else {
                             activationStatus = await this.model.selfApproveActivation(
                                 document.appbar.scope,
-                                selectedEntitlements.map(e => e.role),
+                                selectedEntitlements.map(e => e.id),
                                 request.justification,
                                 request.duration);
                         }
@@ -505,7 +505,7 @@
 
                     if (this.activationType == 'MPA') {
                         $('#jit-requestdialog-peers').show();
-                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].role);
+                        const peersResult = await this.model.listPeers(document.appbar.scope, this.selectedEntitlements[0].id);
                         
                         peersResult.peers.forEach(item => {
                             this._table.addRow(
@@ -579,7 +579,7 @@
                     $("#jit-entitlementstatus-approvebutton").hide();
                     $("#jit-entitlementstatus-consolebutton").hide();
                     if (this.activationStatus.isReviewer) {
-                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                        if (this.activationStatus.entitlements.some(i => i.status === "ACTIVATION_PENDING")) {
                             $("#jit-entitlementstatus-title").text("Review access request");
                             $("#jit-entitlementstatus-description").text("One of your peers is asking you to review the following access request.");
                             $("#jit-entitlementstatus-approvebutton").show();
@@ -593,7 +593,7 @@
                     }
                     else if (this.activationStatus.isBeneficiary) {
                         $("#jit-entitlementstatus-beneficiary").text("You");
-                        if (this.activationStatus.items.some(i => i.status === "ACTIVATION_PENDING")) {
+                        if (this.activationStatus.entitlements.some(i => i.status === "ACTIVATION_PENDING")) {
                             $("#jit-entitlementstatus-title").text("Request submitted");
                             $("#jit-entitlementstatus-description").text("Your request has been submitted for approval. " +
                                 "You'll receive an email once approval has been granted");
@@ -606,8 +606,8 @@
                     }
                 
                     // NB. All roles have the same start/end time.
-                    const startTime = new Date(this.activationStatus.items[0].startTime * 1000);
-                    const endTime = new Date(this.activationStatus.items[0].endTime * 1000);
+                    const startTime = new Date(this.activationStatus.entitlements[0].startTime * 1000);
+                    const endTime = new Date(this.activationStatus.entitlements[0].endTime * 1000);
 
                     $("#jit-entitlementstatus-starttime").text(`${startTime.toLocaleString()} (${Math.floor((new Date() - startTime) / (60*1000))} minutes ago)`);
                     $("#jit-entitlementstatus-endtime").text(`${endTime.toLocaleString()} (in ${Math.floor((endTime - new Date()) / (60*1000))} minutes)`);
@@ -624,12 +624,12 @@
                     }
 
                     this._table.clearRows();
-                    this.activationStatus.items.forEach((item) => {
+                    this.activationStatus.entitlements.forEach((item) => {
                         this._table.addRow(
-                            item.role,
+                            item.id,
                             [
                                 { text: item.projectId },
-                                { text: item.role },
+                                { text: item.name },
                                 { text: this.statusCaptions[item.status] ?? item.status, 
                                   class: item.status === "ACTIVE" ? "activated" : null }
                             ],

@@ -144,7 +144,7 @@ public abstract class AbstractApiResource<TScope extends ResourceId> {
   public @NotNull ListPeersAction.ResponseEntity listPeers(
     @PathParam("scopeType") @Nullable String scopeType,
     @PathParam("scope") @Nullable String scope,
-    @QueryParam("role") @Nullable String role,
+    @QueryParam("id") @Nullable String entitlementId,
     @Context @NotNull SecurityContext securityContext
   ) throws AccessException {
     checkScopeType(scopeType);
@@ -152,7 +152,7 @@ public abstract class AbstractApiResource<TScope extends ResourceId> {
     return this.listPeersAction().execute(
       (IapPrincipal)securityContext.getUserPrincipal(),
       scope,
-      role);
+      entitlementId);
   }
 
   /**

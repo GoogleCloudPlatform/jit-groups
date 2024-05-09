@@ -98,7 +98,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
     public final boolean isBeneficiary;
     public final boolean isReviewer;
     public final String justification;
-    public final @NotNull List<Item> items;
+    public final @NotNull List<Item> entitlements;
 
     public ResponseEntity(
       @NotNull UserId caller,
@@ -110,7 +110,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
       this.beneficiary = request.requestingUser();
       this.isBeneficiary = request.requestingUser().equals(caller);
       this.justification = request.justification();
-      this.items = request
+      this.entitlements = request
         .entitlements()
         .stream()
         .map(ent -> new Item(
@@ -134,14 +134,15 @@ public abstract class AbstractActivationAction extends AbstractAction {
     public static class Item {
       public final @NotNull String activationId;
       public final @NotNull String projectId;
-      public final @NotNull String role;
+      public final @NotNull String id;
+      public final @NotNull String name;
       public final @NotNull ActivationStatus status;
       public final long startTime;
       public final long endTime;
 
       private Item(
         @NotNull ActivationId activationId,
-        @NotNull ProjectRole roleBinding,
+        @NotNull ProjectRole role,
         @NotNull ActivationStatus status,
         @NotNull Instant startTime,
         @NotNull Instant endTime
@@ -149,8 +150,9 @@ public abstract class AbstractActivationAction extends AbstractAction {
         assert endTime.isAfter(startTime);
 
         this.activationId = activationId.toString();
-        this.projectId = roleBinding.projectId().id();
-        this.role = roleBinding.role();
+        this.projectId = role.projectId().id();
+        this.id = role.id();
+        this.name = role.role();
         this.status = status;
         this.startTime = startTime.getEpochSecond();
         this.endTime = endTime.getEpochSecond();

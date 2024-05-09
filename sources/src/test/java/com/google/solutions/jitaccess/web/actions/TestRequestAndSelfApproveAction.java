@@ -177,11 +177,11 @@ public class TestRequestAndSelfApproveAction {
     assertTrue(response.isBeneficiary);
     assertFalse(response.isReviewer);
     assertEquals("justification", response.justification);
-    assertNotNull(response.items);
-    assertEquals(1, response.items.size());
-    assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals(roleBinding.role(), response.items.get(0).role);
-    assertEquals(ActivationStatus.ACTIVE, response.items.get(0).status);
-    assertNotNull(response.items.get(0).activationId);
+    assertNotNull(response.entitlements);
+    assertEquals(1, response.entitlements.size());
+    assertEquals("project-1", response.entitlements.get(0).projectId);
+    assertEquals(roleBinding.role(), response.entitlements.get(0).name);
+    assertEquals(ActivationStatus.ACTIVE, response.entitlements.get(0).status);
+    assertNotNull(response.entitlements.get(0).activationId);
   }
 }

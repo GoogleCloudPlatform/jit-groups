@@ -96,13 +96,13 @@ class Model {
     }
 
     /** List peers that can approve a request */
-    async listPeers(projectId, role) {
+    async listPeers(projectId, entitlementId) {
         console.assert(projectId);
-        console.assert(role);
+        console.assert(entitlementId);
 
         try {
             return await $.ajax({
-                url: `/api/projects/${projectId}/peers?role=${encodeURIComponent(role)}`,
+                url: `/api/projects/${projectId}/peers?id=${encodeURIComponent(entitlementId)}`,
                 dataType: "json",
                 headers: this._getHeaders()
             });
@@ -112,10 +112,10 @@ class Model {
         }
     }
 
-    /** Activate roles without peer approval */
-    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
+    /** Activate entitlements without peer approval */
+    async selfApproveActivation(projectId, entitlementIds, justification, activationTimeout) {
         console.assert(projectId);
-        console.assert(roles.length > 0);
+        console.assert(entitlementIds.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
 
@@ -126,7 +126,7 @@ class Model {
                 dataType: "json",
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
-                    roles: roles,
+                    entitlementIds: entitlementIds,
                     justification: justification,
                     activationTimeout: activationTimeout
                 }),
@@ -139,9 +139,9 @@ class Model {
     }
 
     /** Activate a role with peer approval */
-    async requestActivation(projectId, role, peers, justification, activationTimeout) {
+    async requestActivation(projectId, entitlementId, peers, justification, activationTimeout) {
         console.assert(projectId);
-        console.assert(role);
+        console.assert(entitlementId);
         console.assert(peers.length > 0);
         console.assert(justification)
         console.assert(activationTimeout)
@@ -153,7 +153,7 @@ class Model {
                 dataType: "json",
                 contentType: "application/json; charset=utf-8",
                 data: JSON.stringify({
-                    role: role,
+                    entitlementId: entitlementId,
                     justification: justification,
                     peers: peers,
                     activationTimeout: activationTimeout
@@ -308,7 +308,7 @@ class DebugModel extends Model {
         return Promise.reject("Simulated error");
     }
 
-    async _simulateActivationResponse(projectId, justification, roles, status, forSelf, activationTimeout) {
+    async _simulateActivationResponse(projectId, justification, entitlementIds, status, forSelf, activationTimeout) {
         await new Promise(r => setTimeout(r, 1000));
         return Promise.resolve({
             isBeneficiary: forSelf,
@@ -316,10 +316,11 @@ class DebugModel extends Model {
             justification: justification,
             beneficiary: { email: "user" },
             reviewers: forSelf ? [] : [{ email: "reviewer"}],
-            items: roles.map(r => ({
+            entitlements: entitlementIds.map(id => ({
                 activationId: "sim-1",
                 projectId: projectId,
-                role: r,
+                id: id,
+                name: `Name of ${id}`,
                 status: status,
                 startTime: Math.floor(Date.now() / 1000),
                 endTime: Math.floor(Date.now() / 1000) + activationTimeout * 60
@@ -355,8 +356,9 @@ class DebugModel extends Model {
             const statuses = ["ACTIVE", "AVAILABLE"];
             return Promise.resolve({
                 warnings: ["This is a simulated result"],
-                roles: Array.from({ length: setting }, (e, i) => ({
-                    role: "roles/simulated-role-" + i,
+                entitlements: Array.from({ length: setting }, (e, i) => ({
+                    id: `${projectId}:roles/simulated-role-${i}`,
+                    name: `roles/simulated-role-${i}`,
                     activationType: activationTypes[i % activationTypes.length],
                     status: statuses[i % statuses.length]
                 }))
@@ -380,10 +382,10 @@ class DebugModel extends Model {
         }
     }
 
-    async listPeers(projectId, role) {
+    async listPeers(projectId, entitlementId) {
         var setting = $("#debug-listPeers").val();
         if (!setting) {
-            return super.listPeers(projectId, role);
+            return super.listPeers(projectId, entitlementId);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -398,10 +400,10 @@ class DebugModel extends Model {
         }
     }
 
-    async selfApproveActivation(projectId, roles, justification, activationTimeout) {
+    async selfApproveActivation(projectId, entitlementIds, justification, activationTimeout) {
         var setting = $("#debug-selfApproveActivation").val();
         if (!setting) {
-            return super.selfApproveActivation(projectId, roles, justification, activationTimeout);
+            return super.selfApproveActivation(projectId, entitlementIds, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -410,17 +412,17 @@ class DebugModel extends Model {
             return await this._simulateActivationResponse(
                 projectId,
                 justification,
-                roles,
+                entitlementIds,
                 "ACTIVE",
                 true,
                 activationTimeout);
         }
     }
 
-    async requestActivation(projectId, role, peers, justification, activationTimeout) {
+    async requestActivation(projectId, entitlementId, peers, justification, activationTimeout) {
         var setting = $("#debug-requestActivation").val();
         if (!setting) {
-            return super.requestActivation(projectId, role, peers, justification, activationTimeout);
+            return super.requestActivation(projectId, entitlementId, peers, justification, activationTimeout);
         }
         else if (setting === "error") {
             await this._simulateError();
@@ -429,7 +431,7 @@ class DebugModel extends Model {
             return await this._simulateActivationResponse(
                 projectId,
                 justification,
-                [role],
+                [entitlementId],
                 "ACTIVATION_PENDING",
                 true,
                 activationTimeout);

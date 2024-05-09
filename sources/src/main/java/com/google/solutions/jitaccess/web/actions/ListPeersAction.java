@@ -54,24 +54,28 @@ public class ListPeersAction extends AbstractAction {
   public @NotNull ResponseEntity execute(
     @NotNull IapPrincipal iapPrincipal,
     @Nullable String projectIdString,
-    @Nullable String role
+    @Nullable String entitlementId
   ) throws AccessException {
     Preconditions.checkArgument(
       projectIdString != null && !projectIdString.trim().isEmpty(),
       "A projectId is required");
     Preconditions.checkArgument(
-      role != null && !role.trim().isEmpty(),
+      entitlementId != null && !entitlementId.trim().isEmpty(),
       "A role is required");
 
     var userContext = this.catalog.createContext(iapPrincipal.email());
-
     var projectId = new ProjectId(projectIdString);
-    var roleBinding = new ProjectRole(projectId, role);
+
+    Preconditions.checkArgument(
+      projectId.id().equals(projectIdString),
+      "The project ID does not match the current project");
+
+    var role = ProjectRole.parse(entitlementId);
 
     try {
       var peers = this.catalog.listReviewers(
         userContext,
-        roleBinding);
+        role);
 
       assert !peers.contains(iapPrincipal.email());
 
@@ -83,7 +87,7 @@ public class ListPeersAction extends AbstractAction {
           LogEvents.API_LIST_PEERS,
           String.format("Listing peers failed: %s", Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, e))
-        .addLabels(le -> addLabels(le, roleBinding))
+        .addLabels(le -> addLabels(le, role))
         .addLabels(le -> addLabels(le, projectId))
         .write();
 

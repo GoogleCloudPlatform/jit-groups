@@ -422,11 +422,11 @@ public class TestRequestActivationAction {
     assertTrue(response.isBeneficiary);
     assertFalse(response.isReviewer);
     assertEquals("justification", response.justification);
-    assertNotNull(response.items);
-    assertEquals(1, response.items.size());
-    assertEquals("project-1", response.items.get(0).projectId);
-    assertEquals(roleBinding.role(), response.items.get(0).role);
-    assertEquals(ActivationStatus.ACTIVATION_PENDING, response.items.get(0).status);
-    assertNotNull(response.items.get(0).activationId);
+    assertNotNull(response.entitlements);
+    assertEquals(1, response.entitlements.size());
+    assertEquals("project-1", response.entitlements.get(0).projectId);
+    assertEquals(roleBinding.role(), response.entitlements.get(0).name);
+    assertEquals(ActivationStatus.ACTIVATION_PENDING, response.entitlements.get(0).status);
+    assertNotNull(response.entitlements.get(0).activationId);
   }
 }
