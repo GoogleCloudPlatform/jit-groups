@@ -159,8 +159,7 @@ public class ProjectRole extends EntitlementId {
   ) {
     return EligibilityCondition.parse(binding.getCondition())
       .filter(EligibilityCondition::isJitEligible)
-      .filter(c -> c.resourceCondition() == null)
-      .map(c -> new ProjectRole(projectId, binding.getRole()));
+      .map(c -> new ProjectRole(projectId, binding.getRole(), c.resourceCondition()));
   }
 
   /**
@@ -177,8 +176,7 @@ public class ProjectRole extends EntitlementId {
   ) {
     return EligibilityCondition.parse(binding.getCondition())
       .filter(EligibilityCondition::isMpaEligible)
-      .filter(c -> c.resourceCondition() == null)
-      .map(c -> new ProjectRole(projectId, binding.getRole()));
+      .map(c -> new ProjectRole(projectId, binding.getRole(), c.resourceCondition()));
   }
 
   /**
@@ -194,9 +192,8 @@ public class ProjectRole extends EntitlementId {
     @NotNull Binding binding
   ) {
     return ActivationCondition.parse(binding.getCondition())
-      .filter(c -> c.resourceCondition() == null)
       .map(c -> new ActivatedProjectRole(
-        new ProjectRole(projectId, binding.getRole()),
+        new ProjectRole(projectId, binding.getRole(), c.resourceCondition()),
         c.toActivation()));
   }
 

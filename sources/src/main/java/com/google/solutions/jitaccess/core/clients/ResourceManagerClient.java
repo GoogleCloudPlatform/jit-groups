@@ -159,6 +159,8 @@ public class ResourceManagerClient {
             && b.getCondition() != null
             && TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression());
 
+          //TODO: only purge when expired
+
           var nonObsoleteBindings =
             policy.getBindings().stream()
               .filter(isObsolete.negate())

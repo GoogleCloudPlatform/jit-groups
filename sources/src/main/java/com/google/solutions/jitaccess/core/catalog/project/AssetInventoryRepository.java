@@ -56,6 +56,22 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   private final @NotNull DirectoryGroupsClient groupsClient;
   private final @NotNull AssetInventoryClient assetInventoryClient;
 
+  private static @NotNull String createEntitlementName(
+    @NotNull Binding binding,
+    @NotNull ProjectRole role
+  ) {
+    if (role.resourceCondition() != null) {
+      //
+      // Include the condition title in the name to help distinguish
+      // it from other roles that might have no or different conditions
+      //
+      return String.format("%s (%s)", role.role(), binding.getCondition().getTitle());
+    }
+    else {
+      return role.role();
+    }
+  }
+
   public AssetInventoryRepository(
     @NotNull Executor executor,
     @NotNull DirectoryGroupsClient groupsClient,
@@ -145,13 +161,14 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = allBindings.stream()
-        .map(binding -> ProjectRole.fromJitEligibleRoleBinding(projectId, binding))
+        .map(binding -> ProjectRole
+          .fromJitEligibleRoleBinding(projectId, binding)
+          .map(projectRole -> new Entitlement<>(
+            projectRole,
+            createEntitlementName(binding, projectRole),
+            ActivationType.JIT)))
         .filter(projectRole -> projectRole.isPresent())
         .map(Optional::get)
-        .map(projectRole -> new Entitlement<>(
-          projectRole,
-          projectRole.role(),
-          ActivationType.JIT))
         .collect(Collectors.toSet());
     }
     else {
@@ -166,13 +183,14 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = allBindings.stream()
-        .map(binding -> ProjectRole.fromMpaEligibleRoleBinding(projectId, binding))
+        .map(binding -> ProjectRole
+          .fromMpaEligibleRoleBinding(projectId, binding)
+          .map(projectRole -> new Entitlement<>(
+            projectRole,
+            createEntitlementName(binding, projectRole),
+            ActivationType.MPA)))
         .filter(role -> role.isPresent())
         .map(Optional::get)
-        .map(projectRole -> new Entitlement<>(
-          projectRole,
-          projectRole.role(),
-          ActivationType.MPA))
         .collect(Collectors.toSet());
     }
     else {

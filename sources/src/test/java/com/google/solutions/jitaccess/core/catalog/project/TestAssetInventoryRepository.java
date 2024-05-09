@@ -27,6 +27,7 @@ import com.google.api.services.cloudasset.v1.model.Policy;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
 import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
+import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.*;
 import com.google.solutions.jitaccess.core.auth.UserId;
@@ -287,10 +288,90 @@ public class TestAssetInventoryRepository {
     assertTrue(entitlements.expiredActivations().isEmpty());
 
     assertIterableEquals(
-      List.of("roles/for-user"),
-      entitlements.available().stream().map(e -> e.id().role()).collect(Collectors.toList()));
-    var jitEntitlement = entitlements.available().first();
-    assertEquals(ActivationType.JIT, jitEntitlement.activationType());
+      List.of("project-1:roles/for-user"),
+      entitlements.available()
+        .stream()
+        .filter(e -> e.activationType() == ActivationType.JIT)
+        .map(e -> e.id().id())
+        .collect(Collectors.toList()));
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainEligibleBindingsWithResourceCondition_ThenFindEntitlementsReturnsList() throws Exception {
+    var jitBindingForUserAndResource1 = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(JIT_CONDITION + "&& resource.name=='resource-1'"))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var jitBindingForUserAndResource2 = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(JIT_CONDITION + "&& resource.name=='resource-2'"))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var mpaBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(MPA_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var mpaBindingForUserAndResource1 = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(MPA_CONDITION + "&& resource.name=='resource-1'"))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var mpaBindingForUserAndResource3 = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression(MPA_CONDITION + "&& resource.name=='resource-3'"))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+      .getEffectiveIamPolicies(
+        eq("organization/0"),
+        eq(SAMPLE_PROJECT)))
+      .thenReturn(List.of(
+        new PolicyInfo()
+          .setAttachedResource(SAMPLE_PROJECT.path())
+          .setPolicy(new Policy()
+            .setBindings(List.of(
+              jitBindingForUserAndResource1,
+              jitBindingForUserAndResource2,
+              mpaBindingForUser,
+              mpaBindingForUserAndResource1,
+              mpaBindingForUserAndResource3)))));
+
+    var repository = new AssetInventoryRepository(
+      new SynchronousExecutor(),
+      Mockito.mock(DirectoryGroupsClient.class),
+      caiClient,
+      new AssetInventoryRepository.Options("organization/0"));
+
+    //
+    // JIT and MPA are collapsed for resource-1 only.
+    //
+
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+
+    assertTrue(entitlements.currentActivations().isEmpty());
+    assertTrue(entitlements.expiredActivations().isEmpty());
+
+    assertIterableEquals(
+      List.of(
+        "project-1:roles/for-user:cmVzb3VyY2UubmFtZSA9PSAicmVzb3VyY2UtMSI=", // resource-1
+        "project-1:roles/for-user:cmVzb3VyY2UubmFtZSA9PSAicmVzb3VyY2UtMiI="  // resource-2
+      ),
+      entitlements.available()
+        .stream()
+        .filter(e -> e.activationType() == ActivationType.JIT)
+        .map(e -> e.id().id())
+        .collect(Collectors.toList()));
+    assertIterableEquals(
+      List.of(
+        "project-1:roles/for-user",
+        "project-1:roles/for-user:cmVzb3VyY2UubmFtZSA9PSAicmVzb3VyY2UtMyI="), // resource-3
+      entitlements.available()
+        .stream()
+        .filter(e -> e.activationType() == ActivationType.MPA)
+        .map(e -> e.id().id())
+        .collect(Collectors.toList()));
   }
 
   @Test
@@ -363,6 +444,54 @@ public class TestAssetInventoryRepository {
         .setExpression(new TemporaryIamCondition(
           Instant.now().minus(1, ChronoUnit.HOURS),
           Instant.now().plus(1, ChronoUnit.HOURS)).toString()))
+      .setMembers(List.of("user:" + SAMPLE_USER.email));
+
+    var caiClient = Mockito.mock(AssetInventoryClient.class);
+    when(caiClient
+      .getEffectiveIamPolicies(
+        eq("organization/0"),
+        eq(SAMPLE_PROJECT)))
+      .thenReturn(List.of(
+        new PolicyInfo()
+          .setAttachedResource(SAMPLE_PROJECT.path())
+          .setPolicy(new Policy()
+            .setBindings(List.of(jitBindingForUser, expiredActivationForUser)))));
+
+    var repository = new AssetInventoryRepository(
+      new SynchronousExecutor(),
+      Mockito.mock(DirectoryGroupsClient.class),
+      caiClient,
+      new AssetInventoryRepository.Options("organization/0"));
+
+    var entitlements = repository.findEntitlements(
+      SAMPLE_USER,
+      SAMPLE_PROJECT,
+      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+
+    assertEquals(1, entitlements.available().size());
+
+    var entitlement = entitlements.available().first();
+    assertEquals(ActivationType.JIT, entitlement.activationType());
+
+    assertTrue(entitlements.currentActivations().containsKey(entitlement.id()));
+    assertTrue(entitlements.expiredActivations().isEmpty());
+  }
+
+  @Test
+  public void whenEffectiveIamPoliciesContainsActivationWithResourceCondition_ThenFindEntitlementsReturnsList() throws Exception {
+    var jitBindingForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr().setExpression("resource.name=='resource-1' && " + JIT_CONDITION))
+      .setMembers(List.of("user:" + SAMPLE_USER.email, "user:other@example.com"));
+    var expiredActivationForUser = new Binding()
+      .setRole("roles/for-user")
+      .setCondition(new Expr()
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
+        .setExpression(IamCondition.and(List.of(
+          new TemporaryIamCondition(
+            Instant.now().minus(1, ChronoUnit.HOURS),
+            Instant.now().plus(1, ChronoUnit.HOURS)),
+          new IamCondition("resource.name=='resource-1'"))).toString()))
       .setMembers(List.of("user:" + SAMPLE_USER.email));
 
     var caiClient = Mockito.mock(AssetInventoryClient.class);

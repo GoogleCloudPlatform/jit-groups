@@ -40,8 +40,8 @@ public class TemporaryIamCondition extends IamCondition {
     "(request.time >= timestamp(\"%s\") && " + "request.time < timestamp(\"%s\"))";
 
   private static final String CONDITION_PATTERN =
-    "^\\s*\\(request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
-      + "request.time < timestamp\\(\\\"(.*)\\\"\\)\\)\\s*$";
+    "^\\s*[\\(]+request.time >= timestamp\\(\\\"(.*)\\\"\\) && "
+      + "request.time < timestamp\\(\\\"(.*)\\\"\\)[\\)]+\\s*$";
 
   private static final Pattern CONDITION = Pattern.compile(CONDITION_PATTERN);
 
