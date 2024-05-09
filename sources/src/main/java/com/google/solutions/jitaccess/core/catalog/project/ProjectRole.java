@@ -31,7 +31,7 @@ import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
-import jakarta.validation.constraints.Null;
+import com.google.solutions.jitaccess.core.util.Base64Escape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,10 +98,19 @@ public class ProjectRole extends EntitlementId {
   public @NotNull String id() {
     if (this.resourceCondition != null) {
       //
-      // Include resource condition in ID so that it's considered
-      // in equality checks.
+      // Include resource condition in ID so that we can distinguish
+      // it from another entitlement for the same role that might
+      // have no (or a different) resource condition.
       //
-      return String.format("%s:%s[%s]", this.projectId, this.role, this.resourceCondition);
+      // NB. The base64 escaping is just to prevent encoding issues
+      // because the condition might contain newlines, braces, and
+      // other special characters.
+      //
+      return String.format(
+        "%s:%s:%s",
+        this.projectId,
+        this.role,
+        Base64Escape.escape(this.resourceCondition));
     }
     else {
       return String.format("%s:%s", this.projectId, this.role);
@@ -117,13 +126,23 @@ public class ProjectRole extends EntitlementId {
    */
   public static ProjectRole fromId(@NotNull String id) {
     var parts = id.split(":");
-    if (parts.length != 2 ||
+    if (parts.length < 2 ||
+      parts.length > 3 ||
       parts[0].isBlank() ||
       parts[1].isBlank()) {
       throw new IllegalArgumentException("Invalid ProjectRole ID");
     }
-
-    return new ProjectRole(new ProjectId(parts[0]), parts[1]);
+    else if (parts.length == 3) {
+      return new ProjectRole(
+        new ProjectId(parts[0]),
+        parts[1],
+        Base64Escape.unescape(parts[2]));
+    }
+    else {
+      return new ProjectRole(
+        new ProjectId(parts[0]),
+        parts[1]);
+    }
   }
 
   /**

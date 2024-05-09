@@ -49,10 +49,23 @@ public class TestProjectRole {
       "iam:project-1:role/sample",
       new ProjectRole(SAMPLE_PROJECT, "role/sample").toString());
     assertEquals(
-      "iam:project-1:role/sample[condition]",
-      new ProjectRole(SAMPLE_PROJECT, "role/sample", "condition").toString());
+      "iam:project-1:role/sample:cmVzb3VyY2UubmFtZT09J2Zvbyc=",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").toString());
   }
 
+  // -------------------------------------------------------------------------
+  // id.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void idContainsResourceAndRole() {
+    assertEquals(
+      "project-1:role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample").id());
+    assertEquals(
+      "project-1:role/sample:cmVzb3VyY2UubmFtZT09J2Zvbyc=",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").id());
+  }
 
   // -------------------------------------------------------------------------
   // equals.
@@ -129,9 +142,12 @@ public class TestProjectRole {
   }
 
   @Test
-  public void whenIdValid_ThenFromIdReturns() {
-    var role = new ProjectRole(SAMPLE_PROJECT, "roles/test");
-    assertEquals(role, ProjectRole.fromId(role.id()));
+  public void whenIdValid_ThenFromIdSucceeds() {
+    var roleWithoutCondition = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    var roleWithCondition = new ProjectRole(SAMPLE_PROJECT, "roles/test", "resource.name=='foo'");
+
+    assertEquals(roleWithoutCondition, ProjectRole.fromId(roleWithoutCondition.id()));
+    assertEquals(roleWithCondition, ProjectRole.fromId(roleWithCondition.id()));
   }
 
   // -------------------------------------------------------------------------
