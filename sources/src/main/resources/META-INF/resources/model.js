@@ -321,6 +321,7 @@ class DebugModel extends Model {
                 projectId: projectId,
                 id: id,
                 name: `Name of ${id}`,
+                resourceCondition: 'test()',
                 status: status,
                 startTime: Math.floor(Date.now() / 1000),
                 endTime: Math.floor(Date.now() / 1000) + activationTimeout * 60
@@ -359,6 +360,7 @@ class DebugModel extends Model {
                 entitlements: Array.from({ length: setting }, (e, i) => ({
                     id: `${projectId}:roles/simulated-role-${i}`,
                     name: `roles/simulated-role-${i}`,
+                    resourceCondition: 'test()',
                     activationType: activationTypes[i % activationTypes.length],
                     status: statuses[i % statuses.length]
                 }))

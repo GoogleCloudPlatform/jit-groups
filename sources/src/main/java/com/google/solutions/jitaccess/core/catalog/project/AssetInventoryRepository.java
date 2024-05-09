@@ -56,22 +56,6 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   private final @NotNull DirectoryGroupsClient groupsClient;
   private final @NotNull AssetInventoryClient assetInventoryClient;
 
-  private static @NotNull String createEntitlementName(
-    @NotNull Binding binding,
-    @NotNull ProjectRole role
-  ) {
-    if (role.resourceCondition() != null) {
-      //
-      // Include the condition title in the name to help distinguish
-      // it from other roles that might have no or different conditions
-      //
-      return String.format("%s (%s)", role.role(), binding.getCondition().getTitle());
-    }
-    else {
-      return role.role();
-    }
-  }
-
   public AssetInventoryRepository(
     @NotNull Executor executor,
     @NotNull DirectoryGroupsClient groupsClient,
@@ -165,7 +149,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
           .fromJitEligibleRoleBinding(projectId, binding)
           .map(projectRole -> new Entitlement<>(
             projectRole,
-            createEntitlementName(binding, projectRole),
+            projectRole.role(),
             ActivationType.JIT)))
         .filter(projectRole -> projectRole.isPresent())
         .map(Optional::get)
@@ -187,7 +171,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
           .fromMpaEligibleRoleBinding(projectId, binding)
           .map(projectRole -> new Entitlement<>(
             projectRole,
-            createEntitlementName(binding, projectRole),
+            projectRole.role(),
             ActivationType.MPA)))
         .filter(role -> role.isPresent())
         .map(Optional::get)

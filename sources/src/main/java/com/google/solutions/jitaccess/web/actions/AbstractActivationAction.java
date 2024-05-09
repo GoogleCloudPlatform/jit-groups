@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.web.TokenObfuscator;
 import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -136,6 +137,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
       public final @NotNull String projectId;
       public final @NotNull String id;
       public final @NotNull String name;
+      public final @Nullable String resourceCondition;
       public final @NotNull ActivationStatus status;
       public final long startTime;
       public final long endTime;
@@ -153,6 +155,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
         this.projectId = role.projectId().id();
         this.id = role.id();
         this.name = role.role();
+        this.resourceCondition = role.resourceCondition();
         this.status = status;
         this.startTime = startTime.getEpochSecond();
         this.endTime = endTime.getEpochSecond();
