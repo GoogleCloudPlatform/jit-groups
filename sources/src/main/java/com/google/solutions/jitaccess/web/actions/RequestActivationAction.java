@@ -267,15 +267,17 @@ public class RequestActivationAction extends AbstractActivationAction {
 
       assert request.entitlements().size() == 1;
 
-      this.properties.put("BENEFICIARY", request.requestingUser());
-      this.properties.put("REVIEWERS", request.reviewers());
-      this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", request
+      var role = request
         .entitlements()
         .stream()
         .findFirst()
-        .get()
-        .role());
+        .get();
+
+      this.properties.put("BENEFICIARY", request.requestingUser());
+      this.properties.put("REVIEWERS", request.reviewers());
+      this.properties.put("PROJECT_ID", projectId);
+      this.properties.put("ROLE", role.role());
+      this.properties.put("RESOURCE_CONDITION", role.resourceCondition());
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());
       this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
