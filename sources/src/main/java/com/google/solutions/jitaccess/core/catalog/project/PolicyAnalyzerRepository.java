@@ -187,6 +187,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // conditional and have a special condition that serves
     // as marker.
     //
+    // Ignore eligible role bindings that have an extra
+    // resource condition, we don't support these.
+    //
     Set<Entitlement<ProjectRole>> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = findRoleBindings(
@@ -194,6 +197,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         condition -> ProjectRole.EligibilityCondition
           .parse(condition)
           .filter(ProjectRole.EligibilityCondition::isJitEligible)
+          .filter(c -> c.resourceCondition() == null)
           .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
@@ -214,6 +218,9 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // conditional and have a special condition that serves
     // as marker.
     //
+    // Ignore eligible role bindings that have an extra
+    // resource condition, we don't support these.
+    //
     Set<Entitlement<ProjectRole>> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = findRoleBindings(
@@ -221,6 +228,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
         condition -> ProjectRole.EligibilityCondition
           .parse(condition)
           .filter(ProjectRole.EligibilityCondition::isMpaEligible)
+          .filter(c -> c.resourceCondition() == null)
           .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
@@ -253,9 +261,15 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // the condition evaluates to TRUE (indicating it's still
     // valid).
     //
+    // Ignore eligible role bindings that have an extra
+    // resource condition, we don't support these.
+    //
     var currentActivations = findRoleBindings(
         analysisResult,
-        condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
+        condition -> ProjectRole.ActivationCondition
+          .parse(condition)
+          .filter(c -> c.resourceCondition() == null)
+          .isPresent(),
         evalResult -> "TRUE".equalsIgnoreCase(evalResult))
       .stream()
       .map(conditionalBinding -> ProjectRole.fromActivationRoleBinding(
@@ -272,7 +286,10 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     //
     var expiredActivations = findRoleBindings(
         analysisResult,
-      condition -> ProjectRole.ActivationCondition.parse(condition).isPresent(),
+        condition -> ProjectRole.ActivationCondition
+          .parse(condition)
+          .filter(c -> c.resourceCondition() == null)
+          .isPresent(),
         evalResult -> "FALSE".equalsIgnoreCase(evalResult))
       .stream()
       .map(conditionalBinding -> ProjectRole.fromActivationRoleBinding(

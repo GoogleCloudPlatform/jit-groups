@@ -39,7 +39,14 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
     let first = true;
     columns.forEach((value) => {
         const div = $("<div></div>");
-        div.text(value.text);
+
+        if (value.text && value.maxLength && value.text.length > value.maxLength) {
+            div.prop('title', value.text);
+            div.text(value.text.substring(0, value.maxLength) + '...');
+        }
+        else {
+            div.text(value.text);
+        }
         if (value.class) {
             div.attr("class", value.class);
         }

@@ -145,13 +145,14 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = allBindings.stream()
-        .map(binding -> ProjectRole.fromJitEligibleRoleBinding(projectId, binding))
+        .map(binding -> ProjectRole
+          .fromJitEligibleRoleBinding(projectId, binding)
+          .map(projectRole -> new Entitlement<>(
+            projectRole,
+            projectRole.role(),
+            ActivationType.JIT)))
         .filter(projectRole -> projectRole.isPresent())
         .map(Optional::get)
-        .map(projectRole -> new Entitlement<>(
-          projectRole,
-          projectRole.role(),
-          ActivationType.JIT))
         .collect(Collectors.toSet());
     }
     else {
@@ -166,13 +167,14 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     Set<Entitlement<ProjectRole>> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = allBindings.stream()
-        .map(binding -> ProjectRole.fromMpaEligibleRoleBinding(projectId, binding))
+        .map(binding -> ProjectRole
+          .fromMpaEligibleRoleBinding(projectId, binding)
+          .map(projectRole -> new Entitlement<>(
+            projectRole,
+            projectRole.role(),
+            ActivationType.MPA)))
         .filter(role -> role.isPresent())
         .map(Optional::get)
-        .map(projectRole -> new Entitlement<>(
-          projectRole,
-          projectRole.role(),
-          ActivationType.MPA))
         .collect(Collectors.toSet());
     }
     else {

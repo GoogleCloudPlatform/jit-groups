@@ -31,11 +31,13 @@ import com.google.solutions.jitaccess.core.catalog.Activation;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.EntitlementId;
+import com.google.solutions.jitaccess.core.util.Base64Escape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Identifies a project role binding as an entitlement.
@@ -45,18 +47,42 @@ public class ProjectRole extends EntitlementId {
 
   private final @NotNull ProjectId projectId;
   private final @NotNull String role;
+  private final @Nullable String resourceCondition;
 
-  public ProjectRole(@NotNull ProjectId projectId, @NotNull String role) {
+  public ProjectRole(
+    @NotNull ProjectId projectId,
+    @NotNull String role,
+    @Nullable String resourceCondition
+  ) {
     this.projectId = projectId;
     this.role = role;
+    this.resourceCondition = Strings.emptyToNull(resourceCondition);
   }
 
+  public ProjectRole(@NotNull ProjectId projectId, @NotNull String role) {
+    this(projectId, role, null);
+  }
+
+  /**
+   * @return Project that the role grants access to.
+   */
   public @NotNull ProjectId projectId() {
     return this.projectId;
   }
 
+  /**
+   * @return Predefined or custom role (roles/*)
+   */
   public @NotNull String role() {
     return this.role;
+  }
+
+  /**
+   * @return CEL condition that constrains the set of resources
+   * that this project role grants access to.
+   */
+  public @Nullable String resourceCondition() {
+    return this.resourceCondition;
   }
 
   //---------------------------------------------------------------------------
@@ -70,7 +96,25 @@ public class ProjectRole extends EntitlementId {
 
   @Override
   public @NotNull String id() {
-    return String.format("%s:%s", this.projectId, this.role);
+    if (this.resourceCondition != null) {
+      //
+      // Include resource condition in ID so that we can distinguish
+      // it from another entitlement for the same role that might
+      // have no (or a different) resource condition.
+      //
+      // NB. The base64 escaping is just to prevent encoding issues
+      // because the condition might contain newlines, braces, and
+      // other special characters.
+      //
+      return String.format(
+        "%s:%s:%s",
+        this.projectId,
+        this.role,
+        Base64Escape.escape(this.resourceCondition));
+    }
+    else {
+      return String.format("%s:%s", this.projectId, this.role);
+    }
   }
 
   //---------------------------------------------------------------------------
@@ -82,13 +126,23 @@ public class ProjectRole extends EntitlementId {
    */
   public static ProjectRole fromId(@NotNull String id) {
     var parts = id.split(":");
-    if (parts.length != 2 ||
+    if (parts.length < 2 ||
+      parts.length > 3 ||
       parts[0].isBlank() ||
       parts[1].isBlank()) {
       throw new IllegalArgumentException("Invalid ProjectRole ID");
     }
-
-    return new ProjectRole(new ProjectId(parts[0]), parts[1]);
+    else if (parts.length == 3) {
+      return new ProjectRole(
+        new ProjectId(parts[0]),
+        parts[1],
+        Base64Escape.unescape(parts[2]));
+    }
+    else {
+      return new ProjectRole(
+        new ProjectId(parts[0]),
+        parts[1]);
+    }
   }
 
   /**
@@ -105,7 +159,7 @@ public class ProjectRole extends EntitlementId {
   ) {
     return EligibilityCondition.parse(binding.getCondition())
       .filter(EligibilityCondition::isJitEligible)
-      .map(c -> new ProjectRole(projectId, binding.getRole()));
+      .map(c -> new ProjectRole(projectId, binding.getRole(), c.resourceCondition()));
   }
 
   /**
@@ -122,7 +176,7 @@ public class ProjectRole extends EntitlementId {
   ) {
     return EligibilityCondition.parse(binding.getCondition())
       .filter(EligibilityCondition::isMpaEligible)
-      .map(c -> new ProjectRole(projectId, binding.getRole()));
+      .map(c -> new ProjectRole(projectId, binding.getRole(), c.resourceCondition()));
   }
 
   /**
@@ -139,7 +193,7 @@ public class ProjectRole extends EntitlementId {
   ) {
     return ActivationCondition.parse(binding.getCondition())
       .map(c -> new ActivatedProjectRole(
-        new ProjectRole(projectId, binding.getRole()),
+        new ProjectRole(projectId, binding.getRole(), c.resourceCondition()),
         c.toActivation()));
   }
 
@@ -153,8 +207,17 @@ public class ProjectRole extends EntitlementId {
   //---------------------------------------------------------------------------
 
   static abstract class Condition extends IamCondition {
-    protected Condition(@NotNull String expression) {
+    private final @Nullable String resourceCondition;
+
+    protected Condition(
+      @NotNull String expression,
+      @Nullable String resourceCondition) {
       super(expression);
+      this.resourceCondition = resourceCondition;
+    }
+
+    public @Nullable String resourceCondition() {
+      return this.resourceCondition;
     }
 
     protected static boolean matches(
@@ -190,9 +253,10 @@ public class ProjectRole extends EntitlementId {
 
     private EligibilityCondition(
       @NotNull String expression,
-      ActivationType activationType
+      ActivationType activationType,
+      @Nullable String resourceCondition
     ) {
-      super(expression);
+      super(expression, resourceCondition);
       this.activationType = activationType;
     }
 
@@ -213,29 +277,49 @@ public class ProjectRole extends EntitlementId {
      *
      * @return condition or empty if the expression doesn't represent an eligibility condition
      */
-    static Optional<EligibilityCondition> parse(String expression) {
-      if (matches(expression, JIT_CONDITION_PATTERN)) {
-        return Optional.of(new EligibilityCondition(expression, ActivationType.JIT));
-      }
-      else if (matches(expression, MPA_CONDITION_PATTERN)) {
-        return Optional.of(new EligibilityCondition(expression, ActivationType.MPA));
-      }
-      else {
+    static Optional<EligibilityCondition> parse(@Nullable Expr bindingCondition) {
+      if (bindingCondition == null ||
+        Strings.isNullOrEmpty(bindingCondition.getExpression()) ||
+        bindingCondition.getExpression().isBlank()) {
         return Optional.empty();
       }
-    }
 
-    /**
-     * Try to parse condition
-     *
-     * @return condition or empty if the expression doesn't represent an eligibility condition
-     */
-    static Optional<EligibilityCondition> parse(@Nullable Expr condition) {
-      if (condition == null || condition.getExpression() == null) {
-        return Optional.empty();
+      //
+      // Break the condition into clauses and check if one the clauses
+      // marks this as an eligible role.
+      //
+      // Any remaining clauses make up the resource condition.
+      //
+      var clauses = new IamCondition(bindingCondition.getExpression()).splitAnd();
+      var jitEligible = clauses
+        .stream()
+        .anyMatch(c -> matches(c.toString(), JIT_CONDITION_PATTERN));
+      var mpaEligible = clauses
+        .stream()
+        .anyMatch(c -> matches(c.toString(), MPA_CONDITION_PATTERN));
+      var resourceConditionClauses = clauses
+        .stream()
+        .filter(c -> !matches(c.toString(), JIT_CONDITION_PATTERN))
+        .filter(c -> !matches(c.toString(), MPA_CONDITION_PATTERN))
+        .collect(Collectors.toList());
+      var resourceCondition = resourceConditionClauses.isEmpty()
+        ? null
+        : IamCondition.and(resourceConditionClauses).reformat().toString();
+
+      if (jitEligible) {
+        return Optional.of(new EligibilityCondition(
+          bindingCondition.getExpression(),
+          ActivationType.JIT,
+          resourceCondition));
+      }
+      else if (mpaEligible) {
+        return Optional.of(new EligibilityCondition(
+          bindingCondition.getExpression(),
+          ActivationType.MPA,
+          resourceCondition));
       }
       else {
-        return parse(condition.getExpression());
+        return Optional.empty();
       }
     }
   }
@@ -249,8 +333,11 @@ public class ProjectRole extends EntitlementId {
 
     private final @NotNull TimeSpan validity;
 
-    private ActivationCondition(@NotNull String expression, @NotNull TimeSpan validity) {
-      super(expression);
+    private ActivationCondition(
+      @NotNull String expression,
+      @NotNull TimeSpan validity,
+      @Nullable String resourceCondition) {
+      super(expression, resourceCondition);
       this.validity = validity;
     }
 
@@ -263,18 +350,39 @@ public class ProjectRole extends EntitlementId {
      *
      * @return condition or empty if the expression doesn't represent an activation condition
      */
-    static Optional<ActivationCondition> parse(@Nullable Expr condition) {
-      if (condition != null &&
-        TITLE.equals(condition.getTitle()) &&
-        TemporaryIamCondition.isTemporaryAccessCondition(condition.getExpression())) {
-
-        return Optional.of(new ActivationCondition(
-          condition.getExpression(),
-          new TemporaryIamCondition(condition.getExpression()).getValidity()));
-      }
-      else {
+    static Optional<ActivationCondition> parse(@Nullable Expr bindingCondition) {
+      if (bindingCondition == null ||
+        Strings.isNullOrEmpty(bindingCondition.getExpression()) ||
+        bindingCondition.getExpression().isBlank() ||
+        !TITLE.equals(bindingCondition.getTitle())) {
         return Optional.empty();
       }
+
+      //
+      // Break the condition into clauses. One of them should be a temporary condition,
+      // any remaining clauses make up the resource condition.
+      //
+      var clauses = new IamCondition(bindingCondition.getExpression()).splitAnd();
+      var temporaryCondition = clauses
+        .stream()
+        .filter(c -> TemporaryIamCondition.isTemporaryAccessCondition(c.toString()))
+        .findFirst();
+      if (!temporaryCondition.isPresent()) {
+        return Optional.empty();
+      }
+
+      var resourceConditionClauses = clauses
+        .stream()
+        .filter(c -> !TemporaryIamCondition.isTemporaryAccessCondition(c.toString()))
+        .collect(Collectors.toList());
+      var resourceCondition = resourceConditionClauses.isEmpty()
+        ? null
+        : IamCondition.and(resourceConditionClauses).reformat().toString();
+
+      return Optional.of(new ActivationCondition(
+        bindingCondition.getExpression(),
+        new TemporaryIamCondition(temporaryCondition.get().toString()).getValidity(),
+        resourceCondition));
     }
   }
 }

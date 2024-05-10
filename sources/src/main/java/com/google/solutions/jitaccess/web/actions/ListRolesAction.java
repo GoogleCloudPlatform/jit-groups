@@ -75,6 +75,7 @@ public class ListRolesAction extends AbstractAction {
               return new ResponseEntity.Item(
                 ent.id().id(),
                 ent.name(),
+                ent.id().resourceCondition(),
                 ent.activationType(),
                 ActivationStatus.ACTIVE,
                 currentActivation.validity().end().getEpochSecond());
@@ -83,6 +84,7 @@ public class ListRolesAction extends AbstractAction {
               return new ResponseEntity.Item(
                 ent.id().id(),
                 ent.name(),
+                ent.id().resourceCondition(),
                 ent.activationType(),
                 ActivationStatus.INACTIVE,
                 null);
@@ -121,6 +123,7 @@ public class ListRolesAction extends AbstractAction {
     public static class Item {
       public final @NotNull String id;
       public final @NotNull String name;
+      public final @Nullable String resourceCondition;
       public final @NotNull ActivationType activationType;
       public final @NotNull ActivationStatus status;
       public final Long /* optional */ validUntil;
@@ -128,12 +131,14 @@ public class ListRolesAction extends AbstractAction {
       public Item(
         @NotNull String id,
         @NotNull String name,
+        @Nullable String resourceCondition,
         @NotNull ActivationType activationType,
         @NotNull ActivationStatus status,
         Long validUntil) {
 
         this.id = id;
         this.name = name;
+        this.resourceCondition = resourceCondition;
         this.activationType = activationType;
         this.status = status;
         this.validUntil = validUntil;

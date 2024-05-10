@@ -40,6 +40,13 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
    */
   public abstract @NotNull String id();
 
+  /**
+   * @return Optional condition that constrains this entitlement.
+   */
+  public @Nullable String resourceCondition() {
+    return null;
+  }
+
   @Override
   public String toString() {
     return String.format("%s:%s", this.catalog(), this.id());

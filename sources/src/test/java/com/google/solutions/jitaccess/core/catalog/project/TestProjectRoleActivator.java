@@ -49,6 +49,8 @@ public class TestProjectRoleActivator {
   private static final String SAMPLE_ROLE_1 = "roles/resourcemanager.role1";
   private static final String SAMPLE_ROLE_2 = "roles/resourcemanager.role2";
 
+  private static final Instant JAN1_2040 = Instant.ofEpochSecond(2208988800L);
+
   // -------------------------------------------------------------------------
   // provisionAccess - JIT.
   // -------------------------------------------------------------------------
@@ -69,7 +71,7 @@ public class TestProjectRoleActivator {
         new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1),
         new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_2)),
       "justification",
-      Instant.now(),
+      JAN1_2040,
       Duration.ofMinutes(5));
 
     var activation = activator.activate(requestingUserContext, request);
@@ -82,7 +84,43 @@ public class TestProjectRoleActivator {
       .addProjectIamBinding(
         eq(SAMPLE_PROJECT),
         argThat(b ->
-            TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+          b.getCondition().getExpression().equals(
+            "(request.time >= timestamp(\"2040-01-01T00:00:00Z\") && request.time < timestamp(\"2040-01-01T00:05:00Z\"))") &&
+          b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
+        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
+        eq("Self-approved, justification: justification"));
+  }
+
+  @Test
+  public void provisionAccessForJitRequestWithResourceCondition() throws Exception {
+    var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
+    var activator = new ProjectRoleActivator(
+      Mockito.mock(Catalog.class),
+      resourceManagerClient,
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(2));
+
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var request = activator.createJitRequest(
+      requestingUserContext,
+      Set.of(
+        new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1, "resource.name=='x' || resource.name=='y'")),
+      "justification",
+      JAN1_2040,
+      Duration.ofMinutes(5));
+
+    var activation = activator.activate(requestingUserContext, request);
+
+    assertNotNull(activation);
+    assertEquals(request.startTime(), activation.validity().start());
+    assertEquals(request.endTime(), activation.validity().end());
+
+    verify(resourceManagerClient, times(1))
+      .addProjectIamBinding(
+        eq(SAMPLE_PROJECT),
+        argThat(b ->
+          b.getCondition().getExpression().equals(
+            "((request.time >= timestamp(\"2040-01-01T00:00:00Z\") && request.time < timestamp(\"2040-01-01T00:05:00Z\"))) && (resource.name=='x' || resource.name=='y')") &&
             b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Self-approved, justification: justification"));
@@ -107,7 +145,7 @@ public class TestProjectRoleActivator {
       Set.of(new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1)),
       Set.of(SAMPLE_APPROVING_USER),
       "justification",
-      Instant.now(),
+      JAN1_2040,
       Duration.ofMinutes(5));
 
     var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
@@ -123,7 +161,46 @@ public class TestProjectRoleActivator {
       .addProjectIamBinding(
         eq(SAMPLE_PROJECT),
         argThat(b ->
-          TemporaryIamCondition.isTemporaryAccessCondition(b.getCondition().getExpression()) &&
+          b.getCondition().getExpression().equals(
+            "(request.time >= timestamp(\"2040-01-01T00:00:00Z\") && request.time < timestamp(\"2040-01-01T00:05:00Z\"))") &&
+          b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
+        eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
+        eq("Approved by approver@example.com, justification: justification"));
+  }
+
+  @Test
+  public void provisionAccessForMpaRequestWithResourceCondition() throws Exception {
+    var resourceManagerClient = Mockito.mock(ResourceManagerClient.class);
+    var activator = new ProjectRoleActivator(
+      Mockito.mock(Catalog.class),
+      resourceManagerClient,
+      Mockito.mock(JustificationPolicy.class),
+      new ProjectRoleActivator.Options(1));
+
+    var requestingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var request = activator.createMpaRequest(
+      requestingUserContext,
+      Set.of(new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE_1, "resource.type=='foo'")),
+      Set.of(SAMPLE_APPROVING_USER),
+      "justification",
+      JAN1_2040,
+      Duration.ofMinutes(5));
+
+    var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
+    var activation = activator.approve(
+      approvingUserContext,
+      request);
+
+    assertNotNull(activation);
+    assertEquals(request.startTime(), activation.validity().start());
+    assertEquals(request.endTime(), activation.validity().end());
+
+    verify(resourceManagerClient, times(1))
+      .addProjectIamBinding(
+        eq(SAMPLE_PROJECT),
+        argThat(b ->
+          b.getCondition().getExpression().equals(
+            "((request.time >= timestamp(\"2040-01-01T00:00:00Z\") && request.time < timestamp(\"2040-01-01T00:05:00Z\"))) && (resource.type=='foo')") &&
             b.getCondition().getTitle().equals(ProjectRole.ActivationCondition.TITLE)),
         eq(EnumSet.of(ResourceManagerClient.IamBindingOptions.PURGE_EXISTING_TEMPORARY_BINDINGS)),
         eq("Approved by approver@example.com, justification: justification"));

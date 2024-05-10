@@ -26,8 +26,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestProjectRoleCondition {
 
@@ -50,16 +54,27 @@ public class TestProjectRoleCondition {
 
   @ParameterizedTest
   @ValueSource(strings = {
+    " 1<2",
+    "HAS({}.JitacceSSConstraint) || 1<2"
+  })
+  public void whenExpressionIsUnknown_ThenParseEligibilityConditionReturnsEmpty(String expression) {
+    var condition = new Expr().setExpression(expression);
+    assertFalse(ProjectRole.EligibilityCondition.parse(condition).isPresent());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
     " \r\n\t has( {  }.jitAccessConstraint \t ) \t \r\n\r",
     "HAS({}.JitacceSSConstraint)"
   })
   public void whenExpressionIsJitConstraint_ThenParseEligibilityConditionReturns(String expression) {
     var condition = ProjectRole.EligibilityCondition
-      .parse((new Expr().setExpression(expression)))
+      .parse(new Expr().setExpression(expression))
       .get();
 
     assertTrue(condition.isJitEligible());
     assertFalse(condition.isMpaEligible());
+    assertNull(condition.resourceCondition());
   }
 
   @ParameterizedTest
@@ -69,21 +84,29 @@ public class TestProjectRoleCondition {
   })
   public void whenExpressionIsMpaConstraint_ThenParseEligibilityConditionReturns(String expression) {
     var condition = ProjectRole.EligibilityCondition
-      .parse((new Expr().setExpression(expression)))
+      .parse(new Expr().setExpression(expression))
       .get();
 
     assertFalse(condition.isJitEligible());
     assertTrue(condition.isMpaEligible());
+    assertNull(condition.resourceCondition());
   }
 
   @ParameterizedTest
   @ValueSource(strings = {
-    " 1<2",
-    "HAS({}.JitacceSSConstraint) || 1<2"
+    "HAS({}.JitacceSSConstraint) && a>b     && b <    c",
+    "a>b && HAS({}.JitacceSSConstraint)&& b <    c",
+    "a>b&&b<c&&HAS({}.JitacceSSConstraint)  ",
+    "      \ra>\n b && HAS({}.JitacceSSConstraint)&& b \r\n<\t \t\n    c\t\n",
   })
-  public void whenExpressionIsUnknown_ThenParseEligibilityConditionReturnsEmpty(String expression) {
-    var condition = new Expr().setExpression(expression);
-    assertFalse(ProjectRole.EligibilityCondition.parse(condition).isPresent());
+  public void whenExpressionHasResourceCondition_ThenParseEligibilityConditionExtractsResourceCondition(String expression) {
+    var condition = ProjectRole.EligibilityCondition
+      .parse(new Expr().setExpression(expression))
+      .get();
+
+    assertTrue(condition.isJitEligible());
+    assertFalse(condition.isMpaEligible());
+    assertEquals("a > b && b < c", condition.resourceCondition());
   }
 
   // ---------------------------------------------------------------------
@@ -103,4 +126,63 @@ public class TestProjectRoleCondition {
       .isPresent());
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "",
+    "nonsense",
+    "JIT access"
+  })
+  public void whenTitleUnknown_ThenParseActivationConditionReturnsEmpty(String title) {
+    assertFalse(ProjectRole.ActivationCondition
+      .parse(new Expr()
+        .setTitle(title)
+        .setExpression(
+          "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+          + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))"))
+      .isPresent());
+  }
+
+  @Test
+  public void whenTitleMatchesButTemporaryConditionMissing_henParseActivationConditionReturnsEmpty() {
+    assertFalse(ProjectRole.ActivationCondition
+      .parse(new Expr()
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
+        .setExpression("a<b"))
+      .isPresent());
+  }
+
+  @Test
+  public void whenTitleMatches_ThenParseActivationConditionReturns() {
+    var condition = ProjectRole.ActivationCondition
+      .parse(new Expr()
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
+        .setExpression(
+          "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+            + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))"))
+      .get();
+
+    assertEquals(
+      Instant.from(OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)),
+      condition.toActivation().validity().start());
+    assertEquals(
+      Instant.from(OffsetDateTime.of(2020, 1, 1, 0, 5, 0, 0, ZoneOffset.UTC)),
+      condition.toActivation().validity().end());
+    assertNull(condition.resourceCondition());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && request.time < timestamp(\"2020-01-01T00:05:00Z\"))&&(a<b)&&(b<c)",
+    "  (a<\r\nb   )&&\t(request.time >= timestamp(\"2020-01-01T00:00:00Z\") && request.time < timestamp(\"2020-01-01T00:05:00Z\")) &&(b<c)",
+    "\na<b && b  <   c\r\n&& (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && request.time < timestamp(\"2020-01-01T00:05:00Z\"))\n\n",
+  })
+  public void whenExpressionHasResourceCondition_ThenParseActivationConditionExtractsResourceCondition(String expression) {
+    var condition = ProjectRole.ActivationCondition
+      .parse(new Expr()
+        .setTitle(ProjectRole.ActivationCondition.TITLE)
+        .setExpression(expression))
+      .get();
+
+    assertEquals("a < b && b < c", condition.resourceCondition());
+  }
 }

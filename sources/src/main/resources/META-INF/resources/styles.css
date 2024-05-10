@@ -14,7 +14,13 @@ h1, h2 {
     border-radius: 4px;
     padding: 4px;
     display: inline;
-}    
+}
+
+.condition {
+    font-family: Courier New, Courier, monospace;
+    font-size: 11px;
+    color: #9e9e9e;
+}
 
 .jit-title {
     color: #006CBE;

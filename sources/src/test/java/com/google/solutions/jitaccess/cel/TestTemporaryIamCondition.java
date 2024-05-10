@@ -129,7 +129,16 @@ public class TestTemporaryIamCondition {
   }
 
   @Test
-  public void whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryAccessConditionReturnsTrue() {
+  public void whenExpressionHasExcessParentheses_ThenIsTemporaryAccessConditionReturnsTrue() {
+    var clause =
+      "  (((request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
+        + "request.time < timestamp(\"2020-01-01T00:05:00Z\"))))  ";
+
+    assertTrue(TemporaryIamCondition.isTemporaryAccessCondition(clause));
+  }
+
+  @Test
+  public void whenExpressionContainsMoreThanTemporaryCondition_ThenIsTemporaryAccessConditionReturnsFalse() {
     var clause =
       "  (request.time >= timestamp(\"2020-01-01T00:00:00Z\") && "
         + "request.time < timestamp(\"2020-01-01T00:05:00Z\")) && foo='foo' ";

@@ -45,10 +45,27 @@ public class TestProjectRole {
 
   @Test
   public void toStringReturnsResourceAndRole() {
-    var role = new ProjectRole(SAMPLE_PROJECT, "role/sample");
-    assertEquals("iam:project-1:role/sample", role.toString());
+    assertEquals(
+      "iam:project-1:role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample").toString());
+    assertEquals(
+      "iam:project-1:role/sample:cmVzb3VyY2UubmFtZT09J2Zvbyc=",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").toString());
   }
 
+  // -------------------------------------------------------------------------
+  // id.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void idContainsResourceAndRole() {
+    assertEquals(
+      "project-1:role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample").id());
+    assertEquals(
+      "project-1:role/sample:cmVzb3VyY2UubmFtZT09J2Zvbyc=",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").id());
+  }
 
   // -------------------------------------------------------------------------
   // equals.
@@ -96,6 +113,16 @@ public class TestProjectRole {
   }
 
   @Test
+  public void whenResourceConditionsDiffer_ThenEqualsReturnsFalse() {
+    var role1 = new ProjectRole(new ProjectId("project-1"), "roles/test");
+    var role2 = new ProjectRole(new ProjectId("project-2"), "roles/test", "true || false");
+
+    assertFalse(role1.equals(role2));
+    assertFalse(role1.equals((Object) role2));
+    assertNotEquals(role1.hashCode(), role2.hashCode());
+  }
+
+  @Test
   public void equalsNullIsFalse() {
     var ref1 = new ProjectRole(SAMPLE_PROJECT, "roles/test");
 
@@ -115,9 +142,12 @@ public class TestProjectRole {
   }
 
   @Test
-  public void whenIdValid_ThenFromIdReturns() {
-    var role = new ProjectRole(SAMPLE_PROJECT, "roles/test");
-    assertEquals(role, ProjectRole.fromId(role.id()));
+  public void whenIdValid_ThenFromIdSucceeds() {
+    var roleWithoutCondition = new ProjectRole(SAMPLE_PROJECT, "roles/test");
+    var roleWithCondition = new ProjectRole(SAMPLE_PROJECT, "roles/test", "resource.name=='foo'");
+
+    assertEquals(roleWithoutCondition, ProjectRole.fromId(roleWithoutCondition.id()));
+    assertEquals(roleWithCondition, ProjectRole.fromId(roleWithCondition.id()));
   }
 
   // -------------------------------------------------------------------------
