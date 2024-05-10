@@ -1,24 +1,25 @@
 <!doctype html>
 
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-        <meta name="referrer" content="no-referrer" />
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="referrer" content="no-referrer" />
 
-        <title>Just-in-Time Access</title>
+    <title>Just-in-Time Access</title>
 
-        <!-- All external resources are hosted by Google -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!-- All external resources are hosted by Google -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:regular,bold,italic,thin,light,bolditalic,black,medium&amp;lang=en">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" />
 
-        <link href="mdc/material-components-web.min.css" rel="stylesheet">
-        <script src="mdc/material-components-web.min.js"></script>
-        <link rel="stylesheet" href="styles.css">
-    </head>
+    <link href="mdc/material-components-web.min.css" rel="stylesheet">
+    <script src="mdc/material-components-web.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
     <body>
         <main class="mdc-top-app-bar--fixed-adjust">
           <!-- ListEntitlementsView -->
@@ -357,8 +358,11 @@
                             this._table.addRow(
                                 item.id,
                                 [
-                                    { text: item.name },
-                                    { text: item.resourceCondition ?? "-", class: "condition", maxLength: 30 },
+                                    { text: item.name, icon: 'badge' },
+                                    { text: item.resourceCondition ?? "-", 
+                                      icon: item.resourceCondition ? "filter_alt" : null, 
+                                      class: "condition", 
+                                      maxLength: 30 },
                                     { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                                     { text: (this.statusCaptions[item.status] ?? item.status) + 
                                             (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
@@ -514,7 +518,7 @@
                             this._table.addRow(
                                 item.email,
                                 [
-                                    { text: item.email }
+                                    { text: item.email, icon: 'person' }
                                 ],
                                 true);
                         });
@@ -632,7 +636,7 @@
                             item.id,
                             [
                                 { text: item.projectId },
-                                { text: item.name },
+                                { text: item.name, icon: 'badge' },
                                 { text: item.resourceCondition ?? "-", class: "condition", maxLength: 30 },
                                 { text: this.statusCaptions[item.status] ?? item.status, 
                                   class: item.status === "ACTIVE" ? "activated" : null }

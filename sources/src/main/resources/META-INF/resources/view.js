@@ -60,6 +60,12 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
             td = $(`<td class="mdc-data-table__cell"></td>`);
         }
 
+        const icon = $("<span class='material-symbols-outlined'></span>");
+        if (value.icon) {
+            icon.text(value.icon);
+            div.prepend(icon);
+        }
+        
         td.append(div);
         tr.append(td);
     });
