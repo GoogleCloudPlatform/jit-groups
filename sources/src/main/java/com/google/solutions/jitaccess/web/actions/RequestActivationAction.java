@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.util.Exceptions;
@@ -277,7 +278,7 @@ public class RequestActivationAction extends AbstractActivationAction {
       this.properties.put("REVIEWERS", request.reviewers());
       this.properties.put("PROJECT_ID", projectId);
       this.properties.put("ROLE", role.role());
-      this.properties.put("RESOURCE_CONDITION", role.resourceCondition());
+      this.properties.put("RESOURCE_CONDITION", Strings.nullToEmpty(role.resourceCondition()));
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());
       this.properties.put("REQUEST_EXPIRY_TIME", requestExpiryTime);
