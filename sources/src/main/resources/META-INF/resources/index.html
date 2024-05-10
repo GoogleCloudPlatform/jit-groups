@@ -358,7 +358,7 @@
                                 item.id,
                                 [
                                     { text: item.name },
-                                    { text: item.resourceCondition, class: "condition", maxLength: 30 },
+                                    { text: item.resourceCondition ?? "-", class: "condition", maxLength: 30 },
                                     { text: this.activationTypeCaptions[item.activationType] ?? item.activationType },
                                     { text: (this.statusCaptions[item.status] ?? item.status) + 
                                             (item.validUntil == null ? "" : ` (${Math.floor((item.validUntil * 1000 - new Date()) / (60*1000))} minutes left)`), 
@@ -633,7 +633,7 @@
                             [
                                 { text: item.projectId },
                                 { text: item.name },
-                                { text: item.resourceCondition, class: "condition", maxLength: 30 },
+                                { text: item.resourceCondition ?? "-", class: "condition", maxLength: 30 },
                                 { text: this.statusCaptions[item.status] ?? item.status, 
                                   class: item.status === "ACTIVE" ? "activated" : null }
                             ],
