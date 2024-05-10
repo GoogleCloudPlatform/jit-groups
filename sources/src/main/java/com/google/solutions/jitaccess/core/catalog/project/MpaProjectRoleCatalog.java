@@ -278,7 +278,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     @NotNull int minNumberOfReviewersPerActivationRequest,
     @NotNull int maxNumberOfReviewersPerActivationRequest
   ) {
-    static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 5;
+    static final int MIN_ACTIVATION_TIMEOUT_MINUTES = 1;
 
     public Options {
       Preconditions.checkNotNull(maxActivationDuration, "maxActivationDuration");
@@ -286,7 +286,7 @@ public class MpaProjectRoleCatalog implements Catalog<
       Preconditions.checkArgument(!maxActivationDuration.isNegative());
       Preconditions.checkArgument(
         maxActivationDuration.toMinutes() >= MIN_ACTIVATION_TIMEOUT_MINUTES,
-        "Activation timeout must be at least 5 minutes");
+        "Activation timeout must be at least 1 minutes");
       Preconditions.checkArgument(
         minNumberOfReviewersPerActivationRequest > 0,
         "The minimum number of reviewers cannot be 0");
