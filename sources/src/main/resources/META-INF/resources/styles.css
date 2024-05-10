@@ -151,8 +151,12 @@ ul.ui-menu  {
     display:none;
 }
 
-/* ==== MDC Overrides === */
+.material-symbols-outlined {
+    vertical-align: middle;
+    padding-right: 10px;
+}
 
+/* ==== MDC Overrides === */
 .mdc-data-table {
     width: 100%;
 }
