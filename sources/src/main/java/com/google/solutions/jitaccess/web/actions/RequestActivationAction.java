@@ -111,10 +111,10 @@ public class RequestActivationAction extends AbstractActivationAction {
 
     var userContext = this.catalog.createContext(iapPrincipal.email());
     var projectId = new ProjectId(projectIdString);
-    var role = ProjectRole.fromId(request.entitlementId);
+    var entitlement = ProjectRole.fromId(request.entitlementId);
 
     Preconditions.checkArgument(
-      role.projectId().equals(projectId),
+      entitlement.projectId().equals(projectId),
       "The project ID does not match the current project");
 
     //
@@ -126,7 +126,7 @@ public class RequestActivationAction extends AbstractActivationAction {
     try {
       activationRequest = this.activator.createMpaRequest(
         userContext,
-        Set.of(role),
+        Set.of(entitlement),
         request.peers.stream().map(email -> new UserId(email)).collect(Collectors.toSet()),
         request.justification,
         Instant.now().truncatedTo(ChronoUnit.SECONDS),
@@ -137,10 +137,9 @@ public class RequestActivationAction extends AbstractActivationAction {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "Received invalid activation request from user '%s' for role '%s' on '%s': %s",
+            "Received invalid activation request from user '%s' for '%s': %s",
             iapPrincipal.email(),
-            role,
-            projectId.getFullResourceName(),
+            entitlement,
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, e))
@@ -200,8 +199,8 @@ public class RequestActivationAction extends AbstractActivationAction {
           String.format(
             "User %s requested role '%s' on '%s' for %d minutes",
             iapPrincipal.email(),
-            role.role(),
-            role.projectId().getFullResourceName(),
+            entitlement.role(),
+            entitlement.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -219,12 +218,12 @@ public class RequestActivationAction extends AbstractActivationAction {
           String.format(
             "User %s failed to request role '%s' on '%s' for %d minutes: %s",
             iapPrincipal.email(),
-            role.role(),
-            role.projectId().getFullResourceName(),
+            entitlement.role(),
+            entitlement.projectId().getFullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
-        .addLabels(le -> addLabels(le, role))
+        .addLabels(le -> addLabels(le, entitlement))
         .addLabels(le -> addLabels(le, e))
         .addLabel("justification", request.justification)
         .write();
