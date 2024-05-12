@@ -197,10 +197,9 @@ public class RequestActivationAction extends AbstractActivationAction {
         .newInfoEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s requested role '%s' on '%s' for %d minutes",
+            "User %s requested '%s' for %d minutes",
             iapPrincipal.email(),
-            entitlement.role(),
-            entitlement.projectId().getFullResourceName(),
+            entitlement,
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, projectId))
         .addLabels(le -> addLabels(le, activationRequest))
@@ -216,10 +215,9 @@ public class RequestActivationAction extends AbstractActivationAction {
         .newErrorEntry(
           LogEvents.API_REQUEST_ROLE,
           String.format(
-            "User %s failed to request role '%s' on '%s' for %d minutes: %s",
+            "User %s failed to request '%s' for %d minutes: %s",
             iapPrincipal.email(),
-            entitlement.role(),
-            entitlement.projectId().getFullResourceName(),
+            entitlement,
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))
