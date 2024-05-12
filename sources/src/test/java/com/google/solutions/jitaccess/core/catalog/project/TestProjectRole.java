@@ -46,10 +46,10 @@ public class TestProjectRole {
   @Test
   public void toStringReturnsResourceAndRole() {
     assertEquals(
-      "iam:project-1:role/sample",
+      "[iam] role/sample on project-1",
       new ProjectRole(SAMPLE_PROJECT, "role/sample").toString());
     assertEquals(
-      "iam:project-1:role/sample:cmVzb3VyY2UubmFtZT09J2Zvbyc=",
+      "[iam] role/sample on project-1 (condition: resource.name=='foo')",
       new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").toString());
   }
 

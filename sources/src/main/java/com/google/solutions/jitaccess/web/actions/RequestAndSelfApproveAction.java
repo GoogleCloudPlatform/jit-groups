@@ -123,12 +123,11 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s activated roles %s on '%s' for themselves for %d minutes",
+            "User %s activated %s for themselves for %d minutes",
             iapPrincipal.email(),
             activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.role()))
+              .map(ent -> String.format("'%s'", ent))
               .collect(Collectors.joining(", ")),
-            projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes()))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -143,12 +142,11 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s failed to activate roles %s on '%s' for themselves for %d minutes: %s",
+            "User %s failed to activate %s for themselves for %d minutes: %s",
             iapPrincipal.email(),
             activationRequest.entitlements().stream()
-              .map(ent -> String.format("'%s'", ent.role()))
+              .map(ent -> String.format("'%s'", ent))
               .collect(Collectors.joining(", ")),
-            projectId.getFullResourceName(),
             requestedRoleBindingDuration.toMinutes(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, projectId))

@@ -49,7 +49,7 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
 
   @Override
   public String toString() {
-    return String.format("%s:%s", this.catalog(), this.id());
+    return String.format("[%s] %s", this.catalog(), this.id());
   }
 
   @Override

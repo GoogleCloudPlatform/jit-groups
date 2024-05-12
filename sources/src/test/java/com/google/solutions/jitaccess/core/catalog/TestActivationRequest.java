@@ -84,7 +84,7 @@ public class TestActivationRequest {
       Duration.ofMinutes(5));
 
     assertEquals(
-      "[sample-1] entitlements=sample:1, startTime=1970-01-01T00:00:00Z, " +
+      "[sample-1] entitlements=1, startTime=1970-01-01T00:00:00Z, " +
         "duration=PT5M, justification=some justification",
       request.toString());
   }

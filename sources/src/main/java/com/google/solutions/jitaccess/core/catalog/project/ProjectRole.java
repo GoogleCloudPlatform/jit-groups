@@ -117,6 +117,25 @@ public class ProjectRole extends EntitlementId {
     }
   }
 
+  @Override
+  public String toString() {
+    if (this.resourceCondition != null) {
+      return String.format(
+        "[%s] %s on %s (condition: %s)",
+        this.catalog(),
+        this.role,
+        this.projectId,
+        this.resourceCondition);
+    }
+    else {
+      return String.format(
+        "[%s] %s on %s",
+        this.catalog(),
+        this.role,
+        this.projectId);
+    }
+  }
+
   //---------------------------------------------------------------------------
   // Factory methods.
   //---------------------------------------------------------------------------

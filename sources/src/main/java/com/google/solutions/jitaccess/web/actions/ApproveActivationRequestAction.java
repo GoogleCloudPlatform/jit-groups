@@ -93,7 +93,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
     }
 
     assert activationRequest.entitlements().size() == 1;
-    var roleBinding = activationRequest
+    var entitlement = activationRequest
       .entitlements()
       .stream()
       .findFirst()
@@ -109,10 +109,10 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       //
       for (var service : this.notificationServices) {
         service.sendNotification(new ActivationApprovedNotification(
-          roleBinding.projectId(),
+          entitlement.projectId(),
           activationRequest,
           iapPrincipal.email(),
-          createActivationRequestUrl(uriInfo, roleBinding.projectId(), activationToken)));
+          createActivationRequestUrl(uriInfo, entitlement.projectId(), activationToken)));
       }
 
       //
@@ -122,10 +122,9 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
         .newInfoEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s approved role '%s' on '%s' for %s",
+            "User %s approved '%s' for %s",
             iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.projectId().getFullResourceName(),
+            entitlement,
             activationRequest.requestingUser()))
         .addLabels(le -> addLabels(le, activationRequest))
         .write();
@@ -140,10 +139,9 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
         .newErrorEntry(
           LogEvents.API_ACTIVATE_ROLE,
           String.format(
-            "User %s failed to activate role '%s' on '%s' for %s: %s",
+            "User %s failed to activate '%s' for %s: %s",
             iapPrincipal.email(),
-            roleBinding.role(),
-            roleBinding.projectId().getFullResourceName(),
+            entitlement,
             activationRequest.requestingUser(),
             Exceptions.getFullMessage(e)))
         .addLabels(le -> addLabels(le, activationRequest))
