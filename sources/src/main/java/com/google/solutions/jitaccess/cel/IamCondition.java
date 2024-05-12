@@ -35,10 +35,7 @@ import dev.cel.runtime.CelRuntime;
 import dev.cel.runtime.CelRuntimeFactory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -127,19 +124,26 @@ public class IamCondition implements CelExpression<Boolean> {
     var clauses = new LinkedList<IamCondition>();
     var currentClause = new StringBuilder();
 
+    //
+    // Remove line comments.
+    //
+    var cleanedExpression = Arrays.stream(this.expression.split("\n"))
+      .filter(line -> !line.trim().startsWith("//"))
+      .collect(Collectors.joining("\n"));
+
     var bracesDepth = 0;
     var singleQuotes = 0;
     var doubleQuotes = 0;
-    for (int i = 0; i < this.expression.length(); i++)
+    for (int i = 0; i < cleanedExpression.length(); i++)
     {
-      var c = this.expression.charAt(i);
+      var c = cleanedExpression.charAt(i);
       switch (c) {
         case '&':
           if (bracesDepth == 0 && // not inside a nested clause
             (singleQuotes % 2) == 0 && // quotes are balanced
             (doubleQuotes % 2) == 0 && // quotes are balanced
-            i + 1 < this.expression.length() &&
-            this.expression.charAt(i + 1) == '&') {
+            i + 1 < cleanedExpression.length() &&
+            cleanedExpression.charAt(i + 1) == '&') {
 
             //
             // We've encountered a top-level "&&".

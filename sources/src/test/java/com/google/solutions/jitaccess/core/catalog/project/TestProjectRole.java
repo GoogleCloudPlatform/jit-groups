@@ -187,6 +187,24 @@ public class TestProjectRole {
     assertEquals("roles/test", projectRole.get().role());
   }
 
+  @Test
+  public void whenConditionContainsResourceCondition_ThenFromJitEligibleRoleBindingReturnsRole() {
+    var projectRole = ProjectRole.fromJitEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(
+          "// Require approval\n" +
+            "has({}.jitAccessConstraint) &&\n" +
+            "\n" +
+            "// Disks only\n" +
+            "resource.type == \"compute.googleapis.com/Disk\"\n")));
+    assertTrue(projectRole.isPresent());
+    assertEquals(SAMPLE_PROJECT, projectRole.get().projectId());
+    assertEquals("roles/test", projectRole.get().role());
+    assertEquals("resource.type == \"compute.googleapis.com/Disk\"", projectRole.get().resourceCondition());
+  }
+
   // -------------------------------------------------------------------------
   // fromMpaEligibleRoleBinding.
   // -------------------------------------------------------------------------
@@ -224,6 +242,24 @@ public class TestProjectRole {
     assertEquals("roles/test", projectRole.get().role());
   }
 
+  @Test
+  public void whenConditionContainsResourceCondition_ThenFromMpaEligibleRoleBindingReturnsRole() {
+    var projectRole = ProjectRole.fromMpaEligibleRoleBinding(
+      SAMPLE_PROJECT,
+      new Binding()
+        .setRole("roles/test")
+        .setCondition(new Expr().setExpression(
+            "// Require approval\n" +
+            "has({}.multiPartyApprovalConstraint) &&\n" +
+            "\n" +
+            "// Disks only\n" +
+            "resource.type == \"compute.googleapis.com/Disk\"\n")));
+    assertTrue(projectRole.isPresent());
+    assertEquals(SAMPLE_PROJECT, projectRole.get().projectId());
+    assertEquals("roles/test", projectRole.get().role());
+    assertEquals("resource.type == \"compute.googleapis.com/Disk\"", projectRole.get().resourceCondition());
+  }
+
   // -------------------------------------------------------------------------
   // fromActivationRoleBinding.
   // -------------------------------------------------------------------------
@@ -252,7 +288,7 @@ public class TestProjectRole {
   }
 
   @Test
-  public void whenConditionIsActivationConstraint_henFromActivationRoleBindingReturnsRole() {
+  public void whenConditionIsActivationConstraint_ThenFromActivationRoleBindingReturnsRole() {
     var tempCondition = new TemporaryIamCondition(Instant.now(), Duration.ofMinutes(5));
     var activatedRole = ProjectRole.fromActivationRoleBinding(
       SAMPLE_PROJECT,

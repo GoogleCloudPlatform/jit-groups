@@ -131,7 +131,7 @@ public class TestIamCondition {
 
   @ParameterizedTest
   @ValueSource(strings = {"(a && b && (c || d))"})
-  public void whenExpressionHasSingleNesedClause_ThenSplitAndReturnsClause(String expression) {
+  public void whenExpressionHasSingleNestedClause_ThenSplitAndReturnsClause(String expression) {
     var clauses = new IamCondition(expression).splitAnd();
 
     assertEquals(1, clauses.size());
@@ -155,6 +155,24 @@ public class TestIamCondition {
     assertEquals("a || b ", clauses.get(0).expression);
     assertEquals(" c", clauses.get(1).expression);
     assertEquals("(d&&e) ", clauses.get(2).expression);
+  }
+
+  @Test
+  public void whenExpressionHasComments_ThenSplitAndReturnsClauses() {
+    var clauses = new IamCondition("// comment\r\n" +
+      "a || b\n" +
+      "   //\n" +
+      "   // another comment\r\n" +
+      "   //\n" +
+      " && \n" +
+      "// ignore this-> foo() &&bar()\n" +
+      "c&&(d&&e) \n" +
+      "//").splitAnd();
+
+    assertEquals(3, clauses.size());
+    assertEquals("a || b", clauses.get(0).reformat().toString());
+    assertEquals("c", clauses.get(1).reformat().toString());
+    assertEquals("d && e", clauses.get(2).reformat().toString());
   }
 
   //-------------------------------------------------------------------------
