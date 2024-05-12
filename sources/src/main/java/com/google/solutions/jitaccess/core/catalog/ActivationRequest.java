@@ -130,7 +130,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
     return String.format(
       "[%s] entitlements=%s, startTime=%s, duration=%s, justification=%s",
       this.id,
-      this.entitlements.stream().map(e -> e.toString()).collect(Collectors.joining(",")),
+      this.entitlements.stream().map(e -> e.id()).collect(Collectors.joining(",")),
       this.startTime,
       this.duration,
       this.justification);
