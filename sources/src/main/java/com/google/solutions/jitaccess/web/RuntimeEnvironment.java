@@ -422,7 +422,7 @@ public class RuntimeEnvironment {
         return new AssetInventoryRepository(
           executor,
           groupsClient.get(),
-          (AssetInventoryClient)policyAnalyzerClient,
+          policyAnalyzerClient,
           new AssetInventoryRepository.Options(this.configuration.scope.getValue()));
 
       case POLICYANALYZER:
