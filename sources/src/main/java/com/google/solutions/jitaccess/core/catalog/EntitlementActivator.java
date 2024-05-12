@@ -106,6 +106,11 @@ public abstract class EntitlementActivator<
       startTime.isAfter(Instant.now().minus(Duration.ofMinutes(1))),
       "Start time must not be in the past");
 
+    //
+    // Check that the justification is ok.
+    //
+    policy.checkJustification(requestingUserContext.user(), justification);
+
     var request = new MpaRequest<>(
       ActivationId.newId(ActivationType.MPA),
       requestingUserContext.user(),
@@ -134,8 +139,6 @@ public abstract class EntitlementActivator<
     @NotNull JitActivationRequest<TEntitlementId> request
   ) throws AccessException, AlreadyExistsException, IOException
   {
-    Preconditions.checkNotNull(policy, "policy");
-
     //
     // Check that the justification is ok.
     //
