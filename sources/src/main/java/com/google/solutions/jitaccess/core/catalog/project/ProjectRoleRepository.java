@@ -22,10 +22,10 @@
 package com.google.solutions.jitaccess.core.catalog.project;
 
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

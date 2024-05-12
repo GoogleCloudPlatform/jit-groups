@@ -21,10 +21,7 @@
 
 package com.google.solutions.jitaccess.core.clients;
 
-import jakarta.mail.internet.InternetAddress;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * A routable email address.

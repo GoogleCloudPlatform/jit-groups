@@ -25,7 +25,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
@@ -34,6 +33,7 @@ import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
+import com.google.solutions.jitaccess.core.util.Exceptions;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.RuntimeEnvironment;

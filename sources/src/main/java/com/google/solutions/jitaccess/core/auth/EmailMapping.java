@@ -54,7 +54,7 @@ public class EmailMapping {
       .addFunctionBindings(ExtractFunction.BINDING)
       .build();
 
-  private @Nullable String celExpression;
+  private final @Nullable String celExpression;
 
   /**
    * Create mapping that uses the user's ID as email address.

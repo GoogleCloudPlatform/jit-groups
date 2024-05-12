@@ -275,12 +275,10 @@ public class ResourceManagerClient {
         : List.of();
     }
     catch (GoogleJsonResponseException e) {
-      switch (e.getStatusCode()) {
-        case 401:
-          throw new NotAuthenticatedException("Not authenticated", e);
-        default:
-          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      if (e.getStatusCode() == 401) {
+        throw new NotAuthenticatedException("Not authenticated", e);
       }
+      throw (GoogleJsonResponseException) e.fillInStackTrace();
     }
   }
 
@@ -327,12 +325,10 @@ public class ResourceManagerClient {
         .collect(Collectors.toCollection(TreeSet::new));
     }
     catch (GoogleJsonResponseException e) {
-      switch (e.getStatusCode()) {
-        case 401:
-          throw new NotAuthenticatedException("Not authenticated", e);
-        default:
-          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      if (e.getStatusCode() == 401) {
+        throw new NotAuthenticatedException("Not authenticated", e);
       }
+      throw (GoogleJsonResponseException) e.fillInStackTrace();
     }
   }
 

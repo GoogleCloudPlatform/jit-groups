@@ -22,7 +22,9 @@
 package com.google.solutions.jitaccess.core.auth;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestEmailMapping {
   @Test

@@ -25,7 +25,6 @@ import com.google.solutions.jitaccess.core.auth.EmailMapping;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.clients.EmailAddress;
 import com.google.solutions.jitaccess.core.clients.SmtpClient;
-import jakarta.validation.constraints.Email;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

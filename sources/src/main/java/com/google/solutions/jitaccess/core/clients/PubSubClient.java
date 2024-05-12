@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import java.util.List;
 
 @Singleton
 public class PubSubClient {
@@ -77,7 +77,7 @@ public class PubSubClient {
 
     try {
       var request = new PublishRequest();
-      request.setMessages(Arrays.asList(message));
+      request.setMessages(List.of(message));
 
       var result = client
         .projects()

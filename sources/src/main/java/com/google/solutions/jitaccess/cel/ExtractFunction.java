@@ -61,7 +61,7 @@ public class ExtractFunction  {
     var prefix = template.substring(0, openingBraceIndex);
     var suffix = closingBraceIndex == template.length() - 1
       ? ""
-      : template.substring(closingBraceIndex + 1, template.length());
+      : template.substring(closingBraceIndex + 1);
 
     if (value.contains(prefix)) {
       var afterPrefix = value.substring(value.indexOf(prefix) + prefix.length());
