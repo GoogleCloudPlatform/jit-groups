@@ -42,7 +42,7 @@
                               </div>
                           </th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Role</th>
-                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Condition</th>
+                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Resource condition</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Requirements</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Status</th>
                       </tr>
@@ -148,7 +148,7 @@
                         <tr class="mdc-data-table__header-row">
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Project</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Role</th>
-                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Condition</th>
+                          <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Resource condition</th>
                           <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Status</th>
                         </tr>
                       </thead>
@@ -358,7 +358,7 @@
                             this._table.addRow(
                                 item.id,
                                 [
-                                    { text: item.name, icon: 'badge' },
+                                    { text: item.name, icon: 'assignment_ind' },
                                     { text: item.resourceCondition ?? "-", 
                                       icon: item.resourceCondition ? "filter_alt" : null, 
                                       class: "condition", 
@@ -636,8 +636,12 @@
                             item.id,
                             [
                                 { text: item.projectId },
-                                { text: item.name, icon: 'badge' },
-                                { text: item.resourceCondition ?? "-", class: "condition", maxLength: 30 },
+                                { text: item.name, icon: 'assignment_ind' },
+                                { text: item.resourceCondition ?? "-", 
+                                  icon: item.resourceCondition ? "filter_alt" : null,
+                                  class: "condition",
+                                  maxLength: 30
+                                },
                                 { text: this.statusCaptions[item.status] ?? item.status, 
                                   class: item.status === "ACTIVE" ? "activated" : null }
                             ],
