@@ -24,13 +24,14 @@ package com.google.solutions.jitaccess.web.actions;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.catalog.*;
+import com.google.solutions.jitaccess.core.catalog.Catalog;
+import com.google.solutions.jitaccess.core.catalog.CatalogUserContext;
+import com.google.solutions.jitaccess.core.catalog.EntitlementId;
+import com.google.solutions.jitaccess.core.catalog.ResourceId;
 import com.google.solutions.jitaccess.core.util.Exceptions;
-import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.web.LogAdapter;
 import com.google.solutions.jitaccess.web.LogEvents;
 import com.google.solutions.jitaccess.web.iap.IapPrincipal;
-import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

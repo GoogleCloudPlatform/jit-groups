@@ -21,8 +21,6 @@
 
 package com.google.solutions.jitaccess.core;
 
-import com.google.solutions.jitaccess.core.catalog.project.AssetInventoryRepository;
-import com.google.solutions.jitaccess.core.catalog.project.TestAssetInventoryRepository;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

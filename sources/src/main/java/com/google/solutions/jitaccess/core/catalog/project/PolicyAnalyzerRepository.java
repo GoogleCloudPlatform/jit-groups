@@ -26,10 +26,12 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysis;
 import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysisResult;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.core.AccessException;
-import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.auth.UserId;
+import com.google.solutions.jitaccess.core.catalog.ActivationType;
+import com.google.solutions.jitaccess.core.catalog.Entitlement;
+import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import org.jetbrains.annotations.NotNull;
 

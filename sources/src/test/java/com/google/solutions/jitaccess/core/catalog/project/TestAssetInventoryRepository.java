@@ -29,7 +29,7 @@ import com.google.api.services.directory.model.Group;
 import com.google.api.services.directory.model.Member;
 import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
-import com.google.solutions.jitaccess.core.*;
+import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.ActivationType;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;

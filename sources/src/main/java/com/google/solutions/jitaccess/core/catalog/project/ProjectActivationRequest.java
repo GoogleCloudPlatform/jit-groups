@@ -21,8 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog.project;
 
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
+import com.google.solutions.jitaccess.core.catalog.ProjectId;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.stream.Collectors;
