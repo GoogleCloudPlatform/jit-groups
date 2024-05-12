@@ -140,6 +140,31 @@ public class TestEntitlementActivator {
   // -------------------------------------------------------------------------
 
   @Test
+  public void whenJustificationInvalid_ThenCreateMpaRequestThrowsException() throws Exception {
+    var justificationPolicy = Mockito.mock(JustificationPolicy.class);
+
+    Mockito.doThrow(new InvalidJustificationException("mock"))
+      .when(justificationPolicy)
+      .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
+
+    var activator = new SampleActivator(
+      Mockito.mock(Catalog.class),
+      justificationPolicy);
+
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
+
+    assertThrows(
+      InvalidJustificationException.class,
+      () -> activator.createMpaRequest(
+        requestingUserContext,
+        Set.of(new SampleEntitlementId("cat", "1")),
+        Set.of(SAMPLE_APPROVING_USER),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+  }
+
+  @Test
   public void  whenUserNotAllowedToRequest_ThenCreateMpaRequestThrowsException() throws Exception {
     var catalog = Mockito.mock(Catalog.class);
     var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
@@ -266,10 +291,6 @@ public class TestEntitlementActivator {
   public void whenJustificationInvalid_ThenApproveMpaRequestThrowsException() throws Exception {
     var justificationPolicy = Mockito.mock(JustificationPolicy.class);
 
-    Mockito.doThrow(new InvalidJustificationException("mock"))
-      .when(justificationPolicy)
-      .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
-
     var activator = new SampleActivator(
       Mockito.mock(Catalog.class),
       justificationPolicy);
@@ -282,6 +303,10 @@ public class TestEntitlementActivator {
       "justification",
       Instant.now(),
       Duration.ofMinutes(5));
+
+    Mockito.doThrow(new InvalidJustificationException("mock"))
+      .when(justificationPolicy)
+      .checkJustification(eq(SAMPLE_REQUESTING_USER), anyString());
 
     var approvingUserContext = new UserContext(SAMPLE_APPROVING_USER);
     assertThrows(
