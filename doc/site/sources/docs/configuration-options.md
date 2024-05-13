@@ -93,8 +93,7 @@ The following table lists all available configuration options.
         <code>ELEVATION_DURATION</code>
     </td>
     <td>
-        <p>Duration (in minutes) for which a role remains activated.<br/><br/>
-        The timeout is relative to the time when the user requested access.</p> 
+        <p>Maximum duration (in minutes) for which users can request to activate a role.
     </td>
     <td>Required</td>
     <td><code>120</code></td>
