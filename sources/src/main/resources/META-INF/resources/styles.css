@@ -2,6 +2,8 @@ body {
     margin: 0;
     padding: 0;
     font-family: Roboto;
+    --mdc-typography-body2-font-size: 13px;
+    --mdc-text-button-label-text-size: 14px;
 }
 
 h1, h2 {
@@ -159,6 +161,11 @@ ul.ui-menu  {
 /* ==== MDC Overrides === */
 .mdc-data-table {
     width: 100%;
+}
+
+.mdc-data-table__row,
+.mdc-data-table__header-row {
+    height: 40px; /* Set row height */
 }
 
 .mdc-top-app-bar__row {
