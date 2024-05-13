@@ -358,7 +358,7 @@ $(document).ready(async () => {
         <footer class="jit-footer">
             <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
             &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/?utm_source=iapdesktop&utm_medium=help">JIT Access <span id="application-version"></span></a></div>
+            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/?utm_source=jitaccess&utm_medium=about">JIT Access <span id="application-version"></span></a></div>
         </footer>`);
         
     mdc.autoInit();
