@@ -74,6 +74,9 @@ As an administrator, you can grant a role (to a user or group) and make it _elig
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
 
+To limit access to a subset of resources, you can also include a [resource condition](https://googlecloudplatform.github.io/jit-access/resource-conditions/)
+in the IAM binding.
+
 
 <img src='doc/pix.gif' width='100%' height='1'>
 
