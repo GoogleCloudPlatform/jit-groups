@@ -93,7 +93,7 @@ The following table lists all available configuration options.
         <code>ELEVATION_DURATION</code>
     </td>
     <td>
-        <p>Maximum duration (in minutes) for which users can request to activate a role.
+        <p>Maximum duration (in minutes) for which users can request to activate a role.</p>
     </td>
     <td>Required</td>
     <td><code>120</code></td>
