@@ -78,6 +78,8 @@ nav:
       - 'Configure catalogs': configure-catalogs.md
       - 'Access VPC service perimeters': configure-vpcsc.md
       - 'Use health checks': health-checks.md
+    - 'Use JIT Access':
+      - 'Resource conditions': resource-conditions.md
     - 'Customize JIT Access':
       - 'Configuration options': configuration-options.md
     - 'Extend JIT Access':
