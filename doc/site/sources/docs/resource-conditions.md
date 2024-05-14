@@ -9,11 +9,11 @@ or to resources within a certain zone.
 
 To use a resource condition, you add an extra clause to the IAM condition of an eligible role binding:
 
-*   `has({}.jitAccessConstraint) && [resource-condition]`
+*   `has({}.jitAccessConstraint) && resource-condition`
 
-*   `has({}.multiPartyApprovalConstraint) && [resource-condition]`
+*   `has({}.multiPartyApprovalConstraint) && resource-condition`
 
-Where `[resource-condition]` is a valid [IAM condition :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-overview).
+Where `resource-condition` is a valid [IAM condition :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-overview).
 
 
 !!! note
@@ -21,6 +21,7 @@ Where `[resource-condition]` is a valid [IAM condition :octicons-link-external-1
     You can change the order of clauses. For example `has({}.jitAccessConstraint) && [resource condition]`
     and `[resource condition] && has({}.jitAccessConstraint)` are equivalent.
 
+To use resource conditions, you must the [`AssetInventory` catalog](configure-catalogs.md).
 
 ## Examples
 
