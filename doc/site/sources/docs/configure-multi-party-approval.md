@@ -74,8 +74,23 @@ your corporate email server, or any other SMTP server for this purpose.
 
     1.  Click **Add new user**.
     1.  Click **Done**.
+    
+    Assign a Google Workspace license to the new user account:
+    
+    1.  Refresh the list of users.
+    1.  Open the details for the user account that you just created.
+    1.  Click **Licenses**.
+    1.  Set the status for **Google Workspace** to **assigned**.
+    
+        !!! note
+        
+            You must assign a Google Workspace license. Without a Google Workspace license, 
+            the Gmail SMTP server rejects email delivery.
+            
+    1.  Click **Save**.
+    
 
-    Now create an [app password :octicons-link-external-16:](https://support.google.com/accounts/answer/185833?hl=en) for the new user account:
+    Create an [app password :octicons-link-external-16:](https://support.google.com/accounts/answer/185833?hl=en) for the new user account:
 
     1.  Open an incognito browser window and go to [Google Accounts :octicons-link-external-16:](https://accounts.google.com/).
     1.  Sign in with the new user account that you created.
