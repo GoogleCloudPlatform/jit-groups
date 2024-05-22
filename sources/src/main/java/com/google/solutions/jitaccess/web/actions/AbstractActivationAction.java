@@ -23,10 +23,7 @@ package com.google.solutions.jitaccess.web.actions;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.auth.UserId;
-import com.google.solutions.jitaccess.core.catalog.ActivationId;
-import com.google.solutions.jitaccess.core.catalog.ActivationRequest;
-import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRoleActivator;
 import com.google.solutions.jitaccess.core.notifications.NotificationService;
@@ -68,7 +65,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
 
   protected @NotNull URL createActivationRequestUrl(
     @NotNull UriInfo uriInfo,
-    @NotNull ProjectId projectId,
+    @Nullable ProjectId projectId,
     String activationToken
   ) throws MalformedURLException {
     Preconditions.checkNotNull(uriInfo);
@@ -87,13 +84,16 @@ public abstract class AbstractActivationAction extends AbstractAction {
     // the right scope. This isn't strictly necessary, but it
     // improves user experience.
     //
-    return this.runtimeEnvironment
+    var url = this.runtimeEnvironment
       .createAbsoluteUriBuilder(uriInfo)
       .path("/")
-      .queryParam("activation", TokenObfuscator.encode(activationToken))
-      .queryParam("projectId", projectId.id())
-      .build()
-      .toURL();
+      .queryParam("activation", TokenObfuscator.encode(activationToken));
+
+    if (projectId != null) {
+      url = url.queryParam("projectId", projectId.id());//TODO: test
+    }
+
+    return url.build().toURL();
   }
 
   public static class ResponseEntity {
@@ -106,7 +106,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
 
     public ResponseEntity(
       @NotNull UserId caller,
-      @NotNull ActivationRequest<ProjectRole> request,
+      @NotNull ActivationRequest request,
       ActivationStatus status
     ) {
       Preconditions.checkNotNull(request);
@@ -125,7 +125,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
           request.endTime()))
         .collect(Collectors.toList());
 
-      if (request instanceof MpaActivationRequest<ProjectRole> mpaRequest) {
+      if (request instanceof MpaActivationRequest mpaRequest) {
         this.reviewers = mpaRequest.reviewers();
         this.isReviewer = mpaRequest.reviewers().contains(caller);
       }
@@ -137,7 +137,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
 
     public static class Item {
       public final @NotNull String activationId;
-      public final @NotNull String projectId;
+      public final @Nullable String projectId;
       public final @NotNull String id;
       public final @NotNull String name;
       public final @Nullable String resourceCondition;
@@ -147,7 +147,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
 
       private Item(
         @NotNull ActivationId activationId,
-        @NotNull ProjectRole role,
+        @NotNull EntitlementId entitlement,
         @NotNull ActivationStatus status,
         @NotNull Instant startTime,
         @NotNull Instant endTime
@@ -155,10 +155,12 @@ public abstract class AbstractActivationAction extends AbstractAction {
         assert endTime.isAfter(startTime);
 
         this.activationId = activationId.toString();
-        this.projectId = role.projectId().id();
-        this.id = role.id();
-        this.name = role.role();
-        this.resourceCondition = role.resourceCondition();
+        this.projectId = (entitlement instanceof ScopedEntitlementId scoped)
+          ? scoped.projectId().id()
+          : null;
+        this.id = entitlement.id();
+        this.name = entitlement.displayName();
+        this.resourceCondition = entitlement.resourceCondition();
         this.status = status;
         this.startTime = startTime.getEpochSecond();
         this.endTime = endTime.getEpochSecond();

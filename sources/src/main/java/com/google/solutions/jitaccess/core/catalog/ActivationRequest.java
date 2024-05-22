@@ -34,18 +34,18 @@ import java.util.stream.Collectors;
 /**
  * Represents a request for activating one or more entitlements.
  */
-public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
+public abstract class ActivationRequest {
   private final @NotNull ActivationId id;
   private final @NotNull Instant startTime;
   private final @NotNull Duration duration;
   private final @NotNull UserId requestingUser;
-  private final @NotNull Set<TEntitlementId> entitlements;
+  private final @NotNull Set<EntitlementId> entitlements;
   private final @NotNull String justification;
 
   protected ActivationRequest(
     @NotNull ActivationId id,
     @NotNull UserId requestingUser,
-    @NotNull Set<TEntitlementId> entitlements,
+    @NotNull Set<EntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
     @NotNull Duration duration
@@ -112,7 +112,7 @@ public abstract class ActivationRequest<TEntitlementId extends EntitlementId> {
   /**
    * @return one or more entitlements.
    */
-  public @NotNull Collection<TEntitlementId> entitlements() {
+  public @NotNull Collection<EntitlementId> entitlements() {
     return this.entitlements;
   }
 

@@ -131,7 +131,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull EntitlementSet<ProjectRole> findEntitlements(
+  public @NotNull EntitlementSet findEntitlements(
     @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude
@@ -144,12 +144,12 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // conditional and have a special condition that serves
     // as marker.
     //
-    Set<Entitlement<ProjectRole>> jitEligible;
+    Set<Entitlement> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = allBindings.stream()
         .map(binding -> ProjectRole
           .fromJitEligibleRoleBinding(projectId, binding)
-          .map(projectRole -> new Entitlement<>(
+          .map(projectRole -> new Entitlement(
             projectRole,
             projectRole.role(),
             ActivationType.JIT)))
@@ -166,12 +166,12 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // conditional and have a special condition that serves
     // as marker.
     //
-    Set<Entitlement<ProjectRole>> mpaEligible;
+    Set<Entitlement> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = allBindings.stream()
         .map(binding -> ProjectRole
           .fromMpaEligibleRoleBinding(projectId, binding)
-          .map(projectRole -> new Entitlement<>(
+          .map(projectRole -> new Entitlement(
             projectRole,
             projectRole.role(),
             ActivationType.MPA)))
@@ -187,7 +187,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // Determine effective set of eligible roles. If a role is both JIT- and
     // MPA-eligible, only retain the JIT-eligible one.
     //
-    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
+    var allAvailable = new TreeSet<Entitlement>();
 
     allAvailable.addAll(jitEligible);
     allAvailable.addAll(mpaEligible
@@ -198,8 +198,8 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
     // Find temporary bindings that reflect activations and sort out which
     // ones are still active and which ones have expired.
     //
-    var currentActivations = new HashMap<ProjectRole, Activation>();
-    var expiredActivations = new HashMap<ProjectRole, Activation>();
+    var currentActivations = new HashMap<EntitlementId, Activation>();
+    var expiredActivations = new HashMap<EntitlementId, Activation>();
 
     for (var activatedProjectRole : allBindings.stream()
       .map(binding -> ProjectRole.fromActivationRoleBinding(projectId, binding))
@@ -216,7 +216,7 @@ public class AssetInventoryRepository extends ProjectRoleRepository {
       }
     }
 
-    return new EntitlementSet<>(allAvailable, currentActivations, expiredActivations, Set.of());
+    return new EntitlementSet(allAvailable, currentActivations, expiredActivations, Set.of());
   }
 
   @Override

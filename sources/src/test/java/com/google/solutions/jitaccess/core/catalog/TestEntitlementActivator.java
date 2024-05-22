@@ -51,14 +51,14 @@ public class TestEntitlementActivator {
     @NotNull UserId user
   ) implements CatalogUserContext {}
 
-  private static class SampleActivator extends EntitlementActivator<SampleEntitlementId, ResourceId, UserContext> {
+  private static class SampleActivator extends EntitlementActivator<ResourceId, UserContext> {
     @Override
     public int maximumNumberOfEntitlementsPerJitRequest() {
       return 10;
     }
 
     protected SampleActivator(
-      Catalog<SampleEntitlementId, ResourceId, UserContext> catalog,
+      Catalog<ResourceId, UserContext> catalog,
       JustificationPolicy policy
     ) {
       super(catalog, policy);
@@ -66,7 +66,7 @@ public class TestEntitlementActivator {
 
     @Override
     protected Activation provisionAccess(
-      JitActivationRequest<SampleEntitlementId> request
+      JitActivationRequest request
     ) throws AccessException, AlreadyExistsException, IOException {
       return new Activation(request.startTime(), request.duration());
     }
@@ -74,13 +74,13 @@ public class TestEntitlementActivator {
     @Override
     protected Activation provisionAccess(
       UserId approvingUser,
-      MpaActivationRequest<SampleEntitlementId> request
+      MpaActivationRequest request
     ) throws AccessException, AlreadyExistsException, IOException {
       return new Activation(request.startTime(), request.duration());
     }
 
     @Override
-    public @NotNull JsonWebTokenConverter<MpaActivationRequest<SampleEntitlementId>> createTokenConverter() {
+    public @NotNull JsonWebTokenConverter<MpaActivationRequest> createTokenConverter() {
       return null;
     }
   }
@@ -97,7 +97,7 @@ public class TestEntitlementActivator {
       catalog,
       Mockito.mock(JustificationPolicy.class));
 
-    var entitlements = Set.of(new SampleEntitlementId("cat", "1"));
+    var entitlements = Set.<EntitlementId>of(new SampleEntitlementId("cat", "1"));
 
     var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
     var request = activator.createJitRequest(

@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class MpaProjectRoleCatalog implements Catalog<
-  ProjectRole,
   ProjectId,
   MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ProjectRoleRepository repository;
@@ -64,9 +63,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     this.options = options;
   }
 
-  void validateRequest(
-    @NotNull ActivationRequest<ProjectRole> request
-  ) {
+  void validateRequest(@NotNull ActivationRequest request) {
     Preconditions.checkNotNull(request, "request");
     Preconditions.checkArgument(
       request.duration().toSeconds() >= this.options.minActivationDuration().toSeconds(),
@@ -79,7 +76,7 @@ public class MpaProjectRoleCatalog implements Catalog<
         "The activation duration must be no longer than %d minutes",
         this.options.maxActivationDuration().toMinutes()));
 
-    if (request instanceof MpaActivationRequest<ProjectRole> mpaRequest) {
+    if (request instanceof MpaActivationRequest mpaRequest) {
       Preconditions.checkArgument(
         mpaRequest.reviewers() != null &&
           mpaRequest.reviewers().size() >= this.options.minNumberOfReviewersPerActivationRequest,
@@ -98,7 +95,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull ActivationType activationType,
-    @NotNull Collection<ProjectRole> entitlements
+    @NotNull Collection<EntitlementId> entitlements
   ) throws AccessException, IOException {
     //
     // Verify that the user has eligible role bindings
@@ -171,7 +168,7 @@ public class MpaProjectRoleCatalog implements Catalog<
   }
 
   @Override
-  public EntitlementSet<ProjectRole> listEntitlements(
+  public EntitlementSet listEntitlements(
     @NotNull UserContext userContext,
     @NotNull ProjectId projectId
   ) throws AccessException, IOException {
@@ -184,8 +181,11 @@ public class MpaProjectRoleCatalog implements Catalog<
   @Override
   public @NotNull SortedSet<UserId> listReviewers(
     @NotNull UserContext userContext,
-    @NotNull ProjectRole entitlement
+    @NotNull EntitlementId entitlement
   ) throws AccessException, IOException {
+
+    assert entitlement instanceof ProjectRole;
+    var role = (ProjectRole)entitlement;
 
     //
     // Check that the requesting user is allowed to request approval,
@@ -194,7 +194,7 @@ public class MpaProjectRoleCatalog implements Catalog<
 
     verifyUserCanActivateEntitlements(
       userContext.user(),
-      entitlement.projectId(),
+      role.projectId(),
       ActivationType.MPA,
       List.of(entitlement));
 
@@ -204,7 +204,7 @@ public class MpaProjectRoleCatalog implements Catalog<
     // themselves.
     //
     return this.repository
-      .findEntitlementHolders(entitlement, ActivationType.MPA)
+      .findEntitlementHolders(role, ActivationType.MPA)
       .stream()
       .filter(u -> !u.equals(userContext.user())) // Exclude requesting user
       .collect(Collectors.toCollection(TreeSet::new));
@@ -213,10 +213,14 @@ public class MpaProjectRoleCatalog implements Catalog<
   @Override
   public void verifyUserCanRequest(
     @NotNull UserContext userContext,
-    @NotNull ActivationRequest<ProjectRole> request
+    @NotNull ActivationRequest request
   ) throws AccessException, IOException {
 
     assert userContext.user().equals(request.requestingUser());
+    assert request
+      .entitlements()
+      .stream()
+      .allMatch(e -> e instanceof ProjectRole);
 
     validateRequest(request);
 
@@ -234,8 +238,13 @@ public class MpaProjectRoleCatalog implements Catalog<
   @Override
   public void verifyUserCanApprove(
     @NotNull UserContext userContext,
-    @NotNull MpaActivationRequest<ProjectRole> request
+    @NotNull MpaActivationRequest request
   ) throws AccessException, IOException {
+
+    assert request
+      .entitlements()
+      .stream()
+      .allMatch(e -> e instanceof ProjectRole);
 
     validateRequest(request);
 

@@ -175,7 +175,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
   public static class ActivationSelfApprovedNotification extends NotificationService.Notification {
     protected ActivationSelfApprovedNotification(
       ProjectId projectId,
-      @NotNull ActivationRequest<ProjectRole> request)
+      @NotNull ActivationRequest request)
     {
       super(
         List.of(request.requestingUser()),
@@ -183,7 +183,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
         String.format(
           "Activated roles %s on '%s'",
           request.entitlements().stream()
-            .map(ent -> String.format("'%s'", ent.role()))
+            .map(ent -> String.format("'%s'", ent.displayName()))
             .collect(Collectors.joining(", ")),
           projectId));
 
@@ -192,7 +192,7 @@ public class RequestAndSelfApproveAction extends AbstractActivationAction {
       this.properties.put("ROLE", request
         .entitlements()
         .stream()
-        .map(ent -> ent.role())
+        .map(ent -> ent.displayName())
         .collect(Collectors.joining(", ")));
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());

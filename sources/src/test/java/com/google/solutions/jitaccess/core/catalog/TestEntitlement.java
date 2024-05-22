@@ -37,7 +37,7 @@ public class TestEntitlement {
 
   @Test
   public void toStringReturnsName() {
-    var ent = new Entitlement<SampleEntitlementId>(
+    var ent = new Entitlement(
       new SampleEntitlementId("1"),
       "Sample entitlement",
       ActivationType.JIT);
@@ -51,24 +51,24 @@ public class TestEntitlement {
 
   @Test
   public void compareToOrdersById() {
-    var a = new Entitlement<SampleEntitlementId>(
+    var a = new Entitlement(
       new SampleEntitlementId("A"),
       "Entitlement A",
       ActivationType.JIT);
 
-    var b = new Entitlement<SampleEntitlementId>(
+    var b = new Entitlement(
       new SampleEntitlementId("B"),
       "Entitlement B",
       ActivationType.MPA);
 
-    var c = new Entitlement<SampleEntitlementId>(
+    var c = new Entitlement(
       new SampleEntitlementId("C"),
       "Entitlement C",
       ActivationType.MPA);
 
     var entitlements = List.of(c, b, a);
 
-    var sorted = new TreeSet<Entitlement<SampleEntitlementId>>();
+    var sorted = new TreeSet<Entitlement>();
     sorted.addAll(entitlements);
 
     Assertions.assertIterableEquals(

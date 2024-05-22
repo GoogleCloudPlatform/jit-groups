@@ -47,9 +47,9 @@ public abstract class AbstractAction {
   // Logging helper methods.
   // -------------------------------------------------------------------------
 
-  protected static <T extends EntitlementId> @NotNull LogAdapter.LogEntry addLabels(
+  protected static @NotNull LogAdapter.LogEntry addLabels(
     @NotNull LogAdapter.LogEntry entry,
-    @NotNull ActivationRequest<T> request
+    @NotNull ActivationRequest request
   ) {
     entry
       .addLabel("activation_id", request.id().toString())
@@ -58,7 +58,7 @@ public abstract class AbstractAction {
       .addLabel("justification", request.justification())
       .addLabels(e -> addLabels(e, request.entitlements()));
 
-    if (request instanceof MpaActivationRequest<T> mpaRequest) {
+    if (request instanceof MpaActivationRequest mpaRequest) {
       entry.addLabel("reviewers", mpaRequest
         .reviewers()
         .stream()

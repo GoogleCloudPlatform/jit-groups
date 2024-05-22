@@ -34,7 +34,6 @@ import java.util.SortedSet;
  * The catalog is scoped to a project.
  */
 public interface Catalog<
-  TEntitlementId extends EntitlementId,
   TScopeId extends ResourceId,
   TUserContext extends CatalogUserContext
   > {
@@ -52,7 +51,7 @@ public interface Catalog<
    */
   void verifyUserCanRequest(
     @NotNull TUserContext userContext,
-    @NotNull ActivationRequest<TEntitlementId> request
+    @NotNull ActivationRequest request
   ) throws AccessException, IOException;
 
   /**
@@ -60,7 +59,7 @@ public interface Catalog<
    */
   void verifyUserCanApprove(
     @NotNull TUserContext userContext,
-    @NotNull MpaActivationRequest<TEntitlementId> request
+    @NotNull MpaActivationRequest request
   ) throws AccessException, IOException;
 
   /**
@@ -75,14 +74,14 @@ public interface Catalog<
    */
   SortedSet<UserId> listReviewers(
     @NotNull TUserContext userContext,
-    @NotNull TEntitlementId entitlement
+    @NotNull EntitlementId entitlement
   ) throws AccessException, IOException;
 
 
   /**
    * List available entitlements.
    */
-  EntitlementSet<TEntitlementId> listEntitlements(
+  EntitlementSet listEntitlements(
     TUserContext userContext,
     TScopeId scope
   ) throws AccessException, IOException;

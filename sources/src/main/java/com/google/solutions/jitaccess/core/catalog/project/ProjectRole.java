@@ -27,10 +27,7 @@ import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.cel.IamCondition;
 import com.google.solutions.jitaccess.cel.TemporaryIamCondition;
 import com.google.solutions.jitaccess.cel.TimeSpan;
-import com.google.solutions.jitaccess.core.catalog.Activation;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.EntitlementId;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.util.Base64Escape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Identifies a project role binding as an entitlement.
  */
-public class ProjectRole extends EntitlementId {
+public class ProjectRole extends ScopedEntitlementId {
   static final String CATALOG = "iam";
 
   private final @NotNull ProjectId projectId;
@@ -61,13 +58,6 @@ public class ProjectRole extends EntitlementId {
 
   public ProjectRole(@NotNull ProjectId projectId, @NotNull String role) {
     this(projectId, role, null);
-  }
-
-  /**
-   * @return Project that the role grants access to.
-   */
-  public @NotNull ProjectId projectId() {
-    return this.projectId;
   }
 
   /**
@@ -115,6 +105,15 @@ public class ProjectRole extends EntitlementId {
     else {
       return String.format("%s:%s", this.projectId, this.role);
     }
+  }
+
+  @Override
+  public @NotNull ProjectId projectId() { // TODO: test
+    return this.projectId;
+  }
+
+  public @NotNull String displayName() { // TODO: test
+    return this.role();
   }
 
   @Override

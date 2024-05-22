@@ -31,11 +31,11 @@ import java.util.Comparator;
  * activates it, and it automatically becomes inactive again after a certain
  * period of time has elapsed.
  */
-public record Entitlement<TEntitlementId extends EntitlementId> (
-  @NotNull TEntitlementId id,
+public record Entitlement (
+  @NotNull EntitlementId id,
   @NotNull String name,
   @NotNull ActivationType activationType
-) implements Comparable<Entitlement<TEntitlementId>> {
+) implements Comparable<Entitlement> {
   public Entitlement {
     Preconditions.checkNotNull(id, "id");
     Preconditions.checkNotNull(name, "name");
@@ -47,9 +47,9 @@ public record Entitlement<TEntitlementId extends EntitlementId> (
   }
 
   @Override
-  public int compareTo(@NotNull Entitlement<TEntitlementId> o) {
+  public int compareTo(@NotNull Entitlement o) {
     return Comparator
-      .comparing((Entitlement<TEntitlementId> e) -> e.id)
+      .comparing((Entitlement e) -> e.id)
       .compare(this, o);
   }
 }

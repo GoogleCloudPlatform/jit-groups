@@ -49,11 +49,11 @@ public class ListScopesAction<
   TUserContext extends CatalogUserContext
   > extends AbstractAction {
 
-  private final @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog;
+  private final @NotNull Catalog<TScopeId, TUserContext> catalog;
 
   public ListScopesAction(
     @NotNull LogAdapter logAdapter,
-    @NotNull Catalog<TEntitlementId, TScopeId, TUserContext> catalog
+    @NotNull Catalog<TScopeId, TUserContext> catalog
   ) {
     super(logAdapter);
     this.catalog = catalog;

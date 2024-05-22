@@ -28,10 +28,7 @@ import com.google.api.services.cloudasset.v1.model.IamPolicyAnalysisResult;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.auth.UserId;
-import com.google.solutions.jitaccess.core.catalog.ActivationType;
-import com.google.solutions.jitaccess.core.catalog.Entitlement;
-import com.google.solutions.jitaccess.core.catalog.EntitlementSet;
-import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.PolicyAnalyzerClient;
 import org.jetbrains.annotations.NotNull;
 
@@ -155,7 +152,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
   }
 
   @Override
-  public @NotNull EntitlementSet<ProjectRole> findEntitlements(
+  public @NotNull EntitlementSet findEntitlements(
     @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude
@@ -192,7 +189,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // Ignore eligible role bindings that have an extra
     // resource condition, we don't support these.
     //
-    Set<Entitlement<ProjectRole>> jitEligible;
+    Set<Entitlement> jitEligible;
     if (typesToInclude.contains(ActivationType.JIT)) {
       jitEligible = findRoleBindings(
         analysisResult,
@@ -203,7 +200,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
           .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(conditionalBinding -> new Entitlement<>(
+        .map(conditionalBinding -> new Entitlement(
           ProjectRole.fromJitEligibleRoleBinding(
             conditionalBinding.projectId,
             conditionalBinding.binding).get(),
@@ -223,7 +220,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // Ignore eligible role bindings that have an extra
     // resource condition, we don't support these.
     //
-    Set<Entitlement<ProjectRole>> mpaEligible;
+    Set<Entitlement> mpaEligible;
     if (typesToInclude.contains(ActivationType.MPA)) {
       mpaEligible = findRoleBindings(
         analysisResult,
@@ -234,7 +231,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
           .isPresent(),
         evalResult -> "CONDITIONAL".equalsIgnoreCase(evalResult))
         .stream()
-        .map(conditionalBinding -> new Entitlement<>(
+        .map(conditionalBinding -> new Entitlement(
           ProjectRole.fromMpaEligibleRoleBinding(
             conditionalBinding.projectId,
             conditionalBinding.binding).get(),
@@ -250,7 +247,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
     // Determine effective set of eligible roles. If a role is both JIT- and
     // MPA-eligible, only retain the JIT-eligible one.
     //
-    var allAvailable = new TreeSet<Entitlement<ProjectRole>>();
+    var allAvailable = new TreeSet<Entitlement>();
     allAvailable.addAll(jitEligible);
     allAvailable.addAll(mpaEligible
       .stream()
@@ -280,7 +277,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       .filter(Optional::isPresent)
       .map(Optional::get)
       .collect(Collectors.toMap(
-        activatedRole -> activatedRole.projectRole(),
+        activatedRole -> (EntitlementId)activatedRole.projectRole(),
         activatedRole -> activatedRole.activation()));
 
     //
@@ -300,7 +297,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       .filter(Optional::isPresent)
       .map(Optional::get)
       .collect(Collectors.toMap(
-        activatedRole -> activatedRole.projectRole(),
+        activatedRole -> (EntitlementId)activatedRole.projectRole(),
         activatedRole -> activatedRole.activation()));
 
     var warnings = Stream.ofNullable(analysisResult.getNonCriticalErrors())
@@ -308,7 +305,7 @@ public class PolicyAnalyzerRepository extends ProjectRoleRepository {
       .map(e -> e.getCause())
       .collect(Collectors.toSet());
 
-    return new EntitlementSet<>(allAvailable, currentActivations, expiredActivations, warnings);
+    return new EntitlementSet(allAvailable, currentActivations, expiredActivations, warnings);
   }
 
   @Override

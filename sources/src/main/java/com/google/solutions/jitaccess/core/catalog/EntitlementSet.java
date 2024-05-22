@@ -41,10 +41,10 @@ import java.util.TreeSet;
  * @param expiredActivations previously active (but now expired) entitlements
  * @param warnings encountered warnings, if any.
  */
-public record EntitlementSet<TId extends EntitlementId>(
-  @NotNull SortedSet<Entitlement<TId>> available,
-  @NotNull Map<TId, Activation> currentActivations,
-  @NotNull Map<TId, Activation> expiredActivations,
+public record EntitlementSet(
+  @NotNull SortedSet<Entitlement> available,
+  @NotNull Map<EntitlementId, Activation> currentActivations,
+  @NotNull Map<EntitlementId, Activation> expiredActivations,
   @NotNull Set<String> warnings
 ) {
   public EntitlementSet {
@@ -57,7 +57,7 @@ public record EntitlementSet<TId extends EntitlementId>(
     Preconditions.checkArgument(expiredActivations.values().stream().allMatch(a -> !a.isValid(Instant.now())));
   }
 
-  public static <TId extends EntitlementId> @NotNull EntitlementSet<TId> empty() {
-    return new EntitlementSet<TId>(new TreeSet<>(), Map.of(), Map.of(), Set.of());
+  public static @NotNull EntitlementSet empty() {
+    return new EntitlementSet(new TreeSet<>(), Map.of(), Map.of(), Set.of());
   }
 }

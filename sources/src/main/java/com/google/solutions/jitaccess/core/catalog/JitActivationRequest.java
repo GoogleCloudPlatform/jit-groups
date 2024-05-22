@@ -31,12 +31,11 @@ import java.util.Set;
 /**
  * Request for "JIT-activating" an entitlement.
  */
-public abstract class JitActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
+public abstract class JitActivationRequest extends ActivationRequest {
   protected JitActivationRequest(
     @NotNull ActivationId id,
     @NotNull UserId requestingUser,
-    @NotNull Set<TEntitlementId> entitlements,
+    @NotNull Set<EntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
     @NotNull Duration duration) {

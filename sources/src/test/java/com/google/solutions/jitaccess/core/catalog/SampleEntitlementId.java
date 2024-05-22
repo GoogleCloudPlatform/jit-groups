@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.core.catalog;
 
+import org.jetbrains.annotations.NotNull;
+
 class SampleEntitlementId extends EntitlementId
 {
   private final String catalog;
@@ -42,6 +44,11 @@ class SampleEntitlementId extends EntitlementId
 
   @Override
   public String id() {
+    return this.id;
+  }
+
+  @Override
+  public @NotNull String displayName() {
     return this.id;
   }
 }

@@ -211,7 +211,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var mpaEntitlement = new Entitlement<>(
+    var mpaEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.MPA);
@@ -269,7 +269,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var mpaEntitlement = new Entitlement<>(
+    var mpaEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.MPA);
@@ -279,7 +279,7 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(new EntitlementSet(
         new TreeSet<>(Set.of(mpaEntitlement)),
         Map.of(),
         Map.of(),
@@ -287,7 +287,7 @@ public class TestMpaProjectRoleCatalog {
 
     when(policyAnalyzer
       .findEntitlementHolders(
-        eq(mpaEntitlement.id()),
+        eq((ProjectRole)mpaEntitlement.id()),
         eq(ActivationType.MPA)))
       .thenReturn(Set.of(SAMPLE_REQUESTING_USER, SAMPLE_APPROVING_USER));
 
@@ -309,7 +309,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var jitEntitlement = new Entitlement<>(
+    var jitEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.JIT);
@@ -342,7 +342,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var jitEntitlement = new Entitlement<>(
+    var jitEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.JIT);
@@ -352,7 +352,7 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_REQUESTING_USER),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.JIT))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(new EntitlementSet(
         new TreeSet<>(Set.of(jitEntitlement)),
         Map.of(),
         Map.of(),
@@ -381,7 +381,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var mpaEntitlement = new Entitlement<>(
+    var mpaEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.MPA);
@@ -415,7 +415,7 @@ public class TestMpaProjectRoleCatalog {
       Mockito.mock(ResourceManagerClient.class),
       new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
 
-    var mpaEntitlement = new Entitlement<>(
+    var mpaEntitlement = new Entitlement(
       new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
       "-",
       ActivationType.MPA);
@@ -425,7 +425,7 @@ public class TestMpaProjectRoleCatalog {
         eq(SAMPLE_APPROVING_USER),
         eq(SAMPLE_PROJECT),
         eq(EnumSet.of(ActivationType.MPA))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(new EntitlementSet(
         new TreeSet<>(Set.of(mpaEntitlement)),
         Map.of(),
         Map.of(),
@@ -576,8 +576,8 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA))))
-      .thenReturn(new EntitlementSet<>((
-        new TreeSet<>(Set.of(new Entitlement<>(
+      .thenReturn(new EntitlementSet((
+        new TreeSet<>(Set.of(new Entitlement(
           new ProjectRole(SAMPLE_PROJECT, "roles/different-role"),
           "-",
           ActivationType.MPA)))),
@@ -609,8 +609,8 @@ public class TestMpaProjectRoleCatalog {
       eq(SAMPLE_REQUESTING_USER),
       eq(SAMPLE_PROJECT),
       eq(EnumSet.of(ActivationType.MPA))))
-      .thenReturn(new EntitlementSet<>((
-        new TreeSet<>(Set.of(new Entitlement<>(
+      .thenReturn(new EntitlementSet((
+        new TreeSet<>(Set.of(new Entitlement(
           role,
           "-",
           ActivationType.MPA)))),

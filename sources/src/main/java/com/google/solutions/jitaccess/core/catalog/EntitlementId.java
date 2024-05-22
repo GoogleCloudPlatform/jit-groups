@@ -41,6 +41,11 @@ public abstract class EntitlementId implements Comparable<EntitlementId> {
   public abstract @NotNull String id();
 
   /**
+   * @return Display name, might not be unique.
+   */
+  public abstract @NotNull String displayName();
+
+  /**
    * @return Optional condition that constrains this entitlement.
    */
   public @Nullable String resourceCondition() {

@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
  */
 @Dependent
 public class ProjectRoleActivator extends EntitlementActivator<
-  ProjectRole,
   ProjectId,
   MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ResourceManagerClient resourceManagerClient;
@@ -55,7 +54,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
   private final Options options;
 
   public ProjectRoleActivator(
-    @NotNull Catalog<ProjectRole, ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
+    @NotNull Catalog<ProjectId, MpaProjectRoleCatalog.UserContext> catalog,
     @NotNull ResourceManagerClient resourceManagerClient,
     @NotNull JustificationPolicy policy,
     @NotNull Options options
@@ -125,9 +124,14 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
   @Override
   protected Activation provisionAccess(
-    @NotNull JitActivationRequest<ProjectRole> request
+    @NotNull JitActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException {
     Preconditions.checkNotNull(request, "request");
+
+    assert request
+      .entitlements()
+      .stream()
+      .allMatch(e -> e instanceof ProjectRole);
 
     var bindingDescription = String.format(
       "Self-approved, justification: %s",
@@ -139,6 +143,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
+        .map(e -> (ProjectRole)e)
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
@@ -151,10 +156,14 @@ public class ProjectRoleActivator extends EntitlementActivator<
   @Override
   protected Activation provisionAccess(
     @NotNull UserId approvingUser,
-    @NotNull MpaActivationRequest<ProjectRole> request
+    @NotNull MpaActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException {
 
     Preconditions.checkNotNull(request, "request");
+    assert request
+      .entitlements()
+      .stream()
+      .allMatch(e -> e instanceof ProjectRole);
 
     var bindingDescription = String.format(
       "Approved by %s, justification: %s",
@@ -173,6 +182,7 @@ public class ProjectRoleActivator extends EntitlementActivator<
       request.requestingUser(),
       request.entitlements()
         .stream()
+        .map(e -> (ProjectRole)e)
         .collect(Collectors.toSet()),
       request.startTime(),
       request.duration());
@@ -183,10 +193,10 @@ public class ProjectRoleActivator extends EntitlementActivator<
   }
 
   @Override
-  public @NotNull JsonWebTokenConverter<MpaActivationRequest<ProjectRole>> createTokenConverter() {
+  public @NotNull JsonWebTokenConverter<MpaActivationRequest> createTokenConverter() {
     return new JsonWebTokenConverter<>() {
       @Override
-      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest<ProjectRole> request) {
+      public JsonWebToken.Payload convert(@NotNull MpaActivationRequest request) {
         var entitlements = request.entitlements()
           .stream()
           .toList();
@@ -207,12 +217,12 @@ public class ProjectRoleActivator extends EntitlementActivator<
 
       @SuppressWarnings("unchecked")
       @Override
-      public @NotNull MpaActivationRequest<ProjectRole> convert(@NotNull JsonWebToken.Payload payload) {
+      public @NotNull MpaActivationRequest convert(@NotNull JsonWebToken.Payload payload) {
         var entitlement = ProjectRole.fromId(payload.get("entitlement").toString());
         var startTime = ((Number)payload.get("start")).longValue();
         var endTime = ((Number)payload.get("end")).longValue();
 
-        return new MpaRequest<>(
+        return new MpaRequest(
           new ActivationId(payload.getJwtId()),
           new UserId(payload.get("beneficiary").toString()),
           Set.of(entitlement),

@@ -48,7 +48,7 @@ public abstract class ProjectRoleRepository {
   /**
    * List entitlements for the given user.
    */
-  abstract @NotNull EntitlementSet<ProjectRole> findEntitlements(
+  abstract @NotNull EntitlementSet findEntitlements(
     @NotNull UserId user,
     @NotNull ProjectId projectId,
     @NotNull EnumSet<ActivationType> typesToInclude

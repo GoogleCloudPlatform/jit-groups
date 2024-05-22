@@ -32,8 +32,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 public class TestListPeersAction {
@@ -59,17 +58,19 @@ public class TestListPeersAction {
   @Test
   public void whenCatalogReturnsNoPeers_ThenActionReturnsEmptyList() throws Exception {
     var catalog = Mocks.createMpaProjectRoleCatalogMock();
+    var role = new ProjectRole(PROJECT, "roles/browser");
+
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.role().equals("roles/browser"))))
+        eq(role)))
       .thenReturn(new TreeSet());
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
     var response = action.execute(
       Mocks.createIapPrincipalMock(SAMPLE_USER),
       PROJECT.id(),
-      new ProjectRole(PROJECT, "roles/browser").id());
+      role.id());
 
     assertNotNull(response.peers);
     assertEquals(0, response.peers.size());
@@ -78,17 +79,19 @@ public class TestListPeersAction {
   @Test
   public void whenCatalogReturnsProjects_ThenActionReturnsList() throws Exception {
     var catalog = Mocks.createMpaProjectRoleCatalogMock();
+    var role = new ProjectRole(PROJECT, "roles/browser");
+
     when(catalog
       .listReviewers(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
-        argThat(r -> r.role().equals("roles/browser"))))
+        eq(role)))
       .thenReturn(new TreeSet(Set.of(new UserId("peer-1@example.com"), new UserId("peer-2@example.com"))));
 
     var action = new ListPeersAction(new LogAdapter(), catalog);
     var response = action.execute(
       Mocks.createIapPrincipalMock(SAMPLE_USER),
       PROJECT.id(),
-      new ProjectRole(PROJECT, "roles/browser").id());
+      role.id());
 
     assertNotNull(response.peers);
     assertEquals(2, response.peers.size());

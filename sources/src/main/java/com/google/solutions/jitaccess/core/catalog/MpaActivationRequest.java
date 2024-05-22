@@ -33,14 +33,13 @@ import java.util.Set;
 /**
  * Request for "MPA-activating" an entitlement.
  */
-public abstract class MpaActivationRequest<TEntitlementId extends EntitlementId>
-  extends ActivationRequest<TEntitlementId> {
+public abstract class MpaActivationRequest extends ActivationRequest {
   private final @NotNull Collection<UserId> reviewers;
 
   protected MpaActivationRequest(
     @NotNull ActivationId id,
     @NotNull UserId requestingUser,
-    @NotNull Set<TEntitlementId> entitlements,
+    @NotNull Set<EntitlementId> entitlements,
     @NotNull Set<UserId> reviewers,
     @NotNull String justification,
     @NotNull Instant startTime,

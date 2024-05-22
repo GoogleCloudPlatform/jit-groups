@@ -86,7 +86,7 @@ public class TestListRolesAction {
       .listEntitlements(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(new EntitlementSet(
         new TreeSet<>(Set.of()),
         Map.of(),
         Map.of(),
@@ -108,11 +108,11 @@ public class TestListRolesAction {
     when (catalog.createContext(any()))
       .thenAnswer(inv -> new MpaProjectRoleCatalog.UserContext(inv.getArgument(0)));
 
-    var role1 = new Entitlement<ProjectRole>(
+    var role1 = new Entitlement(
       new ProjectRole(new ProjectId("project-1"), "roles/browser"),
       "ent-1",
       ActivationType.JIT);
-    var role2 = new Entitlement<ProjectRole>(
+    var role2 = new Entitlement(
       new ProjectRole(new ProjectId("project-1"), "roles/janitor"),
       "ent-2",
       ActivationType.JIT);
@@ -121,7 +121,7 @@ public class TestListRolesAction {
       .listEntitlements(
         argThat(ctx -> ctx.user().equals(SAMPLE_USER)),
         eq(new ProjectId("project-1"))))
-      .thenReturn(new EntitlementSet<>(
+      .thenReturn(new EntitlementSet(
         new TreeSet<>(Set.of(role1, role2)),
         Map.of(),
         Map.of(),

@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.core.catalog;
 
 import com.google.solutions.jitaccess.core.auth.UserId;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -48,14 +49,19 @@ public class TestActivationRequest {
     public String id() {
       return this.id;
     }
+
+    @Override
+    public @NotNull String displayName() {
+      return this.id;
+    }
   }
 
-  private class SampleActivationRequest extends ActivationRequest<SampleEntitlementId>
+  private class SampleActivationRequest extends ActivationRequest
   {
     public SampleActivationRequest(
       ActivationId id,
       UserId user,
-      Set<SampleEntitlementId> entitlements,
+      Set entitlements,
       String justification,
       Instant startTime,
       Duration duration) {

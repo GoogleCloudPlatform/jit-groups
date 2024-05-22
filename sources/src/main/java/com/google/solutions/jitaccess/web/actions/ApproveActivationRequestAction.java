@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.core.AccessException;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.MpaActivationRequest;
 import com.google.solutions.jitaccess.core.catalog.ProjectId;
+import com.google.solutions.jitaccess.core.catalog.ScopedEntitlementId;
 import com.google.solutions.jitaccess.core.catalog.TokenSigner;
 import com.google.solutions.jitaccess.core.catalog.project.MpaProjectRoleCatalog;
 import com.google.solutions.jitaccess.core.catalog.project.ProjectRole;
@@ -77,7 +78,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
     var activationToken = TokenObfuscator.decode(obfuscatedActivationToken);
     var userContext = this.catalog.createContext(iapPrincipal.email());
 
-    MpaActivationRequest<ProjectRole> activationRequest;
+    MpaActivationRequest activationRequest;
     try {
       activationRequest = this.tokenSigner.verify(
         this.activator.createTokenConverter(),
@@ -110,11 +111,15 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       // Notify listeners.
       //
       for (var service : this.notificationServices) {
+        var projectId = entitlement instanceof ScopedEntitlementId scoped
+          ? scoped.projectId()
+          : null;
+
         service.sendNotification(new ActivationApprovedNotification(
-          entitlement.projectId(),
+          projectId,
           activationRequest,
           iapPrincipal.email(),
-          createActivationRequestUrl(uriInfo, entitlement.projectId(), activationToken)));
+          createActivationRequestUrl(uriInfo, projectId, activationToken)));
       }
 
       //
@@ -164,8 +169,8 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
    */
   public static class ActivationApprovedNotification extends NotificationService.Notification {
     protected ActivationApprovedNotification(
-      ProjectId projectId,
-      @NotNull MpaActivationRequest<ProjectRole> request,
+      @Nullable ProjectId projectId,
+      @NotNull MpaActivationRequest request,
       @NotNull UserId approver,
       URL activationRequestUrl) throws MalformedURLException
     {
@@ -189,7 +194,7 @@ public class ApproveActivationRequestAction extends AbstractActivationAction {
       this.properties.put("BENEFICIARY", request.requestingUser());
       this.properties.put("REVIEWERS", request.reviewers());
       this.properties.put("PROJECT_ID", projectId);
-      this.properties.put("ROLE", role.role());
+      this.properties.put("ROLE", role.displayName());
       this.properties.put("RESOURCE_CONDITION", Strings.nullToEmpty(role.resourceCondition()));
       this.properties.put("START_TIME", request.startTime());
       this.properties.put("END_TIME", request.endTime());
