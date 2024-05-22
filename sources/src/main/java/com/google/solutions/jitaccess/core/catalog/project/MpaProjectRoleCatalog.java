@@ -42,9 +42,7 @@ import java.util.stream.Collectors;
  * MPA activation for project role-based entitlements.
  */
 @Singleton
-public class MpaProjectRoleCatalog implements Catalog<
-  ProjectId,
-  MpaProjectRoleCatalog.UserContext> {
+public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.UserContext> {
   private final @NotNull ProjectRoleRepository repository;
   private final @NotNull ResourceManagerClient resourceManagerClient;
   private final @NotNull Options options;
@@ -144,7 +142,7 @@ public class MpaProjectRoleCatalog implements Catalog<
   }
 
   @Override
-  public SortedSet<ProjectId> listScopes(
+  public SortedSet<ResourceId> listScopes(
     @NotNull UserContext userContext
   ) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
@@ -152,7 +150,10 @@ public class MpaProjectRoleCatalog implements Catalog<
       // Find projects for which the user has any role bindings (eligible
       // or regular bindings). This method is slow, but accurate.
       //
-      return this.repository.findProjectsWithEntitlements(userContext.user());
+      return new TreeSet<>(this.repository
+        .findProjectsWithEntitlements(userContext.user())
+        .stream()
+        .toList());
     }
     else {
       //
@@ -162,20 +163,27 @@ public class MpaProjectRoleCatalog implements Catalog<
       // entitlements for. Depending on the nature of the projects,
       // this might be acceptable or considered information disclosure.
       //
-      return this.resourceManagerClient.searchProjectIds(
-        this.options.availableProjectsQuery);
+      return new TreeSet<>(this.resourceManagerClient
+        .searchProjectIds(this.options.availableProjectsQuery)
+        .stream()
+        .toList());
     }
   }
 
   @Override
   public EntitlementSet listEntitlements(
     @NotNull UserContext userContext,
-    @NotNull ProjectId projectId
+    @NotNull ResourceId scope
   ) throws AccessException, IOException {
-    return this.repository.findEntitlements(
-      userContext.user(),
-      projectId,
-      EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+    if (scope instanceof ProjectId projectId) {
+      return this.repository.findEntitlements(
+        userContext.user(),
+        projectId,
+        EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+    }
+    else {
+      return EntitlementSet.empty();//TODO: test
+    }
   }
 
   @Override

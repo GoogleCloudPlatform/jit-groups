@@ -36,12 +36,10 @@ import java.util.Set;
 /**
  * Activates entitlements, for example by modifying IAM policies.
  */
-public abstract class EntitlementActivator<
-  TScopeId extends ResourceId,
-  TUserContext extends CatalogUserContext> {
+public abstract class EntitlementActivator<TUserContext extends CatalogUserContext> {
 
   private final @NotNull JustificationPolicy policy;
-  private final @NotNull Catalog<TScopeId, TUserContext> catalog;
+  private final @NotNull Catalog<TUserContext> catalog;
 
   /**
    * @return maximum number of roles that can be requested at once.
@@ -49,7 +47,7 @@ public abstract class EntitlementActivator<
   public abstract int maximumNumberOfEntitlementsPerJitRequest();
 
   protected EntitlementActivator(
-    @NotNull Catalog<TScopeId, TUserContext> catalog,
+    @NotNull Catalog<TUserContext> catalog,
     @NotNull JustificationPolicy policy
   ) {
     Preconditions.checkNotNull(catalog, "catalog");

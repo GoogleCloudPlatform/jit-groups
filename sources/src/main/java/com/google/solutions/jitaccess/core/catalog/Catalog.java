@@ -33,10 +33,7 @@ import java.util.SortedSet;
  *
  * The catalog is scoped to a project.
  */
-public interface Catalog<
-  TScopeId extends ResourceId,
-  TUserContext extends CatalogUserContext
-  > {
+public interface Catalog<TUserContext extends CatalogUserContext> {
 
   /**
    * Capture context information for the user interacting
@@ -65,7 +62,7 @@ public interface Catalog<
   /**
    * List scopes that the user has any entitlements for.
    */
-  SortedSet<TScopeId> listScopes(
+  SortedSet<? extends ResourceId> listScopes(
     @NotNull TUserContext userContext
   ) throws AccessException, IOException;
 
@@ -83,6 +80,6 @@ public interface Catalog<
    */
   EntitlementSet listEntitlements(
     TUserContext userContext,
-    TScopeId scope
+    ResourceId scope
   ) throws AccessException, IOException;
 }

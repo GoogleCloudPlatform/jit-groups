@@ -51,14 +51,14 @@ public class TestEntitlementActivator {
     @NotNull UserId user
   ) implements CatalogUserContext {}
 
-  private static class SampleActivator extends EntitlementActivator<ResourceId, UserContext> {
+  private static class SampleActivator extends EntitlementActivator<UserContext> {
     @Override
     public int maximumNumberOfEntitlementsPerJitRequest() {
       return 10;
     }
 
     protected SampleActivator(
-      Catalog<ResourceId, UserContext> catalog,
+      Catalog<UserContext> catalog,
       JustificationPolicy policy
     ) {
       super(catalog, policy);
