@@ -36,10 +36,10 @@ import java.util.Set;
 /**
  * Activates entitlements, for example by modifying IAM policies.
  */
-public abstract class EntitlementActivator<TUserContext extends CatalogUserContext> {
+public abstract class EntitlementActivator {
 
   private final @NotNull JustificationPolicy policy;
-  private final @NotNull Catalog<TUserContext> catalog;
+  private final @NotNull Catalog catalog;
 
   /**
    * @return maximum number of roles that can be requested at once.
@@ -47,7 +47,7 @@ public abstract class EntitlementActivator<TUserContext extends CatalogUserConte
   public abstract int maximumNumberOfEntitlementsPerJitRequest();
 
   protected EntitlementActivator(
-    @NotNull Catalog<TUserContext> catalog,
+    @NotNull Catalog catalog,
     @NotNull JustificationPolicy policy
   ) {
     Preconditions.checkNotNull(catalog, "catalog");
@@ -61,7 +61,7 @@ public abstract class EntitlementActivator<TUserContext extends CatalogUserConte
    * Create a new request to activate an entitlement that permits self-approval.
    */
   public final @NotNull JitActivationRequest createJitRequest(
-    @NotNull TUserContext requestingUserContext,
+    @NotNull CatalogUserContext requestingUserContext,
     @NotNull Set<EntitlementId> entitlements,
     @NotNull String justification,
     @NotNull Instant startTime,
@@ -93,7 +93,7 @@ public abstract class EntitlementActivator<TUserContext extends CatalogUserConte
    * multi-party approval.
    */
   public @NotNull MpaActivationRequest createMpaRequest(
-    @NotNull TUserContext requestingUserContext,
+    @NotNull CatalogUserContext requestingUserContext,
     @NotNull Set<EntitlementId> entitlements,
     @NotNull Set<UserId> reviewers,
     @NotNull String justification,
@@ -134,7 +134,7 @@ public abstract class EntitlementActivator<TUserContext extends CatalogUserConte
    * Activate an entitlement that permits self-approval.
    */
   public final @NotNull Activation activate(
-    @NotNull TUserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull JitActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException
   {
@@ -158,7 +158,7 @@ public abstract class EntitlementActivator<TUserContext extends CatalogUserConte
    * Approve another user's request.
    */
   public final @NotNull Activation approve(
-    @NotNull TUserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull MpaActivationRequest request
   ) throws AccessException, AlreadyExistsException, IOException
   {

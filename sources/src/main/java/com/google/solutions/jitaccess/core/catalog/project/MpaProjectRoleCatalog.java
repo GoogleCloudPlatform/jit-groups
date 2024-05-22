@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * MPA activation for project role-based entitlements.
  */
 @Singleton
-public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.UserContext> {
+public class MpaProjectRoleCatalog implements Catalog {
   private final @NotNull ProjectRoleRepository repository;
   private final @NotNull ResourceManagerClient resourceManagerClient;
   private final @NotNull Options options;
@@ -135,7 +135,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
   //---------------------------------------------------------------------------
 
   @Override
-  public @NotNull UserContext createContext(
+  public @NotNull CatalogUserContext createContext(
     @NotNull UserId user
   ) {
     return new UserContext(user);
@@ -143,7 +143,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
 
   @Override
   public SortedSet<ResourceId> listScopes(
-    @NotNull UserContext userContext
+    @NotNull CatalogUserContext userContext
   ) throws AccessException, IOException {
     if (Strings.isNullOrEmpty(this.options.availableProjectsQuery)) {
       //
@@ -172,7 +172,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
 
   @Override
   public EntitlementSet listEntitlements(
-    @NotNull UserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull ResourceId scope
   ) throws AccessException, IOException {
     if (scope instanceof ProjectId projectId) {
@@ -188,7 +188,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
 
   @Override
   public @NotNull SortedSet<UserId> listReviewers(
-    @NotNull UserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull EntitlementId entitlement
   ) throws AccessException, IOException {
 
@@ -220,7 +220,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
 
   @Override
   public void verifyUserCanRequest(
-    @NotNull UserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull ActivationRequest request
   ) throws AccessException, IOException {
 
@@ -245,7 +245,7 @@ public class MpaProjectRoleCatalog implements Catalog<MpaProjectRoleCatalog.User
 
   @Override
   public void verifyUserCanApprove(
-    @NotNull UserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull MpaActivationRequest request
   ) throws AccessException, IOException {
 

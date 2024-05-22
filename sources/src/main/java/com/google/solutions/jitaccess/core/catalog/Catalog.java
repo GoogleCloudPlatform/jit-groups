@@ -33,13 +33,13 @@ import java.util.SortedSet;
  *
  * The catalog is scoped to a project.
  */
-public interface Catalog<TUserContext extends CatalogUserContext> {
+public interface Catalog {
 
   /**
    * Capture context information for the user interacting
    * with the catalog.
    */
-  @NotNull TUserContext createContext(
+  @NotNull CatalogUserContext createContext(
     @NotNull UserId user
   ) throws AccessException, IOException;
 
@@ -47,7 +47,7 @@ public interface Catalog<TUserContext extends CatalogUserContext> {
    * Verify if a user is allowed to make the given request.
    */
   void verifyUserCanRequest(
-    @NotNull TUserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull ActivationRequest request
   ) throws AccessException, IOException;
 
@@ -55,7 +55,7 @@ public interface Catalog<TUserContext extends CatalogUserContext> {
    * Verify if a user is allowed to approve a given request.
    */
   void verifyUserCanApprove(
-    @NotNull TUserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull MpaActivationRequest request
   ) throws AccessException, IOException;
 
@@ -63,14 +63,14 @@ public interface Catalog<TUserContext extends CatalogUserContext> {
    * List scopes that the user has any entitlements for.
    */
   SortedSet<? extends ResourceId> listScopes(
-    @NotNull TUserContext userContext
+    @NotNull CatalogUserContext userContext
   ) throws AccessException, IOException;
 
   /**
    * List available reviewers for (MPA-) activating an entitlement.
    */
   SortedSet<UserId> listReviewers(
-    @NotNull TUserContext userContext,
+    @NotNull CatalogUserContext userContext,
     @NotNull EntitlementId entitlement
   ) throws AccessException, IOException;
 
@@ -79,7 +79,7 @@ public interface Catalog<TUserContext extends CatalogUserContext> {
    * List available entitlements.
    */
   EntitlementSet listEntitlements(
-    TUserContext userContext,
+    CatalogUserContext userContext,
     ResourceId scope
   ) throws AccessException, IOException;
 }
