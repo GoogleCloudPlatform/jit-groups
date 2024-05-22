@@ -90,7 +90,7 @@ public abstract class AbstractActivationAction extends AbstractAction {
       .queryParam("activation", TokenObfuscator.encode(activationToken));
 
     if (projectId != null) {
-      url = url.queryParam("projectId", projectId.id());//TODO: test
+      url = url.queryParam("projectId", projectId.id());
     }
 
     return url.build().toURL();

@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.core.AccessDeniedException;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.core.catalog.*;
 import com.google.solutions.jitaccess.core.clients.ResourceManagerClient;
+import io.quarkus.test.Mock;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -535,6 +536,20 @@ public class TestMpaProjectRoleCatalog {
       SAMPLE_REQUESTING_USER,
       SAMPLE_PROJECT,
       EnumSet.of(ActivationType.JIT, ActivationType.MPA));
+  }
+
+  @Test
+  public void whenScopeUnknown_ThenListEntitlementsReturnsEmpty() throws Exception {
+    var catalog = new MpaProjectRoleCatalog(
+      Mockito.mock(ProjectRoleRepository.class),
+      Mockito.mock(ResourceManagerClient.class),
+      new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(5), 1, 1));
+
+    var userContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_REQUESTING_USER);
+    var entitlements = catalog.listEntitlements(userContext, new OrganizationId("123"));
+
+    assertNotNull(entitlements);
+    assertTrue(entitlements.available().isEmpty());
   }
 
   //---------------------------------------------------------------------------

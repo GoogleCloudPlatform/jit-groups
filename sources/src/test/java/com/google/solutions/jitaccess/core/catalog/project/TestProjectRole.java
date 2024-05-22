@@ -68,6 +68,20 @@ public class TestProjectRole {
   }
 
   // -------------------------------------------------------------------------
+  // displayName.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void displayNameContainsRole() {
+    assertEquals(
+      "role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample").displayName());
+    assertEquals(
+      "role/sample",
+      new ProjectRole(SAMPLE_PROJECT, "role/sample", "resource.name=='foo'").displayName());
+  }
+
+  // -------------------------------------------------------------------------
   // equals.
   // -------------------------------------------------------------------------
 

@@ -108,11 +108,11 @@ public class ProjectRole extends ScopedEntitlementId {
   }
 
   @Override
-  public @NotNull ProjectId projectId() { // TODO: test
+  public @NotNull ProjectId projectId() {
     return this.projectId;
   }
 
-  public @NotNull String displayName() { // TODO: test
+  public @NotNull String displayName() {
     return this.role();
   }
 

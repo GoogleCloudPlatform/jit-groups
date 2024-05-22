@@ -182,7 +182,7 @@ public class MpaProjectRoleCatalog implements Catalog {
         EnumSet.of(ActivationType.JIT, ActivationType.MPA));
     }
     else {
-      return EntitlementSet.empty();//TODO: test
+      return EntitlementSet.empty();
     }
   }
 
