@@ -22,7 +22,7 @@
 #
 # Build stage.
 #
-FROM maven:3.9.5-eclipse-temurin-21-alpine AS build
+FROM maven:3.9.6-eclipse-temurin-22-alpine AS build
 WORKDIR /app
 
 # Copy local code to the container image.
