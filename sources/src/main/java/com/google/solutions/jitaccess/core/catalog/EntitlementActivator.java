@@ -123,12 +123,21 @@ public abstract class EntitlementActivator<
       duration);
 
     //
-    // Pre-verify access to avoid sending an MPA requests for which
-    // the access check will fail later.
+    // Check that the user is (still) allowed to activate this entitlement.
+    //
+    // NB. This and the following checks are somewhat redundant because the same
+    // checks are being performed during approval. But by performing an extra
+    // check here, we can prevent approval requests being sent to unauthorized
+    // users.
     //
     this.catalog.verifyUserCanRequest(
       requestingUserContext,
       request);
+
+    //
+    // Check that all chosen reviewers are indeed allowed to approve this entitlement.
+    //
+    this.catalog.verifyReviewersCanApprove(request);
 
     return request;
   }

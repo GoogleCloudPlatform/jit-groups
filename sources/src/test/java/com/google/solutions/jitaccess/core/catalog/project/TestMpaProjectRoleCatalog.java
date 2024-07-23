@@ -39,6 +39,7 @@ public class TestMpaProjectRoleCatalog {
 
   private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
   private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
+  private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("approver-2@example.com");
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
   private static final String SAMPLE_ROLE = "roles/resourcemanager.role1";
 
@@ -440,6 +441,88 @@ public class TestMpaProjectRoleCatalog {
 
     var approvingUserContext = new MpaProjectRoleCatalog.UserContext(SAMPLE_APPROVING_USER);
     catalog.verifyUserCanApprove(approvingUserContext, request);
+  }
+
+  //---------------------------------------------------------------------------
+  // verifyReviewersCanApprove.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void whenAnyReviewerNotAllowedToApprove_ThenVerifyReviewersCanApproveThrowsException() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerRepository.class);
+
+    var catalog = new MpaProjectRoleCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    var mpaEntitlement = new Entitlement<>(
+      new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
+      "-",
+      ActivationType.MPA);
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_APPROVING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA))))
+      .thenReturn(EntitlementSet.empty());      // Not allowed.
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_APPROVING_USER_2),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA))))
+      .thenReturn(new EntitlementSet<>(         // Allowed.
+        new TreeSet<>(Set.of(mpaEntitlement)),
+        Map.of(),
+        Map.of(),
+        Set.of()));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.type()).thenReturn(ActivationType.MPA);
+    when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
+    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVING_USER, SAMPLE_APPROVING_USER_2));
+    when(request.entitlements()).thenReturn(Set.of(mpaEntitlement.id()));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> catalog.verifyReviewersCanApprove(request));
+  }
+
+  @Test
+  public void whenAllReviewersAllowedToApprove_ThenVerifyReviewersCanApproveReturns() throws Exception {
+    var policyAnalyzer = Mockito.mock(PolicyAnalyzerRepository.class);
+
+    var catalog = new MpaProjectRoleCatalog(
+      policyAnalyzer,
+      Mockito.mock(ResourceManagerClient.class),
+      new MpaProjectRoleCatalog.Options(null, Duration.ofMinutes(30), 1, 2));
+
+    var mpaEntitlement = new Entitlement<>(
+      new ProjectRole(SAMPLE_PROJECT, SAMPLE_ROLE),
+      "-",
+      ActivationType.MPA);
+
+    when(policyAnalyzer
+      .findEntitlements(
+        eq(SAMPLE_APPROVING_USER),
+        eq(SAMPLE_PROJECT),
+        eq(EnumSet.of(ActivationType.MPA))))
+      .thenReturn(new EntitlementSet<>(
+        new TreeSet<>(Set.of(mpaEntitlement)),
+        Map.of(),
+        Map.of(),
+        Set.of()));
+
+    var request = Mockito.mock(MpaActivationRequest.class);
+    when(request.duration()).thenReturn(catalog.options().minActivationDuration());
+    when(request.type()).thenReturn(ActivationType.MPA);
+    when(request.requestingUser()).thenReturn(SAMPLE_REQUESTING_USER);
+    when(request.reviewers()).thenReturn(Set.of(SAMPLE_APPROVING_USER));
+    when(request.entitlements()).thenReturn(Set.of(mpaEntitlement.id()));
+
+    catalog.verifyReviewersCanApprove(request);
   }
 
   //---------------------------------------------------------------------------
