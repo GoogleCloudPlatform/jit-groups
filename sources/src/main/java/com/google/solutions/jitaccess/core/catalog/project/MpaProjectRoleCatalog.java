@@ -253,6 +253,22 @@ public class MpaProjectRoleCatalog implements Catalog<
       request.entitlements());
   }
 
+  @Override
+  public void verifyReviewersCanApprove(
+    @NotNull MpaActivationRequest<ProjectRole> request
+  ) throws AccessException, IOException {
+
+    validateRequest(request);
+
+    for (var reviewer : request.reviewers()) {
+      verifyUserCanActivateEntitlements(
+        reviewer,
+        ProjectActivationRequest.projectId(request),
+        request.type(),
+        request.entitlements());
+    }
+  }
+
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------

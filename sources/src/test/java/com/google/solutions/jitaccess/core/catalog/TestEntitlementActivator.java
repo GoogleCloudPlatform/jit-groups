@@ -45,6 +45,7 @@ import static org.mockito.Mockito.verify;
 public class TestEntitlementActivator {
   private static final UserId SAMPLE_REQUESTING_USER = new UserId("user@example.com");
   private static final UserId SAMPLE_APPROVING_USER = new UserId("peer@example.com");
+  private static final UserId SAMPLE_APPROVING_USER_2 = new UserId("peer-2@example.com");
   private static final UserId SAMPLE_UNKNOWN_USER = new UserId("unknown@example.com");
 
   private record UserContext(
@@ -185,6 +186,31 @@ public class TestEntitlementActivator {
         requestingUserContext,
         Set.of(new SampleEntitlementId("cat", "1")),
         Set.of(SAMPLE_APPROVING_USER),
+        "justification",
+        Instant.now(),
+        Duration.ofMinutes(5)));
+  }
+
+  @Test
+  public void  whenApprovingUserNotAllowedToApprove_ThenCreateMpaRequestThrowsException() throws Exception {
+    var catalog = Mockito.mock(Catalog.class);
+    var requestingUserContext = new UserContext(SAMPLE_REQUESTING_USER);
+
+    Mockito.doThrow(new AccessDeniedException("mock"))
+      .when(catalog)
+      .verifyReviewersCanApprove(argThat(req ->
+        req.reviewers().contains(SAMPLE_APPROVING_USER) && req.reviewers().contains(SAMPLE_APPROVING_USER_2)));
+
+    var activator = new SampleActivator(
+      catalog,
+      Mockito.mock(JustificationPolicy.class));
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> activator.createMpaRequest(
+        requestingUserContext,
+        Set.of(new SampleEntitlementId("cat", "1")),
+        Set.of(SAMPLE_APPROVING_USER, SAMPLE_APPROVING_USER_2),
         "justification",
         Instant.now(),
         Duration.ofMinutes(5)));

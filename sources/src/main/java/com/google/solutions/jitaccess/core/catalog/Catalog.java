@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.core.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Set;
 import java.util.SortedSet;
 
 /**
@@ -48,7 +49,7 @@ public interface Catalog<
   ) throws AccessException, IOException;
 
   /**
-   * Verify if a user is allowed to make the given request.
+   * Verify that a user is allowed to make the given request.
    */
   void verifyUserCanRequest(
     @NotNull TUserContext userContext,
@@ -56,10 +57,17 @@ public interface Catalog<
   ) throws AccessException, IOException;
 
   /**
-   * Verify if a user is allowed to approve a given request.
+   * Verify that a user is allowed to approve a given request.
    */
   void verifyUserCanApprove(
     @NotNull TUserContext userContext,
+    @NotNull MpaActivationRequest<TEntitlementId> request
+  ) throws AccessException, IOException;
+
+  /**
+   * Verify that all selected reviewers are allowed to approve a given request.
+   */
+  void verifyReviewersCanApprove(
     @NotNull MpaActivationRequest<TEntitlementId> request
   ) throws AccessException, IOException;
 
