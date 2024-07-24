@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -90,6 +91,56 @@ public class TestIapRequestFilter {
     when(request.getHeaderString(anyString())).thenReturn(randomJwt);
 
     assertThrows(ForbiddenException.class, () -> filter.filter(request));
+  }
+
+  @Test
+  public void whenSkippingIAPVerificationWithIncorrectProject_ThenFilterThrowsForbiddenException() {
+    RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
+    when(environment.getProjectId()).thenReturn("123");
+    when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isRunningOnAppEngine()).thenReturn(false);
+    when(environment.isRunningOnCloudRun()).thenReturn(true);
+    when(environment.isDebugModeEnabled()).thenReturn(false);
+    when(environment.getBackendServiceId()).thenReturn("SKIP_IAP_VERIFICATION");
+
+    IapRequestFilter filter = new IapRequestFilter();
+    filter.runtimeEnvironment = environment;
+    filter.log = new LogAdapter();
+
+    // "aud": "/projects/not_123/global/backendServices/"
+    String wrongProjectJwt = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOiIvcHJvamVjdHMvbm90XzEyMy9nbG9iYWwvYmFja2VuZFNlcnZpY2VzLyJ9.";
+
+    ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
+    when(request.getHeaderString(anyString())).thenReturn(wrongProjectJwt);
+
+    ForbiddenException thrown = assertThrows(ForbiddenException.class, () -> filter.filter(request));
+    assertEquals("Expected audience prefix mismatch.", thrown.getMessage());
+  }
+
+  @Test
+  public void whenSkippingIAPVerificationWithCorrectProject_ThenFilterThrowsForbiddenException() {
+    RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
+    when(environment.getProjectId()).thenReturn("123");
+    when(environment.getProjectNumber()).thenReturn("123");
+    when(environment.isRunningOnAppEngine()).thenReturn(false);
+    when(environment.isRunningOnCloudRun()).thenReturn(true);
+    when(environment.isDebugModeEnabled()).thenReturn(false);
+    when(environment.getBackendServiceId()).thenReturn("SKIP_IAP_VERIFICATION");
+
+    IapRequestFilter filter = new IapRequestFilter();
+    filter.runtimeEnvironment = environment;
+    filter.log = new LogAdapter();
+
+    // "aud": "/projects/123/global/backendServices/some_unknown_thing"
+    String rightProjectJwt = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJhdWQiOiIvcHJvamVjdHMvMTIzL2dsb2JhbC9iYWNrZW5kU2VydmljZXMvc29tZV91bmtub3duX3RoaW5nIn0.";
+
+    ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
+    when(request.getHeaderString(anyString())).thenReturn(rightProjectJwt);
+
+    // This should fail because the JWT is unsigned, not because of the audience
+    // prefix.
+    ForbiddenException thrown = assertThrows(ForbiddenException.class, () -> filter.filter(request));
+    assertNotEquals("Expected audience prefix mismatch.", thrown.getMessage());
   }
 
   // -------------------------------------------------------------------------

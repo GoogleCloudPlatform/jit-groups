@@ -21,7 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.auth.oauth2.TokenVerifier;
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
@@ -38,7 +40,9 @@ import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.security.Principal;
+import java.util.List;
 
 /**
  * Verifies that requests have a valid IAP assertion, and makes the assertion available as
@@ -53,6 +57,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   private static final String IAP_ISSUER_URL = "https://cloud.google.com/iap";
   private static final String IAP_ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
+  private static final String IAP_CLOUD_RUN_SKIP_VERIFICATOIN_HEADER_VALUE = "SKIP_IAP_VERIFICATION";
   private static final String DEBUG_PRINCIPAL_HEADER = "x-debug-principal";
 
   @Inject
@@ -97,13 +102,28 @@ public class IapRequestFilter implements ContainerRequestFilter {
       throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
     }
 
+    TokenVerifier.Builder verifier = TokenVerifier.newBuilder().setIssuer(IAP_ISSUER_URL);
+    if (this.runtimeEnvironment.isRunningOnCloudRun()
+        && this.runtimeEnvironment.getBackendServiceId() == IAP_CLOUD_RUN_SKIP_VERIFICATOIN_HEADER_VALUE) {
+      // We manually verify the project ourselves.
+      JsonWebSignature jsonWebSignature;
+      String expectedAudiencePrefix = String.format("/projects/%s/global/backendServices/",
+          this.runtimeEnvironment.getProjectNumber());
+      try {
+        jsonWebSignature = JsonWebSignature.parse(GsonFactory.getDefaultInstance(), assertion);
+      } catch (IOException e) {
+        throw new ForbiddenException("Error parsing JsonWebSignature for IAP", e);
+      }
+      List<String> audience = jsonWebSignature.getPayload().getAudienceAsList();
+      if (audience.size() < 1 || !audience.get(0).startsWith(expectedAudiencePrefix)) {
+        throw new ForbiddenException("Expected audience prefix mismatch.");
+      }
+    } else {
+      verifier.setAudience(expectedAudience);
+    }
+
     try {
-      final var verifiedAssertion = new IapAssertion(
-        TokenVerifier.newBuilder()
-          .setAudience(expectedAudience)
-          .setIssuer(IAP_ISSUER_URL)
-          .build()
-          .verify(assertion));
+      final var verifiedAssertion = new IapAssertion(verifier.build().verify(assertion));
 
       //
       // Associate the token with the request so that controllers
