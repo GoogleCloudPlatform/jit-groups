@@ -53,6 +53,7 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 
@@ -102,16 +103,12 @@ public class RuntimeEnvironment {
     }
   }
 
-  public boolean isRunningOnAppEngine() {
+  private boolean isRunningOnAppEngine() {
     return System.getenv().containsKey("GAE_SERVICE");
   }
 
-  public boolean isRunningOnCloudRun() {
+  private boolean isRunningOnCloudRun() {
     return System.getenv().containsKey("K_SERVICE");
-  }
-
-  public String getBackendServiceId() {
-    return configuration.backendServiceId.getValue();
   }
 
   // -------------------------------------------------------------------------
@@ -452,5 +449,38 @@ public class RuntimeEnvironment {
         }
       }
     };
+  }
+
+  @Produces
+  @Singleton
+  public IapRequestFilter.Options produceIapRequestFilterOptions() {
+    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience.getValue()){
+      //
+      // Disable expected audience-check.
+      //
+      return new IapRequestFilter.Options(null);
+    }
+    else if (isRunningOnAppEngine()) {
+      //
+      // For AppEngine, we can derive the expected audience
+      // from the project number and name.
+      //
+      return new IapRequestFilter.Options(
+        String.format("/projects/%s/apps/%s", this.projectNumber, this.projectId));
+    }
+    else  if (this.configuration.backendServiceId.isValid()) {
+      //
+      // For Cloud Run, we need the backend service id.
+      //
+      return new IapRequestFilter.Options(
+        String.format(
+          "/projects/%s/global/backendServices/%s",
+          this.projectNumber,
+          this.configuration.backendServiceId.getValue()));
+    }
+    else {
+      throw new RuntimeException(
+        "Initializing application failed because the backend service ID is empty");
+    }
   }
 }

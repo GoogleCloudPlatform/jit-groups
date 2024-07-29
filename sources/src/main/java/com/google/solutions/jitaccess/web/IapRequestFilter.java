@@ -21,9 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.auth.oauth2.TokenVerifier;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.core.auth.UserId;
 import com.google.solutions.jitaccess.web.iap.DeviceInfo;
@@ -32,17 +30,18 @@ import com.google.solutions.jitaccess.web.iap.IapPrincipal;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.Null;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
+import org.jboss.resteasy.annotations.Stream;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.security.Principal;
-import java.util.List;
 
 /**
  * Verifies that requests have a valid IAP assertion, and makes the assertion available as
@@ -57,7 +56,6 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   private static final String IAP_ISSUER_URL = "https://cloud.google.com/iap";
   private static final String IAP_ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
-  private static final String IAP_CLOUD_RUN_SKIP_VERIFICATOIN_HEADER_VALUE = "SKIP_IAP_VERIFICATION";
   private static final String DEBUG_PRINCIPAL_HEADER = "x-debug-principal";
 
   @Inject
@@ -65,24 +63,10 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
   @Inject
   RuntimeEnvironment runtimeEnvironment;
-  //
-  // For AppEngine, we can derive the expected audience
-  // from the project number and name.
-  // For running it inside Cloud Run, we need to use provided backend service id
-  // through the env variable
-  //
-  public String getExpectedAudience() {
-    if (runtimeEnvironment.isRunningOnAppEngine()) {
-      return String.format(
-        "/projects/%s/apps/%s",
-        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getProjectId());
-    } else {
-      return String.format(
-        "/projects/%s/global/backendServices/%s",
-        this.runtimeEnvironment.getProjectNumber(), this.runtimeEnvironment.getBackendServiceId()
-      );
-    }
-  }
+
+  @Inject
+  Options options;
+
   /**
    * Authenticate request using IAP assertion.
    */
@@ -90,9 +74,6 @@ public class IapRequestFilter implements ContainerRequestFilter {
     //
     // Read IAP assertion header and validate it.
     //
-    
-    String expectedAudience = getExpectedAudience();
-
     String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
       this.log
@@ -102,28 +83,13 @@ public class IapRequestFilter implements ContainerRequestFilter {
       throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
     }
 
-    TokenVerifier.Builder verifier = TokenVerifier.newBuilder().setIssuer(IAP_ISSUER_URL);
-    if (this.runtimeEnvironment.isRunningOnCloudRun()
-        && this.runtimeEnvironment.getBackendServiceId() == IAP_CLOUD_RUN_SKIP_VERIFICATOIN_HEADER_VALUE) {
-      // We manually verify the project ourselves.
-      JsonWebSignature jsonWebSignature;
-      String expectedAudiencePrefix = String.format("/projects/%s/global/backendServices/",
-          this.runtimeEnvironment.getProjectNumber());
-      try {
-        jsonWebSignature = JsonWebSignature.parse(GsonFactory.getDefaultInstance(), assertion);
-      } catch (IOException e) {
-        throw new ForbiddenException("Error parsing JsonWebSignature for IAP", e);
-      }
-      List<String> audience = jsonWebSignature.getPayload().getAudienceAsList();
-      if (audience.size() < 1 || !audience.get(0).startsWith(expectedAudiencePrefix)) {
-        throw new ForbiddenException("Expected audience prefix mismatch.");
-      }
-    } else {
-      verifier.setAudience(expectedAudience);
-    }
-
     try {
-      final var verifiedAssertion = new IapAssertion(verifier.build().verify(assertion));
+      final var verifiedAssertion = new IapAssertion(
+        TokenVerifier.newBuilder()
+          .setAudience(this.options.expectedAudience)
+          .setIssuer(IAP_ISSUER_URL)
+          .build()
+          .verify(assertion));
 
       //
       // Associate the token with the request so that controllers
@@ -132,15 +98,26 @@ public class IapRequestFilter implements ContainerRequestFilter {
       return verifiedAssertion;
     }
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
-      this.log
-        .newErrorEntry(
-          EVENT_AUTHENTICATE,
-          String.format(
+      if (this.options.expectedAudience != null) {
+        this.log
+          .newErrorEntry(
+            EVENT_AUTHENTICATE,
+            String.format(
+              "Verifying IAP assertion failed. This might be because the " +
+                "IAP assertion was tampered with, or because it had the wrong audience " +
+                "(expected audience: %s).", this.options.expectedAudience),
+            e)
+          .write();
+      }
+      else {
+        this.log
+          .newErrorEntry(
+            EVENT_AUTHENTICATE,
             "Verifying IAP assertion failed. This might be because the " +
-            "IAP assertion was tampered with, or because it had the wrong audience " +
-            "(expected audience: %s).", expectedAudience),
-          e)
-        .write();
+              "IAP assertion was tampered with",
+            e)
+          .write();
+      }
 
       throw new ForbiddenException("Invalid IAP assertion", e);
     }
@@ -184,6 +161,7 @@ public class IapRequestFilter implements ContainerRequestFilter {
   public void filter(@NotNull ContainerRequestContext requestContext) {
     Preconditions.checkNotNull(this.log, "log");
     Preconditions.checkNotNull(this.runtimeEnvironment, "runtimeEnvironment");
+    Preconditions.checkNotNull(this.options, "options");
 
     var principal = this.runtimeEnvironment.isDebugModeEnabled()
       ? authenticateDebugRequest(requestContext)
@@ -216,4 +194,12 @@ public class IapRequestFilter implements ContainerRequestFilter {
 
     this.log.newInfoEntry(EVENT_AUTHENTICATE, "Authenticated IAP principal").write();
   }
+
+  public record Options(
+    /**
+     * Expected audience in IAP assertions. If null, the audience
+     * check is skipped.
+     */
+    @Nullable String expectedAudience
+  ) {}
 }
