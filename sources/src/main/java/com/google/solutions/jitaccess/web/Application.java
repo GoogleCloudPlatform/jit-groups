@@ -122,16 +122,12 @@ public class Application {
     }
   }
 
-  public boolean isRunningOnAppEngine() {
+  private boolean isRunningOnAppEngine() {
     return System.getenv().containsKey("GAE_SERVICE");
   }
 
-  public boolean isRunningOnCloudRun() {
+  private boolean isRunningOnCloudRun() {
     return System.getenv().containsKey("K_SERVICE");
-  }
-
-  public String getBackendServiceId() {
-    throw new RuntimeException("NIY"); // TODO: read BackendServiceId
   }
 
   // -------------------------------------------------------------------------
@@ -284,20 +280,6 @@ public class Application {
 
   public boolean isDebugModeEnabled() {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
-  }
-
-  public UriBuilder createAbsoluteUriBuilder(@NotNull UriInfo uriInfo) {
-    return uriInfo
-      .getBaseUriBuilder()
-      .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
-  }
-
-  public String getProjectId() {
-    return projectId;
-  }
-
-  public String getProjectNumber() {
-    return projectNumber;
   }
 
   //---------------------------------------------------------------------------
