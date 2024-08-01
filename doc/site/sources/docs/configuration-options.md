@@ -384,6 +384,40 @@ The following table lists all available configuration options.
   </tr>
   <tr>
     <td>
+        <code>IAP_BACKEND_SERVICE_ID</code>
+    </td>
+    <td>
+        <p>
+            ID of the load balancer backend used by IAP. The ID is used 
+            for <a href="https://cloud.google.com/iap/docs/signed-headers-howto#verifying_the_jwt_payload">
+            verifying the audience</a> of IAP assertions
+        </p>
+    </td>
+    <td>Required on Cloud Run unless <code>IAP_VERIFY_AUDIENCE=false</code></td>
+    <td></td>
+    <td>1.3</td>
+  </tr>
+  <tr>
+    <td>
+        <code>IAP_VERIFY_AUDIENCE</code>
+    </td>
+    <td>
+        <p>
+            When set to <code>true</code>, the application
+            <a href="https://cloud.google.com/iap/docs/signed-headers-howto#verifying_the_jwt_payload">
+            verifies the audience</a> of IAP assertions, in addition to verifying their authenticity.</a>.
+        </p>
+        <p>
+            When set to <code>false</code>, the application
+            verifies the authenticity of IAP assertions, but does not verify their audience.
+        </p>
+    </td>
+    <td>Optional</td>
+    <td>true</td>
+    <td>1.8.1</td>
+  </tr>
+  <tr>
+    <td>
         <code>BACKEND_CONNECT_TIMEOUT</code>
     </td>
     <td>

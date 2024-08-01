@@ -100,6 +100,7 @@ class RuntimeConfiguration {
     // Backend service id (Cloud Run only).
     //
     this.backendServiceId = new StringSetting(List.of("IAP_BACKEND_SERVICE_ID"), null);
+    this.verifyIapAudience = new BooleanSetting(List.of("IAP_VERIFY_AUDIENCE"), true);
 
     //
     // Notification settings.
@@ -248,6 +249,11 @@ class RuntimeConfiguration {
    * Backend Service Id for token validation
    */
   public final @NotNull StringSetting backendServiceId;
+
+  /**
+   * Check audience of IAP assertions.
+   */
+  public final @NotNull BooleanSetting verifyIapAudience;
 
   /**
    * Minimum number of reviewers foa an activation request.

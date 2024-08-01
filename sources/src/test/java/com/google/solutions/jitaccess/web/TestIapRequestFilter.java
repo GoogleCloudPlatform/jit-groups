@@ -26,7 +26,6 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -35,14 +34,12 @@ public class TestIapRequestFilter {
   @Test()
   public void whenHeaderMissing_ThenFilterThrowsForbiddenException() {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
     filter.runtimeEnvironment = environment;
     filter.log = new LogAdapter();
+    filter.options = new IapRequestFilter.Options("audience");
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(anyString())).thenReturn(null);
@@ -53,14 +50,12 @@ public class TestIapRequestFilter {
   @Test
   public void whenHeaderContainsMalformedJwt_ThenFilterThrowsForbiddenException() {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
     filter.runtimeEnvironment = environment;
     filter.log = new LogAdapter();
+    filter.options = new IapRequestFilter.Options("audience");
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(anyString())).thenReturn("ey00");
@@ -71,14 +66,12 @@ public class TestIapRequestFilter {
   @Test
   public void whenHeaderContainsInvalidJwt_ThenFilterThrowsForbiddenException() {
     RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
     when(environment.isDebugModeEnabled()).thenReturn(false);
 
     IapRequestFilter filter = new IapRequestFilter();
     filter.runtimeEnvironment = environment;
     filter.log = new LogAdapter();
+    filter.options = new IapRequestFilter.Options("audience");
 
     // Random JWT that doesn't even come from IAP.
     String randomJwt =
@@ -104,6 +97,7 @@ public class TestIapRequestFilter {
     IapRequestFilter filter = new IapRequestFilter();
     filter.runtimeEnvironment = environment;
     filter.log = new LogAdapter();
+    filter.options = new IapRequestFilter.Options("audience");
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     assertThrows(ForbiddenException.class, () -> filter.filter(request));
@@ -117,6 +111,7 @@ public class TestIapRequestFilter {
     IapRequestFilter filter = new IapRequestFilter();
     filter.runtimeEnvironment = environment;
     filter.log = new LogAdapter();
+    filter.options = new IapRequestFilter.Options("audience");
 
     ContainerRequestContext request = Mockito.mock(ContainerRequestContext.class);
     when(request.getHeaderString(eq("x-debug-principal"))).thenReturn("bob");
@@ -125,20 +120,5 @@ public class TestIapRequestFilter {
 
     verify(request, times(1))
       .setSecurityContext(argThat(a -> a.getUserPrincipal().getName().equals("bob")));
-  }
-
-  @Test
-  public void whenRunsInCloudRun_returnsCorrectAudience() {
-    RuntimeEnvironment environment = Mockito.mock(RuntimeEnvironment.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isDebugModeEnabled()).thenReturn(false);
-    when(environment.isRunningOnCloudRun()).thenReturn(true);
-    when(environment.getBackendServiceId()).thenReturn("12345");
-
-    IapRequestFilter filter = new IapRequestFilter();
-    filter.runtimeEnvironment = environment;
-
-    assertEquals(filter.getExpectedAudience(), "/projects/123/global/backendServices/12345");
   }
 }
