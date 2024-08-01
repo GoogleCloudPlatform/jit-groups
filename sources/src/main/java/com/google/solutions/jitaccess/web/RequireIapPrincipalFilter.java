@@ -47,7 +47,6 @@ import org.jetbrains.annotations.Nullable;
 @Priority(Priorities.AUTHENTICATION)
 @RequireIapPrincipal
 public class RequireIapPrincipalFilter implements ContainerRequestFilter {
-  private static final String EVENT_AUTHENTICATE = "iap.authenticate";
 
   private static final String IAP_ISSUER_URL = "https://cloud.google.com/iap";
   private static final String IAP_ASSERTION_HEADER = "x-goog-iap-jwt-assertion";
@@ -69,10 +68,10 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
     //
     // Read IAP assertion header and validate it.
     //
-    String assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
+    var assertion = requestContext.getHeaderString(IAP_ASSERTION_HEADER);
     if (assertion == null) {
       this.logger.warn(
-        EVENT_AUTHENTICATE,
+        EventIds.API_AUTHENTICATE,
         "Missing IAP assertion in header, IAP might be disabled");
 
       throw new ForbiddenException("Identity-Aware Proxy must be enabled for this application");
@@ -93,7 +92,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       if (this.options.expectedAudience != null) {
         this.logger.error(
-          EVENT_AUTHENTICATE,
+          EventIds.API_AUTHENTICATE,
           String.format(
               "Verifying IAP assertion failed. This might be because the " +
                 "IAP assertion was tampered with, or because it had the wrong audience " +
@@ -102,7 +101,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
       }
       else {
         this.logger.error(
-          EVENT_AUTHENTICATE,
+          EventIds.API_AUTHENTICATE,
           "Verifying IAP assertion failed. This might be because the " +
             "IAP assertion was tampered with",
           e);
@@ -140,11 +139,17 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
       authenticateIapRequest(requestContext);
     }
 
-    this.logger.info(EVENT_AUTHENTICATE, "Authenticated IAP principal");
+    this.logger.info(
+      EventIds.API_AUTHENTICATE,
+      "Authenticated IAP principal");
   }
 
   public record Options(
+    /**
+     * Enable pseudo-authentication for debugging.
+     */
     boolean enableDebugAuthentication,
+    
     /**
      * Expected audience in IAP assertions. If null, the audience
      * check is skipped.

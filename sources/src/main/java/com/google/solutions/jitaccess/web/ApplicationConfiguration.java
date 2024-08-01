@@ -166,12 +166,8 @@ class ApplicationConfiguration {
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) { // TODO: test
     this.settingsData = settingsData;
 
-    this.customerId = new StringSetting(
-      "RESOURCE_CUSTOMER_ID",
-       null);
-    this.groupsDomain = new StringSetting(
-      "RESOURCE_DOMAIN",
-      null);
+    this.customerId = new StringSetting("RESOURCE_CUSTOMER_ID", null);
+    this.groupsDomain = new StringSetting("RESOURCE_DOMAIN", null);
 
     //
     // Backend service id (Cloud Run only).

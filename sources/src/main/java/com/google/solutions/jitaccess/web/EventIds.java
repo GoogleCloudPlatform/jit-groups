@@ -25,6 +25,7 @@ package com.google.solutions.jitaccess.web;
  * Log event IDs used by this package.
  */
 public class EventIds {
+  public static final String API_AUTHENTICATE = "api.authenticate";
   public static final String API_CHECK_HEALTH = "api.health.check";
   public static final String API_VIEW_ENVIRONMENTS = "api.environments.view";
   public static final String API_RECONCILE_ENVIRONMENT = "api.environments.reconcile";
