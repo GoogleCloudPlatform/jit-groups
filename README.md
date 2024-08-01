@@ -17,6 +17,9 @@ without having to grant them permanent access. This type of just-in-time privile
 * Create an audit trail that indicates why privileges were activated.
 * Conduct audits and reviews for analyzing past activity.
 
+> [!NOTE]  
+> To manage privileged access to Google Cloud resources, you can also use [Privileged Access Manager](https://cloud.google.com/iam/docs/pam-overview), which is now in preview. To learn more about how JIT Access and Privileged Access Manager compare, see [JIT Access vs Privileged Access Manager, and what's next for JIT Access](https://github.com/GoogleCloudPlatform/jit-access/discussions/451).
+
 ## Activate roles on demand
 
 <a href='https://googlecloudplatform.github.io/jit-access/images/JIT-Activation-Screencast.gif?raw=true'>
