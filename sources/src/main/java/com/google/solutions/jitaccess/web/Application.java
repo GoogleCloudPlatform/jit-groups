@@ -311,7 +311,9 @@ public class Application {
       //
       // Disable expected audience-check.
       //
-      return new RequireIapPrincipalFilter.Options(null);
+      return new RequireIapPrincipalFilter.Options(
+        this.isDebugModeEnabled(),
+        null);
     }
     else if (isRunningOnAppEngine()) {
       //
@@ -319,6 +321,7 @@ public class Application {
       // from the project number and name.
       //
       return new RequireIapPrincipalFilter.Options(
+        this.isDebugModeEnabled(),
         String.format("/projects/%s/apps/%s", this.projectNumber, this.projectId));
     }
     else  if (this.configuration.backendServiceId.isValid()) {
@@ -326,6 +329,7 @@ public class Application {
       // For Cloud Run, we need the backend service id.
       //
       return new RequireIapPrincipalFilter.Options(
+        this.isDebugModeEnabled(),
         String.format(
           "/projects/%s/global/backendServices/%s",
           this.projectNumber,

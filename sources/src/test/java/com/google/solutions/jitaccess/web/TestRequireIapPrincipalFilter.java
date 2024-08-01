@@ -37,14 +37,8 @@ import static org.mockito.Mockito.when;
 public class TestRequireIapPrincipalFilter {
   @Test()
   public void filter_whenHeaderMissing_thenThrowsForbiddenException() {
-    Application environment = Mockito.mock(Application.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
-    when(environment.isDebugModeEnabled()).thenReturn(false);
-
     RequireIapPrincipalFilter filter = new RequireIapPrincipalFilter();
-    filter.application = environment;
+    filter.options = new RequireIapPrincipalFilter.Options(false, "audience");
     filter.requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
     filter.logger = Mockito.mock(Logger.class);
 
@@ -56,14 +50,8 @@ public class TestRequireIapPrincipalFilter {
 
   @Test
   public void filter_whenHeaderContainsMalformedJwt_thenThrowsForbiddenException() {
-    Application environment = Mockito.mock(Application.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
-    when(environment.isDebugModeEnabled()).thenReturn(false);
-
     RequireIapPrincipalFilter filter = new RequireIapPrincipalFilter();
-    filter.application = environment;
+    filter.options = new RequireIapPrincipalFilter.Options(false, "audience");
     filter.requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
     filter.logger = Mockito.mock(Logger.class);
 
@@ -75,14 +63,8 @@ public class TestRequireIapPrincipalFilter {
 
   @Test
   public void filter_whenHeaderContainsInvalidJwt_thenThrowsForbiddenException() {
-    Application environment = Mockito.mock(Application.class);
-    when(environment.getProjectId()).thenReturn("123");
-    when(environment.getProjectNumber()).thenReturn("123");
-    when(environment.isRunningOnAppEngine()).thenReturn(true);
-    when(environment.isDebugModeEnabled()).thenReturn(false);
-
     RequireIapPrincipalFilter filter = new RequireIapPrincipalFilter();
-    filter.application = environment;
+    filter.options = new RequireIapPrincipalFilter.Options(false, "audience");
     filter.requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
     filter.logger = Mockito.mock(Logger.class);
 
@@ -104,11 +86,8 @@ public class TestRequireIapPrincipalFilter {
 
   @Test
   public void filter_whenDebugModeEnabledAndDebugHeaderMissing_thenThrowsForbiddenException() {
-    Application environment = Mockito.mock(Application.class);
-    when(environment.isDebugModeEnabled()).thenReturn(true);
-
     RequireIapPrincipalFilter filter = new RequireIapPrincipalFilter();
-    filter.application = environment;
+    filter.options = new RequireIapPrincipalFilter.Options(true, null);
     filter.requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
     filter.logger = Mockito.mock(Logger.class);
 
@@ -118,11 +97,8 @@ public class TestRequireIapPrincipalFilter {
 
   @Test
   public void filter_whenDebugModeEnabled_thenUsesDebugHeader() {
-    Application environment = Mockito.mock(Application.class);
-    when(environment.isDebugModeEnabled()).thenReturn(true);
-
-    RequireIapPrincipalFilter filter = new RequireIapPrincipalFilter();
-    filter.application = environment;
+    var filter = new RequireIapPrincipalFilter();
+    filter.options = new RequireIapPrincipalFilter.Options(true, null);
     filter.requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
     filter.logger = Mockito.mock(Logger.class);
 

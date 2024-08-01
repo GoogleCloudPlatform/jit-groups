@@ -62,9 +62,6 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
   @Inject
   RequestContext requestContext;
 
-  @Inject
-  Application application; //TODO: remove
-
   /**
    * Authenticate request using IAP assertion.
    */
@@ -119,7 +116,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
    * Pseudo-authenticate request using debug header. Only used in debug mode.
    */
   private void authenticateDebugRequest(@NotNull ContainerRequestContext context) {
-    assert this.application.isDebugModeEnabled();
+    assert this.options.enableDebugAuthentication;
 
     var debugPrincipalName = context.getHeaderString(DEBUG_PRINCIPAL_HEADER);
     if (debugPrincipalName == null || debugPrincipalName.isEmpty()) {
@@ -134,10 +131,9 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
   @Override
   public void filter(@NotNull ContainerRequestContext requestContext) {
     Preconditions.checkNotNull(this.logger, "log");
-    Preconditions.checkNotNull(this.application, "application");
     Preconditions.checkNotNull(this.options, "options");
 
-    if (this.application.isDebugModeEnabled()) {
+    if (this.options.enableDebugAuthentication) {
       authenticateDebugRequest(requestContext);
     }
     else {
@@ -148,10 +144,17 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
   }
 
   public record Options(
+    boolean enableDebugAuthentication,
     /**
      * Expected audience in IAP assertions. If null, the audience
      * check is skipped.
      */
     @Nullable String expectedAudience
-  ) {}
+  ) {
+    public Options {
+      if (enableDebugAuthentication) {
+        Preconditions.checkArgument(expectedAudience == null);
+      }
+    }
+  }
 }
