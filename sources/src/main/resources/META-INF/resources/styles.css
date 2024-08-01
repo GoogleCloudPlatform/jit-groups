@@ -281,9 +281,10 @@ main .mdc-button {
     font-size: 10pt;
     position: fixed;
     width: 300px;
-    background: #eee;
+    background: #fafafa;
+    border: 1px gray dashed;
     bottom: 0px;
     right: 0px;
     z-index: 2;
-    padding: 3px;
+    padding: 10px;
 }
