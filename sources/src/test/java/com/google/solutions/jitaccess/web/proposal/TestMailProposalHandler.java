@@ -66,6 +66,7 @@ public class TestMailProposalHandler {
         Duration.ofMinutes(1)));
 
     var op = Mockito.mock(JitGroupContext.JoinOperation.class);
+    when(op.joiningUser()).thenReturn(SAMPLE_USER_1);
     when(op.user()).thenReturn(SAMPLE_USER_1);
     when(op.group()).thenReturn(SAMPLE_JITGROUP);
     when(op.input()).thenReturn(List.of());
@@ -87,7 +88,7 @@ public class TestMailProposalHandler {
     verify(smtpClient, times(1)).sendMail(
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
-      eq(SAMPLE_USER_1.email + " wants to join " + SAMPLE_JITGROUP.name()),
+      eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
       anyString(),
       eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
@@ -126,7 +127,7 @@ public class TestMailProposalHandler {
     verify(smtpClient, times(1)).sendMail(
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
-      eq(SAMPLE_USER_2.email + " approved your request to join " + SAMPLE_JITGROUP.name()),
+      eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
       anyString(),
       eq(EnumSet.of(SmtpClient.Flags.REPLY)));
   }

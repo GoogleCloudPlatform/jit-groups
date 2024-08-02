@@ -26,7 +26,9 @@
                                 <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">{{group.environment}}</div>
                             </div>
                         </li>
-                        <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">Approval details</div>
+                    </ul>
+                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">{{size(input) > 0 ? "Approval details" : ""}}</div>
+                    <ul style="padding-left: 1em; margin: 0;">
                         {{
                         input.map(name,
                             "<li>" +
