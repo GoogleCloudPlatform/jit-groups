@@ -515,10 +515,10 @@ public class Application {
           break;
         }
       }
-      else if (EnvironmentConfiguration.isServiceAccount(environment)) {
+      else if (ServiceAccountId.parse(environment).isPresent()) {
         try {
           var configuration = EnvironmentConfiguration.forServiceAccount(
-            environment,
+            ServiceAccountId.parse(environment).get(),
             this.applicationPrincipal,
             this.applicationCredentials,
             produceHttpTransportOptions());
@@ -532,6 +532,13 @@ public class Application {
           throw new RuntimeException(
             "Loading catalog failed because of configuration issues");
         }
+      }
+      else {
+        this.logger.error(
+          EventIds.LOAD_ENVIRONMENT,
+          "Encountered an unrecognized entry in environment configuration, " +
+            "this might be because of a missing or invalid prefix: %s",
+          environment);
       }
     }
 
@@ -629,23 +636,12 @@ public class Application {
       );
     }
 
-    static boolean isServiceAccount(@NotNull String s) {
-      return ApplicationConfiguration.ENVIRONMENT_SERVICE_ACCOUNT_PATTERN
-        .matcher(s)
-        .matches();
-    }
-
-    static @NotNull EnvironmentConfiguration forServiceAccount( // TODO: Use ServiceAccountId.parse
-      @NotNull String serviceAccountEmail,
+    static @NotNull EnvironmentConfiguration forServiceAccount(
+      @NotNull ServiceAccountId serviceAccountId,
       @NotNull UserId applicationPrincipal,
       @NotNull GoogleCredentials applicationCredentials,
       @NotNull HttpTransport.Options httpOptions
     ) {
-      var matcher = ApplicationConfiguration.ENVIRONMENT_SERVICE_ACCOUNT_PATTERN.matcher(serviceAccountEmail);
-      if (!matcher.matches()) {
-        throw new IllegalArgumentException("Not a service account");
-      }
-
       //
       // Derive the name of the environment from the service
       // account (jit-ENVIRONMENT@...). This approach has the following
@@ -660,7 +656,13 @@ public class Application {
       // - It ensures that the environment name is alphanumeric
       //   and satisfies the criteria for valid environment names.
       //
-      var environmentName = matcher.group(1);
+      if (!serviceAccountId.id.startsWith(ApplicationConfiguration.ENVIRONMENT_SERVICE_ACCOUNT_PREFIX)) {
+        throw new IllegalArgumentException(
+          "Service accounts must use the prefix " + ApplicationConfiguration.ENVIRONMENT_SERVICE_ACCOUNT_PREFIX);
+      }
+
+      var environmentName = serviceAccountId.id
+        .substring(ApplicationConfiguration.ENVIRONMENT_SERVICE_ACCOUNT_PREFIX.length());
 
       //
       // Impersonate the service account and use it for:
@@ -670,7 +672,7 @@ public class Application {
       //
       var environmentCredentials = ImpersonatedCredentials.create(
         applicationCredentials,
-        serviceAccountEmail,
+        serviceAccountId.value(),
         null,
         List.of(ResourceManagerClient.OAUTH_SCOPE), // No other scopes needed.
         0);
@@ -683,7 +685,7 @@ public class Application {
       //
       var secretPath = String.format(
         "projects/%s/secrets/jit-%s/versions/latest",
-        matcher.group(2),
+        serviceAccountId.projectId,
         environmentName);
 
       return new EnvironmentConfiguration(
@@ -706,10 +708,10 @@ public class Application {
                 "Impersonating service account '%s' of environment '%s' failed, possibly caused " +
                 "by insufficient IAM permissions. Make sure that the service account '%s' has " +
                 "the roles/iam.serviceAccountTokenCreator role on '%s'.",
-                serviceAccountEmail,
+                serviceAccountId.email(),
                 environmentName,
                 applicationPrincipal,
-                serviceAccountEmail));
+                serviceAccountId.email()));
           }
 
           try {

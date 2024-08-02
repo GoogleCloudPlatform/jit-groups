@@ -68,6 +68,13 @@ public class ServiceAccountId implements IamPrincipalId {
   }
 
   /**
+   *  Return email of service account.
+   */
+  public String email() {
+    return String.format("%s@%s.iam.gserviceaccount.com", this.id, this.projectId);
+  }
+
+  /**
    * Parse a user ID that uses the syntax serviceAccount:email.
    */
   public static Optional<ServiceAccountId> parse(@Nullable String s) {
@@ -113,9 +120,12 @@ public class ServiceAccountId implements IamPrincipalId {
     return TYPE;
   }
 
+  /**
+   * Return email of service account.
+   */
   @Override
   public @NotNull String value() {
-    return String.format("%s@%s.iam.gserviceaccount.com", this.id, this.projectId);
+    return email();
   }
 }
 

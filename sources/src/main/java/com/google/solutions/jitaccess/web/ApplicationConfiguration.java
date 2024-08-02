@@ -36,10 +36,9 @@ import java.util.regex.Pattern;
 
 class ApplicationConfiguration {
   /**
-   * Pattern for environment service accounts.
+   * Prefix for environment service accounts.
    */
-  static final @NotNull Pattern ENVIRONMENT_SERVICE_ACCOUNT_PATTERN =
-    Pattern.compile("^jit-(.+)@(.+).iam.gserviceaccount.com$");
+  static final @NotNull String ENVIRONMENT_SERVICE_ACCOUNT_PREFIX = "jit-";
 
   /**
    * Raw settings data, typically sourced from the environment block.
