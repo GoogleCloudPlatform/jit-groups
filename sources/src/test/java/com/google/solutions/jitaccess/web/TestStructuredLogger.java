@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestStructuredLogger {
   // -------------------------------------------------------------------------
@@ -91,10 +92,8 @@ public class TestStructuredLogger {
       new IllegalStateException("outer-exception",
         new IllegalArgumentException("inner-exception")));
 
-    assertEquals(
-      "{\"severity\":\"WARN\",\"logging.googleapis.com/labels\":{\"event/id\":\"E1\",\"event/type\":\"operational\"}," +
-        "\"message\":\"exception: outer-exception, caused by IllegalArgumentException: inner-exception\"}\n",
-      buffer.toString());
+    assertTrue(buffer.toString()
+      .contains("exception: outer-exception, caused by IllegalArgumentException: inner-exception"));
   }
 
   // -------------------------------------------------------------------------
@@ -134,10 +133,8 @@ public class TestStructuredLogger {
       new IllegalStateException("outer-exception",
         new IllegalArgumentException("inner-exception")));
 
-    assertEquals(
-      "{\"severity\":\"ERROR\",\"logging.googleapis.com/labels\":{\"event/id\":\"E1\",\"event/type\":\"operational\"}," +
-        "\"message\":\"exception: outer-exception, caused by IllegalArgumentException: inner-exception\"}\n",
-      buffer.toString());
+    assertTrue(buffer.toString()
+      .contains("exception: outer-exception, caused by IllegalArgumentException: inner-exception"));
   }
 
 

@@ -173,6 +173,9 @@ public class MailProposalHandler extends AbstractProposalHandler {
       //
       // Send mail to joining user and cc others.
       //
+      // NB. Use same subject as before so that Gmail recognizes the
+      // emails as a thread.
+      //
       sendMail(
         List.of(this.emailMapping.emailFromPrincipalId(proposal.user())),
         proposal.recipients()
@@ -180,7 +183,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
           .map(this.emailMapping::emailFromPrincipalId)
           .collect(Collectors.toSet()),
         String.format(
-          "%s approved your request to join %s",
+          "%s wants to join %s",
           operation.user().email,
           operation.group().name()),
         template.evaluate(),

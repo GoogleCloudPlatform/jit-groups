@@ -26,6 +26,7 @@
                                 <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">{{group.environment}}</div>
                             </div>
                         </li>
+                        {{
                         input.map(name,
                             "<li>" +
                                 "<div style=\"display: flex; flow-direction: row;\">" +
@@ -33,7 +34,7 @@
                                 "<div style=\"color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;\">"+input[name].value+"</div>" +
                                 "</div>" +
                             "</li>").join()
-                            }}
+                        }}
                     </ul>
                 </div>
             </div>
