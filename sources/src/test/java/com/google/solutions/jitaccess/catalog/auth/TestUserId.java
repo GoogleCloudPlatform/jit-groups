@@ -44,8 +44,8 @@ public class TestUserId {
 
   @Test
   public void equals_whenObjectAreEquivalent() {
-    UserId id1 = new UserId("bob@example.com");
-    UserId id2 = new UserId("bob@example.com");
+    var id1 = new UserId("bob@example.com");
+    var id2 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -54,8 +54,8 @@ public class TestUserId {
 
   @Test
   public void equals_whenObjectAreEquivalentButDifferInCasing() {
-    UserId id1 = new UserId("Bob@Example.Com");
-    UserId id2 = new UserId("bob@example.com");
+    var id1 = new UserId("Bob@Example.Com");
+    var id2 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -64,16 +64,16 @@ public class TestUserId {
 
   @Test
   public void equals_whenObjectAreSame() {
-    UserId id1 = new UserId("bob@example.com");
+    var id1 = new UserId("bob@example.com");
 
     assertTrue(id1.equals(id1));
     assertEquals(0, id1.compareTo(id1));
   }
 
   @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    UserId id1 = new UserId("alice@example.com");
-    UserId id2 = new UserId("bob@example.com");
+  public void equals_whenEmailsDiffer() {
+    var id1 = new UserId("alice@example.com");
+    var id2 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -82,14 +82,14 @@ public class TestUserId {
 
   @Test
   public void equals_whenObjectIsNull() {
-    UserId id1 = new UserId("bob@example.com");
+    var id1 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void equals_whenObjectIsDifferentType() {
-    UserId id1 = new UserId("bob@example.com");
+    var id1 = new UserId("bob@example.com");
 
     assertFalse(id1.equals(""));
   }

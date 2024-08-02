@@ -32,10 +32,14 @@ import java.util.Optional;
  */
 public interface IamPrincipalId extends PrincipalId, Comparable<IamPrincipalId> {
 
+  /**
+   * Parse a user ID that uses the syntax type:id.
+   */
   static Optional<IamPrincipalId> parse(@Nullable String s) {
     return Optional.<IamPrincipalId>empty()
       .or(() -> UserId.parse(s))
-      .or(() -> GroupId.parse(s));
+      .or(() -> GroupId.parse(s))
+      .or(() -> ServiceAccountId.parse(s));
   }
 
   default int compareTo(@NotNull IamPrincipalId o) {

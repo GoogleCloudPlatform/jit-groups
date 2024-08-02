@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.apis.ProjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -40,7 +41,9 @@ public class TestIamPrincipalId {
     "group:",
     "user",
     "user: ",
-    "invalid"
+    "invalid",
+    "serviceaccunt",
+    "serviceaccunt: "
   })
   public void parse_whenInvalid(String s) {
     assertFalse(IamPrincipalId.parse(null).isPresent());
@@ -56,5 +59,9 @@ public class TestIamPrincipalId {
     assertEquals(
       new UserId("user@example.com"),
       IamPrincipalId.parse("user:user@example.com").get());
+
+    assertEquals(
+      new ServiceAccountId("sa", new ProjectId("project-1")),
+      IamPrincipalId.parse("serviceaccount:sa@project-1.iam.gserviceaccount.com").get());
   }
 }
