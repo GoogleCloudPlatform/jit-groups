@@ -1,4 +1,18 @@
 ﻿<html>
+<head>
+    <script type="application/ld+json">
+        {
+            "@context": "http://schema.org",
+            "@type": "EmailMessage",
+            "potentialAction": {
+                "@type": "ViewAction",
+                "url": "{{proposal.action_uri}}",
+                "name": "Show details"
+            },
+            "description": "Show details and approve"
+        }
+    </script>
+</head>
 <body>
     <div style="width:100%; max-width: 600px; margin: auto; -ms-text-size-adjust:100%; -webkit-text-size-adjust:100%; background: rgba(255, 255, 255, 1);">
         <div style="width:100%; max-width: 600px; height: auto; margin: auto; border:1px solid rgba(224,224,224,1);">
@@ -55,7 +69,7 @@
                 </div>
                 <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
                     <a style="display: flex; flex-direction: column; align-items: center; padding: 8px 24px; gap: 8px; ; background: #1a73e8; box-sizing: border-box; border-radius: 4px; text-decoration: none;" href="{{proposal.action_uri}}">
-                        <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; line-height: 20px; display: flex; align-items: center; text-align: center; letter-spacing: 0.25px; color: #1a73e8; white-space: nowrap; color: white;">View request</div>
+                        <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; line-height: 20px; display: flex; align-items: center; text-align: center; letter-spacing: 0.25px; color: #1a73e8; white-space: nowrap; color: white;">Show details</div>
                     </a>
                 </div>
                 <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 14px; margin-top: 32px;">
