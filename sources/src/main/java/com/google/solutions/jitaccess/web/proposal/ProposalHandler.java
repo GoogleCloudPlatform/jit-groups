@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.web.proposal;
 
 import com.google.solutions.jitaccess.apis.clients.AccessException;
-import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
+import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import org.jetbrains.annotations.NotNull;
 

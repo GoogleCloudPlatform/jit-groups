@@ -33,7 +33,6 @@ import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
-import io.vertx.ext.auth.User;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

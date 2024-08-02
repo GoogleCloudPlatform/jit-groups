@@ -21,21 +21,16 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.Logger;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
 
 /**
  * Verifies that requests contain the header and origin IP

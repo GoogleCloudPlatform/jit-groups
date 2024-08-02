@@ -21,8 +21,8 @@
 
 package com.google.solutions.jitaccess.web.proposal;
 
-import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
+import com.google.solutions.jitaccess.catalog.Proposal;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;

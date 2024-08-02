@@ -1,13 +1,9 @@
 package com.google.solutions.jitaccess.catalog;
 
-import io.quarkus.logging.Log;
-import jakarta.validation.constraints.Null;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public interface Logger {
   /**

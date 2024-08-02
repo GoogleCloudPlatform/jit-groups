@@ -31,7 +31,6 @@ import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
 import com.google.solutions.jitaccess.catalog.policy.Property;
 import com.google.solutions.jitaccess.util.Coalesce;
-import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.LinkBuilder;
 import com.google.solutions.jitaccess.web.LogRequest;
