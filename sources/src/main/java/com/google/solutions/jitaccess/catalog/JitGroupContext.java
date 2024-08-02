@@ -144,7 +144,7 @@ public class JitGroupContext {
     if (proposal.user().equals(this.subject.user())) {
       //
       // The current user is trying to approve or view their own proposal.
-      // Approving owe's own proposal is typically not allowed (unless they
+      // Approving one's own proposal is typically not allowed (unless they
       // have the APPROVE_SELF permission, in which case creating a proposal
       // was unnecessary), but viewing is usually okay.
       //

@@ -42,14 +42,14 @@ import java.util.stream.Collectors;
  */
 @Dependent
 class OperationAuditTrail {
-  private @NotNull Logger logger;
+  private final @NotNull Logger logger;
 
-  private static String LABEL_GROUP_ID = "group/id";
-  private static String LABEL_GROUP_EXPIRY = "group/expiry";
-  private static String LABEL_PREFIX_JOIN_INPUT = "join/input/";
-  private static String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
-  private static String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
-  private static String LABEL_EVENT_TYPE = "event/type";
+  private static final String LABEL_GROUP_ID = "group/id";
+  private static final String LABEL_GROUP_EXPIRY = "group/expiry";
+  private static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
+  private static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
+  private static final String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
+  private static final String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
     this.logger = logger;

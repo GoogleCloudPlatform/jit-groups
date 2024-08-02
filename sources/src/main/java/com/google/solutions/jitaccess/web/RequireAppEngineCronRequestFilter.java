@@ -44,7 +44,7 @@ import jakarta.ws.rs.ext.Provider;
 @Priority(Priorities.AUTHENTICATION)
 @RequireAppEngineCronRequest
 public class RequireAppEngineCronRequestFilter implements ContainerRequestFilter {
-  static String CRON_HEADER = "X-Appengine-Cron";
+  static final String CRON_HEADER = "X-Appengine-Cron";
 
   @Inject
   Logger logger;

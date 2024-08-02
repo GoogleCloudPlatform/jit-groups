@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -138,7 +139,8 @@ public class PolicyAnalysis {
       .principals()
       .stream()
       .filter(p -> p.isValid() && p.id().equals(this.groupId))
-      .findFirst();
+      .findFirst()
+      .orElse(null);
 
     assert result.unsatisfiedConstraints.containsAll(result.failedConstraints
       .keySet());
@@ -148,14 +150,14 @@ public class PolicyAnalysis {
 
   public class Result {
     private final boolean accessAllowed;
-    private @NotNull Optional<Principal> activeMembership;
+    private @Nullable Principal activeMembership;
     private final @NotNull LinkedList<Constraint> satisfiedConstraints;
     private final @NotNull LinkedList<Constraint> unsatisfiedConstraints;
     private final @NotNull Map<Constraint, Exception> failedConstraints;
 
     private Result(boolean accessAllowed) {
       this.accessAllowed = accessAllowed;
-      this.activeMembership = Optional.empty();
+      this.activeMembership = null;
       this.satisfiedConstraints = new LinkedList<>();
       this.unsatisfiedConstraints = new LinkedList<>();
       this.failedConstraints = new HashMap<>();
@@ -195,7 +197,7 @@ public class PolicyAnalysis {
      * @return information about the subject's existing membership, if any.
      */
     public @NotNull Optional<Principal> activeMembership() {
-      return activeMembership;
+      return Optional.ofNullable(activeMembership);
     }
 
     /**

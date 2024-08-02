@@ -161,7 +161,7 @@ class ApplicationConfiguration {
   final @NotNull Setting<String> legacyJustificationHint;
   final @NotNull Setting<String> legacyProjectsQuery;
 
-  public ApplicationConfiguration(@NotNull Map<String, String> settingsData) { // TODO: test
+  public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     this.settingsData = settingsData;
 
     this.customerId = new StringSetting("RESOURCE_CUSTOMER_ID", null);

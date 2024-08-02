@@ -146,12 +146,11 @@ class IamCondition implements CelExpression<Boolean> {
             currentClause.setLength(0);
 
             i++; // Skip the next "&".
-            break;
           }
           else {
             currentClause.append(c);
-            break;
           }
+          break;
 
         case '(':
           bracesDepth++;

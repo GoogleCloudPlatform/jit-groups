@@ -44,14 +44,14 @@ public interface ProposalHandler {
   @NotNull ProposalHandler.ProposalToken propose(
     @NotNull JitGroupContext.JoinOperation joinOperation,
     @NotNull Function<String, URI> buildActionUri
-  ) throws AccessException, IOException;
+  ) throws AccessException;
 
   /**
    * Accept a proposal.
    */
   @NotNull Proposal accept(
     @NotNull String proposalToken
-  ) throws AccessException, IOException;
+  ) throws AccessException;
 
   /**
    * Token that encodes all information about a proposal in a tamper-proof

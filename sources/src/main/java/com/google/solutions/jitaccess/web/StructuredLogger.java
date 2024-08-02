@@ -44,14 +44,12 @@ abstract class StructuredLogger implements Logger {
 
   protected final @NotNull Appendable output;
 
-  private final @NotNull Map<String, String> extraLabels = new HashMap<>();
-
   StructuredLogger(@NotNull Appendable output) {
     this.output = output;
   }
 
   protected @NotNull Map<String, String> createLabels(String eventId) {
-    var labels = new HashMap<>(this.extraLabels);
+    var labels = new HashMap<String, String>();
     labels.put("event/id", eventId);
     labels.put("event/type", "operational");
     return labels;
@@ -208,7 +206,7 @@ abstract class StructuredLogger implements Logger {
     private @Nullable String message;
 
     @JsonProperty("logging.googleapis.com/trace")
-    private @Nullable String traceId;
+    private final @Nullable String traceId;
 
     private JsonLogEntry(
       @NotNull String severity,

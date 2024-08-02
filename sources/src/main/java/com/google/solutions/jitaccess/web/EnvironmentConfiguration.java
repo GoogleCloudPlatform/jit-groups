@@ -116,7 +116,7 @@ class EnvironmentConfiguration {
 
   static @NotNull EnvironmentConfiguration forServiceAccount(
     @NotNull ServiceAccountId serviceAccountId,
-    @NotNull UserId applicationPrincipal, // TODO: convert to ServiceAccountId
+    @NotNull UserId applicationPrincipal,
     @NotNull GoogleCredentials applicationCredentials,
     @NotNull HttpTransport.Options httpOptions
   ) {

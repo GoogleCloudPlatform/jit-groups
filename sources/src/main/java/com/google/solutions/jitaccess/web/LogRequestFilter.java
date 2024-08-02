@@ -25,7 +25,7 @@ public class LogRequestFilter implements ContainerRequestFilter {
   RequestContext requestContext;
 
   @Override
-  public void filter(ContainerRequestContext containerRequestContext) throws IOException {
+  public void filter(ContainerRequestContext containerRequestContext) {
     this.requestContext.initialize(
       containerRequestContext.getRequest().getMethod(),
       containerRequestContext.getUriInfo().getPath(),
