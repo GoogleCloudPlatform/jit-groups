@@ -34,6 +34,7 @@ import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -43,8 +44,11 @@ import java.util.stream.Collectors;
 class OperationAuditTrail {
   private @NotNull Logger logger;
 
-  private static String LABEL_GROUPID = "group/id";
-  private static String LABEL_INPUT_PREFIX = "input/id";
+  private static String LABEL_GROUP_ID = "group/id";
+  private static String LABEL_GROUP_EXPIRY = "group/expiry";
+  private static String LABEL_PREFIX_JOIN_INPUT = "join/input/";
+  private static String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
+  private static String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
   private static String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
@@ -62,7 +66,7 @@ class OperationAuditTrail {
     for (var detail : e.exceptions()) {
       this.logger.buildError(EventIds.GROUP_CONSTRAINT_FAILED)
         .addLabel(LABEL_EVENT_TYPE, "audit")
-        .addLabel(LABEL_GROUPID, groupId)
+        .addLabel(LABEL_GROUP_ID, groupId)
         .setMessage(Exceptions.fullMessage(detail))
         .write();
     }
@@ -74,10 +78,14 @@ class OperationAuditTrail {
   ) {
     this.logger.buildInfo(EventIds.API_JOIN_GROUP)
       .addLabel(LABEL_EVENT_TYPE, "audit")
-      .addLabel(LABEL_GROUPID, joinOp.group())
+      .addLabel(LABEL_GROUP_ID, joinOp.group())
+      .addLabel(LABEL_PREFIX_PROPOSAL_RECIPIENTS, proposal.audience()
+        .stream()
+        .map(IamPrincipalId::toString)
+        .collect(Collectors.joining(",")))
       .addLabels(joinOp.input()
         .stream()
-        .collect(Collectors.toMap(i -> LABEL_INPUT_PREFIX + i.name(), i -> i.get())))
+        .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
       .setMessage(
         "User '%s' asked to join group '%s', proposed to %s for approval",
         joinOp.user(),
@@ -95,10 +103,13 @@ class OperationAuditTrail {
   ) {
     this.logger.buildInfo(EventIds.API_JOIN_GROUP)
       .addLabel(LABEL_EVENT_TYPE, "audit")
-      .addLabel(LABEL_GROUPID,  joinOp.group())
+      .addLabel(LABEL_GROUP_ID,  joinOp.group())
+      .addLabel(LABEL_GROUP_EXPIRY, principal.expiry()
+        .atOffset(ZoneOffset.UTC)
+        .truncatedTo(ChronoUnit.SECONDS))
       .addLabels(joinOp.input()
         .stream()
-        .collect(Collectors.toMap(i -> LABEL_INPUT_PREFIX + i.name(), i -> i.get())))
+        .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
       .setMessage(
         "User '%s' joined group '%s' with expiry %s, approval was not required",
         joinOp.user(),
@@ -114,10 +125,16 @@ class OperationAuditTrail {
   ) {
     this.logger.buildInfo(EventIds.API_APPROVE_JOIN)
       .addLabel(LABEL_EVENT_TYPE, "audit")
-      .addLabel("group/id", approveOp.group())
+      .addLabel(LABEL_GROUP_ID, approveOp.group())
+      .addLabel(LABEL_GROUP_EXPIRY, principal.expiry()
+        .atOffset(ZoneOffset.UTC)
+        .truncatedTo(ChronoUnit.SECONDS))
       .addLabels(approveOp.input()
         .stream()
-        .collect(Collectors.toMap(i -> LABEL_INPUT_PREFIX + i.name(), i -> i.get())))
+        .collect(Collectors.toMap(i -> LABEL_PREFIX_PROPOSAL_INPUT + i.name(), i -> i.get())))
+      .addLabels(approveOp.joiningUserInput()
+        .stream()
+        .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
       .setMessage(
         "User '%s' approved proposal of '%s' to join group '%s' with expiry %s",
         approveOp.user(),
