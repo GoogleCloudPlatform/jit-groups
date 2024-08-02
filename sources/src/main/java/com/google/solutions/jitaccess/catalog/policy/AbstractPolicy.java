@@ -132,7 +132,7 @@ abstract class AbstractPolicy implements Policy {
    * policy's constraint takes priority.
    */
   @Override
-  public @NotNull Collection<Constraint> constraints(ConstraintClass c) { // TODO: Inheritance
+  public @NotNull Collection<Constraint> constraints(ConstraintClass c) {
     var constraints = this.constraints.get(c);
     return constraints != null
       ? constraints

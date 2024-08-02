@@ -242,7 +242,7 @@ public class JitGroupContext {
       // NB. We verified all constraints, so if expiry is empty, then
       // there is no expiry constraint.
       //
-      var expiry = JitGroupContext.this.policy.constraints(Policy.ConstraintClass.JOIN)
+      var expiry = JitGroupContext.this.policy.constraints(Policy.ConstraintClass.JOIN) // TODO: Inheritance!
         .stream()
         .filter(c -> c instanceof ExpiryConstraint)
         .map(c -> (ExpiryConstraint)c)

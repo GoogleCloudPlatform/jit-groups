@@ -126,6 +126,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
     var template = MailTemplate.fromResource(PROPOSAL_TEMPLATE);
     template.addContext("input", operation.input(), true);
     template.addContext("user", operation.user());
+    template.addContext("joining_user", operation.joiningUser());
     template.addContext("group", operation.group());
     template.addContext("proposal")
       .set("action_uri", actionUri.toString())
