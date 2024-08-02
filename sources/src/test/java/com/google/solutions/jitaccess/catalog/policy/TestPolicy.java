@@ -24,15 +24,17 @@ package com.google.solutions.jitaccess.catalog.policy;
 import com.google.solutions.jitaccess.catalog.Subjects;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
+import jakarta.validation.constraints.Null;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 public class TestPolicy {
   private static final UserId SAMPLE_USER = new UserId("user@example.com");
@@ -44,6 +46,13 @@ public class TestPolicy {
       @Nullable AccessControlList acl
     ) {
       super("Test", "Test", acl, Map.of());
+    }
+
+    public SamplePolicy(
+      @Nullable AccessControlList acl,
+      @NotNull Map<ConstraintClass, Collection<Constraint>> constraints
+    ) {
+      super("Test", "Test", acl, constraints);
     }
   }
 
@@ -179,5 +188,51 @@ public class TestPolicy {
     assertTrue(policy.isAllowedByAccessControlList(
       Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of()),
       EnumSet.of(PolicyPermission.JOIN)));
+  }
+
+  //---------------------------------------------------------------------------
+  // effectiveConstraints.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void effectiveConstraints_whenParentEmpty() {
+    var constraint1 = new CelConstraint("constraint-1", "", List.of(), "false");
+    var leafPolicy = new SamplePolicy(
+      null,
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(constraint1)));
+
+    assertEquals(1, leafPolicy.effectiveConstraints(Policy.ConstraintClass.JOIN).size());
+    assertEquals(0, leafPolicy.effectiveConstraints(Policy.ConstraintClass.APPROVE).size());
+
+    assertTrue(leafPolicy.effectiveConstraints(Policy.ConstraintClass.JOIN).contains(constraint1));
+  }
+
+  @Test
+  public void effectiveConstraints_whenParentHasConstraints() {
+    var parentConstraint1 = new CelConstraint("constraint-1", "", List.of(), "false");
+    var parentConstraint2 = new CelConstraint("constraint-2", "", List.of(), "false");
+
+    var parentPolicy = new SamplePolicy(
+      null,
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(parentConstraint1, parentConstraint2)));
+
+    var overriddenConstraint1 = new CelConstraint(parentConstraint1.name(), "", List.of(), "true");
+
+    var childPolicy = new SamplePolicy(
+      null,
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(overriddenConstraint1)));
+    childPolicy.setParent(parentPolicy);
+
+    assertEquals(2, childPolicy.effectiveConstraints(Policy.ConstraintClass.JOIN).size());
+    assertEquals(0, childPolicy.effectiveConstraints(Policy.ConstraintClass.APPROVE).size());
+
+    assertTrue(childPolicy.effectiveConstraints(Policy.ConstraintClass.JOIN).contains(overriddenConstraint1));
+    assertTrue(childPolicy.effectiveConstraints(Policy.ConstraintClass.JOIN).contains(parentConstraint2));
   }
 }

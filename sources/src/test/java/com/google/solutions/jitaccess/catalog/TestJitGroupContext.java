@@ -340,6 +340,44 @@ public class TestJitGroupContext {
   }
 
   @Test
+  public void join_execute_whenExpiryConstraintInherited() throws Exception {
+    var subject = Subjects.create(SAMPLE_USER);
+    var group = new JitGroupPolicy(
+      "group-1",
+      "Group 1",
+      new AccessControlList.Builder()
+        .allow(SAMPLE_USER, PolicyPermission.JOIN.toMask())
+        .allow(SAMPLE_USER, PolicyPermission.APPROVE_SELF.toMask())
+        .build());
+
+    var system = new SystemPolicy(
+      "system-1",
+      "System",
+      null,
+      Map.of(
+        Policy.ConstraintClass.JOIN, List.of(new ExpiryConstraint(Duration.ofMinutes(1))),
+        Policy.ConstraintClass.APPROVE, List.of()));
+
+    createEnvironmentPolicy()
+      .add(system.add(group));
+
+    var provisioner = Mockito.mock(Provisioner.class);
+    var joinOp = new JitGroupContext(group, subject, provisioner).join();
+
+    var principal = joinOp.execute();
+    assertEquals(group.id(), principal.id());
+    assertNotNull(principal.expiry());
+    assertTrue(principal.isValid());
+    assertTrue(principal.expiry().isAfter(Instant.now()));
+    assertTrue(principal.expiry().isBefore(Instant.now().plusSeconds(61)));
+
+    verify(provisioner, times(1)).provisionMembership(
+      eq(group),
+      eq(SAMPLE_USER),
+      any());
+  }
+
+  @Test
   public void join_execute() throws Exception {
     var subject = Subjects.create(SAMPLE_USER);
     var group = new JitGroupPolicy(

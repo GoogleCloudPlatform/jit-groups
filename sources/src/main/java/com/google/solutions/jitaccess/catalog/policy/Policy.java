@@ -26,10 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.Optional;
+import java.util.*;
 
 public interface Policy extends PolicyHeader {
   /**
@@ -60,7 +57,7 @@ public interface Policy extends PolicyHeader {
   /**
    * Constraints, if any.
    */
-  @NotNull Collection<Constraint> constraints(ConstraintClass action);
+  @NotNull Collection<Constraint> constraints(@NotNull ConstraintClass action);
 
   /**
    * Data about the source of this policy.
@@ -97,6 +94,28 @@ public interface Policy extends PolicyHeader {
         .stream()
         .flatMap(acl -> acl.entries().stream())
         .toList());
+  }
+
+  /**
+   * Effective constraints based on the policy's ancestry.
+   */
+  default @NotNull Collection<Constraint> effectiveConstraints(
+    @NotNull Policy.ConstraintClass constraintClass
+  ) {
+    var allConstraints = new HashMap<String, Constraint>();
+    for (var policy = Optional.of(this); policy.isPresent(); policy = policy.get().parent()) {
+      for (var constraint : policy.get().constraints(constraintClass)) {
+        if (!allConstraints.containsKey(constraint.name())) {
+          //
+          // If a parent and child policy contain a constraint with the same name,
+          // we use the child's constraint.
+          //
+          allConstraints.put(constraint.name(), constraint);
+        }
+      }
+    }
+
+    return allConstraints.values();
   }
 
   /**

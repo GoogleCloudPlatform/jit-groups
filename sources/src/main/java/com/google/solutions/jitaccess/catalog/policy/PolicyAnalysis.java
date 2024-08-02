@@ -90,38 +90,13 @@ public class PolicyAnalysis {
   }
 
   /**
-   * Get effective set of constraints, including:
-   *
-   * - This policy's constraints
-   * - Inherited constraints, if not overridden.
-   */
-  protected Collection<Constraint> effectiveConstraints(
-    @NotNull Policy.ConstraintClass constraintClass
-  ) {
-    var allConstraints = new HashMap<String, Constraint>();
-    for (var policy = Optional.of(this.policy); policy.isPresent(); policy = policy.get().parent()) {
-      for (var constraint : policy.get().constraints(constraintClass)) {
-        if (!allConstraints.containsKey(constraint.name())) {
-          //
-          // If a parent and child policy contain a constraint with the same name,
-          // we use the child's constraint.
-          //
-          allConstraints.put(constraint.name(), constraint);
-        }
-      }
-    }
-
-    return allConstraints.values();
-  }
-
-  /**
    * Add a set of constraints to be considered.
    */
   public @NotNull PolicyAnalysis applyConstraints(
     @NotNull Policy.ConstraintClass constraintClass
   ) {
     this.constraintChecks.addAll(
-      effectiveConstraints(constraintClass)
+      this.policy.effectiveConstraints(constraintClass)
         .stream()
         .map(c -> c.createCheck())
         .toList());
