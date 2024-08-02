@@ -32,10 +32,7 @@ import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -131,12 +128,12 @@ public class EnvironmentsResource {
   }
 
   /**
-   * Get policy source.
+   * Get compliance information.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("environments/{environment}/status")
-  public @NotNull EnvironmentsResource.EnvironmentStatusInfo getStatus(
+  @Path("environments/{environment}/compliance")
+  public @NotNull EnvironmentsResource.ComplianceInfo getCompliance(
     @PathParam("environment") @NotNull String environmentName
   ) throws Exception {
     try {
@@ -144,7 +141,31 @@ public class EnvironmentsResource {
         .environment(environmentName)
         .orElseThrow(() -> NOT_FOUND);
 
-      return EnvironmentStatusInfo.create(
+      return ComplianceInfo.forPendingReconciliation(environment);
+    }
+    catch (Exception e) {
+      this.logger.warn(EventIds.API_RECONCILE_ENVIRONMENT, e);
+
+      throw (Exception)e.fillInStackTrace();
+    }
+  }
+
+
+  /**
+   * Reconcile policy and return compliance issues.
+   */
+  @POST
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("environments/{environment}/compliance")
+  public @NotNull EnvironmentsResource.ComplianceInfo reconcile(
+    @PathParam("environment") @NotNull String environmentName
+  ) throws Exception {
+    try {
+      var environment =  this.catalog
+        .environment(environmentName)
+        .orElseThrow(() -> NOT_FOUND);
+
+      return ComplianceInfo.forReconciliation(
         environment,
         environment
           .reconcile()
@@ -203,7 +224,7 @@ public class EnvironmentsResource {
           ? new Link("environments/%s/policy", environment.policy().name())
           : null,
         environment.canReconcile()
-          ? new Link("environments/%s/status", environment.policy().name())
+          ? new Link("environments/%s/compliance", environment.policy().name())
           : null,
         environment.policy().name(),
         environment.policy().displayName(),
@@ -233,35 +254,52 @@ public class EnvironmentsResource {
     }
   }
 
-  public record EnvironmentStatusInfo(
+  public enum ReconciliationStatusInfo {
+    RECONCILIATION_PENDING,
+    RECONCILIATION_COMPLETED
+  }
+
+  public record ComplianceInfo(
     @NotNull Link self,
+    @NotNull ReconciliationStatusInfo status,
     @NotNull EnvironmentInfo environment,
-    @NotNull List<ReconciliationIssueInfo> issues
+    @NotNull List<ComplianceIssueInfo> issues
   ) implements MediaInfo {
-    static EnvironmentStatusInfo create(
+    static ComplianceInfo forReconciliation(
       @NotNull EnvironmentContext environment,
       @NotNull Collection<EnvironmentContext.JitGroupCompliance> groups
     ) {
-      return new EnvironmentStatusInfo(
+      return new ComplianceInfo(
         new Link("environments/%s", environment.policy().name()),
+        ReconciliationStatusInfo.RECONCILIATION_COMPLETED,
         EnvironmentInfo.createSummary(environment.policy()),
         groups.stream()
           .filter(g -> !g.isCompliant())
-          .map(ReconciliationIssueInfo::create)
+          .map(ComplianceIssueInfo::create)
           .toList());
+    }
+
+    static ComplianceInfo forPendingReconciliation(
+      @NotNull EnvironmentContext environment
+    ) {
+      return new ComplianceInfo(
+        new Link("environments/%s", environment.policy().name()),
+        ReconciliationStatusInfo.RECONCILIATION_PENDING,
+        EnvironmentInfo.createSummary(environment.policy()),
+        List.of());
     }
   }
 
-  public record ReconciliationIssueInfo(
+  public record ComplianceIssueInfo(
     @NotNull String environment,
     @NotNull String system,
     @NotNull String group,
     @NotNull String cloudIdentityGroupId,
     @NotNull String details
     ) {
-    static ReconciliationIssueInfo create(EnvironmentContext.JitGroupCompliance compliance) {
+    static ComplianceIssueInfo create(EnvironmentContext.JitGroupCompliance compliance) {
       if (compliance.isOrphaned()) {
-        return new ReconciliationIssueInfo(
+        return new ComplianceIssueInfo(
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
@@ -270,7 +308,7 @@ public class EnvironmentsResource {
 
       }
       else if (!compliance.isCompliant()) {
-        return new ReconciliationIssueInfo(
+        return new ComplianceIssueInfo(
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
@@ -278,7 +316,7 @@ public class EnvironmentsResource {
           compliance.exception().getMessage());
       }
       else {
-        return new ReconciliationIssueInfo(
+        return new ComplianceIssueInfo(
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
