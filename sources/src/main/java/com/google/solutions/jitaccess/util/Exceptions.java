@@ -25,6 +25,9 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -80,6 +83,19 @@ public class Exceptions {
     }
     else {
       return e;
+    }
+  }
+
+  /**
+   * Return an exception's back trace as string.
+   */
+  public static @NotNull String stackTrace(@NotNull Exception e) {
+    try (var sw = new StringWriter()) {
+      e.printStackTrace(new PrintWriter(sw));
+      return sw.toString();
+    }
+    catch (IOException ignored) {
+      return "(unable to capture stack trace)";
     }
   }
 }

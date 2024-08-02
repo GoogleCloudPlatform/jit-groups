@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.util;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestExceptions {
   @Test
@@ -39,5 +39,33 @@ public class TestExceptions {
     assertEquals(
       "Access denied, caused by IllegalStateException: Illegal state, caused by NullPointerException",
       Exceptions.fullMessage(exception));
+  }
+
+  @Test
+  public void rootCause_whenInnerExceptionPresent() {
+    var rootCause = new IllegalArgumentException("root");
+
+    assertSame(
+      rootCause,
+      Exceptions.rootCause(new IllegalArgumentException(new IllegalStateException(new Exception(rootCause)))));
+  }
+
+  @Test
+  public void rootCause_whenNoInnerException() {
+    var rootCause = new IllegalArgumentException("root");
+
+    assertSame(rootCause, rootCause);
+  }
+
+  @Test
+  public void stackTrace() {
+    try {
+      throw new IllegalArgumentException("mock");
+    }
+    catch (Exception e) {
+      var trace = Exceptions.stackTrace(e);
+      assertTrue(trace.contains("IllegalArgumentException"));
+      assertTrue(trace.contains("mock"));
+    }
   }
 }

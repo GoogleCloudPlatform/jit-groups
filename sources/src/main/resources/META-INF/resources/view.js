@@ -268,8 +268,8 @@ class Duration {
 
         const intermediateDurations = steps
             .filter(s => 
-                (minDuration === null || s >= minDuration.toSeconds()) &&
-                (maxDuration === null || s <= maxDuration.toSeconds()))
+                (minDuration === null || s > minDuration.toSeconds()) &&
+                (maxDuration === null || s < maxDuration.toSeconds()))
             .map(s => Duration.fromSeconds(s));
 
         return [minDuration, ...intermediateDurations, maxDuration].filter(d => d !== null);

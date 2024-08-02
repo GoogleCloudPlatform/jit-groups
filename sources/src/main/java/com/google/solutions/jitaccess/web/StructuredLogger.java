@@ -38,6 +38,7 @@ import java.util.Map;
  * Basic logger implementation that writes JSON-structured output.
  */
 abstract class StructuredLogger implements Logger {
+  private static final String LABEL_EXCEPTION_TRACE = "exception/stacktrace";
   private static final ObjectMapper JSON_MAPPER = new ObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
@@ -127,6 +128,7 @@ abstract class StructuredLogger implements Logger {
     @NotNull Exception exception
   ) {
     buildWarning(eventId)
+      .addLabel(LABEL_EXCEPTION_TRACE, Exceptions.stackTrace(exception))
       .setMessage(Exceptions.fullMessage(exception))
       .write();
   }
@@ -138,6 +140,7 @@ abstract class StructuredLogger implements Logger {
     @NotNull Exception exception
   ) {
     buildWarning(eventId)
+      .addLabel(LABEL_EXCEPTION_TRACE, Exceptions.stackTrace(exception))
       .setMessage("%s: %s", message, Exceptions.fullMessage(exception))
       .write();
   }
@@ -169,6 +172,7 @@ abstract class StructuredLogger implements Logger {
     @NotNull Exception exception
   ) {
     buildError(eventId)
+      .addLabel(LABEL_EXCEPTION_TRACE, Exceptions.stackTrace(exception))
       .setMessage(Exceptions.fullMessage(exception))
       .write();
   }
@@ -180,6 +184,7 @@ abstract class StructuredLogger implements Logger {
     @NotNull Exception exception
   ) {
     buildError(eventId)
+      .addLabel(LABEL_EXCEPTION_TRACE, Exceptions.stackTrace(exception))
       .setMessage("%s: %s", message, Exceptions.fullMessage(exception))
       .write();
   }
