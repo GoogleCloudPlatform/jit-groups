@@ -23,15 +23,14 @@ package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.auth.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,6 +41,32 @@ import static org.mockito.Mockito.when;
 public class TestPolicyAnalysis {
   private static final UserId SAMPLE_USER = new UserId("user@example.com");
   private static final JitGroupId SAMPLE_GROUPID = new JitGroupId("env-1", "system-1", "group-1");
+
+
+  private static class SamplePolicy extends AbstractPolicy {
+    public SamplePolicy() {
+      super("Test", "Test", null, Map.of());
+    }
+
+    public SamplePolicy(
+      @Nullable AccessControlList acl
+    ) {
+      super("Test", "Test", acl, Map.of());
+    }
+
+    public SamplePolicy(
+      @NotNull Map<ConstraintClass, Collection<Constraint>> constraints
+    ) {
+      super("Test", "Test", null, constraints);
+    }
+
+    public SamplePolicy(
+      @Nullable AccessControlList acl,
+      @NotNull Map<ConstraintClass, Collection<Constraint>> constraints
+    ) {
+      super("Test", "Test", acl, constraints);
+    }
+  }
 
   private static Subject createSubject(
     UserId user,
@@ -63,10 +88,7 @@ public class TestPolicyAnalysis {
 
   @Test
   public void isMembershipActive_whenSubjectLacksPrincipal() {
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-
+    var policy = new SamplePolicy();
     var subject = createSubject(SAMPLE_USER, Set.of());
 
     var check = new PolicyAnalysis(
@@ -81,10 +103,7 @@ public class TestPolicyAnalysis {
 
   @Test
   public void isMembershipActive_whenSubjectHasPrincipal() {
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-
+    var policy = new SamplePolicy();
     var subject = createSubject(SAMPLE_USER, Set.of(SAMPLE_GROUPID));
 
     var check = new PolicyAnalysis(
@@ -104,10 +123,7 @@ public class TestPolicyAnalysis {
 
   @Test
   public void constraints_whenPolicyHasNoConstraints() {
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-
+    var policy = new SamplePolicy();
     var check = new PolicyAnalysis(
       policy,
       createSubject(SAMPLE_USER, Set.of()),
@@ -141,11 +157,9 @@ public class TestPolicyAnalysis {
         new CelConstraint.BooleanVariable("testBoolean", "")),
       expression);
 
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(constraint));
+    var policy = new SamplePolicy(Map.of(
+      Policy.ConstraintClass.JOIN,
+      List.of(constraint)));
 
     var check = new PolicyAnalysis(
       policy,
@@ -172,11 +186,9 @@ public class TestPolicyAnalysis {
       List.of(),
       "false");
 
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(constraint));
+    var policy = new SamplePolicy(Map.of(
+      Policy.ConstraintClass.JOIN,
+      List.of(constraint)));
 
     var check = new PolicyAnalysis(
       policy,
@@ -199,11 +211,9 @@ public class TestPolicyAnalysis {
       List.of(),
       "syntax error(");
 
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(constraint));
+    var policy = new SamplePolicy(Map.of(
+      Policy.ConstraintClass.JOIN,
+      List.of(constraint)));
 
     var check = new PolicyAnalysis(
       policy,
@@ -227,11 +237,9 @@ public class TestPolicyAnalysis {
       List.of(new CelConstraint.StringVariable("test", "", 0, 10)),
       "true");
 
-    var policy = Mockito.mock(Policy.class);
-    when(policy.parent()).thenReturn(Optional.empty());
-    when(policy.accessControlList()).thenReturn(Optional.empty());
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(constraint));
+    var policy = new SamplePolicy(Map.of(
+      Policy.ConstraintClass.JOIN,
+      List.of(constraint)));
 
     var check = new PolicyAnalysis(
       policy,
@@ -255,9 +263,10 @@ public class TestPolicyAnalysis {
   @Test
   public void isAccessAllowed_whenPolicyDeniesAccess() {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(false);
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .deny(subject.user(), PolicyPermission.JOIN.toMask())
+        .build());
 
     var result = new PolicyAnalysis(
       policy,
@@ -272,9 +281,10 @@ public class TestPolicyAnalysis {
   @Test
   public void isAccessAllowed_whenMembershipActiveButPolicyDeniesAccess() {
     var subject = createSubject(SAMPLE_USER, Set.of(SAMPLE_GROUPID));
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(false);
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .deny(subject.user(), PolicyPermission.JOIN.toMask())
+        .build());
 
     var result = new PolicyAnalysis(
       policy,
@@ -291,11 +301,13 @@ public class TestPolicyAnalysis {
   @Test
   public void isAccessAllowed_whenPolicyGrantsAccessButConstraintUnsatisfied() {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(true);
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(new CelConstraint("unsatisfied", "", List.of(), "false")));
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .allow(subject.user(), PolicyPermission.JOIN.toMask())
+        .build(),
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(new CelConstraint("unsatisfied", "", List.of(), "false"))));
 
     var result = new PolicyAnalysis(
       policy,
@@ -312,11 +324,13 @@ public class TestPolicyAnalysis {
   @Test
   public void isAccessAllowed_whenPolicyGrantsAccessAndConstraintSatisfied() {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(true);
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(new CelConstraint("satisfied", "", List.of(), "true")));
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .allow(subject.user(), PolicyPermission.JOIN.toMask())
+        .build(),
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(new CelConstraint("satisfied", "", List.of(), "true"))));
 
     var result = new PolicyAnalysis(
       policy,
@@ -335,9 +349,10 @@ public class TestPolicyAnalysis {
   @Test
   public void verifyAccessAllowed_whenPolicyDeniesAccess() {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(false);
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .deny(subject.user(), PolicyPermission.JOIN.toMask())
+        .build());
 
     var result = new PolicyAnalysis(
       policy,
@@ -356,9 +371,10 @@ public class TestPolicyAnalysis {
   @Test
   public void verifyAccessAllowed_whenMembershipActiveButPolicyDeniesAccess() {
     var subject = createSubject(SAMPLE_USER, Set.of(SAMPLE_GROUPID));
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(false);
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .deny(subject.user(), PolicyPermission.JOIN.toMask())
+        .build());
 
     var result = new PolicyAnalysis(
       policy,
@@ -379,11 +395,13 @@ public class TestPolicyAnalysis {
   @Test
   public void verifyAccessAllowed_whenPolicyGrantsAccessButConstraintUnsatisfied() throws Exception {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(true);
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(new CelConstraint("unsatisfied", "message", List.of(), "false")));
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .allow(subject.user(), PolicyPermission.JOIN.toMask())
+        .build(),
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(new CelConstraint("unsatisfied", "message", List.of(), "false"))));
 
     var result = new PolicyAnalysis(
       policy,
@@ -406,11 +424,13 @@ public class TestPolicyAnalysis {
   @Test
   public void verifyAccessAllowed_whenPolicyGrantsAccessButConstraintFails() throws Exception {
     var subject = createSubject(SAMPLE_USER, Set.of());
-    var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
-      .thenReturn(true);
-    when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
-      .thenReturn(List.of(new CelConstraint("invalid", "", List.of(), "(;invalid")));
+    var policy = new SamplePolicy(
+      new AccessControlList.Builder()
+        .allow(subject.user(), PolicyPermission.JOIN.toMask())
+        .build(),
+      Map.of(
+        Policy.ConstraintClass.JOIN,
+        List.of(new CelConstraint("invalid", "", List.of(), "(;invalid"))));
 
     var result = new PolicyAnalysis(
       policy,

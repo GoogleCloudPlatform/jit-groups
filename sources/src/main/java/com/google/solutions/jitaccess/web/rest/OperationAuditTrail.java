@@ -101,12 +101,14 @@ class OperationAuditTrail {
     @NotNull JitGroupContext.JoinOperation joinOp,
     @NotNull Principal principal
   ) {
+    var expiry = principal.expiry()
+      .atOffset(ZoneOffset.UTC)
+      .truncatedTo(ChronoUnit.SECONDS);
+
     this.logger.buildInfo(EventIds.API_JOIN_GROUP)
       .addLabel(LABEL_EVENT_TYPE, "audit")
       .addLabel(LABEL_GROUP_ID,  joinOp.group())
-      .addLabel(LABEL_GROUP_EXPIRY, principal.expiry()
-        .atOffset(ZoneOffset.UTC)
-        .truncatedTo(ChronoUnit.SECONDS))
+      .addLabel(LABEL_GROUP_EXPIRY, expiry)
       .addLabels(joinOp.input()
         .stream()
         .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
@@ -114,21 +116,22 @@ class OperationAuditTrail {
         "User '%s' joined group '%s' with expiry %s, approval was not required",
         joinOp.user(),
         joinOp.group(),
-        principal.expiry().atZone(ZoneOffset.UTC).toString())
+        expiry)
       .write();
   }
-
 
   void joinExecuted(
     @NotNull JitGroupContext.ApprovalOperation approveOp,
     @NotNull Principal principal
   ) {
+    var expiry = principal.expiry()
+      .atOffset(ZoneOffset.UTC)
+      .truncatedTo(ChronoUnit.SECONDS);
+
     this.logger.buildInfo(EventIds.API_APPROVE_JOIN)
       .addLabel(LABEL_EVENT_TYPE, "audit")
       .addLabel(LABEL_GROUP_ID, approveOp.group())
-      .addLabel(LABEL_GROUP_EXPIRY, principal.expiry()
-        .atOffset(ZoneOffset.UTC)
-        .truncatedTo(ChronoUnit.SECONDS))
+      .addLabel(LABEL_GROUP_EXPIRY, expiry)
       .addLabels(approveOp.input()
         .stream()
         .collect(Collectors.toMap(i -> LABEL_PREFIX_PROPOSAL_INPUT + i.name(), i -> i.get())))
@@ -140,7 +143,7 @@ class OperationAuditTrail {
         approveOp.user(),
         approveOp.joiningUser(),
         approveOp.group(),
-        principal.expiry().atZone(ZoneOffset.UTC).toString())
+        expiry)
       .write();
   }
 }
