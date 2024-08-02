@@ -172,7 +172,7 @@ public class TestMailProposalHandler {
     public void formatProperty_whenPropertyIsDuration() {
       var property = Mockito.mock(Property.class);
       when(property.type()).thenAnswer(x -> Duration.class);
-      when(property.get()).thenReturn("86460");
+      when(property.get()).thenReturn("P1DT1M");
 
       assertEquals(
         "1 day, 1 minute",

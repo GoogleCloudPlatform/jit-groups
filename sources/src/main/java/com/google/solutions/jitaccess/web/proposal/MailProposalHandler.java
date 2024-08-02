@@ -230,8 +230,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
         return HtmlEscapers.htmlEscaper().escape(p.get());
       }
       else if (p.type() == Duration.class) {
-        var duration = Duration.ofSeconds(Integer.parseInt(p.get()));
-        return DurationFormatter.format(duration);
+        return DurationFormatter.format(Duration.parse(p.get()));
       }
       else {
         return p.get();
