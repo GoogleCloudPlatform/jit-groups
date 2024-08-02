@@ -4,9 +4,9 @@
         <div style="width:100%; max-width: 600px; height: auto; margin: auto; border:1px solid rgba(224,224,224,1);">
             <div style="height: 20px;"></div>
             <div style="color: #3c4043; text-align: left; font-family: Roboto, sans-serif; font-size: 14px; font-weight: normal; line-height: 24px; text-decoration: none; padding-top:0; padding-right:40px; padding-bottom:10px; padding-left:40px;">
-                {{user.email}} approved your request to join the group {{group.name}}.
+                {{user.email}} approved your proposal to join the group {{group.name}}.
                 <div style="margin-top: 16px;">
-                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">Request details</div>
+                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">Group details</div>
                     <ul style="padding-left: 1em; margin: 0;">
                         <li>
                             <div style="display: flex; flow-direction: row;">
@@ -26,6 +26,7 @@
                                 <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">{{group.environment}}</div>
                             </div>
                         </li>
+                        <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 700;">Approval details</div>
                         {{
                         input.map(name,
                             "<li>" +

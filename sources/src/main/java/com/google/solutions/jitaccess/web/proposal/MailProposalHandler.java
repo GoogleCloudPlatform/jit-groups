@@ -144,8 +144,8 @@ public class MailProposalHandler extends AbstractProposalHandler {
         recipients,
         List.of(this.emailMapping.emailFromPrincipalId(proposal.user())),
         String.format(
-          "%s wants to join %s",
-          operation.user().email,
+          "%s proposes to join %s",
+          operation.joiningUser().email,
           operation.group().name()),
         template.evaluate(),
         false);
@@ -183,8 +183,8 @@ public class MailProposalHandler extends AbstractProposalHandler {
           .map(this.emailMapping::emailFromPrincipalId)
           .collect(Collectors.toSet()),
         String.format(
-          "%s wants to join %s",
-          operation.user().email,
+          "%s proposes to join %s",
+          operation.joiningUser().email,
           operation.group().name()),
         template.evaluate(),
         true);
