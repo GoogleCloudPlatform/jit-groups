@@ -186,22 +186,39 @@ public class EnvironmentContext {
       this.exception = exception;
     }
 
+    /**
+     * ID of group whose compliance is being reported.
+     */
     public @NotNull JitGroupId groupId() {
       return groupId;
     }
 
-    public GroupId cloudIdentityGroupId() {
+    /**
+     * Email address of the Cloud Identity group that backs this
+     * JIT group.
+     */
+    public @NotNull GroupId cloudIdentityGroupId() {
       return cloudIdentityGroupId;
     }
 
+    /**
+     * Indicates whether this group is found to be compliant.
+     */
     public boolean isCompliant() {
       return this.exception == null && this.policy != null;
     }
 
+    /**
+     * Indicates whether this group is orphaned, i.e. the group
+     * exists in Cloud Identity, but there's no policy for it..
+     */
     public boolean isOrphaned() {
       return this.exception == null && this.policy == null;
     }
 
+    /**
+     * Exception encountered during reconciliation.
+     */
     public @Nullable Exception exception() {
       return exception;
     }

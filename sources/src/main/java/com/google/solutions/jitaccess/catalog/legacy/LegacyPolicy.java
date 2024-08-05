@@ -185,7 +185,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
   /**
    * Maps a project to a System.
    */
-  public static class ProjectPolicy extends SystemPolicy {
+  static class ProjectPolicy extends SystemPolicy {
     private final @NotNull ProjectId projectId;
     private final @NotNull AtomicBoolean initialized = new AtomicBoolean(false);
     private final @NotNull Supplier<Collection<Binding>> loadBindings;
