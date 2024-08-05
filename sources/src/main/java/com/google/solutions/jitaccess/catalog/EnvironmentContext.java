@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
+import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
@@ -130,6 +131,14 @@ public class EnvironmentContext {
           result.add(new JitGroupCompliance(groupId, cloudIdentityGroupId, policy.get(), e));
         }
       }
+    }
+
+    //
+    // If this is a legacy policy, add any incompatibilities that
+    // prevented the mapping of legacy roles.
+    //
+    if (this.policy instanceof LegacyPolicy legacyPolicy) { // TODO: test
+      result.addAll(legacyPolicy.incompatibilities());
     }
 
     return Optional.of(result);

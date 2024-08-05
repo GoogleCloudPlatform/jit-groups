@@ -39,7 +39,7 @@ public class JitGroupCompliance {
   private final @Nullable JitGroupPolicy policy;
   private final @Nullable Exception exception;
 
-  JitGroupCompliance(
+  public JitGroupCompliance(
     @NotNull JitGroupId groupId,
     @Nullable GroupId cloudIdentityGroupId,
     @Nullable JitGroupPolicy policy,

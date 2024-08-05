@@ -295,7 +295,7 @@ public class EnvironmentsResource {
     @NotNull String environment,
     @NotNull String system,
     @NotNull String group,
-    @NotNull String cloudIdentityGroupId,
+    @Nullable String cloudIdentityGroupId,
     @NotNull String details
     ) {
     static ComplianceIssueInfo create(JitGroupCompliance compliance) {
@@ -306,7 +306,7 @@ public class EnvironmentsResource {
           compliance.groupId().name(),
           compliance.cloudIdentityGroupId()
             .map(g -> g.email)
-            .get(),
+            .orElse(null), // TODO: test
           "The group is orphaned. A group exists in Cloud Identity, but it is not covered by a policy.");
 
       }
@@ -317,7 +317,7 @@ public class EnvironmentsResource {
           compliance.groupId().name(),
           compliance.cloudIdentityGroupId()
             .map(g -> g.email)
-            .get(),
+            .orElse(null),
           compliance.exception()
             .map(e -> e.getMessage())
             .orElse("Unspecified error"));
@@ -329,7 +329,7 @@ public class EnvironmentsResource {
           compliance.groupId().name(),
           compliance.cloudIdentityGroupId()
             .map(g -> g.email)
-            .get(),
+            .orElse(null),
           "OK");
       }
     }

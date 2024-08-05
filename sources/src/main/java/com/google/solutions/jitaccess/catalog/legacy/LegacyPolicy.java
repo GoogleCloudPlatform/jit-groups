@@ -29,11 +29,9 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
 import com.google.solutions.jitaccess.catalog.Logger;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -180,6 +178,23 @@ public class LegacyPolicy extends EnvironmentPolicy {
       projectNumber,
       projectId,
       bindings));
+  }
+
+  /**
+   * Incompatibilities encountered while mapping groups.
+   */
+  public Collection<JitGroupCompliance> incompatibilities() {
+    return this.systems()
+      .stream()
+      .map(p -> (ProjectPolicy)p)
+      .flatMap(p -> p.mappingIssues()
+        .stream()
+        .map(i -> new JitGroupCompliance(
+          new JitGroupId(this.name(), p.displayName(), RolePolicy.createName(i.role)),
+          null,
+          null,
+          i.exception())))
+      .toList();
   }
 
   /**
