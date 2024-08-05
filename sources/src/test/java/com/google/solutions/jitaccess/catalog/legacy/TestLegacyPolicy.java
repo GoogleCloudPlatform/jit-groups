@@ -26,7 +26,6 @@ import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.UserClassId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
@@ -35,7 +34,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -216,10 +214,14 @@ public class TestLegacyPolicy {
 
     assertEquals(0, projectPolicy.get().groups().size());
 
-    assertEquals(1, projectPolicy.get().mappingIssues().size());
-    var issue = List.copyOf(projectPolicy.get().mappingIssues()).get(0);
-    assertEquals(UNACCEPTABLY_LONG_ROLE, issue.role());
-    assertInstanceOf(IllegalArgumentException.class, issue.exception());
+    // Role is incompatible.
+    assertEquals(1, projectPolicy.get().incompatibilities().size());
+    var issue = List.copyOf(projectPolicy.get().incompatibilities()).get(0);
+    assertEquals(LegacyPolicy.NAME, issue.groupId().environment());
+    assertEquals("project-1", issue.groupId().system());
+    assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", issue.groupId().name());
+    assertInstanceOf(UnsupportedOperationException.class, issue.exception().get());
+    assertInstanceOf(IllegalArgumentException.class, issue.exception().get().getCause());
   }
 
   @Test
@@ -277,6 +279,7 @@ public class TestLegacyPolicy {
     var projectPolicy = policy.system(LegacyPolicy.ProjectPolicy.createName(projectNumber));
     assertTrue(projectPolicy.isPresent());
 
+    // One role mapped successfully.
     assertEquals("3039", projectPolicy.get().name());
     assertEquals("project-1", projectPolicy.get().displayName());
     assertEquals("Project project-1", projectPolicy.get().description());
@@ -285,6 +288,14 @@ public class TestLegacyPolicy {
 
     var iamRoleBinding = (IamRoleBinding)List.copyOf(group.privileges()).get(0);
     assertNull(iamRoleBinding.condition());
+
+    // One role is incompatible.
+    assertEquals(1, policy.incompatibilities().size());
+    var issue = List.copyOf(policy.incompatibilities()).get(0);
+    assertEquals(LegacyPolicy.NAME, issue.groupId().environment());
+    assertEquals("project-1", issue.groupId().system());
+    assertEquals("role-1", issue.groupId().name());
+    assertInstanceOf(UnsupportedOperationException.class, issue.exception().get());
   }
 
   @Nested
@@ -323,13 +334,28 @@ public class TestLegacyPolicy {
       assertEquals(
         "p-mycompanyadmin",
         LegacyPolicy.RolePolicy.createName(new IamRole("projects/my-project/roles/myCompanyAdmin")));
+      assertEquals(
+        "p-my-dot-company-dot-admin",
+        LegacyPolicy.RolePolicy.createName(new IamRole("projects/my-project/roles/my.company.admin")));
+      assertEquals(
+        "p-my-dash-company-dash-admin",
+        LegacyPolicy.RolePolicy.createName(new IamRole("projects/my-project/roles/my-company-admin")));
+      assertEquals(
+        "p-my-company-admin",
+        LegacyPolicy.RolePolicy.createName(new IamRole("projects/my-project/roles/my_company_admin")));
     }
 
     @Test
     public void createName_whenCustomOrgRole() {
       assertEquals(
-        "o-serviceaccount-impersonator",
+        "o-serviceaccount-dot-impersonator",
         LegacyPolicy.RolePolicy.createName(new IamRole("organizations/123/roles/ServiceAccount.Impersonator")));
+      assertEquals(
+        "o-serviceaccount-dash-impersonator",
+        LegacyPolicy.RolePolicy.createName(new IamRole("organizations/123/roles/ServiceAccount-Impersonator")));
+      assertEquals(
+        "o-serviceaccount-impersonator",
+        LegacyPolicy.RolePolicy.createName(new IamRole("organizations/123/roles/ServiceAccount_Impersonator")));
     }
 
     //---------------------------------------------------------------------------

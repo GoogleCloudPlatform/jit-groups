@@ -41,12 +41,25 @@ public class Exceptions {
    * exceptions.
    */
   public static @NotNull String fullMessage(@Nullable Throwable e) {
+    return fullMessage(e, true);
+  }
+
+  /**
+   * Create a message that includes details for all nested
+   * exceptions.
+   */
+  public static @NotNull String fullMessage(
+    @Nullable Throwable e,
+    boolean includeNestedExceptionClassName
+  ) {
     var buffer = new StringBuilder();
 
     for (; e != null; e = e.getCause()) {
       if (buffer.length() > 0) {
-        buffer.append(", caused by ");
-        buffer.append(e.getClass().getSimpleName());
+        if (includeNestedExceptionClassName) {
+          buffer.append(", caused by ");
+          buffer.append(e.getClass().getSimpleName());
+        }
 
         if (e.getMessage() != null) {
           buffer.append(": ");

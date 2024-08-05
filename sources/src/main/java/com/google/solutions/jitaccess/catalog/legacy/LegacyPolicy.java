@@ -29,11 +29,8 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.catalog.Logger;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
+import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -183,13 +180,24 @@ public class LegacyPolicy extends EnvironmentPolicy {
   }
 
   /**
+   * Incompatibilities encountered while mapping groups.
+   */
+  public Collection<JitGroupCompliance> incompatibilities() {
+    return this.systems()
+      .stream()
+      .map(p -> (ProjectPolicy)p)
+      .flatMap(p -> p.incompatibilities().stream())
+      .toList();
+  }
+
+  /**
    * Maps a project to a System.
    */
-  public static class ProjectPolicy extends SystemPolicy {
+  static class ProjectPolicy extends SystemPolicy {
     private final @NotNull ProjectId projectId;
     private final @NotNull AtomicBoolean initialized = new AtomicBoolean(false);
     private final @NotNull Supplier<Collection<Binding>> loadBindings;
-    private final @NotNull LinkedList<MappingIssue> mappingIssues = new LinkedList<>();
+    private final @NotNull LinkedList<JitGroupCompliance> incompatibilities = new LinkedList<>();
 
     /**
      * Create a shortened name from a project number.
@@ -245,9 +253,16 @@ public class LegacyPolicy extends EnvironmentPolicy {
               }
             }
             catch (Exception e) {
-              this.mappingIssues.add(new MappingIssue(
-                new IamRole(binding.getRole()),
-                e));
+              this.incompatibilities.add(new JitGroupCompliance(
+                new JitGroupId(
+                  LegacyPolicy.NAME,
+                  this.displayName(),
+                  RolePolicy.createName(new IamRole(binding.getRole())))                ,
+                null,
+                null,
+                new UnsupportedOperationException(
+                  String.format("The role '%s' cannot be mapped to a JIT Group", binding.getRole()),
+                  e)));
             }
           }
 
@@ -260,9 +275,9 @@ public class LegacyPolicy extends EnvironmentPolicy {
      * Return a list of issues that were encountered while
      * mapping legacy roles.
      */
-    public Collection<MappingIssue>  mappingIssues() {
+    public Collection<JitGroupCompliance> incompatibilities() {
       initializeLazily();
-      return this.mappingIssues;
+      return this.incompatibilities;
     }
 
     @Override
@@ -288,11 +303,6 @@ public class LegacyPolicy extends EnvironmentPolicy {
     }
   }
 
-  public record MappingIssue(
-    @NotNull IamRole role,
-    @NotNull Exception exception
-  ) {}
-
   /**
    * Maps an eligible role binding to a JIT Group.
    */
@@ -306,6 +316,16 @@ public class LegacyPolicy extends EnvironmentPolicy {
     private static final Pattern CUSTOM_ORG_ROLE_PATTERN = Pattern.compile("^organizations/(\\d+)/roles/(.+)$");
     private static final Pattern CUSTOM_PROJECT_ROLE_PATTERN = Pattern.compile("^projects/(.+)/roles/(.+)$");
 
+    private static @NotNull String escapeCustomRoleName(@NotNull String s) {
+      //
+      // Replace unsupported characters, but ensure that no
+      // two inputs can map to the same output.
+      //
+      return s
+        .replace("-", "-dash-")
+        .replace('_', '-')
+        .replace(".", "-dot-");
+    }
     /**
      * Create a shortened name for an IAM role.
      */
@@ -314,7 +334,9 @@ public class LegacyPolicy extends EnvironmentPolicy {
         //
         // Predefined role, strip prefix.
         //
-        return role.name().substring(6).replace('.', '-').toLowerCase();
+        return role.name().substring(6)
+          .replace('.', '-')
+          .toLowerCase();
       }
 
       var matchOrgRole = CUSTOM_ORG_ROLE_PATTERN.matcher(role.name());
@@ -324,7 +346,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
         // is still unique within the scope of a project, which
         // is sufficient.
         //
-        return "o-" + matchOrgRole.group(2).replace('.', '-').toLowerCase();
+        return "o-" + escapeCustomRoleName(matchOrgRole.group(2).toLowerCase());
       }
 
       var matchProjectRole = CUSTOM_PROJECT_ROLE_PATTERN.matcher(role.name());
@@ -334,7 +356,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
         // is still unique within the scope of a project, which
         // is sufficient.
         //
-        return "p-" + matchProjectRole.group(2).replace('.', '-').toLowerCase();
+        return "p-" + escapeCustomRoleName(matchProjectRole.group(2).toLowerCase());
       }
 
       throw new IllegalArgumentException("Unrecognized role: " + role);
@@ -355,7 +377,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
 
       if (!Strings.isNullOrEmpty(role.resourceCondition())) {
         throw new UnsupportedOperationException(
-          "The role has a resource condition");
+          "The role binding has a resource condition, which is not supported");
       }
 
       var iamBinding = new IamRoleBinding(
@@ -401,7 +423,6 @@ public class LegacyPolicy extends EnvironmentPolicy {
       //
       return Optional.empty();
     }
-
 
     private RolePolicy(
       @NotNull String name,

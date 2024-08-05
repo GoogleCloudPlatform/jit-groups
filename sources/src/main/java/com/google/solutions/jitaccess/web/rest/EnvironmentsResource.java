@@ -24,9 +24,11 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
+import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
+import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
@@ -267,7 +269,7 @@ public class EnvironmentsResource {
   ) implements MediaInfo {
     static ComplianceInfo forReconciliation(
       @NotNull EnvironmentContext environment,
-      @NotNull Collection<EnvironmentContext.JitGroupCompliance> groups
+      @NotNull Collection<JitGroupCompliance> groups
     ) {
       return new ComplianceInfo(
         new Link("environments/%s", environment.policy().name()),
@@ -294,16 +296,18 @@ public class EnvironmentsResource {
     @NotNull String environment,
     @NotNull String system,
     @NotNull String group,
-    @NotNull String cloudIdentityGroupId,
+    @Nullable String cloudIdentityGroupId,
     @NotNull String details
     ) {
-    static ComplianceIssueInfo create(EnvironmentContext.JitGroupCompliance compliance) {
+    static ComplianceIssueInfo create(JitGroupCompliance compliance) {
       if (compliance.isOrphaned()) {
         return new ComplianceIssueInfo(
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
-          compliance.cloudIdentityGroupId().email,
+          compliance.cloudIdentityGroupId()
+            .map(g -> g.email)
+            .orElse(null),
           "The group is orphaned. A group exists in Cloud Identity, but it is not covered by a policy.");
 
       }
@@ -312,15 +316,21 @@ public class EnvironmentsResource {
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
-          compliance.cloudIdentityGroupId().email,
-          compliance.exception().getMessage());
+          compliance.cloudIdentityGroupId()
+            .map(g -> g.email)
+            .orElse(null),
+          compliance.exception()
+            .map(e -> Exceptions.fullMessage(e, false))
+            .orElse("Unspecified error"));
       }
       else {
         return new ComplianceIssueInfo(
           compliance.groupId().environment(),
           compliance.groupId().system(),
           compliance.groupId().name(),
-          compliance.cloudIdentityGroupId().email,
+          compliance.cloudIdentityGroupId()
+            .map(g -> g.email)
+            .orElse(null),
           "OK");
       }
     }
