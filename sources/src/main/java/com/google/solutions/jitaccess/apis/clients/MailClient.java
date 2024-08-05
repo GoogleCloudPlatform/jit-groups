@@ -23,15 +23,14 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
 import org.jetbrains.annotations.NotNull;
 
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.EnumSet;
 
@@ -89,7 +88,7 @@ public abstract class MailClient {
       message.addHeader("Precedence", "bulk");
 
       if (flags.contains(SmtpClient.Flags.REPLY)) {
-        message.setFlag(jakarta.mail.Flags.Flag.ANSWERED, true);
+        message.setFlag(javax.mail.Flags.Flag.ANSWERED, true);
         message.setSubject("Re: " + subject);
       }
       else {

@@ -21,12 +21,11 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
-import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
-import jakarta.mail.Session;
-import jakarta.mail.internet.InternetAddress;
 import org.jetbrains.annotations.NotNull;
 
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -43,7 +42,7 @@ public class AppEngineMailClient extends MailClient {
   }
 
   @Override
-  protected InternetAddress senderAddress() throws MailException, IOException {
+  protected InternetAddress senderAddress() throws IOException {
     return new InternetAddress(
       this.senderAddress.value(),
       this.senderName);

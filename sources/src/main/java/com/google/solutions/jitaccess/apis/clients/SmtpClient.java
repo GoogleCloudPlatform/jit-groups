@@ -23,11 +23,13 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.mail.Authenticator;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
