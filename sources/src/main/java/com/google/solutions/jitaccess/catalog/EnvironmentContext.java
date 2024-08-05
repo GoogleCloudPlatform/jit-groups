@@ -137,7 +137,7 @@ public class EnvironmentContext {
     // If this is a legacy policy, add any incompatibilities that
     // prevented the mapping of legacy roles.
     //
-    if (this.policy instanceof LegacyPolicy legacyPolicy) { // TODO: test
+    if (this.policy instanceof LegacyPolicy legacyPolicy) {
       result.addAll(legacyPolicy.incompatibilities());
     }
 

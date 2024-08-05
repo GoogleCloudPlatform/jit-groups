@@ -21,15 +21,24 @@
 
 package com.google.solutions.jitaccess.catalog;
 
+import com.google.api.services.cloudasset.v1.model.Binding;
+import com.google.api.services.cloudasset.v1.model.Expr;
+import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
+import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.*;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,6 +50,15 @@ import static org.mockito.Mockito.*;
 public class TestEnvironmentContext {
   private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
 
+  @NotNull
+  private static Provisioner createProvisioner(JitGroupId... groupIds) throws AccessException, IOException {
+    var provisioner = Mockito.mock(Provisioner.class);
+    when(provisioner.provisionedGroupId(any()))
+      .thenReturn(new GroupId("provisioned-id@example.com"));
+    when(provisioner.provisionedGroups())
+      .thenReturn(List.of(groupIds));
+    return provisioner;
+  }
 
   // -------------------------------------------------------------------------
   // systems.
@@ -207,7 +225,7 @@ public class TestEnvironmentContext {
   }
 
   @Test
-  public void reconcile() throws Exception {
+  public void reconcile_whenEnvironmentContainsOrphanedGroup() throws Exception {
     var environmentPolicy = new EnvironmentPolicy(
       "env",
       "env",
@@ -221,17 +239,40 @@ public class TestEnvironmentContext {
 
     var orphanedJitGroupId = new JitGroupId("env", "orphaned", "orphaned");
 
-    var compliantJitGroup = new JitGroupPolicy("compliant", "compliant");
+    Provisioner provisioner = createProvisioner(orphanedJitGroupId);
+
+    var environment = new EnvironmentContext(
+      environmentPolicy,
+      Subjects.create(SAMPLE_USER),
+      provisioner);
+
+    assertTrue(environment.canReconcile());
+
+    var result = environment.reconcile();
+    assertTrue(result.isPresent());
+
+    var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
+    assertTrue(resultMap.get(orphanedJitGroupId).isOrphaned());
+    assertFalse(resultMap.get(orphanedJitGroupId).isCompliant());
+  }
+
+  @Test
+  public void reconcile_whenGroupBroken() throws Exception {
+    var environmentPolicy = new EnvironmentPolicy(
+      "env",
+      "env",
+      new AccessControlList.Builder()
+        .allow(SAMPLE_USER, PolicyPermission.RECONCILE.toMask())
+        .build(),
+      Map.of(),
+      new Policy.Metadata("test", Instant.EPOCH));
+    var systemPolicy = new SystemPolicy("system", "System");
+    environmentPolicy.add(systemPolicy);
+
     var brokenJitGroup = new JitGroupPolicy("broken", "broken");
-    systemPolicy.add(compliantJitGroup);
     systemPolicy.add(brokenJitGroup);
 
-    var provisioner = Mockito.mock(Provisioner.class);
-    when(provisioner.provisionedGroupId(any()))
-      .thenReturn(new GroupId("provisioned-id@example.com"));
-    when(provisioner.provisionedGroups())
-      .thenReturn(List.of(orphanedJitGroupId, compliantJitGroup.id(), brokenJitGroup.id()));
-    doNothing().when(provisioner).reconcile(eq(compliantJitGroup));
+    var provisioner = createProvisioner(brokenJitGroup.id());
     doThrow(new AccessDeniedException("mock")).when(provisioner).reconcile(eq(brokenJitGroup));
 
     var environment = new EnvironmentContext(
@@ -245,15 +286,73 @@ public class TestEnvironmentContext {
     assertTrue(result.isPresent());
 
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
-
-    assertTrue(resultMap.get(orphanedJitGroupId).isOrphaned());
-    assertFalse(resultMap.get(orphanedJitGroupId).isCompliant());
-
-    assertTrue(resultMap.get(compliantJitGroup.id()).isCompliant());
-
     assertFalse(resultMap.get(brokenJitGroup.id()).isCompliant());
     assertInstanceOf(
       AccessDeniedException.class,
-      resultMap.get(brokenJitGroup.id()).exception());
+      resultMap.get(brokenJitGroup.id()).exception().get());
+  }
+
+  @Test
+  public void reconcile_whenGroupCompliant() throws Exception {
+    var environmentPolicy = new EnvironmentPolicy(
+      "env",
+      "env",
+      new AccessControlList.Builder()
+        .allow(SAMPLE_USER, PolicyPermission.RECONCILE.toMask())
+        .build(),
+      Map.of(),
+      new Policy.Metadata("test", Instant.EPOCH));
+    var systemPolicy = new SystemPolicy("system", "System");
+    environmentPolicy.add(systemPolicy);
+
+    var compliantJitGroup = new JitGroupPolicy("compliant", "compliant");
+    systemPolicy.add(compliantJitGroup);
+
+    var provisioner = createProvisioner(compliantJitGroup.id());
+    doNothing().when(provisioner).reconcile(eq(compliantJitGroup));
+
+    var environment = new EnvironmentContext(
+      environmentPolicy,
+      Subjects.create(SAMPLE_USER),
+      provisioner);
+
+    assertTrue(environment.canReconcile());
+
+    var result = environment.reconcile();
+    assertTrue(result.isPresent());
+
+    var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
+    assertTrue(resultMap.get(compliantJitGroup.id()).isCompliant());
+  }
+  
+  @Test
+  public void reconcile_whenLegacyRoleIncompatible() throws Exception {
+    var incompatibleGroupId = new JitGroupId(LegacyPolicy.NAME, "123", "incompatible-role");
+
+    var legacyPolicy = Mockito.mock(LegacyPolicy.class);
+    when(legacyPolicy
+      .isAllowedByAccessControlList(
+        any(),
+        eq(EnumSet.of(PolicyPermission.RECONCILE))))
+      .thenReturn(true);
+    when(legacyPolicy.incompatibilities())
+      .thenReturn(List.of(new JitGroupCompliance(
+        incompatibleGroupId,
+        null,
+        null,
+        new IllegalArgumentException("mock"))));
+
+    var environment = new EnvironmentContext(
+      legacyPolicy,
+      Subjects.create(SAMPLE_USER),
+      createProvisioner());
+
+    assertTrue(environment.canReconcile());
+    var result = environment.reconcile();
+    var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
+    assertFalse(resultMap.get(incompatibleGroupId).isCompliant());
+    assertInstanceOf(
+      IllegalArgumentException.class,
+      resultMap.get(incompatibleGroupId).exception().get());
   }
 }
