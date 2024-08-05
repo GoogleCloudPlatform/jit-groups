@@ -160,13 +160,15 @@
                 Compliance
             </h1>
             <div class="jit-card">
-                The following issues were detected while reconciling the environment policy 
-                with Cloud Identity groups and IAM policies. During reconciliation, the following
-                actions are performed:
+                Reconciling the environment policy:
+
                 <ul>
-                    <li>Finding Cloud Identity groups that are no longer covered by the environment policy</li>
-                    <li>Updating IAM policies that have diverged from privileges defined in the environment policy</li>
+                    <li>Find Cloud Identity groups that are no longer covered by the current environment policy</li>
+                    <li>Ensure that IAM policies match the privileges defined in the environment policy</li>
+                    <li>Detect legacy roles that can't be mapped to JIT groups</li>
                 </ul>
+
+                The following issues have been detected:
             </div>
             <div class="mdc-data-table">
                 <div class="mdc-data-table__table-container">
@@ -849,7 +851,7 @@
                                     { text: item.system },
                                     { text: item.environment },
                                     { text: item.cloudIdentityGroupId },
-                                    { text: item.details, maxLength: 40 }
+                                    { text: item.details }
                                 ],
                                 false);
                         });
