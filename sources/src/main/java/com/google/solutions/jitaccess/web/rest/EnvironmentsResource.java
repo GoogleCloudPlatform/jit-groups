@@ -306,7 +306,7 @@ public class EnvironmentsResource {
           compliance.groupId().name(),
           compliance.cloudIdentityGroupId()
             .map(g -> g.email)
-            .orElse(null), // TODO: test
+            .orElse(null),
           "The group is orphaned. A group exists in Cloud Identity, but it is not covered by a policy.");
 
       }
