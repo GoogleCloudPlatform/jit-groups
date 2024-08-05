@@ -2,9 +2,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "master", "jit-groups" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "jit-groups" ]
   schedule:
     # Every Monday, 7:38 am UTC
     - cron: '38 7 * * 1'
