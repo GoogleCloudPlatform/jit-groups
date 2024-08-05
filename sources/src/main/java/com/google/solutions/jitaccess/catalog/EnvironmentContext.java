@@ -23,17 +23,12 @@ package com.google.solutions.jitaccess.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -164,63 +159,4 @@ public class EnvironmentContext {
       .map(sys -> new SystemContext(sys, this.subject, this.provisioner));
   }
 
-  /**
-   * Compliance information about a JIT Group.
-   */
-  public static class JitGroupCompliance {
-    private final @NotNull JitGroupId groupId;
-    private final @NotNull GroupId cloudIdentityGroupId;
-
-    private final @Nullable JitGroupPolicy policy;
-    private final @Nullable Exception exception;
-
-    private JitGroupCompliance(
-      @NotNull JitGroupId groupId,
-      @NotNull GroupId cloudIdentityGroupId,
-      @Nullable JitGroupPolicy policy,
-      @Nullable Exception exception
-    ) {
-      this.groupId = groupId;
-      this.cloudIdentityGroupId = cloudIdentityGroupId;
-      this.policy = policy;
-      this.exception = exception;
-    }
-
-    /**
-     * ID of group whose compliance is being reported.
-     */
-    public @NotNull JitGroupId groupId() {
-      return groupId;
-    }
-
-    /**
-     * Email address of the Cloud Identity group that backs this
-     * JIT group.
-     */
-    public @NotNull GroupId cloudIdentityGroupId() {
-      return cloudIdentityGroupId;
-    }
-
-    /**
-     * Indicates whether this group is found to be compliant.
-     */
-    public boolean isCompliant() {
-      return this.exception == null && this.policy != null;
-    }
-
-    /**
-     * Indicates whether this group is orphaned, i.e. the group
-     * exists in Cloud Identity, but there's no policy for it..
-     */
-    public boolean isOrphaned() {
-      return this.exception == null && this.policy == null;
-    }
-
-    /**
-     * Exception encountered during reconciliation.
-     */
-    public @Nullable Exception exception() {
-      return exception;
-    }
-  }
 }
