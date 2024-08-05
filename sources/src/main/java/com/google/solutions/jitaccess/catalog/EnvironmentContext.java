@@ -23,17 +23,13 @@ package com.google.solutions.jitaccess.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -137,6 +133,14 @@ public class EnvironmentContext {
       }
     }
 
+    //
+    // If this is a legacy policy, add any incompatibilities that
+    // prevented the mapping of legacy roles.
+    //
+    if (this.policy instanceof LegacyPolicy legacyPolicy) {
+      result.addAll(legacyPolicy.incompatibilities());
+    }
+
     return Optional.of(result);
   }
 
@@ -164,46 +168,4 @@ public class EnvironmentContext {
       .map(sys -> new SystemContext(sys, this.subject, this.provisioner));
   }
 
-  /**
-   * Compliance information about a JIT Group.
-   */
-  public static class JitGroupCompliance {
-    private final @NotNull JitGroupId groupId;
-    private final @NotNull GroupId cloudIdentityGroupId;
-
-    private final @Nullable JitGroupPolicy policy;
-    private final @Nullable Exception exception;
-
-    private JitGroupCompliance(
-      @NotNull JitGroupId groupId,
-      @NotNull GroupId cloudIdentityGroupId,
-      @Nullable JitGroupPolicy policy,
-      @Nullable Exception exception
-    ) {
-      this.groupId = groupId;
-      this.cloudIdentityGroupId = cloudIdentityGroupId;
-      this.policy = policy;
-      this.exception = exception;
-    }
-
-    public @NotNull JitGroupId groupId() {
-      return groupId;
-    }
-
-    public GroupId cloudIdentityGroupId() {
-      return cloudIdentityGroupId;
-    }
-
-    public boolean isCompliant() {
-      return this.exception == null && this.policy != null;
-    }
-
-    public boolean isOrphaned() {
-      return this.exception == null && this.policy == null;
-    }
-
-    public @Nullable Exception exception() {
-      return exception;
-    }
-  }
 }
