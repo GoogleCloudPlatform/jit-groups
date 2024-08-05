@@ -25,26 +25,19 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Properties;
 
 /**
  * Adapter for sending email over SMTP.
  */
-public class SmtpClient {
+public class SmtpClient extends MailClient {
   private final @NotNull SecretManagerClient secretManagerClient;
   private final @NotNull Options options;
-
 
   public SmtpClient(
     @NotNull SecretManagerClient secretManagerClient,
@@ -57,18 +50,15 @@ public class SmtpClient {
     this.options = options;
   }
 
-  public void sendMail(
-    @NotNull Collection<EmailAddress> toRecipients,
-    @NotNull Collection<EmailAddress> ccRecipients,
-    @NotNull String subject,
-    @NotNull Multipart content,
-    @NotNull EnumSet<Flags> flags
-  ) throws MailException {
-    Preconditions.checkNotNull(toRecipients, "toRecipients");
-    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
-    Preconditions.checkNotNull(subject, "subject");
-    Preconditions.checkNotNull(content, "content");
+  @Override
+  protected InternetAddress senderAddress() throws MailException, IOException {
+    return new InternetAddress(
+      options.senderAddress.value(),
+      options.senderName);
+  }
 
+  @Override
+  protected Session createSession() throws MailException {
     PasswordAuthentication authentication;
     try {
       authentication = this.options.createPasswordAuthentication(this.secretManagerClient);
@@ -77,7 +67,7 @@ public class SmtpClient {
       throw new MailException("Looking up SMTP credentials failed", e);
     }
 
-    var session = Session.getDefaultInstance(
+    return Session.getDefaultInstance(
       this.options.smtpProperties,
       new Authenticator() {
         @Override
@@ -85,87 +75,12 @@ public class SmtpClient {
           return authentication;
         }
       });
-
-    try {
-      var message = new MimeMessage(session);
-      message.setContent(content);
-
-      message.setFrom(new InternetAddress(
-        this.options.senderAddress.value(),
-        this.options.senderName));
-
-      for (var recipient : toRecipients){
-        message.addRecipient(
-          Message.RecipientType.TO,
-          new InternetAddress(recipient.value(), recipient.value()));
-      }
-
-      for (var recipient : ccRecipients){
-        message.addRecipient(
-          Message.RecipientType.CC,
-          new InternetAddress(recipient.value(), recipient.value()));
-      }
-
-      //
-      // NB. Setting the Precedence header prevents (some) mail readers to not send
-      // out of office-replies.
-      //
-      message.addHeader("Precedence", "bulk");
-
-      if (flags.contains(Flags.REPLY)) {
-        message.setFlag(jakarta.mail.Flags.Flag.ANSWERED, true);
-        message.setSubject("Re: " + subject);
-      }
-      else {
-        message.setSubject(subject);
-      }
-
-      Transport.send(message);
-    }
-    catch (MessagingException | UnsupportedEncodingException e) {
-      throw new MailException("The mail could not be delivered", e);
-    }
-  }
-
-  public void sendMail(
-    @NotNull Collection<EmailAddress> toRecipients,
-    @NotNull Collection<EmailAddress> ccRecipients,
-    @NotNull String subject,
-    @NotNull String htmlContent,
-    @NotNull EnumSet<Flags> flags
-  ) throws MailException {
-    Preconditions.checkNotNull(toRecipients, "toRecipients");
-    Preconditions.checkNotNull(ccRecipients, "ccRecipients");
-    Preconditions.checkNotNull(subject, "subject");
-    Preconditions.checkNotNull(htmlContent, "htmlContent");
-
-    try {
-      var htmlPart = new MimeBodyPart();
-      htmlPart.setContent(htmlContent, "text/html");
-
-      var content = new MimeMultipart();
-      content.addBodyPart(htmlPart);
-
-      sendMail(
-        toRecipients,
-        ccRecipients,
-        subject,
-        content,
-        flags);
-    }
-    catch (MessagingException e) {
-      throw new MailException("The mail could not be formatted", e);
-    }
   }
 
   // -------------------------------------------------------------------------
   // Inner classes.
   // -------------------------------------------------------------------------
 
-  public enum Flags {
-    NONE,
-    REPLY
-  }
 
   public static class Options {
     private @Nullable PasswordAuthentication cachedAuthentication = null;
@@ -272,12 +187,6 @@ public class SmtpClient {
 
       assert this.cachedAuthentication != null;
       return this.cachedAuthentication;
-    }
-  }
-
-  public static class MailException extends Exception {
-    public MailException(String message, Throwable cause) {
-      super(message, cause);
     }
   }
 }

@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web.proposal;
 
-import com.google.solutions.jitaccess.apis.clients.SmtpClient;
+import com.google.solutions.jitaccess.apis.clients.MailClient;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
@@ -55,12 +55,12 @@ public class TestMailProposalHandler {
 
   @Test
   public void onJoinOperationProposed() throws Exception {
-    var smtpClient = Mockito.mock(SmtpClient.class);
+    var mailClient = Mockito.mock(MailClient.class);
 
     var handler = new MailProposalHandler(
       Mockito.mock(TokenSigner.class),
       new EmailMapping("user.email"),
-      smtpClient,
+      mailClient,
       new MailProposalHandler.Options(
         MailProposalHandler.Options.DEFAULT_TIMEZONE,
         Duration.ofMinutes(1)));
@@ -85,12 +85,12 @@ public class TestMailProposalHandler {
         proposal.expiry()),
       new URI("/"));
 
-    verify(smtpClient, times(1)).sendMail(
+    verify(mailClient, times(1)).sendMail(
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
       eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
       anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.NONE)));
+      eq(EnumSet.of(MailClient.Flags.NONE)));
   }
 
   //-------------------------------------------------------------------------
@@ -99,12 +99,12 @@ public class TestMailProposalHandler {
 
   @Test
   public void onProposalApproved() throws Exception {
-    var smtpClient = Mockito.mock(SmtpClient.class);
+    var mailClient = Mockito.mock(MailClient.class);
 
     var handler = new MailProposalHandler(
       Mockito.mock(TokenSigner.class),
       new EmailMapping("user.email"),
-      smtpClient,
+      mailClient,
       new MailProposalHandler.Options(
         MailProposalHandler.Options.DEFAULT_TIMEZONE,
         Duration.ofMinutes(1)));
@@ -124,12 +124,12 @@ public class TestMailProposalHandler {
       op,
       proposal);
 
-    verify(smtpClient, times(1)).sendMail(
+    verify(mailClient, times(1)).sendMail(
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
       eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
       anyString(),
-      eq(EnumSet.of(SmtpClient.Flags.REPLY)));
+      eq(EnumSet.of(MailClient.Flags.REPLY)));
   }
 
   @Nested

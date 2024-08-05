@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.proposal;
 
 import com.google.api.client.json.GenericJson;
 import com.google.common.html.HtmlEscapers;
-import com.google.solutions.jitaccess.apis.clients.SmtpClient;
+import com.google.solutions.jitaccess.apis.clients.MailClient;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
@@ -64,12 +64,12 @@ public class MailProposalHandler extends AbstractProposalHandler {
   static final String PROPOSAL_APPROVED_TEMPLATE = "mail-templates/proposal-approved.html";
   private final @NotNull Options options;
   private final @NotNull EmailMapping emailMapping;
-  private final @NotNull SmtpClient smtpClient;
+  private final @NotNull MailClient mailClient;
 
   public MailProposalHandler(
     @NotNull TokenSigner tokenSigner,
     @NotNull EmailMapping emailMapping,
-    @NotNull SmtpClient smtpClient,
+    @NotNull MailClient mailClient,
     @NotNull Options options
   ) {
     super(
@@ -77,7 +77,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
       RANDOM,
       new AbstractProposalHandler.Options(options.tokenExpiry));
     this.emailMapping = emailMapping;
-    this.smtpClient = smtpClient;
+    this.mailClient = mailClient;
     this.options = options;
   }
 
@@ -89,16 +89,16 @@ public class MailProposalHandler extends AbstractProposalHandler {
     boolean isReply
   ) throws IOException {
     try {
-      this.smtpClient.sendMail(
+      this.mailClient.sendMail(
         to,
         cc,
         subject,
         message,
         isReply
-          ? EnumSet.of(SmtpClient.Flags.REPLY)
-          : EnumSet.of(SmtpClient.Flags.NONE));
+          ? EnumSet.of(MailClient.Flags.REPLY)
+          : EnumSet.of(MailClient.Flags.NONE));
     }
-    catch (SmtpClient.MailException e) {
+    catch (MailClient.MailException e) {
       throw new IOException("Sending email failed", e);
     }
   }
