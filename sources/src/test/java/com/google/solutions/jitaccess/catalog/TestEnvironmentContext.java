@@ -324,7 +324,7 @@ public class TestEnvironmentContext {
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
     assertTrue(resultMap.get(compliantJitGroup.id()).isCompliant());
   }
-  
+
   @Test
   public void reconcile_whenLegacyRoleIncompatible() throws Exception {
     var incompatibleGroupId = new JitGroupId(LegacyPolicy.NAME, "123", "incompatible-role");

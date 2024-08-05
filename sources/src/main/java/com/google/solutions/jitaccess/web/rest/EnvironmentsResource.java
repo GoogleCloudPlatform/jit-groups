@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
+import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
@@ -319,7 +320,7 @@ public class EnvironmentsResource {
             .map(g -> g.email)
             .orElse(null),
           compliance.exception()
-            .map(e -> e.getMessage())
+            .map(e -> Exceptions.fullMessage(e, false))
             .orElse("Unspecified error"));
       }
       else {

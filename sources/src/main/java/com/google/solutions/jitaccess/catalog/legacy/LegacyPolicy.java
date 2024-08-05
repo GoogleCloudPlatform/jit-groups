@@ -260,7 +260,9 @@ public class LegacyPolicy extends EnvironmentPolicy {
                   RolePolicy.createName(new IamRole(binding.getRole())))                ,
                 null,
                 null,
-                e));
+                new UnsupportedOperationException(
+                  String.format("The role '%s' cannot be mapped to a JIT Group", binding.getRole()),
+                  e)));
             }
           }
 
@@ -375,7 +377,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
 
       if (!Strings.isNullOrEmpty(role.resourceCondition())) {
         throw new UnsupportedOperationException(
-          "The role cannot be mapped to a JIT group because it has a resource condition");
+          "The role binding has a resource condition, which is not supported");
       }
 
       var iamBinding = new IamRoleBinding(
@@ -421,7 +423,6 @@ public class LegacyPolicy extends EnvironmentPolicy {
       //
       return Optional.empty();
     }
-
 
     private RolePolicy(
       @NotNull String name,

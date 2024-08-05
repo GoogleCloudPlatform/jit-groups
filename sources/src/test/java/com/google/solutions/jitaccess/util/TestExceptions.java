@@ -27,6 +27,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestExceptions {
+  //---------------------------------------------------------------------------
+  // fullMessage.
+  //---------------------------------------------------------------------------
+
   @Test
   public void fullMessage()
   {
@@ -34,12 +38,30 @@ public class TestExceptions {
       "Access denied",
       new IllegalStateException(
         "Illegal state",
-        new NullPointerException()));
+        new IllegalArgumentException("message")));
 
     assertEquals(
-      "Access denied, caused by IllegalStateException: Illegal state, caused by NullPointerException",
+      "Access denied, caused by IllegalStateException: Illegal state, caused by IllegalArgumentException: message",
       Exceptions.fullMessage(exception));
   }
+
+  @Test
+  public void fullMessage_whenIncludingNestedExceptionNamesDisabled()
+  {
+    var exception = new AccessDeniedException(
+      "Access denied",
+      new IllegalStateException(
+        "Illegal state",
+        new IllegalArgumentException("message")));
+
+    assertEquals(
+      "Access denied: Illegal state: message",
+      Exceptions.fullMessage(exception, false));
+  }
+
+  //---------------------------------------------------------------------------
+  // rootCause.
+  //---------------------------------------------------------------------------
 
   @Test
   public void rootCause_whenInnerExceptionPresent() {
@@ -56,6 +78,10 @@ public class TestExceptions {
 
     assertSame(rootCause, rootCause);
   }
+
+  //---------------------------------------------------------------------------
+  // stackTrace.
+  //---------------------------------------------------------------------------
 
   @Test
   public void stackTrace() {

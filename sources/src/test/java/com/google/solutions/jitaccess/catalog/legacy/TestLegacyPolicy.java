@@ -220,7 +220,8 @@ public class TestLegacyPolicy {
     assertEquals(LegacyPolicy.NAME, issue.groupId().environment());
     assertEquals("project-1", issue.groupId().system());
     assertEquals("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", issue.groupId().name());
-    assertInstanceOf(IllegalArgumentException.class, issue.exception().get());
+    assertInstanceOf(UnsupportedOperationException.class, issue.exception().get());
+    assertInstanceOf(IllegalArgumentException.class, issue.exception().get().getCause());
   }
 
   @Test
