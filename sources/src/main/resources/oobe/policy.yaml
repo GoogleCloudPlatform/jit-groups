@@ -1,0 +1,97 @@
+schemaVersion: 1
+environment:
+  name: "example"
+  description: |
+    This is an example environment that demonstrates some of the application's features. The
+    environment is shown because you haven't configured any environments yet.
+  access:
+    - principal: "class:authenticatedUsers"
+      allow: "VIEW, EXPORT, RECONCILE"
+  constraints:
+    join:
+      - type: "expression"
+        name: "ticketnumber"
+        displayName: "You must provide a ticket number as ticketnumber"
+        expression: "input.ticketnumber.matches('^[0-9]+$')"
+        variables:
+          - type: "string"
+            name: "ticketnumber"
+            displayName: "Ticket number"
+            min: 1
+            max: 10
+      - type: "expression"
+        name: "block-all"
+        displayName: "This is just an example policy, you can't actually join this group"
+        expression: "false"
+        variables: []
+  systems:
+    - name: "network"
+      description: "Groups related to network administration"
+      groups:
+        - name: "shared-vpc-admins"
+          description: |
+            Administer Shared VPC networks and firewalls
+          access:
+            - principal: "class:authenticatedUsers"
+              allow: "VIEW, JOIN"
+          privileges:
+            iam:
+              - project: example-project
+                role: roles/compute.networkAdmin
+              - project: example-project
+                role: roles/compute.xpnAdmin
+          constraints:
+            join:
+              - type: "expiry"
+                min: "PT1H"
+                max: "P7D"
+
+        - name: "security-admins"
+          description: |
+            Manage Identity-Aware Proxy and other security settings
+          access:
+            - principal: "class:authenticatedUsers"
+              allow: "VIEW"
+          privileges:
+            iam:
+              - project: example-project
+                role: roles/iap.settingsAdmin
+              - project: example-project
+                role: roles/compute.securityAdmin
+          constraints:
+            join:
+              - type: "expiry"
+                min: "P7D"
+                max: "P30D"
+
+
+    - name: "logging"
+      description: "Groups related to logging and auditing"
+      groups:
+        - name: "log-viewers"
+          description: |
+            View audit logs
+          access:
+            - principal: "class:authenticatedUsers"
+              allow: "VIEW, JOIN, APPROVE_SELF"
+          privileges:
+            iam:
+              - project: example-project
+                role: roles/logging.privateLogViewer
+              - project: example-project
+                role: roles/logging.viewer
+          constraints:
+            join:
+              - type: "expression"
+                name: "justification"
+                displayName: "You must provide a brief explanation why you need this access"
+                expression: "input.justification != ''"
+                variables:
+                  - type: "string"
+                    name: "justification"
+                    displayName: "Explanation"
+                    min: 10
+                    max: 1000
+              - type: "expiry"
+                min: "P7D"
+                max: "P90D"

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -36,6 +37,8 @@ import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -48,6 +51,11 @@ import java.util.function.Supplier;
  */
 class EnvironmentConfiguration implements PolicyHeader {
   private static final String DEFAULT_DESCRIPTION = "JIT Groups environment";
+
+
+  private static final String OOBE_POLICY_NAME = "example";
+  private static final String OOBE_POLICY_DESCRIPTION = "Example policy";
+  private static final String OOBE_POLICY_PATH = "oobe/policy.yaml";
 
   private final @NotNull String name;
   private final @NotNull String description;
@@ -84,10 +92,13 @@ class EnvironmentConfiguration implements PolicyHeader {
     return this.loadPolicy.get();
   }
 
+  /**
+   * Create configuration for a file-based policy.
+   */
   static @NotNull EnvironmentConfiguration forFile(
     @NotNull String filePath,
     @NotNull GoogleCredentials applicationCredentials
-  ) {
+  ) throws IOException {
     final File file;
     String environmentName;
     try {
@@ -107,6 +118,10 @@ class EnvironmentConfiguration implements PolicyHeader {
         e);
     }
 
+    if (!file.exists()) {
+      throw new FileNotFoundException(filePath);
+    }
+
     return new EnvironmentConfiguration(
       environmentName,
       DEFAULT_DESCRIPTION, // We don't know the description yet.
@@ -122,6 +137,52 @@ class EnvironmentConfiguration implements PolicyHeader {
     );
   }
 
+  /**
+   * Create configuration for a resource-based policy.
+   */
+  static @NotNull EnvironmentConfiguration forResource(
+    @NotNull String name,
+    @NotNull String description,
+    @NotNull String resourcePath,
+    @NotNull GoogleCredentials applicationCredentials
+  ) throws IOException {
+    try (var stream = EnvironmentConfiguration.class
+      .getClassLoader()
+      .getResourceAsStream(resourcePath)) {
+      if (stream == null) {
+        throw new FileNotFoundException(resourcePath);
+      }
+    }
+
+    return new EnvironmentConfiguration(
+      name,
+      description,
+      applicationCredentials,
+      () -> {
+        try (var stream = EnvironmentConfiguration.class
+          .getClassLoader()
+          .getResourceAsStream(resourcePath)) {
+          if (stream == null) {
+            throw new FileNotFoundException(resourcePath);
+          }
+
+          var policy = new String(stream.readAllBytes());
+          return PolicyDocument
+            .fromString(
+              policy,
+              new Policy.Metadata("built-in policy", Instant.now()))
+            .policy();
+        }
+        catch (Exception e) {
+          throw new UncheckedExecutionException(e);
+        }
+      }
+    );
+  }
+
+  /**
+   * Create configuration for a service account-based policy.
+   */
   static @NotNull EnvironmentConfiguration forServiceAccount(
     @NotNull ServiceAccountId serviceAccountId,
     @NotNull UserId applicationPrincipal,
@@ -217,5 +278,24 @@ class EnvironmentConfiguration implements PolicyHeader {
           throw new UncheckedExecutionException(e);
         }
       });
+  }
+
+  /**
+   * Create inert example configuration that can be used for the
+   * out-of-the-box experience.
+   *
+   * The example configuration is inert in that it doesn't provision
+   * any resources or access.
+   */
+  static EnvironmentConfiguration inertExample() throws IOException {
+    //
+    // Use a defunct credential to ensure that nothing ever
+    // gets provisioned for this policy.
+    //
+    return EnvironmentConfiguration.forResource(
+      OOBE_POLICY_NAME,
+      OOBE_POLICY_DESCRIPTION,
+      OOBE_POLICY_PATH,
+      GoogleCredentials.create(new AccessToken("", null)));
   }
 }
