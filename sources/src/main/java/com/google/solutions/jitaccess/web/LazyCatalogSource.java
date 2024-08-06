@@ -38,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -47,11 +48,11 @@ import java.util.function.Function;
  */
 public class LazyCatalogSource implements Catalog.Source {
   private final @NotNull LoadingCache<String, Entry> environmentCache;
-  private final @NotNull Set<String> environmentNames;
+  private final @NotNull Map<String, PolicyHeader> environments;
   private final @NotNull Logger logger;
 
   LazyCatalogSource(
-    @NotNull Set<String> environmentNames,
+    @NotNull Map<String, PolicyHeader> environments,
     @NotNull Function<String, EnvironmentPolicy> producePolicy,
     @NotNull Function<EnvironmentPolicy, ResourceManagerClient> produceResourceManagerClient,
     @NotNull GroupMapping groupMapping,
@@ -59,7 +60,13 @@ public class LazyCatalogSource implements Catalog.Source {
     @NotNull Duration cacheDuration,
     @NotNull Logger logger
   ) {
-    this.environmentNames = environmentNames;
+    Preconditions.checkArgument(environments
+      .entrySet()
+      .stream()
+      .allMatch(e -> e.getKey().equals(e.getValue().name())),
+      "Key must match name of policy");
+
+    this.environments = environments;
     this.logger = logger;
 
     //
@@ -97,7 +104,7 @@ public class LazyCatalogSource implements Catalog.Source {
   private @NotNull Optional<Entry> lookup(
     @NotNull String name
   ) {
-    if (!environmentNames.contains(name)) {
+    if (!environments.containsKey(name)) {
       return Optional.empty();
     }
 
@@ -126,20 +133,7 @@ public class LazyCatalogSource implements Catalog.Source {
     // Avoid eagerly loading all policies just to retrieve their
     // name and descriptions.
     //
-    return this.environmentNames
-      .stream()
-      .map(name -> (PolicyHeader)new PolicyHeader() {
-        @Override
-        public @NotNull String name() {
-          return name;
-        }
-
-        @Override
-        public @NotNull String description() {
-          return name;
-        }
-      })
-      .toList();
+    return this.environments.values();
   }
 
   @Override

@@ -41,6 +41,7 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
+import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import com.google.solutions.jitaccess.web.proposal.*;
 import jakarta.enterprise.context.RequestScoped;
@@ -55,6 +56,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Entry point for the application. Loads configuration and produces CDI beans.
@@ -549,6 +551,7 @@ public class Application {
         LegacyPolicy.NAME,
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
+          LegacyPolicy.DESCRIPTION,
           this.applicationCredentials, // Use app service account, as in 1.x
           () -> {
             try {
@@ -567,7 +570,9 @@ public class Application {
     }
 
     return new LazyCatalogSource(
-      configurations.keySet(),
+      configurations.entrySet()
+        .stream()
+        .collect(Collectors.toMap(e -> e.getKey(), e -> (PolicyHeader) e.getValue())),
       envName -> configurations.get(envName).loadPolicy(),
       policy -> new ResourceManagerClient(
         configurations.get(policy.name()).resourceCredentials(),
