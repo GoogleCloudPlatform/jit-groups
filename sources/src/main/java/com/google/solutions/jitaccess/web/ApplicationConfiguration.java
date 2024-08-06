@@ -330,6 +330,10 @@ class ApplicationConfiguration {
         return false;
       }
     }
+
+    public boolean isDefault() {
+      return Objects.equals(value(), this.defaultValue);
+    }
   }
 
   private class StringSetting extends Setting<String> {

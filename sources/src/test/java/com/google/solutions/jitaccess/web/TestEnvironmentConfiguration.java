@@ -23,10 +23,8 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
-import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import org.junit.jupiter.api.Test;
@@ -34,8 +32,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.List;
+import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -60,26 +59,41 @@ public class TestEnvironmentConfiguration {
   }
 
   @Test
-  public void forFile() {
+  public void forFile() throws Exception {
+    var tempFile = File.createTempFile("policy", ".yaml");
+    Files.writeString(tempFile.toPath(), "");
+
     var credentials = Mockito.mock(GoogleCredentials.class);
     var configuration = EnvironmentConfiguration.forFile(
-      "file:/environment.yaml",
+      tempFile.toURI().toString(),
       credentials);
 
-    assertEquals("environment", configuration.name());
+    assertEquals(tempFile.getName(), configuration.name() + ".yaml");
     assertSame(credentials, configuration.resourceCredentials());
   }
 
   @Test
-  public void forFile_loadPolicy_whenFileNotFound() {
-    var configuration = EnvironmentConfiguration.forFile(
-      "file:/does-not-exist.yaml",
-      Mockito.mock(GoogleCredentials.class));
+  public void forFile_whenFileNotFound() throws Exception {
+    assertThrows(
+      FileNotFoundException.class,
+      () -> EnvironmentConfiguration.forFile(
+        "file:/does-not-exist.yaml",
+        Mockito.mock(GoogleCredentials.class)));
+  }
 
-    var exception = assertThrows(
-      UncheckedExecutionException.class,
-      () -> configuration.loadPolicy());
-    assertInstanceOf(FileNotFoundException.class, exception.getCause());
+  //---------------------------------------------------------------------------
+  // forFile.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void forResource_whenResourcePathNotFound() {
+    assertThrows(
+      FileNotFoundException.class,
+      () -> EnvironmentConfiguration.forResource(
+        "name",
+        "description",
+        "does-not-exist.yaml",
+        Mockito.mock(GoogleCredentials.class)));
   }
 
   //---------------------------------------------------------------------------
@@ -107,5 +121,17 @@ public class TestEnvironmentConfiguration {
 
     assertEquals("environment", configuration.name());
     assertInstanceOf(ImpersonatedCredentials.class, configuration.resourceCredentials());
+  }
+
+  //---------------------------------------------------------------------------
+  // inertExample.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void inertExample() throws Exception {
+    var policy = EnvironmentConfiguration
+      .inertExample()
+      .loadPolicy();
+    assertNotEquals(0, policy.systems().size());
   }
 }
