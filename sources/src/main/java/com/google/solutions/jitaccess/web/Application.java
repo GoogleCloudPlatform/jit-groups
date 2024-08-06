@@ -27,10 +27,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
-import com.google.auth.oauth2.ComputeEngineCredentials;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.auth.oauth2.*;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.apis.clients.*;
@@ -496,12 +493,12 @@ public class Application {
         }
 
         try {
-          var configuration = EnvironmentConfiguration.
-            forFile(environment,
+          var configuration = EnvironmentConfiguration.forFile(
+            environment,
             this.applicationCredentials);
           configurations.put(configuration.name(), configuration);
         }
-        catch (IllegalArgumentException e) {
+        catch (Exception e) {
           this.logger.warn(
             EventIds.LOAD_ENVIRONMENT,
             "Encountered an invalid environment configuration, ignoring",
@@ -538,7 +535,8 @@ public class Application {
 
     if (this.configuration.legacyCatalog.isValid() &&
       this.configuration.legacyCatalog.value().equalsIgnoreCase("ASSETINVENTORY") &&
-      this.configuration.legacyScope.isValid()) {
+      this.configuration.legacyScope.isValid() &&
+      !this.configuration.legacyScope.isDefault()) {
 
       //
       // Load an extra environment that surfaces JIT Access 1.x roles.
@@ -567,6 +565,21 @@ public class Application {
               throw new UncheckedExecutionException(e);
             }
           }));
+    }
+
+    if (configurations.isEmpty()) {
+      //
+      // No policy configured yet, use the "OOBE" example policy.
+      //
+      try {
+        var example = EnvironmentConfiguration.inertExample();
+        configurations.put(
+          example.name(),
+          example);
+      }
+      catch (IOException e) {
+        this.logger.warn(EventIds.LOAD_ENVIRONMENT, e);
+      }
     }
 
     return new LazyCatalogSource(
