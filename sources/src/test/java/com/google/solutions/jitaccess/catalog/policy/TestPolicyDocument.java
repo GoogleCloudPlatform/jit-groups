@@ -963,6 +963,54 @@ public class TestPolicyDocument {
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_VARIABLE_DECLARATION,
         issues.issues().get(0).code());
     }
+
+    @Test
+    public void toPolicy_whenExpressionHasVariables() {
+      var element = new PolicyDocument.ConstraintElement(
+        "Expression",
+        "name",
+        "display name",
+        null,
+        null,
+        "expression",
+        List.of(new PolicyDocument.CelVariableElement("string", "var", "Var", null, null)));
+
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues);
+      assertTrue(policy.isPresent());
+
+      var constraint = (CelConstraint)policy.get();
+      assertEquals("name", constraint.name());
+      assertEquals("display name", constraint.displayName());
+      assertEquals("expression", constraint.expression());
+      assertEquals(1, constraint.variables().size());
+
+      var variable = List.copyOf(constraint.variables()).get(0);
+      assertEquals("var", variable.name());
+      assertEquals("Var", variable.displayName());
+    }
+
+    @Test
+    public void toPolicy_whenExpressionHasNoVariables() {
+      var element = new PolicyDocument.ConstraintElement(
+        "Expression",
+        "name",
+        "display name",
+        null,
+        null,
+        "expression",
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues);
+      assertTrue(policy.isPresent());
+
+      var constraint = (CelConstraint)policy.get();
+      assertEquals("name", constraint.name());
+      assertEquals("display name", constraint.displayName());
+      assertEquals("expression", constraint.expression());
+      assertEquals(0, constraint.variables().size());
+    }
   }
 
   //---------------------------------------------------------------------------
