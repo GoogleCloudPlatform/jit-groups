@@ -104,25 +104,34 @@
       <version>v1-rev20220614-2.0.0</version>
     </dependency>
     <dependency>
-      <groupId>com.google.appengine</groupId>
-      <artifactId>appengine-api-1.0-sdk</artifactId>
-      <version>2.0.29</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>javax.activation-api</artifactId>
-      <version>1.2.0</version>
-    </dependency>
-
-    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.11.0</version>
     </dependency>
     <dependency>
+      <groupId>com.sun.mail</groupId>
+      <artifactId>jakarta.mail</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+    <dependency>
       <groupId>dev.cel</groupId>
       <artifactId>cel</artifactId>
       <version>0.6.0</version>
+    </dependency>
+
+    <!--
+      This dependency is shaded because it contains old javax.mail classes that conflict
+      with the newer jakarta.mail classes
+    -->
+<!--    <dependency>-->
+<!--      <groupId>com.google.appengine</groupId>-->
+<!--      <artifactId>appengine-api-1.0-sdk</artifactId>-->
+<!--      <version>2.0.29</version>-->
+<!--    </dependency>-->
+    <dependency>
+      <groupId>com.google.appengine</groupId>
+      <artifactId>appengine-apis</artifactId>
+      <version>2.0.29</version>
     </dependency>
 
     <!-- Test dependencies -->
