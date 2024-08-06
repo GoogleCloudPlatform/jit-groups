@@ -45,7 +45,7 @@ import java.util.stream.Stream;
  */
 public class LegacyPolicy extends EnvironmentPolicy {
   public static final @NotNull String NAME = "classic";
-  private static final @NotNull String DESCRIPTION = "JIT Access 1.x roles";
+  public static final @NotNull String DESCRIPTION = "JIT Access 1.x roles";
 
   /**
    * Predefined basic, IAM-, and CRM roles that contain the

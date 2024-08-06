@@ -32,6 +32,7 @@ import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -44,29 +45,35 @@ import java.util.function.Supplier;
 
 /**
  * Configuration for an environment.
- *
- * @param name                name of the environment
- * @param resourceCredentials environment-specific credentials to use for provisioning
- * @param loadPolicy          callback for (lazily) loading the policy
  */
-class EnvironmentConfiguration {
+class EnvironmentConfiguration implements PolicyHeader {
+  private static final String DEFAULT_DESCRIPTION = "JIT Groups environment";
 
   private final @NotNull String name;
+  private final @NotNull String description;
   private final @NotNull GoogleCredentials resourceCredentials;
   private final @NotNull Supplier<EnvironmentPolicy> loadPolicy;
 
   EnvironmentConfiguration(
     @NotNull String name,
+    @NotNull String description,
     @NotNull GoogleCredentials resourceCredentials,
     @NotNull Supplier<EnvironmentPolicy> loadPolicy
   ) {
     this.name = name;
+    this.description = description;
     this.resourceCredentials = resourceCredentials;
     this.loadPolicy = loadPolicy;
   }
 
+  @Override
   public String name() {
     return name;
+  }
+
+  @Override
+  public String description() {
+    return description;
   }
 
   public GoogleCredentials resourceCredentials() {
@@ -102,6 +109,7 @@ class EnvironmentConfiguration {
 
     return new EnvironmentConfiguration(
       environmentName,
+      DEFAULT_DESCRIPTION, // We don't know the description yet.
       applicationCredentials,
       () -> {
         try {
@@ -169,6 +177,7 @@ class EnvironmentConfiguration {
 
     return new EnvironmentConfiguration(
       environmentName,
+      DEFAULT_DESCRIPTION, // We don't know the description yet.
       environmentCredentials,
       () -> {
         //

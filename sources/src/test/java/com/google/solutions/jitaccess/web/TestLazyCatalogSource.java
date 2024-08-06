@@ -29,12 +29,15 @@ import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
+import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,6 +46,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestLazyCatalogSource {
+  private record SampleEnvironment(
+    @NotNull String name,
+    @NotNull String description
+  ) implements PolicyHeader {}
+
   // -------------------------------------------------------------------------
   // environments.
   // -------------------------------------------------------------------------
@@ -50,7 +58,9 @@ public class TestLazyCatalogSource {
   @Test
   public void environments() {
     var loader = new LazyCatalogSource(
-      Set.of("one", "two"),
+      Map.of(
+        "one", new SampleEnvironment("one", "One"),
+        "two", new SampleEnvironment("two", "Two")),
       env -> { throw new UnsupportedOperationException(); },
       policy -> { throw new UnsupportedOperationException(); },
       Mockito.mock(GroupMapping.class),
@@ -65,14 +75,14 @@ public class TestLazyCatalogSource {
       .filter(e -> e.name().equals("one"))
       .findFirst();
     assertTrue(one.isPresent());
-    assertEquals("one", one.get().description());
+    assertEquals("One", one.get().description());
 
     var two = loader.environmentPolicies()
       .stream()
       .filter(e -> e.name().equals("two"))
       .findFirst();
     assertTrue(two.isPresent());
-    assertEquals("two", two.get().description());
+    assertEquals("Two", two.get().description());
   }
 
   // -------------------------------------------------------------------------
@@ -84,7 +94,7 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Set.of(),
+      Map.of(),
       env -> { throw new UnsupportedOperationException(); },
       policy -> { throw new UnsupportedOperationException(); },
       Mockito.mock(GroupMapping.class),
@@ -107,7 +117,7 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Set.of("env"),
+      Map.of("env", new SampleEnvironment("env", "Env")),
       env -> { throw new UnsupportedOperationException(); },
       policy -> { throw new UnsupportedOperationException(); },
       Mockito.mock(GroupMapping.class),
@@ -130,7 +140,7 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Set.of("env"),
+      Map.of("env", new SampleEnvironment("env", "Env")),
       env -> { throw new UncheckedExecutionException(new FileNotFoundException()); },
       policy -> { throw new UnsupportedOperationException(); },
       Mockito.mock(GroupMapping.class),
@@ -153,7 +163,7 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Set.of("env"),
+      Map.of("env", new SampleEnvironment("env", "Env")),
       env -> new EnvironmentPolicy("different", "", new Policy.Metadata("mock", Instant.now())),
       policy -> { throw new UnsupportedOperationException(); },
       Mockito.mock(GroupMapping.class),
@@ -176,7 +186,7 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Set.of("env"),
+      Map.of("env", new SampleEnvironment("env", "Env")),
       env -> new EnvironmentPolicy("env", "", new Policy.Metadata("mock", Instant.now())),
       policy -> Mockito.mock(ResourceManagerClient.class),
       Mockito.mock(GroupMapping.class),
