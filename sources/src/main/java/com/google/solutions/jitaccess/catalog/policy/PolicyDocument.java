@@ -854,7 +854,7 @@ public class PolicyDocument {
                 this.type);
             }
 
-            var variables = this.celVariables
+            var variables = Coalesce.emptyIfNull(this.celVariables)
               .stream()
               .map(v -> v.toPolicy(issues))
               .toList();
