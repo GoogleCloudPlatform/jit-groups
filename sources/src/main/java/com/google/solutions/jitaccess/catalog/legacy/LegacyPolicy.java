@@ -136,7 +136,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
             //
             // Allow all users to VIEW.
             //
-            Stream.of(new AccessControlList.AllowedEntry(UserClassId.AUTHENTICATED_USERS, PolicyPermission.VIEW.toMask())))
+            Stream.of(new AccessControlList.AllowedEntry(UserClassId.IAP_USERS, PolicyPermission.VIEW.toMask())))
           .toList()
       ),
       Map.of(
