@@ -24,7 +24,9 @@ package com.google.solutions.jitaccess.catalog.policy;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedList;
 
 /**
  * Access permissions that can be granted on a policy.
@@ -61,7 +63,12 @@ public enum PolicyPermission {
   /**
    * Reconcile groups and IAM bindings with the policy.
    */
-  RECONCILE(VIEW.value + 32);
+  RECONCILE(VIEW.value + 32),
+
+  /**
+   * All permissions.
+   */
+  ALL(0x7FFFFFFF);
 
   private final int value;
 
@@ -91,10 +98,39 @@ public enum PolicyPermission {
    * Convert a bit mask to an EnumSet.
    */
   public static EnumSet<PolicyPermission> fromMask(int mask) {
-    return EnumSet.copyOf(
-      Arrays.stream(PolicyPermission.values())
-        .filter(p -> (p.toMask() & mask) == p.toMask())
-        .toList());
+    var enumValues = new LinkedList<PolicyPermission>();
+    var captured = 0;
+
+    //
+    // Some enum values are compound, for example
+    // JOIN implies VIEW. In this case, we want to avoid
+    // adding the implied permission to the resulting enum
+    // set.
+    //
+
+    //
+    // Go through the list of enum values in descending order
+    // so that the compound values come first.
+    //
+    for (var value : Arrays.stream(PolicyPermission.values())
+      .sorted(Comparator.reverseOrder())
+      .toList()) {
+      if (((value.toMask() & captured) == value.toMask())) {
+        //
+        // A previous enum value implied this one.
+        //
+      }
+      else if ((value.toMask() & mask) == value.toMask()) {
+        enumValues.add(value);
+
+        //
+        // Memoize the bits that we already covered.
+        //
+        captured |= value.toMask();
+      }
+    }
+
+    return EnumSet.copyOf(enumValues);
   }
 
   /**
