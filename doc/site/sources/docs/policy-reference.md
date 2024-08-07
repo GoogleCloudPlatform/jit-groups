@@ -246,12 +246,13 @@ Each ACE can have the following attributes:
     | `APPROVE_OTHERS` | Approve other's requests to join the group.                                          | Group                      |
     | `EXPORT`         | View or export the policy in the user interface.                                     | Environment                |
     | `RECONCILE`      | Reconcile the policy.                                                                | Environment                |
+    | `ALL`            | Full access, includes all other permissions.                                         | Environment, system, group |
     
     **Remarks**:
     
     +   `APPROVE_OTHERS` does _not_ allow users to approve their own join requests. Only the `APPROVE_SELF` permission
         allows users to join without approval.
-    +   `JOIN`, `APPROVE_SELF`, `APPROVE_OTHERS`, `EXPORT`, `RECONCILE` include the  `VIEW` permission.
+    +   The  `VIEW` permission is implied by all other permissions.
 
 ## Constraint
 
