@@ -613,10 +613,8 @@ public class TestPolicyDocument {
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
-      assertFalse(policy.isPresent());
-      assertEquals(
-        PolicyDocument.Issue.Code.GROUP_MISSING_ACL,
-        issues.issues().get(0).code());
+      assertTrue(policy.isPresent());
+      assertTrue(policy.get().accessControlList().get().entries().isEmpty());
     }
 
     @Test
@@ -627,7 +625,7 @@ public class TestPolicyDocument {
 
       assertTrue(policy.isPresent());
       assertTrue(policy.get().accessControlList().isPresent());
-      assertEquals(0, policy.get().accessControlList().get().entries().size());
+      assertTrue(policy.get().accessControlList().get().entries().isEmpty());
     }
 
     @Test
