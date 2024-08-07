@@ -757,7 +757,7 @@ public class TestPolicyDocument {
       var element = PolicyDocument.AccessControlEntryElement.fromPolicy(ace);
 
       assertEquals("user:" + SAMPLE_USER.email, element.principal());
-      assertEquals("VIEW, JOIN, APPROVE_OTHERS, APPROVE_SELF", element.allowedPermissions());
+      assertEquals("JOIN, APPROVE_OTHERS, APPROVE_SELF", element.allowedPermissions());
       assertNull(element.deniedPermissions());
     }
 
@@ -767,7 +767,7 @@ public class TestPolicyDocument {
       var element = PolicyDocument.AccessControlEntryElement.fromPolicy(ace);
 
       assertEquals("user:" + SAMPLE_USER.email, element.principal());
-      assertEquals("VIEW, JOIN, APPROVE_OTHERS", element.deniedPermissions());
+      assertEquals("JOIN, APPROVE_OTHERS", element.deniedPermissions());
       assertNull(element.allowedPermissions());
     }
 
