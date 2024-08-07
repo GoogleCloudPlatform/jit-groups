@@ -770,6 +770,24 @@ public class PolicyDocument {
         .map(e -> e.toPolicy(issues))
         .toList();
 
+      //
+      // Check for redundant expiry constraints.
+      //
+      if (join.stream()
+        .filter(Optional::isPresent)
+        .filter(c -> c.get() instanceof ExpiryConstraint)
+        .count() > 1) {
+        issues.error(Issue.Code.CONSTRAINT_INVALID_EXPIRY, "More than one expiry constraints found");
+        return Optional.empty();
+      }
+
+      if (approve.stream()
+        .filter(Optional::isPresent)
+        .anyMatch(c -> c.get() instanceof ExpiryConstraint)) {
+        issues.error(Issue.Code.CONSTRAINT_INVALID_EXPIRY, "Expiry constraints can only be used as join-constraint");
+        return Optional.empty();
+      }
+
       return NullaryOptional
         .ifTrue(
           join.stream().allMatch(Optional::isPresent) &&
