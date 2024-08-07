@@ -69,7 +69,22 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.superfences
 nav:
-  - Guides: 
+  - JIT Groups:
+      - Discover:
+        - 'Overview TODO': 'index.md'
+      - 'Deploy':
+        - 'Deploy JIT Groups TODO': deploy.md
+        - 'Migrate from JIT Access TODO': migrate.md
+      - 'Manage':
+        - 'Add an environment TODO': onboard-environment.md
+        - 'Manage policies TODO': manage-policies.md
+        - 'Set up CI/CD TODO': setup-continuous-integration.md
+      - 'Extend':
+          - 'Set up a development environment': development-environment.md
+      - 'Reference':
+          - 'Policy format': policy-reference.md
+          - 'Configuration options': configuration-options.md
+  - JIT Access:
     - Discover: 
       - 'Overview': 'index.md'
       - 'Multi-party approval': multi-party-approval.md
@@ -85,6 +100,4 @@ nav:
       - 'Resource conditions': resource-conditions.md
     - 'Customize JIT Access':
       - 'Configuration options': configuration-options.md
-    - 'Extend JIT Access':
-      - 'Set up a development environment': development-environment.md
   - GitHub: https://github.com/GoogleCloudPlatform/jit-access
