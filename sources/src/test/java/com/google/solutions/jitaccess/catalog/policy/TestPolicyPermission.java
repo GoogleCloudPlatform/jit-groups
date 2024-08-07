@@ -73,15 +73,38 @@ public class TestPolicyPermission {
   @Test
   public void fromMask_whenSingleValue() {
     assertEquals(
-      EnumSet.of(PolicyPermission.VIEW, PolicyPermission.JOIN),
+      EnumSet.of(PolicyPermission.VIEW),
+      PolicyPermission.fromMask(1));
+    assertEquals(
+      EnumSet.of(PolicyPermission.JOIN),
       PolicyPermission.fromMask(3));
+    assertEquals(
+      EnumSet.of(PolicyPermission.APPROVE_OTHERS),
+      PolicyPermission.fromMask(5));
+    assertEquals(
+      EnumSet.of(PolicyPermission.APPROVE_SELF),
+      PolicyPermission.fromMask(9));
   }
 
   @Test
   public void fromMask_whenCombinedValue() {
     assertEquals(
-      EnumSet.of(PolicyPermission.VIEW, PolicyPermission.JOIN, PolicyPermission.APPROVE_SELF),
+      EnumSet.of(PolicyPermission.JOIN, PolicyPermission.APPROVE_SELF),
       PolicyPermission.fromMask(11));
+    assertEquals(
+      EnumSet.of(PolicyPermission.APPROVE_OTHERS, PolicyPermission.APPROVE_SELF),
+      PolicyPermission.fromMask(13));
+    assertEquals(
+      EnumSet.of(
+        PolicyPermission.JOIN,
+        PolicyPermission.APPROVE_SELF,
+        PolicyPermission.APPROVE_OTHERS,
+        PolicyPermission.EXPORT,
+        PolicyPermission.RECONCILE),
+      PolicyPermission.fromMask(0xFF));
+    assertEquals(
+      EnumSet.of(PolicyPermission.ALL),
+      PolicyPermission.fromMask(0x7FFFFFFF));
   }
 
   //---------------------------------------------------------------------------
