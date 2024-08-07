@@ -5,7 +5,7 @@ environment:
     This is an example environment that demonstrates some of the application's features. The
     environment is shown because you haven't configured any environments yet.
   access:
-    - principal: "class:authenticatedUsers"
+    - principal: "class:iapUsers"
       allow: "VIEW, EXPORT, RECONCILE"
   constraints:
     join:
@@ -32,7 +32,7 @@ environment:
           description: |
             Administer Shared VPC networks and firewalls
           access:
-            - principal: "class:authenticatedUsers"
+            - principal: "class:iapUsers"
               allow: "VIEW, JOIN"
           privileges:
             iam:
@@ -50,7 +50,7 @@ environment:
           description: |
             Manage Identity-Aware Proxy and other security settings
           access:
-            - principal: "class:authenticatedUsers"
+            - principal: "class:iapUsers"
               allow: "VIEW"
           privileges:
             iam:
@@ -72,7 +72,7 @@ environment:
           description: |
             View audit logs
           access:
-            - principal: "class:authenticatedUsers"
+            - principal: "class:iapUsers"
               allow: "VIEW, JOIN, APPROVE_SELF"
           privileges:
             iam:

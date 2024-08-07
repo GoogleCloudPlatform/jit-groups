@@ -184,6 +184,6 @@ public class TestSubjectResolver {
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(SAMPLE_GROUP), "other group");
     assertTrue(principals.contains(SAMPLE_JITGROUP), "JIT group");
-    assertTrue(principals.contains(UserClassId.AUTHENTICATED_USERS), "All");
+    assertTrue(principals.contains(UserClassId.IAP_USERS), "All");
   }
 }
