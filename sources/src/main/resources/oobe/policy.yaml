@@ -11,7 +11,7 @@ environment:
     join:
       - type: "expression"
         name: "ticketnumber"
-        displayName: "You must provide a ticket number as ticketnumber"
+        displayName: "You must provide a ticket number as justification"
         expression: "input.ticketnumber.matches('^[0-9]+$')"
         variables:
           - type: "string"
