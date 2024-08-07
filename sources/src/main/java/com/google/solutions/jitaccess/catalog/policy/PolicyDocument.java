@@ -240,7 +240,6 @@ public class PolicyDocument {
       ENVIRONMENT_INVALID,
       SYSTEM_INVALID,
       GROUP_INVALID,
-      GROUP_MISSING_ACL,
       ACL_INVALID_PRINCIPAL,
       ACL_INVALID_PERMISSION,
       CONSTRAINT_INVALID_VARIABLE_DECLARATION,
@@ -591,12 +590,6 @@ public class PolicyDocument {
     @NotNull Optional<JitGroupPolicy> toPolicy(@NotNull IssueCollection issues) {
       issues.setScope(Coalesce.nonEmpty(this.name, "Unnamed group"));
 
-      if (this.acl == null) {
-        issues.error(
-          Issue.Code.GROUP_MISSING_ACL,
-          "The group lacks an access control list");
-      }
-
       var aces = Coalesce
         .emptyIfNull(this.acl)
         .stream()
@@ -615,7 +608,6 @@ public class PolicyDocument {
 
       return NullaryOptional
         .ifTrue(
-          this.acl != null &&
           constraints.isPresent() &&
           aces.stream().allMatch(Optional::isPresent) &&
           roleBindings.stream().allMatch(Optional::isPresent))
