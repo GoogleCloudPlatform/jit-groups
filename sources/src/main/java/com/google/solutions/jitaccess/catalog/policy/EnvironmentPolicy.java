@@ -42,7 +42,7 @@ public class EnvironmentPolicy extends AbstractPolicy {
    * Default ACL for environments.
    */
   static final AccessControlList DEFAULT_ACCESS_CONTROL_LIST = new AccessControlList(
-    List.of(new AccessControlList.AllowedEntry(UserClassId.AUTHENTICATED_USERS, PolicyPermission.VIEW.toMask())));
+    List.of(new AccessControlList.AllowedEntry(UserClassId.IAP_USERS, PolicyPermission.VIEW.toMask())));
 
   private final @NotNull Map<String, SystemPolicy> systems = new TreeMap<>();
 

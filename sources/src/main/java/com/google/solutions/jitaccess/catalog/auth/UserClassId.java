@@ -36,9 +36,10 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
   private final @NotNull String value;
 
   /**
-   * Principal identifier that identifies all users.
+   * Principal identifier that identifies all users that
+   * have been authorized by IAP.
    */
-  public static final @NotNull UserClassId AUTHENTICATED_USERS = new UserClassId("authenticatedUsers");
+  public static final @NotNull UserClassId IAP_USERS = new UserClassId("iapUsers");
 
   private UserClassId(@NotNull String value) {
     this.value = value;
@@ -54,8 +55,8 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
 
     s = s.trim();
 
-    if (s.equalsIgnoreCase(AUTHENTICATED_USERS.toString())) {
-      return Optional.of(AUTHENTICATED_USERS);
+    if (s.equalsIgnoreCase(IAP_USERS.toString())) {
+      return Optional.of(IAP_USERS);
     }
     else {
       return Optional.empty();

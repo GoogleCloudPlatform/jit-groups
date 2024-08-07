@@ -72,13 +72,13 @@ environment:
 
     ```yaml
     access:
-    - principal: "class:authenticatedUsers"
+    - principal: "class:iapUsers"
       allow: "VIEW"
     ```
 
     !!!note
-        Access to the application is guarded by Identity-Aware Proxy. The principal `class:authenticatedUsers`
-        therefore only includes users that Identity-Aware Proxy allows to access the application.
+        Access to the application is guarded by Identity-Aware Proxy (IAP). The principal `class:iapUsers`
+        therefore only includes users that have been authorized by IAP to access the application.
 
 `constraints` **Optional**
 
@@ -206,7 +206,7 @@ An Access Control List (ACL) contains one or more access control entries (ACE).
 
 ```yaml hl_lines="2-9"
 access:
-- principal: "class:authenticatedUsers"         # Everybody can view
+- principal: "class:iapUsers"         # Everybody can view
   allow: "VIEW"
 - principal: "group:devops-staff@example.com"   # Devops staff can request to join
   allow: "JOIN"
@@ -226,7 +226,7 @@ Each ACE can have the following attributes:
     |------------------|------------------|------------------|
     | `user:USER_EMAIL` | User with primary email address `USER_EMAIL`. | `user:bob@example.com` |
     | `group:GROUP_EMAIL` | Includes all _direct_ members of the Cloud Identity/Workspace group `GROUP_EMAIL`.| `group:devops-staff@example.com`|
-    | `class:authenticatedUsers` |  Includes all authenticated users that can access the application ||
+    | `class:iapUsers` |  Includes all users that have been authorized by IAP to access the application ||
 
     **Remarks**:
 

@@ -61,7 +61,7 @@ public class TestLegacyPolicy {
 
     var aces = List.copyOf(policy.accessControlList().get().entries());
     assertEquals(1, aces.size());
-    assertEquals(UserClassId.AUTHENTICATED_USERS, aces.get(0).principal);
+    assertEquals(UserClassId.IAP_USERS, aces.get(0).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(0).accessRights);
   }
 
@@ -96,7 +96,7 @@ public class TestLegacyPolicy {
     assertEquals(new UserId("admin-1@example.com"), aces.get(0).principal);
     assertEquals(PolicyPermission.EXPORT.toMask(), aces.get(0).accessRights);
 
-    assertEquals(UserClassId.AUTHENTICATED_USERS, aces.get(1).principal);
+    assertEquals(UserClassId.IAP_USERS, aces.get(1).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(1).accessRights);
   }
 
@@ -131,7 +131,7 @@ public class TestLegacyPolicy {
     assertEquals(new UserId("admin-1@example.com"), aces.get(1).principal);
     assertEquals(PolicyPermission.RECONCILE.toMask(), aces.get(1).accessRights);
 
-    assertEquals(UserClassId.AUTHENTICATED_USERS, aces.get(2).principal);
+    assertEquals(UserClassId.IAP_USERS, aces.get(2).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(2).accessRights);
   }
 

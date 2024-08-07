@@ -215,7 +215,7 @@ public class SubjectResolver {
     var jitGroupPrincipals = resolveMemberships(user, jitGroupMemberships);
 
     var allPrincipals = new HashSet<Principal>();
-    allPrincipals.add(new Principal(UserClassId.AUTHENTICATED_USERS));
+    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
     allPrincipals.add(new Principal(user));
     allPrincipals.addAll(otherGroupPrincipals);
     allPrincipals.addAll(jitGroupPrincipals);
