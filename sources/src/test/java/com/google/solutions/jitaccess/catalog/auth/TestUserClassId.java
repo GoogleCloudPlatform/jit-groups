@@ -34,7 +34,7 @@ public class TestUserClassId {
 
   @Test
   public void toString_returnsPrefixedValue() {
-    assertEquals("class:authenticatedUsers", UserClassId.AUTHENTICATED_USERS.toString());
+    assertEquals("class:iapUsers", UserClassId.IAP_USERS.toString());
   }
 
   // -------------------------------------------------------------------------
@@ -43,8 +43,8 @@ public class TestUserClassId {
 
   @Test
   public void equals_whenObjectAreEquivalent() {
-    UserClassId id1 = UserClassId.AUTHENTICATED_USERS;
-    UserClassId id2 = UserClassId.AUTHENTICATED_USERS;
+    UserClassId id1 = UserClassId.IAP_USERS;
+    UserClassId id2 = UserClassId.IAP_USERS;
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -53,13 +53,13 @@ public class TestUserClassId {
 
   @Test
   public void equals_whenObjectIsNull() {
-    assertFalse(UserClassId.AUTHENTICATED_USERS.equals(null));
+    assertFalse(UserClassId.IAP_USERS.equals(null));
   }
 
   @Test
   public void equals_whenObjectIsDifferentType() {
-    assertFalse(UserClassId.AUTHENTICATED_USERS.equals(""));
-    assertFalse(UserClassId.AUTHENTICATED_USERS.equals(new UserId("user@example.com")));
+    assertFalse(UserClassId.IAP_USERS.equals(""));
+    assertFalse(UserClassId.IAP_USERS.equals(new UserId("user@example.com")));
   }
 
   // -------------------------------------------------------------------------
@@ -68,12 +68,12 @@ public class TestUserClassId {
 
   @Test
   public void value() {
-    assertEquals("authenticatedUsers", UserClassId.AUTHENTICATED_USERS.value());
+    assertEquals("iapUsers", UserClassId.IAP_USERS.value());
   }
 
   @Test
   public void iamPrincipalId() {
-    assertFalse(((Object)UserClassId.AUTHENTICATED_USERS) instanceof IamPrincipalId);
+    assertFalse(((Object)UserClassId.IAP_USERS) instanceof IamPrincipalId);
   }
 
   // -------------------------------------------------------------------------
@@ -85,7 +85,7 @@ public class TestUserClassId {
     "",
     "class",
     "class:",
-    " class:  authenticatedUsers",
+    " class:  iapUsers",
     "class"
   })
   public void parse_whenInvalid(String s) {
@@ -95,10 +95,10 @@ public class TestUserClassId {
 
   @ParameterizedTest
   @ValueSource(strings = {
-    " class:authenticatedUsers",
-    "class:AUTHENTICATEDUSERS  "
+    " class:iapUsers",
+    "class:IAPUSERS  "
   })
   public void parse(String s) {
-    assertEquals(UserClassId.AUTHENTICATED_USERS, UserClassId.parse(s).get());
+    assertEquals(UserClassId.IAP_USERS, UserClassId.parse(s).get());
   }
 }

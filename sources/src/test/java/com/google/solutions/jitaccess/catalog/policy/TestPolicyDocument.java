@@ -62,7 +62,7 @@ public class TestPolicyDocument {
         "  name: \"env\"\n" +
         "  description: \"\"\n" +
         "  access:\n" +
-        "  - principal: \"class:authenticatedUsers\"\n" +
+        "  - principal: \"class:iapUsers\"\n" +
         "    allow: \"VIEW\"\n" +
         "  systems: []\n",
       new PolicyDocument(policy).toString());
@@ -303,7 +303,7 @@ public class TestPolicyDocument {
 
       var aces = List.copyOf(policy.get().accessControlList().get().entries());
       assertEquals(1, aces.size());
-      assertEquals(UserClassId.AUTHENTICATED_USERS, aces.get(0).principal);
+      assertEquals(UserClassId.IAP_USERS, aces.get(0).principal);
       assertEquals(PolicyPermission.VIEW.toMask(), aces.get(0).accessRights);
     }
 
