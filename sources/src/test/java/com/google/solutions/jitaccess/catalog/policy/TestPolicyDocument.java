@@ -668,6 +668,47 @@ public class TestPolicyDocument {
     }
 
     @Test
+    public void toPolicy_whenJoinConstraintsContainMultipleExpiryConstraints() {
+      var element = new PolicyDocument.GroupElement(
+        "group",
+        "",
+        List.of(),
+        new PolicyDocument.ConstraintsElement(
+          List.of(
+            new PolicyDocument.ConstraintElement("expiry", null, null, "P1D", "P1D", null, null),
+            new PolicyDocument.ConstraintElement("expiry", null, null, "P1D", "P1D", null, null)),
+          null
+        ),
+        null);
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues);
+
+      assertFalse(policy.isPresent());
+      assertEquals(
+        PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
+        issues.issues().get(0).code());
+    }
+
+    @Test
+    public void toPolicy_whenApprovalConstraintsContainExpiryConstraint() {
+      var element = new PolicyDocument.GroupElement(
+        "group",
+        "",
+        List.of(),
+        new PolicyDocument.ConstraintsElement(
+          null,
+          List.of(new PolicyDocument.ConstraintElement("expiry", null, null, "P1D", "P1D", null, null))),
+        null);
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues);
+
+      assertFalse(policy.isPresent());
+      assertEquals(
+        PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
+        issues.issues().get(0).code());
+    }
+
+    @Test
     public void toPolicy_whenBindingInvalid() {
       var element = new PolicyDocument.GroupElement(
         "group",
