@@ -175,10 +175,10 @@ resource "google_project_iam_member" "resource_project_binding_cloudassetviewer"
     role                    = "roles/cloudasset.viewer"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
-resource "google_project_iam_member" "resource_project_binding_securityadmin" {
+resource "google_project_iam_member" "resource_project_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "projects/") ? 1 : 0
     project                 = substr(var.resource_scope, 9, -1)
-    role                    = "roles/iam.securityAdmin"
+    role                    = "roles/resourcemanager.projectIamAdmin"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
 
@@ -191,10 +191,10 @@ resource "google_folder_iam_member" "resource_folder_binding_cloudassetviewer" {
     role                    = "roles/cloudasset.viewer"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
-resource "google_folder_iam_member" "resource_folder_binding_securityadmin" {
+resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "folders/") ? 1 : 0
     folder                  = var.resource_scope
-    role                    = "roles/iam.securityAdmin"
+    role                    = "roles/resourcemanager.projectIamAdmin"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
 
@@ -207,10 +207,10 @@ resource "google_organization_iam_member" "resource_organization_binding_cloudas
     role                    = "roles/cloudasset.viewer"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
-resource "google_organization_iam_member" "resource_organization_binding_securityadmin" {
+resource "google_organization_iam_member" "resource_organization_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "organizations/") ? 1 : 0
     org_id                  = substr(var.resource_scope, 14, -1)
-    role                    = "roles/iam.securityAdmin"
+    role                    = "roles/resourcemanager.projectIamAdmin"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
 }
 
