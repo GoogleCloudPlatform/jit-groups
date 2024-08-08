@@ -125,8 +125,65 @@ resource "google_project_service" "admin" {
     disable_on_destroy      = false
 }
 
+
 #------------------------------------------------------------------------------
-# Service account.
+# AppEngine.
+#------------------------------------------------------------------------------
+
+#
+# Initialize AppEngine.
+#
+resource "google_app_engine_application" "appengine_app" {
+    project                 = var.project_id
+    location_id             = var.location
+    iap {
+        enabled              = true
+        oauth2_client_id     = google_iap_client.iap_client.client_id
+        oauth2_client_secret = google_iap_client.iap_client.secret
+    }
+}
+
+#------------------------------------------------------------------------------
+# AppEngine default service account.
+#------------------------------------------------------------------------------
+
+#
+# Grant the GAE default service account access to Cloud Storage and Artifact Registry,
+# required for deploying and building new versions.
+#
+# Force-remove Editor role bindings as it's unnecessarily broad.
+#
+resource "google_project_iam_member" "project_binding_appengine_createonpushwriter" {
+    depends_on              = [ google_app_engine_application.appengine_app ]
+    project                 = var.project_id
+    role                    = "roles/artifactregistry.createOnPushWriter"
+    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+}
+resource "google_project_iam_member" "project_binding_appengine_storageadmin" {
+    depends_on              = [ google_app_engine_application.appengine_app ]
+    project                 = var.project_id
+    role                    = "roles/storage.admin"
+    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+}
+resource "google_project_iam_member_remove" "project_binding_appengine_editor" {
+    depends_on              = [ google_app_engine_application.appengine_app ]
+    project                 = var.project_id
+    role                    = "roles/editor"
+    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+}
+resource "time_sleep" "project_binding_appengine" {
+    depends_on                = [
+        google_project_iam_member.project_binding_appengine_createonpushwriter,
+        google_project_iam_member.project_binding_appengine_storageadmin,
+        google_project_iam_member_remove.project_binding_appengine_editor
+    ]
+
+    # Give IAM some time to process the IAM policy update before we use it.
+    create_duration = "40s"
+}
+
+#------------------------------------------------------------------------------
+# App service account.
 #------------------------------------------------------------------------------
 
 #
@@ -145,21 +202,6 @@ resource "google_service_account_iam_member" "service_account_member" {
     service_account_id      = google_service_account.jitaccess.name
     role                    = "roles/iam.serviceAccountTokenCreator"
     member                  = "serviceAccount:${google_service_account.jitaccess.email}"
-}
-
-#
-# Grant the GAE default service account access to Cloud Storage and Artifact Registry,
-# required for deploying and building new versions.
-#
-resource "google_project_iam_member" "project_binding_createonpushwriter" {
-    project                 = var.project_id
-    role                    = "roles/artifactregistry.createOnPushWriter"
-    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
-}
-resource "google_project_iam_member" "project_binding_storageadmin" {
-    project                 = var.project_id
-    role                    = "roles/storage.admin"
-    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
 }
 
 #------------------------------------------------------------------------------
@@ -222,6 +264,7 @@ resource "google_organization_iam_member" "resource_organization_binding_project
 # Create an OAuth consent screen for IAP.
 #
 resource "google_iap_brand" "iap_brand" {
+    depends_on              = [ google_project_service.iap ]
     support_email           = var.admin_email
     application_title       = "JIT Access"
     project                 = var.project_id
@@ -239,6 +282,7 @@ resource "google_iap_client" "iap_client" {
 # Allow user to access IAP.
 #
 resource "google_iap_web_iam_binding" "iap_binding_users" {
+    depends_on              = [ google_project_service.iap ]
     count                   = length(var.iap_users) > 0 ? 1 : 0
     project                 = var.project_id
     role                    = "roles/iap.httpsResourceAccessor"
@@ -246,7 +290,7 @@ resource "google_iap_web_iam_binding" "iap_binding_users" {
 }
 
 #------------------------------------------------------------------------------
-# GAE application.
+# Deploy GAE application.
 #------------------------------------------------------------------------------
 
 #
@@ -268,22 +312,10 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 }
 
 #
-# Crate an AppEngine application.
-#
-resource "google_app_engine_application" "appengine_app" {
-    project                 = var.project_id
-    location_id             = var.location
-    iap {
-        enabled              = true
-        oauth2_client_id     = google_iap_client.iap_client.client_id
-        oauth2_client_secret = google_iap_client.iap_client.secret
-    }
-}
-
-#
 # Crate an AppEngine version from the uploaded source code.
 #
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
+    depends_on                = [ time_sleep.project_binding_appengine ]
     version_id                = "v1"
     service                   = "default"
     project                   = var.project_id

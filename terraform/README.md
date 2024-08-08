@@ -2,6 +2,12 @@
 
 1.  Create a project to deploy JIT Access in.
 
+1.  Authorize `gcloud`:
+
+    ```
+    gcloud auth login
+    ```
+
 1.  Set an environment variable to contain your project ID:
 
     ```
@@ -62,6 +68,14 @@
             "JUSTIFICATION_HINT" = "Bug or case number"
         }
     }
+
+    output "url" {
+        value = module.jit-access-appengine.url
+    }
+
+    output "service_account" {
+        value = module.jit-access-appengine.service_account
+    }
     ```
 
     Replace the following:
@@ -89,12 +103,15 @@
 1.  Save the file using a `.tf` file extension.
 
 # Deploy
-
-1.  Authenticate terraform:
+    
+1.  Authorize `terraform`:
 
     ```
-    gcloud auth application-default login
+    gcloud auth application-default login --project $PROJECT_ID
     ```
+    
+    The `--project $PROJECT_ID` sets the current quota project, which is
+    required for `terraform init` to initialize the Cloud Storage bucket.
     
 1.  Initialize Terraform:
 
