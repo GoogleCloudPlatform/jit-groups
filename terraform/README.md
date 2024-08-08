@@ -27,11 +27,11 @@
 1.  Create a configuration file that instructs Terraform to store the state in the Cloud Storage bucket:
 
     ```
-    cat << EOF > .project.tf
+    cat << EOF > _project.tf
     terraform {
       backend "gcs" {
         bucket   = "$PROJECT_ID-state"
-        prefix   = "terraform/{{ directory }}"
+        prefix   = "terraform"
       }
     }
 

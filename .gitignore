@@ -52,3 +52,4 @@ runConfigurations/
 .terraform/
 .terraform*
 .*.tf
+_*.tf
