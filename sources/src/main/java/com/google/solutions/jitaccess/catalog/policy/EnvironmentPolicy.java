@@ -109,7 +109,9 @@ public class EnvironmentPolicy extends AbstractPolicy {
     return Optional.ofNullable(this.systems.get(name));
   }
 
-  @Override
+  /**
+   * Data about the source of this policy.
+   */
   public @NotNull Metadata metadata() {
     return this.metadata;
   }

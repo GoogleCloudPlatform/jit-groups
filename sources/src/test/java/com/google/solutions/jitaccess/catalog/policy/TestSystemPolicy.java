@@ -67,26 +67,6 @@ public class TestSystemPolicy {
   }
 
   //---------------------------------------------------------------------------
-  // metadata.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void metadata() {
-    var group = new SystemPolicy(
-      "system-1",
-      "description");
-
-    var metadata = new Policy.Metadata("test", Instant.EPOCH);
-    var parentPolicy = Mockito.mock(Policy.class);
-    when(parentPolicy.metadata())
-      .thenReturn(metadata);
-
-    group.setParent(parentPolicy);
-
-    assertSame(metadata, group.metadata());
-  }
-
-  //---------------------------------------------------------------------------
   // add.
   //---------------------------------------------------------------------------
 

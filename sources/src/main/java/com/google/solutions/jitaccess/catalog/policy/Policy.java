@@ -59,11 +59,6 @@ public interface Policy extends PolicyHeader {
    */
   @NotNull Collection<Constraint> constraints(@NotNull ConstraintClass action);
 
-  /**
-   * Data about the source of this policy.
-   */
-  @NotNull Metadata metadata();
-
   enum ConstraintClass {
     JOIN,
     APPROVE

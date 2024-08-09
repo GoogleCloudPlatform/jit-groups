@@ -107,17 +107,6 @@ abstract class AbstractPolicy implements Policy {
   }
 
   /**
-   * Metadata describing the source of this policy.
-   */
-  @Override
-  public @NotNull Metadata metadata() {
-    Preconditions.checkState(
-      this.parent != null,
-      "A policy must have a parent or provide metadata");
-    return this.parent.metadata();
-  }
-
-  /**
    * Raw map of constraints.
    */
   Map<ConstraintClass, Collection<Constraint>> constraints() {
