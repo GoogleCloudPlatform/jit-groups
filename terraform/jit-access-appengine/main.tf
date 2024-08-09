@@ -343,6 +343,8 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 #
 # Crate an AppEngine version from the uploaded source code.
 #
+# Keep existing versions to allow rollback/traffic migration.
+#
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
     depends_on                = [ time_sleep.project_binding_appengine ]
     version_id                = formatdate("YYYYMMDDhhmmss", timestamp())
@@ -377,7 +379,7 @@ resource "google_app_engine_service_split_traffic" "appengine_app_version" {
     migrate_traffic = true
 
     split {
-        shard_by = "IP"
+        #shard_by = "IP"
         allocations = {
             (google_app_engine_standard_app_version.appengine_app_version.version_id) = 1.0
         }

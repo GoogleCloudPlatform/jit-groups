@@ -91,7 +91,7 @@ resource "google_service_account" "environment" {
 resource "google_service_account_iam_member" "service_account_member" {
     service_account_id      = google_service_account.environment.name
     role                    = "roles/iam.serviceAccountTokenCreator"
-    member                  = "serviceAccount:${google_service_account.environment.email}"
+    member                  = "serviceAccount:${data.google_service_account.jitaccess.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -118,10 +118,10 @@ resource "google_secret_manager_secret_version" "secret-version-basic" {
 # Allow the environment service account to access the secret.
 #
 resource "google_secret_manager_secret_iam_member" "secret_binding" {
-  project                   = google_secret_manager_secret.policy.project
-  secret_id                 = google_secret_manager_secret.policy.secret_id
-  role                      = "roles/secretmanager.secretAccessor"
-  member                    = "serviceAccount:${data.google_service_account.jitaccess.email}"
+    project                 = google_secret_manager_secret.policy.project
+    secret_id               = google_secret_manager_secret.policy.secret_id
+    role                    = "roles/secretmanager.secretAccessor"
+    member                  = "serviceAccount:${google_service_account.environment.email}"
 }
 
 #------------------------------------------------------------------------------
