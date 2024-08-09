@@ -453,7 +453,7 @@ public class PolicyDocument {
         .map(() -> {
             try {
               var policy = new EnvironmentPolicy(
-                this.name,
+                Coalesce.nonEmpty(this.name, metadata.defaultName()),
                 Strings.nullToEmpty(this.description),
                 acl == null
                   ? EnvironmentPolicy.DEFAULT_ACCESS_CONTROL_LIST

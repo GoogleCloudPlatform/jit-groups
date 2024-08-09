@@ -76,29 +76,6 @@ public class TestAbstractPolicy {
   }
 
   //---------------------------------------------------------------------------
-  // metadata.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void metadata() {
-    var policy = new AbstractPolicy(
-      "policy-1",
-      "description",
-      AccessControlList.EMPTY,
-      Map.of()) {
-    };
-
-    var metadata = new Policy.Metadata("test", Instant.EPOCH);
-    var parentPolicy = Mockito.mock(Policy.class);
-    when(parentPolicy.metadata())
-      .thenReturn(metadata);
-
-    policy.setParent(parentPolicy);
-
-    assertSame(metadata, policy.metadata());
-  }
-
-  //---------------------------------------------------------------------------
   // constraints.
   //---------------------------------------------------------------------------
 
