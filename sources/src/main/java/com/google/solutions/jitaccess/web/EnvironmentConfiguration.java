@@ -141,7 +141,7 @@ class EnvironmentConfiguration implements PolicyHeader {
    * Create configuration for a resource-based policy.
    */
   static @NotNull EnvironmentConfiguration forResource(
-    @NotNull String name,
+    @NotNull String environmentName,
     @NotNull String description,
     @NotNull String resourcePath,
     @NotNull GoogleCredentials applicationCredentials
@@ -155,7 +155,7 @@ class EnvironmentConfiguration implements PolicyHeader {
     }
 
     return new EnvironmentConfiguration(
-      name,
+      environmentName,
       description,
       applicationCredentials,
       () -> {
@@ -268,10 +268,20 @@ class EnvironmentConfiguration implements PolicyHeader {
             environmentCredentials,
             httpOptions);
 
+          //
+          // Set default environment name in metadata so that
+          // the YAML itself doesn't need to specify a name.
+          //
+          var metadata = new Policy.Metadata(
+            secretPath,
+            Instant.now(),
+            null,
+            environmentName);
+
           return PolicyDocument
             .fromString(
               secretClient.accessSecret(secretPath),
-              new Policy.Metadata(secretPath, Instant.now()))
+              metadata)
             .policy();
         }
         catch (Exception e) {
