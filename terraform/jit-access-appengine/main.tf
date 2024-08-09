@@ -29,34 +29,42 @@ variable "project_id" {
 }
 
 variable "location" {
-    description = "AppEngine location, see https://cloud.google.com/about/locations#region"
-    type = string
+    description                 = "AppEngine location, see https://cloud.google.com/about/locations#region"
+    type                        = string
 }
 
 variable "admin_email" {
-    description = "Contact email address, must be a Cloud Identity/Workspace user"
-    type = string
+    description                 = "Contact email address, must be a Cloud Identity/Workspace user"
+    type                        = string
+}
+
+variable "groups_domain" {
+    description                 = "Primary or secondary domain to use for JIT groups"
+    type                        = string
 }
 
 variable "resource_scope" {
-    description = "Project, folder, or organization that JIT Access can manage access for"
-    type = string
+    description                 = "JIT Access 1.x compatibility: Project, folder, or organization that JIT Access can manage access for"
+    type                        = string
+    
+    default                     = "" # Disabled
     
     validation {
-        condition     = (startswith(var.resource_scope, "organizations/") || 
-                         startswith(var.resource_scope, "folders/") || 
-                         startswith(var.resource_scope, "projects/"))
-        error_message = "resource_scope must be in the format organizations/ID, folders/ID, or projects/ID"
+        condition               = var.resource_scope == "" || (
+                                    startswith(var.resource_scope, "organizations/") || 
+                                    startswith(var.resource_scope, "folders/") || 
+                                    startswith(var.resource_scope, "projects/"))
+        error_message           = "resource_scope must be in the format organizations/ID, folders/ID, or projects/ID"
     }
 }
 
 variable "customer_id" {
-    description = "Cloud Identity/Workspace customer ID"
-    type = string
+    description                 = "Cloud Identity/Workspace customer ID"
+    type                        = string
     
     validation {
-        condition     = startswith(var.customer_id, "C")
-        error_message = "customer_id must be a valid customer ID, starting with C"
+        condition               = startswith(var.customer_id, "C")
+        error_message           = "customer_id must be a valid customer ID, starting with C"
     }
 }
 
@@ -119,9 +127,15 @@ resource "google_project_service" "iamcredentials" {
     disable_on_destroy      = false
 }
 
-resource "google_project_service" "admin" {
+resource "google_project_service" "cloudidentity" {
     project                 = var.project_id
-    service                 = "admin.googleapis.com"
+    service                 = "cloudidentity.googleapis.com"
+    disable_on_destroy      = false
+}
+
+resource "google_project_service" "groupssettings" {
+    project                 = var.project_id
+    service                 = "groupssettings.googleapis.com"
     disable_on_destroy      = false
 }
 
@@ -324,8 +338,8 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     service_account           = google_service_account.jitaccess.email
     env_variables             = merge(var.options, {
         "RESOURCE_SCOPE"      = var.resource_scope
-        "RESOURCE_CATALOG"    = "AssetInventory"
         "RESOURCE_CUSTOMER_ID"= var.customer_id
+        "RESOURCE_DOMAIN"     = var.groups_domain
     })
     threadsafe = true
     delete_service_on_destroy = true

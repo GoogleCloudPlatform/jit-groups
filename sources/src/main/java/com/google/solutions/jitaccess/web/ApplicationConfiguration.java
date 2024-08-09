@@ -235,7 +235,7 @@ class ApplicationConfiguration {
     this.legacyCatalog = new StringSetting("RESOURCE_CATALOG", "AssetInventory");
     this.legacyScope = new StringSetting(
       "RESOURCE_SCOPE",
-      String.format("projects/%s", this.settingsData.get("GOOGLE_CLOUD_PROJECT")));
+      null);
     this.legacyActivationTimeout = new DurationSetting(
       "ACTIVATION_TIMEOUT",
       List.of("ELEVATION_DURATION"),

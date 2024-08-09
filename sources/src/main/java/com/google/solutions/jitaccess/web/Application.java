@@ -28,6 +28,7 @@ import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
 import com.google.auth.oauth2.*;
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.apis.clients.*;
@@ -536,7 +537,7 @@ public class Application {
     if (this.configuration.legacyCatalog.isValid() &&
       this.configuration.legacyCatalog.value().equalsIgnoreCase("ASSETINVENTORY") &&
       this.configuration.legacyScope.isValid() &&
-      !this.configuration.legacyScope.isDefault()) {
+      !Strings.isNullOrEmpty(this.configuration.legacyScope.value())) {
 
       //
       // Load an extra environment that surfaces JIT Access 1.x roles.
