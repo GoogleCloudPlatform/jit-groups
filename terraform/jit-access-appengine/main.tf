@@ -24,8 +24,8 @@
 #------------------------------------------------------------------------------
 
 variable "project_id" {
-    description = "Project ID"
-    type = string
+    description                 = "Project to deploy to"
+    type                        = string
 }
 
 variable "location" {
@@ -64,7 +64,7 @@ variable "environments" {
     default                     = []
     
     validation {
-    condition                   = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
+        condition               = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
         error_message           = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
     }
 }
@@ -102,7 +102,6 @@ provider "google" {
 locals {
     sources = "${path.module}/../../sources"
 }
-
 
 #------------------------------------------------------------------------------
 # Required APIs
@@ -150,6 +149,11 @@ resource "google_project_service" "groupssettings" {
     disable_on_destroy      = false
 }
 
+resource "google_project_service" "secretmanager" {
+    project                 = var.project_id
+    service                 = "secretmanager.googleapis.com"
+    disable_on_destroy      = false
+}
 
 #------------------------------------------------------------------------------
 # AppEngine.
@@ -341,20 +345,20 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 #
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
     depends_on                = [ time_sleep.project_binding_appengine ]
-    version_id                = "v1"
+    version_id                = formatdate("YYYYMMDDhhmmss", timestamp())
     service                   = "default"
     project                   = var.project_id
     runtime                   = "java17"
     instance_class            = "F2"
     service_account           = google_service_account.jitaccess.email
     env_variables             = merge(var.options, {
-        "RESOURCE_SCOPE"      = var.resource_scope
-        "RESOURCE_CUSTOMER_ID"= var.customer_id
-        "RESOURCE_DOMAIN"     = var.groups_domain
-        "environments"        = join(",", var.environments)
+      "RESOURCE_SCOPE"        = var.resource_scope
+      "RESOURCE_CUSTOMER_ID"  = var.customer_id
+      "RESOURCE_DOMAIN"       = var.groups_domain
+      "RESOURCE_ENVIRONMENTS" = join(",", var.environments)
     })
     threadsafe = true
-    delete_service_on_destroy = true
+    noop_on_destroy = true
     deployment {
         zip {
           source_url = "https://storage.googleapis.com/${google_app_engine_application.appengine_app.default_bucket}/${google_storage_bucket_object.appengine_sources_object.name}"
@@ -365,13 +369,30 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     }
 }
 
+#
+# Force traffic to new version
+#
+resource "google_app_engine_service_split_traffic" "appengine_app_version" {
+    service = google_app_engine_standard_app_version.appengine_app_version.service
+    migrate_traffic = true
+
+    split {
+        shard_by = "IP"
+        allocations = {
+            (google_app_engine_standard_app_version.appengine_app_version.version_id) = 1.0
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+# Outputs.
+#------------------------------------------------------------------------------
+
 output "url" {
     description             = "URL to application"  
     value                   = "https://${google_app_engine_application.appengine_app.default_hostname}/"
 }
-
 output "service_account" {
     description             = "Service account used by the application"  
     value                   = google_service_account.jitaccess.email
 }
-

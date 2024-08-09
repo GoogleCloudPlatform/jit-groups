@@ -47,6 +47,8 @@
     EOF
     ```
 
+# Deploy the application
+
 1.  Create a Terraform configuration file and paste the following content:
 
     ```
@@ -111,7 +113,6 @@
 
 1.  Save the file using a `.tf` file extension.
 
-# Deploy
     
 1.  Authorize `terraform`:
 
@@ -141,7 +142,7 @@
     email address of the application's service account. You need this email address
     in the next step.
 
-# Grant access to allow the application to resolve group memberships
+## Grant access to allow the application to resolve group memberships
 
 To allow JIT Access to manage Cloud Identity groups, you must grant it an additional
 admin role in your Cloud Identity or Workspace account:
@@ -156,3 +157,5 @@ admin role in your Cloud Identity or Workspace account:
 
 1.  Click **Add**.
 1.  Click **Assign role**.
+
+# Deploy an environment
