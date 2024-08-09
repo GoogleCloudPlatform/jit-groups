@@ -131,14 +131,16 @@ public interface Policy extends PolicyHeader {
    * @param source source the policy has been loaded from, can be a file name or full path
    * @param lastModified date the policy was last changed
    * @param version version number identifying the policy revision
+   * @param defaultName default name to use if the policy doesn't specify one
    */
   record Metadata(
     @NotNull String source,
     @NotNull Instant lastModified,
-    @Nullable String version
+    @Nullable String version,
+    @Nullable String defaultName
   ) {
     public Metadata(@NotNull String source, @NotNull Instant lastModified) {
-      this(source, lastModified, null);
+      this(source, lastModified, null, null);
     }
   }
 }

@@ -293,6 +293,36 @@ public class TestPolicyDocument {
     }
 
     @Test
+    public void toPolicy_whenEnvironmentNameNotEmpty() {
+      var element = new PolicyDocument.EnvironmentElement("env", "", List.of(), null, null);
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues, METADATA);
+
+      assertTrue(policy.isPresent());
+      assertEquals("env", policy.get().name());
+    }
+
+    @Test
+    public void toPolicy_whenEnvironmentNameIsNull() {
+      var element = new PolicyDocument.EnvironmentElement(null, "", List.of(), null, null);
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues, new Policy.Metadata("test", Instant.EPOCH, "1", "default-name"));
+
+      assertTrue(policy.isPresent());
+      assertEquals("default-name", policy.get().name());
+    }
+
+    @Test
+    public void toPolicy_whenEnvironmentNameEmpty() {
+      var element = new PolicyDocument.EnvironmentElement("", "", List.of(), null, null);
+      var issues = new PolicyDocument.IssueCollection();
+      var policy = element.toPolicy(issues, new Policy.Metadata("test", Instant.EPOCH, "1", "default-name"));
+
+      assertTrue(policy.isPresent());
+      assertEquals("default-name", policy.get().name());
+    }
+
+    @Test
     public void toPolicy_whenAclIsNull() {
       var element = new PolicyDocument.EnvironmentElement("env", "", null, null, null);
       var issues = new PolicyDocument.IssueCollection();
