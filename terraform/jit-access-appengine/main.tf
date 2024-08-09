@@ -58,6 +58,17 @@ variable "resource_scope" {
     }
 }
 
+variable "environments" {
+    description                 = "Environment service accounts, prefixed with 'serviceAccount:"
+    type                        = list(string)
+    default                     = []
+    
+    validation {
+    condition                   = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
+        error_message           = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
+    }
+}
+
 variable "customer_id" {
     description                 = "Cloud Identity/Workspace customer ID"
     type                        = string
@@ -69,7 +80,7 @@ variable "customer_id" {
 }
 
 variable "iap_users" {
-    description                 = "Users and groups to allow IAP-access to the application, prefixed by 'user:', 'group:', or domain:"
+    description                 = "Users and groups to allow IAP-access to the application, prefixed with 'user:', 'group:', or domain:"
     type                        = list(string)
     default                     = []
 }
@@ -340,6 +351,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
         "RESOURCE_SCOPE"      = var.resource_scope
         "RESOURCE_CUSTOMER_ID"= var.customer_id
         "RESOURCE_DOMAIN"     = var.groups_domain
+        "environments"        = join(",", var.environments)
     })
     threadsafe = true
     delete_service_on_destroy = true

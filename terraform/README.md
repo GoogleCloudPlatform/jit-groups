@@ -57,11 +57,14 @@
         customer_id     = "CUSTOMER_ID"
         groups_domain   = "DOMAIN"
         admin_email     = "ADMIN_EMAIL"
+        
         location        = "LOCATION"
         iap_users       = []
         options         = {
             "JUSTIFICATION_HINT" = "Bug or case number"
         }
+        
+        environments    = []
         
         # Optional, only needed for JIT Access 1.x compatibility
         # resource_scope  = "RESOURCE_SCOPE"
@@ -90,6 +93,7 @@
         *   Prefix users with `user:`, for example `user:bob@example.com`.
         *   Prefix groups with `group:`, for example `user:eng@example.com`.
         
+    +   `environments` (optional): List of environment service accounts, each prefixed with `serviceAccount:`.
     +   `options` (optional): Map of additional 
         [configuration options](https://googlecloudplatform.github.io/jit-access/configuration-options/).
     
