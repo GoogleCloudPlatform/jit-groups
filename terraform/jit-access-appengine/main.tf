@@ -376,10 +376,10 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
 #
 resource "google_app_engine_service_split_traffic" "appengine_app_version" {
     service = google_app_engine_standard_app_version.appengine_app_version.service
-    migrate_traffic = true
+    migrate_traffic = false
 
     split {
-        #shard_by = "IP"
+        shard_by = "IP"
         allocations = {
             (google_app_engine_standard_app_version.appengine_app_version.version_id) = 1.0
         }
