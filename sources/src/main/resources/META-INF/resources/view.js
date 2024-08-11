@@ -468,7 +468,7 @@ class AppBar {
                     this.environment = found[1];
 
                     $('#jit-scope').text(this.environment);
-                    $('title').html(`JIT Groups: ${this.environment}`);
+                    $('title').text(`JIT Groups: ${this.environment}`);
                 }
                 else {
                     this.environment = null;
@@ -480,7 +480,7 @@ class AppBar {
             resource = `/environments/${this.environment}`;
 
             $('#jit-scope').text(this.environment);
-            $('title').html(`JIT Groups: ${this.environment}`);
+            $('title').text(`JIT Groups: ${this.environment}`);
         }
 
         if (!this.environment) {
