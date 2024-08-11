@@ -218,19 +218,19 @@ resource "time_sleep" "project_binding_appengine" {
 #
 # Service account used by application.
 #
-resource "google_service_account" "jitaccess" {
+resource "google_service_account" "jitgroups" {
     project                 = var.project_id
-    account_id              = "jitaccess"
-    display_name            = "Just-In-Time Access"
+    account_id              = "jitgroups"
+    display_name            = "JIT Groups Application"
 }
 
 #
 # Grant the service account the Token Creator role so that it can sign JWTs.
 #
 resource "google_service_account_iam_member" "service_account_member" {
-    service_account_id      = google_service_account.jitaccess.name
+    service_account_id      = google_service_account.jitgroups.name
     role                    = "roles/iam.serviceAccountTokenCreator"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -244,13 +244,13 @@ resource "google_project_iam_member" "resource_project_binding_cloudassetviewer"
     count                   = startswith(var.resource_scope, "projects/") ? 1 : 0
     project                 = substr(var.resource_scope, 9, -1)
     role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_project_iam_member" "resource_project_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "projects/") ? 1 : 0
     project                 = substr(var.resource_scope, 9, -1)
     role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #
@@ -260,13 +260,13 @@ resource "google_folder_iam_member" "resource_folder_binding_cloudassetviewer" {
     count                   = startswith(var.resource_scope, "folders/") ? 1 : 0
     folder                  = var.resource_scope
     role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "folders/") ? 1 : 0
     folder                  = var.resource_scope
     role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #
@@ -276,13 +276,13 @@ resource "google_organization_iam_member" "resource_organization_binding_cloudas
     count                   = startswith(var.resource_scope, "organizations/") ? 1 : 0
     org_id                  = substr(var.resource_scope, 14, -1)
     role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_organization_iam_member" "resource_organization_binding_projectiamadmin" {
     count                   = startswith(var.resource_scope, "organizations/") ? 1 : 0
     org_id                  = substr(var.resource_scope, 14, -1)
     role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -295,7 +295,7 @@ resource "google_organization_iam_member" "resource_organization_binding_project
 resource "google_iap_brand" "iap_brand" {
     depends_on              = [ google_project_service.iap ]
     support_email           = var.admin_email
-    application_title       = "JIT Access"
+    application_title       = "JIT Groups"
     project                 = var.project_id
 }
 
@@ -303,7 +303,7 @@ resource "google_iap_brand" "iap_brand" {
 # Create an OAuth client ID for IAP.
 #
 resource "google_iap_client" "iap_client" {
-    display_name            = "JIT Access"
+    display_name            = "JIT Groups"
     brand                   = google_iap_brand.iap_brand.name
 }
 
@@ -328,14 +328,14 @@ resource "google_iap_web_iam_binding" "iap_binding_users" {
 data "archive_file" "sources_zip" {
     type                    = "zip"
     source_dir              = "${local.sources}"
-    output_path             = "${path.module}/target/jitaccess-sources.zip"
+    output_path             = "${path.module}/target/jitgroups-sources.zip"
 }
 
 #
 # Upload ZIP file to the AppEngine storage bucket.
 #
 resource "google_storage_bucket_object" "appengine_sources_object" {
-    name                    = "jitaccess.${data.archive_file.sources_zip.output_md5}.zip"
+    name                    = "jitgroups.${data.archive_file.sources_zip.output_md5}.zip"
     bucket                  = google_app_engine_application.appengine_app.default_bucket
     source                  = data.archive_file.sources_zip.output_path
 }
@@ -352,7 +352,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     project                   = var.project_id
     runtime                   = "java17"
     instance_class            = "F2"
-    service_account           = google_service_account.jitaccess.email
+    service_account           = google_service_account.jitgroups.email
     env_variables             = merge(var.options, {
       "RESOURCE_SCOPE"        = var.resource_scope
       "RESOURCE_CUSTOMER_ID"  = var.customer_id
@@ -396,5 +396,5 @@ output "url" {
 }
 output "service_account" {
     description             = "Service account used by the application"  
-    value                   = google_service_account.jitaccess.email
+    value                   = google_service_account.jitgroups.email
 }

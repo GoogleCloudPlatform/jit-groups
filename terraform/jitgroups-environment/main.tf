@@ -72,7 +72,7 @@ resource "google_project_service" "secretmanager" {
 #
 # Service account used by application.
 #
-data "google_service_account" "jitaccess" {
+data "google_service_account" "jitgroups" {
     account_id              = var.application_service_account
 }
 
@@ -91,7 +91,7 @@ resource "google_service_account" "environment" {
 resource "google_service_account_iam_member" "service_account_member" {
     service_account_id      = google_service_account.environment.name
     role                    = "roles/iam.serviceAccountTokenCreator"
-    member                  = "serviceAccount:${data.google_service_account.jitaccess.email}"
+    member                  = "serviceAccount:${data.google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
