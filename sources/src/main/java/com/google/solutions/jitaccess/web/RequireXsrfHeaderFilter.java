@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 @RequireXsrfHeader
 public class RequireXsrfHeaderFilter implements ContainerRequestFilter {
 
-  public static final String XSRF_HEADER_NAME = "X-JITACCESS";
+  public static final String XSRF_HEADER_NAME = "X-JITGROUPS";
   public static final String XSRF_HEADER_VALUE = "1";
 
   @Override

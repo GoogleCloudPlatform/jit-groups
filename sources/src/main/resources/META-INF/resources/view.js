@@ -468,7 +468,7 @@ class AppBar {
                     this.environment = found[1];
 
                     $('#jit-scope').text(this.environment);
-                    $('title').html(`JIT Access: ${this.environment}`);
+                    $('title').text(`JIT Groups: ${this.environment}`);
                 }
                 else {
                     this.environment = null;
@@ -480,7 +480,7 @@ class AppBar {
             resource = `/environments/${this.environment}`;
 
             $('#jit-scope').text(this.environment);
-            $('title').html(`JIT Access: ${this.environment}`);
+            $('title').text(`JIT Groups: ${this.environment}`);
         }
 
         if (!this.environment) {
@@ -534,8 +534,8 @@ $(document).ready(async () => {
           <div class="mdc-top-app-bar__row">
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
                 <span class="mdc-top-app-bar__title jit-title">
-                    <img src='logo.png' alt='JIT Access'/>
-                    <a href="/">JIT Access</a>
+                    <img src='logo.png' alt='JIT Groups'/>
+                    <a href="/">JIT Groups</a>
                 </span>
                 <button class="mdc-button mdc-button--outlined" id="jit-environmentselector">
                     <span class="mdc-button__ripple"></span>
@@ -547,7 +547,7 @@ $(document).ready(async () => {
             </section>
             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end" role="toolbar">
                 <button class="material-icons mdc-top-app-bar__action-item mdc-icon-button" aria-label="help">
-                    <a href='https://googlecloudplatform.github.io/jit-access/?utm_source=jitaccess&utm_medium=help' class='jit-helpbutton' target='_blank'>help_center</a>
+                    <a href='https://googlecloudplatform.github.io/jit-access/?utm_source=jitgroups&utm_medium=help' class='jit-helpbutton' target='_blank'>help_center</a>
                 </button>
             </section>
           </div>
@@ -598,7 +598,7 @@ $(document).ready(async () => {
         <footer class="jit-footer">
             <div>Signed in as&nbsp;<span id="signed-in-user"></span>&nbsp;(<a href="?gcp-iap-mode=CLEAR_LOGIN_COOKIE">change</a>)</div>
             &nbsp;|&nbsp;
-            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/?utm_source=jitaccess&utm_medium=about">JIT Access <span id="application-version"></span></a></div>
+            <div>Powered by&nbsp;<a href="https://googlecloudplatform.github.io/jit-access/?utm_source=jitgroups&utm_medium=about">JIT Groups <span id="application-version"></span></a></div>
         </footer>`);
         
     mdc.autoInit();
