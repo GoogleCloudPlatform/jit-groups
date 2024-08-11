@@ -28,7 +28,7 @@ class LocalSettings {
  */
 class Model {
     _getHeaders() {
-        return { "X-JITACCESS": "1" };
+        return { "X-JITGROUPS": "1" };
     }
 
     _formatError(error) {
