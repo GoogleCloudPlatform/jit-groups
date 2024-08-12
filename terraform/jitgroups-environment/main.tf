@@ -109,7 +109,7 @@ resource "google_secret_manager_secret" "policy" {
         auto {}
     }
 }
-resource "google_secret_manager_secret_version" "secret-version-basic" {
+resource "google_secret_manager_secret_version" "v1" {
     secret                  = google_secret_manager_secret.policy.id
     secret_data             = var.policy
 }

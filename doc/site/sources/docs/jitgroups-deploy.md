@@ -6,17 +6,32 @@ This article describes how to deploy JIT Groups using Terraform.
 
 To complete the deployment, you need the following:
 
-+   Super-admin access to the Cloud Identity or Google Workspace account that 
-    corresponds to the Google Cloud organization that you're using.
-+   A Google Cloud project to deploy the JIT Groups application in.
++   A Google Cloud project to deploy the JIT Groups application in. 
++   Super-admin access to your Cloud Identity or Google Workspace account.
 
-In the Google Cloud console, on the project selector page, select or create a Google Cloud project.
+You also need one of the following premium subscriptions:
 
-+   In the Google Cloud console, on the project selector page, select or create a Google Cloud project.
++ [Cloud Identity Premium :octicons-link-external-16:](https://cloud.google.com/identity)
++ [Google Workspace Enterprise :octicons-link-external-16:](https://support.google.com/a/answer/6043385?co=DASHER._Family%3DEnterprise&oco=0) 
+  Standard, Plus, or Education 
 
-    [Go to project selector](https://console.cloud.google.com/projectselector2/home/dashboard){ .md-button }
+!!!tip
+    **It's sufficient to purchase licenses for a subset of your users**, or even a single user. 
 
-+   [Make sure that billing is enabled for your Google Cloud project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#console).
+    JIT Groups requires a premium subscription, but _doesn't_ require a premium license for all users. The presence
+    of a subscription is sufficient to enable all users to use JIT Groups, including those users that only have a 
+    Cloud Identity Free license.
+
+JIT Groups requires one of these premium subscription because it uses 
+[group membership expirations](https://cloud.google.com/identity/docs/how-to/manage-expirations), which
+is a premium feature. Without a premium subscription, you can deploy JIT Groups, but attempting to join 
+a group will fail.
+
+If you don't have a Cloud Identity Premium or Google Workspace Enterprise subscription, you can
+trial Cloud Identity Premium for free:
+
+[Trial Cloud Identity Premium](https://admin.google.com/ac/billing/buy?action=BUY&sku_id=GOOGLE.IDENTITY_PRO_SKU&journey=83){ .md-button }
+
 
 ## Prepare the project
 

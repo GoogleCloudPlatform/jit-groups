@@ -91,6 +91,24 @@ variable "options" {
     default                     = {}
 }
 
+variable "smtp_user" {
+    description                 = "SMTP host"
+    type                        = string
+    default                     = null
+}
+
+variable "smtp_password" {
+    description                 = "SMTP password"
+    type                        = string
+    default                     = ""
+}
+
+variable "smtp_host" {
+    description                 = "SMTP host"
+    type                        = string
+    default                     = "smtp.gmail.com"
+}
+
 #------------------------------------------------------------------------------
 # Local variables.
 #------------------------------------------------------------------------------
@@ -234,7 +252,7 @@ resource "google_service_account_iam_member" "service_account_member" {
 }
 
 #------------------------------------------------------------------------------
-# IAM bindings for resource scope.
+# JIT Access compatibility: IAM bindings for resource scope.
 #------------------------------------------------------------------------------
 
 #
@@ -319,6 +337,33 @@ resource "google_iap_web_iam_binding" "iap_binding_users" {
 }
 
 #------------------------------------------------------------------------------
+# Secret containing SMTP password.
+#------------------------------------------------------------------------------
+
+resource "google_secret_manager_secret" "smtp" {
+    depends_on              = [ google_project_service.secretmanager ]
+    secret_id               = "smtp"
+    
+    replication {
+        auto {}
+    }
+}
+resource "google_secret_manager_secret_version" "v1" {
+    secret                  = google_secret_manager_secret.smtp.id
+    secret_data             = var.smtp_password
+}
+
+#
+# Allow the service account to access the secret.
+#
+resource "google_secret_manager_secret_iam_member" "secret_binding" {
+    project                 = google_secret_manager_secret.smtp.project
+    secret_id               = google_secret_manager_secret.smtp.secret_id
+    role                    = "roles/secretmanager.secretAccessor"
+    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+}
+
+#------------------------------------------------------------------------------
 # Deploy GAE application.
 #------------------------------------------------------------------------------
 
@@ -353,12 +398,16 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     runtime                   = "java17"
     instance_class            = "F2"
     service_account           = google_service_account.jitgroups.email
-    env_variables             = merge(var.options, {
+    env_variables             = merge({
       "RESOURCE_SCOPE"        = var.resource_scope
       "RESOURCE_CUSTOMER_ID"  = var.customer_id
       "RESOURCE_DOMAIN"       = var.groups_domain
+      "SMTP_HOST"             = var.smtp_host
+      "SMTP_SENDER_ADDRESS"   = var.smtp_user
+      "SMTP_USERNAME"         = var.smtp_user
+      "SMTP_SECRET"           = google_secret_manager_secret_version.v1.name
       "RESOURCE_ENVIRONMENTS" = join(",", var.environments)
-    })
+    }, var.options)
     threadsafe = true
     noop_on_destroy = true
     deployment {
