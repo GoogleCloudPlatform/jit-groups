@@ -73,7 +73,7 @@ nav:
       - Discover:
         - 'Overview TODO': 'index.md'
       - 'Deploy':
-        - 'Deploy JIT Groups TODO': deploy.md
+        - 'Deploy JIT Groups TODO': 'jitgroups-deploy.md'
         - 'Migrate from JIT Access TODO': migrate.md
       - 'Manage':
         - 'Add an environment TODO': onboard-environment.md
@@ -83,10 +83,10 @@ nav:
           - 'Set up a development environment': development-environment.md
       - 'Reference':
           - 'Policy format': policy-reference.md
-          - 'Configuration options': configuration-options.md
+          - 'Configuration options TODO': 'jitgroups-options.md'
   - JIT Access:
     - Discover: 
-      - 'Overview': 'index.md'
+      - 'Overview': 'jitaccess-overview.md'
       - 'Multi-party approval': multi-party-approval.md
       - 'Notifications': pubsub-notifications.md
     - 'Deploy JIT Access':
