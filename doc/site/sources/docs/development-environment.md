@@ -1,5 +1,5 @@
 
-JIT Access is a standalone Java application that's based on [Quarkus](https://quarkus.io/) and designed to run in the
+JIT Groups is a standalone Java application that's based on [Quarkus](https://quarkus.io/) and designed to run in the
 [App Engine Java 17 Standard Environment :octicons-link-external-16:](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
 or on Cloud Run.
 
@@ -12,8 +12,13 @@ To build and run the application locally, you need:
 
 Make sure both `java` and `mvn` are available in your `PATH`.
 
-You also need a Google Cloud development project. Follow the instructions in
-[Manage just-in-time privileged access to projects :octicons-link-external-16:](https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project) to prepare a project.
+## Prepare a development project
+
+To run JIT Groups locally, you need a development project. The quickest way to set up
+a project is to do the following:
+
+1.  Follow the instructions in [Deploy JIT Groups](jitgroups-deploy.md) to deploy JIT Groups to a development project.
+1.  Grant your own user account the _Service Account Token Creator_ on the service account used by JIT Groups.
 
 
 ## Run locally
@@ -22,18 +27,16 @@ You can debug and run the application locally by using the following command:
 
     mvn quarkus:dev -Dsuspend=y -Ddebug=true -Djitaccess.impersonateServiceAccount=SERVICE_ACCOUNT -Djitaccess.debug=true
 
+Replace `SERVICE_ACCOUNT` with the email address of the service account used by JIT Groups.
+
 This command does the following:
-* Start Quarkus in development mode
-* Impersonate a service account, and use that service account to call Google Cloud APIs
-* Disable IAP authentication
 
-In the command line above, replace `SERVICE_ACCOUNT` with a service account that:
-* Your ADC can impersonate (i.e., you have the _Service Account Token Creator_ role on that service account
-* Can access the Policy Analyzer API
++   Start Quarkus in development mode.
++   Impersonate the JIT Groups service account.
++   Disable IAP authentication.
 
-You can then access the application on `http://localhost:8080/?debug=1`. Use the debug panel in the lower left
-to specify a test principal. The debug panel also lets you mock backend calls, which can be useful for frontend
-development.
+You can then access the application on `http://localhost:8080/`. Use the debug panel in the lower left
+to specify a test principal. 
 
 
 ### HTTPS introspection
@@ -41,7 +44,6 @@ development.
 To introspect HTTPS traffic using tools like Fiddler, use the following additional parameters:
 
     -DproxyHost=127.0.0.1 -DproxyPort=8888 -DproxySet=true -Djavax.net.ssl.trustStore=JKS_PATH -Djavax.net.ssl.trustStorePassword=JKS_PASSWORD
-
 
 Replace the following:
 
