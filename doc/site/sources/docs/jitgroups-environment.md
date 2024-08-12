@@ -33,7 +33,7 @@ JIT Groups application or a separate project:
 
        ```hcl  hl_lines="10 17-24"
        module "application" {
-           source                      = "target/jitaccess/terraform/jitgroups-appengine"
+           source                      = "./target/jit-access/terraform/jitgroups-appengine"
            project_id                  = local.project_id
            customer_id                 = "CUSTOMER_ID"
            groups_domain               = "DOMAIN"
@@ -49,7 +49,7 @@ JIT Groups application or a separate project:
        }
 
        module "environment" {
-           source                      = "target/jitaccess/terraform/jitgroups-environment"
+           source                      = "./target/jit-access/terraform/jitgroups-environment"
            project_id                  = local.project_id
            application_service_account = module.application.service_account
     

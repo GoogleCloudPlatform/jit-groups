@@ -100,7 +100,7 @@ variable "smtp_user" {
 variable "smtp_password" {
     description                 = "SMTP password"
     type                        = string
-    default                     = ""
+    default                     = "-"
 }
 
 variable "smtp_host" {
@@ -326,11 +326,9 @@ resource "google_iap_client" "iap_client" {
 }
 
 #
-# Allow user to access IAP.
+# Allow users to access IAP.
 #
-resource "google_iap_web_iam_binding" "iap_binding_users" {
-    depends_on              = [ google_project_service.iap ]
-    count                   = length(var.iap_users) > 0 ? 1 : 0
+resource "google_project_iam_binding" "iap_binding_users" {
     project                 = var.project_id
     role                    = "roles/iap.httpsResourceAccessor"
     members                 = concat([ "user:${var.admin_email}" ], var.iap_users)
@@ -348,7 +346,7 @@ resource "google_secret_manager_secret" "smtp" {
         auto {}
     }
 }
-resource "google_secret_manager_secret_version" "v1" {
+resource "google_secret_manager_secret_version" "v1" {
     secret                  = google_secret_manager_secret.smtp.id
     secret_data             = var.smtp_password
 }

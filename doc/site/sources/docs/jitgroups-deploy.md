@@ -35,7 +35,7 @@ trial Cloud Identity Premium for free:
 
 ## Prepare the project
 
-Prepare your project and configure Terraform to store its state in a Cloud Storage bucket:
+Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage bucket for storing its state:
 
 1.  Open Cloud Shell or a local terminal.
 
@@ -118,7 +118,7 @@ Use Terraform to deploy JIT Groups to App Engine.
 
     ```hcl
     module "application" {
-        source                      = "target/jitaccess/terraform/jitgroups-appengine"
+        source                      = "./target/jit-access/terraform/jitgroups-appengine"
         project_id                  = local.project_id
         customer_id                 = "CUSTOMER_ID"
         groups_domain               = "DOMAIN"
@@ -192,8 +192,8 @@ Use Terraform to deploy JIT Groups to App Engine.
         If this happens, rerun `terraform apply`.
 
     When the command completes, it prints the URL of the application and the
-    email address of the application's service account. You need this email address
-    in the next step.
+    email address of the application's service account. You need this URL and email address
+    later.
 
 ### Grant access to Cloud Identity/Workspace
 
@@ -208,10 +208,10 @@ You only need to perform these steps once.
 
     [Open Admin Roles](https://admin.google.com/ac/roles){ .md-button }
 
-1.  Go to **Admin Roles**.
 1.  Click **Groups Admin > Admins**.
 1.  Click **Assign service accounts**.
-1.  Enter the email address of the application's service account, then click **Add**.
+1.  Enter the email address of the application's service account that you obtained after running `terraform apply`. 
+    Then click **Add**.
 1.  Click **Assign role**.
 
 ### Access the JIT Groups web interface
