@@ -73,16 +73,16 @@ nav:
       - Discover:
         - 'Overview TODO': 'index.md'
       - 'Deploy':
-        - 'Deploy JIT Groups TODO': 'jitgroups-deploy.md'
+        - 'Deploy JIT Groups': 'jitgroups-deploy.md'
+        - 'Add an environment': 'jitgroups-environment.md'
         - 'Migrate from JIT Access TODO': migrate.md
       - 'Manage':
-        - 'Add an environment TODO': onboard-environment.md
         - 'Manage policies TODO': manage-policies.md
         - 'Set up CI/CD TODO': setup-continuous-integration.md
       - 'Extend':
           - 'Set up a development environment': development-environment.md
       - 'Reference':
-          - 'Policy format': policy-reference.md
+          - 'Policy documents': policy-reference.md
           - 'Configuration options TODO': 'jitgroups-options.md'
   - JIT Access:
     - Discover: 

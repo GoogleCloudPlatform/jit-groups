@@ -71,6 +71,13 @@ Prepare your project and configure Terraform to store its state in a Cloud Stora
     EOF
     ```
 
+1.  Authorize `terraform`:
+
+    ```sh
+    gcloud auth application-default login &&
+      gcloud auth application-default set-quota-project $PROJECT_ID
+    ```
+
 ## Deploy the application
 
 Use Terraform to deploy JIT Groups to App Engine.
@@ -129,7 +136,7 @@ Use Terraform to deploy JIT Groups to App Engine.
     +   `ADMIN_EMAIL`: the email address to show as contact on the OAuth consent screen,
         this must be the email address of a Cloud Identity/Workspace user.
     +   `LOCATION`: a supported [App Engine location](https://cloud.google.com/about/locations#region).
-    +   `iap_users` (optional): List of users or groups to allow access to the JIT Groups applications.
+    +   `iap_users` (optional): List of users or groups to allow access to the JIT Groups application.
 
         *   Prefix users with `user:`, for example `user:bob@example.com`.
         *   Prefix groups with `group:`, for example `user:eng@example.com`.
@@ -151,17 +158,9 @@ Use Terraform to deploy JIT Groups to App Engine.
 
 1.  Save the file using a `.tf` file extension.
 
-
-1.  Authorize `terraform`:
-
-    ```sh
-    gcloud auth application-default login
-    ```
-
 1.  Initialize Terraform:
 
     ```sh
-    gcloud auth application-default set-quota-project $PROJECT_ID
     terraform init 
     ```
 
@@ -171,16 +170,17 @@ Use Terraform to deploy JIT Groups to App Engine.
     terraform apply 
     ```
 
-    Because of internal provisioning delays, you might encounter the following
-    error when you run `terraform apply` for the first time:
-    `Error waiting for Creating StandardAppVersion: Error code 13, message: Failed to create cloud build`,
-    If this happens, rerun `terraform apply`.
+    !!!note
+        Because of internal provisioning delays, you might encounter the following
+        error when you run `terraform apply` for the first time:
+        `Error waiting for Creating StandardAppVersion: Error code 13, message: Failed to create cloud build`,
+        If this happens, rerun `terraform apply`.
 
     When the command completes, it prints the URL of the application and the
     email address of the application's service account. You need this email address
     in the next step.
 
-## Grant access to Cloud Identity/Workspace
+### Grant access to Cloud Identity/Workspace
 
 To allow JIT Groups to manage Cloud Identity groups, you must grant it an additional
 admin role in your Cloud Identity or Workspace account. Because this step requires super-admin
@@ -199,7 +199,30 @@ You only need to perform these steps once.
 1.  Enter the email address of the application's service account, then click **Add**.
 1.  Click **Assign role**.
 
-## Optional: Submit your configuration to Git
+### Access the JIT Groups web interface
+
+You can now access the JIT Groups web interface:
+
+1.  Open a browser and navigate to the URL that you obtained after running `terraform apply`.
+1.  Authenticate with a user account that's allowed to access the JIT Groups application. 
+    These user accounts include:
+
+    +   The user configured as `admin_email` in the Terraform configuration.
+    +   All users or groups configured in `iap_users` in the Terraform configuration.
+
+Because you haven't configured an environment yet, JIT Groups uses an example environment
+named `example`. This environment demonstrates some of the features provided by JIT Groups,
+but doesn't let you request access to any groups or resources.
+
+To configure an environment, see [Add an environment](jitgroups-environment.md).
+
+### Optional: Configure email notifications
+
+TODO
+
+### Optional: Submit your configuration to Git
+
+To simplify future upgrades and configuration changes, submit your configuration to Git:
 
 1.  Initialize a `git` repository:
 
@@ -225,3 +248,7 @@ You only need to perform these steps once.
     ```sh
     git add -A && git commit -m 'Initial JIT Groups deployment'
     ```
+    
+## What's next
+
+[Configure an environment](jitgroups-environment.md) and start using JIT Groups to manage access.
