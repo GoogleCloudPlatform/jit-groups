@@ -80,7 +80,7 @@ nav:
           - 'Set up a development environment': development-environment.md
       - 'Reference':
           - 'Policy documents': policy-reference.md
-          - 'Configuration options TODO': 'jitgroups-options.md'
+          - 'Configuration options': 'jitgroups-options.md'
   - JIT Access:
     - Discover: 
       - 'Overview': 'jitaccess-overview.md'

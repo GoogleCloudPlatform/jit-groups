@@ -196,7 +196,7 @@ class ApplicationConfiguration {
     this.smtpHost = new StringSetting("SMTP_HOST", "smtp.gmail.com");
     this.smtpPort = new IntSetting("SMTP_PORT", 587);
     this.smtpEnableStartTls = new BooleanSetting("SMTP_ENABLE_STARTTLS", true);
-    this.smtpSenderName = new StringSetting("SMTP_SENDER_NAME", "JIT Access");
+    this.smtpSenderName = new StringSetting("SMTP_SENDER_NAME", "JIT Groups");
     this.smtpSenderAddress = new StringSetting("SMTP_SENDER_ADDRESS", null);
     this.smtpUsername = new StringSetting("SMTP_USERNAME", null);
     this.smtpPassword = new StringSetting("SMTP_PASSWORD", null);
