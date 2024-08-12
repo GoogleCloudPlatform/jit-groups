@@ -233,7 +233,149 @@ To configure an environment, see [Add an environment](jitgroups-environment.md).
 
 ### Optional: Configure email notifications
 
-TODO
+You can configure a JIT group so that joining the group requires approval from another user. To
+notify users about pending approvals, JIT Groups must be able to send emails.
+
+To let JIT Groups send emails, you must grant it access to an SMTP mail server. You can use Google Workspace, 
+Microsoft 365, or any other SMTP server for this purpose.
+
+1.  Obtain credentials for your SMTP server:
+    
+    === "Google Workspace"
+    
+        You can let JIT Groups send email through Google Workspace by using 
+        [the Gmail SMTP server :octicons-link-external-16:](https://support.google.com/a/answer/176600?hl=en#gmail-smpt-option) and a 
+        dedicated Google Workspace user account.
+    
+        To create a new user account in Google Workspace, do the following:
+    
+        1.  Open the [Google Workspace Admin Console :octicons-link-external-16:](https://admin.google.com/) and sign in as a super-admin user.
+        1.  In the menu, go to **Directory > Users** and click **Add new user** to create a user.
+        1.  Provide an appropriate name and email address such as the following:
+    
+            * **First Name**: a name such as `JIT Groups`
+            * **Last Name**: a name such as `Notifications`
+            * **Primary email**: an email address such as `jitgroups-notifications`
+    
+        1.  Click **Manage user's password, organizational unit, and profile photo** and configure the following settings:
+    
+            * **Password**: Select **Create password** and set a password
+            * **Ask for a password change at the next sign-in**: **Disabled**
+    
+        1.  Click **Add new user**.
+        1.  Click **Done**.
+        
+        Assign a Google Workspace license to the new user account:
+        
+        1.  Refresh the list of users.
+        1.  Open the details for the user account that you just created.
+        1.  Click **Licenses**.
+        1.  Set the status for **Google Workspace** to **assigned**.
+        
+            !!! important
+            
+                You must assign a Google Workspace license. Without a Google Workspace license, 
+                the Gmail SMTP server rejects email delivery.
+                
+        1.  Click **Save**.
+        
+    
+        Create an [app password :octicons-link-external-16:](https://support.google.com/accounts/answer/185833?hl=en) for the new user account:
+    
+        1.  Open an incognito browser window and go to [Google Accounts :octicons-link-external-16:](https://accounts.google.com/).
+        1.  Sign in with the new user account that you created.
+        1.  Go to **Security > Signing in to Google > 2-step verification** and follow the steps to
+            [turn on 2-step verification :octicons-link-external-16:](https://support.google.com/accounts/answer/185839).
+        1.  Go to **Security > Signing in to Google > App passwords**
+    
+            !!! note
+                The **App passwords** link isn't shown if you haven't turned on 2-step verification yet.
+            
+        1.  On the **App passwords** page, use the following settings:
+            1. **Select app**: Select **Mail**
+            1. **Select device**: Select **Other** and enter a name such as `JIT Access`
+        1.  Click **Generate**.
+    
+            Take note of the generated app password, because you need it later.
+    
+    
+    
+    === "Microsoft 365"
+    
+        You can let JIT Groups send email through Microsoft 365 by
+        [using an Office 365 mailbox and SMTP AUTH :octicons-link-external-16:](https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365#option-1-authenticate-your-device-or-application-directly-with-a-microsoft-365-or-office-365-mailbox-and-send-mail-using-smtp-auth-client-submission).
+    
+        1.  Open the [Admin Center :octicons-link-external-16:](https://admin.microsoft.com/).
+        1.  Go to **Users > Active users** and [add a new user :octicons-link-external-16:](https://learn.microsoft.com/en-us/microsoft-365/admin/add-users/add-users?view=o365-worldwide#add-users-one-at-a-time-in-the-dashboard-view).
+            Provide an appropriate name and email address such as the following:
+    
+            * **First Name**: a name such as `JIT Groups`
+            * **Last Name**: a name such as `Notifications`
+            * **Primary email**: an email address such as `jitgroups-notifications`
+    
+            Take note of the user's password, because you need it later.
+            
+        1.  [Enable SMTP AUTH :octicons-link-external-16:](https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/authenticated-client-smtp-submission#enable-smtp-auth-for-specific-mailboxes)
+            for the new user.
+
+1.  Save the SMTP password in Secret Manager:
+
+        echo "Enter SMTP password:" && (read PASSWORD && echo $PASSWORD | gcloud secrets versions add smtp --data-file=-)
+
+
+1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and the following two arguments: 
+
+    ```hcl  hl_lines="14-15"
+    module "application" {
+        source                      = "./target/jit-access/terraform/jitgroups-appengine"
+        project_id                  = local.project_id
+        customer_id                 = "CUSTOMER_ID"
+        groups_domain               = "DOMAIN"
+        admin_email                 = "ADMIN_EMAIL"
+        location                    = "LOCATION"
+        iap_users                   = []
+        environments                = []
+        options                     = {
+            # "APPROVAL_TIMEOUT"    = "90"
+        }
+        
+        smtp_host                   = "SMTP_HOST"
+        smtp_user                   = "SMTP_USER"
+    }
+
+    output "url" {
+        value                       = module.application.url
+    }
+
+    output "service_account" {
+        value                       = module.application.service_account
+    }
+    ```
+
+    Replace the following:
+
+    === "Google Workspace"
+
+        *   `SMTP_HOST`: `smtp.gmail.com`
+        *   `SMTP_USER`: the email address of the Google Workspace user that you created previously, for example `jitaccess-notifications@example.org`
+
+    === "Microsoft 365"
+
+        *   `SMTP_HOST`: `smtp.office365.com`
+        *   `SMTP_USER`: the email address of the Microsoft 365 user that you created previously, 
+            for example `jitaccess-notifications@example.org`
+
+    === "Other email provider"
+
+        *   `SMTP_HOST`: DNS name of the SMTP server
+        *   `SMTP_USER`: user name for authentication
+
+
+1.  Apply the configuration change:
+
+    ```sh
+    terraform apply 
+    ```
 
 ### Optional: Submit your configuration to Git
 

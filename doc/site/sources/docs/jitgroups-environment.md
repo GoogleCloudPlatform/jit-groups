@@ -16,14 +16,14 @@ environment and create the secret and service account there.
 ![Example with 3 environments](images/environments-example.png).
 
 
-## Deploy the environment
+## Register the environment
 
-The steps to deploy an environment differ depending on whether you're using the project that contains the 
+The steps to register an environment differ depending on whether you're using the project that contains the 
 JIT Groups application or a separate project:
 
 === "Same project"
 
-1.  Copy the example policy document to a file names `environment.yaml`:
+1.  Copy the example policy document to a file `environment.yaml`:
 
     ```sh
     cp target/jit-access/sources/src/main/resources/oobe/policy.yaml environment.yaml
@@ -79,7 +79,7 @@ JIT Groups application or a separate project:
     The name can't be changed later.
 
 
-1.  Apply the configuration:
+1.  Apply the configuration change:
 
     ```sh
     terraform apply 
@@ -104,11 +104,21 @@ To customize the policy document of your environment, do the following:
 To save and apply your policy changes, do the following:
 
 1.  Copy the updated YAML code to the `environment.yaml` file.
+
+1.  Reinitialize Terraform:
+
+    ```sh
+    terraform init 
+    ```
+    
 1.  Run Terraform to apply the configuration:
 
     ```sh
     terraform apply 
     ```
 
+## What's next
+
+Read more about the format of [policy documents](policy-reference.md).
 
 

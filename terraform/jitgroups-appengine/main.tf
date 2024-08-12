@@ -100,7 +100,7 @@ variable "smtp_user" {
 variable "smtp_password" {
     description                 = "SMTP password"
     type                        = string
-    default                     = "-"
+    default                     = null
 }
 
 variable "smtp_host" {
@@ -346,10 +346,6 @@ resource "google_secret_manager_secret" "smtp" {
         auto {}
     }
 }
-resource "google_secret_manager_secret_version" "v1" {
-    secret                  = google_secret_manager_secret.smtp.id
-    secret_data             = var.smtp_password
-}
 
 #
 # Allow the service account to access the secret.
@@ -403,7 +399,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
       "SMTP_HOST"             = var.smtp_host
       "SMTP_SENDER_ADDRESS"   = var.smtp_user
       "SMTP_USERNAME"         = var.smtp_user
-      "SMTP_SECRET"           = google_secret_manager_secret_version.v1.name
+      "SMTP_SECRET"           = "${google_secret_manager_secret.smtp.name}/versions/latest"
       "RESOURCE_ENVIRONMENTS" = join(",", var.environments)
     }, var.options)
     threadsafe = true

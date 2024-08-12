@@ -76,9 +76,6 @@ nav:
         - 'Deploy JIT Groups': 'jitgroups-deploy.md'
         - 'Add an environment': 'jitgroups-environment.md'
         - 'Migrate from JIT Access TODO': migrate.md
-      - 'Manage':
-        - 'Manage policies TODO': manage-policies.md
-        - 'Set up CI/CD TODO': setup-continuous-integration.md
       - 'Extend':
           - 'Set up a development environment': development-environment.md
       - 'Reference':
