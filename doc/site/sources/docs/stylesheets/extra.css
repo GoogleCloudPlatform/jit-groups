@@ -1,6 +1,11 @@
 body {
     background-color: #f1f3f4;
 }
+
+table {
+    font-size: .6rem  !important;
+}
+
 .md-typeset h1, .md-typeset h2 {
     padding-top: 15px;
     font-weight: 400;

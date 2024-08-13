@@ -24,26 +24,26 @@
 #------------------------------------------------------------------------------
 
 variable "project_id" {
-    description                 = "Project to deploy to"
-    type                        = string
-}
-
-variable "name" {
-    description                 = "Name of the environment"
-    type                        = string
-}
-
-variable "policy" {
-    description                 = "Policy, in YAML format"
-    type                        = string
+    description                = "Project to deploy to"
+    type                       = string
+}                              
+                               
+variable "name" {              
+    description                = "Name of the environment"
+    type                       = string
+}                              
+                               
+variable "policy" {            
+    description                = "Policy, in YAML format"
+    type                       = string
 }
 
 variable "application_service_account" {
-    description                 = "Email address of the applicartion service account"
-    type                        = string
+    description                = "Email address of the applicartion service account"
+    type                       = string
     validation {
-        condition               = endswith(var.application_service_account, ".iam.gserviceaccount.com")
-        error_message           = "application_service_account must be a service account email address"
+        condition              = endswith(var.application_service_account, ".iam.gserviceaccount.com")
+        error_message          = "application_service_account must be a service account email address"
     }
 }
 
@@ -52,7 +52,7 @@ variable "application_service_account" {
 #------------------------------------------------------------------------------
 
 provider "google" {
-    project = var.project_id
+    project                    = var.project_id
 }
 
 #------------------------------------------------------------------------------
@@ -60,9 +60,9 @@ provider "google" {
 #------------------------------------------------------------------------------
 
 resource "google_project_service" "secretmanager" {
-    project                 = var.project_id
-    service                 = "secretmanager.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "secretmanager.googleapis.com"
+    disable_on_destroy         = false
 }
 
 #------------------------------------------------------------------------------
@@ -73,25 +73,25 @@ resource "google_project_service" "secretmanager" {
 # Service account used by application.
 #
 data "google_service_account" "jitgroups" {
-    account_id              = var.application_service_account
+    account_id                 = var.application_service_account
 }
 
 #
 # Service account used by environment.
 #
 resource "google_service_account" "environment" {
-    project                 = var.project_id
-    account_id              = "jit-${var.name}"
-    display_name            = "JIT Access environment"
+    project                    = var.project_id
+    account_id                 = "jit-${var.name}"
+    display_name               = "JIT Access environment"
 }
 
 #
 # Grant the application service account permission to impersonate.
 #
 resource "google_service_account_iam_member" "service_account_member" {
-    service_account_id      = google_service_account.environment.name
-    role                    = "roles/iam.serviceAccountTokenCreator"
-    member                  = "serviceAccount:${data.google_service_account.jitgroups.email}"
+    service_account_id         = google_service_account.environment.name
+    role                       = "roles/iam.serviceAccountTokenCreator"
+    member                     = "serviceAccount:${data.google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -102,26 +102,26 @@ resource "google_service_account_iam_member" "service_account_member" {
 # Secret to store the policy in.
 #
 resource "google_secret_manager_secret" "policy" {
-    depends_on              = [ google_project_service.secretmanager ]
-    secret_id               = "jit-${var.name}"
+    depends_on                 = [ google_project_service.secretmanager ]
+    secret_id                  = "jit-${var.name}"
     
     replication {
         auto {}
     }
 }
 resource "google_secret_manager_secret_version" "v1" {
-    secret                  = google_secret_manager_secret.policy.id
-    secret_data             = var.policy
+    secret                     = google_secret_manager_secret.policy.id
+    secret_data                = var.policy
 }
 
 #
 # Allow the environment service account to access the secret.
 #
 resource "google_secret_manager_secret_iam_member" "secret_binding" {
-    project                 = google_secret_manager_secret.policy.project
-    secret_id               = google_secret_manager_secret.policy.secret_id
-    role                    = "roles/secretmanager.secretAccessor"
-    member                  = "serviceAccount:${google_service_account.environment.email}"
+    project                    = google_secret_manager_secret.policy.project
+    secret_id                  = google_secret_manager_secret.policy.secret_id
+    role                       = "roles/secretmanager.secretAccessor"
+    member                     = "serviceAccount:${google_service_account.environment.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -129,6 +129,6 @@ resource "google_secret_manager_secret_iam_member" "secret_binding" {
 #------------------------------------------------------------------------------
 
 output "service_account" {
-    description             = "Service account used by the environment"  
-    value                   = google_service_account.environment.email
+    description                = "Service account used by the environment"  
+    value                      = google_service_account.environment.email
 }

@@ -6,10 +6,11 @@ The following table lists all available configuration options.
 
 ## Basic options
 
-| Name                    | Terraform attribute | Description                                                                                                        | Required | Default          | Available since |
-|-------------------------|---------------------|--------------------------------------------------------------------------------------------------------------------|----------|------------------|-----------------|
-| `RESOURCE_CUSTOMER_ID`  | `customer_id`       | [Cloud Identity/Workspace customer ID :octicons-link-external-16:](https://support.google.com/a/answer/10070793)   | Yes      |                  | 1.6             |
-| `APPROVAL_TIMEOUT`      | -                   | Duration (in minutes) for approval requests to remains valid.                                                      | No       | 60               | 2.0             |
+| Name                                     | Terraform attribute | Description                                                                                                      | Required | Default          | Available since |
+|------------------------------------------|---------------------|------------------------------------------------------------------------------------------------------------------|----------|------------------|-----------------|
+| `CUSTOMER_ID` or `RESOURCE_CUSTOMER_ID` | `customer_id`       | [Cloud Identity/Workspace customer ID :octicons-link-external-16:](https://support.google.com/a/answer/10070793) | Yes      |                  | 1.6             |
+| `GROUPS_DOMAIN`                          | `groups_domain`     | Domain to use for JIT groups, this can be the primary or a secondary domain                                      | Yes      |                  | 2.0             |
+| `APPROVAL_TIMEOUT`                       | -                   | Duration (in minutes) for approval requests to remains valid.                                                    | No       | 60               | 2.0             |
 
 ## Email options
 
@@ -106,5 +107,4 @@ The following options from JIT Access 1.x are not supported in JIT Groups:
 + `ACTIVATION_REQUEST_MAX_ROLES`
 + `ACTIVATION_REQUEST_MIN_REVIEWERS`
 + `ACTIVATION_REQUEST_MAX_REVIEWERS`
-+ `ACTIVATION_REQUEST_TIMEOUT` -- superseded by `APPROVAL_TIMEOUT`
 + `NOTIFICATION_TOPIC`

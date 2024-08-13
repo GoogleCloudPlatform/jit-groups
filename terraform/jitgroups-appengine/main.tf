@@ -24,89 +24,89 @@
 #------------------------------------------------------------------------------
 
 variable "project_id" {
-    description                 = "Project to deploy to"
-    type                        = string
-}
-
-variable "location" {
-    description                 = "AppEngine location, see https://cloud.google.com/about/locations#region"
-    type                        = string
-}
-
-variable "admin_email" {
-    description                 = "Contact email address, must be a Cloud Identity/Workspace user"
-    type                        = string
-}
-
-variable "groups_domain" {
-    description                 = "Primary or secondary domain to use for JIT groups"
-    type                        = string
-}
-
-variable "resource_scope" {
-    description                 = "JIT Access 1.x compatibility: Project, folder, or organization that JIT Access can manage access for"
-    type                        = string
-    
-    default                     = "" # Disabled
-    
-    validation {
-        condition               = var.resource_scope == "" || (
-                                    startswith(var.resource_scope, "organizations/") || 
-                                    startswith(var.resource_scope, "folders/") || 
-                                    startswith(var.resource_scope, "projects/"))
-        error_message           = "resource_scope must be in the format organizations/ID, folders/ID, or projects/ID"
-    }
-}
-
-variable "environments" {
-    description                 = "Environment service accounts, prefixed with 'serviceAccount:"
-    type                        = list(string)
-    default                     = []
-    
-    validation {
-        condition               = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
-        error_message           = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
-    }
-}
-
-variable "customer_id" {
-    description                 = "Cloud Identity/Workspace customer ID"
-    type                        = string
-    
-    validation {
-        condition               = startswith(var.customer_id, "C")
-        error_message           = "customer_id must be a valid customer ID, starting with C"
-    }
-}
-
-variable "iap_users" {
-    description                 = "Users and groups to allow IAP-access to the application, prefixed with 'user:', 'group:', or domain:"
-    type                        = list(string)
-    default                     = []
-}
-
-variable "options" {
-    description                 = "Configuration options"
-    type                        = map(string)
-    default                     = {}
-}
-
-variable "smtp_user" {
-    description                 = "SMTP host"
-    type                        = string
-    default                     = null
-}
-
-variable "smtp_password" {
-    description                 = "SMTP password"
-    type                        = string
-    default                     = null
-}
-
-variable "smtp_host" {
-    description                 = "SMTP host"
-    type                        = string
-    default                     = "smtp.gmail.com"
+    description                = "Project to deploy to"
+    type                       = string
+}                              
+                               
+variable "location" {          
+    description                = "AppEngine location, see https://cloud.google.com/about/locations#region"
+    type                       = string
+}                              
+                               
+variable "admin_email" {       
+    description                = "Contact email address, must be a Cloud Identity/Workspace user"
+    type                       = string
+}                              
+                               
+variable "groups_domain" {     
+    description                = "Domain to use for JIT groups, this can be the primary or a secondary domain"
+    type                       = string
+}                              
+                               
+variable "resource_scope" {    
+    description                = "JIT Access 1.x compatibility: Project, folder, or organization that JIT Access can manage access for"
+    type                       = string
+                               
+    default                    = "" # Disabled
+                               
+    validation {               
+        condition              = var.resource_scope == "" || (
+                                   startswith(var.resource_scope, "organizations/") || 
+                                   startswith(var.resource_scope, "folders/") || 
+                                   startswith(var.resource_scope, "projects/"))
+        error_message          = "resource_scope must be in the format organizations/ID, folders/ID, or projects/ID"
+    }                          
+}                              
+                               
+variable "environments" {      
+    description                = "Environment service accounts, prefixed with 'serviceAccount:"
+    type                       = list(string)
+    default                    = []
+                               
+    validation {               
+        condition              = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
+        error_message          = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
+    }                          
+}                              
+                               
+variable "customer_id" {       
+    description                = "Cloud Identity/Workspace customer ID"
+    type                       = string
+                               
+    validation {               
+        condition              = startswith(var.customer_id, "C")
+        error_message          = "customer_id must be a valid customer ID, starting with C"
+    }                          
+}                              
+                               
+variable "iap_users" {         
+    description                = "Users and groups to allow IAP-access to the application, prefixed with 'user:', 'group:', or domain:"
+    type                       = list(string)
+    default                    = []
+}                              
+                               
+variable "options" {           
+    description                = "Configuration options"
+    type                       = map(string)
+    default                    = {}
+}                              
+                               
+variable "smtp_user" {         
+    description                = "SMTP host"
+    type                       = string
+    default                    = null
+}                              
+                               
+variable "smtp_password" {     
+    description                = "SMTP password"
+    type                       = string
+    default                    = null
+}                              
+                               
+variable "smtp_host" {         
+    description                = "SMTP host"
+    type                       = string
+    default                    = "smtp.gmail.com"
 }
 
 #------------------------------------------------------------------------------
@@ -126,51 +126,51 @@ locals {
 #------------------------------------------------------------------------------
 
 resource "google_project_service" "cloudasset" {
-    project                 = var.project_id
-    service                 = "cloudasset.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "cloudasset.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "cloudresourcemanager" {
-    project                 = var.project_id
-    service                 = "cloudresourcemanager.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "cloudresourcemanager.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "iap" {
-    project                 = var.project_id
-    service                 = "iap.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "iap.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "containerregistry" {
-    project                 = var.project_id
-    service                 = "containerregistry.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "containerregistry.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "iamcredentials" {
-    project                 = var.project_id
-    service                 = "iamcredentials.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "iamcredentials.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "cloudidentity" {
-    project                 = var.project_id
-    service                 = "cloudidentity.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "cloudidentity.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "groupssettings" {
-    project                 = var.project_id
-    service                 = "groupssettings.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "groupssettings.googleapis.com"
+    disable_on_destroy         = false
 }
 
 resource "google_project_service" "secretmanager" {
-    project                 = var.project_id
-    service                 = "secretmanager.googleapis.com"
-    disable_on_destroy      = false
+    project                    = var.project_id
+    service                    = "secretmanager.googleapis.com"
+    disable_on_destroy         = false
 }
 
 #------------------------------------------------------------------------------
@@ -181,12 +181,12 @@ resource "google_project_service" "secretmanager" {
 # Initialize AppEngine.
 #
 resource "google_app_engine_application" "appengine_app" {
-    project                 = var.project_id
-    location_id             = var.location
+    project                    = var.project_id
+    location_id                = var.location
     iap {
-        enabled              = true
-        oauth2_client_id     = google_iap_client.iap_client.client_id
-        oauth2_client_secret = google_iap_client.iap_client.secret
+        enabled                = true
+        oauth2_client_id       = google_iap_client.iap_client.client_id
+        oauth2_client_secret   = google_iap_client.iap_client.secret
     }
 }
 
@@ -201,22 +201,22 @@ resource "google_app_engine_application" "appengine_app" {
 # Force-remove Editor role bindings as it's unnecessarily broad.
 #
 resource "google_project_iam_member" "project_binding_appengine_createonpushwriter" {
-    depends_on              = [ google_app_engine_application.appengine_app ]
-    project                 = var.project_id
-    role                    = "roles/artifactregistry.createOnPushWriter"
-    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    depends_on                 = [ google_app_engine_application.appengine_app ]
+    project                    = var.project_id
+    role                       = "roles/artifactregistry.createOnPushWriter"
+    member                     = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
 }
 resource "google_project_iam_member" "project_binding_appengine_storageadmin" {
-    depends_on              = [ google_app_engine_application.appengine_app ]
-    project                 = var.project_id
-    role                    = "roles/storage.admin"
-    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    depends_on                 = [ google_app_engine_application.appengine_app ]
+    project                    = var.project_id
+    role                       = "roles/storage.admin"
+    member                     = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
 }
 resource "google_project_iam_member_remove" "project_binding_appengine_editor" {
-    depends_on              = [ google_app_engine_application.appengine_app ]
-    project                 = var.project_id
-    role                    = "roles/editor"
-    member                  = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
+    depends_on                 = [ google_app_engine_application.appengine_app ]
+    project                    = var.project_id
+    role                       = "roles/editor"
+    member                     = "serviceAccount:${var.project_id}@appspot.gserviceaccount.com"
 }
 resource "time_sleep" "project_binding_appengine" {
     depends_on                = [
@@ -226,7 +226,7 @@ resource "time_sleep" "project_binding_appengine" {
     ]
 
     # Give IAM some time to process the IAM policy update before we use it.
-    create_duration = "40s"
+    create_duration           = "40s"
 }
 
 #------------------------------------------------------------------------------
@@ -237,18 +237,18 @@ resource "time_sleep" "project_binding_appengine" {
 # Service account used by application.
 #
 resource "google_service_account" "jitgroups" {
-    project                 = var.project_id
-    account_id              = "jitgroups"
-    display_name            = "JIT Groups Application"
+    project                    = var.project_id
+    account_id                 = "jitgroups"
+    display_name               = "JIT Groups Application"
 }
 
 #
 # Grant the service account the Token Creator role so that it can sign JWTs.
 #
 resource "google_service_account_iam_member" "service_account_member" {
-    service_account_id      = google_service_account.jitgroups.name
-    role                    = "roles/iam.serviceAccountTokenCreator"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    service_account_id         = google_service_account.jitgroups.name
+    role                       = "roles/iam.serviceAccountTokenCreator"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -259,48 +259,48 @@ resource "google_service_account_iam_member" "service_account_member" {
 # Project scope.
 #
 resource "google_project_iam_member" "resource_project_binding_cloudassetviewer" {
-    count                   = startswith(var.resource_scope, "projects/") ? 1 : 0
-    project                 = substr(var.resource_scope, 9, -1)
-    role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "projects/") ? 1 : 0
+    project                    = substr(var.resource_scope, 9, -1)
+    role                       = "roles/cloudasset.viewer"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_project_iam_member" "resource_project_binding_projectiamadmin" {
-    count                   = startswith(var.resource_scope, "projects/") ? 1 : 0
-    project                 = substr(var.resource_scope, 9, -1)
-    role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "projects/") ? 1 : 0
+    project                    = substr(var.resource_scope, 9, -1)
+    role                       = "roles/resourcemanager.projectIamAdmin"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #
 # Folder scope.
 #
 resource "google_folder_iam_member" "resource_folder_binding_cloudassetviewer" {
-    count                   = startswith(var.resource_scope, "folders/") ? 1 : 0
-    folder                  = var.resource_scope
-    role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "folders/") ? 1 : 0
+    folder                     = var.resource_scope
+    role                       = "roles/cloudasset.viewer"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
-    count                   = startswith(var.resource_scope, "folders/") ? 1 : 0
-    folder                  = var.resource_scope
-    role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "folders/") ? 1 : 0
+    folder                     = var.resource_scope
+    role                       = "roles/resourcemanager.projectIamAdmin"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #
 # Organization scope.
 #
 resource "google_organization_iam_member" "resource_organization_binding_cloudassetviewer" {
-    count                   = startswith(var.resource_scope, "organizations/") ? 1 : 0
-    org_id                  = substr(var.resource_scope, 14, -1)
-    role                    = "roles/cloudasset.viewer"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "organizations/") ? 1 : 0
+    org_id                     = substr(var.resource_scope, 14, -1)
+    role                       = "roles/cloudasset.viewer"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 resource "google_organization_iam_member" "resource_organization_binding_projectiamadmin" {
-    count                   = startswith(var.resource_scope, "organizations/") ? 1 : 0
-    org_id                  = substr(var.resource_scope, 14, -1)
-    role                    = "roles/resourcemanager.projectIamAdmin"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    count                      = startswith(var.resource_scope, "organizations/") ? 1 : 0
+    org_id                     = substr(var.resource_scope, 14, -1)
+    role                       = "roles/resourcemanager.projectIamAdmin"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -311,27 +311,27 @@ resource "google_organization_iam_member" "resource_organization_binding_project
 # Create an OAuth consent screen for IAP.
 #
 resource "google_iap_brand" "iap_brand" {
-    depends_on              = [ google_project_service.iap ]
-    support_email           = var.admin_email
-    application_title       = "JIT Groups"
-    project                 = var.project_id
+    depends_on                 = [ google_project_service.iap ]
+    support_email              = var.admin_email
+    application_title          = "JIT Groups"
+    project                    = var.project_id
 }
 
 #
 # Create an OAuth client ID for IAP.
 #
 resource "google_iap_client" "iap_client" {
-    display_name            = "JIT Groups"
-    brand                   = google_iap_brand.iap_brand.name
+    display_name               = "JIT Groups"
+    brand                      = google_iap_brand.iap_brand.name
 }
 
 #
 # Allow users to access IAP.
 #
 resource "google_project_iam_binding" "iap_binding_users" {
-    project                 = var.project_id
-    role                    = "roles/iap.httpsResourceAccessor"
-    members                 = concat([ "user:${var.admin_email}" ], var.iap_users)
+    project                    = var.project_id
+    role                       = "roles/iap.httpsResourceAccessor"
+    members                    = concat([ "user:${var.admin_email}" ], var.iap_users)
 }
 
 #------------------------------------------------------------------------------
@@ -339,8 +339,8 @@ resource "google_project_iam_binding" "iap_binding_users" {
 #------------------------------------------------------------------------------
 
 resource "google_secret_manager_secret" "smtp" {
-    depends_on              = [ google_project_service.secretmanager ]
-    secret_id               = "smtp"
+    depends_on                 = [ google_project_service.secretmanager ]
+    secret_id                  = "smtp"
     
     replication {
         auto {}
@@ -351,10 +351,10 @@ resource "google_secret_manager_secret" "smtp" {
 # Allow the service account to access the secret.
 #
 resource "google_secret_manager_secret_iam_member" "secret_binding" {
-    project                 = google_secret_manager_secret.smtp.project
-    secret_id               = google_secret_manager_secret.smtp.secret_id
-    role                    = "roles/secretmanager.secretAccessor"
-    member                  = "serviceAccount:${google_service_account.jitgroups.email}"
+    project                    = google_secret_manager_secret.smtp.project
+    secret_id                  = google_secret_manager_secret.smtp.secret_id
+    role                       = "roles/secretmanager.secretAccessor"
+    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
 }
 
 #------------------------------------------------------------------------------
@@ -365,18 +365,18 @@ resource "google_secret_manager_secret_iam_member" "secret_binding" {
 # Create ZIP with Java source code.
 #
 data "archive_file" "sources_zip" {
-    type                    = "zip"
-    source_dir              = "${local.sources}"
-    output_path             = "${path.module}/target/jitgroups-sources.zip"
+    type                       = "zip"
+    source_dir                 = "${local.sources}"
+    output_path                = "${path.module}/target/jitgroups-sources.zip"
 }
 
 #
 # Upload ZIP file to the AppEngine storage bucket.
 #
 resource "google_storage_bucket_object" "appengine_sources_object" {
-    name                    = "jitgroups.${data.archive_file.sources_zip.output_md5}.zip"
-    bucket                  = google_app_engine_application.appengine_app.default_bucket
-    source                  = data.archive_file.sources_zip.output_path
+    name                       = "jitgroups.${data.archive_file.sources_zip.output_md5}.zip"
+    bucket                     = google_app_engine_application.appengine_app.default_bucket
+    source                     = data.archive_file.sources_zip.output_path
 }
 
 #
@@ -385,32 +385,32 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 # Keep existing versions to allow rollback/traffic migration.
 #
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
-    depends_on                = [ time_sleep.project_binding_appengine ]
-    version_id                = formatdate("YYYYMMDDhhmmss", timestamp())
-    service                   = "default"
-    project                   = var.project_id
-    runtime                   = "java17"
-    instance_class            = "F2"
-    service_account           = google_service_account.jitgroups.email
-    env_variables             = merge({
-      "RESOURCE_SCOPE"        = var.resource_scope
-      "RESOURCE_CUSTOMER_ID"  = var.customer_id
-      "RESOURCE_DOMAIN"       = var.groups_domain
-      "SMTP_HOST"             = var.smtp_host
-      "SMTP_SENDER_ADDRESS"   = var.smtp_user
-      "SMTP_USERNAME"         = var.smtp_user
-      "SMTP_SECRET"           = "${google_secret_manager_secret.smtp.name}/versions/latest"
-      "RESOURCE_ENVIRONMENTS" = join(",", var.environments)
+    depends_on                 = [ time_sleep.project_binding_appengine ]
+    version_id                 = formatdate("YYYYMMDDhhmmss", timestamp())
+    service                    = "default"
+    project                    = var.project_id
+    runtime                    = "java17"
+    instance_class             = "F2"
+    service_account            = google_service_account.jitgroups.email
+    env_variables              = merge({
+      "RESOURCE_SCOPE"         = var.resource_scope
+      "CUSTOMER_ID"            = var.customer_id
+      "GROUPS_DOMAIN"          = var.groups_domain
+      "SMTP_HOST"              = var.smtp_host
+      "SMTP_SENDER_ADDRESS"    = var.smtp_user
+      "SMTP_USERNAME"          = var.smtp_user
+      "SMTP_SECRET"            = "${google_secret_manager_secret.smtp.name}/versions/latest"
+      "RESOURCE_ENVIRONMENTS"  = join(",", var.environments)
     }, var.options)
-    threadsafe = true
-    noop_on_destroy = true
+    threadsafe                 = true
+    noop_on_destroy            = true
     deployment {
         zip {
           source_url = "https://storage.googleapis.com/${google_app_engine_application.appengine_app.default_bucket}/${google_storage_bucket_object.appengine_sources_object.name}"
         }
     }
     entrypoint {
-        shell = ""
+        shell                  = ""
     }
 }
 
@@ -418,12 +418,12 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
 # Force traffic to new version
 #
 resource "google_app_engine_service_split_traffic" "appengine_app_version" {
-    service = google_app_engine_standard_app_version.appengine_app_version.service
-    migrate_traffic = false
+    service                    = google_app_engine_standard_app_version.appengine_app_version.service
+    migrate_traffic            = false
 
     split {
-        shard_by = "IP"
-        allocations = {
+        shard_by               = "IP"
+        allocations            = {
             (google_app_engine_standard_app_version.appengine_app_version.version_id) = 1.0
         }
     }
@@ -434,10 +434,10 @@ resource "google_app_engine_service_split_traffic" "appengine_app_version" {
 #------------------------------------------------------------------------------
 
 output "url" {
-    description             = "URL to application"  
-    value                   = "https://${google_app_engine_application.appengine_app.default_hostname}/"
+    description                = "URL to application"  
+    value                      = "https://${google_app_engine_application.appengine_app.default_hostname}/"
 }
 output "service_account" {
-    description             = "Service account used by the application"  
-    value                   = google_service_account.jitgroups.email
+    description                = "Service account used by the application"  
+    value                      = google_service_account.jitgroups.email
 }
