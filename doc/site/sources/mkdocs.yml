@@ -75,7 +75,7 @@ nav:
       - 'Deploy':
         - 'Deploy JIT Groups': 'jitgroups-deploy.md'
         - 'Add an environment': 'jitgroups-environment.md'
-        - 'Migrate from JIT Access TODO': migrate.md
+        - 'Upgrade from JIT Access TODO': 'jitaccess-upgrade.md'
       - 'Extend':
           - 'Set up a development environment': development-environment.md
       - 'Reference':
