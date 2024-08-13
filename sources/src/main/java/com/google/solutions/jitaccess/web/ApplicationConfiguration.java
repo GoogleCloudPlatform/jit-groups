@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.common.collect.Streams;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
@@ -32,6 +33,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Stream;
 
 class ApplicationConfiguration {
   /**
@@ -164,8 +166,11 @@ class ApplicationConfiguration {
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     this.settingsData = settingsData;
 
-    this.customerId = new StringSetting("RESOURCE_CUSTOMER_ID", null);
-    this.groupsDomain = new StringSetting("RESOURCE_DOMAIN", null);
+    this.customerId = new StringSetting(
+      "CUSTOMER_ID",
+      List.of("RESOURCE_CUSTOMER_ID"), // Name used in 1.x
+      null);
+    this.groupsDomain = new StringSetting("GROUPS_DOMAIN", null);
 
     //
     // Backend service id (Cloud Run only).
@@ -180,6 +185,7 @@ class ApplicationConfiguration {
 
     this.proposalTimeout = new DurationSetting(
       "APPROVAL_TIMEOUT",
+      List.of("ACTIVATION_REQUEST_TIMEOUT"), // Name used in 1.x
       ChronoUnit.MINUTES,
       Duration.ofHours(1));
 
@@ -220,7 +226,7 @@ class ApplicationConfiguration {
       "RESOURCE_CACHE_TIMEOUT",
       ChronoUnit.SECONDS,
       Duration.ofMinutes(5));
-    this.environments = new StringSetting("RESOURCE_ENVIRONMENTS", "");
+    this.environments = new StringSetting("ENVIRONMENTS", "");
 
 
     //
@@ -232,6 +238,7 @@ class ApplicationConfiguration {
       String.format("projects/%s", this.settingsData.get("GOOGLE_CLOUD_PROJECT")));
     this.legacyActivationTimeout = new DurationSetting(
       "ACTIVATION_TIMEOUT",
+      List.of("ELEVATION_DURATION"),
       ChronoUnit.MINUTES,
       Duration.ofHours(2));
     this.legacyJustificationPattern = new StringSetting(
@@ -291,12 +298,18 @@ class ApplicationConfiguration {
 
   public abstract class Setting<T> {
     private final @NotNull String key;
+    private final @NotNull Collection<String> aliases;
     private final @Nullable T defaultValue;
 
     protected abstract T parse(String value);
 
-    protected Setting(@NotNull String key, @Nullable T defaultValue) {
+    protected Setting(
+      @NotNull String key,
+      @NotNull Collection<String> aliases,
+      @Nullable T defaultValue
+    ) {
       this.key = key;
+      this.aliases = aliases;
       this.defaultValue = defaultValue;
     }
 
@@ -305,15 +318,18 @@ class ApplicationConfiguration {
     }
 
     public @Nullable T value() {
-      var value = ApplicationConfiguration.this.settingsData.get(key);
-      if (value != null) {
-        value = value.trim();
-        if (!value.isEmpty()) {
-          return parse(value);
-        }
-      }
+      var value = Streams.concat(Stream.of(this.key), this.aliases.stream())
+        .map(ApplicationConfiguration.this.settingsData::get)
+        .filter(v -> v != null)
+        .map(String::trim)
+        .filter(v -> !v.isBlank())
+        .map(this::parse)
+        .findFirst();
 
-      if (this.defaultValue != null) {
+      if (value.isPresent()) {
+        return value.get();
+      }
+      else if (this.defaultValue != null) {
         return this.defaultValue;
       }
       else {
@@ -338,7 +354,15 @@ class ApplicationConfiguration {
 
   private class StringSetting extends Setting<String> {
     public StringSetting(@NotNull String key, @Nullable String defaultValue) {
-      super(key, defaultValue);
+      super(key, List.of(), defaultValue);
+    }
+
+    public StringSetting(
+      @NotNull String key,
+      @NotNull Collection<String> aliases,
+      @Nullable String defaultValue
+    ) {
+      super(key, aliases, defaultValue);
     }
 
     @Override
@@ -349,7 +373,7 @@ class ApplicationConfiguration {
 
   private class IntSetting extends Setting<Integer> {
     public IntSetting(String key, Integer defaultValue) {
-      super(key, defaultValue);
+      super(key, List.of(), defaultValue);
     }
 
     @Override
@@ -360,7 +384,7 @@ class ApplicationConfiguration {
 
   private class BooleanSetting extends Setting<Boolean> {
     public BooleanSetting(@NotNull String key, @Nullable Boolean defaultValue) {
-      super(key, defaultValue);
+      super(key, List.of(), defaultValue);
     }
 
     @Override
@@ -370,10 +394,19 @@ class ApplicationConfiguration {
   }
 
   private class DurationSetting extends Setting<Duration> {
-    private final ChronoUnit unit;
-    public DurationSetting(@NotNull String key, ChronoUnit unit, Duration defaultValue) {
-      super(key, defaultValue);
+    private final @NotNull ChronoUnit unit;
+
+    public DurationSetting(
+      @NotNull String key,
+      @NotNull Collection<String> aliases,
+      @NotNull ChronoUnit unit,
+      @Nullable Duration defaultValue) {
+      super(key, aliases, defaultValue);
       this.unit = unit;
+    }
+
+    public DurationSetting(@NotNull String key, ChronoUnit unit, Duration defaultValue) {
+      this(key, List.of(), unit, defaultValue);
     }
 
     @Override
@@ -384,7 +417,7 @@ class ApplicationConfiguration {
 
   private class ZoneIdSetting extends Setting<ZoneId> {
     public ZoneIdSetting(@NotNull String key) {
-      super(key, ZoneOffset.UTC);
+      super(key, List.of(), ZoneOffset.UTC);
     }
 
     @Override

@@ -27,8 +27,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestApplicationConfiguration {
 
@@ -45,14 +44,14 @@ public class TestApplicationConfiguration {
   @Test
   public void environments_whenEmpty() {
     var configuration = new ApplicationConfiguration(
-      Map.of("RESOURCE_ENVIRONMENTS", " "));
+      Map.of("ENVIRONMENTS", " "));
     assertEquals(0, configuration.environments().size());
   }
 
   @Test
   public void environments() {
     var configuration = new ApplicationConfiguration(
-      Map.of("RESOURCE_ENVIRONMENTS", ", one-env  , two-env "));
+      Map.of("ENVIRONMENTS", ", one-env  , two-env "));
     assertEquals(2, configuration.environments().size());
     assertTrue(configuration.environments().contains("one-env"));
     assertTrue(configuration.environments().contains("two-env"));
@@ -71,5 +70,70 @@ public class TestApplicationConfiguration {
     assertEquals(
       Duration.ofMinutes(5),
       new ApplicationConfiguration(Map.of()).environmentCacheTimeout.value());
+  }
+
+  // -------------------------------------------------------------------------
+  // customerId.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void customerId_whenNotSet() {
+    var configuration = new ApplicationConfiguration(Map.of());
+    assertFalse(configuration.customerId.isValid());
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> configuration.customerId.value());
+  }
+
+  @Test
+  public void customerId_whenEmpty() {
+    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", ""));
+    assertFalse(configuration.customerId.isValid());
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> configuration.customerId.value());
+  }
+
+  @Test
+  public void customerId_whenSet() {
+    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", "1"));
+    assertEquals("CUSTOMER_ID", configuration.customerId.key());
+    assertTrue(configuration.customerId.isValid());
+    assertEquals("1", configuration.customerId.value());
+  }
+
+  @Test
+  public void customerId_whenAliasSet() {
+    var configuration = new ApplicationConfiguration(Map.of("RESOURCE_CUSTOMER_ID", "1"));
+    assertEquals("CUSTOMER_ID", configuration.customerId.key());
+    assertTrue(configuration.customerId.isValid());
+    assertEquals("1", configuration.customerId.value());
+  }
+
+  // -------------------------------------------------------------------------
+  // proposalTimeout.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void proposalTimeout_whenNotSet() {
+    var configuration = new ApplicationConfiguration(Map.of());
+    assertTrue(configuration.proposalTimeout.isValid());
+    assertEquals(Duration.ofHours(1), configuration.proposalTimeout.value());
+  }
+
+  @Test
+  public void proposalTimeout_whenSet() {
+    var configuration = new ApplicationConfiguration(Map.of("APPROVAL_TIMEOUT", " 30 "));
+    assertTrue(configuration.proposalTimeout.isValid());
+    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
+  }
+
+  @Test
+  public void proposalTimeout_whenAliasSet() {
+    var configuration = new ApplicationConfiguration(Map.of("ACTIVATION_REQUEST_TIMEOUT", " 30 "));
+    assertTrue(configuration.proposalTimeout.isValid());
+    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
   }
 }
