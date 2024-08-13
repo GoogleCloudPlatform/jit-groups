@@ -170,7 +170,7 @@ class ApplicationConfiguration {
       "CUSTOMER_ID",
       List.of("RESOURCE_CUSTOMER_ID"), // Name used in 1.x
       null);
-    this.groupsDomain = new StringSetting("RESOURCE_DOMAIN", null);
+    this.groupsDomain = new StringSetting("GROUPS_DOMAIN", null);
 
     //
     // Backend service id (Cloud Run only).
@@ -226,7 +226,7 @@ class ApplicationConfiguration {
       "RESOURCE_CACHE_TIMEOUT",
       ChronoUnit.SECONDS,
       Duration.ofMinutes(5));
-    this.environments = new StringSetting("RESOURCE_ENVIRONMENTS", "");
+    this.environments = new StringSetting("ENVIRONMENTS", "");
 
 
     //

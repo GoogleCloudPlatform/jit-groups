@@ -44,14 +44,14 @@ public class TestApplicationConfiguration {
   @Test
   public void environments_whenEmpty() {
     var configuration = new ApplicationConfiguration(
-      Map.of("RESOURCE_ENVIRONMENTS", " "));
+      Map.of("ENVIRONMENTS", " "));
     assertEquals(0, configuration.environments().size());
   }
 
   @Test
   public void environments() {
     var configuration = new ApplicationConfiguration(
-      Map.of("RESOURCE_ENVIRONMENTS", ", one-env  , two-env "));
+      Map.of("ENVIRONMENTS", ", one-env  , two-env "));
     assertEquals(2, configuration.environments().size());
     assertTrue(configuration.environments().contains("one-env"));
     assertTrue(configuration.environments().contains("two-env"));
