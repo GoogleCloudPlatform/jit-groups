@@ -179,7 +179,7 @@ resource "time_sleep" "project_binding_appengine" {
     ]
 
     # Give IAM some time to process the IAM policy update before we use it.
-    create_duration = "40s"
+    create_duration = "10s"
 }
 
 #------------------------------------------------------------------------------
@@ -279,14 +279,12 @@ resource "google_iap_client" "iap_client" {
 }
 
 #
-# Allow user to access IAP.
+# Allow users to access IAP.
 #
-resource "google_iap_web_iam_binding" "iap_binding_users" {
-    depends_on              = [ google_project_service.iap ]
-    count                   = length(var.iap_users) > 0 ? 1 : 0
-    project                 = var.project_id
-    role                    = "roles/iap.httpsResourceAccessor"
-    members                 = concat([ "user:${var.admin_email}" ], var.iap_users)
+resource "google_project_iam_binding" "iap_binding_users" {
+    project                    = var.project_id
+    role                       = "roles/iap.httpsResourceAccessor"
+    members                    = concat([ "user:${var.admin_email}" ], var.iap_users)
 }
 
 #------------------------------------------------------------------------------
@@ -316,7 +314,7 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 #
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
     depends_on                = [ time_sleep.project_binding_appengine ]
-    version_id                = "v1"
+    version_id                = formatdate("YYYYMMDDhhmmss", timestamp())
     service                   = "default"
     project                   = var.project_id
     runtime                   = "java17"
@@ -328,7 +326,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
         "RESOURCE_CUSTOMER_ID"= var.customer_id
     })
     threadsafe = true
-    delete_service_on_destroy = true
+    noop_on_destroy           = true
     deployment {
         zip {
           source_url = "https://storage.googleapis.com/${google_app_engine_application.appengine_app.default_bucket}/${google_storage_bucket_object.appengine_sources_object.name}"
@@ -338,6 +336,25 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
         shell = ""
     }
 }
+
+#
+# Force traffic to new version
+#
+resource "google_app_engine_service_split_traffic" "appengine_app_version" {
+    service                    = google_app_engine_standard_app_version.appengine_app_version.service
+    migrate_traffic            = false
+
+    split {
+        shard_by               = "IP"
+        allocations            = {
+            (google_app_engine_standard_app_version.appengine_app_version.version_id) = 1.0
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+# Outputs.
+#------------------------------------------------------------------------------
 
 output "url" {
     description             = "URL to application"  
