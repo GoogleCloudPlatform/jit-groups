@@ -4,7 +4,7 @@ these resources to different teams or business units.
 
 For each environment, JIT Access maintains:
 
-+   A _policy document_ that defines the groups for this environment. 
++   A [policy document](policy-reference.md) that defines the groups for this environment. 
 +   A Secret Manger secret that contains the policy document. 
 +   A service account that's used to provision IAM bindings for resources in this environment. 
 
@@ -78,10 +78,10 @@ JIT Groups application or a separate project:
 
     The name can't be changed later.
 
-
-1.  Apply the configuration change:
+1.  Reinitialize Terraform and apply the configuration change:
 
     ```sh
+    terraform init 
     terraform apply 
     ```
 
@@ -105,12 +105,6 @@ To save and apply your policy changes, do the following:
 
 1.  Copy the updated YAML code to the `environment.yaml` file.
 
-1.  Reinitialize Terraform:
-
-    ```sh
-    terraform init 
-    ```
-    
 1.  Run Terraform to apply the configuration:
 
     ```sh

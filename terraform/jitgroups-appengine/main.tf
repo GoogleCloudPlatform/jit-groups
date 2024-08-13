@@ -400,7 +400,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
       "SMTP_SENDER_ADDRESS"    = var.smtp_user
       "SMTP_USERNAME"          = var.smtp_user
       "SMTP_SECRET"            = "${google_secret_manager_secret.smtp.name}/versions/latest"
-      "RESOURCE_ENVIRONMENTS"  = join(",", var.environments)
+      "ENVIRONMENTS"           = join(",", var.environments)
     }, var.options)
     threadsafe                 = true
     noop_on_destroy            = true

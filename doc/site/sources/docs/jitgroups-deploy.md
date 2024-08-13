@@ -331,8 +331,9 @@ To configure email notifications, do the following:
 1.  Save the SMTP password in Secret Manager:
 
     ```sh
-    echo "Enter SMTP password:" && \
-      (read -s PASSWORD && echo $PASSWORD | gcloud secrets versions add smtp --data-file=-)
+    echo "Enter SMTP password:" && (read -s PASSWORD && \
+      echo "Saving..." &&
+      echo $PASSWORD | gcloud secrets versions add smtp --data-file=-)
     ```
 
 1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and the following two arguments: 
@@ -369,13 +370,13 @@ To configure email notifications, do the following:
     === "Google Workspace"
 
         *   `SMTP_HOST`: `smtp.gmail.com`
-        *   `SMTP_USER`: the email address of the Google Workspace user that you created previously, for example `jitaccess-notifications@example.org`
+        *   `SMTP_USER`: the email address of the Google Workspace user that you created previously, for example `jitgroups-notifications@example.org`
 
     === "Microsoft 365"
 
         *   `SMTP_HOST`: `smtp.office365.com`
         *   `SMTP_USER`: the email address of the Microsoft 365 user that you created previously, 
-            for example `jitaccess-notifications@example.org`
+            for example `jitgroups-notifications@example.org`
 
     === "Other email provider"
 
@@ -409,7 +410,8 @@ To simplify future upgrades and configuration changes, submit your configuration
  
     # Local .terraform directories
     **/.terraform/*
-    END
+    .terraform.*
+    EOF
     ```
 
 1.  Commit your changes:
@@ -420,4 +422,4 @@ To simplify future upgrades and configuration changes, submit your configuration
     
 ## What's next
 
-[Configure an environment](jitgroups-environment.md) and start using JIT Groups to manage access.
+[Configure an environment](jitgroups-environment.md) for JIT Groups and customize its policy.
