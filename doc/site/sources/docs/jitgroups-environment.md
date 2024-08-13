@@ -13,7 +13,7 @@ project that contains the JIT Groups application. If you're planning to use mult
 administration of these environments to different teams, then it's best to create a deciated project for each
 environment and create the secret and service account there.
 
-![Example with 3 environments](images/environments-example.png).
+![Example with 3 environments](images/environments-example.png)
 
 
 ## Register the environment
