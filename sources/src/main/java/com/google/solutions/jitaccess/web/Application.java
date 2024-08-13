@@ -255,19 +255,28 @@ public class Application {
     //
     // Load essential configuration.
     //
-    this.customerId = NullaryOptional.ifTrue(configuration.customerId.isValid())
-      .map(() -> configuration.customerId.value())
-      .orElseThrow(() -> new RuntimeException(
-        String.format(
-          "The environment variable '%s' must be set to the customer ID " +
-            "of a Cloud Identity or Workspace account",
-          configuration.customerId.key())));
-    this.groupsDomain = NullaryOptional.ifTrue(configuration.groupsDomain.isValid())
-      .map(() -> configuration.groupsDomain.value())
-      .orElseThrow(() -> new RuntimeException(
-        String.format(
-          "The environment variable '%s' must contain a (verified) domain name",
-          configuration.groupsDomain.key())));
+    try {
+      this.customerId = NullaryOptional.ifTrue(configuration.customerId.isValid())
+        .map(() -> configuration.customerId.value())
+        .orElseThrow(() -> new IllegalStateException(
+          String.format(
+            "The environment variable '%s' must be set to the customer ID " +
+              "of a Cloud Identity or Workspace account",
+            configuration.customerId.key())));
+      this.groupsDomain = NullaryOptional.ifTrue(configuration.groupsDomain.isValid())
+        .map(() -> configuration.groupsDomain.value())
+        .orElseThrow(() -> new IllegalStateException(
+          String.format(
+            "The environment variable '%s' must contain a (verified) domain name",
+            configuration.groupsDomain.key())));
+    }
+    catch (IllegalStateException e) {
+      logger.error(
+        EventIds.STARTUP,
+        "Initializing the application failed because the configuration is incomplete",
+        e);
+      throw new RuntimeException("The configuration is incomplete, aborting startup.");
+    }
   }
 
   public boolean isDebugModeEnabled() {

@@ -226,7 +226,7 @@ resource "time_sleep" "project_binding_appengine" {
     ]
 
     # Give IAM some time to process the IAM policy update before we use it.
-    create_duration           = "40s"
+    create_duration           = "10s"
 }
 
 #------------------------------------------------------------------------------
