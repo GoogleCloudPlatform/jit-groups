@@ -92,26 +92,62 @@ You can identify JIT groups in the Admin Console based on their `jit.` prefix.
 
 ## Environment
 
-JIT groups and their policies are part of an _environment_. 
+JIT groups and their policies aren't managed in isolation. Instead, each JIT group belongs to an _environment_. 
 
-### Policy
-
-### Reconciliation
-
-As you extend and modify the policy of a JIT groups
-
-The next time a user joins the group, the application does the following:
-
-+   Update the group's IAM role bindings in case the policy document has changed
-+   Add a time-bound membership for the user.
-
-
-
+An environment represents a segment of your Google Cloud organizational hierarchy. You can use a single environment
+for all your Google Cloud projects, but especially in larger organizations, it can be better to have multiple environments
+and delegate the management of each environment to different teams or business units.
 
 For each environment, JIT Access maintains:
 
-*   A policy document that defines the groups for this environment. The examples above are excerpts from such a policy document.
-*   A Secret Manger secret to store the policy document. The secret can live in any project, and must be appropriately secured.
-*   A service account to provision IAM bindings for projects that belong to that environment. Because each environment uses a different service account, a policy document can only grant access to resources that the corresponding service account has access to. This helps keep environments isolated from another.
-* 
-## Environment Policy
++   A [policy document](policy-reference.md) that defines the groups for this environment, stored in a 
+    Secret Manger secret.
++   A service account that's used to provision IAM bindings for resources in this environment.
+
+To access the policy document, JIT Groups first
+[impersonates :octicons-link-external-16:](https://cloud.google.com/iam/docs/service-account-impersonation)
+the environment's service account, and then reads the document from the environment's Secret Manger secret.
+
+Similarly, to provision IAM bindings for the environment, JIT Groups impersonates the environment's service account,
+and then uses that service account's identity to modify the IAM bindings.
+
+![Example with 3 environments](images/environments-example.png)
+
+
+Using different service accounts for each environment helps isolate environments from another, and helps
+ensure that no single service account has direct access to all resources.
+
+
+### Policy document
+
+To add or change the configuration of a JIT group, you modify the policy document that's stored in the
+Secret Manger secret. The changes then take effect with a short delay, typically less than a minute.
+
+Because policy documents are YAML files, they're well suited to be managed using a GitOps workflow
+where you do the following:
+
++   You store the policy document in a Git repository.
++   You use a code review process for all proposed policy changes.
++   You let a CI/CD system (such as GitHub Actions) apply change by updating the Secret Manager secret.
+
+### Reconciliation
+
+Over time, the policy document, the Cloud Identity security groups, and their IAM bindings might go
+out of sync. JIT Groups deals with this challenge as follows:
+
++   Whenever a user joins a JIT group, the application checks whether the [`privileges` section](policy-reference.md#privilege) 
+    of the group's policy has changed, and updates IAM bindings if necessary.
++   At any point in time, administrators (that is, users with [`RECONCILE` access](policy-reference.md#access-control-list)
+    to the environment) can use the web interface to _reconcile_ the policy.
+   
+On reconciliation, JIT Groups performs the following:
+
++   Find Cloud Identity groups that are no longer covered by the policy
++   Update IAM policy bindings if the `privileges` section of the policy has changed
++   Detect legacy roles that can't be mapped to JIT groups
+
+The application reports any issues it encounters so that you can take action manually.
+
+## What's next
+
++   Read more about the [format of policy documents](policy-reference.md).

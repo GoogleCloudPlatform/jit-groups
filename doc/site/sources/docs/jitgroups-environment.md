@@ -10,7 +10,7 @@ For each environment, JIT Access maintains:
 
 If you're planning to use a single environment, it's best to create the secret and service account in the
 project that contains the JIT Groups application. If you're planning to use multiple environments, and delegate the
-administration of these environments to different teams, then it's best to create a deciated project for each
+administration of these environments to different teams, then it's best to create a dedicated project for each
 environment and create the secret and service account there.
 
 ![Example with 3 environments](images/environments-example.png)
