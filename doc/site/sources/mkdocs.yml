@@ -72,6 +72,7 @@ nav:
   - JIT Groups:
       - Discover:
         - 'Overview': 'index.md'
+        - 'Concepts': 'jitgroups-concepts.md'
       - 'Deploy':
         - 'Deploy JIT Groups': 'jitgroups-deploy.md'
         - 'Add an environment': 'jitgroups-environment.md'

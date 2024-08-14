@@ -38,7 +38,7 @@ and which conditions they need to meet to join individual groups.
 As a user, you can join a group to obtain time-bound access to Google Cloud resources.
 
 As an administrator, you can decide whether users need approval to join a group, or whether they're
-allowed to join without approval. You can also control the time period for which access is granted, and whether
+allowed to join without approval. You can also control the time period for which access is granted, and wh[jitgroups-concepts.md](jitgroups-concepts.md)ether
 there are any additional constraints users need to satisfy.
 
 You can manage groups and their settings using [policy documents](policy-reference.md),

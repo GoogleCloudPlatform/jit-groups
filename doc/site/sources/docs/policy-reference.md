@@ -17,7 +17,7 @@ environment:
 :   Contains the configuration for the environment, see [next section](#environment) for details.
 
 
-# Environment
+## Environment
 
 An environment represents a set of resources that have similar access requirements. An environment 
 typically corresponds to a folder in a Google Cloud organization.
