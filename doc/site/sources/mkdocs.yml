@@ -19,7 +19,7 @@
 # under the License.
 #
 
-site_name: Just-In-Time Access
+site_name: JIT Groups
 site_url: https://googlecloudplatform.github.io/jit-access/
 theme:
   name: material
@@ -71,11 +71,11 @@ markdown_extensions:
 nav:
   - JIT Groups:
       - Discover:
-        - 'Overview TODO': 'index.md'
+        - 'Overview': 'index.md'
       - 'Deploy':
         - 'Deploy JIT Groups': 'jitgroups-deploy.md'
         - 'Add an environment': 'jitgroups-environment.md'
-        - 'Upgrade from JIT Access TODO': 'jitaccess-upgrade.md'
+        - 'Upgrade from JIT Access': 'jitaccess-upgrade.md'
       - 'Extend':
           - 'Set up a development environment': development-environment.md
       - 'Reference':

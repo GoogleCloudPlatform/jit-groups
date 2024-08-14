@@ -17,8 +17,8 @@ without having to grant them permanent access. This type of just-in-time privile
 
 ## Activate roles on demand
 
-<a href='images/JIT-Activation-Screencast.gif?raw=true'>
-<img src='images/JIT-Activation_350.png' align='right'>
+<a href='../images/JIT-Activation-Screencast.gif?raw=true'>
+<img src='../images/JIT-Activation_350.png' align='right'>
 </a>
 
 As a user, you can activate a role in three steps:
@@ -31,13 +31,13 @@ After validating your request, the application then
 [grants you temporary access :octicons-link-external-16:](https://cloud.google.com/iam/docs/configuring-temporary-access)
 to the project.
 
-<img src='images/pix.gif' style='width: 100%; height: 1px'>
+<img src='../images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Request approval to activate a role
 
-<a href='images/MPA-Activation-Screencast.gif?raw=true'>
-<img src='images/MPA-Activation_350.png' align='right'>
+<a href='../images/MPA-Activation-Screencast.gif?raw=true'>
+<img src='../images/MPA-Activation_350.png' align='right'>
 </a>
 
 For roles that require [multi-party approval](multi-party-approval.md), 
@@ -52,13 +52,13 @@ Your selected peers are notified via email and can approve your request. Once ap
 [grants you temporary access :octicons-link-external-16:](https://cloud.google.com/iam/docs/configuring-temporary-access) to the project
 and notifies you via email.
 
-<img src='images/pix.gif' style='width: 100%; height: 1px'>
+<img src='../images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Grant access
 
-<a href='images/Condition.png?raw=true'>
-<img src='images/Condition_350.png' align='right'>
+<a href='../images/Condition.png?raw=true'>
+<img src='../images/Condition_350.png' align='right'>
 </a>
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
@@ -72,13 +72,13 @@ access to individual users, you can also use groups.
 To limit access to a subset of resources, you can also include a [resource condition](resource-conditions.md)
 in the IAM binding.
 
-<img src='images/pix.gif' style='width: 100%; height: 1px'>
+<img src='../images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Audit access
 
-<a href='images/AuditLog.png?raw=true'>
-<img src='images/AuditLog_350.png' align='right'>
+<a href='../images/AuditLog.png?raw=true'>
+<img src='../images/AuditLog_350.png' align='right'>
 </a>
 
 As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users. 
@@ -89,7 +89,7 @@ For each activation, the Just-In-Time application writes an audit log entry that
 * the project and role for which access was requested
 * the justification provided by the user
 
-<img src='images/pix.gif' style='width: 100%; height: 1px'>
+<img src='../images/pix.gif' style='width: 100%; height: 1px'>
 
 
 ## Deploy the application

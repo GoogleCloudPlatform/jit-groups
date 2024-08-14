@@ -45,20 +45,148 @@ This compatibility is subject to the following limitations:
 +    JIT Groups doesn't support [Pub/Sub notifications](pubsub-notifications.md).
 
 
-## Upgrade an existing JIT Access deployment
+## Upgrade an existing deployment
 
 To upgrade your existing JIT Access deployment, do the following:
 
-1.   Verify that you're using the `AssetInventory` catalog
+1.  Open Cloud Shell or a local terminal.
 
-     If you're (http://localhost:8000/jit-access/configure-catalogs/#assetinventory-catalog)
+    [Open Cloud Shell](https://console.cloud.google.com/?cloudshell=true){ .md-button }
 
-1.   GROUPS_DOMAIN
-1.   Enable Groups Settings API
-1.   Grant Group Manager admin role
+1.  Set an environment variable to contain [your project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
 
-Add an environment
+    ```sh
+    gcloud config set project PROJECT_ID
+    ```
 
-## Optional: Roll back the upgrade
+    Replace `PROJECT_ID` with the ID of the project that contains your JIT Access deployment.
+
+1.  Clone the
+    [GitHub repository](https://github.com/GoogleCloudPlatform/iam-privilege-manager)
+    and switch to the `jitgroups/latest` branch:
+
+    ```sh
+    git clone https://github.com/GoogleCloudPlatform/jit-access.git
+    cd jit-access/sources
+    git checkout jitgroups/latest
+    ```
+
+1.  Download the configuration file that you used previously to deploy the
+    application and save it to a file `app.yaml`:
+
+    === "App Engine"
+
+        ```
+        APPENGINE_VERSION=$(gcloud app versions list --service default --hide-no-traffic --format "value(version.id)")
+        APPENGINE_APPYAML_URL=$(gcloud app versions describe $APPENGINE_VERSION --service default --format "value(deployment.files.'app.yaml'.sourceUrl)")
+    
+        curl -H "Authorization: Bearer $(gcloud auth print-access-token)" $APPENGINE_APPYAML_URL -o app.yaml
+        cat app.yaml
+        ```
+   
+        If downloading the file `app.yaml` fails, you can download your current
+        configuration [in the Cloud Console](https://console.cloud.google.com/appengine/versions?serviceId=default).
+
+    === "Cloud Run"
+
+        ```sh
+        gcloud config set run/region REGION
+        gcloud run services describe jitaccess --format yaml > app.yaml
+        ```
+   
+        Replace `REGION` with the region that contains your
+        existing Cloud Run deployment.
+
+1.  Verify that you're using the `AssetInventory` catalog:
+
+    ```sh
+    grep RESOURCE_CATALOG app.yaml
+    ```
+    
+    If you see the output `RESOURCE_CATALOG: AssetInventory`, then you're using the `AssetInventory` catalog. Otherwise,
+    [you must switch to the  `AssetInventory` catalog](http://localhost:8000/jit-access/configure-catalogs/#assetinventory-catalog)
+    first before you can proceed with the upgrade.
+
+1.  Add an environment variable to `app.yaml`:
+
+    ```yaml
+    GROUPS_DOMAIN: DOMAIN
+    ```
+    Replace `DOMAIN` with the domain to use for Cloud Identity groups, this can be the primary or a secondary domain of
+    your Cloud Identity or Google Workspace account.
+
+1.  Enable the Cloud Identity and Groups Settings APIs:
+
+    ```sh
+    gcloud services enable cloudidentity.googleapis.com groupssettings.googleapis.com
+    ```
+
+1.  Deploy the application:
+
+    === "App Engine"
+
+        ```sh
+        sed -i 's/java11/java17/g' app.yaml
+        gcloud app deploy --appyaml app.yaml
+        ```
+
+    === "Cloud Run"
+
+        ```sh
+        PROJECT_ID=$(gcloud config get-value core/project)
+
+        docker build -t gcr.io/$PROJECT_ID/jitaccess:latest .
+        docker push gcr.io/$PROJECT_ID/jitaccess:latest
+
+        IMAGE=$(docker inspect --format='&#123;{index .RepoDigests 0}}'  gcr.io/$PROJECT_ID/jitaccess)
+        sed -i "s|image:.*|image: $IMAGE|g" app.yaml
+
+        gcloud run services replace app.yaml
+        ```
+
+To allow JIT Groups to manage Cloud Identity security groups, you must grant it the
+[Groups Admin role :octicons-link-external-16:](https://support.google.com/a/answer/2405986?hl=en#:~:text=another%20admin.-,Groups%20Admin,-Has%20full%20control)
+in your Cloud Identity or Workspace account. 
+
+!!!note
+
+    For JIT Access, it was sufficient to grant the _Groups Reader_ role because it only needed to read
+    access to groups. JIT Groups requires the _Groups Admin_ role so that it can create and manage security groups.
+
+You only need to perform these steps once.
+
+1.  Open the Google Admin console and sign in as a super-admin user.
+1.  Go to **Account > Admin Roles**:
+
+    [Open Admin Roles](https://admin.google.com/ac/roles){ .md-button }
+
+1.  Click **Groups Admin > Admins**.
+1.  Click **Assign service accounts**.
+1.  Enter the email address of the application's service account, then click **Add**.
+1.  Click **Assign role**.
+
+## Roll back an upgrade
 
 If JIT Groups doesn't work as expected, you can roll back the upgrade by doing the following:
+
+=== "App Engine"
+
+    1.  Open the Cloud Console and go to **App Engine > Versions**: 
+
+        [Open App Engine Versions](https://console.cloud.google.com/appengine/versions?serviceId=default){ .md-button }
+
+    1.  Select a previous version and click **Migrate traffic**.
+    1.  In the Google Admin console, revoke the **Groups Admin** role for the application's service account.
+
+=== "Cloud Run"
+
+    1.  Open the Cloud Console and go to **Cloud Run**: 
+
+        [Open Cloud Run](https://console.cloud.google.com/run){ .md-button }
+
+    1.  Open the details for `jitaccess`.
+    1.  Select the **Revisions** tab.
+    1.  Select a previous version and click **... > Manage traffic**.
+    1.  Assign 100% of traffic to the previous version and click **OK**.
+    1.  In the Google Admin console, revoke the **Groups Admin** role for the application's service account.
+    
