@@ -2,7 +2,7 @@
 
 Just-In-Time Access is an open source application that lets you implement just-in-time privileged access to Google Cloud resources. 
 
-[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-access/)
+[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-access/jitaccess-overview/)
 
 Just-In-Time Access works by introducing the notion of _eligible role bindings_ to Cloud IAM. Unlike a [regular
 IAM role binding](https://cloud.google.com/iam/docs/overview#cloud-iam-policy), 

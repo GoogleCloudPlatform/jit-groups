@@ -1,6 +1,5 @@
 schemaVersion: 1
 environment:
-  name: "example"
   description: |
     This is an example environment that demonstrates some of the application's features. The
     environment is shown because you haven't configured any environments yet.
