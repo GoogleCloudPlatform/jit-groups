@@ -23,9 +23,9 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ master, "jit-groups" ]
+    branches: [ master, "jitaccess" ]
   pull_request:
-    branches: [ master, "jit-groups" ]
+    branches: [ master, "jitaccess" ]
   
 jobs:
   ci:
