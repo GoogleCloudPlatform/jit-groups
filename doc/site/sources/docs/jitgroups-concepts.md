@@ -150,4 +150,4 @@ The application reports any issues it encounters so that you can take action man
 
 ## What's next
 
-+   Read more about the [format of policy documents](policy-reference.md).
+[Deploy JIT Groups :material-arrow-right:](jitgroups-deploy.md){ .md-button }

@@ -1,5 +1,6 @@
-JIT Groups lets you configure one or more _environments_. Environments correspond to segments of your
-Google Cloud organizational hierarchy, and you can use environments to delegate the management of
+JIT Groups lets you configure one or more [environments](jitgroups-concepts.md#environment).
+Environments correspond to segments of your Google Cloud organizational hierarchy, 
+and you can use environments to delegate the management of
 these resources to different teams or business units.
 
 For each environment, JIT Access maintains:
@@ -12,8 +13,6 @@ If you're planning to use a single environment, it's best to create the secret a
 project that contains the JIT Groups application. If you're planning to use multiple environments, and delegate the
 administration of these environments to different teams, then it's best to create a dedicated project for each
 environment and create the secret and service account there.
-
-![Example with 3 environments](images/environments-example.png)
 
 
 ## Register the environment
@@ -113,6 +112,6 @@ To save and apply your policy changes, do the following:
 
 ## What's next
 
-Read more about the format of [policy documents](policy-reference.md).
+[Customize your policy document :material-arrow-right:](policy-reference.md){ .md-button }
 
 

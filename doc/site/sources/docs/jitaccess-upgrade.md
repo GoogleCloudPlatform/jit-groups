@@ -165,7 +165,20 @@ You only need to perform these steps once.
 1.  Enter the email address of the application's service account, then click **Add**.
 1.  Click **Assign role**.
 
-## Roll back an upgrade
+### Test
+
+You can now access the JIT Groups web interface:
+
+1.  Select the `classic` environment. This environment contains the JIT croups that correspond to your
+    eligible role bindings.
+2.  Click **Reconcile**.
+
+    JIT Groups now performs a [jitgroups-concepts.md#reconciliation] and checks if there are any 
+    legacy roles that can't be mapped to JIT groups. This process can take a few minutes.
+
+3.  Verify the results to see if there are any groups that can't be mapped.
+
+### Roll back
 
 If JIT Groups doesn't work as expected, you can roll back the upgrade by doing the following:
 

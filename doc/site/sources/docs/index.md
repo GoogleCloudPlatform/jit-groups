@@ -100,3 +100,7 @@ for authentication and authorization, and the [Cloud Identity API :octicons-link
 [IAM API :octicons-link-external-16:](https://cloud.google.com/iam/docs/reference/rest) to manage groups and access.
 
 For detailed instructions on deploying Just-In-Time Access, see [Deploy JIT Groups](jitgroups-deploy.md).
+
+## What's next 
+
+[More about the concepts behind JIT Groups :material-arrow-right:](jitgroups-concepts.md){ .md-button }

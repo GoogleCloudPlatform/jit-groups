@@ -422,4 +422,4 @@ To simplify future upgrades and configuration changes, submit your configuration
     
 ## What's next
 
-[Configure an environment](jitgroups-environment.md) for JIT Groups and customize its policy.
+[Add an environment :material-arrow-right:](jitgroups-environment.md){ .md-button }
