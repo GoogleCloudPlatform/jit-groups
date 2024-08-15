@@ -154,7 +154,8 @@ public class CloudIdentityGroupsClient {
           }
         }
 
-        throw new AccessDeniedException("The group or membership does not exist, or access is denied", e);
+        throw new AccessDeniedException(
+          "The group or membership does not exist in Cloud Identity, or access to Cloud Identity API is denied", e);
       }
       case 404:
         throw new ResourceNotFoundException("The group or membership does not exist", e);

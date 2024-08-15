@@ -1,5 +1,3 @@
-# Policy format
-
 Policy documents define the configuration for an [environment](#environment) and use YAML format.
 A minimal policy document looks as follows:
 
@@ -19,7 +17,7 @@ environment:
 :   Contains the configuration for the environment, see [next section](#environment) for details.
 
 
-# Environment
+## Environment
 
 An environment represents a set of resources that have similar access requirements. An environment 
 typically corresponds to a folder in a Google Cloud organization.
@@ -94,9 +92,9 @@ A system represents a set of resources that logically belong together. A system 
 a small set of projects in a Google Cloud organization.
 
 ```yaml hl_lines="5-11"
-# ...(omitted)
+...
 environment:
-  # ...(omitted)
+  ...
   systems:
     - name: "datamart"
       description: "Contains groups that manage access to the corporate data mart"
@@ -154,9 +152,9 @@ perform this job function or role.
 
 
 ```yaml hl_lines="7-12"
-# ...(omitted)
+...
 environment:
-  # ...(omitted)
+  ...
   systems:
   - name: "datamart"
     groups:
@@ -362,7 +360,7 @@ An `expression` constraint can have the following attributes:
 
 `expression` **Required**
 
-:   A [CEL expression](https://github.com/google/cel-spec/blob/master/doc/langdef.md) that evaluates to
+:   A [CEL expression :octicons-link-external-16:](https://github.com/google/cel-spec/blob/master/doc/langdef.md) that evaluates to
     `true` (in which case the constraint is satisfied) or `false`.
 
     CEL expressions can access the following variables:
@@ -378,15 +376,15 @@ An `expression` constraint can have the following attributes:
 
     CEL expressions can use the following macros and functions:
 
-    +   [Standard macros](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
+    +   [Standard macros :octicons-link-external-16:](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
         such as `filter`, `map`, or `matches` (for [RE2](https://github.com/google/re2/wiki/Syntax) regular expressions).
-    +   [String functions](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
+    +   [String functions :octicons-link-external-16:](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
         such as `replace`, `substring`, or `trim`.
-    +   [Encoder functions](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
+    +   [Encoder functions :octicons-link-external-16:](https://github.com/google/cel-java/blob/main/extensions/src/main/java/dev/cel/extensions/README.md#strings)
         such as `base64.encode` and `base64.decode`.
-    +   [`extract`](https://cloud.google.com/iam/docs/conditions-attribute-reference#extract)
+    +   [`extract` :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-attribute-reference#extract)
 
-#### Expression variables
+### Expression variables
 
 Variables let you prompt the user to provide input, and you can then check this input in the CEL
 expression:
@@ -458,5 +456,5 @@ You can list any number of privileges under the `iam` key. Each privilege can ha
 
 `condition` **Optional**
 
-:   An [IAM condition](https://cloud.google.com/iam/docs/conditions-overview). The application adds this
+:   An [IAM condition :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-overview). The application adds this
     condition when creating the respective IAM bindings.
