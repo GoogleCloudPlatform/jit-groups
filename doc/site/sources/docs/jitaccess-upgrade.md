@@ -6,22 +6,23 @@ the functional differences between JIT Groups and JIT Access, and how to perform
 JIT Access has been narrowly focussed on _privileged access management_ and the ability to activate
 individual IAM role bindings for short period of time (typically less than a day).
 
-JIT Groups expands this scope to include _entitlement management_ and _self-service access management_. 
+JIT Groups expands this scope to include _self-service access management_, or _entitlement management_. 
 You can use JIT Groups not only for managing privileged access, but all types of access to Google Cloud 
 resources.
 
 The following table summarizes key differences between JIT Groups and JIT Access:
 
-|                                  | JIT Groups                                                                                     | JIT Access                   |
-|----------------------------------|------------------------------------------------------------------------------------------------|------------------------------|
-| Use cases                        | - Entitlement management<br>- Self-service access management<br>- Privileged access management | Privileged access management |
-| Entitlements being managed       | Memberships to Cloud Identity security groups                                                  | IAM role bindings            |
-| Granularity of entitlements      | Groups can "bundle" any number of roles, across one or more projects                           | Single IAM role              |
-| Scope of policies                | JIT group, system, environment                                                                 | Global only                  |
-| IAM conditions                   | :material-check:                                                                               | :material-check:             |
-| Activation without approval      | :material-check:                                                                               | :material-check:             |
-| Activation with peer approval    | :material-check:                                                                               | :material-check:             |
-| Activation with manager approval | :material-check:                                                                               | :x:                          |
+|                                            | JIT Groups                                                                                     | JIT Access                   |
+|--------------------------------------------|------------------------------------------------------------------------------------------------|------------------------------|
+| Use cases                                  | - Entitlement management<br>- Self-service access management<br>- Privileged access management | Privileged access management |
+| Entitlements being managed                 | Memberships to Cloud Identity security groups                                                  | IAM role bindings            |
+| Scope of configuration                     | JIT group, system, environment                                                                 | Global only                  |
+| Granularity of entitlements                | Groups can "bundle" any number of roles, across one or more projects                           | Single IAM role              |
+| Grant access to projects                   | :material-check:                                                                               | :material-check:             |
+| Grant access to resources (IAM conditions) | :material-check:                                                                               | :material-check:             |
+| Activation without approval                | :material-check:                                                                               | :material-check:             |
+| Activation with peer approval              | :material-check:                                                                               | :material-check:             |
+| Activation with manager approval           | :material-check:                                                                               | :x:                          |
 
 
 ## Compatibility with JIT Access
@@ -171,10 +172,9 @@ You can now access the JIT Groups web interface:
 
 1.  Select the `classic` environment. This environment contains the JIT croups that correspond to your
     eligible role bindings.
-2.  Click **Reconcile**.
-
-    JIT Groups now performs a [jitgroups-concepts.md#reconciliation] and checks if there are any 
-    legacy roles that can't be mapped to JIT groups. This process can take a few minutes.
+2.  Click **Reconcile** to let JIT Groups
+    [check for legacy roles that can't be mapped to JIT groups](jitgroups-concepts.md#reconciliation).
+    This process can take a few minutes.
 
 3.  Verify the results to see if there are any groups that can't be mapped.
 

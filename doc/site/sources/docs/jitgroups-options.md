@@ -1,5 +1,5 @@
 You can customize the behavior of JIT Groups by setting environment variables
-in your [AppEngine configuration file :octicons-link-external-16:](https://cloud.google.com/appengine/docs/standard/java-gen2/config/appref)
+in your [App Engine configuration file :octicons-link-external-16:](https://cloud.google.com/appengine/docs/standard/java-gen2/config/appref)
 or [Cloud Run service YAML :octicons-link-external-16:](https://cloud.google.com/run/docs/reference/yaml/v1).
 
 The following table lists all available configuration options.
@@ -31,8 +31,7 @@ The following options let you customize how JIT Groups sends emails.
 
 Remarks:
 
-+  Options marked as `(Yes)` are required to enable approvals.
-+  [Port 25 can't be used on Google Cloud](https://cloud.google.com/compute/docs/tutorials/sending-mail#using_standard_email_ports).
++  JIT Groups uses port `587` by default [because port 25 can't be used on Google Cloud](https://cloud.google.com/compute/docs/tutorials/sending-mail#using_standard_email_ports).
 +  For a list of JavaMail options to use in  `SMTP_OPTIONS`, see [JavaMail documentation :octicons-link-external-16:](https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html).
    Most mail servers don't require any additional options.
 +  For a list of time zone identifiers, see the [IANA Time Zone Database (TZDB) :octicons-link-external-16:](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
@@ -57,11 +56,12 @@ CEL expressions can use the following macros and functions:
 
 Examples:
 
-+    Replace the domain <code>example.com</code> with <code>test.example.com</code> for all users:
++    The following CEL expression replaces the domain `example.com` with `test.example.com` for all users:
      
-         user.email.extract('{handle}@example.com') + '@test.example.com'</code>
+         user.email.extract('{handle}@example.com') + '@test.example.com'
    
-+    Substitute the domain `external.example.com` with `otherdomain.example`, but keep all other domains:
++    The following CEL expression substitutes the domain `external.example.com` with `otherdomain.example`, 
+     but keeps all other domains:
 
          user.email.endsWith('@external.example.com') 
            ? user.email.extract('{handle}@external.example.com') + '@otherdomain.example' 
@@ -82,7 +82,7 @@ Remarks:
 
 +    When `IAP_VERIFY_AUDIENCE` is `true` (default), JIT Groups 
      [verifies the audience of IAP assertions :octicons-link-external-16:](https://cloud.google.com/iap/docs/signed-headers-howto#verifying_the_jwt_payload).
-     On Cloud Run, this requires `IAP_BACKEND_SERVICE_ID to contain the backend ID of the load balancer.
+     On Cloud Run, this requires `IAP_BACKEND_SERVICE_ID` to contain the backend ID of the load balancer.
 
      When `IAP_VERIFY_AUDIENCE` is `false` JIT Groups verifies the authenticity of IAP assertions, but does not verify their audience.
 

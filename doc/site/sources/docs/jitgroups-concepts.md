@@ -2,13 +2,13 @@ This articles explains _JIT groups_ and _Environments_, two key concepts used by
 
 ## JIT group
 
-A JIT group represents a job function or role, for example _prod-network-admins_ or _finance-datamart-readers_.
+A JIT group represents a job function or role, for example _Prod-Server-Admins_ or _Finance-Datamart-Readers_.
 The group bundles the IAM role bindings that users need to perform this job function or role, and defines
 the subset of users that are allowed to _join_ the group.
 
-As their name indicates, JIT groups are intended to be joined just-in-time:  
+As their name indicates, JIT groups are intended to be joined _just-in-time_:  
 
-+   As an administrator, you don't grant access to JIT groups on demand, just because users _might_ need certain access.
++   As an administrator, you don't add members to JIT groups in advance, just because users _might_ need certain access.
 +   Instead, you entitle users to join the group _just-in-time, when they need it_.
 
 Membership if a JIT group is always time-bound:
@@ -17,18 +17,18 @@ Membership if a JIT group is always time-bound:
     access for this time period. Once the time period expires, they're automatically removed from the group.
 +   Within the expiry period, users can keep extending their access.
 
-By making all memberships time-bound, JIT Groups lets you flip incentives:
+By making all memberships time-bound, JIT Groups helps set the right incentives:
 
-+   Without JIT Groups, users are incentivized to accumulate access, because revoking access incurs friction.
-+   With JIT Groups, users are **dis-incentivized** to accumulate access, because retaining access incurs friction while
-    revoking access is automatic.
++   Without JIT Groups, users are incentivized to accumulate access, because giving up access incurs friction.
++   With JIT Groups, users are *dis-incentivized* to accumulate access: Retaining access incurs friction because
+    users have to explicitly extend their access, while giving up access happens automatically.
 
 ### Policy
 
 JIT groups are defined in code, and a simple JIT group policy might look like the following:
 
 ```yaml
-- name: "Server-Admins"
+- name: "Prod-Server-Admins"
   description: "Admin-level access to servers"
   
   # Who can view, join, approve?
@@ -37,9 +37,9 @@ JIT groups are defined in code, and a simple JIT group policy might look like th
     - principal: "user:ann@example.com"
       allow: "JOIN, APPROVE_SELF"
       
-    # Ben can also join and approve other's requests to join the group
+    # Ben can also join, but needs approval from someone else
     - principal: "user:ben@example.com"
-      allow: "JOIN, APPROVE_SELF, APPROVE_OTHERS"
+      allow: "JOIN"
       
     # Everybody in the managers group can approve requests, but can't join themselves
     - principal: "group:managers@example.com"
@@ -75,12 +75,13 @@ JIT groups are defined in code, and a simple JIT group policy might look like th
     that defines who is allowed to join the group, 
     and whether they need approval to do so.
 +   The [`constraints` section](policy-reference.md#constraint) defines what additional constraints apply 
-    when joining the group.
+    when users join the group. In addition to defining an expiry, you could require users
+    to provide a justification, enter a ticket number, or check for other attributes.
 +   The [`privileges` section](policy-reference.md#privilege) defines what access members of the groups are granted.
 
 ### Provisioning 
 
-The first time a user joins a JIT group, the application provisions the following:
+The first time a user joins a JIT group, the application provisions the following resources:
 
 +   A [Cloud Identity security group :octicons-link-external-16:](https://cloud.google.com/identity/docs/how-to/update-group-to-security-group)
     that corresponds to the JIT group. 
@@ -88,7 +89,7 @@ The first time a user joins a JIT group, the application provisions the followin
     in the policy document.
 +   A time-bound membership for the user.
 
-You can identify JIT groups in the Admin Console based on their `jit.` prefix.
+As an administrator, you can see these groups in the Admin Console, and you can identify them based on their `jit.` prefix.
 
 ## Environment
 
