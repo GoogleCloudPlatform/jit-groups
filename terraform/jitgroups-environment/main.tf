@@ -48,7 +48,7 @@ variable "application_service_account" {
 }                            
                                
 variable "resource_scope" {    
-    description                = "Project, folder, or organization that JIT Access can manage access for"
+    description                = "Project, folder, or organization that this environment corresponds to"
     type                       = string
                                
     validation {               
@@ -95,7 +95,7 @@ data "google_service_account" "jitgroups" {
 resource "google_service_account" "environment" {
     project                    = var.project_id
     account_id                 = "jit-${var.name}"
-    display_name               = "JIT Access environment"
+    display_name               = "JIT Groups environment"
 }
 
 #
