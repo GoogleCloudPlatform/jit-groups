@@ -76,6 +76,7 @@ nav:
       - 'Deploy':
         - 'Deploy JIT Groups': 'jitgroups-deploy.md'
         - 'Add an environment': 'jitgroups-environment.md'
+        - 'Deploy continuously': 'jitgroups-continous-deployment.md'
         - 'Upgrade from JIT Access': 'jitaccess-upgrade.md'
       - 'Extend':
           - 'Set up a development environment': development-environment.md

@@ -122,6 +122,7 @@ To save and apply your policy changes, do the following:
 
 ## What's next
 
+[Set up continuous deployment :material-arrow-right:](jitgroups-continous-deployment.md){ .md-button }
 [Customize your policy document :material-arrow-right:](policy-reference.md){ .md-button }
 
 
