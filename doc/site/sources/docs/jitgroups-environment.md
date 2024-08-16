@@ -30,7 +30,7 @@ JIT Groups application or a separate project:
 
    1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="10 17-24"
+       ```hcl  hl_lines="10 17-25"
        module "application" {
            source                      = "./target/jit-access/terraform/jitgroups-appengine"
            project_id                  = local.project_id
@@ -54,6 +54,7 @@ JIT Groups application or a separate project:
     
            name                        = "NAME"
            policy                      = file("environment.yaml")
+           resource_scope              = "SCOPE"
        }
 
        output "url" {
@@ -66,16 +67,25 @@ JIT Groups application or a separate project:
        ```
 
 
-    Replace `NAME` with the name of the environment. 
-    The application uses the environment name as unique identifier and 
-    incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
-    restrictions:
- 
-    +   Names are case-insensitive. You can't have two environments whose names only differ in casing.
-    +   Names must be no longer than 16 characters.
-    +   Names must only use the following characters: `A-Z`, `a-z`, `0-9`, `-`.
+    Replace the following:
 
-    The name can't be changed later.
+    +   `NAME`: the name of the environment. 
+        The application uses the environment name as unique identifier and 
+        incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
+        restrictions:
+     
+        +   Names are case-insensitive. You can't have two environments whose names only differ in casing.
+        +   Names must be no longer than 16 characters.
+        +   Names must only use the following characters: `A-Z`, `a-z`, `0-9`, `-`.
+    
+        The name can't be changed later.
+
+    +   `SCOPE`: the project, folder, or organization that this environment corresponds to. Set this to one of
+        the following values
+
+        +   `projects/PROJECT_ID` where `PROJECT_ID` is a project ID
+        +   `folders/FOLDER_ID` where `FOLDER_ID` is a folder ID
+        +   `organizations/ORG_ID` where `ORG_ID` is an organization ID
 
 1.  Reinitialize Terraform and apply the configuration change:
 
