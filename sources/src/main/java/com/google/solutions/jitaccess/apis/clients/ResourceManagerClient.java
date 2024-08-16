@@ -181,7 +181,7 @@ public class ResourceManagerClient {
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
-          throw new AccessDeniedException(String.format("Denied access to project '%s'", projectId), e);
+          throw new AccessDeniedException(String.format("Access to project '%s' is denied", projectId), e);
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }

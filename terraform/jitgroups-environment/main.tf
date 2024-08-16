@@ -45,7 +45,20 @@ variable "application_service_account" {
         condition              = endswith(var.application_service_account, ".iam.gserviceaccount.com")
         error_message          = "application_service_account must be a service account email address"
     }
-}
+}                            
+                               
+variable "resource_scope" {    
+    description                = "Project, folder, or organization that JIT Access can manage access for"
+    type                       = string
+                               
+    validation {               
+        condition              = var.resource_scope == "" || (
+                                   startswith(var.resource_scope, "organizations/") || 
+                                   startswith(var.resource_scope, "folders/") || 
+                                   startswith(var.resource_scope, "projects/"))
+        error_message          = "resource_scope must be in the format organizations/ID, folders/ID, or projects/ID"
+    }                          
+} 
 
 #------------------------------------------------------------------------------
 # Local variables.
@@ -121,6 +134,41 @@ resource "google_secret_manager_secret_iam_member" "secret_binding" {
     project                    = google_secret_manager_secret.policy.project
     secret_id                  = google_secret_manager_secret.policy.secret_id
     role                       = "roles/secretmanager.secretAccessor"
+    member                     = "serviceAccount:${google_service_account.environment.email}"
+}
+
+
+#------------------------------------------------------------------------------
+# IAM bindings for resource scope.
+#------------------------------------------------------------------------------
+
+#
+# Project scope.
+#
+resource "google_project_iam_member" "resource_project_binding_projectiamadmin" {
+    count                      = startswith(var.resource_scope, "projects/") ? 1 : 0
+    project                    = substr(var.resource_scope, 9, -1)
+    role                       = "roles/resourcemanager.projectIamAdmin"
+    member                     = "serviceAccount:${google_service_account.environment.email}"
+}
+
+#
+# Folder scope.
+#
+resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
+    count                      = startswith(var.resource_scope, "folders/") ? 1 : 0
+    folder                     = var.resource_scope
+    role                       = "roles/resourcemanager.projectIamAdmin"
+    member                     = "serviceAccount:${google_service_account.environment.email}"
+}
+
+#
+# Organization scope.
+#
+resource "google_organization_iam_member" "resource_organization_binding_projectiamadmin" {
+    count                      = startswith(var.resource_scope, "organizations/") ? 1 : 0
+    org_id                     = substr(var.resource_scope, 14, -1)
+    role                       = "roles/resourcemanager.projectIamAdmin"
     member                     = "serviceAccount:${google_service_account.environment.email}"
 }
 
