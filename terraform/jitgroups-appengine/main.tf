@@ -374,7 +374,7 @@ data "archive_file" "sources_zip" {
 # Upload ZIP file to the AppEngine storage bucket.
 #
 resource "google_storage_bucket_object" "appengine_sources_object" {
-    name                       = "jitgroups.${data.archive_file.sources_zip.output_md5}.zip"
+    name                       = "jitgroups.${data.archive_file.sources_zip.output_sha256}.zip"
     bucket                     = google_app_engine_application.appengine_app.default_bucket
     source                     = data.archive_file.sources_zip.output_path
 }
@@ -386,7 +386,7 @@ resource "google_storage_bucket_object" "appengine_sources_object" {
 #
 resource "google_app_engine_standard_app_version" "appengine_app_version" {
     depends_on                 = [ time_sleep.project_binding_appengine ]
-    version_id                 = formatdate("YYYYMMDDhhmmss", timestamp())
+    version_id                 = "rev-${substr(data.archive_file.sources_zip.output_sha256, 0, 16)}"
     service                    = "default"
     project                    = var.project_id
     runtime                    = "java17"
