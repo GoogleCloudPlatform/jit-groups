@@ -199,11 +199,12 @@
           <noindex>true</noindex>
           <nonavbar>true</nonavbar>
           <top><![CDATA[
-            <div class='jit-flex-box'><div class='jit-flex-content'>header1</div></div>
+            <div class='jit-flex-box jit-topbar'><div class='jit-flex-content'></div></div>
             <div class='jit-flex-box jit-menubar'><div class='jit-flex-content'>
               <ul>
-                <li><a href='#'>One</a></li>
-                <li><a href='#'>One</a></li>
+                <li><a href='https://googlecloudplatform.github.io/jit-access/'>JIT Groups</a></li>
+                <li><a href='https://github.com/GoogleCloudPlatform/jit-access/'>GitHub</a></li>
+                <li><a href='https://github.com/GoogleCloudPlatform/jit-access/javadoc/' class='jit-activemenu'>Javadoc</a></li>
               </ul>
             </div></div>
           ]]></top>
