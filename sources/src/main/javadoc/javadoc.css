@@ -1,0 +1,125 @@
+.flex-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color: #F1F3F4;
+
+.flex-content {
+    margin-top: 120px;
+    max-width: 61rem;
+    position: revert;
+}
+
+.jit-flex-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    height: 48px;
+}
+
+.jit-flex-content {
+    width: 61rem;
+    position: revert;
+}
+
+.jit-menubar {
+    background-color: #2866BB;
+}
+
+.jit-menubar ul {
+    list-style: none;
+    display: flex;
+    padding: 0;
+}
+
+.jit-menubar li {
+    padding-left: .6rem;
+    padding-right: .6rem;
+}
+.jit-menubar a {
+    color:white;
+}
+
+
+header {
+    position: absolute;
+    width: 100%;
+    background-color: white;
+}
+
+main {
+    background-color: white;
+    box-shadow: 0 0 0.1rem #0000001a, 0 0.1rem 0.2rem #0003;
+}
+
+.top-nav {
+    background-color: #2866BB;
+}
+
+
+footer {
+    color: gray;
+}
+
+hr {
+    border-top: 1px dashed lightgray;
+}
+
+.caption span {
+    background-color: revert;
+    padding-left: revert;
+}
+
+ul.nav-list li {
+    color: lightgray;
+}
+
+.nav-bar-cell1-rev {
+    background-color: revert;
+    color: white;
+    color: #253441;
+    margin: auto 5px;
+}
+
+a {
+    font-weight: normal !important;
+    color: #4051b5
+}
+
+.caption a:hover,
+.caption a:active,
+a[href]:hover, 
+a[href]:focus{
+    color: #526cfe;
+}
+
+h1, h2, h3 {
+    font-weight: normal !important;
+    font-style: normal !important;
+}
+
+div .block {
+    font-family: revert;
+}
+
+.odd-row-color, .odd-row-color .table-header {
+    background-color: #fafafa;
+}
+
+.class-uses .detail, .serialized-class-details {
+    background-color: #fafafa;
+}
+
+div.table-tabs > button.active-table-tab {
+   background: #dee3e9;
+   color: #253441;
+}
+div.table-tabs > button.table-tab {
+   background: revert;
+   color: gray;
+}
+
+section {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}

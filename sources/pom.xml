@@ -27,10 +27,13 @@
   <version>2.3.0</version>
   <properties>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
+    <surefire-plugin.version>3.3.1</surefire-plugin.version>
+    <maven-javadoc-plugin.version>3.8.0</maven-javadoc-plugin.version>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.source>17</maven.compiler.source>
     <quarkus.version>3.24.4</quarkus.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <javadoc.outputDirectory>${project.build.directory}/javadoc</javadoc.outputDirectory>
   </properties>
 
   <dependencyManagement>
@@ -184,6 +187,30 @@
             <phase>test</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <configuration>
+          <outputDirectory>${javadoc.outputDirectory}</outputDirectory> <addStylesheets>
+            <addStylesheet>javadoc.css</addStylesheet>
+          </addStylesheets>
+          <noindex>true</noindex>
+          <nonavbar>true</nonavbar>
+          <top><![CDATA[
+            <div class='jit-flex-box'><div class='jit-flex-content'>header1</div></div>
+            <div class='jit-flex-box jit-menubar'><div class='jit-flex-content'>
+              <ul>
+                <li><a href='#'>One</a></li>
+                <li><a href='#'>One</a></li>
+              </ul>
+            </div></div>
+          ]]></top>
+          <bottom><![CDATA[  ]]></bottom>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>
       </plugin>
     </plugins>
 
