@@ -212,6 +212,16 @@
           <bottom><![CDATA[  ]]></bottom>
           <source>${maven.compiler.source}</source>
           <target>${maven.compiler.target}</target>
+          <groups>
+            <group>
+              <title>Application logic</title>
+              <packages>com.google.solutions.jitaccess.catalog*</packages>
+            </group>
+            <group>
+              <title>Web API</title>
+              <packages>com.google.solutions.jitaccess.web*</packages>
+            </group>
+          </groups>
         </configuration>
       </plugin>
     </plugins>
