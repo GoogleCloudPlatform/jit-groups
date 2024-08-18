@@ -44,6 +44,7 @@ public class TestJitGroupContext {
   private static final UserId SAMPLE_USER = new UserId("user@example.com");
   private static final UserId SAMPLE_APPROVER_1 = new UserId("approver-1@example.com");
   private static final UserId SAMPLE_APPROVER_2 = new UserId("approver-2@example.com");
+  private static final GroupId SAMPLE_APPROVER_GROUP = new GroupId("approvers@example.com");
 
   private static EnvironmentPolicy createEnvironmentPolicy() {
     return new EnvironmentPolicy(
@@ -584,33 +585,6 @@ public class TestJitGroupContext {
   // approve.
   // -------------------------------------------------------------------------
 
-  @Test
-  public void approve_whenSubjectNotAmongRecipients() {
-    var subject = Subjects.create(SAMPLE_APPROVER_1);
-    var groupPolicy = new JitGroupPolicy(
-      "group-1",
-      "Group 1");
-
-    createEnvironmentPolicy()
-      .add(new SystemPolicy("system-1", "System")
-        .add(groupPolicy));
-
-    var group = new JitGroupContext(
-      groupPolicy,
-      subject,
-      Mockito.mock(Provisioner.class));
-
-    var proposal = new MockProposal(
-      SAMPLE_USER,
-      group.policy().id(),
-      Set.of(new UserId("unknown@example.com")),
-      Instant.now().plusSeconds(10),
-      Map.of());
-
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> group.approve(proposal));
-  }
 
   @Test
   public void approve_whenProposalExpired() {
@@ -753,20 +727,23 @@ public class TestJitGroupContext {
   }
 
   @Test
-  public void approve_dryRun_whenUserNotAmongRecipients() {
+  public void approve_dryRun_whenAllowedViaGroupAndUserNotAmongRecipients() throws Exception {
     var groupPolicy = new JitGroupPolicy(
       "group-1",
       "Group 1",
       new AccessControlList.Builder()
+        .allow(SAMPLE_APPROVER_GROUP, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
-      Map.of(Policy.ConstraintClass.APPROVE, List.of(createSatisfiedConstraint("approve"))),
+      Map.of(Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("failing"))),
       List.of());
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
         .add(groupPolicy));
 
-    var subject = Subjects.create(SAMPLE_APPROVER_2);
+    var subject = Subjects.createWithPrincipalIds(
+      SAMPLE_APPROVER_1,
+      Set.of(SAMPLE_APPROVER_GROUP));
     var group = new JitGroupContext(
       groupPolicy,
       subject,
@@ -775,13 +752,17 @@ public class TestJitGroupContext {
     var proposal = new MockProposal(
       SAMPLE_USER,
       group.policy().id(),
-      Set.of(SAMPLE_APPROVER_1),
+      Set.of(SAMPLE_APPROVER_GROUP),
       Instant.now().plusSeconds(10),
       Map.of());
 
-    assertThrows(
-      IllegalArgumentException.class,
-      () -> group.approve(proposal));
+    var approveOp = group.approve(proposal);
+    var analysis = approveOp.dryRun();
+    assertTrue(analysis.isAccessAllowed(PolicyAnalysis.AccessOptions.IGNORE_CONSTRAINTS));
+    assertFalse(analysis.isAccessAllowed(PolicyAnalysis.AccessOptions.DEFAULT));
+    assertEquals(0, analysis.satisfiedConstraints().size());
+    assertEquals(1, analysis.unsatisfiedConstraints().size());
+    assertEquals(1, analysis.failedConstraints().size());
   }
 
   @Test
