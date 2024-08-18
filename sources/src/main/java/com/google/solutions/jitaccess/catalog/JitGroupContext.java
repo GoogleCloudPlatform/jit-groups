@@ -116,10 +116,16 @@ public class JitGroupContext {
     Preconditions.checkArgument(
       proposal.expiry().isAfter(Instant.now()),
       "Proposal must not be expired");
-    Preconditions.checkArgument(
-      proposal.user().equals(this.subject.user()) ||
-      proposal.recipients().contains(JitGroupContext.this.subject.user()),
-      "Current user must be among recipients");
+
+    //
+    // NB. We're not checking if the user is among the recipients
+    // of the proposal. That's for 2 reasons:
+    //
+    // (1) The current user might be part of a group. To verify if the
+    //     user is among the recipients, we'd have to expand groups.
+    // (2) What matters is if the user is allowed to approve based on
+    //     the ACL, not the list of recipients.
+    //
 
     //
     // Recreate the list of inputs that the user provided initially.
