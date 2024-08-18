@@ -45,7 +45,6 @@ test.properties
 runConfigurations/
 .metals
 .vscode
-.idea/
 .vs/
 
 # Terraform files 
