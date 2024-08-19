@@ -68,7 +68,7 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     ```sh
     PROJECT_ID=$(gcloud config get core/project)
     gcloud services enable storage-api.googleapis.com
-    gcloud storage buckets create gs://$PROJECT_ID-state
+    gcloud storage buckets create gs://$PROJECT_ID-state --uniform-bucket-level-access
     gcloud storage buckets update gs://$PROJECT_ID-state --versioning
     ```
 
@@ -123,18 +123,14 @@ Use Terraform to deploy JIT Groups to App Engine.
     to the `jitgroups/latest` branch:
 
     ```sh
-    (mkdir -p target && \
-     cd target && \
-     git clone https://github.com/GoogleCloudPlatform/jit-access.git && \
-     cd jit-access && \
-     git checkout jitgroups/latest)
+    git clone https://github.com/GoogleCloudPlatform/jit-access.git --branch jitgroups/latest target
     ```
 
 1.  Create a Terraform configuration file named `main.tf` and paste the following content:
 
     ```hcl
     module "application" {
-        source                      = "./target/jit-access/terraform/jitgroups-appengine"
+        source                      = "./target/terraform/jitgroups-appengine"
         project_id                  = local.project_id
         customer_id                 = "CUSTOMER_ID"
         groups_domain               = "DOMAIN"
@@ -340,7 +336,7 @@ To configure email notifications, do the following:
 
     ```hcl  hl_lines="14-15"
     module "application" {
-        source                      = "./target/jit-access/terraform/jitgroups-appengine"
+        source                      = "./target/terraform/jitgroups-appengine"
         project_id                  = local.project_id
         customer_id                 = "CUSTOMER_ID"
         groups_domain               = "DOMAIN"
