@@ -174,6 +174,23 @@ resource "google_project_service" "secretmanager" {
 }
 
 #------------------------------------------------------------------------------
+# Project.
+#------------------------------------------------------------------------------
+
+data "google_project" "project" {
+    project_id                 = var.project_id
+}
+
+#
+# Force-remove Editor role from Compute Engine service account, if present.
+#
+resource "google_project_iam_member_remove" "project_binding_gce_default" {
+    project                    = var.project_id
+    role                       = "roles/editor"
+    member                     = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
+#------------------------------------------------------------------------------
 # AppEngine.
 #------------------------------------------------------------------------------
 
