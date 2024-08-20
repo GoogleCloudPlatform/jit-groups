@@ -265,58 +265,6 @@ resource "google_service_account_iam_member" "service_account_member" {
 }
 
 #------------------------------------------------------------------------------
-# JIT Access compatibility: IAM bindings for resource scope.
-#------------------------------------------------------------------------------
-
-#
-# Project scope.
-#
-resource "google_project_iam_member" "resource_project_binding_cloudassetviewer" {
-    count                      = startswith(var.resource_scope, "projects/") ? 1 : 0
-    project                    = substr(var.resource_scope, 9, -1)
-    role                       = "roles/cloudasset.viewer"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-resource "google_project_iam_member" "resource_project_binding_projectiamadmin" {
-    count                      = startswith(var.resource_scope, "projects/") ? 1 : 0
-    project                    = substr(var.resource_scope, 9, -1)
-    role                       = "roles/resourcemanager.projectIamAdmin"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-
-#
-# Folder scope.
-#
-resource "google_folder_iam_member" "resource_folder_binding_cloudassetviewer" {
-    count                      = startswith(var.resource_scope, "folders/") ? 1 : 0
-    folder                     = var.resource_scope
-    role                       = "roles/cloudasset.viewer"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
-    count                      = startswith(var.resource_scope, "folders/") ? 1 : 0
-    folder                     = var.resource_scope
-    role                       = "roles/resourcemanager.projectIamAdmin"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-
-#
-# Organization scope.
-#
-resource "google_organization_iam_member" "resource_organization_binding_cloudassetviewer" {
-    count                      = startswith(var.resource_scope, "organizations/") ? 1 : 0
-    org_id                     = substr(var.resource_scope, 14, -1)
-    role                       = "roles/cloudasset.viewer"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-resource "google_organization_iam_member" "resource_organization_binding_projectiamadmin" {
-    count                      = startswith(var.resource_scope, "organizations/") ? 1 : 0
-    org_id                     = substr(var.resource_scope, 14, -1)
-    role                       = "roles/resourcemanager.projectIamAdmin"
-    member                     = "serviceAccount:${google_service_account.jitgroups.email}"
-}
-
-#------------------------------------------------------------------------------
 # IAP.
 #------------------------------------------------------------------------------
 

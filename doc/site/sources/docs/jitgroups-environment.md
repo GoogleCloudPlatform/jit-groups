@@ -30,7 +30,7 @@ JIT Groups application or a separate project:
 
    1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="10 17-25"
+       ```hcl  hl_lines="10 17-28"
        module "application" {
            source                      = "./target/terraform/jitgroups-appengine"
            project_id                  = local.project_id
@@ -54,7 +54,10 @@ JIT Groups application or a separate project:
     
            name                        = "NAME"
            policy                      = file("environment.yaml")
-           resource_scope              = "SCOPE"
+       }
+
+       output "environment"  {
+           value                       = module.environment.service_account
        }
 
        output "url" {
@@ -67,29 +70,28 @@ JIT Groups application or a separate project:
        ```
 
 
-    Replace the following:
+    Replace `NAME` with the name of the environment. 
 
-    +   `NAME`: the name of the environment. 
-        The application uses the environment name as unique identifier and 
-        incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
-        restrictions:
-     
-        +   Names are case-insensitive. You can't have two environments whose names only differ in casing.
-        +   Names must be no longer than 16 characters.
-        +   Names must only use the following characters: `A-Z`, `a-z`, `0-9`, `-`.
+    The application uses the environment name as unique identifier and 
+    incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
+    restrictions:
+ 
+    +   Names are case-insensitive. You can't have two environments whose names only differ in casing.
+    +   Names must be no longer than 16 characters.
+    +   Names must only use the following characters: `A-Z`, `a-z`, `0-9`, `-`.
+
+    The name can't be changed later.
+
+    !!!note
+        To add multiple environments, duplicate the highlighted section and assign unique
+        names to the modules and outputs.
+
+1.  Authorize `terraform`:
+
+    ```sh
+    gcloud auth application-default login
+    ```
     
-        The name can't be changed later.
-
-    +   `SCOPE`: the project, folder, or organization that this environment corresponds to. Set this to one of
-        the following values:
-
-        +   `projects/PROJECT_ID` where `PROJECT_ID` is a project ID
-        +   `folders/FOLDER_ID` where `FOLDER_ID` is a folder ID
-        +   `organizations/ORG_ID` where `ORG_ID` is an organization ID
-
-        Leave `resource_scope` blank if you don't want the module to set up IAM bindings for the environment's
-        service account.
-
 1.  Reinitialize Terraform and apply the configuration change:
 
     ```sh
@@ -99,6 +101,70 @@ JIT Groups application or a separate project:
 
 1.  Open a browser and navigate to the URL that you obtained after running `terraform apply`.
 1.  Open the environment selector and select your environment.
+
+## Grant access to resources
+
+As a result of applying the Terraform configuration change, your project now contains an additional
+service account, `jit.NAME@PROJECT.iam.gserviceaccount.com` where `NAME` is the name of the environment and
+`PROJECT` is the project ID.
+
+You must grant this service account permission to modify IAM policies of the resources that the environment
+corresponds to. Because this step might require privileged access to these resources, 
+it's not performed automatically by Terraform.
+
+For example, if the environment corresponds to the `development` folder of your Google Cloud
+organization, then you must grant the service account permission to modify the IAM policy of that folder.
+
+=== "Project"
+
+    If the environment corresponds to a single project, do the following:
+    
+    ```sh
+    RESOURCE_ID=PROJECT_ID
+    ENVIRONMENT_SERVICE_ACCOUNT=$(terraform output -raw environment)
+    
+    gcloud projects add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$ENVIRONMENT_SERVICE_ACCOUNT" \
+      --role "roles/resourcemanager.projectIamAdmin" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace  `PROJECT_ID` with the project ID that that you want to grant access to.
+
+=== "Folder"
+
+    If the environment corresponds to a folder, do the following:
+    
+    ```sh
+    RESOURCE_ID=FOLDER_ID
+    ENVIRONMENT_SERVICE_ACCOUNT=$(terraform output -raw environment)
+    
+    gcloud resource-manager folders add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$ENVIRONMENT_SERVICE_ACCOUNT" \
+      --role "roles/resourcemanager.projectIamAdmin" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace `FOLDER_ID` with the folder ID that that you want to grant access to.
+
+=== "Organization"
+
+    If the environment corresponds to the entire organization, do the following:
+    
+    ```sh
+    RESOURCE_ID=ORG_ID
+    ENVIRONMENT_SERVICE_ACCOUNT=$(terraform output -raw environment)
+    
+    gcloud resource-manager folders add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$ENVIRONMENT_SERVICE_ACCOUNT" \
+      --role "roles/resourcemanager.projectIamAdmin" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace `ORG_ID` with the organization ID that that you want to grant access to.
 
 ## Customize the policy
 
