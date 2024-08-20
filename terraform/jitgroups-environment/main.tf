@@ -142,6 +142,11 @@ resource "google_project_iam_member" "resource_project_binding_projectiamadmin" 
     project                    = substr(var.resource_scope, 9, -1)
     role                       = "roles/resourcemanager.projectIamAdmin"
     member                     = "serviceAccount:${google_service_account.environment.email}"
+    
+    # Ignore on subsequent deployments
+    lifecycle {
+        ignore_changes = [ all ]
+    }
 }
 
 #
@@ -152,6 +157,11 @@ resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
     folder                     = var.resource_scope
     role                       = "roles/resourcemanager.projectIamAdmin"
     member                     = "serviceAccount:${google_service_account.environment.email}"
+    
+    # Ignore on subsequent deployments
+    lifecycle {
+        ignore_changes = [ all ]
+    }
 }
 
 #
@@ -162,6 +172,11 @@ resource "google_organization_iam_member" "resource_organization_binding_project
     org_id                     = substr(var.resource_scope, 14, -1)
     role                       = "roles/resourcemanager.projectIamAdmin"
     member                     = "serviceAccount:${google_service_account.environment.email}"
+    
+    # Ignore on subsequent deployments
+    lifecycle {
+        ignore_changes = [ all ]
+    }
 }
 
 #------------------------------------------------------------------------------
