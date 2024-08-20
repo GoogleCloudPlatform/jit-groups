@@ -62,10 +62,10 @@ enable required APIs:
 
     Replace `PROJECT_ID` with the ID of the project to deploy JIT Groups in.
 
-1.  Enable the App Engine Admin API:
+1.  Enable the App Engine Admin API and Service Usage API:
 
     ```sh
-    gcloud services enable appengine.googleapis.com
+    gcloud services enable appengine.googleapis.com serviceusage.googleapis.com
     ```
     
 1.  Connect Cloud Build to your Git repository. 
