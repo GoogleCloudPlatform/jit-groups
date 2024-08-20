@@ -1,5 +1,42 @@
-This article describes how you can configure [Cloud Build :octicons-link-external-16:](https://cloud.google.com/build/docs/overview)
-so that it automatically deploys changes in your Terraform configuration.
+This article describes how you can set up continuous deployment to automate the process
+of applying configuration changes or performing upgrades.
+
+When you set up continuous deployment, your Git repository becomes the *source of truth*, and any
+changes you make in that Git repository are automatically applied to JIT Groups. Using the
+Git repository as source of truth and deploying changes automatically can have several
+advantages, including the following:
+
++   Improved efficiency, because no manual work is required to roll out changes.
++   Improved reliability, because the process is fully automated and repeatable.
++   Improved traceability, because the Git commit log let you can trace all changes.
+ 
+However, making your Git repository the source of truth also 
+[introduces risks :octicons-link-external-16:](https://cloud.google.com/architecture/design-secure-deployment-pipelines-bp) 
+and an improperly-secured Git repository can undermine the security of JIT Groups, and the
+Google Cloud resources that JIT Groups manages access for:
+
++   Instead of trying to compromise JIT Groups or its Google Cloud project directly, bad actors
+    might attempt to gain access to the Git repository and apply malicious changes to the Git repository.
++   If these malicious changes are applied automatically, they might allow the bad actor to escalate 
+    their privileges and compromise the JIT Groups application, or impersonate the privileged service account
+    that JIT Groups uses to provision access.
+
+To help you mitigate these risks, this article describes a continuous deployment setup that
+uses [Cloud Build :octicons-link-external-16:](https://cloud.google.com/build/docs/overview) to implement
+the following safety measures:
+
++   **Pull instead of push**: Instead of letting an external CI/CD system such as GitHub Actions or GitLab _push_
+    configuration changes to Google Cloud, you let Google Cloud _pull_ changes from your Git repository and apply them
+    locally. 
+
+    This approach avoids having to use workload identity federation or service account keys to grant the external
+    CI/CD system privileged access to Google Cloud resources.
+  
++   **Require build approvals**: All deployments to Google Cloud must be approved manually.
+
+    This additional approval step adds a _last layer of defense_ that can prevent a Git repository compromise
+    affect JIT Groups and your Google Cloud resources.
+
 
 ## Before you begin
 
@@ -17,6 +54,15 @@ enable required APIs:
         1.  [Link your GitHub repository :octicons-link-external-16:](https://cloud.google.com/build/docs/automating-builds/github/connect-repo-github#connecting_a_github_repository_2)
             to let Cloud Build access your repository contents.
 
+    === "GitLab"
+
+        To connect Cloud Build to a GitLab repository, do the following:
+
+        1.  [Create a host connection :octicons-link-external-16:](https://cloud.google.com/build/docs/automating-builds/gitlab/connect-host-gitlab)
+            to connect Cloud Build to GitLab.
+        1.  [Link your GitLab repository :octicons-link-external-16:](https://cloud.google.com/build/docs/automating-builds/gitlab/connect-repo-gitlab)
+            to let Cloud Build access your repository contents.
+
 1.  Enable the App Engine Admin API:
 
     ```sh
@@ -25,7 +71,8 @@ enable required APIs:
 
 ## Deploy automatically
 
-
+Configure Cloud Build so that it triggers a build and runs `terraform apply` 
+when your repository's mainline branch (`main` or `master`) changes:
 
 1.  Create a service account for Cloud Build:
 
@@ -41,21 +88,24 @@ enable required APIs:
     echo -n \
       roles/viewer \
       roles/logging.logWriter \
-      roles/storage.objectAdmin \
       roles/appengine.appAdmin \
       roles/cloudbuild.builds.editor \
       roles/iam.serviceAccountUser \
       roles/oauthconfig.editor \
-    | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+      | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member "serviceAccount:$DEPLOY_ACCOUNT" \
+        --condition None \
+        --format "value(etag)" \
+        --role 
+    gcloud storage buckets add-iam-policy-binding gs://$PROJECT_ID-state \
       --member "serviceAccount:$DEPLOY_ACCOUNT" \
       --condition None \
       --format "value(etag)" \
-      --role 
+      --role roles/storage.objectAdmin 
     ```
 
-!!!important
-
-    TODO: highly privileged, therefore maual approval.    
+    !!! note
+        This service account is now highly-privileged.
 
 1.  In the Cloud Console, go to **Cloud Build > Triggers**:
 
@@ -123,15 +173,28 @@ enable required APIs:
     Replace `JITGROUPS_REF` with the JIT Groups tag or branch that you want to deploy, for example `tags/2.0.0` or
     `jitgroups/latest`.
     
-   1.  Commit your changes and push them to the remote:
+   1.  Commit your changes and push them to the remote repository:
     
        ```sh
-       git add -A && git commit -m 'Add Cloud Build configuration for deploying automatically'
+       git add -A && \
+         git commit -m 'Add Cloud Build configuration for deploying automatically' && \
+         git push
        ```
 
-TODO: Screenshot for approval
+1.  In the Cloud Console, go to **Cloud Build > History**:
+
+    [Open History](https://console.cloud.google.com/cloud-build/builds){ .md-button }
+
+    You see a build that's awaiting approval:
+
+    ![Cloud Build](images/cloudbuild-approve.png)
+
+1.  Click **... > Approve build** to approve and start the deployment.
 
 ## Verify pull requests
+
+Create a second Cloud Build trigger for pull requests and configure it so that
+it runs `terraform plan`, but doesn't apply any changes to the project:
 
 1.  Create a service account for Cloud Build:
 
@@ -147,15 +210,18 @@ TODO: Screenshot for approval
     echo -n \
       roles/viewer \
       roles/logging.logWriter \
-      roles/storage.objectUser \
-      roles/oauthconfig.viewer \
-    | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+      roles/oauthconfig.editor \
+      | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+        --member "serviceAccount:$VERIFY_ACCOUNT" \
+        --condition None \
+        --format "value(etag)" \
+        --role 
+    gcloud storage buckets add-iam-policy-binding gs://$PROJECT_ID-state \
       --member "serviceAccount:$VERIFY_ACCOUNT" \
       --condition None \
       --format "value(etag)" \
-      --role 
+      --role roles/storage.objectUser 
     ```
-**TODO: Grant write access to state bucket only**
 
 1.  In the Cloud Console, go to **Cloud Build > Triggers**:
 
@@ -174,7 +240,6 @@ TODO: Screenshot for approval
     +   **Require approval before build executes**: **disabled**
     +   **Send logs to GitHub**: **enabled**
     +   **Service account**: `jitgroups-cloudbuild-verify`
-
 
 
 1.  Click **Create**.
@@ -221,9 +286,11 @@ TODO: Screenshot for approval
     Replace `JITGROUPS_REF` with the JIT Groups tag or branch that you want to deploy, for example `tags/2.0.0` or
     `jitgroups/latest`.
 
-1.  Commit your changes:
+1.  Commit your changes and push them to the remote repository:
 
     ```sh
-    git add -A && git commit -m 'Add Cloud Build configuration for verifying pull requests'
+    git add -A && \
+      git commit -m 'Add Cloud Build configuration for verifying pull requests' && \
+      git push
     ```
        
