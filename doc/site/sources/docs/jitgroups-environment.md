@@ -25,14 +25,14 @@ JIT Groups application or a separate project:
 1.  Copy the example policy document to a file `environment.yaml`:
 
     ```sh
-    cp target/jit-access/sources/src/main/resources/oobe/policy.yaml environment.yaml
+    cp target/sources/src/main/resources/oobe/policy.yaml environment.yaml
     ```
 
    1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
        ```hcl  hl_lines="10 17-25"
        module "application" {
-           source                      = "./target/jit-access/terraform/jitgroups-appengine"
+           source                      = "./target/terraform/jitgroups-appengine"
            project_id                  = local.project_id
            customer_id                 = "CUSTOMER_ID"
            groups_domain               = "DOMAIN"
@@ -48,7 +48,7 @@ JIT Groups application or a separate project:
        }
 
        module "environment" {
-           source                      = "./target/jit-access/terraform/jitgroups-environment"
+           source                      = "./target/terraform/jitgroups-environment"
            project_id                  = local.project_id
            application_service_account = module.application.service_account
     

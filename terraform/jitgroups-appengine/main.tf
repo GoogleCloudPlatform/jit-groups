@@ -113,10 +113,6 @@ variable "smtp_host" {
 # Local variables.
 #------------------------------------------------------------------------------
 
-provider "google" {
-    project = var.project_id
-}
-
 locals {
     sources = "${path.module}/../../sources"
 }
