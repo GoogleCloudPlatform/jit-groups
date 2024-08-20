@@ -81,11 +81,14 @@ JIT Groups application or a separate project:
         The name can't be changed later.
 
     +   `SCOPE`: the project, folder, or organization that this environment corresponds to. Set this to one of
-        the following values
+        the following values:
 
         +   `projects/PROJECT_ID` where `PROJECT_ID` is a project ID
         +   `folders/FOLDER_ID` where `FOLDER_ID` is a folder ID
         +   `organizations/ORG_ID` where `ORG_ID` is an organization ID
+
+        If you leave `resource_scope` blank, the module won't set up any IAM bindings for the environment's
+        service account.
 
 1.  Reinitialize Terraform and apply the configuration change:
 

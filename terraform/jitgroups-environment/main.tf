@@ -50,6 +50,7 @@ variable "application_service_account" {
 variable "resource_scope" {    
     description                = "Project, folder, or organization that this environment corresponds to"
     type                       = string
+    default                    = ""
                                
     validation {               
         condition              = var.resource_scope == "" || (
