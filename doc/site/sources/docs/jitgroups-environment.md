@@ -87,7 +87,7 @@ JIT Groups application or a separate project:
         +   `folders/FOLDER_ID` where `FOLDER_ID` is a folder ID
         +   `organizations/ORG_ID` where `ORG_ID` is an organization ID
 
-        If you leave `resource_scope` blank, the module won't set up any IAM bindings for the environment's
+        Leave `resource_scope` blank if you don't want the module to set up IAM bindings for the environment's
         service account.
 
 1.  Reinitialize Terraform and apply the configuration change:
