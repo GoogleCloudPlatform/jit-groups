@@ -43,6 +43,31 @@ the following safety measures:
 Before you can configure the automatic deployment, you first need to connect Cloud Build to your Git repository and
 enable required APIs:
 
+
+1.  Open Cloud Shell or a local terminal.
+
+    [Open Cloud Shell](https://console.cloud.google.com/?cloudshell=true){ .md-button }
+
+1.  Authorize `gcloud`:
+
+    ```sh
+    gcloud auth login
+    ```
+
+1.  Set an environment variable to contain [your project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
+
+    ```sh
+    gcloud config set project PROJECT_ID
+    ```
+
+    Replace `PROJECT_ID` with the ID of the project to deploy JIT Groups in.
+
+1.  Enable the App Engine Admin API:
+
+    ```sh
+    gcloud services enable appengine.googleapis.com
+    ```
+    
 1.  Connect Cloud Build to your Git repository. 
 
     === "GitHub"
@@ -63,11 +88,6 @@ enable required APIs:
         1.  [Link your GitLab repository :octicons-link-external-16:](https://cloud.google.com/build/docs/automating-builds/gitlab/connect-repo-gitlab)
             to let Cloud Build access your repository contents.
 
-1.  Enable the App Engine Admin API:
-
-    ```sh
-    gcloud services enable appengine.googleapis.com
-    ```
 
 ## Deploy automatically
 
@@ -85,6 +105,7 @@ when your repository's mainline branch (`main` or `master`) changes:
 1.  Grant the service account the necessary roles to perform deployments:
 
     ```sh
+    PROJECT_ID=$(gcloud config get core/project)
     echo -n \
       roles/viewer \
       roles/logging.logWriter \
@@ -205,6 +226,7 @@ it runs `terraform plan`, but doesn't apply any changes to the project:
 1.  Grant the service account the necessary roles to verify deployments:
 
     ```sh
+    PROJECT_ID=$(gcloud config get core/project)
     echo -n \
       roles/viewer \
       roles/logging.logWriter \
@@ -235,9 +257,93 @@ it runs `terraform plan`, but doesn't apply any changes to the project:
     +   **Repository**: Select the Git repository that contains your
         Terraform configuration.
     +   **Branch**: `^master$` or `^main$`, depending on the name of your main branch.
-    +   **Require approval before build executes**: **disabled**
+    +   **Require approval before build executes**: **enabled**
     +   **Send logs to GitHub**: **enabled**
     +   **Service account**: `jitgroups-cloudbuild-verify`
 
 
 1.  Click **Create**.
+
+
+## Optional: Allow access to the environment's scope
+
+If your Terraform configuration contains a `resource_scope`, then you must grant the
+Cloud Build service accounts additional access to *read* the IAM policy of the respective
+project, folder, or organization.
+
+For example, if your Terraform configuration contains the following, then you must allow
+Cloud Build to read the IAM policy of folder `folder/123` to confirm that it matches
+the configuration.
+
+```hcl  hl_lines="3"
+module "environment" {
+    ...
+    resource_scope              = "folder/123"
+}
+```
+
+=== "Project"
+
+    If you've set `resource_scope` to a project, do the following:
+    
+    ```sh
+    RESOURCE_ID=PROJECT_ID
+    
+    gcloud projects add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$DEPLOY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    
+    gcloud projects add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$VERIFY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace `PROJECT_ID` with the project ID that you've referenced in `resource_scope`, without the `projects/` prefix.
+
+=== "Folder"
+
+    If you've set `resource_scope` to a project, do the following:
+    
+    ```sh
+    RESOURCE_ID=FOLDER_ID
+    
+    gcloud resource-manager folders add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$DEPLOY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    
+    gcloud resource-manager folders add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$VERIFY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace `FOLDER_ID` with the folder ID that you've referenced in `resource_scope`, without the `folders/` prefix.
+
+=== "Organization"
+
+    If you've set `resource_scope` to a project, do the following:
+    
+    ```sh
+    RESOURCE_ID=ORG_ID
+    
+    gcloud organizations add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$DEPLOY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    
+    gcloud organizations add-iam-policy-binding $RESOURCE_ID \
+      --member "serviceAccount:$VERIFY_ACCOUNT" \
+      --role "roles/iam.securityReviewer" \
+      --format "value(etag)" \
+      --condition None
+    ```
+    
+    Replace `ORG_ID` with the organization ID that you've referenced in `resource_scope`, without the `organizations/` prefix.
