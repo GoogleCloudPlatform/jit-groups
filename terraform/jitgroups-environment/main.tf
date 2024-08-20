@@ -159,7 +159,7 @@ resource "google_folder_iam_member" "resource_folder_binding_projectiamadmin" {
     member                     = "serviceAccount:${google_service_account.environment.email}"
     
     # Ignore on subsequent deployments
-    lifecycle {{
+    lifecycle {
         ignore_changes = all
     }
 }
@@ -174,7 +174,7 @@ resource "google_organization_iam_member" "resource_organization_binding_project
     member                     = "serviceAccount:${google_service_account.environment.email}"
     
     # Ignore on subsequent deployments
-    lifecycle {{
+    lifecycle {
         ignore_changes = all
     }
 }
