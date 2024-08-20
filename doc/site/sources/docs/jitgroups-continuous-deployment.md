@@ -88,20 +88,18 @@ when your repository's mainline branch (`main` or `master`) changes:
     echo -n \
       roles/viewer \
       roles/logging.logWriter \
-      roles/appengine.appAdmin \
-      roles/cloudbuild.builds.editor \
-      roles/iam.serviceAccountUser \
       roles/oauthconfig.editor \
+      roles/cloudbuild.builds.editor \
+      roles/secretmanager.admin \
+      roles/resourcemanager.projectIamAdmin \
+      roles/appengine.appAdmin \
+      roles/storage.objectAdmin \
+      roles/iam.serviceAccountUser \
       | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member "serviceAccount:$DEPLOY_ACCOUNT" \
         --condition None \
         --format "value(etag)" \
-        --role 
-    gcloud storage buckets add-iam-policy-binding gs://$PROJECT_ID-state \
-      --member "serviceAccount:$DEPLOY_ACCOUNT" \
-      --condition None \
-      --format "value(etag)" \
-      --role roles/storage.objectAdmin 
+        --role
     ```
 
     !!! note
@@ -139,8 +137,9 @@ when your repository's mainline branch (`main` or `master`) changes:
     
     ```yaml
     substitutions:
-      _JITGROUPS_REF: 'jit-groups'
+      _JITGROUPS_REF: 'JITGROUPS_REF'
       _JITGROUPS_URL: https://github.com/GoogleCloudPlatform/jit-access.git
+    
     steps:
     
     # Clone JIT Groups repository
@@ -210,6 +209,7 @@ it runs `terraform plan`, but doesn't apply any changes to the project:
       roles/viewer \
       roles/logging.logWriter \
       roles/oauthconfig.editor \
+      roles/secretmanager.secretAccessor \
       | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member "serviceAccount:$VERIFY_ACCOUNT" \
         --condition None \
@@ -241,12 +241,3 @@ it runs `terraform plan`, but doesn't apply any changes to the project:
 
 
 1.  Click **Create**.
-
-1.  Commit your changes and push them to the remote repository:
-
-    ```sh
-    git add -A && \
-      git commit -m 'Add Cloud Build configuration for verifying pull requests' && \
-      git push
-    ```
-       

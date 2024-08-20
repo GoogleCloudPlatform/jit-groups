@@ -87,6 +87,10 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
         bucket   = "$PROJECT_ID-state"
         prefix   = "terraform"
       }
+
+      provider_meta "google" {
+        module_name = "cloud-solutions/jitgroups–deploy-v2.0"
+      }
     }
 
     locals {
