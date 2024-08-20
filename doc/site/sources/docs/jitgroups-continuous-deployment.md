@@ -139,34 +139,33 @@ when your repository's mainline branch (`main` or `master`) changes:
     
     ```yaml
     substitutions:
-      _JITGROUPS_REF: 'TAG'
+      _JITGROUPS_REF: 'jit-groups'
+      _JITGROUPS_URL: https://github.com/GoogleCloudPlatform/jit-access.git
     steps:
     
     # Clone JIT Groups repository
     - name: 'alpine/git'
-      args:
-        - clone
-        - https://github.com/GoogleCloudPlatform/jit-access.git
-        - --branch
-        - $_JITGROUPS_REF
-        - target
+      script: |
+        git clone $_JITGROUPS_URL --branch $_JITGROUPS_REF target
     
     # Terraform: Init
     - name: 'hashicorp/terraform:1.9'
-      args:
-        - 'init'
-        - '-no-color'
+      script: |
+        terraform init -no-color
     
-    # Terraform: Apply
+    # Terraform: Plan/Apply
     - name: 'hashicorp/terraform:1.9'
-      args:
-        - apply
-        - -no-color
-        - -input=false
-        - -auto-approve
+      script: |
+        if [ "$TRIGGER_NAME" == "deploy" ]
+        then
+          terraform apply -no-color -input=false -auto-approve
+        else
+          terraform plan -no-color -input=false
+        fi
       timeout: '600s'
     
     options:
+      automapSubstitutions: true
       logging: CLOUD_LOGGING_ONLY
     ```
         
@@ -236,55 +235,12 @@ it runs `terraform plan`, but doesn't apply any changes to the project:
     +   **Repository**: Select the Git repository that contains your
         Terraform configuration.
     +   **Branch**: `^master$` or `^main$`, depending on the name of your main branch.
-    +   **Cloud Build configuration file location**: `cloudbuild.verify.yaml`
     +   **Require approval before build executes**: **disabled**
     +   **Send logs to GitHub**: **enabled**
     +   **Service account**: `jitgroups-cloudbuild-verify`
 
 
 1.  Click **Create**.
-
-1.  In your Git repository, create a build configuration file:
-
-    ```sh
-    touch cloudbuild.verify.yaml
-    ```
-
-1.  Open the file `cloudbuild.verify.yaml` and paste the following workflow configuration:
-
-    ```yaml
-    substitutions:
-      _JITGROUPS_REF: 'TAG'
-    steps:
-    
-    # Clone JIT Groups repository
-    - name: 'alpine/git'
-      args:
-        - clone
-        - https://github.com/GoogleCloudPlatform/jit-access.git
-        - --branch
-        - $_JITGROUPS_REF
-        - target
-    
-    # Terraform: Init
-    - name: 'hashicorp/terraform:1.9'
-      args:
-        - 'init'
-        - '-no-color'
-    
-    # Terraform: Plan
-    - name: 'hashicorp/terraform:1.9'
-      args:
-        - plan
-        - -no-color
-        - -input=false
-    
-    options:
-      logging: CLOUD_LOGGING_ONLY
-    ```
-
-    Replace `JITGROUPS_REF` with the JIT Groups tag or branch that you want to deploy, for example `tags/2.0.0` or
-    `jitgroups/latest`.
 
 1.  Commit your changes and push them to the remote repository:
 
