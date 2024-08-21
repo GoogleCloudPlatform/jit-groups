@@ -102,7 +102,7 @@ JIT Groups application or a separate project:
 1.  Open a browser and navigate to the URL that you obtained after running `terraform apply`.
 1.  Open the environment selector and select your environment.
 
-## Grant access to resources
+### Grant access to resources
 
 As a result of applying the Terraform configuration change, your project now contains an additional
 service account, `jit.NAME@PROJECT.iam.gserviceaccount.com` where `NAME` is the name of the environment and
@@ -165,6 +165,25 @@ organization, then you must grant the service account permission to modify the I
     ```
     
     Replace `ORG_ID` with the organization ID that that you want to grant access to.
+
+### Grant access to the VPC Service Controls perimeter
+
+If you're using the environment to manage access to projects that are part of a 
+VPC Service Controls perimeter, then you must create an ingress rule that permits
+JIT Groups to access the perimeter:
+
+1.  In the Cloud Console, go to [VPC Service Controls :octicons-link-external-16:](https://console.cloud.google.com/security/service-perimeter)
+    and open the service perimeter.
+1.  Click **Edit perimeter**.
+1.  Select **Ingress Policy**.
+1.  Click **Add rule** and configure the following settings:
+
+    +   **Source**: **All sources**
+    +   **Identity**: the email address of the environment's service account (`jit.NAME@PROJECT.iam.gserviceaccount.com`)
+    +   **Project**: the project to manage access for, or **All projects**
+    +   **Services**: **Google Cloud Resource Manager API**
+
+1.  Click **Save**
 
 ## Customize the policy
 
