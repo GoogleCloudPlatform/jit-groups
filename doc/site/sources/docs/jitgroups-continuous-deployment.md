@@ -116,6 +116,7 @@ when your repository's mainline branch (`main` or `master`) changes:
       roles/appengine.appAdmin \
       roles/storage.objectAdmin \
       roles/iam.serviceAccountUser \
+      roles/iam.serviceAccountAdmin \
       | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
         --member "serviceAccount:$DEPLOY_ACCOUNT" \
         --condition None \
