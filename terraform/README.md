@@ -62,7 +62,7 @@
         customer_id     = "CUSTOMER_ID"
         admin_email     = "ADMIN_EMAIL"
         location        = "LOCATION"
-        resource_scope  = "RESOURCE_SCOPE"
+        resource_scope  = "RESOURCE_SCOPE"
         iap_users       = []
         options         = {
             "JUSTIFICATION_HINT" = "Bug or case number"
