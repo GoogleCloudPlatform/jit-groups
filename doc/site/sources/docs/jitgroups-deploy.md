@@ -54,6 +54,7 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     ```sh
     gcloud auth login
     ```
+
     You can skip this step if you're using Cloud Shell.
 
 1.  Set an environment variable to contain 
@@ -138,13 +139,12 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
 
 ## Deploy the application
 
-Use Terraform to deploy JIT Groups to App Engine.
+Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
 
 !!!note
 
-    JIT Groups can be deployed to either App Engine or Cloud Run. Cloud Run requires a more complex
-    configuration than deploying the application to App Engine. This article therefore
-    focuses on App Engine.
+    JIT Groups can be deployed to either App Engine or Cloud Run. App Engine is preferred because
+    it requires a less complex configuration.
 
 
 1.  Clone the GitHub repository to the `target` directory and switch 
@@ -156,41 +156,87 @@ Use Terraform to deploy JIT Groups to App Engine.
 
 1.  Create a Terraform configuration file named `main.tf` and paste the following content:
 
-    ```hcl
-    module "application" {
-        source                      = "./target/terraform/jitgroups-appengine"
-        project_id                  = local.project_id
-        customer_id                 = local.customer_id
-        primary_domain              = local.primary_domain
-        organization_id             = local.organization_id
-    
-        admin_email                 = "ADMIN_EMAIL"
-        location                    = "LOCATION"
-        iap_users                   = [
-            # "domain:${local.primary_domain}"
-        ]
-        environments                = []
-    
-        # groups_domain             = "GROUPS_DOMAIN"
-        options                     = {
-            # "APPROVAL_TIMEOUT"    = "90"
+    === "App Engine"
+
+        ```hcl
+        module "application" {
+            source                      = "./target/terraform/jitgroups-appengine"
+            project_id                  = local.project_id
+            customer_id                 = "CUSTOMER_ID"
+            groups_domain               = "DOMAIN"
+            admin_email                 = "ADMIN_EMAIL"
+            location                    = "LOCATION"
+            iap_users                   = []
+            environments                = []
+            options                     = {
+                # "APPROVAL_TIMEOUT"    = "90"
+            }
         }
-    }
+    
+        output "url" {
+            value                       = module.application.url
+        }
+    
+        output "service_account" {
+            value                       = module.application.service_account
+        }
+        ```
 
-    output "url" {
-        value                       = module.application.url
-    }
+    === "Cloud Run"
 
-    output "service_account" {
-        value                       = module.application.service_account
-    }
-    ```
+        ```hcl
+        variable "image_tag" {
+            description                = "Docker image tag to deploy. If not specified, the image is built from source."
+            type                       = string
+            default                    = null
+        }
+
+        module "application" {
+            source                      = "./target/terraform/jitgroups-cloudrun"
+            project_id                  = local.project_id
+            image_tag                   = var.image_tag
+            customer_id                 = "CUSTOMER_ID"
+            domain                      = "DOMAIN"
+            groups_domain               = "GROUPS_DOMAIN"
+            admin_email                 = "ADMIN_EMAIL"
+            location                    = "LOCATION"
+            iap_users                   = []
+            environments                = []
+            options                     = {
+                # "APPROVAL_TIMEOUT"    = "90"
+            }
+        }
+
+        output "url" {
+            value                       = module.application.url
+        }
+
+        output "ip" {
+            value                       = module.application.ip
+        }
+
+        output "service_account" {
+            value                       = module.application.service_account
+        }
+
+        ```
 
     Replace values of the following variables:
 
-    +   `admin_email`: the email address to show as contact on the OAuth consent screen,
+    +   `CUSTOMER_ID`: your [Cloud Identity or Google Workspace account's customer ID](https://support.google.com/a/answer/10070793).
+    +   `DOMAIN` (Cloud Run only): the fully-qualified domain name to use for the Cloud Run service,
+        for example `jitgroups.example.com`.
+
+        You must use a domain name that you own, and you'll need to create a DNS record for this domain name in a 
+        later step. The domain can be different from the primary or secondary domains that uou use for your
+        Cloud Identity or Google Workspace account.
+
+    +   `GROUPS_DOMAIN`: the domain to use for Cloud Identity groups, this can be the primary or a secondary domain of
+        your Cloud Identity or Google Workspace account.
+    +   `ADMIN_EMAIL`: the email address to show as contact on the OAuth consent screen,
         this must be the email address of a Cloud Identity/Workspace user.
-    +   `location`: a supported [App Engine location](https://cloud.google.com/about/locations#region).
+    +   `LOCATION`: a supported [App Engine location :octicons-link-external-16:](https://cloud.google.com/about/locations#region)
+        or [Cloud Run region :octicons-link-external-16:](https://cloud.google.com/run/docs/locations).
     +   `iap_users` (optional): List of users or groups to allow access to the JIT Groups application.
 
         *   Prefix users with `user:`, for example `user:bob@example.com`.
@@ -232,6 +278,25 @@ Use Terraform to deploy JIT Groups to App Engine.
     When the command completes, it prints the URL of the application and the
     email address of the application's service account. You need this URL and email address
     later.
+
+1.  Create a DNS record for JIT Groups:
+
+    === "App Engine"
+
+        App Engine automatically creates a DNS record for you.
+
+    === "Cloud Run"
+
+        Create a DNS `A` record in your public DNS zone:
+
+        + Name: the name that you provided in `domain`.
+        + Address: the IP address that's shown in the output of `terraform apply`.
+
+        !!! note
+            The Terraform module automatically creates a Google-managed SSL certificate
+            for the domain. It typically takes around 10 minutes until the certificate 
+            is fully provisioned and during this time, the managed SSL certificate can't be used. For details,
+            see [Troubleshooting Google-managed certificates :octicons-link-external-16:](https://cloud.google.com/load-balancing/docs/ssl-certificates/troubleshooting#troubleshooting_google-managed_certificates).
 
 ### Grant access to Cloud Identity/Workspace
 
