@@ -88,7 +88,7 @@ public class TestMailProposalHandler {
     verify(smtpClient, times(1)).sendMail(
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
-      eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
+      eq(SAMPLE_USER_1.email + " requests to join " + SAMPLE_JITGROUP.name()),
       anyString(),
       eq(EnumSet.of(SmtpClient.Flags.NONE)));
   }
@@ -127,7 +127,7 @@ public class TestMailProposalHandler {
     verify(smtpClient, times(1)).sendMail(
       eq(List.of(new EmailAddress(SAMPLE_USER_1.email))),
       eq(Set.of(new EmailAddress(SAMPLE_USER_2.email))),
-      eq(SAMPLE_USER_1.email + " proposes to join " + SAMPLE_JITGROUP.name()),
+      eq(SAMPLE_USER_1.email + " requests to join " + SAMPLE_JITGROUP.name()),
       anyString(),
       eq(EnumSet.of(SmtpClient.Flags.REPLY)));
   }
