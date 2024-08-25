@@ -53,6 +53,7 @@ enable required APIs:
     ```sh
     gcloud auth login
     ```
+    You can skip this step if you're using Cloud Shell.
 
 1.  Set an environment variable to contain [your project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
 

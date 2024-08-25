@@ -54,6 +54,7 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     ```sh
     gcloud auth login
     ```
+    You can skip this step if you're using Cloud Shell.
 
 1.  Set an environment variable to contain [your project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
 
@@ -67,7 +68,7 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
 
     ```sh
     PROJECT_ID=$(gcloud config get core/project)
-    gcloud services enable storage-api.googleapis.com
+    gcloud services enable cloudresourcemanager.googleapis.com storage-api.googleapis.com
     gcloud storage buckets create gs://$PROJECT_ID-state --uniform-bucket-level-access
     gcloud storage buckets update gs://$PROJECT_ID-state --versioning
     ```
@@ -111,6 +112,7 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
       gcloud auth application-default set-quota-project $PROJECT_ID
     ```
 
+    You can skip this step if you're using Cloud Shell.
 
 ## Deploy the application
 
@@ -336,32 +338,16 @@ To configure email notifications, do the following:
       echo $PASSWORD | gcloud secrets versions add smtp --data-file=-)
     ```
 
-1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and the following two arguments: 
+1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and the following two lines to the `application` module:
 
-    ```hcl  hl_lines="14-15"
+    ```hcl  hl_lines="6-7"
     module "application" {
-        source                      = "./target/terraform/jitgroups-appengine"
-        project_id                  = local.project_id
-        customer_id                 = "CUSTOMER_ID"
-        groups_domain               = "DOMAIN"
-        admin_email                 = "ADMIN_EMAIL"
-        location                    = "LOCATION"
-        iap_users                   = []
-        environments                = []
-        options                     = {
-            # "APPROVAL_TIMEOUT"    = "90"
-        }
+        source                      = ...
+        project_id                  = ...
+        ...
         
         smtp_host                   = "SMTP_HOST"
         smtp_user                   = "SMTP_USER"
-    }
-
-    output "url" {
-        value                       = module.application.url
-    }
-
-    output "service_account" {
-        value                       = module.application.service_account
     }
     ```
 
