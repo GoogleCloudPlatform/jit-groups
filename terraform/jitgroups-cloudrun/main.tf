@@ -126,7 +126,7 @@ variable "image_tag" {
 
 terraform {
     provider_meta "google" {
-        module_name = "cloud-solutions/jitgroups–deploy-v2.0"
+        module_name = "cloud-solutions/jitgroups–cloudrun-deploy-v2.0"
     }
 }
 
