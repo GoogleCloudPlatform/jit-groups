@@ -124,6 +124,12 @@ variable "image_tag" {
 # Provider.
 #------------------------------------------------------------------------------
 
+terraform {
+    provider_meta "google" {
+        module_name = "cloud-solutions/jitgroups–cloudrun-deploy-v2.0"
+    }
+}
+
 provider "google-beta" {
     project                    = var.project_id
 }
