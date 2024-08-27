@@ -1,7 +1,7 @@
 # JIT Groups <sup class='preview'>Preview</sup>
 
 JIT Groups is an open source application that lets you implement secure, self-service
-access management for Google Cloud using security groups.
+access management for Google Cloud using groups.
 
 !!! note ""
 
@@ -73,9 +73,9 @@ Entra ID and Okta typically use. While discussion forum groups are suitable for 
 they provide fewer security safeguards than security groups and are therefore not well-suited for managing access to
 resources.
 
-## Separate organizational groups and security groups
+## Separate organizational groups and access groups
 
-JIT Groups can help you separate organizational groups and security groups:
+JIT Groups can help you separate organizational groups and access groups:
 
 +   **Organizational groups** are groups that model the organizational structure, and they're often based on 
     departments, teams, or reporting structures. You can continue to manage these groups using Entra ID, Okta, 
@@ -84,7 +84,7 @@ JIT Groups can help you separate organizational groups and security groups:
 
 ![Group structure](images/group-structure.svg){ width="450" align="right"  }
 
-+   **Security groups** are groups that model job functions or roles, and they're used to control access to 
++   **Access groups** are groups that model job functions or roles, and they're used to control access to 
     resources. 
 
     You can let JIT Groups manage these groups, and control which users and organizational groups
