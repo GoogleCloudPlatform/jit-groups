@@ -7,14 +7,14 @@ access management for Google Cloud using groups.
 [<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/)
 
 > [!NOTE]
-> JIT Groups supersedes the [JIT Access](jitaccess-overview.md) project, which has largely outlived its purpose as
+> JIT Groups supersedes the [JIT Access](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/) project, which has largely outlived its purpose as
 > privileged access management
 > [is now available as a platform feature in Google Cloud](https://cloud.google.com/iam/docs/pam-overview).
 > 
 > JIT Groups addresses an adjacent, but different use case -- self-service
 > access management, or _entitlement management_, for all types of Google Cloud access, not only privileged access. 
 > If you're currently using JIT Access, you can continue to do so. But we encourage you to consider 
-> [upgrading to JIT Groups](jitaccess-upgrade.md) or migrating to PAM.
+> [upgrading to JIT Groups](https://googlecloudplatform.github.io/jit-groups/jitaccess-upgrade/) or migrating to PAM.
 
 
 ## Bundle access by job function
@@ -37,6 +37,7 @@ process of creating the groups and provisioning the necessary IAM policies.
 **As an administrator**, you can control which groups users are allowed to discover and join,
 and which conditions they need to meet to join individual groups.
 
+<br /><br /><br /><br /><br /><br />
 <img src='https://googlecloudplatform.github.io/jit-groups/images/pix.gif' style='width: 100%; height: 1px'>
 
 ## Let users activate time-bound access
@@ -51,7 +52,7 @@ and which conditions they need to meet to join individual groups.
 allowed to join without approval. You can also control the time period for which access is granted, and which
 additional constraints users need to satisfy.
 
-
+<br /><br /><br /><br /><br /><br />
 <img src='https://googlecloudplatform.github.io/jit-groups/images/pix.gif' style='width: 100%; height: 1px'>
 
 ## Use GitOps to manage groups and policies
@@ -60,7 +61,7 @@ additional constraints users need to satisfy.
   <img alt='DevOps Process' src='https://googlecloudplatform.github.io/jit-groups/images/process-450.png' align='right'>
 </a>
 
-**As an administrator**, you manage groups and their settings using [policy documents](policy-reference.md),
+**As an administrator**, you manage groups and their settings using [policy documents](https://googlecloudplatform.github.io/jit-groups/policy-reference/),
 which are YAML documents.
 
 You can use a GitOps workflow to manage and deploy these policy documents, similar to how
@@ -117,7 +118,7 @@ is stateless and uses [Identity-Aware-Proxy](https://cloud.google.com/iap/docs/c
 for authentication and authorization, and the [Cloud Identity API](https://cloud.google.com/identity/docs/reference/rest) and
 [IAM API](https://cloud.google.com/iam/docs/reference/rest) to manage groups and access.
 
-For detailed instructions on deploying Just-In-Time Access, see [Deploy JIT Groups](jitgroups-deploy.md).
+For detailed instructions on deploying Just-In-Time Access, see [Deploy JIT Groups](https://googlecloudplatform.github.io/jit-groups/jitgroups-deploy/).
 
 --- 
 
