@@ -10,6 +10,7 @@ access management for Google Cloud using groups.
 > JIT Groups supersedes the [JIT Access](jitaccess-overview.md) project, which has largely outlived its purpose as
 > privileged access management
 > [is now available as a platform feature in Google Cloud](https://cloud.google.com/iam/docs/pam-overview).
+> 
 > JIT Groups addresses an adjacent, but different use case -- self-service
 > access management, or _entitlement management_, for all types of Google Cloud access, not only privileged access. 
 > If you're currently using JIT Access, you can continue to do so. But we encourage you to consider 
