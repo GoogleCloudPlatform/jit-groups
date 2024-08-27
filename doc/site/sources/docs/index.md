@@ -49,7 +49,7 @@ additional constraints users need to satisfy.
 
 ## Use GitOps to manage groups and policies
 
-![Group structure](images/process.svg){ width="450" align="right"  }
+![DevOps Process](images/process.svg){ width="450" align="right"  }
 
 **As an administrator**, you manage groups and their settings using [policy documents](policy-reference.md),
 which are YAML documents. 

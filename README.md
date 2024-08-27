@@ -28,7 +28,9 @@ process of creating the groups and provisioning the necessary IAM policies.
 
 ## Let users discover groups and access
 
-[![Discover groups](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover.png){ width="350" align="right"  }](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover.png)
+<a href='https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover.png'>
+  <img alt='Discover groups' src='https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover-350.png' align='right'>
+</a>
 
 **As a user**, you can browse and discover available groups in a self-service fashion.
 
@@ -39,7 +41,9 @@ and which conditions they need to meet to join individual groups.
 
 ## Let users activate time-bound access
 
-[![Request form](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails.png){ width="300" align="right"  }](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails.png)
+<a href='https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails.png'>
+  <img alt='Request form' src='https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails-300.png' align='right'>
+</a>
 
 **As a user**, you can join a group to obtain time-bound access to Google Cloud resources.
 
@@ -52,7 +56,9 @@ additional constraints users need to satisfy.
 
 ## Use GitOps to manage groups and policies
 
-![Group structure](https://googlecloudplatform.github.io/jit-groups/images/process.svg){ width="450" align="right"  }
+<a href='https://googlecloudplatform.github.io/jit-groups/images/process.svg'>
+  <img alt='DevOps Process' src='https://googlecloudplatform.github.io/jit-groups/images/process-450.png' align='right'>
+</a>
 
 **As an administrator**, you manage groups and their settings using [policy documents](policy-reference.md),
 which are YAML documents.
@@ -84,8 +90,9 @@ JIT Groups can help you separate organizational groups and access groups:
     departments, teams, or reporting structures. You can continue to manage these groups using Entra ID, Okta,
     or an HRIS and provision them to Cloud Identity.
 
-
-![Group structure](https://googlecloudplatform.github.io/jit-groups/images/group-structure.svg){ width="450" align="right"  }
+<a href='https://googlecloudplatform.github.io/jit-groups/images/group-structure.svg'>
+  <img alt='Group structure' src='https://googlecloudplatform.github.io/jit-groups/images/group-structure-450.png' align='right'>
+</a>
 
 +   **Access groups** are groups that model job functions or roles, and they're used to control access to
     resources.
