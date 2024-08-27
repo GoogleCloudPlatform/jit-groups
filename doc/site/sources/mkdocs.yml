@@ -20,7 +20,7 @@
 #
 
 site_name: JIT Groups
-site_url: https://googlecloudplatform.github.io/jit-access/
+site_url: https://googlecloudplatform.github.io/jit-groups/
 theme:
   name: material
   custom_dir: overrides
@@ -46,12 +46,12 @@ extra:
 extra_css:
   - stylesheets/extra.css
   
-repo_name: jit-access
-repo_url: https://github.com/GoogleCloudPlatform/jit-access
+repo_name: jit-groups
+repo_url: https://github.com/GoogleCloudPlatform/jit-groups
 copyright: |
     JIT Access is an open-source project developed and maintained by the Google Cloud Solutions Architects team.<br>
     Copyright &copy; 2019-2024 Google LLC<br>
-    <a href='https://cloud.google.com/'><img src='https://googlecloudplatform.github.io/jit-access/images/cloud.svg' width='240' height='160'/></a>
+    <a href='https://cloud.google.com/'><img src='https://googlecloudplatform.github.io/jit-groups/images/cloud.svg' width='240' height='160'/></a>
 
 markdown_extensions:
   - admonition
@@ -99,4 +99,4 @@ nav:
       - 'Resource conditions': resource-conditions.md
     - 'Customize JIT Access':
       - 'Configuration options': configuration-options.md
-  - GitHub: https://github.com/GoogleCloudPlatform/jit-access
+  - GitHub: https://github.com/GoogleCloudPlatform/jit-groups

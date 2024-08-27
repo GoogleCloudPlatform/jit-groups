@@ -2,7 +2,7 @@
 
 Just-In-Time Access is an open source application that lets you implement just-in-time privileged access to Google Cloud resources. 
 
-[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-access/jitaccess-overview/)
+[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/)
 
 Just-In-Time Access works by introducing the notion of _eligible role bindings_ to Cloud IAM. Unlike a [regular
 IAM role binding](https://cloud.google.com/iam/docs/overview#cloud-iam-policy), 
@@ -22,8 +22,8 @@ without having to grant them permanent access. This type of just-in-time privile
 
 ## Activate roles on demand
 
-<a href='https://googlecloudplatform.github.io/jit-access/images/JIT-Activation-Screencast.gif?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-access/images/JIT-Activation_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-groups/images/JIT-Activation-Screencast.gif?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-groups/images/JIT-Activation_350.png' align='right'>
 </a>
 
 As a user, you can activate a role in three steps:
@@ -42,11 +42,11 @@ to the project.
 
 ## Request approval to activate a role
 
-<a href='https://googlecloudplatform.github.io/jit-access/images/MPA-Activation-Screencast.gif?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-access/images/MPA-Activation_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-groups/images/MPA-Activation-Screencast.gif?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-groups/images/MPA-Activation_350.png' align='right'>
 </a>
 
-For roles that require [multi-party approval](https://googlecloudplatform.github.io/jit-access/multi-party-approval/), 
+For roles that require [multi-party approval](https://googlecloudplatform.github.io/jit-groups/multi-party-approval/), 
 you can request access in four steps:
 
 1. Select the project you need to access
@@ -65,19 +65,19 @@ and notifies you via email.
 
 ## Grant access
 
-<a href='https://googlecloudplatform.github.io/jit-access/images/Condition.png?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-access/images/Condition_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-groups/images/Condition.png?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-groups/images/Condition_350.png' align='right'>
 </a>
 
 As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
 
 * `has({}.jitAccessConstraint)` (no approval required)
-* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://googlecloudplatform.github.io/jit-access/multi-party-approval/) required) 
+* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://googlecloudplatform.github.io/jit-groups/multi-party-approval/) required) 
 
 You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
 access to individual users, you can also use groups.
 
-To limit access to a subset of resources, you can also include a [resource condition](https://googlecloudplatform.github.io/jit-access/resource-conditions/)
+To limit access to a subset of resources, you can also include a [resource condition](https://googlecloudplatform.github.io/jit-groups/resource-conditions/)
 in the IAM binding.
 
 
@@ -86,8 +86,8 @@ in the IAM binding.
 
 ## Audit access
 
-<a href='https://googlecloudplatform.github.io/jit-access/images/AuditLog.png?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-access/images/AuditLog_350.png' align='right'>
+<a href='https://googlecloudplatform.github.io/jit-groups/images/AuditLog.png?raw=true'>
+<img src='https://googlecloudplatform.github.io/jit-groups/images/AuditLog_350.png' align='right'>
 </a>
 
 As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users. 
