@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.pubsub.Pubsub;
 import com.google.api.services.pubsub.model.PublishRequest;
 import com.google.api.services.pubsub.model.PubsubMessage;
@@ -53,17 +54,9 @@ public class PubSubClient {
   }
 
   private @NotNull Pubsub createClient() throws IOException {
-    try {
-      return new Pubsub.Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a PubSub client failed", e);
-    }
+    return Builders
+      .newBuilder(Pubsub.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   public String publish(

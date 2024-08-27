@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.apis.clients;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -48,18 +49,9 @@ public class IamCredentialsClient {
 
   private @NotNull IAMCredentials createClient() throws IOException
   {
-    try {
-      return new IAMCredentials
-        .Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a IAMCredentials client failed", e);
-    }
+    return Builders
+      .newBuilder(IAMCredentials.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   public IamCredentialsClient(

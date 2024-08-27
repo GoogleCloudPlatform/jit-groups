@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.secretmanager.v1.SecretManager;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
@@ -57,17 +58,9 @@ public class SecretManagerClient {
   }
 
   private @NotNull SecretManager createClient() throws IOException {
-    try {
-      return new SecretManager.Builder(
-          HttpTransport.newTransport(),
-          new GsonFactory(),
-          HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a SecretManager client failed", e);
-    }
+    return Builders
+      .newBuilder(SecretManager.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   /**
