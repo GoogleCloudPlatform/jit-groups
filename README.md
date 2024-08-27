@@ -1,114 +1,115 @@
-# Just-In-Time Access
+# JIT Groups
 
-Just-In-Time Access is an open source application that lets you implement just-in-time privileged access to Google Cloud resources. 
+
+JIT Groups is an open source application that lets you implement secure, self-service
+access management for Google Cloud using groups.
 
 [<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/)
 
-Just-In-Time Access works by introducing the notion of _eligible role bindings_ to Cloud IAM. Unlike a [regular
-IAM role binding](https://cloud.google.com/iam/docs/overview#cloud-iam-policy), 
-an eligible role binding doesn't grant the user access to a project yet:
-Instead, a user first has to _activate_ the binding on demand by using the Just-In-Time Access application. As an administrator,
-you can decide whether activating a role requires approval, or whether users only need to provide a justification (like a bug or case number).
-
-You can use _eligible role bindings_ to grant users privileged (or break-glass) access to resources
-without having to grant them permanent access. This type of just-in-time privileged access helps you to:
-
-* Reduce the risk of someone accidentally modifying or deleting resources. For example, when users have privileged access only when it's needed, it helps prevent them from running scripts at other times that unintentionally affect resources that they shouldn't be able to change.
-* Create an audit trail that indicates why privileges were activated.
-* Conduct audits and reviews for analyzing past activity.
-
-> [!NOTE]  
-> To manage privileged access to Google Cloud resources, you can also use [Privileged Access Manager](https://cloud.google.com/iam/docs/pam-overview), which is now in preview. To learn more about how JIT Access and Privileged Access Manager compare, see [JIT Access vs Privileged Access Manager, and what's next for JIT Access](https://github.com/GoogleCloudPlatform/jit-access/discussions/451).
-
-## Activate roles on demand
-
-<a href='https://googlecloudplatform.github.io/jit-groups/images/JIT-Activation-Screencast.gif?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-groups/images/JIT-Activation_350.png' align='right'>
-</a>
-
-As a user, you can activate a role in three steps:
-
-1. Select the project you need to access
-2. Select one or more roles to activate (from your list of eligible roles)
-3. Enter a justification (like a bug or case number)
-
-After validating your request, the application then [grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access)
-to the project.
+> [!NOTE]
+> JIT Groups supersedes the [JIT Access](jitaccess-overview.md) project, which has largely outlived its purpose as
+> privileged access management
+> [is now available as a platform feature in Google Cloud](https://cloud.google.com/iam/docs/pam-overview).
+> JIT Groups addresses an adjacent, but different use case -- self-service
+> access management, or _entitlement management_, for all types of Google Cloud access, not only privileged access. 
+> If you're currently using JIT Access, you can continue to do so. But we encourage you to consider 
+> [upgrading to JIT Groups](jitaccess-upgrade.md) or migrating to PAM.
 
 
+## Bundle access by job function
 
-<img src='doc/pix.gif' width='100%' height='1'>
+**As a user**, you often need a combination of IAM roles to perform a certain job function or role,
+and you might also need access to more than a single project.
 
+**As an administrator**, you can use JIT Groups to create _access bundles_ -- groups that combine all
+access required to perform a certain job function or role -- and let the application automate the
+process of creating the groups and provisioning the necessary IAM policies.
 
-## Request approval to activate a role
+## Let users discover groups and access
 
-<a href='https://googlecloudplatform.github.io/jit-groups/images/MPA-Activation-Screencast.gif?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-groups/images/MPA-Activation_350.png' align='right'>
-</a>
+[![Discover groups](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover.png){ width="350" align="right"  }](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-discover.png)
 
-For roles that require [multi-party approval](https://googlecloudplatform.github.io/jit-groups/multi-party-approval/), 
-you can request access in four steps:
+**As a user**, you can browse and discover available groups in a self-service fashion.
 
-1. Select the project you need to access
-2. Select the role to activate (from your list of eligible roles)
-3. Select one or more peers to approve your request (peers are users that share the same level of access as you)
-3. Enter a justification (like a bug or case number)
+**As an administrator**, you can control which groups users are allowed to discover and join,
+and which conditions they need to meet to join individual groups.
 
-Your selected peers are notified via email and can approve your request. Once approved, the application 
-[grants you temporary access](https://cloud.google.com/iam/docs/configuring-temporary-access) to the project
-and notifies you via email.
+<img src='https://googlecloudplatform.github.io/jit-groups/images/pix.gif' style='width: 100%; height: 1px'>
 
+## Let users activate time-bound access
 
+[![Request form](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails.png){ width="300" align="right"  }](https://googlecloudplatform.github.io/jit-groups/images/jitgroups-groupdetails.png)
 
-<img src='doc/pix.gif' width='100%' height='1'>
+**As a user**, you can join a group to obtain time-bound access to Google Cloud resources.
 
-
-## Grant access
-
-<a href='https://googlecloudplatform.github.io/jit-groups/images/Condition.png?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-groups/images/Condition_350.png' align='right'>
-</a>
-
-As an administrator, you can grant a role (to a user or group) and make it _eligible_ by adding a special IAM condition:
-
-* `has({}.jitAccessConstraint)` (no approval required)
-* `has({}.multiPartyApprovalConstraint)` ([multi-party approval](https://googlecloudplatform.github.io/jit-groups/multi-party-approval/) required) 
-
-You can create the binding for a specific project, or for an entire folder. Instead of granting eligible
-access to individual users, you can also use groups.
-
-To limit access to a subset of resources, you can also include a [resource condition](https://googlecloudplatform.github.io/jit-groups/resource-conditions/)
-in the IAM binding.
+**As an administrator**, you can decide whether users need approval to join a group, or whether they're
+allowed to join without approval. You can also control the time period for which access is granted, and which
+additional constraints users need to satisfy.
 
 
-<img src='doc/pix.gif' width='100%' height='1'>
+<img src='https://googlecloudplatform.github.io/jit-groups/images/pix.gif' style='width: 100%; height: 1px'>
+
+## Use GitOps to manage groups and policies
+
+![Group structure](https://googlecloudplatform.github.io/jit-groups/images/process.svg){ width="450" align="right"  }
+
+**As an administrator**, you manage groups and their settings using [policy documents](policy-reference.md),
+which are YAML documents.
+
+You can use a GitOps workflow to manage and deploy these policy documents, similar to how
+you manage your infrastructure as code.
+
+**As a user**, you can use the JIT Groups web interface to discover and join groups, and to approve
+other user's join requests -- no code or Git knowledge required.
+
+<img src='https://googlecloudplatform.github.io/jit-groups/images/pix.gif' style='width: 100%; height: 1px'>
+
+## Secure your groups
+
+JIT Groups uses Cloud Identity [security groups](https://support.google.com/a/answer/10607394) and
+[adjusts their settings](https://support.google.com/groups/answer/2464926?hl=en#advanced)
+to make them safe for use in Cloud IAM allow policies, deny policies, and permission access boundaries.
+
+Using security groups is a step up from using _discussion forum_ groups, which provisioning tools such as
+Entra ID and Okta typically use. While discussion forum groups are suitable for managing _organizational groups_,
+they provide fewer security safeguards than security groups and are therefore not well-suited for managing access to
+resources.
+
+## Separate organizational groups and access groups
+
+JIT Groups can help you separate organizational groups and access groups:
+
++   **Organizational groups** are groups that model the organizational structure, and they're often based on
+    departments, teams, or reporting structures. You can continue to manage these groups using Entra ID, Okta,
+    or an HRIS and provision them to Cloud Identity.
 
 
-## Audit access
+![Group structure](https://googlecloudplatform.github.io/jit-groups/images/group-structure.svg){ width="450" align="right"  }
 
-<a href='https://googlecloudplatform.github.io/jit-groups/images/AuditLog.png?raw=true'>
-<img src='https://googlecloudplatform.github.io/jit-groups/images/AuditLog_350.png' align='right'>
-</a>
++   **Access groups** are groups that model job functions or roles, and they're used to control access to
+    resources.
 
-As an administrator, you can use Cloud Logging to review when and why eligible roles have been activated by users. 
-For each activation, the Just-In-Time application writes an audit log entry that contains information about:
+    You can let JIT Groups manage these groups, and control which users and organizational groups
+    are allowed to join them.
 
-* the user that requested access
-* the user's device, including satisfied [access levels](https://cloud.google.com/access-context-manager/docs/manage-access-levels) 
-* the project and role for which access was requested
-* the justification provided by the user
+## Audit group membership
 
-<img src='doc/pix.gif' width='100%' height='1'>
+**As an administrator or auditor**, you can use Cloud Logging to review the JIT Groups audit log. The audit log tracks all events
+related to users joining groups or approving membership requests and contains detailed information about:
 
+* the user's identity
+* the affected group
+* the information provided by the user, such as a justification or ticket number
+* the user's device, including satisfied [access levels](https://cloud.google.com/access-context-manager/docs/manage-access-levels)
 
-## Deploy the application
+## Deploy on App Engine or Cloud Run
 
-Just-In-Time Access runs on App Engine (standard) and Cloud Run. The application
-is stateless and uses [Identity-Aware-Proxy](https://cloud.google.com/iap/docs/concepts-overview) for authentication and authorization, 
-and the [Cloud Asset API](https://cloud.google.com/asset-inventory/docs/reference/rest) and 
-[IAM API](https://cloud.google.com/iam/docs/reference/rest) to manage access.
+JIT Groups is a Java application and runs on App Engine (standard) and Cloud Run. The application
+is stateless and uses [Identity-Aware-Proxy](https://cloud.google.com/iap/docs/concepts-overview)
+for authentication and authorization, and the [Cloud Identity API](https://cloud.google.com/identity/docs/reference/rest) and
+[IAM API](https://cloud.google.com/iam/docs/reference/rest) to manage groups and access.
 
-For detailed instructions on deploying Just-In-Time Access, see [Manage just-in-time privileged access to projects ](https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project) on the Google Cloud website.
+For detailed instructions on deploying Just-In-Time Access, see [Deploy JIT Groups](jitgroups-deploy.md).
 
 --- 
 
