@@ -21,9 +21,12 @@
 
 package com.google.solutions.jitaccess.web;
 
+import org.jboss.resteasy.util.DateUtil;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,5 +92,23 @@ public class TestAbstractConfiguration {
     var configuration = new SampleConfiguration(Map.of("ALIAS", "  1 "));
     assertTrue(configuration.readStringSetting("TEST", "ALIAS").isPresent());
     assertEquals("1", configuration.readStringSetting("TEST", "ALIAS").get());
+  }
+
+  // -------------------------------------------------------------------------
+  // readDurationSetting.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void readDurationSetting_whenNotSet() {
+    var configuration = new SampleConfiguration(Map.of());
+    assertFalse(configuration.readDurationSetting(ChronoUnit.SECONDS, "TEST").isPresent());
+  }
+
+  @Test
+  public void readDurationSetting_whenPresent() {
+    var configuration = new SampleConfiguration(Map.of("TEST", "  3 "));
+    assertEquals(
+      Duration.ofHours(3),
+      configuration.readDurationSetting(ChronoUnit.HOURS, "TEST"));
   }
 }

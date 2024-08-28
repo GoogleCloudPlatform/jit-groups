@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.web;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -70,5 +72,17 @@ public abstract class AbstractConfiguration {
     @NotNull String... keys
   ) {
     return readSetting(s -> s, keys);
+  }
+
+  /**
+   * Read and parse a Duration-typed setting.
+   */
+  protected @NotNull Optional<Duration> readDurationSetting(
+    @NotNull ChronoUnit unit,
+    @NotNull String... keys
+  ) {
+    return readSetting(
+      s -> Duration.of(Integer.parseInt(s), unit),
+      keys);
   }
 }

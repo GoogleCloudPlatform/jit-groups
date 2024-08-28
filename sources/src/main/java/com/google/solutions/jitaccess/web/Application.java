@@ -418,8 +418,8 @@ public class Application {
           secretManagerClient,
           smtpOptions),
         new MailProposalHandler.Options(
-          this.configuration.notificationTimeZone.value(),
-          this.configuration.proposalTimeout.value()));
+          this.configuration.notificationTimeZone,
+          this.configuration.proposalTimeout));
     }
     else {
       return new ProposalHandler() {
@@ -569,7 +569,7 @@ public class Application {
       groupsClient,
       isDebugModeEnabled()
         ? Duration.ofSeconds(20)
-        : this.configuration.environmentCacheTimeout.value(),
+        : this.configuration.environmentCacheTimeout,
       logger);
   }
 

@@ -66,34 +66,9 @@ public class TestApplicationConfiguration {
     assertEquals(
       Duration.ofMinutes(1),
       new ApplicationConfiguration(
-        Map.of("RESOURCE_CACHE_TIMEOUT", "60")).environmentCacheTimeout.value());
+        Map.of("RESOURCE_CACHE_TIMEOUT", "60")).environmentCacheTimeout);
     assertEquals(
       Duration.ofMinutes(5),
-      new ApplicationConfiguration(Map.of()).environmentCacheTimeout.value());
-  }
-
-  // -------------------------------------------------------------------------
-  // proposalTimeout.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void proposalTimeout_whenNotSet() {
-    var configuration = new ApplicationConfiguration(Map.of());
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofHours(1), configuration.proposalTimeout.value());
-  }
-
-  @Test
-  public void proposalTimeout_whenSet() {
-    var configuration = new ApplicationConfiguration(Map.of("APPROVAL_TIMEOUT", " 30 "));
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
-  }
-
-  @Test
-  public void proposalTimeout_whenAliasSet() {
-    var configuration = new ApplicationConfiguration(Map.of("ACTIVATION_REQUEST_TIMEOUT", " 30 "));
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
+      new ApplicationConfiguration(Map.of()).environmentCacheTimeout);
   }
 }

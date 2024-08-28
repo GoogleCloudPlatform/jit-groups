@@ -57,7 +57,17 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Zone to apply to dates when sending notifications.
    */
-  final @NotNull Setting<ZoneId> notificationTimeZone;
+  final @NotNull ZoneId notificationTimeZone;
+
+  /**
+   * Timeout for proposals.
+   */
+  final @NotNull Duration proposalTimeout;
+
+  /**
+   * Timeout for environment cache.
+   */
+  final @NotNull Duration environmentCacheTimeout;
 
   /**
    * CEL expression for mapping userIDs to email addresses.
@@ -138,19 +148,9 @@ class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull Setting<Duration> backendWriteTimeout;
 
   /**
-   * Timeout for environment cache.
-   */
-  final @NotNull Setting<Duration> environmentCacheTimeout;
-
-  /**
    * Comma-separated list of environments.
    */
   final @NotNull Setting<String> environments;
-
-  /**
-   * Timeout for proposals.
-   */
-  final @NotNull Setting<Duration> proposalTimeout;
 
   final @NotNull Setting<String> legacyCatalog;
   final @NotNull Setting<String> legacyScope;
@@ -163,15 +163,44 @@ class ApplicationConfiguration extends AbstractConfiguration {
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     super(settingsData);
 
-    this.customerId = readStringSetting("CUSTOMER_ID", "RESOURCE_CUSTOMER_ID")
+    //
+    // Basic settings.
+    //
+
+    this.customerId = readStringSetting(
+      "CUSTOMER_ID",
+      "RESOURCE_CUSTOMER_ID") // Name used in 1.x
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'CUSTOMER_ID' must be set to the customer ID " +
           "of a Cloud Identity or Workspace account"));
 
-
     this.groupsDomain = readStringSetting("GROUPS_DOMAIN")
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'GROUPS_DOMAIN' must contain a (verified) domain name"));
+
+    this.proposalTimeout = readDurationSetting(
+      ChronoUnit.MINUTES,
+      "APPROVAL_TIMEOUT",
+      "ACTIVATION_REQUEST_TIMEOUT") // Name used in 1.x
+      .orElse(Duration.ofHours(1));
+
+    //
+    // Environment settings.
+    //
+
+    this.environmentCacheTimeout = readDurationSetting(
+      ChronoUnit.SECONDS,
+      "RESOURCE_CACHE_TIMEOUT")
+      .orElse(Duration.ofMinutes(5));
+
+
+    this.environments = new StringSetting("ENVIRONMENTS", "");
+
+    //
+    // Notification settings.
+    //
+    this.notificationTimeZone = readSetting(ZoneId::of, "NOTIFICATION_TIMEZONE")
+      .orElse(ZoneOffset.UTC);
 
     //
     // Backend service id (Cloud Run only).
@@ -179,16 +208,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
     this.backendServiceId = new StringSetting("IAP_BACKEND_SERVICE_ID", null);
     this.verifyIapAudience = new BooleanSetting("IAP_VERIFY_AUDIENCE", true);
 
-    //
-    // Notification settings.
-    //
-    this.notificationTimeZone = new ZoneIdSetting("NOTIFICATION_TIMEZONE");
-
-    this.proposalTimeout = new DurationSetting(
-      "APPROVAL_TIMEOUT",
-      List.of("ACTIVATION_REQUEST_TIMEOUT"), // Name used in 1.x
-      ChronoUnit.MINUTES,
-      Duration.ofHours(1));
 
     //
     // SMTP settings.
@@ -219,15 +238,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
      "BACKEND_WRITE_TIMEOUT",
       ChronoUnit.SECONDS,
       Duration.ofSeconds(5));
-
-    //
-    // Environment settings.
-    //
-    this.environmentCacheTimeout = new DurationSetting(
-      "RESOURCE_CACHE_TIMEOUT",
-      ChronoUnit.SECONDS,
-      Duration.ofMinutes(5));
-    this.environments = new StringSetting("ENVIRONMENTS", "");
 
 
     //
