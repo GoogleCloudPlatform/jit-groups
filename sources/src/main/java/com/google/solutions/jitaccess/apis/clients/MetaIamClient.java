@@ -25,16 +25,13 @@ import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient;
 import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClientRequest;
 import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.json.JsonFactory;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 /**
  * Generic client for IAM meta APIs, i.e. API that expose
@@ -56,20 +53,10 @@ public class MetaIamClient {
 
   private @NotNull MetaApi createClient(
     @NotNull String endpoint
-  ) throws IOException
-  {
-    try {
-      return (MetaApi)new MetaApi.Builder(
-        endpoint,
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-  }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a MetaIam client failed", e);
-    }
+  ) throws IOException {
+    return Builders
+      .newBuilder((t, j, h) -> new MetaApi.Builder(endpoint, t, j, h), this.credentials, this.httpOptions)
+      .build();
   }
 
   /**
