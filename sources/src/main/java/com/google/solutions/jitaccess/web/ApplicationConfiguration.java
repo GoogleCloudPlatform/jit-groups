@@ -153,12 +153,12 @@ class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull Duration backendWriteTimeout;
 
 
-  final @NotNull Setting<String> legacyCatalog;
-  final @NotNull Setting<String> legacyScope;
-  final @NotNull Setting<Duration> legacyActivationTimeout;
-  final @NotNull Setting<String> legacyJustificationPattern;
-  final @NotNull Setting<String> legacyJustificationHint;
-  final @NotNull Setting<String> legacyProjectsQuery;
+  final @NotNull String legacyCatalog;
+  final @NotNull Optional<String> legacyScope;
+  final @NotNull Duration legacyActivationTimeout;
+  final @NotNull String legacyJustificationPattern;
+  final @NotNull String legacyJustificationHint;
+  final @NotNull String legacyProjectsQuery;
 
 
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
@@ -230,24 +230,19 @@ class ApplicationConfiguration extends AbstractConfiguration {
     //
     // Legacy settings.
     //
-    this.legacyCatalog = new StringSetting("RESOURCE_CATALOG", "AssetInventory");
-    this.legacyScope = new StringSetting(
-      "RESOURCE_SCOPE",
-      null);
-    this.legacyActivationTimeout = new DurationSetting(
-      "ACTIVATION_TIMEOUT",
-      List.of("ELEVATION_DURATION"),
+    this.legacyCatalog = readStringSetting("RESOURCE_CATALOG").orElse("AssetInventory");
+    this.legacyScope = readStringSetting("RESOURCE_SCOPE");
+    this.legacyActivationTimeout = readDurationSetting(
       ChronoUnit.MINUTES,
-      Duration.ofHours(2));
-    this.legacyJustificationPattern = new StringSetting(
-      "JUSTIFICATION_PATTERN",
-      ".*");
-    this.legacyJustificationHint = new StringSetting(
-      "JUSTIFICATION_HINT",
-      "Bug or case number");
-    this.legacyProjectsQuery = new StringSetting(
-      "AVAILABLE_PROJECTS_QUERY",
-      "state:ACTIVE");
+      "ACTIVATION_TIMEOUT",
+      "ELEVATION_DURATION")
+      .orElse(Duration.ofHours(2));
+    this.legacyJustificationPattern = readStringSetting("JUSTIFICATION_PATTERN")
+      .orElse(".*");
+    this.legacyJustificationHint = readStringSetting("JUSTIFICATION_HINT")
+      .orElse("Bug or case number");
+    this.legacyProjectsQuery = readStringSetting("AVAILABLE_PROJECTS_QUERY")
+      .orElse("state:ACTIVE");
   }
 
   boolean isSmtpConfigured() {

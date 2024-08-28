@@ -508,10 +508,8 @@ public class Application {
       }
     }
 
-    if (this.configuration.legacyCatalog.isValid() &&
-      this.configuration.legacyCatalog.value().equalsIgnoreCase("ASSETINVENTORY") &&
-      this.configuration.legacyScope.isValid() &&
-      !Strings.isNullOrEmpty(this.configuration.legacyScope.value())) {
+    if (this.configuration.legacyCatalog.equalsIgnoreCase("ASSETINVENTORY") &&
+      this.configuration.legacyScope.isPresent()) {
 
       //
       // Load an extra environment that surfaces JIT Access 1.x roles.
@@ -529,11 +527,11 @@ public class Application {
           () -> {
             try {
               return legacyLoader.load(
-                this.configuration.legacyProjectsQuery.value(),
-                this.configuration.legacyScope.value(),
-                this.configuration.legacyActivationTimeout.value(),
-                this.configuration.legacyJustificationPattern.value(),
-                this.configuration.legacyJustificationHint.value(),
+                this.configuration.legacyProjectsQuery,
+                this.configuration.legacyScope.get(),
+                this.configuration.legacyActivationTimeout,
+                this.configuration.legacyJustificationPattern,
+                this.configuration.legacyJustificationHint,
                 logger);
             }
             catch (Exception e) {
