@@ -66,7 +66,7 @@ public class ResourceManagerClient extends AbstractIamClient {
   }
 
   /**
-   * Modify a project IAM policy using the optimistic concurrency control-mechanism.
+   * Modify a project IAM policy using optimistic concurrency control.
    */
   public void modifyIamPolicy(
     @NotNull ProjectId projectId,

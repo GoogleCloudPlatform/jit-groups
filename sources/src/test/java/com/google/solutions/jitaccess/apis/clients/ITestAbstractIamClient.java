@@ -22,11 +22,14 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest;
 import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest;
 import com.google.auth.Credentials;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,5 +135,50 @@ public class ITestAbstractIamClient {
       GoogleJsonResponseException.class,
       () -> request.execute());
     assertEquals(404, exception.getStatusCode());
+  }
+
+  //---------------------------------------------------------------------
+  // modifyIamPolicy.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void modifyIamPolicy_whenUnauthenticated() {
+    var client = createIamClient(ITestEnvironment.INVALID_CREDENTIAL);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () ->
+        client.modifyIamPolicy(
+          String.format("v3/projects/%s", ITestEnvironment.PROJECT_ID),
+          policy -> {},
+          "testing"));
+  }
+
+  @Test
+  public void modifyIamPolicy_whenCallerLacksPermission() {
+    var client = createIamClient(ITestEnvironment.NO_ACCESS_CREDENTIALS);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () ->
+        client.modifyIamPolicy(
+          String.format("v3/projects/%s", ITestEnvironment.PROJECT_ID),
+          policy -> {},
+          "testing"));
+  }
+
+  @Test
+  public void modifyIamPolicy_whenRoleNotCompatible() {
+    var client = createIamClient(ITestEnvironment.APPLICATION_CREDENTIALS);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () ->
+        client.modifyIamPolicy(
+          String.format("v3/projects/%s", ITestEnvironment.PROJECT_ID),
+          policy -> policy.getBindings().add(new Binding()
+            .setMembers(List.of("user:bob@example.com"))
+            .setRole("roles/billing.viewer")),
+          "testing"));
   }
 }

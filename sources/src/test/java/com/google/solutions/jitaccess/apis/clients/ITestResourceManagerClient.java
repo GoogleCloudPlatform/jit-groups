@@ -36,54 +36,7 @@ public class ITestResourceManagerClient {
   //---------------------------------------------------------------------
 
   @Test
-  public void modifyIamPolicy_whenUnauthenticated() {
-    var adapter = new ResourceManagerClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
-
-    assertThrows(
-      NotAuthenticatedException.class,
-      () ->
-        adapter.modifyIamPolicy(
-          ITestEnvironment.PROJECT_ID,
-          policy -> {},
-          REQUEST_REASON));
-  }
-
-  @Test
-  public void modifyIamPolicy_whenCallerLacksPermission() {
-    var adapter = new ResourceManagerClient(
-      ITestEnvironment.NO_ACCESS_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
-
-    assertThrows(
-      AccessDeniedException.class,
-      () ->
-        adapter.modifyIamPolicy(
-          ITestEnvironment.PROJECT_ID,
-          policy -> {},
-          REQUEST_REASON));
-  }
-
-  @Test
-  public void modifyIamPolicy_whenRoleNotGrantableOnProject() {
-    var adapter = new ResourceManagerClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      HttpTransport.Options.DEFAULT);
-
-    assertThrows(
-      AccessDeniedException.class,
-      () ->
-        adapter.modifyIamPolicy(
-          ITestEnvironment.PROJECT_ID,
-          policy -> policy.getBindings().add(new Binding()
-            .setMembers(List.of("user:bob@example.com"))
-            .setRole("roles/billing.viewer")),
-          REQUEST_REASON));
-  }
-
-  @Test
-  public void modifyIamPolicy() throws Exception {
+  public void modifyIamPolicy_project() throws Exception {
     var adapter = new ResourceManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
