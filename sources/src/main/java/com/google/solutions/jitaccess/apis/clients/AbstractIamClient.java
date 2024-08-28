@@ -32,8 +32,7 @@ import java.io.IOException;
 import java.util.function.Consumer;
 
 /**
- * Base class for 'IAM Meta API' clients, i.e. clients that modify IAM policies
- * using resource-specific getIamPolicy and setIamPolicy methods.
+ * Base class for APIs that support getIamPolicy and setIamPolicy methods.
  */
 public abstract class AbstractIamClient {
   /**
@@ -55,6 +54,9 @@ public abstract class AbstractIamClient {
 
   /**
    * Read IAM policy of resource.
+   *
+   * Deriving classes should provide an overload that accepts a ResourceId
+   * instead of a resource path.
    */
   protected GetIamPolicy getIamPolicy(
     @NotNull String fullResourcePath,
@@ -65,6 +67,9 @@ public abstract class AbstractIamClient {
 
   /**
    * Set IAM policy on resource.
+   *
+   * Deriving classes should provide an overload that accepts a ResourceId
+   * instead of a resource path.
    */
   protected SetIamPolicy setIamPolicy(
     @NotNull String fullResourcePath,
