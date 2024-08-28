@@ -140,17 +140,17 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Connect timeout for HTTP requests to backends.
    */
-  final @NotNull Setting<Duration> backendConnectTimeout;
+  final @NotNull Duration backendConnectTimeout;
 
   /**
    * Read timeout for HTTP requests to backends.
    */
-  final @NotNull Setting<Duration> backendReadTimeout;
+  final @NotNull Duration backendReadTimeout;
 
   /**
    * Write timeout for HTTP requests to backends.
    */
-  final @NotNull Setting<Duration> backendWriteTimeout;
+  final @NotNull Duration backendWriteTimeout;
 
 
   final @NotNull Setting<String> legacyCatalog;
@@ -167,30 +167,25 @@ class ApplicationConfiguration extends AbstractConfiguration {
     //
     // Basic settings.
     //
-
     this.customerId = readStringSetting(
       "CUSTOMER_ID",
       "RESOURCE_CUSTOMER_ID") // Name used in 1.x
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'CUSTOMER_ID' must be set to the customer ID " +
           "of a Cloud Identity or Workspace account"));
-
     this.groupsDomain = readStringSetting("GROUPS_DOMAIN")
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'GROUPS_DOMAIN' must contain a (verified) domain name"));
-
     this.proposalTimeout = readDurationSetting(
       ChronoUnit.MINUTES,
       "APPROVAL_TIMEOUT",
       "ACTIVATION_REQUEST_TIMEOUT") // Name used in 1.x
       .orElse(Duration.ofHours(1));
-
     this.environments = readStringSetting("ENVIRONMENTS").stream()
       .flatMap(s -> Arrays.stream(s.split(",")))
       .map(String::trim)
       .filter(s -> !s.isBlank())
       .toList();
-
     this.environmentCacheTimeout = readDurationSetting(
       ChronoUnit.SECONDS,
       "RESOURCE_CACHE_TIMEOUT")
@@ -222,23 +217,15 @@ class ApplicationConfiguration extends AbstractConfiguration {
     this.backendServiceId = new StringSetting("IAP_BACKEND_SERVICE_ID", null);
     this.verifyIapAudience = new BooleanSetting("IAP_VERIFY_AUDIENCE", true);
 
-
     //
     // Backend settings.
     //
-    this.backendConnectTimeout = new DurationSetting(
-     "BACKEND_CONNECT_TIMEOUT",
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(5));
-    this.backendReadTimeout = new DurationSetting(
-     "BACKEND_READ_TIMEOUT",
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(20));
-    this.backendWriteTimeout = new DurationSetting(
-     "BACKEND_WRITE_TIMEOUT",
-      ChronoUnit.SECONDS,
-      Duration.ofSeconds(5));
-
+    this.backendConnectTimeout = readDurationSetting(ChronoUnit.SECONDS, "BACKEND_CONNECT_TIMEOUT")
+      .orElse(Duration.ofSeconds(5));
+    this.backendReadTimeout = readDurationSetting(ChronoUnit.SECONDS, "BACKEND_READ_TIMEOUT")
+      .orElse(Duration.ofSeconds(20));
+    this.backendWriteTimeout = readDurationSetting(ChronoUnit.SECONDS, "BACKEND_WRITE_TIMEOUT")
+      .orElse(Duration.ofSeconds(5));
 
     //
     // Legacy settings.

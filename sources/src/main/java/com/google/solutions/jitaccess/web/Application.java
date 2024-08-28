@@ -329,9 +329,9 @@ public class Application {
   @Singleton
   public @NotNull HttpTransport.Options produceHttpTransportOptions() {
     return new HttpTransport.Options(
-      this.configuration.backendConnectTimeout.value(),
-      this.configuration.backendReadTimeout.value(),
-      this.configuration.backendWriteTimeout.value());
+      this.configuration.backendConnectTimeout,
+      this.configuration.backendReadTimeout,
+      this.configuration.backendWriteTimeout);
   }
 
   @Produces
