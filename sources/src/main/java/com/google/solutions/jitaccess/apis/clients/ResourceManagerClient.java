@@ -27,6 +27,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.api.services.pubsub.Pubsub;
+import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.ApplicationVersion;
@@ -43,16 +44,17 @@ import java.util.function.Consumer;
 /**
  * Adapter for Resource Manager API.
  */
-public class ResourceManagerClient {
+public class ResourceManagerClient extends AbstractIamClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
 
   private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
 
-  private final @NotNull GoogleCredentials credentials;
+  private final @NotNull Credentials credentials;
   private final @NotNull HttpTransport.Options httpOptions;
 
-  private @NotNull CloudResourceManager createClient() throws IOException
+  @Override
+  protected @NotNull CloudResourceManager createClient() throws IOException
   {
     return Builders
       .newBuilder(CloudResourceManager.Builder::new, this.credentials, this.httpOptions)
@@ -66,7 +68,7 @@ public class ResourceManagerClient {
   }
 
   public ResourceManagerClient(
-    @NotNull GoogleCredentials credentials,
+    @NotNull Credentials credentials,
     @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
