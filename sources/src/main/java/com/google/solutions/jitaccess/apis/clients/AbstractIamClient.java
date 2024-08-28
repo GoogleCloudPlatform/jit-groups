@@ -21,12 +21,17 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient;
 import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClientRequest;
 import com.google.api.services.cloudresourcemanager.v3.model.GetIamPolicyRequest;
+import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest;
+import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.ProjectId;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -35,22 +40,18 @@ import java.util.function.Consumer;
  * Base class for APIs that support getIamPolicy and setIamPolicy methods.
  */
 public abstract class AbstractIamClient {
+  private static final int MAX_SET_IAM_POLICY_ATTEMPTS = 4;
+
+  private static boolean isRoleNotGrantableErrorMessage(@Nullable String message)
+  {
+    return message != null &&
+      (message.contains("not supported") || message.contains("does not exist"));
+  }
+
   /**
    * Create a new, API-specific client.
    */
   abstract @NotNull AbstractGoogleJsonClient createClient() throws IOException;
-
-  /**
-   * Modify a resource's IAM policy using the optimistic
-   * concurrency control-mechanism.
-   */
-  protected void modifyIamPolicy(
-    @NotNull String fullResourcePath,
-    @NotNull Consumer<Policy> modify,
-    @NotNull String requestReason
-  ) throws AccessException, IOException {
-    throw new UnsupportedOperationException();
-  }
 
   /**
    * Read IAM policy of resource.
@@ -76,6 +77,113 @@ public abstract class AbstractIamClient {
     @NotNull SetIamPolicyRequest content
   ) throws IOException {
     return new SetIamPolicy(createClient(), fullResourcePath, content);
+  }
+
+  /**
+   * Modify an IAM policy using the optimistic concurrency control-mechanism.
+   */
+  public void modifyIamPolicy(
+    @NotNull String fullResourcePath,
+    @NotNull Consumer<Policy> modify,
+    @NotNull String requestReason
+  ) throws AccessException, IOException {
+    Preconditions.checkNotNull(fullResourcePath, "fullResourcePath");
+    Preconditions.checkNotNull(modify, "modify");
+
+    final var optionsV3 = new GetPolicyOptions().setRequestedPolicyVersion(3);
+
+    try {
+      var client = createClient();
+
+      //
+      // IAM policies use optimistic concurrency control, so we might need to perform
+      // multiple attempts to update the policy.
+      //
+      for (int attempt = 0; attempt < MAX_SET_IAM_POLICY_ATTEMPTS; attempt++) {
+        //
+        // Read current version of policy.
+        //
+        // NB. The API might return a v1 policy even if we
+        // request a v3 policy.
+        //
+        var getRequest = new GetIamPolicy(
+          client,
+          fullResourcePath,
+          new GetIamPolicyRequest()
+            .setOptions(optionsV3));
+        var policy = getRequest.execute();
+
+        //
+        // Make sure we're using v3; older versions don't support conditions.
+        //
+        policy.setVersion(3);
+
+        //
+        // Apply changes.
+        //
+        modify.accept(policy);
+
+        try {
+          var request = new SetIamPolicy(
+            client,
+            fullResourcePath,
+            new SetIamPolicyRequest().setPolicy(policy));
+
+          request.getRequestHeaders().set("x-goog-request-reason", requestReason);
+          request.execute();
+
+          //
+          // Successful update -> quit loop.
+          //
+          return;
+        }
+        catch (GoogleJsonResponseException e) {
+          if (e.getStatusCode() == 412) {
+            //
+            // Concurrent modification - back off and retry.
+            //
+            try {
+              Thread.sleep(200);
+            }
+            catch (InterruptedException ignored) {
+            }
+          }
+          else {
+            throw (GoogleJsonResponseException) e.fillInStackTrace();
+          }
+        }
+      }
+
+      throw new AlreadyExistsException(
+        "Failed to update IAM bindings due to concurrent modifications");
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 400:
+          //
+          // One possible reason for an INVALID_ARGUMENT error is that we've tried
+          // to grant a role on a resource that cannot be granted on this type of resource.
+          // If that's the case, provide a more descriptive error message.
+          //
+          if (e.getDetails() != null &&
+            e.getDetails().getErrors() != null &&
+            e.getDetails().getErrors().size() > 0 &&
+            isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
+            throw new AccessDeniedException(
+              String.format("Modifying IAM policy of '%s' failed because one of the " +
+                "roles isn't compatible with this resource",
+                fullResourcePath));
+          }
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(String.format(
+            "Access to '%s' is denied", fullResourcePath),
+            e);
+        default:
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+      }
+    }
   }
 
   //---------------------------------------------------------------------------

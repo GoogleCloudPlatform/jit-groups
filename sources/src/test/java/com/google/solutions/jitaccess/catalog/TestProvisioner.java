@@ -438,7 +438,7 @@ public class TestProvisioner {
         SAMPLE_GROUP,
         Set.of());
 
-      verify(resourceManagerClient, times(0)).modifyIamPolicy(any(), any(), any());
+      verify(resourceManagerClient, times(0)).modifyIamPolicy(any(ProjectId.class), any(), any());
       verify(groupsClient, times(0)).patchGroup(any(), any());
     }
 
@@ -459,7 +459,7 @@ public class TestProvisioner {
         SAMPLE_GROUP,
         Set.of(new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1)));
 
-      verify(resourceManagerClient, times(0)).modifyIamPolicy(any(), any(), any());
+      verify(resourceManagerClient, times(0)).modifyIamPolicy(any(ProjectId.class), any(), any());
       verify(groupsClient, times(0)).patchGroup(any(), any());
     }
 
