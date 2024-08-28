@@ -26,6 +26,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.*;
+import com.google.api.services.pubsub.Pubsub;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.ApplicationVersion;
@@ -53,18 +54,9 @@ public class ResourceManagerClient {
 
   private @NotNull CloudResourceManager createClient() throws IOException
   {
-    try {
-      return new CloudResourceManager
-        .Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a ResourceManager client failed", e);
-    }
+    return Builders
+      .newBuilder(CloudResourceManager.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   private static boolean isRoleNotGrantableErrorMessage(@Nullable String message)

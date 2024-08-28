@@ -25,6 +25,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.api.services.cloudidentity.v1.model.*;
+import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -102,31 +103,15 @@ public class CloudIdentityGroupsClient {
   }
 
   private @NotNull CloudIdentity createClient() throws IOException {
-    try {
-      return new CloudIdentity.Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a Cloud Identity client failed", e);
-    }
+    return Builders
+      .newBuilder(CloudIdentity.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   private @NotNull Groupssettings createSettingsClient() throws IOException {
-    try {
-      return new Groupssettings.Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a group settings client failed", e);
-    }
+    return Builders
+      .newBuilder(Groupssettings.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   private static boolean isAlreadyExistsError(

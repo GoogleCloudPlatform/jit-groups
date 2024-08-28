@@ -25,6 +25,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
+import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.ApplicationVersion;
@@ -55,17 +56,9 @@ public class AssetInventoryClient {
   }
 
   protected @NotNull CloudAsset createClient() throws IOException {
-    try {
-      return new CloudAsset.Builder(
-        HttpTransport.newTransport(),
-        new GsonFactory(),
-        HttpTransport.newAuthenticatingRequestInitializer(this.credentials, this.httpOptions))
-        .setApplicationName(ApplicationVersion.USER_AGENT)
-        .build();
-    }
-    catch (GeneralSecurityException e) {
-      throw new IOException("Creating a CloudAsset client failed", e);
-    }
+    return Builders
+      .newBuilder(CloudAsset.Builder::new, this.credentials, this.httpOptions)
+      .build();
   }
 
   /**
