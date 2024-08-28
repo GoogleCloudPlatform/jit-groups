@@ -454,7 +454,7 @@ public class Application {
     // policy yet (because that's expensive).
     //
     final var configurations = new HashMap<String, EnvironmentConfiguration>();
-    for (var environment : this.configuration.environments()) {
+    for (var environment : this.configuration.environments) {
       if (environment.startsWith("file:")) {
         //
         // Value contains a file path, which is only allowed for development.

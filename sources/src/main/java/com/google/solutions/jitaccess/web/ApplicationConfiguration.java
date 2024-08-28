@@ -55,6 +55,11 @@ class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull String groupsDomain;
 
   /**
+   * list of environments.
+   */
+  final @NotNull Collection<String> environments;
+
+  /**
    * Zone to apply to dates when sending notifications.
    */
   final @NotNull ZoneId notificationTimeZone;
@@ -147,10 +152,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
    */
   final @NotNull Setting<Duration> backendWriteTimeout;
 
-  /**
-   * Comma-separated list of environments.
-   */
-  final @NotNull Setting<String> environments;
 
   final @NotNull Setting<String> legacyCatalog;
   final @NotNull Setting<String> legacyScope;
@@ -184,17 +185,15 @@ class ApplicationConfiguration extends AbstractConfiguration {
       "ACTIVATION_REQUEST_TIMEOUT") // Name used in 1.x
       .orElse(Duration.ofHours(1));
 
-    //
-    // Environment settings.
-    //
+    this.environments = readStringSetting("ENVIRONMENTS").stream()
+      .flatMap(s -> Arrays.stream(s.split(",")))
+      .filter(s -> !s.isBlank())
+      .toList();
 
     this.environmentCacheTimeout = readDurationSetting(
       ChronoUnit.SECONDS,
       "RESOURCE_CACHE_TIMEOUT")
       .orElse(Duration.ofMinutes(5));
-
-
-    this.environments = new StringSetting("ENVIRONMENTS", "");
 
     //
     // Notification settings.
@@ -279,13 +278,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
       SecretManagerClient.OAUTH_SCOPE,
       CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
       CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE));
-  }
-
-  @NotNull Collection<String> environments() {
-    return Arrays.stream(this.environments.value().split(","))
-      .map(String::trim)
-      .filter(s -> !s.isBlank())
-      .toList();
   }
 
   public @NotNull Map<String, String> smtpExtraOptionsMap() {
