@@ -29,7 +29,6 @@ import com.google.api.services.cloudresourcemanager.v3.model.GetPolicyOptions;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.api.services.cloudresourcemanager.v3.model.SetIamPolicyRequest;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.apis.ProjectId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
