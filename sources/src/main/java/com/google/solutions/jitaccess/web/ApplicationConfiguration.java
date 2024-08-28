@@ -21,20 +21,16 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.common.collect.Streams;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 class ApplicationConfiguration extends AbstractConfiguration {
   /**
@@ -130,12 +126,12 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Backend Service Id for token validation
    */
-  final @NotNull Setting<String> backendServiceId;
+  final @NotNull Optional<String> backendServiceId;
 
   /**
    * Check audience of IAP assertions.
    */
-  final @NotNull Setting<Boolean> verifyIapAudience;
+  final boolean verifyIapAudience;
 
   /**
    * Connect timeout for HTTP requests to backends.
@@ -195,10 +191,14 @@ class ApplicationConfiguration extends AbstractConfiguration {
     // SMTP settings.
     //
     this.smtpAddressMapping = readStringSetting("SMTP_ADDRESS_MAPPING");
-    this.smtpHost = readStringSetting("SMTP_HOST").orElse("smtp.gmail.com");
-    this.smtpPort = readSetting(Integer::parseInt, "SMTP_PORT").orElse(587);
-    this.smtpEnableStartTls = readSetting(Boolean::parseBoolean, "SMTP_ENABLE_STARTTLS").orElse(true);
-    this.smtpSenderName = readStringSetting("SMTP_SENDER_NAME").orElse("JIT Groups");
+    this.smtpHost = readStringSetting("SMTP_HOST")
+      .orElse("smtp.gmail.com");
+    this.smtpPort = readSetting(Integer::parseInt, "SMTP_PORT")
+      .orElse(587);
+    this.smtpEnableStartTls = readSetting(Boolean::parseBoolean, "SMTP_ENABLE_STARTTLS")
+      .orElse(true);
+    this.smtpSenderName = readStringSetting("SMTP_SENDER_NAME")
+      .orElse("JIT Groups");
     this.smtpSenderAddress = readStringSetting("SMTP_SENDER_ADDRESS");
     this.smtpUsername = readStringSetting("SMTP_USERNAME");
     this.smtpPassword = readStringSetting("SMTP_PASSWORD");
@@ -214,8 +214,9 @@ class ApplicationConfiguration extends AbstractConfiguration {
     //
     // Backend service id (Cloud Run only).
     //
-    this.backendServiceId = new StringSetting("IAP_BACKEND_SERVICE_ID", null);
-    this.verifyIapAudience = new BooleanSetting("IAP_VERIFY_AUDIENCE", true);
+    this.backendServiceId = readStringSetting("IAP_BACKEND_SERVICE_ID");
+    this.verifyIapAudience = readSetting(Boolean::parseBoolean, "IAP_VERIFY_AUDIENCE")
+      .orElse(true);
 
     //
     // Backend settings.
@@ -275,139 +276,5 @@ class ApplicationConfiguration extends AbstractConfiguration {
     }
 
     return map;
-  }
-
-  // -------------------------------------------------------------------------
-  // Inner classes.
-  // -------------------------------------------------------------------------
-
-  public abstract class Setting<T> {
-    private final @NotNull String key;
-    private final @NotNull Collection<String> aliases;
-    private final @Nullable T defaultValue;
-
-    protected abstract T parse(String value);
-
-    protected Setting(
-      @NotNull String key,
-      @NotNull Collection<String> aliases,
-      @Nullable T defaultValue
-    ) {
-      this.key = key;
-      this.aliases = aliases;
-      this.defaultValue = defaultValue;
-    }
-
-    public @Nullable String key() {
-      return this.key;
-    }
-
-    public @Nullable T value() {
-      var value = Streams.concat(Stream.of(this.key), this.aliases.stream())
-        .map(ApplicationConfiguration.this.settingsData::get)
-        .filter(v -> v != null)
-        .map(String::trim)
-        .filter(v -> !v.isBlank())
-        .map(this::parse)
-        .findFirst();
-
-      if (value.isPresent()) {
-        return value.get();
-      }
-      else if (this.defaultValue != null) {
-        return this.defaultValue;
-      }
-      else {
-        throw new IllegalStateException("No value provided for " + this.key);
-      }
-    }
-
-    public boolean isValid() {
-      try {
-        value();
-        return true;
-      }
-      catch (Exception ignored) {
-        return false;
-      }
-    }
-
-    public boolean isDefault() {
-      return Objects.equals(value(), this.defaultValue);
-    }
-  }
-
-  private class StringSetting extends Setting<String> {
-    public StringSetting(@NotNull String key, @Nullable String defaultValue) {
-      super(key, List.of(), defaultValue);
-    }
-
-    public StringSetting(
-      @NotNull String key,
-      @NotNull Collection<String> aliases,
-      @Nullable String defaultValue
-    ) {
-      super(key, aliases, defaultValue);
-    }
-
-    @Override
-    protected String parse(String value) {
-      return value;
-    }
-  }
-
-  private class IntSetting extends Setting<Integer> {
-    public IntSetting(String key, Integer defaultValue) {
-      super(key, List.of(), defaultValue);
-    }
-
-    @Override
-    protected @NotNull Integer parse(@NotNull String value) {
-      return Integer.parseInt(value);
-    }
-  }
-
-  private class BooleanSetting extends Setting<Boolean> {
-    public BooleanSetting(@NotNull String key, @Nullable Boolean defaultValue) {
-      super(key, List.of(), defaultValue);
-    }
-
-    @Override
-    protected @NotNull Boolean parse(String value) {
-      return Boolean.parseBoolean(value);
-    }
-  }
-
-  private class DurationSetting extends Setting<Duration> {
-    private final @NotNull ChronoUnit unit;
-
-    public DurationSetting(
-      @NotNull String key,
-      @NotNull Collection<String> aliases,
-      @NotNull ChronoUnit unit,
-      @Nullable Duration defaultValue) {
-      super(key, aliases, defaultValue);
-      this.unit = unit;
-    }
-
-    public DurationSetting(@NotNull String key, ChronoUnit unit, Duration defaultValue) {
-      this(key, List.of(), unit, defaultValue);
-    }
-
-    @Override
-    protected Duration parse(@NotNull String value) {
-      return Duration.of(Integer.parseInt(value), this.unit);
-    }
-  }
-
-  private class ZoneIdSetting extends Setting<ZoneId> {
-    public ZoneIdSetting(@NotNull String key) {
-      super(key, List.of(), ZoneOffset.UTC);
-    }
-
-    @Override
-    protected @NotNull ZoneId parse(@NotNull String value) {
-      return ZoneId.of(value);
-    }
   }
 }

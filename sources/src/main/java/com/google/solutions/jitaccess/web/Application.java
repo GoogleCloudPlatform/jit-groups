@@ -255,7 +255,7 @@ public class Application {
   @Produces
   @Singleton
   public RequireIapPrincipalFilter.Options produceIapRequestFilterOptions() {
-    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience.value()){
+    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience){
       //
       // Disable expected audience-check.
       //
@@ -272,7 +272,7 @@ public class Application {
         this.isDebugModeEnabled(),
         String.format("/projects/%s/apps/%s", this.projectNumber, this.projectId));
     }
-    else  if (this.configuration.backendServiceId.isValid()) {
+    else  if (this.configuration.backendServiceId.isPresent()) {
       //
       // For Cloud Run, we need the backend service id.
       //
@@ -281,7 +281,7 @@ public class Application {
         String.format(
           "/projects/%s/global/backendServices/%s",
           this.projectNumber,
-          this.configuration.backendServiceId.value()));
+          this.configuration.backendServiceId.get()));
     }
     else {
       throw new RuntimeException(
