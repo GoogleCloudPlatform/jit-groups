@@ -203,7 +203,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
     this.smtpUsername = readStringSetting("SMTP_USERNAME");
     this.smtpPassword = readStringSetting("SMTP_PASSWORD");
     this.smtpSecret = readStringSetting("SMTP_SECRET");
-    this.smtpExtraOptions =readStringSetting("SMTP_OPTIONS");
+    this.smtpExtraOptions = readStringSetting("SMTP_OPTIONS");
 
     //
     // Notification settings.
