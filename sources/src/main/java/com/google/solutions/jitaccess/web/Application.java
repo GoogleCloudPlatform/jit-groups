@@ -389,31 +389,31 @@ public class Application {
     }
     else if (configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
-        this.configuration.smtpHost.value(),
-        this.configuration.smtpPort.value(),
-        this.configuration.smtpSenderName.value(),
-        new EmailAddress(this.configuration.smtpSenderAddress.value()),
-        this.configuration.smtpEnableStartTls.value(),
+        this.configuration.smtpHost,
+        this.configuration.smtpPort,
+        this.configuration.smtpSenderName,
+        new EmailAddress(this.configuration.smtpSenderAddress.get()),
+        this.configuration.smtpEnableStartTls,
         this.configuration.smtpExtraOptionsMap());
 
       //
       // Lookup credentials from config and/or secret. Use the secret
       // if both are configured.
       //
-      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
+      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isPresent()) {
         smtpOptions.setSmtpSecretCredentials(
-          this.configuration.smtpUsername.value(),
-          this.configuration.smtpSecret.value());
+          this.configuration.smtpUsername.get(),
+          this.configuration.smtpSecret.get());
       }
-      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
+      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isPresent()) {
         smtpOptions.setSmtpCleartextCredentials(
-          this.configuration.smtpUsername.value(),
-          this.configuration.smtpPassword.value());
+          this.configuration.smtpUsername.get(),
+          this.configuration.smtpPassword.get());
       }
 
       return new MailProposalHandler(
         tokenSigner,
-        new EmailMapping(this.configuration.smtpAddressMapping.value()),
+        new EmailMapping(this.configuration.smtpAddressMapping.orElse(null)),
         new SmtpClient(
           secretManagerClient,
           smtpOptions),

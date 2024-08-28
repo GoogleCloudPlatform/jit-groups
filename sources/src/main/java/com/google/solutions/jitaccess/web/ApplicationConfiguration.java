@@ -77,42 +77,42 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * CEL expression for mapping userIDs to email addresses.
    */
-  final @NotNull Setting<String> smtpAddressMapping;
+  final @NotNull Optional<String> smtpAddressMapping;
 
   /**
    * SMTP server for sending notifications.
    */
-  final @NotNull Setting<String> smtpHost;
+  final @NotNull String smtpHost;
 
   /**
    * SMTP port for sending notifications.
    */
-  final @NotNull Setting<Integer> smtpPort;
+  final int smtpPort;
 
   /**
    * Enable StartTLS.
    */
-  final @NotNull Setting<Boolean> smtpEnableStartTls;
+  final @NotNull boolean smtpEnableStartTls;
 
   /**
    * Human-readable sender name used for notifications.
    */
-  final @NotNull Setting<String> smtpSenderName;
+  final @NotNull String smtpSenderName;
 
   /**
    * Email address used for notifications.
    */
-  final @NotNull Setting<String> smtpSenderAddress;
+  final @NotNull Optional<String> smtpSenderAddress;
 
   /**
    * SMTP username.
    */
-  final @NotNull Setting<String> smtpUsername;
+  final @NotNull Optional<String> smtpUsername;
 
   /**
    * SMTP password. For Gmail, this should be an application-specific password.
    */
-  final @NotNull Setting<String> smtpPassword;
+  final @NotNull Optional<String> smtpPassword;
 
   /**
    * Path to a SecretManager secret that contains the SMTP password.
@@ -120,12 +120,12 @@ class ApplicationConfiguration extends AbstractConfiguration {
    *
    * The path must be in the format projects/x/secrets/y/versions/z.
    */
-  final @NotNull Setting<String> smtpSecret;
+  final @NotNull Optional<String> smtpSecret;
 
   /**
    * Extra JavaMail options.
    */
-  final @NotNull Setting<String> smtpExtraOptions;
+  final @NotNull Optional<String> smtpExtraOptions;
 
   /**
    * Backend Service Id for token validation
@@ -187,6 +187,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
 
     this.environments = readStringSetting("ENVIRONMENTS").stream()
       .flatMap(s -> Arrays.stream(s.split(",")))
+      .map(String::trim)
       .filter(s -> !s.isBlank())
       .toList();
 
@@ -194,6 +195,20 @@ class ApplicationConfiguration extends AbstractConfiguration {
       ChronoUnit.SECONDS,
       "RESOURCE_CACHE_TIMEOUT")
       .orElse(Duration.ofMinutes(5));
+
+    //
+    // SMTP settings.
+    //
+    this.smtpAddressMapping = readStringSetting("SMTP_ADDRESS_MAPPING");
+    this.smtpHost = readStringSetting("SMTP_HOST").orElse("smtp.gmail.com");
+    this.smtpPort = readSetting(Integer::parseInt, "SMTP_PORT").orElse(587);
+    this.smtpEnableStartTls = readSetting(Boolean::parseBoolean, "SMTP_ENABLE_STARTTLS").orElse(true);
+    this.smtpSenderName = readStringSetting("SMTP_SENDER_NAME").orElse("JIT Groups");
+    this.smtpSenderAddress = readStringSetting("SMTP_SENDER_ADDRESS");
+    this.smtpUsername = readStringSetting("SMTP_USERNAME");
+    this.smtpPassword = readStringSetting("SMTP_PASSWORD");
+    this.smtpSecret = readStringSetting("SMTP_SECRET");
+    this.smtpExtraOptions =readStringSetting("SMTP_OPTIONS");
 
     //
     // Notification settings.
@@ -207,20 +222,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
     this.backendServiceId = new StringSetting("IAP_BACKEND_SERVICE_ID", null);
     this.verifyIapAudience = new BooleanSetting("IAP_VERIFY_AUDIENCE", true);
 
-
-    //
-    // SMTP settings.
-    //
-    this.smtpAddressMapping = new StringSetting("SMTP_ADDRESS_MAPPING", "");
-    this.smtpHost = new StringSetting("SMTP_HOST", "smtp.gmail.com");
-    this.smtpPort = new IntSetting("SMTP_PORT", 587);
-    this.smtpEnableStartTls = new BooleanSetting("SMTP_ENABLE_STARTTLS", true);
-    this.smtpSenderName = new StringSetting("SMTP_SENDER_NAME", "JIT Groups");
-    this.smtpSenderAddress = new StringSetting("SMTP_SENDER_ADDRESS", null);
-    this.smtpUsername = new StringSetting("SMTP_USERNAME", null);
-    this.smtpPassword = new StringSetting("SMTP_PASSWORD", null);
-    this.smtpSecret = new StringSetting("SMTP_SECRET", null);
-    this.smtpExtraOptions = new StringSetting("SMTP_OPTIONS", null);
 
     //
     // Backend settings.
@@ -263,13 +264,12 @@ class ApplicationConfiguration extends AbstractConfiguration {
   }
 
   boolean isSmtpConfigured() {
-    var requiredSettings = List.of(smtpHost, smtpPort, smtpSenderName, smtpSenderAddress);
-    return requiredSettings.stream().allMatch(s -> s.isValid());
+    return this.smtpSenderAddress.isPresent();
   }
 
   public boolean isSmtpAuthenticationConfigured() {
-    return this.smtpUsername.isValid() &&
-      (this.smtpPassword.isValid() || this.smtpSecret.isValid());
+    return this.smtpUsername.isPresent() &&
+      (this.smtpPassword.isPresent() || this.smtpSecret.isPresent());
   }
 
   @NotNull Set<String> requiredOauthScopes() {
@@ -283,8 +283,8 @@ class ApplicationConfiguration extends AbstractConfiguration {
   public @NotNull Map<String, String> smtpExtraOptionsMap() {
     var map = new HashMap<String, String>();
 
-    if (this.smtpExtraOptions.isValid()) {
-      for (var kvp : this.smtpExtraOptions.value().split(",")) {
+    if (this.smtpExtraOptions.isPresent()) {
+      for (var kvp : this.smtpExtraOptions.get().split(",")) {
         var parts = kvp.split("=");
         if (parts.length == 2) {
           map.put(parts[0].trim(), parts[1].trim());
