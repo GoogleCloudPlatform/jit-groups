@@ -109,6 +109,6 @@ public class TestAbstractConfiguration {
     var configuration = new SampleConfiguration(Map.of("TEST", "  3 "));
     assertEquals(
       Duration.ofHours(3),
-      configuration.readDurationSetting(ChronoUnit.HOURS, "TEST"));
+      configuration.readDurationSetting(ChronoUnit.HOURS, "TEST").get());
   }
 }
