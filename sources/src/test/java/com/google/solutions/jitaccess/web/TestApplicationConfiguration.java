@@ -73,46 +73,6 @@ public class TestApplicationConfiguration {
   }
 
   // -------------------------------------------------------------------------
-  // customerId.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void customerId_whenNotSet() {
-    var configuration = new ApplicationConfiguration(Map.of());
-    assertFalse(configuration.customerId.isValid());
-
-    assertThrows(
-      IllegalStateException.class,
-      () -> configuration.customerId.value());
-  }
-
-  @Test
-  public void customerId_whenEmpty() {
-    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", ""));
-    assertFalse(configuration.customerId.isValid());
-
-    assertThrows(
-      IllegalStateException.class,
-      () -> configuration.customerId.value());
-  }
-
-  @Test
-  public void customerId_whenSet() {
-    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", "1"));
-    assertEquals("CUSTOMER_ID", configuration.customerId.key());
-    assertTrue(configuration.customerId.isValid());
-    assertEquals("1", configuration.customerId.value());
-  }
-
-  @Test
-  public void customerId_whenAliasSet() {
-    var configuration = new ApplicationConfiguration(Map.of("RESOURCE_CUSTOMER_ID", "1"));
-    assertEquals("CUSTOMER_ID", configuration.customerId.key());
-    assertTrue(configuration.customerId.isValid());
-    assertEquals("1", configuration.customerId.value());
-  }
-
-  // -------------------------------------------------------------------------
   // proposalTimeout.
   // -------------------------------------------------------------------------
 

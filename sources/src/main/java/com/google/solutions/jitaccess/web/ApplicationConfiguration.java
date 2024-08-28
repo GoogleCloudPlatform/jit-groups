@@ -33,30 +33,26 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
-class ApplicationConfiguration {
+class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Prefix for environment service accounts.
    */
   static final @NotNull String ENVIRONMENT_SERVICE_ACCOUNT_PREFIX = "jit-";
 
   /**
-   * Raw settings data, typically sourced from the environment block.
-   */
-  private final @NotNull Map<String, String> settingsData;
-
-  /**
    * Cloud Identity/Workspace customer ID.
    */
-  final @NotNull Setting<String> customerId;
+  final @NotNull String customerId;
 
   /**
    * Domain to use for JIT groups. This can be the primary
    * or a secondary domain of the account identified
    * by @see customerId.
    */
-  final @NotNull Setting<String> groupsDomain;
+  final @NotNull String groupsDomain;
 
   /**
    * Zone to apply to dates when sending notifications.
@@ -163,14 +159,19 @@ class ApplicationConfiguration {
   final @NotNull Setting<String> legacyJustificationHint;
   final @NotNull Setting<String> legacyProjectsQuery;
 
-  public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
-    this.settingsData = settingsData;
 
-    this.customerId = new StringSetting(
-      "CUSTOMER_ID",
-      List.of("RESOURCE_CUSTOMER_ID"), // Name used in 1.x
-      null);
-    this.groupsDomain = new StringSetting("GROUPS_DOMAIN", null);
+  public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
+    super(settingsData);
+
+    this.customerId = readStringSetting("CUSTOMER_ID", "RESOURCE_CUSTOMER_ID")
+      .orElseThrow(() -> new IllegalStateException(
+        "The environment variable 'CUSTOMER_ID' must be set to the customer ID " +
+          "of a Cloud Identity or Workspace account"));
+
+
+    this.groupsDomain = readStringSetting("GROUPS_DOMAIN")
+      .orElseThrow(() -> new IllegalStateException(
+        "The environment variable 'GROUPS_DOMAIN' must contain a (verified) domain name"));
 
     //
     // Backend service id (Cloud Run only).

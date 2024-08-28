@@ -77,15 +77,6 @@ public class Application {
    */
   private final @NotNull ApplicationConfiguration configuration = new ApplicationConfiguration(System.getenv());
 
-  /**
-   * Cloud Identity/Workspace customer ID.
-   */
-  private final @NotNull String customerId;
-
-  /**
-   * Domain to use for groups.
-   */
-  private final @NotNull String groupsDomain;
 
   // -------------------------------------------------------------------------
   // Private helpers.
@@ -251,32 +242,6 @@ public class Application {
       throw new RuntimeException(
         "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
     }
-
-    //
-    // Load essential configuration.
-    //
-    try {
-      this.customerId = NullaryOptional.ifTrue(configuration.customerId.isValid())
-        .map(() -> configuration.customerId.value())
-        .orElseThrow(() -> new IllegalStateException(
-          String.format(
-            "The environment variable '%s' must be set to the customer ID " +
-              "of a Cloud Identity or Workspace account",
-            configuration.customerId.key())));
-      this.groupsDomain = NullaryOptional.ifTrue(configuration.groupsDomain.isValid())
-        .map(() -> configuration.groupsDomain.value())
-        .orElseThrow(() -> new IllegalStateException(
-          String.format(
-            "The environment variable '%s' must contain a (verified) domain name",
-            configuration.groupsDomain.key())));
-    }
-    catch (IllegalStateException e) {
-      logger.error(
-        EventIds.STARTUP,
-        "Initializing the application failed because the configuration is incomplete",
-        e);
-      throw new RuntimeException("The configuration is incomplete, aborting startup.");
-    }
   }
 
   public boolean isDebugModeEnabled() {
@@ -347,7 +312,7 @@ public class Application {
 
   @Produces
   public @NotNull CloudIdentityGroupsClient.Options produceCloudIdentityGroupsClientOptions() {
-    return new CloudIdentityGroupsClient.Options(this.customerId);
+    return new CloudIdentityGroupsClient.Options(this.configuration.customerId);
   }
 
   @Produces
@@ -411,7 +376,7 @@ public class Application {
   @Produces
   @Singleton
   public @NotNull GroupMapping produceGroupMapping() {
-    return new GroupMapping(this.groupsDomain);
+    return new GroupMapping(this.configuration.groupsDomain);
   }
 
   @Produces
