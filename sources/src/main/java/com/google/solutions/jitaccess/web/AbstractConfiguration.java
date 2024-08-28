@@ -34,7 +34,7 @@ public abstract class AbstractConfiguration {
   /**
    * Raw settings data, typically sourced from the environment block.
    */
-  protected final @NotNull Map<String, String> settingsData; // TODO: make private
+  private final @NotNull Map<String, String> settingsData;
 
   public AbstractConfiguration(@NotNull Map<String, String> settingsData) {
     this.settingsData = settingsData;
