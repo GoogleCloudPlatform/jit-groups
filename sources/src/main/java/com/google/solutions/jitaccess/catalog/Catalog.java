@@ -71,7 +71,7 @@ public class Catalog {
 
     return this.source
       .environmentPolicy(name)
-      .filter(env -> env.isAllowedByAccessControlList(this.subject, EnumSet.of(PolicyPermission.VIEW)))
+      .filter(env -> env.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
       .map(policy -> new EnvironmentContext(policy, this.subject, provisioner.get()));
   }
 

@@ -96,29 +96,29 @@ public class TestPolicy {
   }
 
   //---------------------------------------------------------------------------
-  // isAllowedByAccessControlList.
+  // isAccessAllowed.
   //---------------------------------------------------------------------------
 
   @Test
-  public void isAllowedByAccessControlList_whenPolicyHasNoAcl() {
+  public void isAccessAllowed_whenPolicyHasNoAcl() {
     var policy = new SamplePolicy(null);
 
-    assertFalse(policy.isAllowedByAccessControlList(
+    assertFalse(policy.isAccessAllowed(
       Subjects.create(SAMPLE_USER),
       EnumSet.of(PolicyPermission.JOIN)));
   }
 
   @Test
-  public void isAllowedByAccessControlList_whenPolicyHasEmptyAcl() {
+  public void isAccessAllowed_whenPolicyHasEmptyAcl() {
     var policy = new SamplePolicy(AccessControlList.EMPTY);
 
-    assertFalse(policy.isAllowedByAccessControlList(
+    assertFalse(policy.isAccessAllowed(
       Subjects.create(SAMPLE_USER),
       EnumSet.of(PolicyPermission.JOIN)));
   }
 
   @Test
-  public void isAllowedByAccessControlList_whenParentHasNoAcl() {
+  public void isAccessAllowed_whenParentHasNoAcl() {
     var parentPolicy = new SamplePolicy(null);
 
     var policy = new SamplePolicy(
@@ -127,13 +127,13 @@ public class TestPolicy {
       )));
     policy.setParent(parentPolicy);
 
-    assertTrue(policy.isAllowedByAccessControlList(
+    assertTrue(policy.isAccessAllowed(
       Subjects.create(SAMPLE_USER),
       EnumSet.of(PolicyPermission.JOIN)));
   }
 
   @Test
-  public void isAllowedByAccessControlList_whenParentDeniesAccess() {
+  public void isAccessAllowed_whenParentDeniesAccess() {
     var parentPolicy = new SamplePolicy(
       new AccessControlList(List.of(
         new AccessControlList.DeniedEntry(SAMPLE_USER, -1)
@@ -145,13 +145,13 @@ public class TestPolicy {
       )));
     policy.setParent(parentPolicy);
 
-    assertFalse(policy.isAllowedByAccessControlList(
+    assertFalse(policy.isAccessAllowed(
       Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of()),
       EnumSet.of(PolicyPermission.JOIN)));
   }
 
   @Test
-  public void isAllowedByAccessControlList_whenChildDeniesAccess() {
+  public void isAccessAllowed_whenChildDeniesAccess() {
     var parentPolicy = new SamplePolicy(
       new AccessControlList(List.of(
         new AccessControlList.AllowedEntry(SAMPLE_USER, -1)
@@ -163,13 +163,13 @@ public class TestPolicy {
       )));
     policy.setParent(parentPolicy);
 
-    assertFalse(policy.isAllowedByAccessControlList(
+    assertFalse(policy.isAccessAllowed(
       Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of()),
       EnumSet.of(PolicyPermission.JOIN)));
   }
 
   @Test
-  public void isAllowedByAccessControlList_whenParentAndChildGrantAccess() {
+  public void isAccessAllowed_whenParentAndChildGrantAccess() {
     var parentPolicy = new SamplePolicy(
       new AccessControlList(List.of(
         new AccessControlList.AllowedEntry(SAMPLE_USER, -1)
@@ -181,7 +181,7 @@ public class TestPolicy {
       )));
     policy.setParent(parentPolicy);
 
-    assertTrue(policy.isAllowedByAccessControlList(
+    assertTrue(policy.isAccessAllowed(
       Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of()),
       EnumSet.of(PolicyPermission.JOIN)));
   }

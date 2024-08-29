@@ -124,7 +124,7 @@ public class PolicyAnalysis {
     // Evaluate ACLs of this policy and its parents.
     //
     var result = new Result(
-      policy.isAllowedByAccessControlList(this.subject, this.requestedAccess));
+      policy.isAccessAllowed(this.subject, this.requestedAccess));
 
     for (var constraintCheck : this.constraintChecks) {
       evaluateConstraintCheck(constraintCheck, result);

@@ -116,7 +116,7 @@ public interface Policy extends PolicyHeader {
   /**
    * Check access based on this policy's ACL, and it's ancestry's ACLs.
    */
-  default boolean isAllowedByAccessControlList(
+  default boolean isAccessAllowed(
     @NotNull Subject subject,
     @NotNull EnumSet<PolicyPermission> requiredRights
   ) {

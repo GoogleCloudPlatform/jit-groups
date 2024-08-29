@@ -21,9 +21,6 @@
 
 package com.google.solutions.jitaccess.catalog;
 
-import com.google.api.services.cloudasset.v1.model.Binding;
-import com.google.api.services.cloudasset.v1.model.Expr;
-import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
@@ -36,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
@@ -331,7 +327,7 @@ public class TestEnvironmentContext {
 
     var legacyPolicy = Mockito.mock(LegacyPolicy.class);
     when(legacyPolicy
-      .isAllowedByAccessControlList(
+      .isAccessAllowed(
         any(),
         eq(EnumSet.of(PolicyPermission.RECONCILE))))
       .thenReturn(true);
