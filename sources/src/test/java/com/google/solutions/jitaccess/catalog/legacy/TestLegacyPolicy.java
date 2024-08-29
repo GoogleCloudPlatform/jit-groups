@@ -57,9 +57,9 @@ public class TestLegacyPolicy {
   @Test
   public void accessControlList_whenRootBindingsEmpty() {
     var policy = new LegacyPolicy(Duration.ofMinutes(1), "", "", List.of(), METADATA);
-    assertFalse(policy.accessControlList().isEmpty());
+    assertFalse(policy.effectiveAccessControlList().isEmpty());
 
-    var aces = List.copyOf(policy.accessControlList().get().entries());
+    var aces = List.copyOf(policy.effectiveAccessControlList().entries());
     assertEquals(1, aces.size());
     assertEquals(UserClassId.IAP_USERS, aces.get(0).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(0).accessRights);
@@ -88,9 +88,9 @@ public class TestLegacyPolicy {
           .setRole(privilegedRole)
           .setMembers(List.of("user:admin-1@example.com"))),
       METADATA);
-    assertFalse(policy.accessControlList().isEmpty());
+    assertFalse(policy.effectiveAccessControlList().isEmpty());
 
-    var aces = List.copyOf(policy.accessControlList().get().entries());
+    var aces = List.copyOf(policy.effectiveAccessControlList().entries());
     assertEquals(2, aces.size());
 
     assertEquals(new UserId("admin-1@example.com"), aces.get(0).principal);
@@ -120,9 +120,9 @@ public class TestLegacyPolicy {
           .setRole(privilegedRole)
           .setMembers(List.of("user:admin-1@example.com"))),
       METADATA);
-    assertFalse(policy.accessControlList().isEmpty());
+    assertFalse(policy.effectiveAccessControlList().isEmpty());
 
-    var aces = List.copyOf(policy.accessControlList().get().entries());
+    var aces = List.copyOf(policy.effectiveAccessControlList().entries());
     assertEquals(3, aces.size());
 
     assertEquals(new UserId("admin-1@example.com"), aces.get(0).principal);
@@ -253,7 +253,9 @@ public class TestLegacyPolicy {
     var group = List.copyOf(projectPolicy.get().groups()).get(0);
 
     assertEquals(1, group.privileges().size());
-    assertEquals(2, group.accessControlList().get().entries().size());
+    assertEquals(
+      2 + policy.effectiveAccessControlList().entries().size(),
+      group.effectiveAccessControlList().entries().size());
   }
 
   @Test
@@ -284,7 +286,9 @@ public class TestLegacyPolicy {
     assertEquals("project-1", projectPolicy.get().displayName());
     assertEquals("Project project-1", projectPolicy.get().description());
     var group = List.copyOf(projectPolicy.get().groups()).get(0);
-    assertEquals(1, group.accessControlList().get().entries().size());
+    assertEquals(
+      1 + policy.effectiveAccessControlList().entries().size(),
+      group.effectiveAccessControlList().entries().size());
 
     var iamRoleBinding = (IamRoleBinding)List.copyOf(group.privileges()).get(0);
     assertNull(iamRoleBinding.condition());
@@ -412,7 +416,7 @@ public class TestLegacyPolicy {
       var role = LegacyPolicy.RolePolicy.fromBinding(SAMPLE_PROJECT_1, binding);
       assertTrue(role.isPresent());
 
-      var aces = List.copyOf(role.get().accessControlList().get().entries());
+      var aces = List.copyOf(role.get().effectiveAccessControlList().entries());
       assertEquals(2, aces.size());
 
       assertEquals(new UserId("user@example.com"), aces.get(0).principal);
@@ -448,7 +452,7 @@ public class TestLegacyPolicy {
       var role = LegacyPolicy.RolePolicy.fromBinding(SAMPLE_PROJECT_1, binding);
       assertTrue(role.isPresent());
 
-      var aces = List.copyOf(role.get().accessControlList().get().entries());
+      var aces = List.copyOf(role.get().effectiveAccessControlList().entries());
       assertEquals(2, aces.size());
 
       assertEquals(new UserId("user@example.com"), aces.get(0).principal);
@@ -541,7 +545,7 @@ public class TestLegacyPolicy {
       assertEquals(0, merged.constraints(Policy.ConstraintClass.JOIN).size());
       assertEquals(1, merged.privileges().size());
 
-      var aces = List.copyOf(merged.accessControlList().get().entries());
+      var aces = List.copyOf(merged.effectiveAccessControlList().entries());
       assertEquals(3, aces.size());
 
       assertEquals(new UserId("user-1@example.com"), aces.get(0).principal);
