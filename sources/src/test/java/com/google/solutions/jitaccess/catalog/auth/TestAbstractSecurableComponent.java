@@ -52,7 +52,7 @@ public class TestAbstractSecurableComponent {
     }
 
     @Override
-    protected @NotNull Optional<? extends AbstractSecurableComponent> parent() {
+    protected @NotNull Optional<? extends AbstractSecurableComponent> container() {
       return Optional.ofNullable(this.parent);
     }
 
@@ -67,7 +67,7 @@ public class TestAbstractSecurableComponent {
   //---------------------------------------------------------------------------
 
   @Test
-  public void effectiveAccessControlList_whenAclAndParentIsEmpty() {
+  public void effectiveAccessControlList_whenAclAndContainerIsEmpty() {
     var component = new SampleComponent(null, null);
 
     var acl = component.effectiveAccessControlList();
@@ -76,7 +76,7 @@ public class TestAbstractSecurableComponent {
 
 
   @Test
-  public void effectiveAccessControlList_whenParentIsEmpty() {
+  public void effectiveAccessControlList_whenContainerIsEmpty() {
     var component = new SampleComponent(
       null,
       new AccessControlList.Builder().allow(SAMPLE_USER, -1).build());
@@ -86,7 +86,7 @@ public class TestAbstractSecurableComponent {
   }
 
   @Test
-  public void effectiveAccessControlList_whenParentHasAcl() {
+  public void effectiveAccessControlList_whenContainerHasAcl() {
     var parent = new SampleComponent(
       null,
       new AccessControlList.Builder().deny(SAMPLE_USER, -1).build());
@@ -102,7 +102,6 @@ public class TestAbstractSecurableComponent {
     assertInstanceOf(AccessControlList.DeniedEntry.class, aces.get(0));
     assertInstanceOf(AccessControlList.AllowedEntry.class, aces.get(1));
   }
-
 
   //---------------------------------------------------------------------------
   // isAccessAllowed.
@@ -127,7 +126,7 @@ public class TestAbstractSecurableComponent {
   }
 
   @Test
-  public void isAccessAllowed_whenParentHasNoAcl() {
+  public void isAccessAllowed_whenContainerHasNoAcl() {
     var parent = new SampleComponent(null, null);
 
     var component = new SampleComponent(
@@ -140,7 +139,7 @@ public class TestAbstractSecurableComponent {
   }
 
   @Test
-  public void isAccessAllowed_whenParentDeniesAccess() {
+  public void isAccessAllowed_whenContainerDeniesAccess() {
     var parent = new SampleComponent(
       null,
       new AccessControlList.Builder().deny(SAMPLE_USER, -1).build());
@@ -170,7 +169,7 @@ public class TestAbstractSecurableComponent {
   }
 
   @Test
-  public void isAccessAllowed_whenParentAndChildGrantAccess() {
+  public void isAccessAllowed_whenContainerAndChildGrantAccess() {
     var parent = new SampleComponent(
       null,
       new AccessControlList.Builder().allow(SAMPLE_USER, -1).build());

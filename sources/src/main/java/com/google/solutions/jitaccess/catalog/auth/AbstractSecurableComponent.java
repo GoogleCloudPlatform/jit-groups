@@ -22,22 +22,20 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.solutions.jitaccess.catalog.policy.AccessControlList;
-import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Optional;
 
 /**
- * Abstract implementation of a securable object that supports
- * ACL inheritance.
+ * Abstract implementation of a securable component that inherits
+ * ACLs from a container.
  */
 public abstract class AbstractSecurableComponent implements Securable {
   /**
-   * Return the parent object, if present.
+   * Return the parent container, if present.
    */
-  protected abstract @NotNull Optional<? extends AbstractSecurableComponent> parent();
+  protected abstract @NotNull Optional<? extends AbstractSecurableComponent> container();
 
   /**
    * ACL, if any. If the ACL is null or empty, all subjects are granted access.
@@ -56,7 +54,7 @@ public abstract class AbstractSecurableComponent implements Securable {
     var aclAncestry = new LinkedList<AccessControlList>();
     for (var policy = Optional.of(this);
          policy.isPresent();
-         policy = policy.get().parent().map(p -> (AbstractSecurableComponent)p)) {
+         policy = policy.get().container().map(p -> (AbstractSecurableComponent)p)) {
       var acl = policy.get().accessControlList();
       acl.ifPresent(aclAncestry::addFirst);
     }
