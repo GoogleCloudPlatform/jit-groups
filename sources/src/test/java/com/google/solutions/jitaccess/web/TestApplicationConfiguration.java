@@ -21,119 +21,130 @@
 
 package com.google.solutions.jitaccess.web;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestApplicationConfiguration {
 
+  private Map<String, String> createMandatorySettings() {
+    return Map.of(
+      "GROUPS_DOMAIN", "  example.com ",
+      "CUSTOMER_ID", " C123 ");
+  }
+
   // -------------------------------------------------------------------------
-  // environments.
+  // Constructor.
   // -------------------------------------------------------------------------
 
   @Test
-  public void environments_whenNonConfigured() {
-    var configuration = new ApplicationConfiguration(Map.of());
-    assertEquals(0, configuration.environments().size());
+  public void constructor_whenCustomerIdMissing_thenThrows() {
+    var data = Map.of("GROUPS_DOMAIN", "example.com");
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> new ApplicationConfiguration(data));
   }
+
+  @Test
+  public void constructor_whenGroupDomainMissing_thenThrows() {
+    var data = Map.of("CUSTOMER_ID", "C123");
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> new ApplicationConfiguration(data));
+  }
+
+  @Test
+  public void constructor_whenMandatorySettingsProvided() {
+    var configuration = new ApplicationConfiguration(createMandatorySettings());
+    assertEquals("example.com", configuration.groupsDomain);
+    assertEquals("C123", configuration.customerId);
+  }
+
+  // -------------------------------------------------------------------------
+  // Environments.
+  // -------------------------------------------------------------------------
 
   @Test
   public void environments_whenEmpty() {
-    var configuration = new ApplicationConfiguration(
-      Map.of("ENVIRONMENTS", " "));
-    assertEquals(0, configuration.environments().size());
+    var configuration = new ApplicationConfiguration(createMandatorySettings());
+    assertTrue(configuration.environments.isEmpty());
   }
 
   @Test
-  public void environments() {
-    var configuration = new ApplicationConfiguration(
-      Map.of("ENVIRONMENTS", ", one-env  , two-env "));
-    assertEquals(2, configuration.environments().size());
-    assertTrue(configuration.environments().contains("one-env"));
-    assertTrue(configuration.environments().contains("two-env"));
-  }
+  public void environments_whenProvided() {
+    var settings = new HashMap<>(createMandatorySettings());
+    settings.put("ENVIRONMENTS", "env-1,, , env-2 ");
+    var configuration = new ApplicationConfiguration(settings);
 
-  // -------------------------------------------------------------------------
-  // environmentCacheTimeout.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void environmentCacheTimeout() {
-    assertEquals(
-      Duration.ofMinutes(1),
-      new ApplicationConfiguration(
-        Map.of("RESOURCE_CACHE_TIMEOUT", "60")).environmentCacheTimeout.value());
-    assertEquals(
-      Duration.ofMinutes(5),
-      new ApplicationConfiguration(Map.of()).environmentCacheTimeout.value());
+    assertEquals(2, configuration.environments.size());
+    assertTrue(configuration.environments.contains("env-1"));
+    assertTrue(configuration.environments.contains("env-2"));
   }
 
   // -------------------------------------------------------------------------
-  // customerId.
+  // SMTP.
   // -------------------------------------------------------------------------
 
   @Test
-  public void customerId_whenNotSet() {
-    var configuration = new ApplicationConfiguration(Map.of());
-    assertFalse(configuration.customerId.isValid());
+  public void smtp_whenEmpty() {
+    var configuration = new ApplicationConfiguration(createMandatorySettings());
 
-    assertThrows(
-      IllegalStateException.class,
-      () -> configuration.customerId.value());
+    assertFalse(configuration.isSmtpConfigured());
+    assertFalse(configuration.isSmtpAuthenticationConfigured());
+
+    assertFalse(configuration.smtpAddressMapping.isPresent());
+    assertEquals("smtp.gmail.com", configuration.smtpHost);
+    assertEquals(587, configuration.smtpPort);
+    assertTrue(configuration.smtpEnableStartTls);
+    assertEquals("JIT Groups", configuration.smtpSenderName);
+
+    assertFalse(configuration.smtpSenderAddress.isPresent());
+    assertFalse(configuration.smtpUsername.isPresent());
+    assertFalse(configuration.smtpPassword.isPresent());
+    assertFalse(configuration.smtpSecret.isPresent());
+    assertFalse(configuration.smtpExtraOptions.isPresent());
+    assertTrue(configuration.smtpExtraOptionsMap().isEmpty());
   }
 
   @Test
-  public void customerId_whenEmpty() {
-    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", ""));
-    assertFalse(configuration.customerId.isValid());
+  public void smtp_whenProvided() {
+    var settings = new HashMap<>(createMandatorySettings());
+    settings.put("SMTP_ADDRESS_MAPPING", "email -> email");
+    settings.put("SMTP_HOST", " localhost ");
+    settings.put("SMTP_PORT", " 25 ");
+    settings.put("SMTP_ENABLE_STARTTLS", " false");
+    settings.put("SMTP_SENDER_NAME", "sender");
+    settings.put("SMTP_SENDER_ADDRESS", "sender@localhost");
+    settings.put("SMTP_USERNAME", "username");
+    settings.put("SMTP_PASSWORD", "password");
+    settings.put("SMTP_SECRET", "secret");
+    settings.put("SMTP_OPTIONS", "a=1,  b = 2,  ");
 
-    assertThrows(
-      IllegalStateException.class,
-      () -> configuration.customerId.value());
-  }
+    var configuration = new ApplicationConfiguration(settings);
 
-  @Test
-  public void customerId_whenSet() {
-    var configuration = new ApplicationConfiguration(Map.of("CUSTOMER_ID", "1"));
-    assertEquals("CUSTOMER_ID", configuration.customerId.key());
-    assertTrue(configuration.customerId.isValid());
-    assertEquals("1", configuration.customerId.value());
-  }
+    assertTrue(configuration.isSmtpConfigured());
+    assertTrue(configuration.isSmtpAuthenticationConfigured());
 
-  @Test
-  public void customerId_whenAliasSet() {
-    var configuration = new ApplicationConfiguration(Map.of("RESOURCE_CUSTOMER_ID", "1"));
-    assertEquals("CUSTOMER_ID", configuration.customerId.key());
-    assertTrue(configuration.customerId.isValid());
-    assertEquals("1", configuration.customerId.value());
-  }
+    assertEquals("email -> email", configuration.smtpAddressMapping.get());
+    assertEquals("localhost", configuration.smtpHost);
+    assertEquals(25, configuration.smtpPort);
+    assertFalse(configuration.smtpEnableStartTls);
+    assertEquals("sender", configuration.smtpSenderName);
 
-  // -------------------------------------------------------------------------
-  // proposalTimeout.
-  // -------------------------------------------------------------------------
+    assertEquals("sender@localhost", configuration.smtpSenderAddress.get());
+    assertEquals("username", configuration.smtpUsername.get());
+    assertEquals("password", configuration.smtpPassword.get());
+    assertEquals("secret", configuration.smtpSecret.get());
+    assertFalse(configuration.smtpExtraOptionsMap().isEmpty());
+    assertEquals(2, configuration.smtpExtraOptionsMap().size());
+    assertEquals("1", configuration.smtpExtraOptionsMap().get("a"));
+    assertEquals("2", configuration.smtpExtraOptionsMap().get("b"));
 
-  @Test
-  public void proposalTimeout_whenNotSet() {
-    var configuration = new ApplicationConfiguration(Map.of());
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofHours(1), configuration.proposalTimeout.value());
-  }
-
-  @Test
-  public void proposalTimeout_whenSet() {
-    var configuration = new ApplicationConfiguration(Map.of("APPROVAL_TIMEOUT", " 30 "));
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
-  }
-
-  @Test
-  public void proposalTimeout_whenAliasSet() {
-    var configuration = new ApplicationConfiguration(Map.of("ACTIVATION_REQUEST_TIMEOUT", " 30 "));
-    assertTrue(configuration.proposalTimeout.isValid());
-    assertEquals(Duration.ofMinutes(30), configuration.proposalTimeout.value());
   }
 }

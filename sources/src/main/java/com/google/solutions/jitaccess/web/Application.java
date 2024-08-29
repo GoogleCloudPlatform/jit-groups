@@ -77,15 +77,6 @@ public class Application {
    */
   private final @NotNull ApplicationConfiguration configuration = new ApplicationConfiguration(System.getenv());
 
-  /**
-   * Cloud Identity/Workspace customer ID.
-   */
-  private final @NotNull String customerId;
-
-  /**
-   * Domain to use for groups.
-   */
-  private final @NotNull String groupsDomain;
 
   // -------------------------------------------------------------------------
   // Private helpers.
@@ -251,32 +242,6 @@ public class Application {
       throw new RuntimeException(
         "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
     }
-
-    //
-    // Load essential configuration.
-    //
-    try {
-      this.customerId = NullaryOptional.ifTrue(configuration.customerId.isValid())
-        .map(() -> configuration.customerId.value())
-        .orElseThrow(() -> new IllegalStateException(
-          String.format(
-            "The environment variable '%s' must be set to the customer ID " +
-              "of a Cloud Identity or Workspace account",
-            configuration.customerId.key())));
-      this.groupsDomain = NullaryOptional.ifTrue(configuration.groupsDomain.isValid())
-        .map(() -> configuration.groupsDomain.value())
-        .orElseThrow(() -> new IllegalStateException(
-          String.format(
-            "The environment variable '%s' must contain a (verified) domain name",
-            configuration.groupsDomain.key())));
-    }
-    catch (IllegalStateException e) {
-      logger.error(
-        EventIds.STARTUP,
-        "Initializing the application failed because the configuration is incomplete",
-        e);
-      throw new RuntimeException("The configuration is incomplete, aborting startup.");
-    }
   }
 
   public boolean isDebugModeEnabled() {
@@ -290,7 +255,7 @@ public class Application {
   @Produces
   @Singleton
   public RequireIapPrincipalFilter.Options produceIapRequestFilterOptions() {
-    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience.value()){
+    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience){
       //
       // Disable expected audience-check.
       //
@@ -307,7 +272,7 @@ public class Application {
         this.isDebugModeEnabled(),
         String.format("/projects/%s/apps/%s", this.projectNumber, this.projectId));
     }
-    else  if (this.configuration.backendServiceId.isValid()) {
+    else  if (this.configuration.backendServiceId.isPresent()) {
       //
       // For Cloud Run, we need the backend service id.
       //
@@ -316,7 +281,7 @@ public class Application {
         String.format(
           "/projects/%s/global/backendServices/%s",
           this.projectNumber,
-          this.configuration.backendServiceId.value()));
+          this.configuration.backendServiceId.get()));
     }
     else {
       throw new RuntimeException(
@@ -347,7 +312,7 @@ public class Application {
 
   @Produces
   public @NotNull CloudIdentityGroupsClient.Options produceCloudIdentityGroupsClientOptions() {
-    return new CloudIdentityGroupsClient.Options(this.customerId);
+    return new CloudIdentityGroupsClient.Options(this.configuration.customerId);
   }
 
   @Produces
@@ -364,9 +329,9 @@ public class Application {
   @Singleton
   public @NotNull HttpTransport.Options produceHttpTransportOptions() {
     return new HttpTransport.Options(
-      this.configuration.backendConnectTimeout.value(),
-      this.configuration.backendReadTimeout.value(),
-      this.configuration.backendWriteTimeout.value());
+      this.configuration.backendConnectTimeout,
+      this.configuration.backendReadTimeout,
+      this.configuration.backendWriteTimeout);
   }
 
   @Produces
@@ -411,7 +376,7 @@ public class Application {
   @Produces
   @Singleton
   public @NotNull GroupMapping produceGroupMapping() {
-    return new GroupMapping(this.groupsDomain);
+    return new GroupMapping(this.configuration.groupsDomain);
   }
 
   @Produces
@@ -424,37 +389,37 @@ public class Application {
     }
     else if (configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
-        this.configuration.smtpHost.value(),
-        this.configuration.smtpPort.value(),
-        this.configuration.smtpSenderName.value(),
-        new EmailAddress(this.configuration.smtpSenderAddress.value()),
-        this.configuration.smtpEnableStartTls.value(),
+        this.configuration.smtpHost,
+        this.configuration.smtpPort,
+        this.configuration.smtpSenderName,
+        new EmailAddress(this.configuration.smtpSenderAddress.get()),
+        this.configuration.smtpEnableStartTls,
         this.configuration.smtpExtraOptionsMap());
 
       //
       // Lookup credentials from config and/or secret. Use the secret
       // if both are configured.
       //
-      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isValid()) {
+      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isPresent()) {
         smtpOptions.setSmtpSecretCredentials(
-          this.configuration.smtpUsername.value(),
-          this.configuration.smtpSecret.value());
+          this.configuration.smtpUsername.get(),
+          this.configuration.smtpSecret.get());
       }
-      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isValid()) {
+      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isPresent()) {
         smtpOptions.setSmtpCleartextCredentials(
-          this.configuration.smtpUsername.value(),
-          this.configuration.smtpPassword.value());
+          this.configuration.smtpUsername.get(),
+          this.configuration.smtpPassword.get());
       }
 
       return new MailProposalHandler(
         tokenSigner,
-        new EmailMapping(this.configuration.smtpAddressMapping.value()),
+        new EmailMapping(this.configuration.smtpAddressMapping.orElse(null)),
         new SmtpClient(
           secretManagerClient,
           smtpOptions),
         new MailProposalHandler.Options(
-          this.configuration.notificationTimeZone.value(),
-          this.configuration.proposalTimeout.value()));
+          this.configuration.notificationTimeZone,
+          this.configuration.proposalTimeout));
     }
     else {
       return new ProposalHandler() {
@@ -489,7 +454,7 @@ public class Application {
     // policy yet (because that's expensive).
     //
     final var configurations = new HashMap<String, EnvironmentConfiguration>();
-    for (var environment : this.configuration.environments()) {
+    for (var environment : this.configuration.environments) {
       if (environment.startsWith("file:")) {
         //
         // Value contains a file path, which is only allowed for development.
@@ -543,10 +508,8 @@ public class Application {
       }
     }
 
-    if (this.configuration.legacyCatalog.isValid() &&
-      this.configuration.legacyCatalog.value().equalsIgnoreCase("ASSETINVENTORY") &&
-      this.configuration.legacyScope.isValid() &&
-      !Strings.isNullOrEmpty(this.configuration.legacyScope.value())) {
+    if (this.configuration.legacyCatalog.equalsIgnoreCase("ASSETINVENTORY") &&
+      this.configuration.legacyScope.isPresent()) {
 
       //
       // Load an extra environment that surfaces JIT Access 1.x roles.
@@ -564,11 +527,11 @@ public class Application {
           () -> {
             try {
               return legacyLoader.load(
-                this.configuration.legacyProjectsQuery.value(),
-                this.configuration.legacyScope.value(),
-                this.configuration.legacyActivationTimeout.value(),
-                this.configuration.legacyJustificationPattern.value(),
-                this.configuration.legacyJustificationHint.value(),
+                this.configuration.legacyProjectsQuery,
+                this.configuration.legacyScope.get(),
+                this.configuration.legacyActivationTimeout,
+                this.configuration.legacyJustificationPattern,
+                this.configuration.legacyJustificationHint,
                 logger);
             }
             catch (Exception e) {
@@ -604,7 +567,7 @@ public class Application {
       groupsClient,
       isDebugModeEnabled()
         ? Duration.ofSeconds(20)
-        : this.configuration.environmentCacheTimeout.value(),
+        : this.configuration.environmentCacheTimeout,
       logger);
   }
 
