@@ -59,16 +59,27 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
   }
 
   //---------------------------------------------------------------------------
-  // Overrides.
+  // AbstractSecurableComponent overrides.
   //---------------------------------------------------------------------------
 
+  /**
+   * Access control list.
+   */
+  @Override
+  protected @NotNull Optional<AccessControlList> accessControlList() { // TODO: remove
+    return Optional.ofNullable(acl);
+  }
+
+  /**
+   * Return parent policy as container so that we inherit its ACL.
+   */
   @Override
   protected @NotNull Optional<? extends AbstractSecurableComponent> container() {
     return Optional.ofNullable((AbstractSecurableComponent)this.parent);
   }
 
   //---------------------------------------------------------------------------
-  // Publics.
+  // Public methods.
   //---------------------------------------------------------------------------
 
   /**
@@ -107,17 +118,6 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
   @Override
   public @NotNull Optional<Policy> parent() {
     return Optional.ofNullable(this.parent);
-  }
-
-  /**
-   * Access control list.
-   *
-   * Subjects aren't allowed to view or use the policy unless
-   * the ACL (or one of its ancestors' ACLs) grants them access.
-   */
-  @Override
-  public @NotNull Optional<AccessControlList> accessControlList() { // TODO: remove
-    return Optional.ofNullable(acl);
   }
 
   /**
