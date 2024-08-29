@@ -249,9 +249,9 @@ public class TestPolicyDocument {
   public static class EnvironmentElement {
 
     @Test
-    public void fromPolicy_whenAclIsEmpty() {
+    public void toYaml_whenAclIsEmpty() {
       var policy = new EnvironmentPolicy("env", "Env", AccessControlList.EMPTY, Map.of(), METADATA);
-      var element = PolicyDocument.EnvironmentElement.fromPolicy(policy);
+      var element = PolicyDocument.EnvironmentElement.toYaml(policy);
 
       assertEquals("env", element.name());
       assertEquals("Env", element.description());
@@ -259,14 +259,14 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenAclIsNotEmpty() {
+    public void toYaml_whenAclIsNotEmpty() {
       var policy = new EnvironmentPolicy(
         "env",
         "Env",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of(),
         METADATA);
-      var element = PolicyDocument.EnvironmentElement.fromPolicy(policy);
+      var element = PolicyDocument.EnvironmentElement.toYaml(policy);
 
       assertEquals("env", element.name());
       assertEquals("Env", element.description());
@@ -274,7 +274,7 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenConstraintsSpecified() {
+    public void toYaml_whenConstraintsSpecified() {
       var policy = new EnvironmentPolicy(
         "env",
         "Env",
@@ -283,7 +283,7 @@ public class TestPolicyDocument {
           Policy.ConstraintClass.JOIN, List.of(new CelConstraint("join", "", List.of(), "true")),
           Policy.ConstraintClass.APPROVE, List.of(new CelConstraint("approve", "", List.of(), "true"))),
         METADATA);
-      var element = PolicyDocument.EnvironmentElement.fromPolicy(policy);
+      var element = PolicyDocument.EnvironmentElement.toYaml(policy);
 
       assertEquals(1, element.constraints().join().size());
       assertEquals("join", element.constraints().join().get(0).name());
@@ -425,9 +425,9 @@ public class TestPolicyDocument {
   @Nested
   public static class SystemElement {
     @Test
-    public void fromPolicy_whenAclIsNull() {
+    public void toYaml_whenAclIsNull() {
       var policy = new SystemPolicy("sys", "System", null, Map.of());
-      var element = PolicyDocument.SystemElement.fromPolicy(policy);
+      var element = PolicyDocument.SystemElement.toYaml(policy);
 
       assertEquals("sys", element.name());
       assertEquals("System", element.description());
@@ -435,9 +435,9 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenAclIsEmpty() {
+    public void toYaml_whenAclIsEmpty() {
       var policy = new SystemPolicy("sys", "System", AccessControlList.EMPTY, Map.of());
-      var element = PolicyDocument.SystemElement.fromPolicy(policy);
+      var element = PolicyDocument.SystemElement.toYaml(policy);
 
       assertEquals("sys", element.name());
       assertEquals("System", element.description());
@@ -445,13 +445,13 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenAclIsNotEmpty() {
+    public void toYaml_whenAclIsNotEmpty() {
       var policy = new SystemPolicy(
         "sys",
         "System",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of());
-      var element = PolicyDocument.SystemElement.fromPolicy(policy);
+      var element = PolicyDocument.SystemElement.toYaml(policy);
 
       assertEquals("sys", element.name());
       assertEquals("System", element.description());
@@ -459,7 +459,7 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenConstraintsSpecified() {
+    public void toYaml_whenConstraintsSpecified() {
       var policy = new SystemPolicy(
         "sys",
         "System",
@@ -467,7 +467,7 @@ public class TestPolicyDocument {
         Map.of(
           Policy.ConstraintClass.JOIN, List.of(new CelConstraint("join", "", List.of(), "true")),
           Policy.ConstraintClass.APPROVE, List.of(new CelConstraint("approve", "", List.of(), "true"))));
-      var element = PolicyDocument.SystemElement.fromPolicy(policy);
+      var element = PolicyDocument.SystemElement.toYaml(policy);
 
       assertEquals(1, element.constraints().join().size());
       assertEquals("join", element.constraints().join().get(0).name());
@@ -574,14 +574,14 @@ public class TestPolicyDocument {
   @Nested
   public static class GroupElement {
     @Test
-    public void fromPolicy_whenAclIsEmpty() {
+    public void toYaml_whenAclIsEmpty() {
       var policy = new JitGroupPolicy(
         "group",
         "Group",
         AccessControlList.EMPTY,
         Map.of(),
         List.of());
-      var element = PolicyDocument.GroupElement.fromPolicy(policy);
+      var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals("group", element.name());
       assertEquals("Group", element.description());
@@ -589,14 +589,14 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenAclIsNotEmpty() {
+    public void toYaml_whenAclIsNotEmpty() {
       var policy = new JitGroupPolicy(
         "group",
         "Group",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of(),
         List.of());
-      var element = PolicyDocument.GroupElement.fromPolicy(policy);
+      var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals("group", element.name());
       assertEquals("Group", element.description());
@@ -604,7 +604,7 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenConstraintsSpecified() {
+    public void toYaml_whenConstraintsSpecified() {
       var policy = new JitGroupPolicy(
         "group",
         "Group",
@@ -613,7 +613,7 @@ public class TestPolicyDocument {
           Policy.ConstraintClass.JOIN, List.of(new CelConstraint("join", "", List.of(), "true")),
           Policy.ConstraintClass.APPROVE, List.of(new CelConstraint("approve", "", List.of(), "true"))),
         List.of());
-      var element = PolicyDocument.GroupElement.fromPolicy(policy);
+      var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals(1, element.constraints().join().size());
       assertEquals("join", element.constraints().join().get(0).name());
@@ -623,14 +623,14 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenPrivilegesSpecified() {
+    public void toYaml_whenPrivilegesSpecified() {
       var policy = new JitGroupPolicy(
         "group",
         "Group",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of(),
         List.of(new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1"))));
-      var element = PolicyDocument.GroupElement.fromPolicy(policy);
+      var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals(1, element.privileges().iamRoleBindings().size());
       assertEquals("project-1", element.privileges().iamRoleBindings().get(0).project());
@@ -782,9 +782,9 @@ public class TestPolicyDocument {
   @Nested
   public static class AccessControlEntryElement {
     @Test
-    public void fromPolicy_whenAllowMaskCombinesMultipleValues() {
+    public void toYaml_whenAllowMaskCombinesMultipleValues() {
       var ace = new AccessControlList.AllowedEntry(SAMPLE_USER, 15);
-      var element = PolicyDocument.AccessControlEntryElement.fromPolicy(ace);
+      var element = PolicyDocument.AccessControlEntryElement.toYaml(ace);
 
       assertEquals("user:" + SAMPLE_USER.email, element.principal());
       assertEquals("JOIN, APPROVE_OTHERS, APPROVE_SELF", element.allowedPermissions());
@@ -792,9 +792,9 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenDenyMaskCombinesMultipleValues() {
+    public void toYaml_whenDenyMaskCombinesMultipleValues() {
       var ace = new AccessControlList.DeniedEntry(SAMPLE_USER, 7);
-      var element = PolicyDocument.AccessControlEntryElement.fromPolicy(ace);
+      var element = PolicyDocument.AccessControlEntryElement.toYaml(ace);
 
       assertEquals("user:" + SAMPLE_USER.email, element.principal());
       assertEquals("JOIN, APPROVE_OTHERS", element.deniedPermissions());
@@ -881,9 +881,9 @@ public class TestPolicyDocument {
   @Nested
   public static class ConstraintElement {
     @Test
-    public void fromPolicy_whenFixedExpiry() {
+    public void toYaml_whenFixedExpiry() {
       var constraint = new ExpiryConstraint(Duration.ofMinutes(5));
-      var element = PolicyDocument.ConstraintElement.fromPolicy(constraint);
+      var element = PolicyDocument.ConstraintElement.toYaml(constraint);
 
       assertEquals("expiry", element.type());
       assertNull(element.name());
@@ -895,9 +895,9 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenUserDefinedExpiry() {
+    public void toYaml_whenUserDefinedExpiry() {
       var constraint = new ExpiryConstraint(Duration.ofMinutes(5), Duration.ofDays(3));
-      var element = PolicyDocument.ConstraintElement.fromPolicy(constraint);
+      var element = PolicyDocument.ConstraintElement.toYaml(constraint);
 
       assertEquals("expiry", element.type());
       assertNull(element.name());
@@ -909,13 +909,13 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenCelExpressionWithoutVariables() {
+    public void toYaml_whenCelExpressionWithoutVariables() {
       var constraint = new CelConstraint(
         "name",
         "display name",
         List.of(),
         "expression");
-      var element = PolicyDocument.ConstraintElement.fromPolicy(constraint);
+      var element = PolicyDocument.ConstraintElement.toYaml(constraint);
 
       assertEquals("expression", element.type());
       assertEquals("name", element.name());
@@ -927,13 +927,13 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenCelExpressionWithVariables() {
+    public void toYaml_whenCelExpressionWithVariables() {
       var constraint = new CelConstraint(
         "name",
         "display name",
         List.of(new CelConstraint.BooleanVariable("b", "")),
         "expression");
-      var element = PolicyDocument.ConstraintElement.fromPolicy(constraint);
+      var element = PolicyDocument.ConstraintElement.toYaml(constraint);
 
       assertEquals("expression", element.type());
       assertEquals("name", element.name());
@@ -1089,7 +1089,7 @@ public class TestPolicyDocument {
   @Nested
   public static class CelVariableElement {
     @Test
-    public void fromPolicy_whenTypeInvalid() {
+    public void toYaml_whenTypeInvalid() {
       var variable = new CelConstraint.Variable("test", "test") {
         @Override
         protected @NotNull Property bind(@NotNull GenericJson json) {
@@ -1099,13 +1099,13 @@ public class TestPolicyDocument {
 
       assertThrows(
         UnsupportedOperationException.class,
-        () -> PolicyDocument.CelVariableElement.fromPolicy(variable));
+        () -> PolicyDocument.CelVariableElement.toYaml(variable));
     }
 
     @Test
-    public void fromPolicy_whenTypeIsString() {
+    public void toYaml_whenTypeIsString() {
       var variable = new CelConstraint.StringVariable("name", "display name", 1, 10);
-      var element = PolicyDocument.CelVariableElement.fromPolicy(variable);
+      var element = PolicyDocument.CelVariableElement.toYaml(variable);
 
       assertEquals("string", element.type());
       assertEquals("name", element.name());
@@ -1115,9 +1115,9 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenTypeIsLong() {
+    public void toYaml_whenTypeIsLong() {
       var variable = new CelConstraint.LongVariable("name", "display name", -1L, 1L);
-      var element = PolicyDocument.CelVariableElement.fromPolicy(variable);
+      var element = PolicyDocument.CelVariableElement.toYaml(variable);
 
       assertEquals("int", element.type());
       assertEquals("name", element.name());
@@ -1127,9 +1127,9 @@ public class TestPolicyDocument {
     }
 
     @Test
-    public void fromPolicy_whenTypeIsBoolean() {
+    public void toYaml_whenTypeIsBoolean() {
       var variable = new CelConstraint.BooleanVariable("name", "display name");
-      var element = PolicyDocument.CelVariableElement.fromPolicy(variable);
+      var element = PolicyDocument.CelVariableElement.toYaml(variable);
 
       assertEquals("boolean", element.type());
       assertEquals("name", element.name());
@@ -1222,14 +1222,14 @@ public class TestPolicyDocument {
   @Nested
   public static class IamRoleBindingElement {
     @Test
-    public void fromPolicy_whenTypeInvalid() {
+    public void toYaml_whenTypeInvalid() {
       var binding = new IamRoleBinding(
         new ProjectId("project-1"),
         new IamRole("roles/viewer"),
         "description",
         "expression");
 
-      var element = PolicyDocument.IamRoleBindingElement.fromPolicy(binding);
+      var element = PolicyDocument.IamRoleBindingElement.toYaml(binding);
       assertEquals("project-1", element.project());
       assertEquals("roles/viewer", element.role());
       assertEquals("description", element.description());

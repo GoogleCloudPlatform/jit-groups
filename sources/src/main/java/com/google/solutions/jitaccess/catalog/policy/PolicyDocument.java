@@ -90,7 +90,7 @@ public class PolicyDocument {
       return new YAMLMapper()
         .writer()
         .without(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-        .writeValueAsString(DocumentElement.fromPolicy(this.policy));
+        .writeValueAsString(DocumentElement.toYaml(this.policy));
     } catch (JsonProcessingException e) {
       return "(invalid)";
     }
@@ -354,12 +354,12 @@ public class PolicyDocument {
     @JsonProperty("schemaVersion") Integer schemaVersion,
     @JsonProperty("environment") EnvironmentElement environment
   ) {
-    private static DocumentElement fromPolicy(
+    private static DocumentElement toYaml(
       @NotNull EnvironmentPolicy policy
     ) {
       return new DocumentElement(
         CURRENT_VERSION,
-        EnvironmentElement.fromPolicy(policy));
+        EnvironmentElement.toYaml(policy));
     }
 
     private @NotNull Optional<EnvironmentPolicy> toPolicy(
@@ -404,7 +404,7 @@ public class PolicyDocument {
     @JsonProperty("systems") List<SystemElement> systems
   ) {
 
-    static EnvironmentElement fromPolicy(
+    static EnvironmentElement toYaml(
       @NotNull EnvironmentPolicy policy
     ) {
       return new EnvironmentElement(
@@ -414,14 +414,14 @@ public class PolicyDocument {
           .map(acl -> acl
             .entries()
             .stream()
-            .map(AccessControlEntryElement::fromPolicy)
+            .map(AccessControlEntryElement::toYaml)
             .toList())
           .orElse(null),
-        ConstraintsElement.fromPolicy(policy.constraints()),
+        ConstraintsElement.toYaml(policy.constraints()),
         policy
           .systems()
           .stream()
-          .map(SystemElement::fromPolicy)
+          .map(SystemElement::toYaml)
           .toList());
     }
 
@@ -487,7 +487,7 @@ public class PolicyDocument {
     @JsonProperty("constraints") ConstraintsElement constraints,
     @JsonProperty("groups") List<GroupElement> groups
   ) {
-    static SystemElement fromPolicy(@NotNull SystemPolicy policy) {
+    static SystemElement toYaml(@NotNull SystemPolicy policy) {
       return new SystemElement(
         policy.name(),
         policy.description(),
@@ -495,14 +495,14 @@ public class PolicyDocument {
           .map(acl -> acl
             .entries()
             .stream()
-            .map(AccessControlEntryElement::fromPolicy)
+            .map(AccessControlEntryElement::toYaml)
             .toList())
           .orElse(null),
-        ConstraintsElement.fromPolicy(policy.constraints()),
+        ConstraintsElement.toYaml(policy.constraints()),
         policy
           .groups()
           .stream()
-          .map(GroupElement::fromPolicy)
+          .map(GroupElement::toYaml)
           .toList());
     }
 
@@ -567,7 +567,7 @@ public class PolicyDocument {
     @JsonProperty("privileges") PrivilegesElement privileges
   ) {
 
-    static GroupElement fromPolicy(@NotNull JitGroupPolicy policy) {
+    static GroupElement toYaml(@NotNull JitGroupPolicy policy) {
       return new GroupElement(
         policy.name(),
         policy.description(),
@@ -575,15 +575,15 @@ public class PolicyDocument {
           .map(acl -> acl
             .entries()
             .stream()
-            .map(AccessControlEntryElement::fromPolicy)
+            .map(AccessControlEntryElement::toYaml)
             .toList())
           .orElse(null),
-        ConstraintsElement.fromPolicy(policy.constraints()),
+        ConstraintsElement.toYaml(policy.constraints()),
         new PrivilegesElement(
           policy.privileges()
             .stream()
             .filter(p -> p instanceof IamRoleBinding)
-            .map(p -> IamRoleBindingElement.fromPolicy((IamRoleBinding)p))
+            .map(p -> IamRoleBindingElement.toYaml((IamRoleBinding)p))
             .toList()));
     }
 
@@ -641,7 +641,7 @@ public class PolicyDocument {
     @JsonProperty("allow") String allowedPermissions,
     @JsonProperty("deny") String deniedPermissions
   ) {
-    static AccessControlEntryElement fromPolicy(@NotNull AccessControlList.Entry ace) {
+    static AccessControlEntryElement toYaml(@NotNull AccessControlList.Entry ace) {
       return new AccessControlEntryElement(
         String.format("%s:%s", ace.principal.type(), ace.principal.value()),
         ace instanceof AccessControlList.AllowedEntry
@@ -740,15 +740,15 @@ public class PolicyDocument {
   ) {
     private static final ConstraintsElement EMPTY = new ConstraintsElement(null, null);
 
-    static @Nullable ConstraintsElement fromPolicy(@NotNull Map<Policy.ConstraintClass, Collection<Constraint>> constraints) {
+    static @Nullable ConstraintsElement toYaml(@NotNull Map<Policy.ConstraintClass, Collection<Constraint>> constraints) {
       return constraints.isEmpty() ? null : new ConstraintsElement(
         Coalesce.emptyIfNull(constraints.get(Policy.ConstraintClass.JOIN))
           .stream()
-          .map(ConstraintElement::fromPolicy)
+          .map(ConstraintElement::toYaml)
           .toList(),
         Coalesce.emptyIfNull(constraints.get(Policy.ConstraintClass.APPROVE))
           .stream()
-          .map(ConstraintElement::fromPolicy)
+          .map(ConstraintElement::toYaml)
           .toList());
     }
 
@@ -800,7 +800,7 @@ public class PolicyDocument {
     @JsonProperty("expression") String celExpression,
     @JsonProperty("variables") List<CelVariableElement> celVariables
   ) {
-    static ConstraintElement fromPolicy(@NotNull Constraint constraint) {
+    static ConstraintElement toYaml(@NotNull Constraint constraint) {
       if (constraint instanceof ExpiryConstraint expiryConstraint) {
         return new ConstraintElement(
           "expiry",
@@ -821,7 +821,7 @@ public class PolicyDocument {
           celConstraint.expression(),
           celConstraint.variables()
             .stream()
-            .map(CelVariableElement::fromPolicy)
+            .map(CelVariableElement::toYaml)
             .toList());
       }
       else {
@@ -919,7 +919,7 @@ public class PolicyDocument {
     @JsonProperty("min") Integer min,
     @JsonProperty("max") Integer max
   ) {
-    static CelVariableElement fromPolicy(@NotNull CelConstraint.Variable variable) {
+    static CelVariableElement toYaml(@NotNull CelConstraint.Variable variable) {
       if (variable instanceof CelConstraint.StringVariable stringVariable) {
         return new CelVariableElement(
           "string",
@@ -1004,7 +1004,7 @@ public class PolicyDocument {
     @JsonProperty("description") String description,
     @JsonProperty("condition") String condition
   ) {
-    static IamRoleBindingElement fromPolicy(@NotNull IamRoleBinding binding) {
+    static IamRoleBindingElement toYaml(@NotNull IamRoleBinding binding) {
       return new IamRoleBindingElement(
         binding.resource().id(),
         binding.role().name(),
