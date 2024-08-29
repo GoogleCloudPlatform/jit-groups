@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.clients.Diagnosable;
 import com.google.solutions.jitaccess.catalog.Logger;
-import com.google.solutions.jitaccess.catalog.ThrowingCompletableFuture;
+import com.google.solutions.jitaccess.util.CompletableFutures;
 import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.EventIds;
 import jakarta.enterprise.context.Dependent;
@@ -90,7 +90,7 @@ public class HealthResource {
     //
     var diagnosticsFutures = this.diagnosables
       .stream()
-      .map(d -> ThrowingCompletableFuture.submit(() -> d.diagnose(), this.executor))
+      .map(d -> CompletableFutures.supplyAsync(() -> d.diagnose(), this.executor))
       .toList();
 
     //

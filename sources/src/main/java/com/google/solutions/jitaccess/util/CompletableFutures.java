@@ -19,36 +19,38 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog;
+package com.google.solutions.jitaccess.util;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**
- * Completable future for a supplier that can throw a checked exception.
+ * Utility methods for using CompletableFutures.
  */
-public class ThrowingCompletableFuture {
+public abstract class CompletableFutures {
   /**
-   * Function that can throw a checked exception.
+   * Return a Returns a new CompletableFuture, similar to
+   * CompletableFuture.supplyAsync, but accepts a Callable.
+   *
+   * Any checked exceptions thrown by the callable are wrapped
+   * so that future.get() throws an ExecutionException with the
+   * checked exception as cause.
    */
-  @FunctionalInterface
-  public interface ThrowingSupplier<T> {
-    T supply() throws Exception;
-  }
-
-  public static <T> @NotNull CompletableFuture<T> submit(
-    @NotNull ThrowingSupplier<T> supplier,
+  public static @NotNull <T> CompletableFuture<T> supplyAsync(
+    @NotNull Callable<T> callable,
     @NotNull Executor executor
-  ) {
+    ) {
     var future = new CompletableFuture<T>();
     executor.execute(() -> {
       try {
-        future.complete(supplier.supply());
+        future.complete(callable.call());
       }
       catch (Exception e) {
         future.completeExceptionally(e);
@@ -61,7 +63,7 @@ public class ThrowingCompletableFuture {
   /**
    * Await a future and rethrow exceptions, unwrapping known exceptions.
    */
-  public static <T> T awaitAndRethrow(
+  public static <T> T getOrRethrow(
     @NotNull CompletableFuture<T> future
   ) throws AccessException, IOException {
     try {
