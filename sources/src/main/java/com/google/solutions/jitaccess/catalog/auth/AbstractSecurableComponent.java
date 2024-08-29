@@ -45,7 +45,7 @@ public abstract class AbstractSecurableComponent implements Securable {
   /**
    * Effective ACL based on the policy's ancestry.
    */
-  protected AccessControlList effectiveAccessControlList() {
+  public @NotNull AccessControlList effectiveAccessControlList() {
     //
     // Find all ACLs in ancestry and order them so that the
     // root policy's ACL comes first, and this policy's ACL

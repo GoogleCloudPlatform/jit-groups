@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.catalog.auth.AbstractSecurableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,7 @@ import java.util.Optional;
 /**
  * Base implementation for a policy.
  */
-abstract class AbstractPolicy implements Policy {
+abstract class AbstractPolicy extends AbstractSecurableComponent implements Policy {
   private final @NotNull String name;
   private final @NotNull String displayName;
   private final @NotNull String description;
@@ -56,6 +57,19 @@ abstract class AbstractPolicy implements Policy {
     this.acl = acl;
     this.constraints = constraints;
   }
+
+  //---------------------------------------------------------------------------
+  // Overrides.
+  //---------------------------------------------------------------------------
+
+  @Override
+  protected @NotNull Optional<? extends AbstractSecurableComponent> container() {
+    return Optional.ofNullable((AbstractSecurableComponent)this.parent);
+  }
+
+  //---------------------------------------------------------------------------
+  // Publics.
+  //---------------------------------------------------------------------------
 
   /**
    * Name of policy.
@@ -102,7 +116,7 @@ abstract class AbstractPolicy implements Policy {
    * the ACL (or one of its ancestors' ACLs) grants them access.
    */
   @Override
-  public @NotNull Optional<AccessControlList> accessControlList() {
+  public @NotNull Optional<AccessControlList> accessControlList() { // TODO: remove
     return Optional.ofNullable(acl);
   }
 

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.policy;
 
+import com.google.solutions.jitaccess.catalog.auth.Securable;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Instant;
 import java.util.*;
 
-public interface Policy extends PolicyHeader {
+public interface Policy extends Securable, PolicyHeader {
   /**
    * Name of policy.
    */
@@ -50,11 +51,6 @@ public interface Policy extends PolicyHeader {
   @NotNull Optional<Policy> parent();
 
   /**
-   * ACL, if any. A policy without an ACL grants access to all principals.
-   */
-  @NotNull Optional<AccessControlList> accessControlList();
-
-  /**
    * Constraints, if any.
    */
   @NotNull Collection<Constraint> constraints(@NotNull ConstraintClass action);
@@ -62,33 +58,6 @@ public interface Policy extends PolicyHeader {
   enum ConstraintClass {
     JOIN,
     APPROVE
-  }
-
-  /**
-   * Effective ACL based on the policy's ancestry.
-   */
-  default AccessControlList effectiveAccessControlList() {
-    //
-    // Find all ACLs in ancestry and order them so that the
-    // root policy's ACL comes first, and this policy's ACL
-    // is last.
-    //
-    var aclAncestry = new LinkedList<AccessControlList>();
-    for (var policy = Optional.of(this);
-         policy.isPresent();
-         policy = policy.get().parent()) {
-      var acl = policy.get().accessControlList();
-      acl.ifPresent(aclAncestry::addFirst);
-    }
-
-    //
-    // Create a consolidated ACL that contains all entries.
-    //
-    return new AccessControlList(
-      aclAncestry
-        .stream()
-        .flatMap(acl -> acl.entries().stream())
-        .toList());
   }
 
   /**
@@ -120,7 +89,7 @@ public interface Policy extends PolicyHeader {
     @NotNull Subject subject,
     @NotNull EnumSet<PolicyPermission> requiredRights
   ) {
-    return effectiveAccessControlList().isAllowed(
+    return isAccessAllowed(
       subject,
       PolicyPermission.toMask(requiredRights));
   }
