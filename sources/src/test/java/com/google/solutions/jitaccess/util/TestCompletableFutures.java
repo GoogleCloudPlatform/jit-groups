@@ -21,8 +21,11 @@
 
 package com.google.solutions.jitaccess.util;
 
+import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
+import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -31,6 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestCompletableFutures {
   private class CheckedException extends Exception {}
   private static final Executor EXECUTOR = (Runnable r) -> r.run();
+
+  //---------------------------------------------------------------------------
+  // supplyAsync.
+  //---------------------------------------------------------------------------
 
   @Test
   public void supplyAsync_whenCallableReturnsValue() throws Exception {
@@ -64,5 +71,42 @@ public class TestCompletableFutures {
       () -> future.get());
     assertInstanceOf(IllegalArgumentException.class, exception.getCause());
     assertInstanceOf(IllegalArgumentException.class, Exceptions.unwrap(exception));
+  }
+
+  //---------------------------------------------------------------------------
+  // getOrRethrow.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void getOrRethrow_whenFutureThrowsIoException() {
+    var future = CompletableFutures.supplyAsync(
+      () -> { throw new IOException("IO!"); },
+      EXECUTOR);
+
+    assertThrows(
+      IOException.class,
+      () -> CompletableFutures.getOrRethrow(future));
+  }
+
+  @Test
+  public void getOrRethrow_whenFutureThrowsAccessException() {
+    var future = CompletableFutures.supplyAsync(
+      () -> { throw new AccessDeniedException("Access!"); },
+      EXECUTOR);
+
+    assertThrows(
+      AccessException.class,
+      () -> CompletableFutures.getOrRethrow(future));
+  }
+
+  @Test
+  public void getOrRethrow_whenFutureThrowsOtherException() {
+    var future = CompletableFutures.supplyAsync(
+      () -> { throw new RuntimeException("Runtime!"); },
+      EXECUTOR);
+
+    assertThrows(
+      IOException.class,
+      () -> CompletableFutures.getOrRethrow(future));
   }
 }

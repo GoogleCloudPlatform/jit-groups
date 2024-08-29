@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.catalog.auth;
 import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.catalog.ThrowingCompletableFuture;
 import com.google.solutions.jitaccess.util.CompletableFutures;
 import org.jetbrains.annotations.NotNull;
 
@@ -112,8 +111,8 @@ public class GroupResolver {
 
     var expandedPrincipals = new HashSet<>(nonGroups);
     for (var future : futures) {
-      var members = ThrowingCompletableFuture
-        .awaitAndRethrow(future)
+      var members = CompletableFutures
+        .getOrRethrow(future)
         .stream()
         .map(m -> principalFromMembership(m))
         .filter(Optional::isPresent)

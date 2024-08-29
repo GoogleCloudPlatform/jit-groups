@@ -22,10 +22,13 @@
 package com.google.solutions.jitaccess.util;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**
@@ -35,6 +38,10 @@ public abstract class CompletableFutures {
   /**
    * Return a Returns a new CompletableFuture, similar to
    * CompletableFuture.supplyAsync, but accepts a Callable.
+   *
+   * Any checked exceptions thrown by the callable are wrapped
+   * so that future.get() throws an ExecutionException with the
+   * checked exception as cause.
    */
   public static @NotNull <T> CompletableFuture<T> supplyAsync(
     @NotNull Callable<T> callable,
@@ -51,5 +58,27 @@ public abstract class CompletableFutures {
     });
 
     return future;
+  }
+
+  /**
+   * Await a future and rethrow exceptions, unwrapping known exceptions.
+   */
+  public static <T> T getOrRethrow(
+    @NotNull CompletableFuture<T> future
+  ) throws AccessException, IOException {
+    try {
+      return future.get();
+    }
+    catch (InterruptedException | ExecutionException e) {
+      if (e.getCause() instanceof AccessException) {
+        throw (AccessException)e.getCause().fillInStackTrace();
+      }
+
+      if (e.getCause() instanceof IOException) {
+        throw (IOException)e.getCause().fillInStackTrace();
+      }
+
+      throw new IOException("Awaiting executor tasks failed", e);
+    }
   }
 }

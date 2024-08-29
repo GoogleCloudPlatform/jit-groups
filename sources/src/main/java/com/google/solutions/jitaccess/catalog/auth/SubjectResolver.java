@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.Logger;
-import com.google.solutions.jitaccess.catalog.ThrowingCompletableFuture;
 import com.google.solutions.jitaccess.util.CompletableFutures;
 import org.jetbrains.annotations.NotNull;
 
@@ -86,7 +85,7 @@ public class SubjectResolver {
     var principals = new HashSet<Principal>();
     for (var future : membershipFutures) {
       try {
-        var membership = ThrowingCompletableFuture.awaitAndRethrow(future);
+        var membership = CompletableFutures.getOrRethrow(future);
 
         assert membership.details.getPreferredMemberKey().getId().equals(user.email);
 
