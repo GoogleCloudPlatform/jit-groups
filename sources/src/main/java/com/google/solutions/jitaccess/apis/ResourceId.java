@@ -43,4 +43,9 @@ public interface ResourceId {
    * For example, projects/test-123 folders/234, organizations/345.
    */
   @NotNull String path();
+
+  /**
+   * Service that this resource belongs to, in format xxx.googleapis.com.
+   */
+  @NotNull String service();
 }

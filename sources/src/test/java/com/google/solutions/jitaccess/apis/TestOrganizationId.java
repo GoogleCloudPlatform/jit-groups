@@ -31,10 +31,10 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestProjectId {
+public class TestOrganizationId {
   @Test
   public void toString_returnsId() {
-    assertEquals("project-1", new ProjectId("project-1").toString());
+    assertEquals("100000000000000001", new OrganizationId("100000000000000001").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -43,32 +43,33 @@ public class TestProjectId {
 
   @Test
   public void parse_whenIdPrefixed() {
-    var id = ProjectId.parse(ProjectId.PREFIX + "project-1");
+    var id = OrganizationId.parse(OrganizationId.PREFIX + "100000000000000001");
 
     assertTrue(id.isPresent());
-    assertEquals("project-1", id.get().toString());
+    assertEquals("100000000000000001", id.get().toString());
   }
 
   @Test
   public void parse_whenIdNotPrefixed() {
-    var id = ProjectId.parse(" project-1 ");
+    var id = OrganizationId.parse(" 100000000000000001 ");
 
     assertTrue(id.isPresent());
-    assertEquals("project-1", id.get().toString());
+    assertEquals("100000000000000001", id.get().toString());
   }
 
   @ParameterizedTest
   @ValueSource(strings = {
     " ",
-    "123",
+    "name",
     "foo/bar",
-    "project-1/",
-    ProjectId.PREFIX,
-    "projects/a/resource/b"
+    "100000000000000001/",
+    OrganizationId.PREFIX,
+    "organizations//1",
+    "organizations//1/resource/b"
   })
   public void parse_whenIdInvalid(String s) {
-    assertFalse(ProjectId.parse(null).isPresent());
-    assertFalse(ProjectId.parse(s).isPresent());
+    assertFalse(OrganizationId.parse(null).isPresent());
+    assertFalse(OrganizationId.parse(s).isPresent());
   }
 
   // -------------------------------------------------------------------------
@@ -77,7 +78,7 @@ public class TestProjectId {
 
   @Test
   public void service() {
-    assertEquals(ResourceManagerClient.SERVICE, new ProjectId("project-1").service());
+    assertEquals(ResourceManagerClient.SERVICE, new OrganizationId("100000000000000001").service());
   }
 
   // -------------------------------------------------------------------------
@@ -86,7 +87,7 @@ public class TestProjectId {
 
   @Test
   public void type() {
-    assertEquals("project", new ProjectId("project-1").type());
+    assertEquals("organization", new OrganizationId("100000000000000001").type());
   }
 
   // -------------------------------------------------------------------------
@@ -95,7 +96,7 @@ public class TestProjectId {
 
   @Test
   public void id() {
-    assertEquals("project-1", new ProjectId("project-1").id());
+    assertEquals("100000000000000001", new OrganizationId("100000000000000001").id());
   }
 
   // -------------------------------------------------------------------------
@@ -104,7 +105,7 @@ public class TestProjectId {
 
   @Test
   public void path() {
-    assertEquals("projects/project-1", new ProjectId("project-1").path());
+    assertEquals("organizations/100000000000000001", new OrganizationId("100000000000000001").path());
   }
 
   // -------------------------------------------------------------------------
@@ -113,8 +114,8 @@ public class TestProjectId {
 
   @Test
   public void equals_whenObjectAreEquivalent() {
-    ProjectId id1 = new ProjectId("project-1");
-    ProjectId id2 = new ProjectId("project-1");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
+    OrganizationId id2 = new OrganizationId("100000000000000001");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -122,15 +123,15 @@ public class TestProjectId {
 
   @Test
   public void equals_whenObjectAreSame() {
-    ProjectId id1 = new ProjectId("project-1");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void equals_whenObjectAreMotEquivalent() {
-    ProjectId id1 = new ProjectId("project-1");
-    ProjectId id2 = new ProjectId("project-2");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
+    OrganizationId id2 = new OrganizationId("100000000000000002");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -138,14 +139,14 @@ public class TestProjectId {
 
   @Test
   public void equals_whenObjectIsNull() {
-    ProjectId id1 = new ProjectId("project-1");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void equals_whenObjectIsDifferentType() {
-    ProjectId id1 = new ProjectId("project-1");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertFalse(id1.equals(""));
   }
@@ -157,15 +158,15 @@ public class TestProjectId {
   @Test
   public void compareTo() {
     var projects = List.of(
-      new ProjectId("project-3"),
-      new ProjectId("project-1"),
-      new ProjectId("project-2"));
+      new OrganizationId("10003"),
+      new OrganizationId("10001"),
+      new OrganizationId("10002"));
 
     assertIterableEquals(
       List.of(
-        new ProjectId("project-1"),
-        new ProjectId("project-2"),
-        new ProjectId("project-3")),
+        new OrganizationId("10001"),
+        new OrganizationId("10002"),
+        new OrganizationId("10003")),
       new TreeSet<>(projects));
   }
 }

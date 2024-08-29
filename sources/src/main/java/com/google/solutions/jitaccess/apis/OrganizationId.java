@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2023 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -29,14 +29,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * ID of a Google Cloud project.
+ * ID of a Google Cloud organization.
  */
-public record ProjectId(
+public record OrganizationId(
   @NotNull String id
-) implements Comparable<ProjectId>, ResourceId {
-  static final String PREFIX = "projects/";
+) implements Comparable<OrganizationId>, ResourceId {
+  static final String PREFIX = "organizations/";
 
-  public ProjectId {
+  public OrganizationId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
     assert !id.contains("/");
@@ -48,14 +48,14 @@ public record ProjectId(
   }
 
   /**
-   * Parse a project ID from one of the formats
+   * Parse a organization ID from one of the formats
    *
-   * * projects/project-123
-   * * project-123
+   * * organizations/123
+   * * 123
    *
    * @return empty if the input string is malformed.
    */
-  public static @NotNull Optional<ProjectId> parse(@Nullable String s) {
+  public static @NotNull Optional<OrganizationId> parse(@Nullable String s) {
     if (s == null) {
       return Optional.empty();
     }
@@ -66,16 +66,13 @@ public record ProjectId(
       s.indexOf('/', PREFIX.length()) == -1 &&
       s.length() > PREFIX.length()) {
       //
-      // String has folders/ prefix.
+      // String has organizations/ prefix, strip.
       //
-      return Optional.of(new ProjectId(s.substring(PREFIX.length())));
+      s = s.substring(PREFIX.length());
     }
-    else if (s.length() > 0 && s.indexOf('/') == -1 &&
-      !Character.isDigit(s.charAt(0))) {
-      //
-      // String has no prefix.
-      //
-      return Optional.of(new ProjectId(s));
+
+    if (s.length() > 0 && s.indexOf('/') == -1 && s.chars().allMatch(Character::isDigit)) {
+      return Optional.of(new OrganizationId(s));
     }
     else {
       return Optional.empty();
@@ -87,7 +84,7 @@ public record ProjectId(
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(@NotNull ProjectId o) {
+  public int compareTo(@NotNull OrganizationId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -102,7 +99,7 @@ public record ProjectId(
 
   @Override
   public @NotNull String type() {
-    return "project";
+    return "organization";
   }
 
   @Override
