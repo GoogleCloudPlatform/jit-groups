@@ -30,10 +30,10 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestFolderId {
+public class TestOrganizationId {
   @Test
   public void toString_returnsId() {
-    assertEquals("100000000000000001", new FolderId("100000000000000001").toString());
+    assertEquals("100000000000000001", new OrganizationId("100000000000000001").toString());
   }
 
   // -------------------------------------------------------------------------
@@ -42,7 +42,7 @@ public class TestFolderId {
 
   @Test
   public void parse_whenIdPrefixed() {
-    var id = FolderId.parse(FolderId.PREFIX + "100000000000000001");
+    var id = OrganizationId.parse(OrganizationId.PREFIX + "100000000000000001");
 
     assertTrue(id.isPresent());
     assertEquals("100000000000000001", id.get().toString());
@@ -50,7 +50,7 @@ public class TestFolderId {
 
   @Test
   public void parse_whenIdNotPrefixed() {
-    var id = FolderId.parse(" 100000000000000001 ");
+    var id = OrganizationId.parse(" 100000000000000001 ");
 
     assertTrue(id.isPresent());
     assertEquals("100000000000000001", id.get().toString());
@@ -62,13 +62,13 @@ public class TestFolderId {
     "name",
     "foo/bar",
     "100000000000000001/",
-    FolderId.PREFIX,
-    "folders//1",
-    "folders/1/resource/b"
+    OrganizationId.PREFIX,
+    "organizations//1",
+    "organizations//1/resource/b"
   })
   public void parse_whenIdInvalid(String s) {
-    assertFalse(FolderId.parse(null).isPresent());
-    assertFalse(FolderId.parse(s).isPresent());
+    assertFalse(OrganizationId.parse(null).isPresent());
+    assertFalse(OrganizationId.parse(s).isPresent());
   }
 
   // -------------------------------------------------------------------------
@@ -77,7 +77,7 @@ public class TestFolderId {
 
   @Test
   public void type() {
-    assertEquals("folder", new FolderId("100000000000000001").type());
+    assertEquals("organization", new OrganizationId("100000000000000001").type());
   }
 
   // -------------------------------------------------------------------------
@@ -86,7 +86,7 @@ public class TestFolderId {
 
   @Test
   public void id() {
-    assertEquals("100000000000000001", new FolderId("100000000000000001").id());
+    assertEquals("100000000000000001", new OrganizationId("100000000000000001").id());
   }
 
   // -------------------------------------------------------------------------
@@ -95,7 +95,7 @@ public class TestFolderId {
 
   @Test
   public void path() {
-    assertEquals("folders/100000000000000001", new FolderId("100000000000000001").path());
+    assertEquals("organizations/100000000000000001", new OrganizationId("100000000000000001").path());
   }
 
   // -------------------------------------------------------------------------
@@ -104,8 +104,8 @@ public class TestFolderId {
 
   @Test
   public void equals_whenObjectAreEquivalent() {
-    FolderId id1 = new FolderId("100000000000000001");
-    FolderId id2 = new FolderId("100000000000000001");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
+    OrganizationId id2 = new OrganizationId("100000000000000001");
 
     assertTrue(id1.equals(id2));
     assertEquals(id1.hashCode(), id2.hashCode());
@@ -113,15 +113,15 @@ public class TestFolderId {
 
   @Test
   public void equals_whenObjectAreSame() {
-    FolderId id1 = new FolderId("100000000000000001");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertTrue(id1.equals(id1));
   }
 
   @Test
   public void equals_whenObjectAreMotEquivalent() {
-    FolderId id1 = new FolderId("100000000000000001");
-    FolderId id2 = new FolderId("100000000000000002");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
+    OrganizationId id2 = new OrganizationId("100000000000000002");
 
     assertFalse(id1.equals(id2));
     assertNotEquals(id1.hashCode(), id2.hashCode());
@@ -129,14 +129,14 @@ public class TestFolderId {
 
   @Test
   public void equals_whenObjectIsNull() {
-    FolderId id1 = new FolderId("100000000000000001");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertFalse(id1.equals(null));
   }
 
   @Test
   public void equals_whenObjectIsDifferentType() {
-    FolderId id1 = new FolderId("100000000000000001");
+    OrganizationId id1 = new OrganizationId("100000000000000001");
 
     assertFalse(id1.equals(""));
   }
@@ -148,15 +148,15 @@ public class TestFolderId {
   @Test
   public void compareTo() {
     var projects = List.of(
-      new FolderId("10003"),
-      new FolderId("10001"),
-      new FolderId("10002"));
+      new OrganizationId("10003"),
+      new OrganizationId("10001"),
+      new OrganizationId("10002"));
 
     assertIterableEquals(
       List.of(
-        new FolderId("10001"),
-        new FolderId("10002"),
-        new FolderId("10003")),
+        new OrganizationId("10001"),
+        new OrganizationId("10002"),
+        new OrganizationId("10003")),
       new TreeSet<>(projects));
   }
 }

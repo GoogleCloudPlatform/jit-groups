@@ -28,14 +28,14 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * ID of a Google Cloud folder.
+ * ID of a Google Cloud organization.
  */
-public record FolderId(
+public record OrganizationId(
   @NotNull String id
-) implements Comparable<FolderId>, ResourceId {
-  static final String PREFIX = "folders/";
+) implements Comparable<OrganizationId>, ResourceId {
+  static final String PREFIX = "organizations/";
 
-  public FolderId {
+  public OrganizationId {
     Preconditions.checkNotNull(id, "id");
     assert !id.startsWith("//");
     assert !id.contains("/");
@@ -47,14 +47,14 @@ public record FolderId(
   }
 
   /**
-   * Parse a folder ID from one of the formats
+   * Parse a organization ID from one of the formats
    *
-   * * folders/123
+   * * organizations/123
    * * 123
    *
    * @return empty if the input string is malformed.
    */
-  public static @NotNull Optional<FolderId> parse(@Nullable String s) {
+  public static @NotNull Optional<OrganizationId> parse(@Nullable String s) {
     if (s == null) {
       return Optional.empty();
     }
@@ -65,13 +65,13 @@ public record FolderId(
       s.indexOf('/', PREFIX.length()) == -1 &&
       s.length() > PREFIX.length()) {
       //
-      // String has folders/ prefix, strip.
+      // String has organizations/ prefix, strip.
       //
       s = s.substring(PREFIX.length());
     }
 
     if (s.length() > 0 && s.indexOf('/') == -1 && s.chars().allMatch(Character::isDigit)) {
-      return Optional.of(new FolderId(s));
+      return Optional.of(new OrganizationId(s));
     }
     else {
       return Optional.empty();
@@ -83,7 +83,7 @@ public record FolderId(
   // -------------------------------------------------------------------------
 
   @Override
-  public int compareTo(@NotNull FolderId o) {
+  public int compareTo(@NotNull OrganizationId o) {
     return this.id.compareTo(o.id);
   }
 
@@ -93,7 +93,7 @@ public record FolderId(
 
   @Override
   public @NotNull String type() {
-    return "folder";
+    return "organization";
   }
 
   @Override
