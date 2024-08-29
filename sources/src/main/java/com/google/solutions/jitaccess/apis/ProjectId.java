@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.apis;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -93,6 +94,11 @@ public record ProjectId(
   // -------------------------------------------------------------------------
   // ResourceId.
   // -------------------------------------------------------------------------
+
+  @Override
+  public @NotNull String service() {
+    return ResourceManagerClient.SERVICE;
+  }
 
   @Override
   public @NotNull String type() {

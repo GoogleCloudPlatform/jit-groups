@@ -21,12 +21,12 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
-import com.google.api.services.cloudresourcemanager.v3.model.Binding;
+import com.google.solutions.jitaccess.apis.ResourceId;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 public class ITestResourceManagerClient {
   private static final String REQUEST_REASON = "testing";
@@ -36,12 +36,29 @@ public class ITestResourceManagerClient {
   //---------------------------------------------------------------------
 
   @Test
-  public void modifyIamPolicy_project() throws Exception {
-    var adapter = new ResourceManagerClient(
+  public void modifyIamPolicy_whenResourceFromDifferentService() throws Exception {
+    var id = Mockito.mock(ResourceId.class);
+    when(id.service()).thenReturn("other.googleapis.com");
+    
+    var service = new ResourceManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
-    adapter.modifyIamPolicy(
+    assertThrows(
+      IllegalArgumentException.class,
+      () ->  service.modifyIamPolicy(
+      id,
+        policy -> {},
+        REQUEST_REASON));
+  }
+  
+  @Test
+  public void modifyIamPolicy_project() throws Exception {
+    var service = new ResourceManagerClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    service.modifyIamPolicy(
       ITestEnvironment.PROJECT_ID,
       policy -> {},
       REQUEST_REASON);

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -69,6 +70,15 @@ public class TestOrganizationId {
   public void parse_whenIdInvalid(String s) {
     assertFalse(OrganizationId.parse(null).isPresent());
     assertFalse(OrganizationId.parse(s).isPresent());
+  }
+
+  // -------------------------------------------------------------------------
+  // Service.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void service() {
+    assertEquals(ResourceManagerClient.SERVICE, new OrganizationId("100000000000000001").service());
   }
 
   // -------------------------------------------------------------------------

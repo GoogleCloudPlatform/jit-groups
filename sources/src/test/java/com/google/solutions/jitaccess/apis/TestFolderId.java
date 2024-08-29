@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -70,6 +71,16 @@ public class TestFolderId {
     assertFalse(FolderId.parse(null).isPresent());
     assertFalse(FolderId.parse(s).isPresent());
   }
+
+  // -------------------------------------------------------------------------
+  // Service.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void service() {
+    assertEquals(ResourceManagerClient.SERVICE, new FolderId("100000000000000001").service());
+  }
+
 
   // -------------------------------------------------------------------------
   // Type.

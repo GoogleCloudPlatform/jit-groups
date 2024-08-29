@@ -27,7 +27,9 @@ import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.cloudresourcemanager.v3.model.*;
 import com.google.auth.Credentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.FolderId;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.ResourceId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -39,6 +41,7 @@ import java.util.function.Consumer;
  * Adapter for Resource Manager API.
  */
 public class ResourceManagerClient extends AbstractIamClient {
+  public static final String SERVICE = "cloudresourcemanager.googleapis.com";
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private static final int SEARCH_PROJECTS_PAGE_SIZE = 1000;
@@ -66,18 +69,20 @@ public class ResourceManagerClient extends AbstractIamClient {
   }
 
   /**
-   * Modify a project IAM policy using optimistic concurrency control.
+   * Modify a project, folder, or organization's
+   * IAM policy using optimistic concurrency control.
    */
   public void modifyIamPolicy(
-    @NotNull ProjectId projectId,
+    @NotNull ResourceId id,
     @NotNull Consumer<Policy> modify,
     @NotNull String requestReason
   ) throws AccessException, IOException {
-    Preconditions.checkNotNull(projectId, "projectId");
+    Preconditions.checkNotNull(id, "projectId");
+    Preconditions.checkArgument(SERVICE.equals(id.service()), "Resource must be a CRM resource");
     Preconditions.checkNotNull(modify, "modify");
 
     modifyIamPolicy(
-      String.format("v3/projects/%s", projectId),
+      String.format("v3/%s", id.path()),
       modify,
       requestReason);
   }
