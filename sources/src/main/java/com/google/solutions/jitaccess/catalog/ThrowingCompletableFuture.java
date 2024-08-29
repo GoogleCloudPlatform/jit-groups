@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,31 +34,6 @@ import java.util.concurrent.Executor;
  * Completable future for a supplier that can throw a checked exception.
  */
 public class ThrowingCompletableFuture {
-  /**
-   * Function that can throw a checked exception.
-   */
-  @FunctionalInterface
-  public interface ThrowingSupplier<T> {
-    T supply() throws Exception;
-  }
-
-  public static <T> @NotNull CompletableFuture<T> submit(
-    @NotNull ThrowingSupplier<T> supplier,
-    @NotNull Executor executor
-  ) {
-    var future = new CompletableFuture<T>();
-    executor.execute(() -> {
-      try {
-        future.complete(supplier.supply());
-      }
-      catch (Exception e) {
-        future.completeExceptionally(e);
-      }
-    });
-
-    return future;
-  }
-
   /**
    * Await a future and rethrow exceptions, unwrapping known exceptions.
    */

@@ -35,50 +35,21 @@ public abstract class CompletableFutures {
   /**
    * Return a Returns a new CompletableFuture, similar to
    * CompletableFuture.supplyAsync, but accepts a Callable.
-   *
-   * If the Callable throws an exception, it's wrapped in a
-   * UncheckedExecutionException.
-   */
-  public static @NotNull <T> CompletableFuture<T> supplyAsync(
-    @NotNull Callable<T> callable
-  ) {
-    return CompletableFuture.supplyAsync(
-      () -> {
-        try {
-          return callable.call();
-        }
-        catch (RuntimeException e) {
-          throw (RuntimeException)e.fillInStackTrace();
-        }
-        catch (Exception e) {
-          throw new UncheckedExecutionException(e);
-        }
-      });
-  }
-
-  /**
-   * Return a Returns a new CompletableFuture, similar to
-   * CompletableFuture.supplyAsync, but accepts a Callable.
-   *
-   * If the Callable throws an exception, it's wrapped in a
-   * UncheckedExecutionException.
    */
   public static @NotNull <T> CompletableFuture<T> supplyAsync(
     @NotNull Callable<T> callable,
     @NotNull Executor executor
     ) {
-    return CompletableFuture.supplyAsync(
-      () -> {
-        try {
-          return callable.call();
-        }
-        catch (RuntimeException e) {
-          throw (RuntimeException)e.fillInStackTrace();
-        }
-        catch (Exception e) {
-          throw new UncheckedExecutionException(e);
-        }
-      },
-      executor);
+    var future = new CompletableFuture<T>();
+    executor.execute(() -> {
+      try {
+        future.complete(callable.call());
+      }
+      catch (Exception e) {
+        future.completeExceptionally(e);
+      }
+    });
+
+    return future;
   }
 }

@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.catalog;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
+import com.google.solutions.jitaccess.util.CompletableFutures;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class TestThrowingCompletableFuture {
 
   @Test
   public void awaitAndRethrow_whenFutureThrowsIoException() {
-    var future = ThrowingCompletableFuture.<String>submit(
+    var future = CompletableFutures.supplyAsync(
       () -> { throw new IOException("IO!"); },
       new SynchronousExecutor());
 
@@ -57,7 +58,7 @@ public class TestThrowingCompletableFuture {
 
   @Test
   public void awaitAndRethrow_whenFutureThrowsAccessException() {
-    var future = ThrowingCompletableFuture.<String>submit(
+    var future = CompletableFutures.supplyAsync(
       () -> { throw new AccessDeniedException("Access!"); },
       new SynchronousExecutor());
 
@@ -65,9 +66,10 @@ public class TestThrowingCompletableFuture {
       AccessException.class,
       () -> ThrowingCompletableFuture.awaitAndRethrow(future));
   }
+
   @Test
   public void awaitAndRethrow_whenFutureThrowsOtherException() {
-    var future = ThrowingCompletableFuture.<String>submit(
+    var future = CompletableFutures.supplyAsync(
       () -> { throw new RuntimeException("Runtime!"); },
       new SynchronousExecutor());
 

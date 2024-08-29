@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.util;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -50,8 +49,7 @@ public class TestCompletableFutures {
     var exception = assertThrows(
       ExecutionException.class,
       () -> future.get());
-    assertInstanceOf(UncheckedExecutionException.class, exception.getCause());
-    assertInstanceOf(CheckedException.class, exception.getCause().getCause());
+    assertInstanceOf(CheckedException.class, exception.getCause());
     assertInstanceOf(CheckedException.class, Exceptions.unwrap(exception));
   }
 

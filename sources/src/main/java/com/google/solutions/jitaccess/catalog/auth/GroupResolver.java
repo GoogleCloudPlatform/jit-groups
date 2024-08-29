@@ -25,6 +25,7 @@ import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.catalog.ThrowingCompletableFuture;
+import com.google.solutions.jitaccess.util.CompletableFutures;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -95,7 +96,7 @@ public class GroupResolver {
     //
     List<CompletableFuture<List<Membership>>> futures = groups
       .stream()
-      .map(group -> ThrowingCompletableFuture.submit(
+      .map(group -> CompletableFutures.supplyAsync(
         () -> this.groupsClient.listMemberships(group),
         this.executor))
       .toList();
