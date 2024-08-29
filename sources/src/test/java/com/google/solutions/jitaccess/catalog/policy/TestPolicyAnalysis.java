@@ -454,7 +454,7 @@ public class TestPolicyAnalysis {
   public void verifyAccessAllowed_whenPolicyGrantsAccessAndConstraintSatisfied() throws Exception {
     var subject = createSubject(SAMPLE_USER, Set.of());
     var policy = Mockito.mock(Policy.class);
-    when(policy.isAllowedByAccessControlList(subject, EnumSet.of(PolicyPermission.JOIN)))
+    when(policy.isAccessAllowed(subject, EnumSet.of(PolicyPermission.JOIN)))
       .thenReturn(true);
     when(policy.constraints(eq(Policy.ConstraintClass.JOIN)))
       .thenReturn(List.of(new CelConstraint("satisfied", "", List.of(), "true")));

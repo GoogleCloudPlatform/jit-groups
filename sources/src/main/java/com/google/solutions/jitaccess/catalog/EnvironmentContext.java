@@ -68,7 +68,7 @@ public class EnvironmentContext {
    * Requires EXPORT access.
    */
   public boolean canExport() {
-    return this.policy.isAllowedByAccessControlList(
+    return this.policy.isAccessAllowed(
       this.subject,
       EnumSet.of(PolicyPermission.EXPORT));
   }
@@ -88,7 +88,7 @@ public class EnvironmentContext {
    * Requires RECONCILE access.
    */
   public boolean canReconcile() {
-    return this.policy.isAllowedByAccessControlList(
+    return this.policy.isAccessAllowed(
       this.subject,
       EnumSet.of(PolicyPermission.RECONCILE));
   }
@@ -151,7 +151,7 @@ public class EnvironmentContext {
     return this.policy
       .systems()
       .stream()
-      .filter(sys -> sys.isAllowedByAccessControlList(this.subject, EnumSet.of(PolicyPermission.VIEW)))
+      .filter(sys -> sys.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
       .map(sys -> new SystemContext(sys, this.subject, this.provisioner))
       .toList();
   }
@@ -164,7 +164,7 @@ public class EnvironmentContext {
 
     return this.policy
       .system(name)
-      .filter(env -> env.isAllowedByAccessControlList(this.subject, EnumSet.of(PolicyPermission.VIEW)))
+      .filter(env -> env.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
       .map(sys -> new SystemContext(sys, this.subject, this.provisioner));
   }
 

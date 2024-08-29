@@ -131,6 +131,13 @@ public record AccessControlList(
       this.entries, requiredAccessRights);
   }
 
+  /**
+   * Check if the ACL is empty, i.e. doesn't contain any ACEs.
+   */
+  public boolean isEmpty() {
+    return this.entries.isEmpty();
+  }
+
   //---------------------------------------------------------------------------
   // Inner classes.
   //---------------------------------------------------------------------------

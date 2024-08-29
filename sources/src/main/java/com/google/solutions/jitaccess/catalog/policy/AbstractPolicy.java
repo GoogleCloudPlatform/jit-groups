@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.catalog.auth.AbstractSecurableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,7 @@ import java.util.Optional;
 /**
  * Base implementation for a policy.
  */
-abstract class AbstractPolicy implements Policy {
+abstract class AbstractPolicy extends AbstractSecurableComponent implements Policy {
   private final @NotNull String name;
   private final @NotNull String displayName;
   private final @NotNull String description;
@@ -56,6 +57,30 @@ abstract class AbstractPolicy implements Policy {
     this.acl = acl;
     this.constraints = constraints;
   }
+
+  //---------------------------------------------------------------------------
+  // AbstractSecurableComponent overrides.
+  //---------------------------------------------------------------------------
+
+  /**
+   * Access control list.
+   */
+  @Override
+  protected @NotNull Optional<AccessControlList> accessControlList() { // TODO: remove
+    return Optional.ofNullable(acl);
+  }
+
+  /**
+   * Return parent policy as container so that we inherit its ACL.
+   */
+  @Override
+  protected @NotNull Optional<? extends AbstractSecurableComponent> container() {
+    return Optional.ofNullable((AbstractSecurableComponent)this.parent);
+  }
+
+  //---------------------------------------------------------------------------
+  // Public methods.
+  //---------------------------------------------------------------------------
 
   /**
    * Name of policy.
@@ -93,17 +118,6 @@ abstract class AbstractPolicy implements Policy {
   @Override
   public @NotNull Optional<Policy> parent() {
     return Optional.ofNullable(this.parent);
-  }
-
-  /**
-   * Access control list.
-   *
-   * Subjects aren't allowed to view or use the policy unless
-   * the ACL (or one of its ancestors' ACLs) grants them access.
-   */
-  @Override
-  public @NotNull Optional<AccessControlList> accessControlList() {
-    return Optional.ofNullable(acl);
   }
 
   /**
