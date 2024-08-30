@@ -21,11 +21,12 @@
 
 package com.google.solutions.jitaccess.util;
 
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +37,7 @@ import java.util.concurrent.Executor;
  */
 public abstract class CompletableFutures {
   /**
-   * Return a Returns a new CompletableFuture, similar to
+   * Returns a new CompletableFuture, similar to
    * CompletableFuture.supplyAsync, but accepts a Callable.
    *
    * Any checked exceptions thrown by the callable are wrapped
@@ -61,9 +62,49 @@ public abstract class CompletableFutures {
   }
 
   /**
+   * Invokes a function for each supplied argument and returns a
+   * CompletableFuture.
+   *
+   * If one of the function throws an exception, the future
+   * will throw an AggregateException.
+   */
+  public static <T, R> CompletableFuture<Collection<R>> applyAsync(
+    @NotNull ThrowingFunction<T, R> function,
+    @NotNull Iterable<T> arguments,
+    @NotNull Executor executor
+  ) {
+    var futures = new LinkedList<CompletableFuture<R>>();
+    for (var argument : arguments) {
+      futures.add(supplyAsync(() -> function.apply(argument), executor));
+    }
+
+    return supplyAsync(
+      () -> {
+        var results = new LinkedList<R>();
+        var exceptions = new LinkedList<Exception>();
+        for (var future : futures) {
+          try {
+            results.add(future.get());
+          }
+          catch (Exception e) {
+            exceptions.add(Exceptions.unwrap(e));
+          }
+        }
+
+        if (exceptions.isEmpty()) {
+          return results;
+        }
+        else {
+          throw new AggregateException(exceptions);
+        }
+      },
+      executor);
+  }
+
+  /**
    * Await a future and rethrow exceptions, unwrapping known exceptions.
    */
-  public static <T> T getOrRethrow(
+  public static <T> T getOrRethrow( // TODO: remove
     @NotNull CompletableFuture<T> future
   ) throws AccessException, IOException {
     try {
@@ -81,4 +122,13 @@ public abstract class CompletableFutures {
       throw new IOException("Awaiting executor tasks failed", e);
     }
   }
+
+  /**
+   * Function that can throw a checked exception.
+   */
+  @FunctionalInterface
+  public interface ThrowingFunction<T, R> {
+    R apply(T t) throws Exception;
+  }
+
 }
