@@ -357,13 +357,28 @@ public class TestProvisioner {
   @Nested
   public static class IamProvisioner {
 
-
     // -------------------------------------------------------------------------
     // replaceBindingsForPrincipals.
     // -------------------------------------------------------------------------
 
     @Test
-    public void replaceBindingsForPrincipals_whenExistingPoliciesHasObsoleteBindings() {
+    public void replaceBindingsForPrincipals_whenExistingPolicyHasNoBindings() {
+      var policy = new Policy();
+
+      Provisioner.IamProvisioner.replaceBindingsForPrincipals(
+        policy,
+        SAMPLE_USER_1,
+        List.of(new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_3)));
+
+      assertEquals(1, policy.getBindings().size());
+
+      assertEquals("roles/role-3", policy.getBindings().get(0).getRole());
+      assertEquals(1, policy.getBindings().get(0).getMembers().size());
+      assertEquals("user:" + SAMPLE_USER_1.email, policy.getBindings().get(0).getMembers().get(0));
+    }
+
+    @Test
+    public void replaceBindingsForPrincipals_whenExistingPolicyHasObsoleteBindings() {
       var role1 = new Binding()
         .setRole("roles/role-1")
         .setMembers(new ArrayList<>(List.of(

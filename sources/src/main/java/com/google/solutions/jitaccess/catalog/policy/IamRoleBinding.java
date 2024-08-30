@@ -51,7 +51,7 @@ public record IamRoleBinding(
       this.description,
       String.format("%s on %s",
         this.role,
-        this.resource));
+        this.resource.path()));
   }
 
   public IamRoleBinding(
