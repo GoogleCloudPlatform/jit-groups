@@ -75,12 +75,12 @@ public class TestCompletableFutures {
   }
 
   //---------------------------------------------------------------------------
-  // applyAsync.
+  // mapAsync.
   //---------------------------------------------------------------------------
 
   @Test
-  public void applyAsync_whenArgumentsEmpty() throws Exception {
-    var future = CompletableFutures.applyAsync(
+  public void mapAsync_whenArgumentsEmpty() throws Exception {
+    var future = CompletableFutures.mapAsync(
       arg -> { throw new IllegalStateException(); },
       List.of(),
       EXECUTOR);
@@ -90,8 +90,8 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenAllSucceed() throws Exception {
-    var future = CompletableFutures.applyAsync(
+  public void mapAsync_whenAllSucceed() throws Exception {
+    var future = CompletableFutures.mapAsync(
       arg -> arg.toUpperCase(),
       List.of("foo", "bar"),
       EXECUTOR);
@@ -103,8 +103,8 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenOneFails() throws Exception {
-    var future = CompletableFutures.applyAsync(
+  public void mapAsync_whenOneFails() throws Exception {
+    var future = CompletableFutures.mapAsync(
       arg -> {
         if (arg.isBlank()) {
           throw new IllegalStateException();
@@ -127,8 +127,8 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenAllFail() throws Exception {
-    var future = CompletableFutures.applyAsync(
+  public void mapAsync_whenAllFail() throws Exception {
+    var future = CompletableFutures.mapAsync(
       arg -> { throw new IllegalStateException(); },
       List.of("foo", "bar"),
       EXECUTOR);

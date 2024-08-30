@@ -68,7 +68,7 @@ public abstract class CompletableFutures {
    * If one of the function throws an exception, the future
    * will throw an AggregateException.
    */
-  public static <T, R> CompletableFuture<Collection<R>> applyAsync(
+  public static <T, R> CompletableFuture<Collection<R>> mapAsync(
     @NotNull ThrowingFunction<T, R> function,
     @NotNull Iterable<T> arguments,
     @NotNull Executor executor

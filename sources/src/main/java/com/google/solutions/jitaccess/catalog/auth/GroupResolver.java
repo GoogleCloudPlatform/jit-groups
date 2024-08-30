@@ -31,10 +31,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -102,7 +100,7 @@ public class GroupResolver {
       .filter(p -> !(p instanceof GroupId))
       .toList();
 
-    var future = CompletableFutures.applyAsync(
+    var future = CompletableFutures.mapAsync(
       group -> this.groupsClient
         .listMemberships(group)
         .stream()
