@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -71,6 +72,73 @@ public class TestCompletableFutures {
       () -> future.get());
     assertInstanceOf(IllegalArgumentException.class, exception.getCause());
     assertInstanceOf(IllegalArgumentException.class, Exceptions.unwrap(exception));
+  }
+
+  //---------------------------------------------------------------------------
+  // applyAsync.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void applyAsync_whenArgumentsEmpty() throws Exception {
+    var future = CompletableFutures.applyAsync(
+      arg -> { throw new IllegalStateException(); },
+      List.of(),
+      EXECUTOR);
+
+    var results = future.get();
+    assertEquals(0, results.size());
+  }
+
+  @Test
+  public void applyAsync_whenAllSucceed() throws Exception {
+    var future = CompletableFutures.applyAsync(
+      arg -> arg.toUpperCase(),
+      List.of("foo", "bar"),
+      EXECUTOR);
+
+    var results = future.get();
+    assertEquals(
+      List.of("FOO", "BAR"),
+      results);
+  }
+
+  @Test
+  public void applyAsync_whenOneFails() throws Exception {
+    var future = CompletableFutures.applyAsync(
+      arg -> {
+        if (arg.isBlank()) {
+          throw new IllegalStateException();
+        }
+        else {
+          return arg.toUpperCase();
+        }
+      },
+      List.of("foo", "bar", ""),
+      EXECUTOR);
+
+    var exception = assertThrows(
+      ExecutionException.class,
+      () -> future.get());
+
+    var aggregateException = assertInstanceOf(AggregateException.class, exception.getCause());
+    assertEquals(1, aggregateException.getCauses().size());
+    assertInstanceOf(IllegalStateException.class, aggregateException.getCause());
+    assertInstanceOf(IllegalStateException.class, aggregateException.getCauses().get(0));
+  }
+
+  @Test
+  public void applyAsync_whenAllFail() throws Exception {
+    var future = CompletableFutures.applyAsync(
+      arg -> { throw new IllegalStateException(); },
+      List.of("foo", "bar"),
+      EXECUTOR);
+
+    var exception = assertThrows(
+      ExecutionException.class,
+      () -> future.get());
+
+    var aggregateException = assertInstanceOf(AggregateException.class, exception.getCause());
+    assertEquals(2, aggregateException.getCauses().size());
   }
 
   //---------------------------------------------------------------------------
