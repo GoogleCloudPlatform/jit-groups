@@ -55,7 +55,7 @@ public class TestIamRoleBinding {
       new ProjectId("project-1"),
       new IamRole("roles/viewer"));
 
-    assertEquals("roles/viewer on project-1", binding.toString());
+    assertEquals("roles/viewer on projects/project-1", binding.toString());
   }
 
   // -------------------------------------------------------------------------
