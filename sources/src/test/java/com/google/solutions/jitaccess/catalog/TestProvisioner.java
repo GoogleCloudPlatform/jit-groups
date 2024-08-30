@@ -25,7 +25,9 @@ import com.google.api.services.cloudidentity.v1.model.EntityKey;
 import com.google.api.services.cloudidentity.v1.model.Group;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
+import com.google.solutions.jitaccess.apis.FolderId;
 import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
@@ -59,6 +61,8 @@ public class TestProvisioner {
   private static final GroupId SAMPLE_GROUP = new GroupId("group@example.com");
   private static final ProjectId SAMPLE_PROJECT_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_2 = new ProjectId("project-2");
+  private static final FolderId SAMPLE_FOLDER = new FolderId("1");
+  private static final OrganizationId SAMPLE_ORGANIZATION = new OrganizationId("1");
   private static final IamRole SAMPLE_ROLE_1 = new IamRole("roles/role-1");
   private static final IamRole SAMPLE_ROLE_2 = new IamRole("roles/role-2");
   private static final IamRole SAMPLE_ROLE_3 = new IamRole("roles/role-3");
@@ -357,13 +361,28 @@ public class TestProvisioner {
   @Nested
   public static class IamProvisioner {
 
-
     // -------------------------------------------------------------------------
     // replaceBindingsForPrincipals.
     // -------------------------------------------------------------------------
 
     @Test
-    public void replaceBindingsForPrincipals_whenExistingPoliciesHasObsoleteBindings() {
+    public void replaceBindingsForPrincipals_whenExistingPolicyHasNoBindings() {
+      var policy = new Policy();
+
+      Provisioner.IamProvisioner.replaceBindingsForPrincipals(
+        policy,
+        SAMPLE_USER_1,
+        List.of(new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_3)));
+
+      assertEquals(1, policy.getBindings().size());
+
+      assertEquals("roles/role-3", policy.getBindings().get(0).getRole());
+      assertEquals(1, policy.getBindings().get(0).getMembers().size());
+      assertEquals("user:" + SAMPLE_USER_1.email, policy.getBindings().get(0).getMembers().get(0));
+    }
+
+    @Test
+    public void replaceBindingsForPrincipals_whenExistingPolicyHasObsoleteBindings() {
       var role1 = new Binding()
         .setRole("roles/role-1")
         .setMembers(new ArrayList<>(List.of(
@@ -483,12 +502,19 @@ public class TestProvisioner {
         Set.of(
           new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1),
           new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_2),
-          new IamRoleBinding(SAMPLE_PROJECT_2, SAMPLE_ROLE_2)));
+          new IamRoleBinding(SAMPLE_PROJECT_2, SAMPLE_ROLE_2),
+          new IamRoleBinding(SAMPLE_FOLDER, SAMPLE_ROLE_2),
+          new IamRoleBinding(SAMPLE_ORGANIZATION, SAMPLE_ROLE_2)));
 
       verify(resourceManagerClient, times(1))
         .modifyIamPolicy(eq(SAMPLE_PROJECT_1), any(), any());
       verify(resourceManagerClient, times(1))
         .modifyIamPolicy(eq(SAMPLE_PROJECT_2), any(), any());
+      verify(resourceManagerClient, times(1))
+        .modifyIamPolicy(eq(SAMPLE_FOLDER), any(), any());
+      verify(resourceManagerClient, times(1))
+        .modifyIamPolicy(eq(SAMPLE_ORGANIZATION), any(), any());
+
       verify(groupsClient, times(1)).patchGroup(
         any(),
         eq("Test group #69092b7d"));

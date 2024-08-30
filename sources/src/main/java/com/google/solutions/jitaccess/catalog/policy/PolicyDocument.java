@@ -29,14 +29,14 @@ import com.fasterxml.jackson.databind.exc.PropertyBindingException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.apis.IamRole;
-import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.UserClassId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -247,6 +247,7 @@ public class PolicyDocument {
       CONSTRAINT_INVALID_EXPIRY,
       CONSTRAINT_INVALID_EXPRESSION,
       PRIVILEGE_INVALID_RESOURCE_ID,
+      PRIVILEGE_DUPLICATE_RESOURCE_ID,
       PRIVILEGE_INVALID_ROLE,
     }
 
@@ -999,26 +1000,43 @@ public class PolicyDocument {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   public record IamRoleBindingElement(
+    // union {
     @JsonProperty("project") String project,
+    @JsonProperty("resource") String resource,
+    // }
     @JsonProperty("role") String role,
     @JsonProperty("description") String description,
     @JsonProperty("condition") String condition
   ) {
     static IamRoleBindingElement toYaml(@NotNull IamRoleBinding binding) {
       return new IamRoleBindingElement(
-        binding.resource().id(),
+        null,
+        binding.resource().path(),
         binding.role().name(),
         binding.description(),
         binding.condition());
     }
 
     @NotNull Optional<IamRoleBinding> toPolicy(@NotNull IssueCollection issues) {
-      var projectId = ProjectId.parse(this.project);
-      if (projectId.isEmpty()) {
+      if (!MoreStrings.isNullOrBlank(this.project) && !MoreStrings.isNullOrBlank((this.resource))) {
+        issues.error(
+          Issue.Code.PRIVILEGE_DUPLICATE_RESOURCE_ID,
+          "The binding can be either for a project or resource, but not both");
+        return Optional.empty();
+      }
+
+      var resourceId = Optional.<ResourceId>empty()
+        .or(() -> ProjectId.parse(this.project))
+        .or(() -> ProjectId.parse(this.resource))
+        .or(() -> FolderId.parse(this.resource))
+        .or(() -> OrganizationId.parse(this.resource));
+
+      if (resourceId.isEmpty()) {
         issues.error(
           Issue.Code.PRIVILEGE_INVALID_RESOURCE_ID,
-          "The project ID '%s' is invalid",
-          this.project);
+          "The resource ID '%s' does not match the format " +
+            "projects/ID, folders/ID, or organizations/ID",
+          Coalesce.nonEmpty(this.project, this.resource));
       }
 
       var role = IamRole.parse(this.role);
@@ -1030,9 +1048,9 @@ public class PolicyDocument {
       }
 
       return NullaryOptional
-        .ifTrue(projectId.isPresent() && role.isPresent())
+        .ifTrue(resourceId.isPresent() && role.isPresent())
         .map(() -> new IamRoleBinding(
-          projectId.get(),
+          resourceId.get(),
           role.get(),
           this.description,
           this.condition));

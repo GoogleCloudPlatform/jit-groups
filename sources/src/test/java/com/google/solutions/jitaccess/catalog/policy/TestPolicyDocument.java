@@ -22,7 +22,9 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.api.client.json.GenericJson;
+import com.google.solutions.jitaccess.apis.FolderId;
 import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.auth.UserClassId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
@@ -633,7 +635,8 @@ public class TestPolicyDocument {
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals(1, element.privileges().iamRoleBindings().size());
-      assertEquals("project-1", element.privileges().iamRoleBindings().get(0).project());
+      assertNull(element.privileges().iamRoleBindings().get(0).project());
+      assertEquals("projects/project-1", element.privileges().iamRoleBindings().get(0).resource());
       assertEquals("roles/role-1", element.privileges().iamRoleBindings().get(0).role());
     }
 
@@ -744,7 +747,7 @@ public class TestPolicyDocument {
         List.of(),
         null,
         new PolicyDocument.PrivilegesElement(List.of(
-          new PolicyDocument.IamRoleBindingElement("1", null, null, null)
+          new PolicyDocument.IamRoleBindingElement("1", null, null, null, null)
         )));
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
@@ -763,7 +766,7 @@ public class TestPolicyDocument {
         List.of(),
         null,
         new PolicyDocument.PrivilegesElement(List.of(
-          new PolicyDocument.IamRoleBindingElement("project-", "roles/viewer", "d", "c")
+          new PolicyDocument.IamRoleBindingElement("project-1", null, "roles/viewer", "d", "c")
         )));
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
@@ -1230,16 +1233,127 @@ public class TestPolicyDocument {
         "expression");
 
       var element = PolicyDocument.IamRoleBindingElement.toYaml(binding);
-      assertEquals("project-1", element.project());
+      assertNull(element.project());
+      assertEquals("projects/project-1", element.resource());
       assertEquals("roles/viewer", element.role());
       assertEquals("description", element.description());
       assertEquals("expression", element.condition());
+    }
+
+    @Test
+    public void toPolicy_whenProjectIdAndResourceIdEmpty() {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        " ",
+        " ",
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertFalse(binding.isPresent());
+      assertEquals(
+        PolicyDocument.Issue.Code.PRIVILEGE_INVALID_RESOURCE_ID,
+        issues.issues().get(0).code());
+    }
+
+    @Test
+    public void toPolicy_whenProjectIdSpecified() {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        " ",
+        "project-1",
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertTrue(binding.isPresent());
+      assertEquals(
+        new ProjectId("project-1"),
+        binding.get().resource());
+    }
+
+    @Test
+    public void toPolicy_whenFolderIdSpecified() {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        " ",
+        "folders/1",
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertTrue(binding.isPresent());
+      assertEquals(
+        new FolderId("1"),
+        binding.get().resource());
+    }
+
+    @Test
+    public void toPolicy_whenOrganizationIdSpecified() {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        " ",
+        "organizations/1",
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertTrue(binding.isPresent());
+      assertEquals(
+        new OrganizationId("1"),
+        binding.get().resource());
+    }
+
+    @Test
+    public void toPolicy_whenProjectIdAndResourceIdSpecified() {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        "project-1",
+        "project-2",
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertFalse(binding.isPresent());
+      assertEquals(
+        PolicyDocument.Issue.Code.PRIVILEGE_DUPLICATE_RESOURCE_ID,
+        issues.issues().get(0).code());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"123", "folder/1", "projects/a/resource/b"})
     public void toPolicy_whenProjectIdInvalid(String project) {
       var element = new PolicyDocument.IamRoleBindingElement(
+        project,
+        null,
+        "roles/viewer",
+        null,
+        null);
+
+      var issues = new PolicyDocument.IssueCollection();
+      var binding = element.toPolicy(issues);
+
+      assertFalse(binding.isPresent());
+      assertEquals(
+        PolicyDocument.Issue.Code.PRIVILEGE_INVALID_RESOURCE_ID,
+        issues.issues().get(0).code());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"billingAccounts/1", "projects/a/resource/b"})
+    public void toPolicy_whenResourceIdInvalid(String project) {
+      var element = new PolicyDocument.IamRoleBindingElement(
+        null,
         project,
         "roles/viewer",
         null,
@@ -1259,6 +1373,7 @@ public class TestPolicyDocument {
     public void toPolicy_whenRoleInvalid(String role) {
       var element = new PolicyDocument.IamRoleBindingElement(
         "project-1",
+        null,
         role,
         null,
         null);
@@ -1276,6 +1391,7 @@ public class TestPolicyDocument {
     public void toPolicy_whenOptionalFieldsMissing() {
       var element = new PolicyDocument.IamRoleBindingElement(
         "project-1",
+        null,
         "roles/viewer",
         null,
         null);
@@ -1294,6 +1410,7 @@ public class TestPolicyDocument {
     public void toPolicy() {
       var element = new PolicyDocument.IamRoleBindingElement(
         "project-1",
+        null,
         "roles/viewer",
         "description",
         "expression");

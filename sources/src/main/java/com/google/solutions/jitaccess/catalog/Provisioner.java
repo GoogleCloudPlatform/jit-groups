@@ -37,10 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -287,15 +284,21 @@ public class Provisioner {
     static void replaceBindingsForPrincipals(
       @NotNull Policy policy,
       @NotNull IamPrincipalId principal,
-      @NotNull Collection<IamRoleBinding> bindings
+      @NotNull Collection<IamRoleBinding> newBindings
     ) {
       var prefixedPrincipal = principal.type() + ":" + principal.value();
+
+      var policyBindings = policy.getBindings();
+      if (policyBindings == null) {
+        policyBindings = new ArrayList<>();
+        policy.setBindings(policyBindings);
+      }
 
       //
       // Remove principal from existing bindings.
       //
       var obsoleteBindings = new LinkedList<Binding>();
-      for (var existingBinding : policy.getBindings()) {
+      for (var existingBinding : policyBindings) {
         existingBinding.getMembers().remove(prefixedPrincipal);
 
         if (existingBinding.getMembers().isEmpty()) {
@@ -306,19 +309,19 @@ public class Provisioner {
       //
       // Purge bindings for which there is no more principal left.
       //
-      policy.getBindings().removeAll(obsoleteBindings);
+      policyBindings.removeAll(obsoleteBindings);
 
       //
       // Add new bindings.
       //
-      for (var binding : bindings) {
+      for (var binding : newBindings) {
         var condition = Strings.isNullOrEmpty(binding.condition())
           ? null
           : new Expr()
           .setTitle(Coalesce.nonEmpty(binding.description(), "-"))
           .setExpression(binding.condition());
 
-        policy.getBindings().add(new Binding()
+        policyBindings.add(new Binding()
           .setMembers(List.of(prefixedPrincipal))
           .setRole(binding.role().name())
           .setCondition(condition));
@@ -364,16 +367,10 @@ public class Provisioner {
             .collect(Collectors.groupingBy(b -> b.resource()))
             .entrySet()) {
 
-            if (bindingsForResource.getKey() instanceof ProjectId projectId) {
-              this.resourceManagerClient.modifyIamPolicy(
-                projectId,
-                policy -> replaceBindingsForPrincipals(policy, groupId, bindingsForResource.getValue()),
-                "Provisioning JIT group");
-            }
-            else {
-              throw new UnsupportedOperationException(
-                "Unsupported resource type: " + bindingsForResource.getKey().type());
-            }
+            this.resourceManagerClient.modifyIamPolicy(
+              bindingsForResource.getKey(),
+              policy -> replaceBindingsForPrincipals(policy, groupId, bindingsForResource.getValue()),
+              "Provisioning JIT group");
           }
 
           //
