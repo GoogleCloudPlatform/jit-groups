@@ -81,8 +81,8 @@ public class TestCompletableFutures {
   @Test
   public void mapAsync_whenArgumentsEmpty() throws Exception {
     var future = CompletableFutures.mapAsync(
-      arg -> { throw new IllegalStateException(); },
       List.of(),
+      arg -> { throw new IllegalStateException(); },
       EXECUTOR);
 
     var results = future.get();
@@ -92,8 +92,8 @@ public class TestCompletableFutures {
   @Test
   public void mapAsync_whenAllSucceed() throws Exception {
     var future = CompletableFutures.mapAsync(
-      arg -> arg.toUpperCase(),
       List.of("foo", "bar"),
+      arg -> arg.toUpperCase(),
       EXECUTOR);
 
     var results = future.get();
@@ -105,6 +105,7 @@ public class TestCompletableFutures {
   @Test
   public void mapAsync_whenOneFails() throws Exception {
     var future = CompletableFutures.mapAsync(
+      List.of("foo", "bar", ""),
       arg -> {
         if (arg.isBlank()) {
           throw new IllegalStateException();
@@ -113,7 +114,6 @@ public class TestCompletableFutures {
           return arg.toUpperCase();
         }
       },
-      List.of("foo", "bar", ""),
       EXECUTOR);
 
     var exception = assertThrows(
@@ -129,8 +129,8 @@ public class TestCompletableFutures {
   @Test
   public void mapAsync_whenAllFail() throws Exception {
     var future = CompletableFutures.mapAsync(
-      arg -> { throw new IllegalStateException(); },
       List.of("foo", "bar"),
+      arg -> { throw new IllegalStateException(); },
       EXECUTOR);
 
     var exception = assertThrows(

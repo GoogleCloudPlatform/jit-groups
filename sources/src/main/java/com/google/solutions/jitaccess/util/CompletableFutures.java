@@ -69,8 +69,8 @@ public abstract class CompletableFutures {
    * will throw an AggregateException.
    */
   public static <T, R> CompletableFuture<Collection<R>> mapAsync(
-    @NotNull ThrowingFunction<T, R> function,
     @NotNull Iterable<T> arguments,
+    @NotNull ThrowingFunction<T, R> function,
     @NotNull Executor executor
   ) {
     var futures = new LinkedList<CompletableFuture<R>>();

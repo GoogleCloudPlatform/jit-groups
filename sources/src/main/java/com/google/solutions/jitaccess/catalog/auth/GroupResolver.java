@@ -101,13 +101,13 @@ public class GroupResolver {
       .toList();
 
     var future = CompletableFutures.mapAsync(
+      groups,
       group -> this.groupsClient
         .listMemberships(group)
         .stream()
         .map(m -> principalFromMembership(m))
         .flatMap(Optional::stream)
         .toList(),
-      groups,
       this.executor);
 
     try {
