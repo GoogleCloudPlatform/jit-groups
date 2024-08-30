@@ -104,7 +104,7 @@ public abstract class CompletableFutures {
   /**
    * Await a future and rethrow exceptions, unwrapping known exceptions.
    */
-  public static <T> T getOrRethrow(
+  public static <T> T getOrRethrow( // TODO: remove
     @NotNull CompletableFuture<T> future
   ) throws AccessException, IOException {
     try {

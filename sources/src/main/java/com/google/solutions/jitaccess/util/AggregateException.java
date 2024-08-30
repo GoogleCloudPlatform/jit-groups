@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Represents one or more exceptions that occurred during an asynchronous operation.
  */
-public class AggregateException extends Exception { // TODO: unwrap
+public class AggregateException extends Exception {
   private final @NotNull Collection<Exception> exceptions;
 
   public AggregateException(@NotNull Collection<Exception> exceptions) {
