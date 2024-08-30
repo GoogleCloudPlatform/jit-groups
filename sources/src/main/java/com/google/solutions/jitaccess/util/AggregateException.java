@@ -21,28 +21,56 @@
 
 package com.google.solutions.jitaccess.util;
 
+import jakarta.validation.constraints.Null;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
  * Represents one or more exceptions that occurred during an asynchronous operation.
  */
-public class AggregateException extends Exception {
-  private final @NotNull Collection<Exception> exceptions;
+public class AggregateException extends ExecutionException {
+  private final @NotNull List<Exception> exceptions;
+  private Throwable cause;
 
   public AggregateException(@NotNull Collection<Exception> exceptions) {
-    super(exceptions.stream()
-      .findFirst()
-      .get());
-    this.exceptions = exceptions;
+    this.exceptions = List.copyOf(exceptions);
   }
 
   public AggregateException(Exception... exceptions) {
-    super(exceptions.length > 0 ? exceptions[0] : null);
     this.exceptions = List.of(exceptions);
+  }
+
+  @Override
+  public synchronized @Nullable Throwable getCause() {
+    if (cause == null) {
+      if (exceptions.isEmpty()) {
+        cause = null;
+      }
+      else if (exceptions.size() == 1) {
+        cause = exceptions.get(0);
+      }
+      else {
+        //
+        // Use the first exception with all other exceptions
+        // added as "suppressed". That way, we don't lose
+        // track of the other exceptions.
+        //
+        // Make sure we only do this once, even when getCause
+        // is invoked multiple times.
+        //
+        cause = exceptions.get(0);
+        exceptions.stream()
+          .skip(1)
+          .forEach(cause::addSuppressed);
+      }
+    }
+
+    return cause;
   }
 
   public @NotNull List<Exception> getCauses() {
