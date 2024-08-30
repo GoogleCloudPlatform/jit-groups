@@ -40,7 +40,7 @@ public class Exceptions {
    * Create a message that includes details for all nested
    * exceptions.
    */
-  public static @NotNull String fullMessage(@Nullable Throwable e) {
+  public static @NotNull String fullMessage(@Nullable Throwable e) { // TODO: suppressed exceptions
     return fullMessage(e, true);
   }
 
@@ -50,24 +50,44 @@ public class Exceptions {
    */
   public static @NotNull String fullMessage(
     @Nullable Throwable e,
-    boolean includeNestedExceptionClassName
+    boolean includeNestedExceptionDetails
   ) {
     var buffer = new StringBuilder();
 
     for (; e != null; e = e.getCause()) {
       if (buffer.length() > 0) {
-        if (includeNestedExceptionClassName) {
+        if (includeNestedExceptionDetails) {
           buffer.append(", caused by ");
           buffer.append(e.getClass().getSimpleName());
         }
 
         if (e.getMessage() != null) {
           buffer.append(": ");
-          buffer.append(e.getMessage());
         }
       }
-      else {
+
+      if (e.getMessage() != null) {
         buffer.append(e.getMessage());
+      }
+
+      if (e.getSuppressed() != null && e.getSuppressed().length > 0 && includeNestedExceptionDetails) {
+        boolean first = true;
+        buffer.append(" (also: ");
+        for (var suppressed : e.getSuppressed()) {
+          if (first) {
+            first = false;
+          }
+          else {
+            buffer.append(", ");
+          }
+
+          buffer.append(suppressed.getClass().getSimpleName());
+          if (suppressed.getMessage() != null) {
+            buffer.append(": ");
+            buffer.append(suppressed.getMessage());
+          }
+        }
+        buffer.append(")");
       }
     }
 

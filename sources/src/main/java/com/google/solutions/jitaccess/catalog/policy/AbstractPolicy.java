@@ -66,7 +66,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
    * Access control list.
    */
   @Override
-  protected @NotNull Optional<AccessControlList> accessControlList() { // TODO: remove
+  protected @NotNull Optional<AccessControlList> accessControlList() {
     return Optional.ofNullable(acl);
   }
 
