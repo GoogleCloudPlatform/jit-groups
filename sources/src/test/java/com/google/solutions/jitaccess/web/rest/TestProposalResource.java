@@ -178,7 +178,7 @@ public class TestProposalResource {
     assertEquals(group.name(), groupInfo.name());
     assertEquals(group.description(), groupInfo.description());
     assertEquals(2, groupInfo.privileges().size());
-    assertEquals("roles/role-1 on project-1", groupInfo.privileges().get(0).description());
+    assertEquals("roles/role-1 on projects/project-1", groupInfo.privileges().get(0).description());
     assertEquals("description", groupInfo.privileges().get(1).description());
     assertEquals(group.system().name(), groupInfo.system().name());
     assertEquals(group.system().description(), groupInfo.system().description());
@@ -216,7 +216,7 @@ public class TestProposalResource {
     assertEquals(group.name(), groupInfo.name());
     assertEquals(group.description(), groupInfo.description());
     assertEquals(2, groupInfo.privileges().size());
-    assertEquals("roles/role-1 on project-1", groupInfo.privileges().get(0).description());
+    assertEquals("roles/role-1 on projects/project-1", groupInfo.privileges().get(0).description());
     assertEquals("description", groupInfo.privileges().get(1).description());
     assertEquals(group.system().name(), groupInfo.system().name());
     assertEquals(group.system().description(), groupInfo.system().description());
