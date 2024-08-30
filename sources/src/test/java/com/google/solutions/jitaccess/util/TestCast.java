@@ -27,16 +27,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCast {
   @Test
-  public void as_whenIncompatible() {
-    assertFalse(Cast.as(1, String.class).isPresent());
+  public void tryCast_whenIncompatible() {
+    assertFalse(Cast.tryCast(1, String.class).isPresent());
   }
 
   @Test
-  public void as_whenCompatible() {
-    assertTrue(Cast.as(1, Number.class).isPresent());
-    assertEquals(1, Cast.as(1, Number.class).get());
+  public void tryCast_whenCompatible() {
+    assertTrue(Cast.tryCast(1, Number.class).isPresent());
+    assertEquals(1, Cast.tryCast(1, Number.class).get());
 
-    assertTrue(Cast.as("test", String.class).isPresent());
-    assertEquals("test", Cast.as("test", String.class).get());
+    assertTrue(Cast.tryCast("test", String.class).isPresent());
+    assertEquals("test", Cast.tryCast("test", String.class).get());
   }
 }

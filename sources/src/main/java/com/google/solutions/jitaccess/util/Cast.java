@@ -34,7 +34,7 @@ public class Cast {
    *
    * Similar to the C# 'as' operator.
    */
-  public static <TSource, TTarget extends TSource> @NotNull Optional<TTarget> as(
+  public static <TSource, TTarget extends TSource> @NotNull Optional<TTarget> tryCast(
     @NotNull TSource obj,
     @NotNull Class<TTarget> cls
   ) {
