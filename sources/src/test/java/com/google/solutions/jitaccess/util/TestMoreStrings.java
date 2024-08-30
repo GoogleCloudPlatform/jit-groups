@@ -21,27 +21,27 @@
 
 package com.google.solutions.jitaccess.util;
 
-import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Utility methods for casting.
- */
-public abstract class Cast {
-  /**
-   * Cast the object to TTarget if possible, otherwise return empty.
-   *
-   * Similar to the C# 'as' operator.
-   */
-  public static <TSource, TTarget extends TSource> @NotNull Optional<TTarget> tryCast(
-    @NotNull TSource obj,
-    @NotNull Class<TTarget> cls
-  ) {
-    if (cls.isInstance(obj)) {
-      return Optional.of(cls.cast(obj));
-    } else {
-      return Optional.empty();
-    }
+public class TestMoreStrings {
+  @Test
+  public void isNullOrBlank_whenNull() {
+    assertTrue(MoreStrings.isNullOrBlank(null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", " ",  "\n\t"})
+  public void isNullOrBlank_whenBlank(String s) {
+    assertTrue(MoreStrings.isNullOrBlank(s));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"x", " x",  "\n\tx"})
+  public void isNullOrBlank_whenNotBlank(String s) {
+    assertFalse(MoreStrings.isNullOrBlank(s));
   }
 }

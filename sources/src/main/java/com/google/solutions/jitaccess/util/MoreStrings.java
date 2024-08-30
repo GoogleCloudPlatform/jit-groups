@@ -21,27 +21,16 @@
 
 package com.google.solutions.jitaccess.util;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Optional;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Utility methods for casting.
+ * Utility methods for working with strings.
  */
-public abstract class Cast {
+public abstract class MoreStrings {
   /**
-   * Cast the object to TTarget if possible, otherwise return empty.
-   *
-   * Similar to the C# 'as' operator.
+   * Check if a string is null or only contains whitespace
    */
-  public static <TSource, TTarget extends TSource> @NotNull Optional<TTarget> tryCast(
-    @NotNull TSource obj,
-    @NotNull Class<TTarget> cls
-  ) {
-    if (cls.isInstance(obj)) {
-      return Optional.of(cls.cast(obj));
-    } else {
-      return Optional.empty();
-    }
+  public static boolean isNullOrBlank(@Nullable String s) {
+    return s == null || s.isBlank();
   }
 }
