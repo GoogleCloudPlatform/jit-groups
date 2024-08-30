@@ -40,7 +40,7 @@ public class Exceptions {
    * Create a message that includes details for all nested
    * exceptions.
    */
-  public static @NotNull String fullMessage(@Nullable Throwable e) { // TODO: suppressed exceptions
+  public static @NotNull String fullMessage(@Nullable Throwable e) {
     return fullMessage(e, true);
   }
 
@@ -70,6 +70,9 @@ public class Exceptions {
         buffer.append(e.getMessage());
       }
 
+      //
+      // Include details about suppressed exceptions, if any.
+      //
       if (e.getSuppressed() != null && e.getSuppressed().length > 0 && includeNestedExceptionDetails) {
         boolean first = true;
         buffer.append(" (also: ");
