@@ -430,10 +430,10 @@ Privileges define the projects that members of a JIT groups are granted access t
 ```yaml hl_lines="2-9"
 privileges:
   iam:
-  - project: "project-1"                # Allow view-access to project-1
+  - resource: "projects/project-1"      # Allow view-access to project-1
     role: "roles/compute.viewer"
     
-  - project: "project-3"                # Allow limited view-access to project-3
+  - resource: "projects/project-3"      # Allow limited view-access to project-3
     role: "roles/compute.viewer"
     description: "View Compute Engine instances"
     condition: "resource.type == 'compute.googleapis.com/Instance'"
@@ -441,9 +441,17 @@ privileges:
 
 You can list any number of privileges under the `iam` key. Each privilege can have the following attributes:
 
-`project` **Required**
+`resource` **Required**
 
-:   Project ID of a Google Cloud project that you want to grant access to.
+:   Resource that you want to grant access to, this can be one of the following:
+    
+    | Resource                                                  | Example                 |
+    |-----------------------------------------------------------|-------------------------|
+    | `projects/ID`, where `ID` is a [project ID :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin)                 | `projects/my-project-1`, `my-project-1` |
+    | `folders/ID`, where `ID` is a folder ID                   | `folders/1234567890`|
+    | `organizations/ID` where `ID` is [an organization ID :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-organization#retrieving_your_organization_id)|`organizations/1234567890`|
+
+    The `projects/` prefix is optional.
 
 `role` **Required**
 
@@ -458,3 +466,6 @@ You can list any number of privileges under the `iam` key. Each privilege can ha
 
 :   An [IAM condition :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-overview). The application adds this
     condition when creating the respective IAM bindings.
+
+    You can use an IAM condition to grant access to [individual resources such as storage buckets,
+    billing accounts, or VM instances :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-resource-attributes).
