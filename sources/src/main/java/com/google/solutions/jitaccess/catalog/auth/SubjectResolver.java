@@ -86,6 +86,10 @@ public class SubjectResolver {
             this.groupsClient.getMembership(membership.membershipId)));
         }
         catch (ResourceNotFoundException e) {
+          //
+          // Membership has been removed (or has expired) in the meantime,
+          // we can ignore that.
+          //
           return Optional.<ResolvedMembership>empty();
         }
       },
@@ -93,48 +97,42 @@ public class SubjectResolver {
 
     var principals = new HashSet<Principal>();
     try {
-      for (var membership : resolvedMembershipsFuture.get()) {
-        if (membership.isEmpty())
-        {
+      for (var membership : resolvedMembershipsFuture.get()
+        .stream()
+        .flatMap(Optional::stream)
+        .toList()) {
+
+        assert membership.details
+          .getPreferredMemberKey()
+          .getId()
+          .equals(user.email);
+
+        //
+        // NB. Temporary group memberships don't have a start date, but they
+        // must have an expiry date.
+        //
+        var expiryDate = membership.details.getRoles()
+          .stream()
+          .filter(r -> r.getExpiryDetail() != null && r.getExpiryDetail().getExpireTime() != null)
+          .map(d -> Instant.parse(d.getExpiryDetail().getExpireTime()))
+          .min(Instant::compareTo)
+          .orElse(null);
+
+        if (expiryDate == null) {
           //
-          // Membership has been removed (or has expired) in the meantime,
-          // we can ignore that.
+          // This is not a proper JIT group. Somebody might have created a group
+          // that just happens to fit the naming convention.
           //
+          this.logger.warn(
+            EventIds.SUBJECT_RESOLUTION,
+            String.format(
+              "The group '%s' looks like a JIT group, but lacks an expiry date",
+              membership.group()));
         }
         else {
-          assert membership.get()
-            .details
-            .getPreferredMemberKey()
-            .getId()
-            .equals(user.email);
-
-          //
-          // NB. Temporary group memberships don't have a start date, but they
-          // must have an expiry date.
-          //
-          var expiryDate = membership.get().details.getRoles()
-            .stream()
-            .filter(r -> r.getExpiryDetail() != null && r.getExpiryDetail().getExpireTime() != null)
-            .map(d -> Instant.parse(d.getExpiryDetail().getExpireTime()))
-            .min(Instant::compareTo)
-            .orElse(null);
-
-          if (expiryDate == null) {
-            //
-            // This is not a proper JIT group. Somebody might have created a group
-            // that just happens to fit the naming convention.
-            //
-            this.logger.warn(
-              EventIds.SUBJECT_RESOLUTION,
-              String.format(
-                "The group '%s' looks like a JIT group, but lacks an expiry date",
-                membership.get().group()));
-          }
-          else {
-            principals.add(new Principal(
-              this.groupMapping.jitGroupFromGroup(membership.get().group()),
-              expiryDate));
-          }
+          principals.add(new Principal(
+            this.groupMapping.jitGroupFromGroup(membership.group()),
+            expiryDate));
         }
       }
     }
