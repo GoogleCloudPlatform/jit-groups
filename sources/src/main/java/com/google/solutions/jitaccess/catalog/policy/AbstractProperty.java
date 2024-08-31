@@ -71,7 +71,7 @@ abstract class AbstractProperty<T> implements Property {
    */
   @Override
   public @NotNull String name() {
-    return name;
+    return this.name;
   }
 
   /**
@@ -79,7 +79,7 @@ abstract class AbstractProperty<T> implements Property {
    */
   @Override
   public @NotNull String displayName() {
-    return displayName;
+    return this.displayName;
   }
 
   /**
@@ -95,7 +95,7 @@ abstract class AbstractProperty<T> implements Property {
    */
   @Override
   public boolean isRequired() {
-    return isRequired;
+    return this.isRequired;
   }
 
   /**

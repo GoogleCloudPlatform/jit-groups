@@ -55,7 +55,7 @@ public class JitGroupCompliance {
    * ID of group whose compliance is being reported.
    */
   public @NotNull JitGroupId groupId() {
-    return groupId;
+    return this.groupId;
   }
 
   /**
@@ -63,7 +63,7 @@ public class JitGroupCompliance {
    * JIT group.
    */
   public @NotNull Optional<GroupId> cloudIdentityGroupId() {
-    return Optional.ofNullable(cloudIdentityGroupId);
+    return Optional.ofNullable(this.cloudIdentityGroupId);
   }
 
   /**
@@ -85,6 +85,6 @@ public class JitGroupCompliance {
    * Exception encountered during reconciliation.
    */
   public @NotNull Optional<Exception> exception() {
-    return Optional.ofNullable(exception);
+    return Optional.ofNullable(this.exception);
   }
 }

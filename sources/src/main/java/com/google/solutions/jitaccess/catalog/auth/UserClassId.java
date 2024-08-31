@@ -99,7 +99,7 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
     }
 
     UserClassId id = (UserClassId) o;
-    return value.equals(id.value);
+    return this.value.equals(id.value);
   }
 
   @Override

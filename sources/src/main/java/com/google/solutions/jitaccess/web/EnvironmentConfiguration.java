@@ -76,16 +76,16 @@ class EnvironmentConfiguration implements PolicyHeader {
 
   @Override
   public @NotNull String name() {
-    return name;
+    return this.name;
   }
 
   @Override
   public @NotNull String description() {
-    return description;
+    return this.description;
   }
 
   public GoogleCredentials resourceCredentials() {
-    return resourceCredentials;
+    return this.resourceCredentials;
   }
 
   public EnvironmentPolicy loadPolicy() {

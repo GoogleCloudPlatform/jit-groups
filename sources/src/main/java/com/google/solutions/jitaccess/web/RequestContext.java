@@ -79,7 +79,7 @@ public class RequestContext {
         {
           if (this.cachedPrincipals == null) {
             try {
-              this.cachedPrincipals = subjectResolver.resolve(this.user()).principals();
+              this.cachedPrincipals = RequestContext.this.subjectResolver.resolve(this.user()).principals();
             }
             catch (AccessException | IOException e) {
               throw new UncheckedExecutionException(e);
@@ -110,15 +110,15 @@ public class RequestContext {
   }
 
   public @Nullable String requestMethod() {
-    return requestMethod;
+    return this.requestMethod;
   }
 
   public @Nullable String requestPath() {
-    return requestPath;
+    return this.requestPath;
   }
 
   public @Nullable String requestTraceId() {
-    return requestTraceId;
+    return this.requestTraceId;
   }
 
   private static class AuthenticationContext implements Subject {

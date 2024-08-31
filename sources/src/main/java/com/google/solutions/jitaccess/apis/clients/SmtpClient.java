@@ -266,7 +266,7 @@ public class SmtpClient {
         }
 
         synchronized (this) {
-          this.cachedAuthentication = new PasswordAuthentication(smtpUsername, password);
+          this.cachedAuthentication = new PasswordAuthentication(this.smtpUsername, password);
         }
       }
 

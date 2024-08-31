@@ -273,7 +273,7 @@ public class PolicyDocument {
     }
 
     List<Issue> issues() {
-      return issues;
+      return this.issues;
     }
 
     boolean containsErrors() {
@@ -317,7 +317,7 @@ public class PolicyDocument {
     private final @NotNull List<PolicyDocument.Issue> issues;
 
     public @NotNull List<PolicyDocument.Issue> issues() {
-      return issues;
+      return this.issues;
     }
 
     SyntaxException(
@@ -456,7 +456,7 @@ public class PolicyDocument {
               var policy = new EnvironmentPolicy(
                 Coalesce.nonEmpty(this.name, metadata.defaultName()),
                 Strings.nullToEmpty(this.description),
-                acl == null
+                this.acl == null
                   ? EnvironmentPolicy.DEFAULT_ACCESS_CONTROL_LIST
                   : new AccessControlList(aces.stream().map(Optional::get).toList()),
                 constraints.get(),
@@ -536,7 +536,7 @@ public class PolicyDocument {
             var policy = new SystemPolicy(
               this.name,
               Strings.nullToEmpty(this.description),
-              acl == null
+              this.acl == null
                 ? null
                 : new AccessControlList(aces.stream().map(Optional::get).toList()),
               constraints.get());

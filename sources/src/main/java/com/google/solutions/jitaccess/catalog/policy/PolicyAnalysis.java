@@ -124,7 +124,7 @@ public class PolicyAnalysis {
     // Evaluate ACLs of this policy and its parents.
     //
     var result = new Result(
-      policy.isAccessAllowed(this.subject, this.requestedAccess));
+      this.policy.isAccessAllowed(this.subject, this.requestedAccess));
 
     for (var constraintCheck : this.constraintChecks) {
       evaluateConstraintCheck(constraintCheck, result);
@@ -174,14 +174,14 @@ public class PolicyAnalysis {
      * @return satisfied constraints.
      */
     public @NotNull Collection<Constraint> satisfiedConstraints() {
-      return satisfiedConstraints;
+      return this.satisfiedConstraints;
     }
 
     /**
      * @return unsatisfied and failed constraints.
      */
     public @NotNull Collection<Constraint> unsatisfiedConstraints() {
-      return unsatisfiedConstraints;
+      return this.unsatisfiedConstraints;
     }
 
     /**
@@ -190,14 +190,14 @@ public class PolicyAnalysis {
      * Failed constraints are always unsatisfied too.
      */
     public @NotNull Map<Constraint, Exception> failedConstraints() {
-      return failedConstraints;
+      return this.failedConstraints;
     }
 
     /**
      * @return information about the subject's existing membership, if any.
      */
     public @NotNull Optional<Principal> activeMembership() {
-      return Optional.ofNullable(activeMembership);
+      return Optional.ofNullable(this.activeMembership);
     }
 
     /**
@@ -209,7 +209,7 @@ public class PolicyAnalysis {
         //
         // Only consider ACL.
         //
-        return accessAllowed;
+        return this.accessAllowed;
       }
       else {
         //
@@ -265,7 +265,7 @@ public class PolicyAnalysis {
     }
 
     public Collection<Exception> exceptions() {
-      return exceptions;
+      return this.exceptions;
     }
   }
 

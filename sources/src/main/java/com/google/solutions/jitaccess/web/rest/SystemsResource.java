@@ -47,7 +47,7 @@ import java.util.List;
 @RequireIapPrincipal
 @LogRequest
 public class SystemsResource {
-  private final AccessDeniedException NOT_FOUND = new AccessDeniedException(
+  private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(
     "The system does not exist or access is denied");
 
   @Inject

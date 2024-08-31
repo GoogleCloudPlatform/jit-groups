@@ -327,14 +327,14 @@ abstract class StructuredLogger implements Logger {
       var labels = super.createLabels(eventId);
 
       if (this.requestContext.isAuthenticated()) {
-        labels.put("auth/user_id", requestContext.user().email);
-        labels.put("auth/device_id", requestContext.device().deviceId());
+        labels.put("auth/user_id", this.requestContext.user().email);
+        labels.put("auth/device_id", this.requestContext.device().deviceId());
         labels.put("auth/device_access_levels",
-          String.join(", ", requestContext.device().accessLevels()));
+          String.join(", ", this.requestContext.device().accessLevels()));
       }
 
-      labels.put("request/method", requestContext.requestMethod());
-      labels.put("request/path", requestContext.requestPath());
+      labels.put("request/method", this.requestContext.requestMethod());
+      labels.put("request/path", this.requestContext.requestPath());
 
       return labels;
     }

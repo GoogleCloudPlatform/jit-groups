@@ -52,6 +52,6 @@ record IapDevice(String deviceId, List<String> accessLevels) implements Device {
       return false;
     }
     var that = (IapDevice) o;
-    return deviceId.equals(that.deviceId) && accessLevels.equals(that.accessLevels);
+    return this.deviceId.equals(that.deviceId) && this.accessLevels.equals(that.accessLevels);
   }
 }

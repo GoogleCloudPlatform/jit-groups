@@ -88,12 +88,12 @@ public class UserId implements IamPrincipalId {
     }
 
     UserId userId = (UserId) o;
-    return email.equals(userId.email);
+    return this.email.equals(userId.email);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(email);
+    return Objects.hash(this.email);
   }
 
   // -------------------------------------------------------------------------

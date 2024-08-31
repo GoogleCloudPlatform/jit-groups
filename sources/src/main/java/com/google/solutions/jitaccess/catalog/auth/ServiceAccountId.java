@@ -64,7 +64,7 @@ public class ServiceAccountId implements IamPrincipalId {
    * Project that contains the service account.
    */
   public ProjectId projectId() {
-    return projectId;
+    return this.projectId;
   }
 
   /**

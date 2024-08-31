@@ -316,7 +316,7 @@ public class CloudIdentityGroupsClient {
       //
       createSettingsClient()
         .groups()
-        .update(emailAddress.email, RESTRICTED_SETTINGS)
+        .update(emailAddress.email, this.RESTRICTED_SETTINGS)
         .execute();
 
       return groupKey;

@@ -349,7 +349,7 @@ public class Provisioner {
         //
       }
       else {
-        logger.info(
+        this.logger.info(
           EventIds.PROVISION_IAM_BINDINGS,
           "IAM role bindings for group %s have changed (expected checksum: %s, actual: %s), provisioning...",
           groupId,
@@ -379,7 +379,7 @@ public class Provisioner {
             new GroupKey(groupDetails.getName()),
             expectedChecksum.toTaggedDescription(groupDetails.getDescription()));
 
-          logger.info(
+          this.logger.info(
             EventIds.PROVISION_IAM_BINDINGS,
             "IAM role bindings for group %s provisioned",
             groupId,

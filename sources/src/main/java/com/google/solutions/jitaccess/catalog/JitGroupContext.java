@@ -78,7 +78,7 @@ public class JitGroupContext {
     //
     // NB. Self-approval requires that the subject also satisfies approval constraints.
     //
-    var joinWithSelfApprovalAnalysis = policy
+    var joinWithSelfApprovalAnalysis = this.policy
       .analyze(this.subject, EnumSet.of(PolicyPermission.JOIN, PolicyPermission.APPROVE_SELF))
       .applyConstraints(Policy.ConstraintClass.JOIN)
       .applyConstraints(Policy.ConstraintClass.APPROVE);
@@ -99,7 +99,7 @@ public class JitGroupContext {
     //
     return new JoinOperation(
       true,
-      policy
+      this.policy
         .analyze(this.subject, EnumSet.of(PolicyPermission.JOIN))
         .applyConstraints(Policy.ConstraintClass.JOIN));
   }
@@ -133,7 +133,7 @@ public class JitGroupContext {
     // executing it (because the current user isn't the one that's
     // trying to join).
     //
-    var inputFromJoiningUser = policy
+    var inputFromJoiningUser = this.policy
       .analyze(this.subject, EnumSet.of(PolicyPermission.JOIN))
       .applyConstraints(Policy.ConstraintClass.JOIN)
       .input();
@@ -169,7 +169,7 @@ public class JitGroupContext {
     //
     return new ApprovalOperation(
       proposal,
-      policy
+      this.policy
         .analyze(this.subject, requiredPermissions)
         .applyConstraints(Policy.ConstraintClass.APPROVE),
       inputFromJoiningUser);
