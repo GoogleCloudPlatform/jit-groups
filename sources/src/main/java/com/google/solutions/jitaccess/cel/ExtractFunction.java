@@ -64,7 +64,7 @@ public class ExtractFunction  {
 
     if (value.contains(prefix)) {
       var afterPrefix = value.substring(value.indexOf(prefix) + prefix.length());
-      if (suffix.length() == 0) {
+      if (suffix.isEmpty()) {
         return afterPrefix;
       }
       else if (afterPrefix.contains(suffix)) {

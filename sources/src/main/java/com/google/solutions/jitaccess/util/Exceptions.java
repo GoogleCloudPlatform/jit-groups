@@ -55,7 +55,7 @@ public class Exceptions {
     var buffer = new StringBuilder();
 
     for (; e != null; e = e.getCause()) {
-      if (buffer.length() > 0) {
+      if (!buffer.isEmpty()) {
         if (includeNestedExceptionDetails) {
           buffer.append(", caused by ");
           buffer.append(e.getClass().getSimpleName());

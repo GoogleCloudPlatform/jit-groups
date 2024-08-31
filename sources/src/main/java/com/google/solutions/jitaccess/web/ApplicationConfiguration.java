@@ -32,6 +32,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Prefix for environment service accounts.

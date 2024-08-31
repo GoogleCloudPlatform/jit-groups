@@ -84,7 +84,7 @@ public class GroupResolver {
    */
   @NotNull Set<PrincipalId> expand(
     @NotNull Set<PrincipalId> principals
-  ) throws AccessException, IOException {
+  ) throws AccessException {
     var groups = principals
       .stream()
       .filter(p -> p instanceof GroupId)

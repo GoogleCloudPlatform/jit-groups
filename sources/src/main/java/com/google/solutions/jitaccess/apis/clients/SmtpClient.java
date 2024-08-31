@@ -252,7 +252,7 @@ public class SmtpClient {
       if (this.cachedAuthentication == null)
       {
         String password;
-        if (this.smtpSecretPath != null && this.smtpSecretPath.length() > 0) {
+        if (this.smtpSecretPath != null && !this.smtpSecretPath.isEmpty()) {
           //
           // Read password from secret manager.
           //

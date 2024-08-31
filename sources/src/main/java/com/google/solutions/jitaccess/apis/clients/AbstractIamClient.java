@@ -166,7 +166,7 @@ public abstract class AbstractIamClient {
           //
           if (e.getDetails() != null &&
             e.getDetails().getErrors() != null &&
-            e.getDetails().getErrors().size() > 0 &&
+            !e.getDetails().getErrors().isEmpty() &&
             isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
             throw new AccessDeniedException(
               String.format("Modifying IAM policy of '%s' failed because one of the " +
@@ -189,7 +189,7 @@ public abstract class AbstractIamClient {
   // Request classes.
   //---------------------------------------------------------------------------
 
-  class GetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
+  static class GetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
     protected GetIamPolicy(
       @NotNull AbstractGoogleJsonClient client,
       @NotNull String fullResourcePath,
@@ -204,7 +204,7 @@ public abstract class AbstractIamClient {
     }
   }
 
-  class SetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
+  static class SetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
     protected SetIamPolicy(
       @NotNull AbstractGoogleJsonClient client,
       @NotNull String fullResourcePath,

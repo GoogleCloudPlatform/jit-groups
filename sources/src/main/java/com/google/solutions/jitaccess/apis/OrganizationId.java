@@ -71,7 +71,7 @@ public record OrganizationId(
       s = s.substring(PREFIX.length());
     }
 
-    if (s.length() > 0 && s.indexOf('/') == -1 && s.chars().allMatch(Character::isDigit)) {
+    if (!s.isEmpty() && s.indexOf('/') == -1 && s.chars().allMatch(Character::isDigit)) {
       return Optional.of(new OrganizationId(s));
     }
     else {

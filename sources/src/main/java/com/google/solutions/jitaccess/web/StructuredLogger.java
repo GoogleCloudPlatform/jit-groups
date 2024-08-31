@@ -269,7 +269,7 @@ abstract class StructuredLogger implements Logger {
    * the application.
    */
   static class ApplicationContextLogger extends StructuredLogger {
-
+    @SuppressWarnings("SameParameterValue")
     ApplicationContextLogger(@NotNull Appendable output) {
       super(output);
     }

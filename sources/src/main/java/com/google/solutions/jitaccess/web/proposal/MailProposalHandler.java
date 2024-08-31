@@ -262,6 +262,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
       return context;
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public Context addContext(
       @NotNull String name,
       @NotNull UserId user
@@ -270,6 +271,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
         .set("email", user.email);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public Context addContext(
       @NotNull String name,
       @NotNull JitGroupId group

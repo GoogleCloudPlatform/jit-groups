@@ -74,7 +74,8 @@ public class PubSubClient {
         .topics()
         .publish(topic.getFullResourceName(), request)
         .execute();
-      if (result.getMessageIds().size() < 1){
+      if (result.getMessageIds()
+        .isEmpty()){
         throw new IOException(
           String.format("Publishing message to topic %s returned empty response", topic));
       }

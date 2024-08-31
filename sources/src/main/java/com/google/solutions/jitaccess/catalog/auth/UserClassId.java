@@ -41,6 +41,7 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
    */
   public static final @NotNull UserClassId IAP_USERS = new UserClassId("iapUsers");
 
+  @SuppressWarnings("SameParameterValue")
   private UserClassId(@NotNull String value) {
     this.value = value;
   }

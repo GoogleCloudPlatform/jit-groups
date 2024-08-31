@@ -178,7 +178,7 @@ class IamCondition implements CelExpression<Boolean> {
       }
     }
 
-    if (currentClause.length() > 0) {
+    if (!currentClause.isEmpty()) {
       clauses.addLast(new IamCondition(currentClause.toString()));
     }
 
