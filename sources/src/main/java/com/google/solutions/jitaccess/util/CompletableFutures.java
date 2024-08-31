@@ -21,15 +21,12 @@
 
 package com.google.solutions.jitaccess.util;
 
-import com.google.solutions.jitaccess.apis.clients.AccessException;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**

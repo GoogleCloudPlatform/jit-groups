@@ -83,21 +83,21 @@ public class JitGroupId implements Comparable<JitGroupId>, PrincipalId {
    * Environment that this group applies to.
    */
   public @NotNull String environment() {
-    return environment;
+    return this.environment;
   }
 
   /**
    * System that this group applies to.
    */
   public @NotNull String system() {
-    return system;
+    return this.system;
   }
 
   /**
    * Name of the group.
    */
   public @NotNull String name() {
-    return name;
+    return this.name;
   }
 
   @Override

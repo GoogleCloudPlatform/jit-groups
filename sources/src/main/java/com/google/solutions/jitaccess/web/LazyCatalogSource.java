@@ -40,7 +40,6 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -104,7 +103,7 @@ public class LazyCatalogSource implements Catalog.Source {
   private @NotNull Optional<Entry> lookup(
     @NotNull String name
   ) {
-    if (!environments.containsKey(name)) {
+    if (!this.environments.containsKey(name)) {
       return Optional.empty();
     }
 

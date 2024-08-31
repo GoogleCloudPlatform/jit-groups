@@ -22,22 +22,18 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.api.services.cloudidentity.v1.model.*;
-import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -133,7 +129,7 @@ public class CloudIdentityGroupsClient {
       case 403: {
         if (e.getDetails() != null) {
           var message = e.getDetails().get("message");
-          if (message != null && message instanceof String &&
+          if (message instanceof String &&
             (((String) message).contains("3005") || ((String) message).contains("3006"))) {
             throw new AccessDeniedException("This feature requires a Cloud Identity Premium or Workspace subscription");
           }
@@ -156,7 +152,7 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a group ID by email.
    */
-  @SuppressWarnings("ThrowableNotThrown")
+  @SuppressWarnings({"DataFlowIssue"})
   private @NotNull GroupKey lookupGroup(
     @NotNull CloudIdentity client,
     @NotNull GroupId email
@@ -180,7 +176,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull Group getGroup(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey
@@ -234,7 +229,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Create group in an idempotent way.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   public @NotNull GroupKey createGroup(
     @NotNull GroupId emailAddress,
     @NotNull GroupType type,
@@ -320,7 +314,7 @@ public class CloudIdentityGroupsClient {
       //
       createSettingsClient()
         .groups()
-        .update(emailAddress.email, RESTRICTED_SETTINGS)
+        .update(emailAddress.email, this.RESTRICTED_SETTINGS)
         .execute();
 
       return groupKey;
@@ -360,7 +354,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Delete a group.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   public void deleteGroup(
     @NotNull GroupKey groupKey
   ) throws AccessException, IOException {
@@ -389,7 +382,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a membership ID by group and user email.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull MembershipId lookupGroupMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
@@ -413,7 +405,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Get details for an existing group membership.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull Membership getMembership(
     @NotNull CloudIdentity client,
     @NotNull MembershipId membershipId
@@ -467,7 +458,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Delete a group membership in an idempotent way.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   public void deleteMembership(
     @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
@@ -490,7 +480,6 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull MembershipId updateMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
@@ -522,7 +511,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Add a member to a group in an idempotent way.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull MembershipId addMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
@@ -604,7 +592,6 @@ public class CloudIdentityGroupsClient {
   /**
    * List members of a group.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   private @NotNull List<Membership> listMemberships(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey
@@ -661,7 +648,6 @@ public class CloudIdentityGroupsClient {
   /**
    * List groups a user is a member of.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   public @NotNull List<MembershipRelation> listMembershipsByUser(
     @NotNull UserId userId
   ) throws AccessException, IOException {
@@ -718,7 +704,6 @@ public class CloudIdentityGroupsClient {
   /**
    * Search for groups that match a certain CEL query.
    */
-  @SuppressWarnings("ThrowableNotThrown")
   public @NotNull List<Group> searchGroups(
     @NotNull String query,
     boolean fullDetails

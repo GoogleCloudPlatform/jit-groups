@@ -67,7 +67,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
    */
   @Override
   protected @NotNull Optional<AccessControlList> accessControlList() {
-    return Optional.ofNullable(acl);
+    return Optional.ofNullable(this.acl);
   }
 
   /**
@@ -88,7 +88,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
   @NotNull
   @Override
   public String name() {
-    return name;
+    return this.name;
   }
 
   /**
@@ -97,7 +97,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
   @NotNull
   @Override
   public String displayName() {
-    return displayName;
+    return this.displayName;
   }
 
   /**
@@ -106,7 +106,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
   @NotNull
   @Override
   public String description() {
-    return description;
+    return this.description;
   }
 
   /**
@@ -124,7 +124,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
    * Raw map of constraints.
    */
   Map<ConstraintClass, Collection<Constraint>> constraints() {
-    return constraints;
+    return this.constraints;
   }
 
   /**

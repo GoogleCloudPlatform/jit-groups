@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.util;
 
-import jakarta.validation.constraints.Null;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,12 +46,12 @@ public class AggregateException extends ExecutionException {
 
   @Override
   public synchronized @Nullable Throwable getCause() {
-    if (cause == null) {
-      if (exceptions.isEmpty()) {
-        cause = null;
+    if (this.cause == null) {
+      if (this.exceptions.isEmpty()) {
+        this.cause = null;
       }
-      else if (exceptions.size() == 1) {
-        cause = exceptions.get(0);
+      else if (this.exceptions.size() == 1) {
+        this.cause = this.exceptions.get(0);
       }
       else {
         //
@@ -63,18 +62,18 @@ public class AggregateException extends ExecutionException {
         // Make sure we only do this once, even when getCause
         // is invoked multiple times.
         //
-        cause = exceptions.get(0);
-        exceptions.stream()
+        this.cause = this.exceptions.get(0);
+        this.exceptions.stream()
           .skip(1)
-          .forEach(cause::addSuppressed);
+          .forEach(this.cause::addSuppressed);
       }
     }
 
-    return cause;
+    return this.cause;
   }
 
   public @NotNull List<Exception> getCauses() {
-    return List.copyOf(exceptions);
+    return List.copyOf(this.exceptions);
   }
 
   @Override

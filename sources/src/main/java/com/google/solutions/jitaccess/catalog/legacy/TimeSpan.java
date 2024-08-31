@@ -53,11 +53,11 @@ record TimeSpan(
       return false;
     }
     TimeSpan timeSpan = (TimeSpan) o;
-    return start.equals(timeSpan.start) && end.equals(timeSpan.end);
+    return this.start.equals(timeSpan.start) && this.end.equals(timeSpan.end);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(start, end);
+    return Objects.hash(this.start, this.end);
   }
 }

@@ -57,7 +57,7 @@ import java.util.Optional;
 @RequireIapPrincipal
 @LogRequest
 public class GroupsResource {
-  private final AccessDeniedException NOT_FOUND = new AccessDeniedException(
+  private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(
     "The group does not exist or access is denied");
 
   @Inject

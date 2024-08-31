@@ -52,7 +52,7 @@ import java.util.List;
 @RequireIapPrincipal
 @LogRequest
 public class ProposalResource {
-  private final AccessDeniedException NOT_FOUND = new AccessDeniedException(
+  private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(
     "The group does not exist or access is denied");
 
   @Inject

@@ -34,7 +34,7 @@ import java.util.Optional;
  */
 public class JitGroupCompliance {
   private final @NotNull JitGroupId groupId;
-  private final @NotNull GroupId cloudIdentityGroupId;
+  private final @Nullable GroupId cloudIdentityGroupId;
 
   private final @Nullable JitGroupPolicy policy;
   private final @Nullable Exception exception;
@@ -55,7 +55,7 @@ public class JitGroupCompliance {
    * ID of group whose compliance is being reported.
    */
   public @NotNull JitGroupId groupId() {
-    return groupId;
+    return this.groupId;
   }
 
   /**
@@ -63,7 +63,7 @@ public class JitGroupCompliance {
    * JIT group.
    */
   public @NotNull Optional<GroupId> cloudIdentityGroupId() {
-    return Optional.ofNullable(cloudIdentityGroupId);
+    return Optional.ofNullable(this.cloudIdentityGroupId);
   }
 
   /**
@@ -75,7 +75,7 @@ public class JitGroupCompliance {
 
   /**
    * Indicates whether this group is orphaned, i.e. the group
-   * exists in Cloud Identity, but there's no policy for it..
+   * exists in Cloud Identity, but there's no policy for it.
    */
   public boolean isOrphaned() {
     return this.exception == null && this.policy == null;
@@ -85,6 +85,6 @@ public class JitGroupCompliance {
    * Exception encountered during reconciliation.
    */
   public @NotNull Optional<Exception> exception() {
-    return Optional.ofNullable(exception);
+    return Optional.ofNullable(this.exception);
   }
 }

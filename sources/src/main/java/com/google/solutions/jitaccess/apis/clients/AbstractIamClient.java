@@ -81,6 +81,7 @@ public abstract class AbstractIamClient {
   /**
    * Modify an IAM policy using the optimistic concurrency control-mechanism.
    */
+  @SuppressWarnings("fallthrough")
   public void modifyIamPolicy(
     @NotNull String fullResourcePath,
     @NotNull Consumer<Policy> modify,
@@ -166,19 +167,25 @@ public abstract class AbstractIamClient {
           //
           if (e.getDetails() != null &&
             e.getDetails().getErrors() != null &&
-            e.getDetails().getErrors().size() > 0 &&
+            !e.getDetails().getErrors().isEmpty() &&
             isRoleNotGrantableErrorMessage(e.getDetails().getErrors().get(0).getMessage())) {
             throw new AccessDeniedException(
               String.format("Modifying IAM policy of '%s' failed because one of the " +
                 "roles isn't compatible with this resource",
                 fullResourcePath));
           }
+          else {
+            // Fallthrough.
+          }
+
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
+
         case 403:
           throw new AccessDeniedException(String.format(
             "Access to '%s' is denied", fullResourcePath),
             e);
+
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
@@ -189,7 +196,7 @@ public abstract class AbstractIamClient {
   // Request classes.
   //---------------------------------------------------------------------------
 
-  class GetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
+  static class GetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
     protected GetIamPolicy(
       @NotNull AbstractGoogleJsonClient client,
       @NotNull String fullResourcePath,
@@ -204,7 +211,7 @@ public abstract class AbstractIamClient {
     }
   }
 
-  class SetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
+  static class SetIamPolicy extends AbstractGoogleJsonClientRequest<Policy> {
     protected SetIamPolicy(
       @NotNull AbstractGoogleJsonClient client,
       @NotNull String fullResourcePath,

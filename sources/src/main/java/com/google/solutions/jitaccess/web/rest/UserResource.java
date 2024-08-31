@@ -64,7 +64,7 @@ public class UserResource {
     // Return principal details in debug mode only.
     //
     var principals = this.application.isDebugModeEnabled()
-      ? requestContext.subject().principals()
+      ? this.requestContext.subject().principals()
         .stream()
         .map(p -> new PrincipalInfo(p.id().type(), p.id().value()))
         .collect(Collectors.toList())
@@ -73,7 +73,7 @@ public class UserResource {
     return new UserInfo(
       new Link("user"),
       new SubjectInfo(
-        requestContext.user().email,
+        this.requestContext.user().email,
         principals),
       new ApplicationInfo(
         ApplicationVersion.VERSION_STRING,

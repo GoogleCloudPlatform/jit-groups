@@ -22,17 +22,13 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudasset.v1.CloudAsset;
 import com.google.api.services.cloudasset.v1.model.PolicyInfo;
-import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.List;
 
 /**

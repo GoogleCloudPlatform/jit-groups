@@ -47,5 +47,6 @@ public interface ResourceId {
   /**
    * Service that this resource belongs to, in format xxx.googleapis.com.
    */
+  @SuppressWarnings("SameReturnValue")
   @NotNull String service();
 }

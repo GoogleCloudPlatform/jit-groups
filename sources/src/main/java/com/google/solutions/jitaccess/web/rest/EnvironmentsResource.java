@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 @RequireIapPrincipal
 @LogRequest
 public class EnvironmentsResource {
-  private final AccessDeniedException NOT_FOUND = new AccessDeniedException(
+  private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(
     "The environment does not exist or access is denied");
 
   @Inject

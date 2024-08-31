@@ -208,7 +208,7 @@ public class ExceptionMappers {
     @SuppressWarnings("unchecked")
     public Response toResponse(@NotNull UncheckedExecutionException exception) {
       var cause = Exceptions.unwrap(exception);
-      ExceptionMapper mapper = providers.getExceptionMapper(cause.getClass());
+      ExceptionMapper mapper = this.providers.getExceptionMapper(cause.getClass());
       if (mapper != null) {
         return mapper.toResponse(cause);
       }
@@ -229,7 +229,7 @@ public class ExceptionMappers {
     }
 
     public String getMessage() {
-      return message;
+      return this.message;
     }
 
     @Override

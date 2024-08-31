@@ -27,8 +27,10 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonObjectParser;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.GenericData;
-import com.google.auth.oauth2.*;
-import com.google.common.base.Strings;
+import com.google.auth.oauth2.ComputeEngineCredentials;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ImpersonatedCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.apis.clients.*;
@@ -40,7 +42,6 @@ import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
-import com.google.solutions.jitaccess.util.NullaryOptional;
 import com.google.solutions.jitaccess.web.proposal.*;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Produces;
@@ -48,7 +49,8 @@ import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.net.*;
+import java.net.URI;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
@@ -125,7 +127,7 @@ public class Application {
     this.logger = new StructuredLogger.ApplicationContextLogger(System.out);
 
     if (!this.configuration.isSmtpConfigured()) {
-      logger.warn(
+      this.logger.warn(
         EventIds.STARTUP,
         "The SMTP configuration is incomplete");
     }
@@ -163,7 +165,7 @@ public class Application {
             0);
         }
 
-        logger.info(
+        this.logger.info(
           EventIds.STARTUP,
           String.format("Running in project %s (%s) as %s, version %s",
             this.projectId,
@@ -172,7 +174,7 @@ public class Application {
             ApplicationVersion.VERSION_STRING));
       }
       catch (IOException e) {
-        logger.error(
+        this.logger.error(
           EventIds.STARTUP,
           "Failed to lookup instance metadata", e);
         throw new RuntimeException("Failed to initialize runtime environment", e);
@@ -234,7 +236,7 @@ public class Application {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
-      logger.warn(
+      this.logger.warn(
         EventIds.STARTUP,
         String.format("Running in development mode as %s", this.applicationPrincipal));
     }
@@ -342,7 +344,7 @@ public class Application {
 
   @Produces
   public GoogleCredentials produceApplicationCredentials() {
-    return applicationCredentials;
+    return this.applicationCredentials;
   }
 
   @Produces
@@ -387,7 +389,7 @@ public class Application {
     if (isDebugModeEnabled()) {
       return new DebugProposalHandler(tokenSigner);
     }
-    else if (configuration.isSmtpConfigured()) {
+    else if (this.configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
         this.configuration.smtpHost,
         this.configuration.smtpPort,
@@ -532,7 +534,7 @@ public class Application {
                 this.configuration.legacyActivationTimeout,
                 this.configuration.legacyJustificationPattern,
                 this.configuration.legacyJustificationHint,
-                logger);
+                this.logger);
             }
             catch (Exception e) {
               throw new UncheckedExecutionException(e);
@@ -558,7 +560,7 @@ public class Application {
     return new LazyCatalogSource(
       configurations.entrySet()
         .stream()
-        .collect(Collectors.toMap(e -> e.getKey(), e -> (PolicyHeader) e.getValue())),
+        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())),
       envName -> configurations.get(envName).loadPolicy(),
       policy -> new ResourceManagerClient(
         configurations.get(policy.name()).resourceCredentials(),
@@ -568,7 +570,7 @@ public class Application {
       isDebugModeEnabled()
         ? Duration.ofSeconds(20)
         : this.configuration.environmentCacheTimeout,
-      logger);
+      this.logger);
   }
 
 }

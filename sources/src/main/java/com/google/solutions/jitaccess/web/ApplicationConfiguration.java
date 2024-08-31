@@ -32,6 +32,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Prefix for environment service accounts.
@@ -88,7 +89,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Enable StartTLS.
    */
-  final @NotNull boolean smtpEnableStartTls;
+  final boolean smtpEnableStartTls;
 
   /**
    * Human-readable sender name used for notifications.

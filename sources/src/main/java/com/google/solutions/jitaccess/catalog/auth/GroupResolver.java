@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.util.CompletableFutures;
 import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -84,7 +83,7 @@ public class GroupResolver {
    */
   @NotNull Set<PrincipalId> expand(
     @NotNull Set<PrincipalId> principals
-  ) throws AccessException, IOException {
+  ) throws AccessException {
     var groups = principals
       .stream()
       .filter(p -> p instanceof GroupId)
@@ -114,7 +113,6 @@ public class GroupResolver {
       var expandedPrincipals = new HashSet<>(nonGroups);
 
       future.get()
-        .stream()
         .forEach(expandedPrincipals::addAll);
 
       assert groups

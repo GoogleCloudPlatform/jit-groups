@@ -70,7 +70,7 @@ public record ProjectId(
       //
       return Optional.of(new ProjectId(s.substring(PREFIX.length())));
     }
-    else if (s.length() > 0 && s.indexOf('/') == -1 &&
+    else if (!s.isEmpty() && s.indexOf('/') == -1 &&
       !Character.isDigit(s.charAt(0))) {
       //
       // String has no prefix.

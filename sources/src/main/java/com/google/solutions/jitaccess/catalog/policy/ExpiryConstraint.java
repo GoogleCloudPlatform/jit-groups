@@ -72,14 +72,14 @@ public class ExpiryConstraint implements Constraint {
    * @return minimum duration.
    */
   public @NotNull Duration minDuration() {
-    return minDuration;
+    return this.minDuration;
   }
 
   /**
    * @return maximum duration.
    */
   public @NotNull Duration maxDuration() {
-    return maxDuration;
+    return this.maxDuration;
   }
 
   /**
@@ -134,7 +134,8 @@ public class ExpiryConstraint implements Constraint {
           return List.of();
         }
         else {
-          return List.of(new AbstractDurationProperty(NAME, "Expiry", true, minDuration, maxDuration) {
+          return List.of(new AbstractDurationProperty(NAME, "Expiry", true, ExpiryConstraint.this.minDuration,
+            ExpiryConstraint.this.maxDuration) {
             @Override
             protected void setCore(@Nullable Duration value) {
               userProvidedDuration = value;
@@ -170,9 +171,9 @@ public class ExpiryConstraint implements Constraint {
           //
           // Verify that the user-provided duration is within range.
           //
-          return userProvidedDuration != null &&
-            userProvidedDuration.toMinutes() >= minDuration.toMinutes() &&
-            userProvidedDuration.toMinutes() <= maxDuration.toMinutes();
+          return this.userProvidedDuration != null &&
+            this.userProvidedDuration.toMinutes() >= ExpiryConstraint.this.minDuration.toMinutes() &&
+            this.userProvidedDuration.toMinutes() <= ExpiryConstraint.this.maxDuration.toMinutes();
         }
       }
     };

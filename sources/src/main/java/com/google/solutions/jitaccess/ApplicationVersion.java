@@ -47,7 +47,7 @@ public class ApplicationVersion {
           versionProperties.load(propertiesFile);
 
           var version = versionProperties.getProperty("application.version");
-          if (version != null && version.length() > 0) {
+          if (version != null && !version.isEmpty()) {
             return version;
           }
         }

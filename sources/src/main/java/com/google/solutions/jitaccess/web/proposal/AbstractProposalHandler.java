@@ -105,7 +105,7 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       .forEach(p -> inputs.set(p.getKey(), p.getValue()));
 
     var jwtId = new byte[6];
-    jwtIdGenerator.nextBytes(jwtId);
+    this.jwtIdGenerator.nextBytes(jwtId);
 
     var payload = new JsonWebToken.Payload()
       .setJwtId(Base64.getEncoder().encodeToString(jwtId))

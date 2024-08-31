@@ -22,18 +22,14 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.secretmanager.v1.SecretManager;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 /**
  * Client for the Secrets Manager API.

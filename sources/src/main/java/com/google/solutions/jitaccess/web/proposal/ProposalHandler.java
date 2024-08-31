@@ -27,7 +27,6 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Set;

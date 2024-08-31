@@ -103,14 +103,14 @@ public class CelConstraint implements Constraint {
    * Variables used by the CEL expression.
    */
   public @NotNull Collection<Variable> variables() {
-    return variableDeclarations;
+    return this.variableDeclarations;
   }
 
   /**
    * The CEL expression.
    */
   public @NotNull String expression() {
-    return expression;
+    return this.expression;
   }
 
   /**
@@ -137,7 +137,7 @@ public class CelConstraint implements Constraint {
       var json = new GenericJson();
       this.variables.put("input", json);
 
-      this.input = variableDeclarations.stream()
+      this.input = CelConstraint.this.variableDeclarations.stream()
         .map(v -> v.bind(json))
         .toList();
     }
@@ -179,7 +179,7 @@ public class CelConstraint implements Constraint {
         compiler.addVar(variable, CelTypes.createMap(CelTypes.STRING, CelTypes.ANY));
       }
 
-      return compiler.build().compile(expression);
+      return compiler.build().compile(CelConstraint.this.expression);
     }
 
     @Override
@@ -234,7 +234,7 @@ public class CelConstraint implements Constraint {
      * Name of the variable as referred to in CEL.
      */
     public @NotNull String name() {
-      return name;
+      return this.name;
     }
 
     /**
@@ -242,7 +242,7 @@ public class CelConstraint implements Constraint {
      * the CEL expression itself.
      */
     public @NotNull String displayName() {
-      return displayName;
+      return this.displayName;
     }
 
     /**
@@ -275,11 +275,11 @@ public class CelConstraint implements Constraint {
     }
 
     public int minLength() {
-      return minLength;
+      return this.minLength;
     }
 
     public int maxLength() {
-      return maxLength;
+      return this.maxLength;
     }
 
     @Override
@@ -325,11 +325,11 @@ public class CelConstraint implements Constraint {
     }
 
     public Long minInclusive() {
-      return minInclusive;
+      return this.minInclusive;
     }
 
     public Long maxInclusive() {
-      return maxInclusive;
+      return this.maxInclusive;
     }
 
     @Override
