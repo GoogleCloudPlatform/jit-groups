@@ -8,8 +8,6 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.ext.Provider;
 
-import java.io.IOException;
-
 @Dependent
 @Provider
 @Priority(Priorities.AUTHENTICATION + 10)

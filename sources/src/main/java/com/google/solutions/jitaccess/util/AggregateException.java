@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.util;
 
-import jakarta.validation.constraints.Null;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

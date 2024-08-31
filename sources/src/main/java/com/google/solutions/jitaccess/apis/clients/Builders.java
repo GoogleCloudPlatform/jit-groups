@@ -25,7 +25,6 @@ import com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.solutions.jitaccess.ApplicationVersion;
 import org.jetbrains.annotations.NotNull;
 

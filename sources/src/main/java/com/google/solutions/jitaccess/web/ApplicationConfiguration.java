@@ -89,7 +89,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Enable StartTLS.
    */
-  final @NotNull boolean smtpEnableStartTls;
+  final boolean smtpEnableStartTls;
 
   /**
    * Human-readable sender name used for notifications.

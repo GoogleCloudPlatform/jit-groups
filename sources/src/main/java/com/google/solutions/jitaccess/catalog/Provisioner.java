@@ -26,7 +26,6 @@ import com.google.api.services.cloudresourcemanager.v3.model.Expr;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;

@@ -22,22 +22,18 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.cloudidentity.v1.CloudIdentity;
 import com.google.api.services.cloudidentity.v1.model.*;
-import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -156,7 +152,7 @@ public class CloudIdentityGroupsClient {
   /**
    * Look up a group ID by email.
    */
-  @SuppressWarnings("ThrowableNotThrown")
+  @SuppressWarnings({"ThrowableNotThrown", "DataFlowIssue"})
   private @NotNull GroupKey lookupGroup(
     @NotNull CloudIdentity client,
     @NotNull GroupId email

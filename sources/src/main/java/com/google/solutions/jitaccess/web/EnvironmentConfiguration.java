@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
@@ -76,12 +75,12 @@ class EnvironmentConfiguration implements PolicyHeader {
   }
 
   @Override
-  public String name() {
+  public @NotNull String name() {
     return name;
   }
 
   @Override
-  public String description() {
+  public @NotNull String description() {
     return description;
   }
 

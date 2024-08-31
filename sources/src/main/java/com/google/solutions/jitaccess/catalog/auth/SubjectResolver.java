@@ -23,7 +23,6 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.api.services.cloudidentity.v1.model.MembershipRelation;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
@@ -31,7 +30,6 @@ import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.util.CompletableFutures;
-import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -40,7 +38,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;

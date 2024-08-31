@@ -280,15 +280,10 @@ abstract class AbstractBooleanProperty extends AbstractProperty<Boolean> {
       return null;
     }
 
-    switch (value.trim().toLowerCase()) {
-      case "true":
-      case "on":
-      case "yes":
-        return true;
-
-      default:
-        return false;
-    }
+    return switch (value.trim().toLowerCase()) {
+      case "true", "on", "yes" -> true;
+      default -> false;
+    };
   }
 
   @Override

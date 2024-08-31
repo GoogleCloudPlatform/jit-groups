@@ -29,7 +29,6 @@ import com.google.solutions.jitaccess.util.CompletableFutures;
 import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;

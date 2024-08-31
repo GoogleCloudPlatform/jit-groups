@@ -41,7 +41,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 
 public class TestLegacyPolicy {
   private static final Policy.Metadata METADATA = new Policy.Metadata("Asset Inventory", Instant.EPOCH);

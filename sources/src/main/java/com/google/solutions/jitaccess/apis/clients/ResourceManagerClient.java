@@ -24,11 +24,10 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
-import com.google.api.services.cloudresourcemanager.v3.model.*;
+import com.google.api.services.cloudresourcemanager.v3.model.Policy;
+import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.auth.Credentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.apis.FolderId;
-import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import org.jetbrains.annotations.NotNull;
 
