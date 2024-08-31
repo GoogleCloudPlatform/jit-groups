@@ -48,7 +48,7 @@ public record OrganizationId(
   }
 
   /**
-   * Parse a organization ID from one of the formats
+   * Parse an organization ID from one of the formats
    *
    * * organizations/123
    * * 123

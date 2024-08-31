@@ -73,8 +73,8 @@ public class JitGroupContext {
    */
   public @NotNull JoinOperation join() {
     //
-    // Check if the current subject can self-approve. If so, initiate a join-
-    // operation with self-approval.
+    // Check if the current subject can self-approve. If so, initiate a
+    // join-operation with self-approval.
     //
     // NB. Self-approval requires that the subject also satisfies approval constraints.
     //

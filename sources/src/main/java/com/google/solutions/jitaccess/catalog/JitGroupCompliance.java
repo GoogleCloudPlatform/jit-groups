@@ -34,7 +34,7 @@ import java.util.Optional;
  */
 public class JitGroupCompliance {
   private final @NotNull JitGroupId groupId;
-  private final @NotNull GroupId cloudIdentityGroupId;
+  private final @Nullable GroupId cloudIdentityGroupId;
 
   private final @Nullable JitGroupPolicy policy;
   private final @Nullable Exception exception;
@@ -75,7 +75,7 @@ public class JitGroupCompliance {
 
   /**
    * Indicates whether this group is orphaned, i.e. the group
-   * exists in Cloud Identity, but there's no policy for it..
+   * exists in Cloud Identity, but there's no policy for it.
    */
   public boolean isOrphaned() {
     return this.exception == null && this.policy == null;

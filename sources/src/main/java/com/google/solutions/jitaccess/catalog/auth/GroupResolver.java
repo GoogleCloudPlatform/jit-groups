@@ -113,7 +113,6 @@ public class GroupResolver {
       var expandedPrincipals = new HashSet<>(nonGroups);
 
       future.get()
-        .stream()
         .forEach(expandedPrincipals::addAll);
 
       assert groups

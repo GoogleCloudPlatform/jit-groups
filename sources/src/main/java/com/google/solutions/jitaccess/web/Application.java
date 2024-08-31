@@ -560,7 +560,7 @@ public class Application {
     return new LazyCatalogSource(
       configurations.entrySet()
         .stream()
-        .collect(Collectors.toMap(e -> e.getKey(), e -> (PolicyHeader) e.getValue())),
+        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())),
       envName -> configurations.get(envName).loadPolicy(),
       policy -> new ResourceManagerClient(
         configurations.get(policy.name()).resourceCredentials(),

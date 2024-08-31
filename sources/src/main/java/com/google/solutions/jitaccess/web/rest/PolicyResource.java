@@ -49,6 +49,7 @@ public class PolicyResource {
   public @NotNull LintingResultInfo lint(
     @FormParam("source") @Nullable String source
   ) {
+    // TODO: check source != null
 
     try {
       PolicyDocument.fromString(
