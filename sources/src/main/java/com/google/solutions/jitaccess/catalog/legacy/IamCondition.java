@@ -109,6 +109,7 @@ class IamCondition implements CelExpression<Boolean> {
    * Split a condition that consists of multiple AND clauses
    * into its parts.
    */
+  @SuppressWarnings("AssignmentToForLoopParameter")
   public List<IamCondition> splitAnd() {
     //
     // The CEL library doesn't lend itself well for this, so

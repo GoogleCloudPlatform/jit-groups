@@ -81,6 +81,7 @@ public abstract class AbstractIamClient {
   /**
    * Modify an IAM policy using the optimistic concurrency control-mechanism.
    */
+  @SuppressWarnings("fallthrough")
   public void modifyIamPolicy(
     @NotNull String fullResourcePath,
     @NotNull Consumer<Policy> modify,
@@ -173,12 +174,18 @@ public abstract class AbstractIamClient {
                 "roles isn't compatible with this resource",
                 fullResourcePath));
           }
+          else {
+            // Fallthrough.
+          }
+
         case 401:
           throw new NotAuthenticatedException("Not authenticated", e);
+
         case 403:
           throw new AccessDeniedException(String.format(
             "Access to '%s' is denied", fullResourcePath),
             e);
+
         default:
           throw (GoogleJsonResponseException) e.fillInStackTrace();
       }
