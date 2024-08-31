@@ -102,28 +102,6 @@ public abstract class CompletableFutures {
   }
 
   /**
-   * Await a future and rethrow exceptions, unwrapping known exceptions.
-   */
-  public static <T> T getOrRethrow( // TODO: remove
-    @NotNull CompletableFuture<T> future
-  ) throws AccessException, IOException {
-    try {
-      return future.get();
-    }
-    catch (InterruptedException | ExecutionException e) {
-      if (e.getCause() instanceof AccessException) {
-        throw (AccessException)e.getCause().fillInStackTrace();
-      }
-
-      if (e.getCause() instanceof IOException) {
-        throw (IOException)e.getCause().fillInStackTrace();
-      }
-
-      throw new IOException("Awaiting executor tasks failed", e);
-    }
-  }
-
-  /**
    * Function that can throw a checked exception.
    */
   @FunctionalInterface

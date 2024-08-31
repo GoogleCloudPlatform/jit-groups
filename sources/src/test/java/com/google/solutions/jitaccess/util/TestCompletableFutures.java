@@ -140,41 +140,4 @@ public class TestCompletableFutures {
     var aggregateException = assertInstanceOf(AggregateException.class, exception.getCause());
     assertEquals(2, aggregateException.getCauses().size());
   }
-
-  //---------------------------------------------------------------------------
-  // getOrRethrow.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsIoException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new IOException("IO!"); },
-      EXECUTOR);
-
-    assertThrows(
-      IOException.class,
-      () -> CompletableFutures.getOrRethrow(future));
-  }
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsAccessException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new AccessDeniedException("Access!"); },
-      EXECUTOR);
-
-    assertThrows(
-      AccessException.class,
-      () -> CompletableFutures.getOrRethrow(future));
-  }
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsOtherException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new RuntimeException("Runtime!"); },
-      EXECUTOR);
-
-    assertThrows(
-      IOException.class,
-      () -> CompletableFutures.getOrRethrow(future));
-  }
 }
