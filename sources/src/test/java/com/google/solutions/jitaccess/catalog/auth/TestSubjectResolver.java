@@ -120,7 +120,7 @@ public class TestSubjectResolver {
   }
 
   @Test
-  public void resolveMemberships_whenLookupFails_thenGrouplIsIgnored() throws Exception {
+  public void resolveMemberships_whenLookupFails_thenGroupIsIgnored() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
     var membershipId = new CloudIdentityGroupsClient.MembershipId("m1");
 
@@ -142,7 +142,6 @@ public class TestSubjectResolver {
         membershipId)));
 
     assertEquals(0, principals.size());
-    verify(logger, times(1)).warn(eq(EventIds.SUBJECT_RESOLUTION), anyString());
   }
 
   //---------------------------------------------------------------------------

@@ -22,17 +22,18 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.Membership;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.util.CompletableFutures;
+import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**
@@ -91,16 +92,6 @@ public class GroupResolver {
       .toList();
 
     //
-    // Expand groups a single level deep.
-    //
-    List<CompletableFuture<List<Membership>>> futures = groups
-      .stream()
-      .map(group -> CompletableFutures.supplyAsync(
-        () -> this.groupsClient.listMemberships(group),
-        this.executor))
-      .toList();
-
-    //
     // Create a new set in which the groups are replaced
     // by its members.
     //
@@ -109,20 +100,36 @@ public class GroupResolver {
       .filter(p -> !(p instanceof GroupId))
       .toList();
 
-    var expandedPrincipals = new HashSet<>(nonGroups);
-    for (var future : futures) {
-      var members = CompletableFutures
-        .getOrRethrow(future)
+    var future = CompletableFutures.mapAsync(
+      groups,
+      group -> this.groupsClient
+        .listMemberships(group)
         .stream()
         .map(m -> principalFromMembership(m))
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .toList();
-      expandedPrincipals.addAll(members);
+        .flatMap(Optional::stream)
+        .toList(),
+      this.executor);
+
+    try {
+      var expandedPrincipals = new HashSet<>(nonGroups);
+
+      future.get()
+        .stream()
+        .forEach(expandedPrincipals::addAll);
+
+      assert groups
+        .stream()
+        .noneMatch(g -> expandedPrincipals.contains(g));
+
+      return expandedPrincipals;
     }
-
-    assert groups.stream().noneMatch(g -> expandedPrincipals.contains(g));
-
-    return expandedPrincipals;
+    catch (InterruptedException | ExecutionException e) {
+      if (Exceptions.unwrap(e) instanceof AccessException accessException) {
+        throw (AccessException) accessException.fillInStackTrace();
+      }
+      else {
+        throw new UncheckedExecutionException(e);
+      }
+    }
   }
 }

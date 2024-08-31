@@ -68,9 +68,9 @@ public abstract class CompletableFutures {
    * If one of the function throws an exception, the future
    * will throw an AggregateException.
    */
-  public static <T, R> CompletableFuture<Collection<R>> applyAsync(
-    @NotNull ThrowingFunction<T, R> function,
+  public static <T, R> CompletableFuture<Collection<R>> mapAsync(
     @NotNull Iterable<T> arguments,
+    @NotNull ThrowingFunction<T, R> function,
     @NotNull Executor executor
   ) {
     var futures = new LinkedList<CompletableFuture<R>>();
@@ -99,28 +99,6 @@ public abstract class CompletableFutures {
         }
       },
       executor);
-  }
-
-  /**
-   * Await a future and rethrow exceptions, unwrapping known exceptions.
-   */
-  public static <T> T getOrRethrow( // TODO: remove
-    @NotNull CompletableFuture<T> future
-  ) throws AccessException, IOException {
-    try {
-      return future.get();
-    }
-    catch (InterruptedException | ExecutionException e) {
-      if (e.getCause() instanceof AccessException) {
-        throw (AccessException)e.getCause().fillInStackTrace();
-      }
-
-      if (e.getCause() instanceof IOException) {
-        throw (IOException)e.getCause().fillInStackTrace();
-      }
-
-      throw new IOException("Awaiting executor tasks failed", e);
-    }
   }
 
   /**

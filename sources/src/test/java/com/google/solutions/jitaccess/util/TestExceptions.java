@@ -24,6 +24,8 @@ package com.google.solutions.jitaccess.util;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileNotFoundException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestExceptions {
@@ -32,7 +34,7 @@ public class TestExceptions {
   //---------------------------------------------------------------------------
 
   @Test
-  public void fullMessage()
+  public void fullMessage_whenCauseHasMessage()
   {
     var exception = new AccessDeniedException(
       "Access denied",
@@ -41,12 +43,59 @@ public class TestExceptions {
         new IllegalArgumentException("message")));
 
     assertEquals(
-      "Access denied, caused by IllegalStateException: Illegal state, caused by IllegalArgumentException: message",
+      "Access denied, caused by IllegalStateException: Illegal state, " +
+        "caused by IllegalArgumentException: message",
       Exceptions.fullMessage(exception));
   }
 
   @Test
-  public void fullMessage_whenIncludingNestedExceptionNamesDisabled()
+  public void fullMessage_whenCauseHasNoMessage()
+  {
+    var exception = new AccessDeniedException(
+      "Access denied",
+      new IllegalStateException(
+        "Illegal state",
+        new IllegalArgumentException()));
+
+    assertEquals(
+      "Access denied, caused by IllegalStateException: Illegal state, " +
+        "caused by IllegalArgumentException",
+      Exceptions.fullMessage(exception));
+  }
+
+  @Test
+  public void fullMessage_whenExceptionHasSuppressedExceptions()
+  {
+    var exception = new AccessDeniedException("Access denied");
+    exception.addSuppressed(
+      new IllegalStateException(
+        "Illegal state",
+        new IllegalArgumentException()));
+    exception.addSuppressed(new FileNotFoundException("Another one"));
+
+    assertEquals(
+      "Access denied (also: IllegalStateException: Illegal state, FileNotFoundException: Another one)",
+      Exceptions.fullMessage(exception));
+  }
+
+  @Test
+  public void fullMessage_whenCauseHasSuppressedExceptions()
+  {
+    var cause = new IllegalStateException(
+      "Illegal state",
+      new IllegalArgumentException());
+    cause.addSuppressed(new FileNotFoundException("Another one"));
+
+    var exception = new AccessDeniedException("Access denied", cause);
+
+    assertEquals(
+      "Access denied, caused by IllegalStateException: Illegal state (also: FileNotFoundException: Another one), " +
+        "caused by IllegalArgumentException",
+      Exceptions.fullMessage(exception));
+  }
+
+  @Test
+  public void fullMessage_whenNestedExceptionDetailsDisabled()
   {
     var exception = new AccessDeniedException(
       "Access denied",

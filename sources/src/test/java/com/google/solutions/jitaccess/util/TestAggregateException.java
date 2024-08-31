@@ -23,16 +23,16 @@ package com.google.solutions.jitaccess.util;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import static io.smallrye.common.constraint.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAggregateException {
-  @Test
-  public void constructor_whenListEmpty() {
-    var exception = new AggregateException();
-    assertNull(exception.getCause());
-    assertEquals(0, exception.getCauses().size());
-  }
+  //---------------------------------------------------------------------------
+  // getMessage.
+  //---------------------------------------------------------------------------
 
   @Test
   public void getMessage_combinesExceptions() {
@@ -44,13 +44,104 @@ public class TestAggregateException {
       ).getMessage());
   }
 
+  //---------------------------------------------------------------------------
+  // toString.
+  //---------------------------------------------------------------------------
+
   @Test
   public void toString_combinesExceptions() {
+    var exception = new AggregateException(
+      new IllegalArgumentException("one"),
+      new IllegalArgumentException("two"));
+
     assertEquals(
       "[java.lang.IllegalArgumentException: one, java.lang.IllegalArgumentException: two]",
-      new AggregateException(
-        new IllegalArgumentException("one"),
-        new IllegalArgumentException("two")
-      ).toString());
+      exception.toString());
+  }
+
+  //---------------------------------------------------------------------------
+  // getCauses.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void getCauses_whenEmpty() {
+    assertTrue(new AggregateException().getCauses().isEmpty());
+  }
+
+  @Test
+  public void getCauses_whenNotEmpty() {
+    var cause1 = new IllegalArgumentException("one");
+    var cause2 = new IllegalArgumentException("two");
+
+    var exception = new AggregateException(cause1, cause2);
+
+    assertEquals(
+      List.of(cause1, cause2),
+      exception.getCauses());
+  }
+
+  //---------------------------------------------------------------------------
+  // getCause.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void getCause_whenEmpty() {
+    assertNull(new AggregateException().getCause());
+  }
+
+  @Test
+  public void getCause_whenSingleException() {
+    var cause = new IllegalArgumentException("one");
+    var exception = new AggregateException(cause);
+
+    assertSame(cause, exception.getCause());
+  }
+
+  @Test
+  public void getCause_whenMultipleExceptions() {
+    var cause1 = new IllegalArgumentException("one");
+    var cause2 = new IllegalArgumentException("two");
+    var cause3 = new IllegalStateException("three");
+
+    var exception = new AggregateException(cause1, cause2, cause3);
+
+    assertSame(cause1, exception.getCause());
+    assertEquals(
+      List.of(cause2, cause3),
+      List.of(exception.getCause().getSuppressed()));
+    assertEquals(
+      List.of(cause2, cause3),
+      List.of(exception.getCause().getSuppressed()));
+  }
+
+  @Test
+  public void getCause_unwrap_whenSingleException() {
+    var cause = new IllegalArgumentException("one");
+
+    var unwrapped = Exceptions.unwrap(
+      new ExecutionException(
+        new AggregateException(cause)));
+
+    assertSame(cause, unwrapped);
+    assertEquals(0, unwrapped.getSuppressed().length);
+  }
+
+  @Test
+  public void getCause_unwrap_whenMultipleExceptions() {
+    var cause1 = new IllegalArgumentException("one");
+    var cause2 = new IllegalArgumentException("two");
+    var cause3 = new IllegalStateException("three");
+
+    var unwrapped = Exceptions.unwrap(
+      new ExecutionException(
+        new AggregateException(cause1, cause2, cause3)));
+
+    assertSame(cause1, unwrapped);
+    assertEquals(
+      List.of(cause2, cause3),
+      List.of(unwrapped.getSuppressed()));
+    assertEquals(
+      List.of(cause2, cause3),
+      List.of(unwrapped.getSuppressed()));
   }
 }

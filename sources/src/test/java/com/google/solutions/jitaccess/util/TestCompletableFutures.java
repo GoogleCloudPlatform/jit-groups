@@ -75,14 +75,14 @@ public class TestCompletableFutures {
   }
 
   //---------------------------------------------------------------------------
-  // applyAsync.
+  // mapAsync.
   //---------------------------------------------------------------------------
 
   @Test
-  public void applyAsync_whenArgumentsEmpty() throws Exception {
-    var future = CompletableFutures.applyAsync(
-      arg -> { throw new IllegalStateException(); },
+  public void mapAsync_whenArgumentsEmpty() throws Exception {
+    var future = CompletableFutures.mapAsync(
       List.of(),
+      arg -> { throw new IllegalStateException(); },
       EXECUTOR);
 
     var results = future.get();
@@ -90,10 +90,10 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenAllSucceed() throws Exception {
-    var future = CompletableFutures.applyAsync(
-      arg -> arg.toUpperCase(),
+  public void mapAsync_whenAllSucceed() throws Exception {
+    var future = CompletableFutures.mapAsync(
       List.of("foo", "bar"),
+      arg -> arg.toUpperCase(),
       EXECUTOR);
 
     var results = future.get();
@@ -103,8 +103,9 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenOneFails() throws Exception {
-    var future = CompletableFutures.applyAsync(
+  public void mapAsync_whenOneFails() throws Exception {
+    var future = CompletableFutures.mapAsync(
+      List.of("foo", "bar", ""),
       arg -> {
         if (arg.isBlank()) {
           throw new IllegalStateException();
@@ -113,7 +114,6 @@ public class TestCompletableFutures {
           return arg.toUpperCase();
         }
       },
-      List.of("foo", "bar", ""),
       EXECUTOR);
 
     var exception = assertThrows(
@@ -127,10 +127,10 @@ public class TestCompletableFutures {
   }
 
   @Test
-  public void applyAsync_whenAllFail() throws Exception {
-    var future = CompletableFutures.applyAsync(
-      arg -> { throw new IllegalStateException(); },
+  public void mapAsync_whenAllFail() throws Exception {
+    var future = CompletableFutures.mapAsync(
       List.of("foo", "bar"),
+      arg -> { throw new IllegalStateException(); },
       EXECUTOR);
 
     var exception = assertThrows(
@@ -139,42 +139,5 @@ public class TestCompletableFutures {
 
     var aggregateException = assertInstanceOf(AggregateException.class, exception.getCause());
     assertEquals(2, aggregateException.getCauses().size());
-  }
-
-  //---------------------------------------------------------------------------
-  // getOrRethrow.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsIoException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new IOException("IO!"); },
-      EXECUTOR);
-
-    assertThrows(
-      IOException.class,
-      () -> CompletableFutures.getOrRethrow(future));
-  }
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsAccessException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new AccessDeniedException("Access!"); },
-      EXECUTOR);
-
-    assertThrows(
-      AccessException.class,
-      () -> CompletableFutures.getOrRethrow(future));
-  }
-
-  @Test
-  public void getOrRethrow_whenFutureThrowsOtherException() {
-    var future = CompletableFutures.supplyAsync(
-      () -> { throw new RuntimeException("Runtime!"); },
-      EXECUTOR);
-
-    assertThrows(
-      IOException.class,
-      () -> CompletableFutures.getOrRethrow(future));
   }
 }
