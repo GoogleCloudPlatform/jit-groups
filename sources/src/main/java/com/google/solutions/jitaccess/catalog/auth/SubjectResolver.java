@@ -23,6 +23,7 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.api.services.cloudidentity.v1.model.MembershipRelation;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
@@ -30,14 +31,17 @@ import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.util.CompletableFutures;
+import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -73,69 +77,74 @@ public class SubjectResolver {
     //
     // Lookup details for each membership.
     //
-    List<CompletableFuture<ResolvedMembership>> membershipFutures = memberships
-      .stream()
-      .map(membership -> CompletableFutures.supplyAsync(
-        () -> new ResolvedMembership(
-          membership.group,
-          this.groupsClient.getMembership(membership.membershipId)),
-        this.executor))
-      .toList();
+    var resolvedMembershipsFuture = CompletableFutures.mapAsync(
+      memberships,
+      membership -> {
+        try {
+          return Optional.of(new ResolvedMembership(
+            membership.group,
+            this.groupsClient.getMembership(membership.membershipId)));
+        }
+        catch (ResourceNotFoundException e) {
+          return Optional.<ResolvedMembership>empty();
+        }
+      },
+      this.executor);
 
     var principals = new HashSet<Principal>();
-    for (var future : membershipFutures) {
-      try {
-        var membership = CompletableFutures.getOrRethrow(future);
-
-        assert membership.details.getPreferredMemberKey().getId().equals(user.email);
-
-        //
-        // NB. Temporary group memberships don't have a start date, but they
-        // must have an expiry date.
-        //
-        var expiryDate = membership.details.getRoles()
-          .stream()
-          .filter(r -> r.getExpiryDetail() != null && r.getExpiryDetail().getExpireTime() != null)
-          .map(d -> Instant.parse(d.getExpiryDetail().getExpireTime()))
-          .min(Instant::compareTo)
-          .orElse(null);
-
-        if (expiryDate == null) {
+    try {
+      for (var membership : resolvedMembershipsFuture.get()) {
+        if (membership.isEmpty())
+        {
           //
-          // This is not a proper JIT group. Somebody might have created a group
-          // that just happens to fit the naming convention.
+          // Membership has been removed (or has expired) in the meantime,
+          // we can ignore that.
           //
-          this.logger.warn(
-            EventIds.SUBJECT_RESOLUTION,
-            String.format(
-              "The group '%s' looks like a JIT group, but lacks an expiry date",
-              membership.group()));
         }
         else {
-          principals.add(new Principal(
-            this.groupMapping.jitGroupFromGroup(membership.group()),
-            expiryDate));
+          assert membership.get()
+            .details
+            .getPreferredMemberKey()
+            .getId()
+            .equals(user.email);
+
+          //
+          // NB. Temporary group memberships don't have a start date, but they
+          // must have an expiry date.
+          //
+          var expiryDate = membership.get().details.getRoles()
+            .stream()
+            .filter(r -> r.getExpiryDetail() != null && r.getExpiryDetail().getExpireTime() != null)
+            .map(d -> Instant.parse(d.getExpiryDetail().getExpireTime()))
+            .min(Instant::compareTo)
+            .orElse(null);
+
+          if (expiryDate == null) {
+            //
+            // This is not a proper JIT group. Somebody might have created a group
+            // that just happens to fit the naming convention.
+            //
+            this.logger.warn(
+              EventIds.SUBJECT_RESOLUTION,
+              String.format(
+                "The group '%s' looks like a JIT group, but lacks an expiry date",
+                membership.get().group()));
+          }
+          else {
+            principals.add(new Principal(
+              this.groupMapping.jitGroupFromGroup(membership.get().group()),
+              expiryDate));
+          }
         }
       }
-      catch (ResourceNotFoundException e) {
-        //
-        // Membership expired in the meantime.
-        //
-        this.logger.warn(
-          EventIds.SUBJECT_RESOLUTION,
-          String.format(
-            "The user '%s' is a member of one or more groups that don't exist anymore",
-            user));
-      } catch (AccessException | IOException e) {
-        this.logger.error(
-          EventIds.SUBJECT_RESOLUTION,
-          String.format(
-            "Resolving JIT group memberships for user '%s' failed", user),
-          e);
-      }
     }
-
-    assert principals.size() <= membershipFutures.size();
+    catch (InterruptedException | ExecutionException e) {
+      this.logger.error(
+        EventIds.SUBJECT_RESOLUTION,
+        String.format(
+          "Resolving JIT group memberships for user '%s' failed", user),
+        e);
+    }
 
     return principals;
   }
