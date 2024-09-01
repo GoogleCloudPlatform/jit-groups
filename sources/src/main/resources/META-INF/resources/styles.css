@@ -127,7 +127,7 @@ a {
 
 div.jit-card-subsection[title]:not(:empty)::before {
     content: attr(title);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #000000a8;
     font-weight: normal;
     font-size: 16px;
@@ -179,6 +179,7 @@ div.jit-card-subsection[title]:not(:empty)::before {
 
 .mdc-list-item__primary-text {
     overflow: unset;
+    white-space: unset;
 }
 
 .mdc-select__anchor {
@@ -282,6 +283,9 @@ main .mdc-button {
     word-wrap: break-word; 
 }
 
+.mdc-list-item__secondary-text::before {
+    height: unset;
+}
 
 /* ==== MDC Form Overrides === */
 
