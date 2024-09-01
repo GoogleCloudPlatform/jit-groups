@@ -60,7 +60,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Entry point for the application. Loads configuration and produces CDI beans.
+ * Initializes the application and produces and produces CDI beans.
  */
 @Singleton
 public class Application {
@@ -68,18 +68,17 @@ public class Application {
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
   private static final String CONFIG_PROJECT = "jitaccess.project";
 
-  private final String projectId;
-  private final String projectNumber;
-  private final @NotNull GoogleCredentials applicationCredentials;
-  private final @NotNull UserId applicationPrincipal;
+  private static final String projectId;
+  private static final String projectNumber;
+  private static final @NotNull GoogleCredentials applicationCredentials;
+  private static final @NotNull UserId applicationPrincipal;
 
-  private final @NotNull Logger logger;
+  private static final @NotNull Logger logger;
 
   /**
    * Configuration, based on app.yaml environment variables.
    */
-  private final @NotNull ApplicationConfiguration configuration = new ApplicationConfiguration(System.getenv());
-
+  private static final @NotNull ApplicationConfiguration configuration;
 
   // -------------------------------------------------------------------------
   // Private helpers.
@@ -108,27 +107,29 @@ public class Application {
     }
   }
 
-  private boolean isRunningOnAppEngine() {
-    return System.getenv().containsKey("GAE_SERVICE");
-  }
-
-  private boolean isRunningOnCloudRun() {
-    return System.getenv().containsKey("K_SERVICE");
-  }
-
   // -------------------------------------------------------------------------
-  // Public methods.
+  // Application startup.
   // -------------------------------------------------------------------------
 
-  public Application() {
+  /**
+   * Force initialization by triggering the static constructor.
+   */
+  public static void initialize() {
+  }
+
+  /**
+   * Perform all one-time initialization work.
+   */
+  static {
     //
-    // Create a log adapter. We can't rely on injection as we're not in the
+    // Create a logger. We can't rely on injection as we're not in the
     // scope of a specific request here.
     //
-    this.logger = new StructuredLogger.ApplicationContextLogger(System.out);
+    logger = new StructuredLogger.ApplicationContextLogger(System.out);
+    configuration = new ApplicationConfiguration(System.getenv());
 
-    if (!this.configuration.isSmtpConfigured()) {
-      this.logger.warn(
+    if (!configuration.isSmtpConfigured()) {
+      logger.warn(
         EventIds.STARTUP,
         "The SMTP configuration is incomplete");
     }
@@ -141,41 +142,41 @@ public class Application {
         GenericData projectMetadata =
           getMetadata().parseAs(GenericData.class);
 
-        this.projectId = (String) projectMetadata.get("projectId");
-        this.projectNumber = projectMetadata.get("numericProjectId").toString();
+        projectId = (String) projectMetadata.get("projectId");
+        projectNumber = projectMetadata.get("numericProjectId").toString();
 
         var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
-        this.applicationPrincipal = new UserId(defaultCredentials.getAccount());
+        applicationPrincipal = new UserId(defaultCredentials.getAccount());
 
-        if (defaultCredentials.getScopes().containsAll(this.configuration.requiredOauthScopes())) {
+        if (defaultCredentials.getScopes().containsAll(configuration.requiredOauthScopes())) {
           //
           // Default credential has all the right scopes, use it as-is.
           //
-          this.applicationCredentials = defaultCredentials;
+          applicationCredentials = defaultCredentials;
         }
         else {
           //
           // Extend the set of scopes to include required non-cloud APIs by
           // letting the service account impersonate itself.
           //
-          this.applicationCredentials = ImpersonatedCredentials.create(
+          applicationCredentials = ImpersonatedCredentials.create(
             defaultCredentials,
-            this.applicationPrincipal.email,
+            applicationPrincipal.email,
             null,
-            this.configuration.requiredOauthScopes().stream().toList(),
+            configuration.requiredOauthScopes().stream().toList(),
             0);
         }
 
-        this.logger.info(
+        logger.info(
           EventIds.STARTUP,
           String.format("Running in project %s (%s) as %s, version %s",
-            this.projectId,
-            this.projectNumber,
-            this.applicationPrincipal,
+            projectId,
+            projectNumber,
+            applicationPrincipal,
             ApplicationVersion.VERSION_STRING));
       }
       catch (IOException e) {
-        this.logger.error(
+        logger.error(
           EventIds.STARTUP,
           "Failed to lookup instance metadata", e);
         throw new RuntimeException("Failed to initialize runtime environment", e);
@@ -185,8 +186,8 @@ public class Application {
       //
       // Initialize using development settings and credential.
       //
-      this.projectId = System.getProperty(CONFIG_PROJECT, "dev");
-      this.projectNumber = "0";
+      projectId = System.getProperty(CONFIG_PROJECT, "dev");
+      projectNumber = "0";
 
       try {
         var defaultCredentials = GoogleCredentials.getApplicationDefault();
@@ -199,11 +200,11 @@ public class Application {
           // credential for the right set of scopes, and that we're not running
           // with end-user credentials.
           //
-          this.applicationCredentials = ImpersonatedCredentials.create(
+          applicationCredentials = ImpersonatedCredentials.create(
             defaultCredentials,
             impersonateServiceAccount,
             null,
-            this.configuration.requiredOauthScopes().stream().toList(),
+            configuration.requiredOauthScopes().stream().toList(),
             0);
 
           //
@@ -214,16 +215,16 @@ public class Application {
           // To prevent this from happening, force a refresh here. If the
           // refresh fails, fail application startup.
           //
-          this.applicationCredentials.refresh();
-          this.applicationPrincipal = new UserId(impersonateServiceAccount);
+          applicationCredentials.refresh();
+          applicationPrincipal = new UserId(impersonateServiceAccount);
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
-          this.applicationCredentials = defaultCredentials;
-          this.applicationPrincipal = new UserId(
-              ((ServiceAccountCredentials) this.applicationCredentials).getServiceAccountUser());
+          applicationCredentials = defaultCredentials;
+          applicationPrincipal = new UserId(
+              ((ServiceAccountCredentials) applicationCredentials).getServiceAccountUser());
         }
         else {
           throw new RuntimeException(String.format(
@@ -237,9 +238,9 @@ public class Application {
         throw new RuntimeException("Failed to lookup application credentials", e);
       }
 
-      this.logger.warn(
+      logger.warn(
         EventIds.STARTUP,
-        String.format("Running in development mode as %s", this.applicationPrincipal));
+        String.format("Running in development mode as %s", applicationPrincipal));
     }
     else {
       throw new RuntimeException(
@@ -247,7 +248,15 @@ public class Application {
     }
   }
 
-  private boolean isDebugModeEnabled() {
+  private static boolean isRunningOnAppEngine() {
+    return System.getenv().containsKey("GAE_SERVICE");
+  }
+
+  private static boolean isRunningOnCloudRun() {
+    return System.getenv().containsKey("K_SERVICE");
+  }
+
+  private static boolean isDebugModeEnabled() {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
@@ -258,12 +267,12 @@ public class Application {
   @Produces
   @Singleton
   public RequireIapPrincipalFilter.Options produceIapRequestFilterOptions() {
-    if (this.isDebugModeEnabled() || !this.configuration.verifyIapAudience){
+    if (isDebugModeEnabled() || !configuration.verifyIapAudience){
       //
       // Disable expected audience-check.
       //
       return new RequireIapPrincipalFilter.Options(
-        this.isDebugModeEnabled(),
+        isDebugModeEnabled(),
         null);
     }
     else if (isRunningOnAppEngine()) {
@@ -272,19 +281,19 @@ public class Application {
       // from the project number and name.
       //
       return new RequireIapPrincipalFilter.Options(
-        this.isDebugModeEnabled(),
-        String.format("/projects/%s/apps/%s", this.projectNumber, this.projectId));
+        isDebugModeEnabled(),
+        String.format("/projects/%s/apps/%s", projectNumber, projectId));
     }
-    else  if (this.configuration.backendServiceId.isPresent()) {
+    else  if (configuration.backendServiceId.isPresent()) {
       //
       // For Cloud Run, we need the backend service id.
       //
       return new RequireIapPrincipalFilter.Options(
-        this.isDebugModeEnabled(),
+        isDebugModeEnabled(),
         String.format(
           "/projects/%s/global/backendServices/%s",
-          this.projectNumber,
-          this.configuration.backendServiceId.get()));
+          projectNumber,
+          configuration.backendServiceId.get()));
     }
     else {
       throw new RuntimeException(
@@ -315,7 +324,7 @@ public class Application {
 
   @Produces
   public @NotNull CloudIdentityGroupsClient.Options produceCloudIdentityGroupsClientOptions() {
-    return new CloudIdentityGroupsClient.Options(this.configuration.customerId);
+    return new CloudIdentityGroupsClient.Options(configuration.customerId);
   }
 
   @Produces
@@ -332,9 +341,9 @@ public class Application {
   @Singleton
   public @NotNull HttpTransport.Options produceHttpTransportOptions() {
     return new HttpTransport.Options(
-      this.configuration.backendConnectTimeout,
-      this.configuration.backendReadTimeout,
-      this.configuration.backendWriteTimeout);
+      configuration.backendConnectTimeout,
+      configuration.backendReadTimeout,
+      configuration.backendWriteTimeout);
   }
 
   @Produces
@@ -346,7 +355,7 @@ public class Application {
   @Produces
   @Singleton
   public UserResource.Options produceUserResourceOptions() {
-    return new UserResource.Options(this.isDebugModeEnabled());
+    return new UserResource.Options(isDebugModeEnabled());
   }
 
   @Produces
@@ -385,7 +394,7 @@ public class Application {
   @Produces
   @Singleton
   public @NotNull GroupMapping produceGroupMapping() {
-    return new GroupMapping(this.configuration.groupsDomain);
+    return new GroupMapping(configuration.groupsDomain);
   }
 
   @Produces
@@ -396,39 +405,39 @@ public class Application {
     if (isDebugModeEnabled()) {
       return new DebugProposalHandler(tokenSigner);
     }
-    else if (this.configuration.isSmtpConfigured()) {
+    else if (configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
-        this.configuration.smtpHost,
-        this.configuration.smtpPort,
-        this.configuration.smtpSenderName,
-        new EmailAddress(this.configuration.smtpSenderAddress.get()),
-        this.configuration.smtpEnableStartTls,
-        this.configuration.smtpExtraOptionsMap());
+        configuration.smtpHost,
+        configuration.smtpPort,
+        configuration.smtpSenderName,
+        new EmailAddress(configuration.smtpSenderAddress.get()),
+        configuration.smtpEnableStartTls,
+        configuration.smtpExtraOptionsMap());
 
       //
       // Lookup credentials from config and/or secret. Use the secret
       // if both are configured.
       //
-      if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpSecret.isPresent()) {
+      if (configuration.isSmtpAuthenticationConfigured() && configuration.smtpSecret.isPresent()) {
         smtpOptions.setSmtpSecretCredentials(
-          this.configuration.smtpUsername.get(),
-          this.configuration.smtpSecret.get());
+          configuration.smtpUsername.get(),
+          configuration.smtpSecret.get());
       }
-      else if (this.configuration.isSmtpAuthenticationConfigured() && this.configuration.smtpPassword.isPresent()) {
+      else if (configuration.isSmtpAuthenticationConfigured() && configuration.smtpPassword.isPresent()) {
         smtpOptions.setSmtpCleartextCredentials(
-          this.configuration.smtpUsername.get(),
-          this.configuration.smtpPassword.get());
+          configuration.smtpUsername.get(),
+          configuration.smtpPassword.get());
       }
 
       return new MailProposalHandler(
         tokenSigner,
-        new EmailMapping(this.configuration.smtpAddressMapping.orElse(null)),
+        new EmailMapping(configuration.smtpAddressMapping.orElse(null)),
         new SmtpClient(
           secretManagerClient,
           smtpOptions),
         new MailProposalHandler.Options(
-          this.configuration.notificationTimeZone,
-          this.configuration.proposalTimeout));
+          configuration.notificationTimeZone,
+          configuration.proposalTimeout));
     }
     else {
       return new ProposalHandler() {
@@ -464,7 +473,7 @@ public class Application {
     // policy yet (because that's expensive).
     //
     final var configurations = new HashMap<String, EnvironmentConfiguration>();
-    for (var environment : this.configuration.environments) {
+    for (var environment : configuration.environments) {
       if (environment.startsWith("file:")) {
         //
         // Value contains a file path, which is only allowed for development.
@@ -518,8 +527,8 @@ public class Application {
       }
     }
 
-    if (this.configuration.legacyCatalog.equalsIgnoreCase("ASSETINVENTORY") &&
-      this.configuration.legacyScope.isPresent()) {
+    if (configuration.legacyCatalog.equalsIgnoreCase("ASSETINVENTORY") &&
+      configuration.legacyScope.isPresent()) {
 
       //
       // Load an extra environment that surfaces JIT Access 1.x roles.
@@ -537,11 +546,11 @@ public class Application {
           () -> {
             try {
               return legacyLoader.load(
-                this.configuration.legacyProjectsQuery,
-                this.configuration.legacyScope.get(),
-                this.configuration.legacyActivationTimeout,
-                this.configuration.legacyJustificationPattern,
-                this.configuration.legacyJustificationHint,
+                configuration.legacyProjectsQuery,
+                configuration.legacyScope.get(),
+                configuration.legacyActivationTimeout,
+                configuration.legacyJustificationPattern,
+                configuration.legacyJustificationHint,
                 this.logger);
             }
             catch (Exception e) {
@@ -581,5 +590,4 @@ public class Application {
       executor,
       this.logger);
   }
-
 }
