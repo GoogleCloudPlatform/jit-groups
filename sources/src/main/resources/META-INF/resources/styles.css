@@ -2,8 +2,12 @@ body {
     margin: 0;
     padding: 0;
     font-family: Roboto;
-    --mdc-typography-body2-font-size: 14px;
-    --mdc-text-button-label-text-size: 14px;
+    --mdc-typography-body2-font-size: 13px;
+    --mdc-typography-subtitle1-font-size: 14px;
+    --mdc-typography-subtitle2-font-size: 13px;
+    --mdc-protected-button-label-text-size: 13px;
+    --mdc-outlined-button-label-text-size: 13px;
+    --mdc-text-button-label-text-size: 13px;
 }
 
 h1 {
@@ -123,7 +127,7 @@ a {
 
 div.jit-card-subsection[title]:not(:empty)::before {
     content: attr(title);
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     color: #000000a8;
     font-weight: normal;
     font-size: 16px;
@@ -175,6 +179,11 @@ div.jit-card-subsection[title]:not(:empty)::before {
 
 .mdc-list-item__primary-text {
     overflow: unset;
+    white-space: unset;
+}
+
+.mdc-select__anchor {
+    height: 40px !important;
 }
 
 .tabulated-list {
@@ -220,7 +229,7 @@ form[title]:has(input)::before {
 
 .mdc-data-table__row,
 .mdc-data-table__header-row {
-    height: 40px; /* Set row height */
+    height: 30px; /* Set row height */
 }
 
 .mdc-top-app-bar__row {
@@ -272,6 +281,24 @@ main .mdc-button {
 .mdc-data-table__cell {
     white-space: normal; 
     word-wrap: break-word; 
+}
+
+.mdc-list-item__secondary-text::before {
+    height: unset;
+}
+
+/* ==== MDC Form Overrides === */
+
+.mdc-deprecated-list-item,
+.mdc-text-field--outlined,
+.mdc-text-field__input {
+    height: 40px !important;
+}
+
+.mdc-text-field--outlined .mdc-notched-outline--upgraded .mdc-floating-label--float-above,
+.mdc-select--outlined .mdc-select__anchor .mdc-notched-outline--upgraded .mdc-floating-label--float-above{
+    -webkit-transform: translateY(-25px) scale(0.75);
+    transform: translateY(-25px) scale(0.75);
 }
 
 /* ==== Debug === */
