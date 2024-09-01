@@ -2,8 +2,12 @@ body {
     margin: 0;
     padding: 0;
     font-family: Roboto;
-    --mdc-typography-body2-font-size: 14px;
-    --mdc-text-button-label-text-size: 14px;
+    --mdc-typography-body2-font-size: 13px;
+    --mdc-typography-subtitle1-font-size: 14px;
+    --mdc-typography-subtitle2-font-size: 13px;
+    --mdc-protected-button-label-text-size: 13px;
+    --mdc-outlined-button-label-text-size: 13px;
+    --mdc-text-button-label-text-size: 13px;
 }
 
 h1 {
@@ -220,7 +224,7 @@ form[title]:has(input)::before {
 
 .mdc-data-table__row,
 .mdc-data-table__header-row {
-    height: 40px; /* Set row height */
+    height: 30px; /* Set row height */
 }
 
 .mdc-top-app-bar__row {
