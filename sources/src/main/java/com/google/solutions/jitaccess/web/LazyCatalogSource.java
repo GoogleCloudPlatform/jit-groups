@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 
 /**
@@ -57,6 +58,7 @@ public class LazyCatalogSource implements Catalog.Source {
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Duration cacheDuration,
+    @NotNull Executor executor,
     @NotNull Logger logger
   ) {
     Preconditions.checkArgument(environments
@@ -94,6 +96,7 @@ public class LazyCatalogSource implements Catalog.Source {
               groupMapping,
               groupsClient,
               produceResourceManagerClient.apply(policy),
+              executor,
               logger)
           );
         }

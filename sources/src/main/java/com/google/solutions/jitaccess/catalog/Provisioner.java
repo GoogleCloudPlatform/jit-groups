@@ -26,17 +26,22 @@ import com.google.api.services.cloudresourcemanager.v3.model.Expr;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.util.Coalesce;
+import com.google.solutions.jitaccess.util.CompletableFutures;
+import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,12 +68,13 @@ public class Provisioner {
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull ResourceManagerClient resourceManagerClient,
+    @NotNull Executor executor,
     @NotNull Logger logger
   ) {
     this(
       environmentName,
       new GroupProvisioner(groupMapping, groupsClient, logger),
-      new IamProvisioner(groupsClient, resourceManagerClient, logger));
+      new IamProvisioner(groupsClient, resourceManagerClient, executor, logger));
   }
 
   /**
@@ -262,15 +268,18 @@ public class Provisioner {
   public static class IamProvisioner {
     private final @NotNull CloudIdentityGroupsClient groupsClient;
     private final @NotNull ResourceManagerClient resourceManagerClient;
+    private final @NotNull Executor executor;
     private final @NotNull Logger logger;
 
     public IamProvisioner(
       @NotNull CloudIdentityGroupsClient groupsClient,
       @NotNull ResourceManagerClient resourceManagerClient,
+      @NotNull Executor executor,
       @NotNull Logger logger
     ) {
       this.groupsClient = groupsClient;
       this.resourceManagerClient = resourceManagerClient;
+      this.executor = executor;
       this.logger = logger;
     }
 
@@ -356,21 +365,29 @@ public class Provisioner {
           expectedChecksum,
           actualChecksum);
 
-        try {
-          //
-          // One or more role bindings must have changed, so we need to
-          // re-provision all bindings.
-          //
-          for (var bindingsForResource : roleBindings
+        //
+        // One or more role bindings must have changed, so we need to
+        // re-provision all bindings.
+        //
+        // If there are multiple roles for a single resource, we can
+        // provision them at once.
+        //
+        var future = CompletableFutures.mapAsync(
+          roleBindings
             .stream()
             .collect(Collectors.groupingBy(b -> b.resource()))
-            .entrySet()) {
-
+            .entrySet(),
+          bindingsForResource -> {
             this.resourceManagerClient.modifyIamPolicy(
               bindingsForResource.getKey(),
               policy -> replaceBindingsForPrincipals(policy, groupId, bindingsForResource.getValue()),
               "Provisioning JIT group");
-          }
+            return bindingsForResource.getKey();
+          },
+          this.executor);
+
+        try {
+          future.get();
 
           //
           // Update group.
@@ -386,13 +403,18 @@ public class Provisioner {
             expectedChecksum,
             actualChecksum);
         }
-        catch (AccessException e) {
-          this.logger.error(
-            EventIds.PROVISION_IAM_BINDINGS,
-            String.format("Provisioning IAM role bindings for group %s failed", groupId),
-            e);
+        catch (InterruptedException | ExecutionException e) {
+          if (Exceptions.unwrap(e) instanceof AccessException accessException) {
+            this.logger.error(
+              EventIds.PROVISION_IAM_BINDINGS,
+              String.format("Provisioning IAM role bindings for group %s failed", groupId),
+              accessException);
 
-          throw (AccessException)e.fillInStackTrace();
+            throw (AccessException) accessException.fillInStackTrace();
+          }
+          else {
+            throw new UncheckedExecutionException(e);
+          }
         }
       }
     }

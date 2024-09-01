@@ -38,6 +38,7 @@ import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -45,6 +46,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TestLazyCatalogSource {
+  private static final Executor EXECUTOR = command -> command.run();
+
   private record SampleEnvironment(
     @NotNull String name,
     @NotNull String description
@@ -65,6 +68,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       Mockito.mock(Logger.class));
 
     assertEquals(2, loader.environmentPolicies().size());
@@ -99,6 +103,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       logger);
 
     assertFalse(loader
@@ -122,6 +127,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       logger);
 
     assertFalse(loader
@@ -145,6 +151,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       logger);
 
     assertFalse(loader
@@ -168,6 +175,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       logger);
 
     assertFalse(loader
@@ -191,6 +199,7 @@ public class TestLazyCatalogSource {
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
       Duration.ZERO,
+      EXECUTOR,
       logger);
 
     var environment = loader.provisioner(Mockito.mock(Catalog.class), "env");
