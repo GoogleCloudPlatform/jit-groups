@@ -26,7 +26,6 @@ import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
-import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.RequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -58,10 +57,7 @@ public class TestUserResource {
   public void context_whenDebugModeOff() {
     var resource = new UserResource();
     resource.requestContext = Mockito.mock(RequestContext.class);
-    resource.application = Mockito.mock(Application.class);
-
-    when(resource.application.isDebugModeEnabled())
-      .thenReturn(false);
+    resource.options = new UserResource.Options(false);
 
     when(resource.requestContext.user())
       .thenReturn(SAMPLE_USER);
@@ -80,10 +76,7 @@ public class TestUserResource {
   public void context_whenDebugModeOn() {
     var resource = new UserResource();
     resource.requestContext = Mockito.mock(RequestContext.class);
-    resource.application = Mockito.mock(Application.class);
-
-    when(resource.application.isDebugModeEnabled())
-      .thenReturn(true);
+    resource.options = new UserResource.Options(true);
 
     var subject = createSubject();
     when(resource.requestContext.subject())

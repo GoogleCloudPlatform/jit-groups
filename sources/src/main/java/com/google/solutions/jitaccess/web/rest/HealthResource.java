@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.apis.clients.Diagnosable;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.util.CompletableFutures;
-import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.EventIds;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;
@@ -56,9 +55,6 @@ public class HealthResource {
 
   @Inject
   Logger logger;
-
-  @Inject
-  Application application;
 
   /**
    * Check if the application is alive.
