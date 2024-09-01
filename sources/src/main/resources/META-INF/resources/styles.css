@@ -181,6 +181,10 @@ div.jit-card-subsection[title]:not(:empty)::before {
     overflow: unset;
 }
 
+.mdc-select__anchor {
+    height: 40px !important;
+}
+
 .tabulated-list {
     list-style: none;
 }
@@ -276,6 +280,21 @@ main .mdc-button {
 .mdc-data-table__cell {
     white-space: normal; 
     word-wrap: break-word; 
+}
+
+
+/* ==== MDC Form Overrides === */
+
+.mdc-deprecated-list-item,
+.mdc-text-field--outlined,
+.mdc-text-field__input {
+    height: 40px !important;
+}
+
+.mdc-text-field--outlined .mdc-notched-outline--upgraded .mdc-floating-label--float-above,
+.mdc-select--outlined .mdc-select__anchor .mdc-notched-outline--upgraded .mdc-floating-label--float-above{
+    -webkit-transform: translateY(-25px) scale(0.75);
+    transform: translateY(-25px) scale(0.75);
 }
 
 /* ==== Debug === */
