@@ -55,6 +55,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -449,8 +450,9 @@ public class Application {
   @Singleton
   public @NotNull LazyCatalogSource produceEnvironments(
     @NotNull GroupMapping groupMapping,
-    @NotNull CloudIdentityGroupsClient groupsClient
-    ) {
+    @NotNull CloudIdentityGroupsClient groupsClient,
+    @NotNull Executor executor
+  ) {
     //
     // Prepare configuration for all environments, but don't load their
     // policy yet (because that's expensive).
@@ -570,6 +572,7 @@ public class Application {
       isDebugModeEnabled()
         ? Duration.ofSeconds(20)
         : this.configuration.environmentCacheTimeout,
+      executor,
       this.logger);
   }
 

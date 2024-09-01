@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,6 +68,7 @@ public class TestProvisioner {
   private static final IamRole SAMPLE_ROLE_2 = new IamRole("roles/role-2");
   private static final IamRole SAMPLE_ROLE_3 = new IamRole("roles/role-3");
 
+  private static final Executor EXECUTOR = command -> command.run();
 
   //---------------------------------------------------------------------------
   // provisionMembership.
@@ -451,6 +453,7 @@ public class TestProvisioner {
       var provisioner = new Provisioner.IamProvisioner(
         groupsClient,
         resourceManagerClient,
+        EXECUTOR,
         Mockito.mock(Logger.class));
 
       provisioner.provisionAccess(
@@ -472,6 +475,7 @@ public class TestProvisioner {
       var provisioner = new Provisioner.IamProvisioner(
         groupsClient,
         resourceManagerClient,
+        EXECUTOR,
         Mockito.mock(Logger.class));
 
       provisioner.provisionAccess(
@@ -495,6 +499,7 @@ public class TestProvisioner {
       var provisioner = new Provisioner.IamProvisioner(
         groupsClient,
         resourceManagerClient,
+        EXECUTOR,
         Mockito.mock(Logger.class));
 
       provisioner.provisionAccess(
@@ -537,6 +542,7 @@ public class TestProvisioner {
       var provisioner = new Provisioner.IamProvisioner(
         groupsClient,
         resourceManagerClient,
+        EXECUTOR,
         logger);
 
       assertThrows(
