@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.ApplicationVersion;
-import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequestContext;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
@@ -51,7 +50,7 @@ public class UserResource {
   RequestContext requestContext;
 
   @Inject
-  Application application;
+  Options options;
 
   /**
    * Get information about the current subject and application.
@@ -63,7 +62,7 @@ public class UserResource {
     //
     // Return principal details in debug mode only.
     //
-    var principals = this.application.isDebugModeEnabled()
+    var principals = this.options.isDebugModeEnabled()
       ? this.requestContext.subject().principals()
         .stream()
         .map(p -> new PrincipalInfo(p.id().type(), p.id().value()))
@@ -77,7 +76,7 @@ public class UserResource {
         principals),
       new ApplicationInfo(
         ApplicationVersion.VERSION_STRING,
-        this.application.isDebugModeEnabled()));
+        this.options.isDebugModeEnabled()));
   }
 
   //---------------------------------------------------------------------------
@@ -103,5 +102,13 @@ public class UserResource {
   public record ApplicationInfo(
     @NotNull String version,
     boolean debugMode
+  ) {}
+
+  //---------------------------------------------------------------------------
+  // Options..
+  //---------------------------------------------------------------------------
+
+  public record Options(
+    boolean isDebugModeEnabled
   ) {}
 }

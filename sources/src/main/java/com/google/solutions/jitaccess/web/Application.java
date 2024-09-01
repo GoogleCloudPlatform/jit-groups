@@ -41,8 +41,8 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.web.proposal.*;
+import com.google.solutions.jitaccess.web.rest.UserResource;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
@@ -247,7 +247,7 @@ public class Application {
     }
   }
 
-  public boolean isDebugModeEnabled() {
+  private boolean isDebugModeEnabled() {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
@@ -341,6 +341,12 @@ public class Application {
   @Singleton
   public @NotNull ServiceAccountSigner.Options produceServiceAccountSignerOptions() {
     return new ServiceAccountSigner.Options(this.applicationPrincipal);
+  }
+
+  @Produces
+  @Singleton
+  public UserResource.Options produceUserResourceOptions() {
+    return new UserResource.Options(this.isDebugModeEnabled());
   }
 
   @Produces
