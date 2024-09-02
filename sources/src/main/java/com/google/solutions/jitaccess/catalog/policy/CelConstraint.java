@@ -302,7 +302,7 @@ public class CelConstraint implements Constraint {
    * Long-typed variable.
    * <p>
    * We use Long instead of Integer because cel-java lacks built-in operators
-   * (like <=) for Integer.
+   * for Integers.
    */
   public static class LongVariable extends Variable {
     private final Long minInclusive;
