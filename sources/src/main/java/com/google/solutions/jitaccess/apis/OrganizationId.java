@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * ID of a Google Cloud organization.
+ * Identifier for a Google Cloud organization.
  */
 public record OrganizationId(
   @NotNull String id
@@ -42,16 +42,13 @@ public record OrganizationId(
     assert !id.contains("/");
   }
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
-
   /**
    * Parse an organization ID from one of the formats
-   * <p>
-   * * organizations/123
-   * * 123
+   *
+   *  <ul>
+   *   <li>organizations/123</li>
+   *   <li>123</li>
+   * </ul>
    *
    * @return empty if the input string is malformed.
    */
@@ -92,18 +89,35 @@ public record OrganizationId(
   // ResourceId.
   // -------------------------------------------------------------------------
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String service() {
     return ResourceManagerClient.SERVICE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String type() {
     return "organization";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String path() {
     return PREFIX + this.id;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString() {
+    return this.id;
   }
 }

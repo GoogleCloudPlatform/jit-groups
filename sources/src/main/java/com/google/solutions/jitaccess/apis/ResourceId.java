@@ -49,4 +49,10 @@ public interface ResourceId {
    */
   @SuppressWarnings("SameReturnValue")
   @NotNull String service();
+
+  /**
+   * Return the ID, without prefix.
+   */
+  @Override
+  public String toString();
 }

@@ -284,7 +284,9 @@ public class MailProposalHandler extends AbstractProposalHandler {
     }
   }
 
-
+  /**
+   * Constructor options, to be injected using CDI.
+   */
   public record Options(
     @NotNull ZoneId timeZone,
     @NotNull Duration tokenExpiry
