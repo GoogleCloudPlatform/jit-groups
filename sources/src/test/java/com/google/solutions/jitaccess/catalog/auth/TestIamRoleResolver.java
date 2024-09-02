@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog.validation;
+package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
@@ -32,49 +32,49 @@ import static io.smallrye.common.constraint.Assert.assertFalse;
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-public class TestIamRoleValidator {
+public class TestIamRoleResolver {
 
   // -------------------------------------------------------------------------
-  // isValidRole.
+  // exists.
   // -------------------------------------------------------------------------
 
   @Test
-  public void isValidRole_whenPredefinedRole() throws Exception {
+  public void exists_whenPredefinedRole() throws Exception {
     var iamClient = Mockito.mock(IamClient.class);
     when(iamClient.listPredefinedRoles())
       .thenReturn(List.of(
         new IamRole("roles/owner"),
         new IamRole("roles/editor"),
         new IamRole("roles/viewer")));
-    var validator = new IamRoleValidator(iamClient);
+    var resolver = new IamRoleResolver(iamClient);
 
-    assertTrue(validator.isValidRole(new IamRole("roles/owner")));
+    assertTrue(resolver.exists(new IamRole("roles/owner")));
   }
 
   @Test
-  public void isValidRole_whenUnknown() throws Exception {
+  public void exists_whenUnknown() throws Exception {
     var iamClient = Mockito.mock(IamClient.class);
     when(iamClient.listPredefinedRoles())
       .thenReturn(List.of(
         new IamRole("roles/owner"),
         new IamRole("roles/editor"),
         new IamRole("roles/viewer")));
-    var validator = new IamRoleValidator(iamClient);
+    var resolver = new IamRoleResolver(iamClient);
 
-    assertFalse(validator.isValidRole(new IamRole("roles/unknown")));
+    assertFalse(resolver.exists(new IamRole("roles/unknown")));
   }
 
   @Test
-  public void isValidRole_whenProjectCustomRole() {
-    var validator = new IamRoleValidator(Mockito.mock(IamClient.class));
+  public void exists_whenProjectCustomRole() {
+    var resolver = new IamRoleResolver(Mockito.mock(IamClient.class));
 
-    assertTrue(validator.isValidRole(new IamRole("projects/project-1/roles/role")));
+    assertTrue(resolver.exists(new IamRole("projects/project-1/roles/role")));
   }
 
   @Test
-  public void isValidRole_whenOrganizationCustomRole() {
-    var validator = new IamRoleValidator(Mockito.mock(IamClient.class));
+  public void exists_whenOrganizationCustomRole() {
+    var resolver = new IamRoleResolver(Mockito.mock(IamClient.class));
 
-    assertTrue(validator.isValidRole(new IamRole("organizations/123/roles/role")));
+    assertTrue(resolver.exists(new IamRole("organizations/123/roles/role")));
   }
 }

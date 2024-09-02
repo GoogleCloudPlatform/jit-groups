@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.validation.IamRoleValidator;
+import com.google.solutions.jitaccess.catalog.auth.IamRoleResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -78,8 +78,8 @@ public class TestPolicyResource {
   @Test
   public void lint_whenPolicyContainsInvalidRoles() {
     var resource = new PolicyResource();
-    resource.roleValidator = Mockito.mock(IamRoleValidator.class);
-    when(resource.roleValidator.isValidRole(any())).thenReturn(false);
+    resource.roleResolver = Mockito.mock(IamRoleResolver.class);
+    when(resource.roleResolver.exists(any())).thenReturn(false);
 
     var result = resource.lint(
       "schemaVersion: 1\n" +
