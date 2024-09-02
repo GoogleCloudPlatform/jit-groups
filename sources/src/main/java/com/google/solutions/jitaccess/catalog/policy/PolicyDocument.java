@@ -390,7 +390,7 @@ public class PolicyDocument {
     ) {
       return new EnvironmentElement(
         policy.name(),
-        policy.description(),
+        Strings.nullToEmpty(policy.description()),
         policy.accessControlList()
           .map(acl -> acl
             .entries()
@@ -471,7 +471,7 @@ public class PolicyDocument {
     static SystemElement toYaml(@NotNull SystemPolicy policy) {
       return new SystemElement(
         policy.name(),
-        policy.description(),
+        Strings.nullToEmpty(policy.description()),
         policy.accessControlList()
           .map(acl -> acl
             .entries()
@@ -596,7 +596,7 @@ public class PolicyDocument {
           try {
             return new JitGroupPolicy(
               this.name,
-              this.description,
+              Strings.nullToEmpty(this.description),
               new AccessControlList(aces.stream().map(Optional::get).toList()),
               constraints.get(),
               roleBindings
