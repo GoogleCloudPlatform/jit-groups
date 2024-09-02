@@ -136,7 +136,7 @@ public class PolicyResource {
   ) {
     static IssueInfo fromIssue(@NotNull PolicyDocument.Issue issue) {
       return new IssueInfo(
-        issue.error(),
+        issue.severe(),
         issue.scope(),
         issue.code().toString(),
         issue.details());

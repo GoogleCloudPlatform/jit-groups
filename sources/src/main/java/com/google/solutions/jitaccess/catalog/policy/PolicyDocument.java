@@ -220,16 +220,16 @@ public class PolicyDocument {
   /**
    * Warning or error affecting a policy.
    *
-   * @param error indicates if this is a fatal error
+   * @param severe indicates if this is a fatal error
    * @param scope scope in which the issue was encountered
    * @param code unique code for the issue
    * @param details textual description
    */
   public record Issue(
-    boolean error,
+    boolean severe,
     @Nullable String scope,
     @NotNull Code code,
-    @NotNull String details) {
+    @NotNull String details) implements PolicyIssue {
 
     public enum Code {
       FILE_INVALID,
@@ -252,10 +252,10 @@ public class PolicyDocument {
     }
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
       return String.format(
         "%s %s: %s",
-        this.error ? "ERROR" : "WARNING",
+        this.severe ? "ERROR" : "WARNING",
         this.code,
         this.details);
     }
@@ -277,7 +277,7 @@ public class PolicyDocument {
     }
 
     boolean containsErrors() {
-      return this.issues.stream().anyMatch(i -> i.error());
+      return this.issues.stream().anyMatch(i -> i.severe);
     }
 
     private void error(
