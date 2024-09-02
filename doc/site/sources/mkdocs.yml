@@ -69,7 +69,7 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.superfences
 nav:
-  - 'JIT Groups <sup class="preview">Preview</sup>':
+  - 'JIT Groups':
       - Discover:
         - 'Overview': 'index.md'
         - 'Concepts': 'jitgroups-concepts.md'
