@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import com.google.solutions.jitaccess.util.Coalesce;
+import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -40,6 +41,7 @@ import java.util.LinkedList;
 /**
  * Client for IAM API.
  */
+@Singleton
 public class IamClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
   private final @NotNull GoogleCredentials credentials;
