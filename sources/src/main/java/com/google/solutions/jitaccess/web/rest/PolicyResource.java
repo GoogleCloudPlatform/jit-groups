@@ -67,7 +67,7 @@ public class PolicyResource {
     PolicyDocument document;
 
     //
-    // 1. Parse and valiate document structure.
+    // 1. Parse and validate document structure.
     //
     try {
       //
