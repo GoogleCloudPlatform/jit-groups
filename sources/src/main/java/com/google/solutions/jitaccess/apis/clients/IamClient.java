@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -22,76 +22,84 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.api.services.iamcredentials.v1.IAMCredentials;
-import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
+import com.google.api.services.iam.v1.model.QueryGrantableRolesRequest;
+import com.google.api.services.iam.v1.model.QueryGrantableRolesResponse;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.api.services.iam.v1.Iam;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
-import jakarta.inject.Singleton;
+import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.ResourceId;
+import com.google.solutions.jitaccess.util.Coalesce;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
- * Client for IAM Credentials API.
+ * Client for IAM API.
  */
-@Singleton
-public class IamCredentialsClient {
+public class IamClient {
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
-
   private final @NotNull GoogleCredentials credentials;
   private final @NotNull HttpTransport.Options httpOptions;
+  private final @NotNull Options options;
 
-  private @NotNull IAMCredentials createClient() throws IOException
+  private @NotNull Iam createClient() throws IOException
   {
     return Builders
-      .newBuilder(IAMCredentials.Builder::new, this.credentials, this.httpOptions)
+      .newBuilder(Iam.Builder::new, this.credentials, this.httpOptions)
       .build();
   }
 
-  public IamCredentialsClient(
+  public IamClient(
+    @NotNull Options options,
     @NotNull GoogleCredentials credentials,
     @NotNull HttpTransport.Options httpOptions
   )  {
+    Preconditions.checkNotNull(options, "options");
     Preconditions.checkNotNull(credentials, "credentials");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
+    this.options = options;
     this.httpOptions = httpOptions;
     this.credentials = credentials;
   }
 
-  /**
-   * Sign a JWT using the Google-managed service account key.
-   */
-  public String signJwt(
-    @NotNull UserId serviceAccount,
-    @NotNull JsonWebToken.Payload payload
+  public Collection<IamRole> listGrantableRoles(
+    @NotNull ResourceId resourceId
   ) throws AccessException, IOException {
-    Preconditions.checkNotNull(serviceAccount, "serviceAccount");
-    Preconditions.checkNotNull(payload, "payload");
+    Preconditions.checkNotNull(resourceId, "resourceId");
+    Preconditions.checkArgument(
+      ResourceManagerClient.SERVICE.equals(resourceId.service()),
+      "Resource must be a CRM resource");
 
-    try
-    {
-      if (payload.getFactory() == null) {
-        payload.setFactory(new GsonFactory());
-      }
+    try {
+      var client = createClient();
 
-      var payloadJson = payload.toString();
-      assert (payloadJson.startsWith("{"));
+      var requestBody = new QueryGrantableRolesRequest()
+        .setFullResourceName("//cloudresourcemanager.googleapis.com/" + resourceId.path())
+        .setView("BASIC")
+        .setPageSize(this.options.defaultPageSize());
+      var request = client
+        .roles()
+        .queryGrantableRoles(requestBody);
 
-      var request = new SignJwtRequest()
-        .setPayload(payloadJson);
+      var roles = new LinkedList<IamRole>();
 
-      return createClient()
-        .projects()
-        .serviceAccounts()
-        .signJwt(
-          String.format("projects/-/serviceAccounts/%s", serviceAccount.email),
-          request)
-        .execute()
-        .getSignedJwt();
+      QueryGrantableRolesResponse response;
+      do {
+        response = request.execute();
+
+        Coalesce
+          .emptyIfNull(response.getRoles())
+          .stream()
+          .forEach(r -> roles.add(new IamRole(r.getName())));
+
+        requestBody.setPageToken(response.getNextPageToken());
+      } while (response.getNextPageToken() != null);
+
+      return roles;
     }
     catch (GoogleJsonResponseException e) {
       switch (e.getStatusCode()) {
@@ -99,19 +107,15 @@ public class IamCredentialsClient {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(
-            String.format("Denied access to service account '%s': %s", serviceAccount.email, e.getMessage()), e);
+            String.format("Access to resource '%s' is denied: %s", resourceId, e.getMessage()), e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
     }
   }
 
-  /**
-   * Get JWKS location for service account key set.
-   */
-  public static String getJwksUrl(@NotNull UserId serviceAccount) {
-    return String.format(
-      "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", 
-      serviceAccount.email);
+  public record Options(
+    int defaultPageSize
+  ) {
   }
 }

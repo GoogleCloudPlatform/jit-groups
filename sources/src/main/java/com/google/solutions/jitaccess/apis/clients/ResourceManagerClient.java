@@ -76,7 +76,7 @@ public class ResourceManagerClient extends AbstractIamClient {
     @NotNull Consumer<Policy> modify,
     @NotNull String requestReason
   ) throws AccessException, IOException {
-    Preconditions.checkNotNull(id, "projectId");
+    Preconditions.checkNotNull(id, "id");
     Preconditions.checkArgument(SERVICE.equals(id.service()), "Resource must be a CRM resource");
     Preconditions.checkNotNull(modify, "modify");
 

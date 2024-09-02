@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,54 +21,64 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ITestAssetInventoryClient {
-  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
+public class ITestIamClient {
 
   // -------------------------------------------------------------------------
-  // getEffectiveIamPolicies.
+  // listGrantableRoles.
   // -------------------------------------------------------------------------
 
   @Test
-  public void getEffectiveIamPolicies_whenUnauthenticated() {
-    var client = new AssetInventoryClient(
-      ITestEnvironment.INVALID_CREDENTIAL,
-      HttpTransport.Options.DEFAULT);
-
-    assertThrows(
-      NotAuthenticatedException.class,
-      () -> client.getEffectiveIamPolicies(
-        "folders/0",
-        "projects/" + SAMPLE_PROJECT));
-  }
-
-  @Test
-  public void getEffectiveIamPolicies_whenCallerLacksPermission() {
-    var client = new AssetInventoryClient(
+  public void listGrantableRoles_whenUnauthenticated() {
+    var client = new IamClient(
+      new IamClient.Options(10),
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> client.getEffectiveIamPolicies(
-        "folders/0",
-        "projects/" + SAMPLE_PROJECT));
+      () -> client.listGrantableRoles(ITestEnvironment.PROJECT_ID));
   }
 
   @Test
-  public void getEffectiveIamPolicies_whenProjectDoesNotExist() {
-    var client = new AssetInventoryClient(
+  public void listGrantableRoles_whenCallerLacksPermission() {
+    var client = new IamClient(
+      new IamClient.Options(10),
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.listGrantableRoles(ITestEnvironment.PROJECT_ID));
+  }
+
+  @Test
+  public void listGrantableRoles_whenProjectDoesNotExist() {
+    var client = new IamClient(
+      new IamClient.Options(10),
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
-      ResourceNotFoundException.class,
-      () -> client.getEffectiveIamPolicies(
-        "projects/" + ITestEnvironment.PROJECT_ID,
-        "projects/0"));
+      AccessDeniedException.class,
+      () -> client.listGrantableRoles(new ProjectId("0")));
+  }
+
+  @Test
+  public void listGrantableRoles() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(100),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var roles = client.listGrantableRoles(ITestEnvironment.PROJECT_ID);
+
+    assertTrue(roles.size() > 100);
   }
 }
