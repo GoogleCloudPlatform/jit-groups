@@ -25,11 +25,14 @@ import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Instant;
 
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestPolicyResource {
   //---------------------------------------------------------------------------
@@ -37,13 +40,36 @@ public class TestPolicyResource {
   //---------------------------------------------------------------------------
 
   @Test
-  public void lint_whenPolicyMalformed() {
+  public void lint_whenPolicyNull() {
     var resource = new PolicyResource();
 
-    var result = resource.lint("invalid:;)");
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> resource.lint(null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"-", ";", "invalid:;)"})
+  public void lint_whenPolicyMalformed(String source) {
+    var resource = new PolicyResource();
+
+    var result = resource.lint(source);
 
     assertFalse(result.successful());
     assertFalse(result.issues().isEmpty());
+  }
+
+  @Test
+  public void lint_whenPolicyHasNoName() {
+    var resource = new PolicyResource();
+
+    var result = resource.lint(
+      "schemaVersion: 1\n" +
+      "environment:\n" +
+      "  name: \"\"");
+
+    assertTrue(result.successful());
+    assertTrue(result.issues().isEmpty());
   }
 
   @Test
