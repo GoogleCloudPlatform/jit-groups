@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.auth.IamRoleResolver;
+import com.google.solutions.jitaccess.apis.IamRoleResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

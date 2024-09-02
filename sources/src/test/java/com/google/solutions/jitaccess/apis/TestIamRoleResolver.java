@@ -19,9 +19,9 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog.auth;
+package com.google.solutions.jitaccess.apis;
 
-import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.api.services.iam.v1.model.LintResult;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -30,9 +30,12 @@ import java.util.List;
 
 import static io.smallrye.common.constraint.Assert.assertFalse;
 import static io.smallrye.common.constraint.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestIamRoleResolver {
+  private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
 
   // -------------------------------------------------------------------------
   // exists.
@@ -55,10 +58,7 @@ public class TestIamRoleResolver {
   public void exists_whenUnknown() throws Exception {
     var iamClient = Mockito.mock(IamClient.class);
     when(iamClient.listPredefinedRoles())
-      .thenReturn(List.of(
-        new IamRole("roles/owner"),
-        new IamRole("roles/editor"),
-        new IamRole("roles/viewer")));
+      .thenReturn(List.of());
     var resolver = new IamRoleResolver(iamClient);
 
     assertFalse(resolver.exists(new IamRole("roles/unknown")));
@@ -76,5 +76,47 @@ public class TestIamRoleResolver {
     var resolver = new IamRoleResolver(Mockito.mock(IamClient.class));
 
     assertTrue(resolver.exists(new IamRole("organizations/123/roles/role")));
+  }
+
+  // -------------------------------------------------------------------------
+  // lintRoleBinding.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void lintRoleBinding_whenRoleUnknownAndConditionInvalid() throws Exception {
+    var iamClient = Mockito.mock(IamClient.class);
+    when(iamClient.listPredefinedRoles())
+      .thenReturn(List.of());
+    when(iamClient.lintIamCondition(
+      eq(SAMPLE_PROJECT),
+      eq("condition")))
+      .thenReturn(List.of(new LintResult().setDebugMessage("not good")));
+
+    var resolver = new IamRoleResolver(iamClient);
+    var issues = resolver.lintRoleBinding(
+      SAMPLE_PROJECT,
+      new IamRole("roles/owner"),
+      "condition");
+
+    assertEquals(2, issues.size());
+  }
+
+  @Test
+  public void lintRoleBinding() throws Exception {
+    var iamClient = Mockito.mock(IamClient.class);
+    when(iamClient.listPredefinedRoles())
+      .thenReturn(List.of(new IamRole("roles/owner")));
+    when(iamClient.lintIamCondition(
+      eq(SAMPLE_PROJECT),
+      eq("condition")))
+      .thenReturn(List.of());
+
+    var resolver = new IamRoleResolver(iamClient);
+    var issues = resolver.lintRoleBinding(
+      SAMPLE_PROJECT,
+      new IamRole("roles/owner"),
+      "condition");
+
+    assertTrue(issues.isEmpty());
   }
 }
