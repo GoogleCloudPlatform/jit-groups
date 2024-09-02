@@ -225,31 +225,11 @@ public class PolicyDocument {
    * @param code unique code for the issue
    * @param details textual description
    */
-  public record Issue(
+  record Issue(
     boolean severe,
     @Nullable String scope,
     @NotNull Code code,
     @NotNull String details) implements PolicyIssue {
-
-    public enum Code {
-      FILE_INVALID,
-      FILE_INVALID_SYNTAX,
-      FILE_INVALID_VERSION,
-      FILE_UNKNOWN_PROPERTY,
-      ENVIRONMENT_MISSING,
-      ENVIRONMENT_INVALID,
-      SYSTEM_INVALID,
-      GROUP_INVALID,
-      ACL_INVALID_PRINCIPAL,
-      ACL_INVALID_PERMISSION,
-      CONSTRAINT_INVALID_VARIABLE_DECLARATION,
-      CONSTRAINT_INVALID_TYPE,
-      CONSTRAINT_INVALID_EXPIRY,
-      CONSTRAINT_INVALID_EXPRESSION,
-      PRIVILEGE_INVALID_RESOURCE_ID,
-      PRIVILEGE_DUPLICATE_RESOURCE_ID,
-      PRIVILEGE_INVALID_ROLE,
-    }
 
     @Override
     public @NotNull String toString() {
@@ -314,18 +294,18 @@ public class PolicyDocument {
   }
 
   public static class SyntaxException extends Exception {
-    private final @NotNull List<PolicyDocument.Issue> issues;
+    private final @NotNull List<PolicyIssue> issues;
 
-    public @NotNull List<PolicyDocument.Issue> issues() {
+    public @NotNull List<PolicyIssue> issues() {
       return this.issues;
     }
 
     SyntaxException(
       @NotNull String message,
-      @NotNull List<PolicyDocument.Issue> issues
+      @NotNull List<? extends PolicyIssue> issues
     ) {
       super(message);
-      this.issues = issues;
+      this.issues = List.copyOf(issues);
     }
 
     @Override

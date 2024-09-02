@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.auth.IamRoleResolver;
+import com.google.solutions.jitaccess.catalog.policy.PolicyIssue;
 import com.google.solutions.jitaccess.util.Cast;
 import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
@@ -134,7 +135,7 @@ public class PolicyResource {
     @NotNull String code,
     @NotNull String details
   ) {
-    static IssueInfo fromIssue(@NotNull PolicyDocument.Issue issue) {
+    static IssueInfo fromIssue(@NotNull PolicyIssue issue) {
       return new IssueInfo(
         issue.severe(),
         issue.scope(),
@@ -149,7 +150,7 @@ public class PolicyResource {
       return new IssueInfo(
         true,
         scope,
-        PolicyDocument.Issue.Code.PRIVILEGE_INVALID_ROLE.toString(),
+        PolicyIssue.Code.PRIVILEGE_INVALID_ROLE.toString(),
         String.format("'%s' is not a valid role", role));
     }
   }
