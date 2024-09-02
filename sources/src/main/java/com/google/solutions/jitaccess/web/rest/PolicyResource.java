@@ -21,8 +21,10 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import jakarta.enterprise.context.Dependent;
@@ -49,12 +51,22 @@ public class PolicyResource {
   public @NotNull LintingResultInfo lint(
     @FormParam("source") @Nullable String source
   ) {
-    // TODO: check source != null
+    Preconditions.checkArgument(
+      !MoreStrings.isNullOrBlank(source),
+      "Source must not be empty");
 
     try {
+      //
+      // NB. It's possible that the user is validating that doesn't
+      //     explicitly specify a name (because it's implied).
+      //
       PolicyDocument.fromString(
         source,
-        new Policy.Metadata("user-provided", Instant.now()));
+        new Policy.Metadata(
+          "user-provided",
+          Instant.now(),
+          null,
+          "anonymous")); // Accept policies without name.
     }
     catch (PolicyDocument.SyntaxException e) {
       return LintingResultInfo.create(e);
