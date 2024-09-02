@@ -1,4 +1,4 @@
-# JIT Groups <sup class='preview'>Preview</sup>
+# JIT Groups
 
 JIT Groups is an open source application that lets you implement secure, self-service
 access management for Google Cloud using groups.

@@ -4,7 +4,7 @@
 JIT Groups is an open source application that lets you implement secure, self-service
 access management for Google Cloud using groups.
 
-[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/)
+[<img src="doc/documentation.png">](https://googlecloudplatform.github.io/jit-groups/)
 
 > [!NOTE]
 > JIT Groups supersedes the [JIT Access](https://googlecloudplatform.github.io/jit-groups/jitaccess-overview/) project, which has largely outlived its purpose as
