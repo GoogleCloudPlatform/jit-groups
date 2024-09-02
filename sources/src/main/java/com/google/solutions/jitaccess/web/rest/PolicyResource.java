@@ -26,7 +26,7 @@ import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.validation.IamRoleValidator;
+import com.google.solutions.jitaccess.catalog.auth.IamRoleResolver;
 import com.google.solutions.jitaccess.util.Cast;
 import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
@@ -40,7 +40,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Dependent
 @Path("/api")
@@ -48,7 +47,7 @@ import java.util.stream.Stream;
 @LogRequest
 public class PolicyResource {
   @Inject
-  IamRoleValidator roleValidator;
+  IamRoleResolver roleResolver;
 
   /**
    * Validate policy document
@@ -98,7 +97,7 @@ public class PolicyResource {
         .stream()
         .flatMap(p -> Cast.tryCast(p, IamRoleBinding.class).stream())
         .map(b -> b.role())
-        .filter(r -> !this.roleValidator.isValidRole(r))
+        .filter(r -> !this.roleResolver.exists(r))
         .map(r -> IssueInfo.fromInvalidRole(grp.name(), r)))
       .toList();
 

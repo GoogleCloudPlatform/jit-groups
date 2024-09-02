@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog.validation;
+package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
@@ -34,10 +34,10 @@ import java.util.Set;
  * Validates IAM roles.
  */
 @Singleton
-public class IamRoleValidator {
+public class IamRoleResolver {
   private final @NotNull Lazy<Set<IamRole>> predefinedRoles;
 
-  public IamRoleValidator(
+  public IamRoleResolver(
     @NotNull IamClient iamClient
   ) {
     //
@@ -48,7 +48,10 @@ public class IamRoleValidator {
       () -> new HashSet<>(iamClient.listPredefinedRoles()));
   }
 
-  public boolean isValidRole(@NotNull IamRole role) {
+  /**
+   * Check if a given role exists.
+   */
+  public boolean exists(@NotNull IamRole role) {
     if (role.isPredefined()) {
       return this.predefinedRoles
         .get()
