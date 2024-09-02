@@ -220,42 +220,22 @@ public class PolicyDocument {
   /**
    * Warning or error affecting a policy.
    *
-   * @param error indicates if this is a fatal error
+   * @param severe indicates if this is a fatal error
    * @param scope scope in which the issue was encountered
    * @param code unique code for the issue
    * @param details textual description
    */
-  public record Issue(
-    boolean error,
+  record Issue(
+    boolean severe,
     @Nullable String scope,
     @NotNull Code code,
-    @NotNull String details) {
-
-    public enum Code {
-      FILE_INVALID,
-      FILE_INVALID_SYNTAX,
-      FILE_INVALID_VERSION,
-      FILE_UNKNOWN_PROPERTY,
-      ENVIRONMENT_MISSING,
-      ENVIRONMENT_INVALID,
-      SYSTEM_INVALID,
-      GROUP_INVALID,
-      ACL_INVALID_PRINCIPAL,
-      ACL_INVALID_PERMISSION,
-      CONSTRAINT_INVALID_VARIABLE_DECLARATION,
-      CONSTRAINT_INVALID_TYPE,
-      CONSTRAINT_INVALID_EXPIRY,
-      CONSTRAINT_INVALID_EXPRESSION,
-      PRIVILEGE_INVALID_RESOURCE_ID,
-      PRIVILEGE_DUPLICATE_RESOURCE_ID,
-      PRIVILEGE_INVALID_ROLE,
-    }
+    @NotNull String details) implements PolicyIssue {
 
     @Override
-    public String toString() {
+    public @NotNull String toString() {
       return String.format(
         "%s %s: %s",
-        this.error ? "ERROR" : "WARNING",
+        this.severe ? "ERROR" : "WARNING",
         this.code,
         this.details);
     }
@@ -277,7 +257,7 @@ public class PolicyDocument {
     }
 
     boolean containsErrors() {
-      return this.issues.stream().anyMatch(i -> i.error());
+      return this.issues.stream().anyMatch(i -> i.severe);
     }
 
     private void error(
@@ -314,18 +294,18 @@ public class PolicyDocument {
   }
 
   public static class SyntaxException extends Exception {
-    private final @NotNull List<PolicyDocument.Issue> issues;
+    private final @NotNull List<PolicyIssue> issues;
 
-    public @NotNull List<PolicyDocument.Issue> issues() {
+    public @NotNull List<PolicyIssue> issues() {
       return this.issues;
     }
 
     SyntaxException(
       @NotNull String message,
-      @NotNull List<PolicyDocument.Issue> issues
+      @NotNull List<? extends PolicyIssue> issues
     ) {
       super(message);
-      this.issues = issues;
+      this.issues = List.copyOf(issues);
     }
 
     @Override
@@ -410,7 +390,7 @@ public class PolicyDocument {
     ) {
       return new EnvironmentElement(
         policy.name(),
-        policy.description(),
+        Strings.nullToEmpty(policy.description()),
         policy.accessControlList()
           .map(acl -> acl
             .entries()
@@ -491,7 +471,7 @@ public class PolicyDocument {
     static SystemElement toYaml(@NotNull SystemPolicy policy) {
       return new SystemElement(
         policy.name(),
-        policy.description(),
+        Strings.nullToEmpty(policy.description()),
         policy.accessControlList()
           .map(acl -> acl
             .entries()
@@ -616,7 +596,7 @@ public class PolicyDocument {
           try {
             return new JitGroupPolicy(
               this.name,
-              this.description,
+              Strings.nullToEmpty(this.description),
               new AccessControlList(aces.stream().map(Optional::get).toList()),
               constraints.get(),
               roleBindings

@@ -79,7 +79,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString("  "));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
       e.issues().get(0).code());
@@ -90,7 +90,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString("}"));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_SYNTAX,
       e.issues().get(0).code());
@@ -103,7 +103,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
       e.issues().get(0).code());
@@ -116,7 +116,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
       e.issues().get(0).code());
@@ -129,7 +129,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
       e.issues().get(0).code());
@@ -145,7 +145,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_MISSING,
       e.issues().get(0).code());
@@ -161,7 +161,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_INVALID,
       e.issues().get(0).code());
@@ -179,7 +179,7 @@ public class TestPolicyDocument {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
       () -> PolicyDocument.fromString(yaml));
-    assertTrue(e.issues().get(0).error());
+    assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.SYSTEM_INVALID,
       e.issues().get(0).code());
