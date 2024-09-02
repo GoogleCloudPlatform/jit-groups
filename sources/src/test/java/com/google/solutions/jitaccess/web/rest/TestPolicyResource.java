@@ -24,15 +24,18 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.catalog.validation.IamRoleValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 
 import static io.smallrye.common.constraint.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 public class TestPolicyResource {
   //---------------------------------------------------------------------------
@@ -73,7 +76,38 @@ public class TestPolicyResource {
   }
 
   @Test
-  public void lint_whenPolicyValid() {
+  public void lint_whenPolicyContainsInvalidRoles() {
+    var resource = new PolicyResource();
+    resource.roleValidator = Mockito.mock(IamRoleValidator.class);
+    when(resource.roleValidator.isValidRole(any())).thenReturn(false);
+
+    var result = resource.lint(
+      "schemaVersion: 1\n" +
+        "environment:\n" +
+        "  name: \"environment\"\n" +
+        "  systems:\n" +
+        "  - name: \"system-1\"\n" +
+        "    groups:\n" +
+        "    - name: \"group-1\"\n" +
+        "      privileges:\n" +
+        "        iam:\n" +
+        "        - resource: \"projects/project-1\"\n" +
+        "          role: \"roles/compute.invalid-1\"\n" +
+        "        - resource: \"projects/project-1\"\n" +
+        "          role: \"roles/compute.invalid-2\"");
+
+    assertFalse(result.successful());
+    assertEquals(2, result.issues().size());
+
+    assertEquals("group-1", result.issues().get(0).scope());
+    assertEquals("PRIVILEGE_INVALID_ROLE", result.issues().get(0).code());
+
+    assertEquals("group-1", result.issues().get(1).scope());
+    assertEquals("PRIVILEGE_INVALID_ROLE", result.issues().get(1).code());
+  }
+
+  @Test
+  public void lint() {
     var resource = new PolicyResource();
 
     var policy = new EnvironmentPolicy(
