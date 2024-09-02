@@ -34,40 +34,40 @@ public class ITestAssetInventoryClient {
   // -------------------------------------------------------------------------
 
   @Test
-  public void whenUnauthenticated_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new AssetInventoryClient(
+  public void getEffectiveIamPolicies_whenUnauthenticated() {
+    var client = new AssetInventoryClient(
       ITestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> adapter.getEffectiveIamPolicies(
+      () -> client.getEffectiveIamPolicies(
         "folders/0",
         "projects/" + SAMPLE_PROJECT));
   }
 
   @Test
-  public void whenCallerLacksPermission_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new AssetInventoryClient(
+  public void getEffectiveIamPolicies_whenCallerLacksPermission() {
+    var client = new AssetInventoryClient(
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.getEffectiveIamPolicies(
+      () -> client.getEffectiveIamPolicies(
         "folders/0",
         "projects/" + SAMPLE_PROJECT));
   }
 
   @Test
-  public void whenProjectDoesNotExist_ThenGetEffectiveIamPoliciesThrowsException() {
-    var adapter = new AssetInventoryClient(
+  public void getEffectiveIamPolicies_whenProjectDoesNotExist() {
+    var client = new AssetInventoryClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
-      () -> adapter.getEffectiveIamPolicies(
+      () -> client.getEffectiveIamPolicies(
         "projects/" + ITestEnvironment.PROJECT_ID,
         "projects/0"));
   }

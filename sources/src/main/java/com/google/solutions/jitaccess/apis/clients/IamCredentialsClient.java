@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 
 /**
- * Adapter for IAM Credentials API
+ * Client for IAM Credentials API.
  */
 @Singleton
 public class IamCredentialsClient {

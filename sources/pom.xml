@@ -63,6 +63,12 @@
       <artifactId>google-auth-library-oauth2-http</artifactId>
       <version>1.24.1</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-iam</artifactId>
+      <version>v1-rev20240725-2.0.0</version>
+    </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudresourcemanager</artifactId>

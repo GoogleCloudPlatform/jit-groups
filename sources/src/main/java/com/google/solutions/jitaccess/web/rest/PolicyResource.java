@@ -22,12 +22,17 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.catalog.validation.IamRoleValidator;
+import com.google.solutions.jitaccess.util.Cast;
 import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import jakarta.enterprise.context.Dependent;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.jetbrains.annotations.NotNull;
@@ -35,12 +40,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
 @LogRequest
 public class PolicyResource {
+  @Inject
+  IamRoleValidator roleValidator;
+
   /**
    * Validate policy document
    */
@@ -55,12 +64,17 @@ public class PolicyResource {
       !MoreStrings.isNullOrBlank(source),
       "Source must not be empty");
 
+    PolicyDocument document;
+
+    //
+    // 1. Parse and valiate document structure.
+    //
     try {
       //
       // NB. It's possible that the user is validating that doesn't
       //     explicitly specify a name (because it's implied).
       //
-      PolicyDocument.fromString(
+      document = PolicyDocument.fromString(
         source,
         new Policy.Metadata(
           "user-provided",
@@ -70,6 +84,26 @@ public class PolicyResource {
     }
     catch (PolicyDocument.SyntaxException e) {
       return LintingResultInfo.create(e);
+    }
+
+    //
+    // 2. Validate roles.
+    //
+    var roleIssues = document.policy()
+      .systems()
+      .stream()
+      .flatMap(s -> s.groups().stream())
+      .flatMap(grp -> grp
+        .privileges()
+        .stream()
+        .flatMap(p -> Cast.tryCast(p, IamRoleBinding.class).stream())
+        .map(b -> b.role())
+        .filter(r -> !this.roleValidator.isValidRole(r))
+        .map(r -> IssueInfo.fromInvalidRole(grp.name(), r)))
+      .toList();
+
+    if (!roleIssues.isEmpty()) {
+      return new LintingResultInfo(false, roleIssues);
     }
 
     return LintingResultInfo.SUCCESS;
@@ -107,6 +141,17 @@ public class PolicyResource {
         issue.scope(),
         issue.code().toString(),
         issue.details());
+    }
+
+    static IssueInfo fromInvalidRole(
+      @Nullable String scope,
+      @NotNull IamRole role
+    ) {
+      return new IssueInfo(
+        true,
+        scope,
+        PolicyDocument.Issue.Code.PRIVILEGE_INVALID_ROLE.toString(),
+        String.format("'%s' is not a valid role", role));
     }
   }
 }

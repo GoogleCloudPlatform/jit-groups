@@ -87,7 +87,7 @@ public class AssetInventoryClient {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(
-            String.format("Denied access to scope '%s'", scope), e);
+            String.format("Access to scope '%s' is denied", scope), e);
         case 404:
           throw new ResourceNotFoundException(
             String.format("The resource '%s' does not exist", resourceId), e);

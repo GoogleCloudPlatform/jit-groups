@@ -354,6 +354,12 @@ public class Application {
 
   @Produces
   @Singleton
+  public IamClient.Options produceIamClientOptions() {
+    return new IamClient.Options(isDebugModeEnabled() ? 500 : Integer.MAX_VALUE);
+  }
+
+  @Produces
+  @Singleton
   public UserResource.Options produceUserResourceOptions() {
     return new UserResource.Options(isDebugModeEnabled());
   }
