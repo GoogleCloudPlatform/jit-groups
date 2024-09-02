@@ -93,14 +93,14 @@ The following options let you configure compatibility with JIT Access 1.x. The o
 `classic` environment.
 
 
-| Name                       | Terraform attribute | Description                      | Required  | Default          | Available since  |
-|----------------------------|---------------------|----------------------------------|-----------|------------------|------------------|
-| `RESOURCE_SCOPE`           | `resource_scope`    | [Details](configuration-options) | No        | -                | 2.0              |
-| `RESOURCE_CATALOG`         | -                   | [Details](configuration-options) | No        | `AssetInventory` | 2.0              |
-| `ACTIVATION_TIMEOUT`       | -                   | [Details](configuration-options) | No        | -                | 2.0              |
-| `JUSTIFICATION_HINT`       | -                   | [Details](configuration-options) | No        | -                | 2.0              |
-| `JUSTIFICATION_PATTERN`    | -                   | [Details](configuration-options) | No        | -                | 2.0              |
-| `AVAILABLE_PROJECTS_QUERY` | -                   | [Details](configuration-options) | No        | -                | 2.0              |
+| Name                       | Terraform attribute | Description                         | Required  | Default          | Available since  |
+|----------------------------|---------------------|-------------------------------------|-----------|------------------|------------------|
+| `RESOURCE_SCOPE`           | `resource_scope`    | [Details](configuration-options.md) | No        | -                | 2.0              |
+| `RESOURCE_CATALOG`         | -                   | [Details](configuration-options.md) | No        | `AssetInventory` | 2.0              |
+| `ACTIVATION_TIMEOUT`       | -                   | [Details](configuration-options.md) | No        | -                | 2.0              |
+| `JUSTIFICATION_HINT`       | -                   | [Details](configuration-options.md) | No        | -                | 2.0              |
+| `JUSTIFICATION_PATTERN`    | -                   | [Details](configuration-options.md) | No        | -                | 2.0              |
+| `AVAILABLE_PROJECTS_QUERY` | -                   | [Details](configuration-options.md) | No        | -                | 2.0              |
 
 The following options from JIT Access 1.x are not supported in JIT Groups:
 
