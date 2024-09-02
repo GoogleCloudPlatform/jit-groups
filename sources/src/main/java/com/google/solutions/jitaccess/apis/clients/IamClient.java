@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.services.iam.v1.model.ListRolesResponse;
 import com.google.api.services.iam.v1.model.QueryGrantableRolesRequest;
 import com.google.api.services.iam.v1.model.QueryGrantableRolesResponse;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -66,7 +67,44 @@ public class IamClient {
     this.credentials = credentials;
   }
 
-  public Collection<IamRole> listGrantableRoles(
+  public @NotNull Collection<IamRole> listPredefinedRoles(
+  ) throws AccessException, IOException {
+    try {
+      var request = createClient()
+        .roles()
+        .list()
+        .setPageSize(Math.min(1000, this.options.defaultPageSize()));
+
+      var roles = new LinkedList<IamRole>();
+
+      ListRolesResponse response;
+      do {
+        response = request.execute();
+
+        Coalesce
+          .emptyIfNull(response.getRoles())
+          .stream()
+          .forEach(r -> roles.add(new IamRole(r.getName())));
+
+        request.setPageToken(response.getNextPageToken());
+      } while (response.getNextPageToken() != null);
+
+      return roles;
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        case 403:
+          throw new AccessDeniedException(
+            String.format("Access to IAM API is denied: %s", e.getMessage()), e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
+    }
+  }
+
+  public @NotNull Collection<IamRole> listGrantableRoles(
     @NotNull ResourceId resourceId
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(resourceId, "resourceId");
@@ -75,13 +113,11 @@ public class IamClient {
       "Resource must be a CRM resource");
 
     try {
-      var client = createClient();
-
       var requestBody = new QueryGrantableRolesRequest()
         .setFullResourceName("//cloudresourcemanager.googleapis.com/" + resourceId.path())
         .setView("BASIC")
-        .setPageSize(this.options.defaultPageSize());
-      var request = client
+        .setPageSize(Math.min(2000, this.options.defaultPageSize()));
+      var request = createClient()
         .roles()
         .queryGrantableRoles(requestBody);
 
@@ -117,5 +153,8 @@ public class IamClient {
   public record Options(
     int defaultPageSize
   ) {
+    public Options {
+      Preconditions.checkArgument(defaultPageSize > 0, "Page size must be positive");
+    }
   }
 }

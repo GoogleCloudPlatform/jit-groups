@@ -43,7 +43,11 @@ public record IamRole(
   }
 
   /**
-   * Parse a role in the format roles/name.
+   * Parse a role that uses one of the following formats:
+   *
+   * - roles/... (predefined)
+   * - projects/... (custom project role)
+   * - organizations/... (custom organization role)
    *
    * @return empty if the input string is malformed.
    */
@@ -71,5 +75,26 @@ public record IamRole(
   @Override
   public String toString() {
     return this.name;
+  }
+
+  /**
+   * Check if this is a predefined role.
+   */
+  public boolean isPredefined() {
+    return this.name.startsWith(PREDEFINED_ROLE_PREFIX);
+  }
+
+  /**
+   * Check if this is a custom project role.
+   */
+  public boolean isCustomProjectRole() {
+    return this.name.startsWith(CUSTOM_PROJECT_ROLE_PREFIX);
+  }
+
+  /**
+   * Check if this is a custom organization role.
+   */
+  public boolean isCustomOrganizationRole() {
+    return this.name.startsWith(CUSTOM_ORG_ROLE_PREFIX);
   }
 }

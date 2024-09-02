@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
-import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +71,18 @@ public class ITestIamClient {
   }
 
   @Test
+  public void listGrantableRoles_whenPageSizeTooBig() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(Integer.MAX_VALUE),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var roles = client.listGrantableRoles(ITestEnvironment.PROJECT_ID);
+
+    assertTrue(roles.size() > 100);
+  }
+
+  @Test
   public void listGrantableRoles() throws Exception {
     var client = new IamClient(
       new IamClient.Options(100),
@@ -80,5 +92,34 @@ public class ITestIamClient {
     var roles = client.listGrantableRoles(ITestEnvironment.PROJECT_ID);
 
     assertTrue(roles.size() > 100);
+  }
+
+  // -------------------------------------------------------------------------
+  // listPredefinedRoles.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void listPredefinedRoles_whenPageSizeTooBig() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(Integer.MAX_VALUE),
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var roles = client.listPredefinedRoles();
+
+    assertTrue(roles.size() > 100);
+  }
+
+  @Test
+  public void listPredefinedRoles() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(100),
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var roles = client.listPredefinedRoles();
+
+    assertTrue(roles.size() > 100);
+    assertTrue(roles.stream().allMatch(IamRole::isPredefined));
   }
 }

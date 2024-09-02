@@ -79,4 +79,43 @@ public class TestIamRole {
     assertTrue(role.isPresent());
     assertEquals("organizations/123/roles/CustomRole", role.get().name());
   }
+
+  // -------------------------------------------------------------------------
+  // isPredefinedRole.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void isPredefinedRole() {
+    var role = new IamRole("roles/browser");
+
+    assertTrue(role.isPredefined());
+    assertFalse(role.isCustomProjectRole());
+    assertFalse(role.isCustomOrganizationRole());
+  }
+
+  // -------------------------------------------------------------------------
+  // isCustomProjectRole.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void isCustomProjectRole() {
+    var role = new IamRole("projects/my-project/roles/my-role");
+
+    assertFalse(role.isPredefined());
+    assertTrue(role.isCustomProjectRole());
+    assertFalse(role.isCustomOrganizationRole());
+  }
+
+  // -------------------------------------------------------------------------
+  // isCustomOrganizationRole.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void isCustomOrganizationRole() {
+    var role = new IamRole("organizations/123/roles/my-role");
+
+    assertFalse(role.isPredefined());
+    assertFalse(role.isCustomProjectRole());
+    assertTrue(role.isCustomOrganizationRole());
+  }
 }
