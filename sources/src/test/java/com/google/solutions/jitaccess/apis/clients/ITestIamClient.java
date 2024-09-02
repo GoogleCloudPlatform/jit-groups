@@ -25,8 +25,7 @@ import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestIamClient {
 
@@ -121,5 +120,54 @@ public class ITestIamClient {
 
     assertTrue(roles.size() > 100);
     assertTrue(roles.stream().allMatch(IamRole::isPredefined));
+  }
+  
+  // -------------------------------------------------------------------------
+  // lintIamCondition.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void lintIamCondition_whenUnauthenticatedAndResourceDoesNotExist() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(10),
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var issues = client.lintIamCondition(new ProjectId("0"), "true");
+    assertTrue(issues.isEmpty());
+  }
+
+  @Test
+  public void lintIamCondition_whenExpressionDoesNotCompile() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(10),
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var issues = client.lintIamCondition(
+      ITestEnvironment.PROJECT_ID,
+      "(;)");
+
+    assertFalse(issues.isEmpty());
+    assertTrue(issues.stream()
+      .allMatch(i -> i.getValidationUnitName()
+      .equals("LintValidationUnits/ConditionCompileCheck")));
+  }
+
+  @Test
+  public void lintIamCondition_whenExpressionUsesUnknownResourceType() throws Exception {
+    var client = new IamClient(
+      new IamClient.Options(10),
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var issues = client.lintIamCondition(
+      ITestEnvironment.PROJECT_ID,
+      "resource.type == 'unknown'");
+
+    assertFalse(issues.isEmpty());
+    assertTrue(issues.stream()
+      .allMatch(i -> i.getValidationUnitName()
+        .equals("LintValidationUnits/ResourceTypeLiteralCheck")));
   }
 }

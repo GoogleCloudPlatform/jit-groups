@@ -22,13 +22,12 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.services.iam.v1.model.ListRolesResponse;
-import com.google.api.services.iam.v1.model.QueryGrantableRolesRequest;
-import com.google.api.services.iam.v1.model.QueryGrantableRolesResponse;
+import com.google.api.services.iam.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.api.services.iam.v1.Iam;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import jakarta.inject.Singleton;
@@ -69,6 +68,9 @@ public class IamClient {
     this.credentials = credentials;
   }
 
+  /**
+   * List all predefined roles.
+   */
   public @NotNull Collection<IamRole> listPredefinedRoles(
   ) throws AccessException, IOException {
     try {
@@ -106,6 +108,9 @@ public class IamClient {
     }
   }
 
+  /**
+   * List all roles (predefined and custom) that an be granted on a given resource.
+   */
   public @NotNull Collection<IamRole> listGrantableRoles(
     @NotNull ResourceId resourceId
   ) throws AccessException, IOException {
@@ -150,6 +155,38 @@ public class IamClient {
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
     }
+  }
+
+  /**
+   * Lint policies and return any errors or warnings encountered.
+   *
+   * @return List of issues, or empty if the expression is ok.
+   */
+  public Collection<LintResult> lintIamCondition(
+    @NotNull ResourceId resourceId,
+    @NotNull String expression
+  ) throws IOException {
+    //
+    // NB. The call doesn't require authorization, and the resource
+    // doesn't need to exist either.
+    //
+    var response = createClient()
+      .iamPolicies()
+      .lintPolicy(new LintPolicyRequest()
+        .setFullResourceName("//cloudresourcemanager.googleapis.com/" + resourceId.path())
+        .setCondition(new Expr()
+          .setExpression(expression)))
+      .execute();
+
+    //
+    // The result contains an item for each check, even for those that
+    // succeeded, so we must filter out NOTICE-level items.
+    //
+    return Coalesce
+      .emptyIfNull(response.getLintResults())
+      .stream()
+      .filter(r -> !"NOTICE".equals(r.getSeverity()))
+      .toList();
   }
 
   public record Options(
