@@ -22,11 +22,10 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.auth.IamRoleResolver;
+import com.google.solutions.jitaccess.apis.IamRoleResolver;
 import com.google.solutions.jitaccess.catalog.policy.PolicyIssue;
 import com.google.solutions.jitaccess.util.Cast;
 import com.google.solutions.jitaccess.util.MoreStrings;
@@ -39,6 +38,7 @@ import jakarta.ws.rs.core.MediaType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
@@ -87,7 +87,7 @@ public class PolicyResource {
     }
 
     //
-    // 2. Validate roles.
+    // 2. Validate role bindings.
     //
     var roleIssues = document.policy()
       .systems()
@@ -97,9 +97,17 @@ public class PolicyResource {
         .privileges()
         .stream()
         .flatMap(p -> Cast.tryCast(p, IamRoleBinding.class).stream())
-        .map(b -> b.role())
-        .filter(r -> !this.roleResolver.exists(r))
-        .map(r -> IssueInfo.fromInvalidRole(grp.name(), r)))
+        .flatMap(b -> {
+          try {
+            return this.roleResolver.lintRoleBinding(b.resource(), b.role(), b.condition()).stream();
+          }
+          catch (IOException ignored) {
+            return List
+              .of(new IamRoleResolver.LintingIssue("Linting role binding failed"))
+              .stream();
+          }
+        })
+        .map(iss -> IssueInfo.fromLintingIssue(grp.name(), iss)))
       .toList();
 
     if (!roleIssues.isEmpty()) {
@@ -124,7 +132,7 @@ public class PolicyResource {
         false,
         e.issues()
           .stream()
-          .map(IssueInfo::fromIssue)
+          .map(IssueInfo::fromPolicyIssue)
           .toList());
     }
   }
@@ -135,7 +143,7 @@ public class PolicyResource {
     @NotNull String code,
     @NotNull String details
   ) {
-    static IssueInfo fromIssue(@NotNull PolicyIssue issue) {
+    static IssueInfo fromPolicyIssue(@NotNull PolicyIssue issue) {
       return new IssueInfo(
         issue.severe(),
         issue.scope(),
@@ -143,15 +151,15 @@ public class PolicyResource {
         issue.details());
     }
 
-    static IssueInfo fromInvalidRole(
+    static IssueInfo fromLintingIssue(
       @Nullable String scope,
-      @NotNull IamRole role
+      @NotNull IamRoleResolver.LintingIssue issue
     ) {
       return new IssueInfo(
         true,
         scope,
         PolicyIssue.Code.PRIVILEGE_INVALID_ROLE.toString(),
-        String.format("'%s' is not a valid role", role));
+        issue.details());
     }
   }
 }
