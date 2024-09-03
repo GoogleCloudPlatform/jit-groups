@@ -14,7 +14,6 @@ mdc.dataTable.MDCDataTable.prototype.clearRows = function() {
 };
 
 mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox=true) {
-    console.assert(id);
     console.assert(columns);
 
     const tr = $(`<tr data-row-id="${id}" class="mdc-data-table__row"></tr>`);
