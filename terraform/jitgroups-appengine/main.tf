@@ -115,7 +115,7 @@ variable "smtp_host" {
 
 terraform {
     provider_meta "google" {
-        module_name = "cloud-solutions/jitgroups–appengine-deploy-v2.0"
+        module_name = "cloud-solutions/jitgroups-appengine-deploy-v2.0"
     }
 }
 
