@@ -31,8 +31,9 @@ import java.util.List;
 import static io.smallrye.common.constraint.Assert.assertFalse;
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TestIamRoleResolver {
   private static final ProjectId SAMPLE_PROJECT = new ProjectId("project-1");
@@ -81,6 +82,20 @@ public class TestIamRoleResolver {
   // -------------------------------------------------------------------------
   // lintRoleBinding.
   // -------------------------------------------------------------------------
+
+  @Test
+  public void lintRoleBinding_whenConditionEmpty_thenSkipsLinting() throws Exception {
+    var role = new IamRole("roles/owner");
+    var iamClient = Mockito.mock(IamClient.class);
+    when(iamClient.listPredefinedRoles())
+      .thenReturn(List.of(role));
+
+    var resolver = new IamRoleResolver(iamClient);
+    resolver.lintRoleBinding(SAMPLE_PROJECT, role, null);
+    resolver.lintRoleBinding(SAMPLE_PROJECT, role, " ");
+
+    verify(iamClient, times(0)).lintIamCondition(any(), any());
+  }
 
   @Test
   public void lintRoleBinding_whenRoleUnknownAndConditionInvalid() throws Exception {

@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
@@ -30,11 +32,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 
 import static io.smallrye.common.constraint.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestPolicyResource {
@@ -76,10 +81,45 @@ public class TestPolicyResource {
   }
 
   @Test
-  public void lint_whenPolicyContainsInvalidRoles() {
+  public void lint_whenLintingFails() throws Exception {
     var resource = new PolicyResource();
     resource.roleResolver = Mockito.mock(IamRoleResolver.class);
-    when(resource.roleResolver.exists(any())).thenReturn(false);
+    when(resource.roleResolver.lintRoleBinding(
+      eq(new ProjectId("project-1")),
+      eq(new IamRole("roles/compute.valid")),
+      any()))
+      .thenThrow(new IOException("mock"));
+
+    var result = resource.lint(
+      "schemaVersion: 1\n" +
+        "environment:\n" +
+        "  name: \"environment\"\n" +
+        "  systems:\n" +
+        "  - name: \"system-1\"\n" +
+        "    groups:\n" +
+        "    - name: \"group-1\"\n" +
+        "      privileges:\n" +
+        "        iam:\n" +
+        "        - resource: \"projects/project-1\"\n" +
+        "          role: \"roles/compute.valid\"");
+
+    assertFalse(result.successful());
+    assertEquals(1, result.issues().size());
+
+    assertEquals("group-1", result.issues().get(0).scope());
+    assertEquals("PRIVILEGE_INVALID_ROLE", result.issues().get(0).code());
+    assertEquals("Linting role binding failed", result.issues().get(0).details());
+  }
+
+  @Test
+  public void lint_whenPolicyContainsInvalidRoleBindings() throws Exception {
+    var resource = new PolicyResource();
+    resource.roleResolver = Mockito.mock(IamRoleResolver.class);
+    when(resource.roleResolver.lintRoleBinding(
+      eq(new ProjectId("project-1")),
+      eq(new IamRole("roles/compute.invalid-1")),
+      any()))
+      .thenReturn(List.of(new IamRoleResolver.LintingIssue("invalid")));
 
     var result = resource.lint(
       "schemaVersion: 1\n" +
@@ -94,16 +134,14 @@ public class TestPolicyResource {
         "        - resource: \"projects/project-1\"\n" +
         "          role: \"roles/compute.invalid-1\"\n" +
         "        - resource: \"projects/project-1\"\n" +
-        "          role: \"roles/compute.invalid-2\"");
+        "          role: \"roles/compute.valid\"");
 
     assertFalse(result.successful());
-    assertEquals(2, result.issues().size());
+    assertEquals(1, result.issues().size());
 
     assertEquals("group-1", result.issues().get(0).scope());
     assertEquals("PRIVILEGE_INVALID_ROLE", result.issues().get(0).code());
-
-    assertEquals("group-1", result.issues().get(1).scope());
-    assertEquals("PRIVILEGE_INVALID_ROLE", result.issues().get(1).code());
+    assertEquals("invalid", result.issues().get(0).details());
   }
 
   @Test

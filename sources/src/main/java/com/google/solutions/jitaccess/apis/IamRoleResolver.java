@@ -21,8 +21,10 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
 import com.google.solutions.jitaccess.util.Lazy;
+import com.google.solutions.jitaccess.util.MoreStrings;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -86,11 +88,16 @@ public class IamRoleResolver {
       issues.add(new LintingIssue(String.format("The role '%s' does not exist", role)));
     }
 
-    this.iamClient
-      .lintIamCondition(resourceId, condition)
-      .stream()
-      .map(r -> new LintingIssue(r.getDebugMessage()))
-      .forEach(issues::add);
+    if (!MoreStrings.isNullOrBlank(condition)) {
+      this.iamClient
+        .lintIamCondition(resourceId, condition)
+        .stream()
+        .filter(r -> !Strings.isNullOrEmpty(r.getDebugMessage()))
+        .map(r -> new LintingIssue(r
+          .getDebugMessage()
+          .replace("ERROR", "Invalid condition")))
+        .forEach(issues::add);
+    }
 
     return issues;
   }
