@@ -24,18 +24,33 @@ package com.google.solutions.jitaccess.web;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.UserType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 class IapAssertion {
-  private final JsonWebToken.Payload payload;
+  private final @NotNull JsonWebToken.Payload payload;
+  private final @NotNull UserId userId;
 
-  public IapAssertion(JsonWebToken.Payload payload) {
+  public IapAssertion(@NotNull JsonWebToken.Payload payload) {
     this.payload = payload;
+
+    //
+    // Extract email address, which could identify a service account
+    // or a user account.
+    //
+    var email = this.payload.get("email").toString().toLowerCase();
+    this.userId = Optional.<UserId>empty()
+      .or(() -> ServiceAccountId.parse("serviceAccount:" + email)) // TODO: service agents
+      .orElse(new EndUserId(email));
   }
 
   public IapAssertion(@NotNull JsonWebSignature payload) {
@@ -43,10 +58,42 @@ class IapAssertion {
   }
 
   /**
-   * Extract user information
+   * Get email of the authenticated user.
    */
   public @NotNull EndUserId email() {
-    return new EndUserId(this.payload.get("email").toString());
+    return (EndUserId) this.userId; // TODO: Change type to allow service account -- UserPrincipalId?
+  }
+
+
+  /**
+   * Get email the hosted domain of the authenticated user, if present.
+   */
+  public @NotNull Optional<String> hostedDomain() {
+    return Optional
+      .ofNullable((String)this.payload.get("hd"))
+      .map(String::toLowerCase);
+  }
+
+  /**
+   * Get the user account type of the current user.
+   */
+  public UserType userType() {
+    if (this.userId instanceof ServiceAccountId) {
+      //
+      // NB. JWT assertions for service accounts never contain a 'hd' claim,
+      // even if they belong to an organization-owned project.
+      //
+      return UserType.SERVICE_ACCOUNT;
+    }
+    else {
+      //
+      // For users, the presence of the 'hd' claim is a reliable indicator
+      // of a managed user account.
+      //
+      return hostedDomain().isPresent()
+        ? UserType.MANAGED
+        : UserType.CONSUMER;
+    }
   }
 
   /**
