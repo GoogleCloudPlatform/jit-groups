@@ -222,13 +222,13 @@ public class Application {
           applicationCredentials.refresh();
           applicationPrincipal = impersonateServiceAccount.get();
         }
-        else if (defaultCredentials instanceof ServiceAccountCredentials) {
+        else if (defaultCredentials instanceof ServiceAccountCredentials saCredentials) {
           //
           // Use ADC as-is.
           //
           applicationCredentials = defaultCredentials;
           applicationPrincipal = ServiceAccountId
-            .parse(((ServiceAccountCredentials) applicationCredentials).getServiceAccountUser()) // TODO: add helper
+            .parse(saCredentials.getServiceAccountUser())
             .get();
         }
         else {
