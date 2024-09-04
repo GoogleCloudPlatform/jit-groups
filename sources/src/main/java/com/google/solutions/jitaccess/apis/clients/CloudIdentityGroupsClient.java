@@ -769,7 +769,9 @@ public class CloudIdentityGroupsClient {
       String.format(
         "parent=='customers/%s' && (%s)",
         this.options.customerId,
-        String.join("||", groupIds.stream().map(g -> String.format("group_key=='%s'", g.email)).toList())),
+        String.join("||", groupIds.stream()
+          .map(g -> String.format("group_key=='%s'", g.email))
+          .toList())),
       fullDetails);
   }
 

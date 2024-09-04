@@ -621,6 +621,10 @@ public class ITestCloudIdentityGroupsClient {
       () -> client.searchGroups("invalid", false));
   }
 
+  //---------------------------------------------------------------------
+  // searchGroupsByPrefix.
+  //---------------------------------------------------------------------
+
   @Test
   public void searchGroupsByPrefix() throws Exception {
     var client = new CloudIdentityGroupsClient(
@@ -648,12 +652,42 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void searchGroupsById_whenSomeGroupsDoNotExist() throws Exception {
+  public void searchGroupsByPrefix_whenPrefixContainsQuote() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
         ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> client.searchGroupsByPrefix("test'", false));
+  }
+
+  //---------------------------------------------------------------------
+  // searchGroupsById.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void searchGroupsById_whenEmailContainsQuote() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> client.searchGroupsById(Set.of(new GroupId("test'@example.com")), false));
+  }
+
+  @Test
+  public void searchGroupsById_whenSomeGroupsDoNotExist() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+        HttpTransport.Options.DEFAULT);
 
     client.createGroup(
       TEST_GROUP_EMAIL,
