@@ -85,7 +85,7 @@ public class TestIapAssertion {
       .setSubject("subject-1")
       .set("email", "user@example.com"));
 
-    assertEquals(Directory.CONSUMER.hostedDomain(), assertion.directory());
+    assertEquals(Directory.CONSUMER, assertion.directory());
   }
 
   @Test
