@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -151,7 +151,7 @@ public class TestStructuredLogger {
       var requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
       requestContext.initialize("GET", "/", "trace-1");
       requestContext.authenticate(
-        new UserId("id"),
+        new EndUserId("id"),
         new IapDevice("device-id", List.of()));
       var logger = new StructuredLogger.RequestContextLogger(buffer, requestContext);
 
@@ -172,7 +172,7 @@ public class TestStructuredLogger {
       var requestContext = new RequestContext(Mockito.mock(SubjectResolver.class));
       requestContext.initialize("GET", "/", "trace-1");
       requestContext.authenticate(
-        new UserId("id"),
+        new EndUserId("id"),
         new IapDevice("device-id", List.of("level-1", "level-2")));
       var logger = new StructuredLogger.RequestContextLogger(buffer, requestContext);
 

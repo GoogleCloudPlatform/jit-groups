@@ -41,9 +41,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class TestJitGroupContext {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
-  private static final UserId SAMPLE_APPROVER_1 = new UserId("approver-1@example.com");
-  private static final UserId SAMPLE_APPROVER_2 = new UserId("approver-2@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
+  private static final EndUserId SAMPLE_APPROVER_1 = new EndUserId("approver-1@example.com");
+  private static final EndUserId SAMPLE_APPROVER_2 = new EndUserId("approver-2@example.com");
   private static final GroupId SAMPLE_APPROVER_GROUP = new GroupId("approvers@example.com");
 
   private static EnvironmentPolicy createEnvironmentPolicy() {
@@ -81,7 +81,7 @@ public class TestJitGroupContext {
   }
 
   private record MockProposal(
-    @NotNull UserId user,
+    @NotNull EndUserId user,
     @NotNull JitGroupId group,
     @NotNull Set<IamPrincipalId> recipients,
     @NotNull Instant expiry,

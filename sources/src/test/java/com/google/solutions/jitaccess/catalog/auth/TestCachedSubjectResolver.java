@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 
 public class TestCachedSubjectResolver {
   private final String SAMPLE_DOMAIN = "example.com";
-  private final UserId SAMPLE_USER = new UserId("user@example.com");
+  private final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private final Executor EXECUTOR = command -> command.run();
 
   //---------------------------------------------------------------------------

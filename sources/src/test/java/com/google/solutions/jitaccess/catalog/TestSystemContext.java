@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.catalog;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestSystemContext {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user-1@example.com");
 
   // -------------------------------------------------------------------------
   // groups.

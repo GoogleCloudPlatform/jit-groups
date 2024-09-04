@@ -33,7 +33,7 @@ import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.UserClassId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.util.MoreStrings;
@@ -640,7 +640,7 @@ public class PolicyDocument {
         .map(s -> {
           try {
             return Optional.<PrincipalId>empty()
-              .or(() -> UserId.parse(s))
+              .or(() -> EndUserId.parse(s))
               .or(() -> GroupId.parse(s))
               .or(() -> UserClassId.parse(s))
               .orElse(null);

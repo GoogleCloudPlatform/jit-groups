@@ -29,7 +29,7 @@ import com.google.solutions.jitaccess.catalog.*;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
@@ -50,7 +50,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 public class TestProposalResource {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private static final JitGroupId SAMPLE_JITGROUP_ID =  new JitGroupId("env", "sys", "group-1");
 
   private static Catalog createCatalog(JitGroupPolicy group) {
@@ -61,7 +61,7 @@ public class TestProposalResource {
 
   private static ProposalHandler createProposalHandler(
     JitGroupId group,
-    UserId proposingUser,
+    EndUserId proposingUser,
     Set<IamPrincipalId> recipients
   ) throws IOException, AccessException {
 
@@ -206,7 +206,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     var proposalInfo = resource.get(group.id().environment(), "token");
@@ -350,7 +350,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     assertThrows(
@@ -383,7 +383,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     var input = new MultivaluedHashMap<String, String>();
@@ -419,7 +419,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     var input = new MultivaluedHashMap<String, String>();
@@ -449,7 +449,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     var proposalInfo = resource.post(
@@ -481,7 +481,7 @@ public class TestProposalResource {
     resource.catalog = createCatalog(group);
     resource.proposalHandler = createProposalHandler(
       group.id(),
-      new UserId("other@example.com"),
+      new EndUserId("other@example.com"),
       Set.of(SAMPLE_USER));
 
     assertThrows(

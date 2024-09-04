@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ public interface Proposal {
   /**
    * User that initiated the proposal.
    */
-  @NotNull UserId user();
+  @NotNull EndUserId user();
 
   /**
    * Get group that the user is trying to join.

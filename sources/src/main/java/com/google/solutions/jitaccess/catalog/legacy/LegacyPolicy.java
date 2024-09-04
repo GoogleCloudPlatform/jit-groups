@@ -92,7 +92,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
     return binding.getMembers()
       .stream()
       .flatMap(member -> Optional.<PrincipalId>empty()
-        .or(() -> UserId.parse(member))
+        .or(() -> EndUserId.parse(member))
         .or(() -> GroupId.parse(member))
         .stream())
       .toList();

@@ -31,12 +31,12 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Principal identifier for a user.
+ * Principal identifier for an end user.
  *
  * NB. The ID looks like an email address, but it might not
  *     be a route-able email address.
  */
-public class UserId implements IamPrincipalId {
+public class EndUserId implements IamPrincipalId {
   private static final @NotNull Pattern PATTERN = Pattern.compile("^user:(.+)@(.+)$");
 
   public static final String TYPE = "user";
@@ -44,7 +44,7 @@ public class UserId implements IamPrincipalId {
 
   public final @NotNull String email;
 
-  public UserId(@NotNull String email) {
+  public EndUserId(@NotNull String email) {
     Preconditions.checkNotNull(email, "email");
     Preconditions.checkArgument(!email.isBlank());
 
@@ -62,7 +62,7 @@ public class UserId implements IamPrincipalId {
   /**
    * Parse a user ID that uses the syntax <code>user:email</code>.
    */
-  public static Optional<UserId> parse(@Nullable String s) {
+  public static Optional<EndUserId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
       return Optional.empty();
     }
@@ -72,7 +72,7 @@ public class UserId implements IamPrincipalId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new UserId(matcher.group(1) + "@" + matcher.group(2)));
+      .map(() -> new EndUserId(matcher.group(1) + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------
@@ -89,7 +89,7 @@ public class UserId implements IamPrincipalId {
       return false;
     }
 
-    UserId userId = (UserId) o;
+    EndUserId userId = (EndUserId) o;
     return this.email.equals(userId.email);
   }
 

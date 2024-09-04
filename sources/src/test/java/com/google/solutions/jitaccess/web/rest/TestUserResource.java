@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.web.RequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TestUserResource {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user-1@example.com");
   private static final GroupId SAMPLE_GROUP = new GroupId("group-1@example.com");
 
   private static Subject createSubject() {

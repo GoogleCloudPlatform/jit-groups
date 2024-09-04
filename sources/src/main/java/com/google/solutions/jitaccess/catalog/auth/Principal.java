@@ -39,7 +39,7 @@ public record Principal(
   ) {
   public Principal {
     Preconditions.checkArgument(
-      expiry == null || !id.type().equals(UserId.TYPE),
+      expiry == null || !id.type().equals(EndUserId.TYPE),
       "User principals cannot expire");
   }
 

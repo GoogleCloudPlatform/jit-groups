@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
 import com.google.solutions.jitaccess.catalog.auth.EmailMapping;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.Property;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -45,8 +45,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TestMailProposalHandler {
-  private final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
+  private final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
+  private final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
   private final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
 
   //-------------------------------------------------------------------------

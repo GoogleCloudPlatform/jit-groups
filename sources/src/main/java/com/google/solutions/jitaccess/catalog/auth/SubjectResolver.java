@@ -64,7 +64,7 @@ public class SubjectResolver {
   }
 
   @NotNull Set<Principal> resolveMemberships(
-    @NotNull UserId user,
+    @NotNull EndUserId user,
     @NotNull List<UnresolvedMembership> memberships
   ) {
     assert memberships
@@ -154,7 +154,7 @@ public class SubjectResolver {
    *
    */
   public @NotNull Subject resolve(
-    @NotNull UserId user
+    @NotNull EndUserId user
   ) throws AccessException, IOException {
     //
     // Find the user's direct group memberships. This includes all
@@ -233,7 +233,7 @@ public class SubjectResolver {
 
     return new Subject() {
       @Override
-      public @NotNull UserId user() {
+      public @NotNull EndUserId user() {
         return user;
       }
 

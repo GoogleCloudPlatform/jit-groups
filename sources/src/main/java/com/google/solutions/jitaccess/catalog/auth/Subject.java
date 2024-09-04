@@ -32,7 +32,7 @@ public interface Subject {
   /**
    * @return Primary id.
    */
-  @NotNull UserId user();
+  @NotNull EndUserId user();
 
   /**
    * @return full set of principals, including groups and roles.

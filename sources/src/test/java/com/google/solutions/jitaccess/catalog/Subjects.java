@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 public class Subjects {
 
   public static Subject createWithPrincipals(
-    UserId user,
+    EndUserId user,
     Set<Principal> otherPrincipals
   ) {
     var defaultPrincipals = Stream.of(
@@ -51,7 +51,7 @@ public class Subjects {
   }
 
   public static Subject createWithPrincipalIds(
-    UserId user,
+    EndUserId user,
     Set<PrincipalId> otherPrincipals
   ) {
     return createWithPrincipals(
@@ -62,7 +62,7 @@ public class Subjects {
         .collect(Collectors.toSet()));
   }
 
-  public static Subject create(UserId user) {
+  public static Subject create(EndUserId user) {
     return createWithPrincipals(user, Set.<Principal>of());
   }
 }

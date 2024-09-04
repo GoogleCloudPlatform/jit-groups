@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.catalog.policy;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -34,12 +34,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAccessControlList {
 
-  private static final UserId TEST_USER = new UserId("test-1@example.com");
-  private static final UserId TEST_USER_OTHER = new UserId("test-2@example.com");
+  private static final EndUserId TEST_USER = new EndUserId("test-1@example.com");
+  private static final EndUserId TEST_USER_OTHER = new EndUserId("test-2@example.com");
   private static final GroupId TEST_GROUP_1 = new GroupId("group-1@example.com");
 
   private record TestSubject(
-    UserId user,
+    EndUserId user,
     Set<Principal> principals) implements Subject {
   }
 

@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.gson.Gson;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.SynchronousExecutionContext;
@@ -37,7 +37,7 @@ import java.net.URISyntaxException;
 public class RestDispatcher<TResource> {
   private final Dispatcher dispatcher;
 
-  public RestDispatcher(TResource resource, final UserId userId) {
+  public RestDispatcher(TResource resource, final EndUserId userId) {
     dispatcher = MockDispatcherFactory.createDispatcher();
     dispatcher.getRegistry().addSingletonResource(resource);
 

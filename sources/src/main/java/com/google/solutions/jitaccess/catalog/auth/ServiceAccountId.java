@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Principal identifier for a service account.
+ * Principal identifier for a user-managed service account.
  */
 public class ServiceAccountId implements IamPrincipalId {
   private static final @NotNull Pattern PATTERN =
