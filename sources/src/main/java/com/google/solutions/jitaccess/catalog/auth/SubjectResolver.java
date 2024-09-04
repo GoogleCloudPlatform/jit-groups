@@ -241,7 +241,8 @@ public class SubjectResolver {
    *
    */
   public @NotNull Subject resolve(
-    @NotNull EndUserId user
+    @NotNull EndUserId user,
+    @NotNull Directory directory
   ) throws AccessException, IOException {
     var allPrincipals = lookupPrincipals(user);
     assert allPrincipals.stream().anyMatch(p -> p.id().equals(user));
@@ -250,6 +251,11 @@ public class SubjectResolver {
       @Override
       public @NotNull EndUserId user() {
         return user;
+      }
+
+      @Override
+      public @NotNull Directory directory() {
+        return directory;
       }
 
       @Override

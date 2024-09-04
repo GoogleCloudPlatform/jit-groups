@@ -22,6 +22,11 @@ public class RequestContext {
     }
 
     @Override
+    public @NotNull Directory directory() {
+      return Directory.PROJECT;
+    }
+
+    @Override
     public @NotNull Set<Principal> principals() {
       return Set.of(new Principal(user()));
     }
@@ -57,6 +62,7 @@ public class RequestContext {
    */
   void authenticate(
     @NotNull EndUserId userId,
+    @NotNull Directory directory,
     @NotNull Device device
   ) {
     if (isAuthenticated()) {
@@ -74,6 +80,11 @@ public class RequestContext {
       }
 
       @Override
+      public @NotNull Directory directory() {
+        return directory;
+      }
+
+      @Override
       public @NotNull Set<Principal> principals() {
         //
         // Resolve lazily.
@@ -82,7 +93,9 @@ public class RequestContext {
         {
           if (this.cachedPrincipals == null) {
             try {
-              this.cachedPrincipals = RequestContext.this.subjectResolver.resolve(this.user()).principals();
+              this.cachedPrincipals = RequestContext.this.subjectResolver
+                .resolve(this.user(), this.directory())
+                .principals();
             }
             catch (AccessException | IOException e) {
               throw new UncheckedExecutionException(e);
@@ -132,6 +145,11 @@ public class RequestContext {
     @Override
     public @NotNull EndUserId user() {
       return this.subject.user();
+    }
+
+    @Override
+    public @NotNull Directory directory() {
+      return this.subject.directory();
     }
 
     @Override

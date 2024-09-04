@@ -303,7 +303,6 @@ abstract class StructuredLogger implements Logger {
    */
   static class RequestContextLogger extends StructuredLogger {
     private final @NotNull RequestContext requestContext;
-    private @Nullable String traceId;
 
     RequestContextLogger(
       @NotNull Appendable output,
@@ -328,6 +327,7 @@ abstract class StructuredLogger implements Logger {
 
       if (this.requestContext.isAuthenticated()) {
         labels.put("auth/user_id", this.requestContext.user().email);
+        labels.put("auth/directory", this.requestContext.subject().directory().toString());
         labels.put("auth/device_id", this.requestContext.device().deviceId());
         labels.put("auth/device_access_levels",
           String.join(", ", this.requestContext.device().accessLevels()));

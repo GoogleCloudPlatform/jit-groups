@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.Nested;
@@ -152,6 +153,7 @@ public class TestStructuredLogger {
       requestContext.initialize("GET", "/", "trace-1");
       requestContext.authenticate(
         new EndUserId("id"),
+        Directory.CONSUMER,
         new IapDevice("device-id", List.of()));
       var logger = new StructuredLogger.RequestContextLogger(buffer, requestContext);
 
@@ -173,6 +175,7 @@ public class TestStructuredLogger {
       requestContext.initialize("GET", "/", "trace-1");
       requestContext.authenticate(
         new EndUserId("id"),
+        Directory.CONSUMER,
         new IapDevice("device-id", List.of("level-1", "level-2")));
       var logger = new StructuredLogger.RequestContextLogger(buffer, requestContext);
 

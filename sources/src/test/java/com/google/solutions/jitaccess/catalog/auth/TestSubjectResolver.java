@@ -34,8 +34,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -174,12 +173,13 @@ public class TestSubjectResolver {
       EXECUTOR,
       Mockito.mock(Logger.class));
 
-    var subject = resolver.resolve(SAMPLE_USER);
+    var subject = resolver.resolve(SAMPLE_USER, Directory.CONSUMER);
     var principals = subject.principals().stream()
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
     assertEquals(SAMPLE_USER, subject.user());
+    assertSame(Directory.CONSUMER, subject.directory());
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(SAMPLE_GROUP), "other group");
     assertTrue(principals.contains(SAMPLE_JITGROUP), "JIT group");
