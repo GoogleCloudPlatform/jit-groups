@@ -193,7 +193,7 @@ class EnvironmentConfiguration implements PolicyHeader {
    */
   static @NotNull EnvironmentConfiguration forServiceAccount(
     @NotNull ServiceAccountId serviceAccountId,
-    @NotNull UserId applicationPrincipal,
+    @NotNull ServiceAccountId applicationPrincipal,
     @NotNull GoogleCredentials applicationCredentials,
     @NotNull HttpTransport.Options httpOptions
   ) {

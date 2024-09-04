@@ -28,6 +28,7 @@ import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,7 @@ public class IamCredentialsClient {
    * Sign a JWT using the Google-managed service account key.
    */
   public String signJwt(
-    @NotNull UserId serviceAccount,
+    @NotNull ServiceAccountId serviceAccount,
     @NotNull JsonWebToken.Payload payload
   ) throws AccessException, IOException {
     Preconditions.checkNotNull(serviceAccount, "serviceAccount");
@@ -88,7 +89,7 @@ public class IamCredentialsClient {
         .projects()
         .serviceAccounts()
         .signJwt(
-          String.format("projects/-/serviceAccounts/%s", serviceAccount.email),
+          String.format("projects/-/serviceAccounts/%s", serviceAccount.value()),
           request)
         .execute()
         .getSignedJwt();
@@ -99,7 +100,11 @@ public class IamCredentialsClient {
           throw new NotAuthenticatedException("Not authenticated", e);
         case 403:
           throw new AccessDeniedException(
-            String.format("Denied access to service account '%s': %s", serviceAccount.email, e.getMessage()), e);
+            String.format(
+              "Denied access to service account '%s': %s",
+              serviceAccount.value(),
+              e.getMessage()),
+            e);
         default:
           throw (GoogleJsonResponseException)e.fillInStackTrace();
       }
@@ -109,9 +114,9 @@ public class IamCredentialsClient {
   /**
    * Get JWKS location for service account key set.
    */
-  public static String getJwksUrl(@NotNull UserId serviceAccount) {
+  public static String getJwksUrl(@NotNull ServiceAccountId serviceAccount) {
     return String.format(
       "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s", 
-      serviceAccount.email);
+      serviceAccount.value());
   }
 }

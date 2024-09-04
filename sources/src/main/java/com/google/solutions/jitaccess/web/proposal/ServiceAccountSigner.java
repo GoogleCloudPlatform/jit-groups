@@ -26,6 +26,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
@@ -55,8 +56,8 @@ public class ServiceAccountSigner implements TokenSigner {
     this.tokenVerifier = TokenVerifier
       .newBuilder()
       .setCertificatesLocation(IamCredentialsClient.getJwksUrl(options.serviceAccount))
-      .setIssuer(options.serviceAccount.email)
-      .setAudience(options.serviceAccount.email)
+      .setIssuer(options.serviceAccount.value())
+      .setAudience(options.serviceAccount.value())
       .build();
   }
 
@@ -74,8 +75,8 @@ public class ServiceAccountSigner implements TokenSigner {
     //
     var issueTime = Instant.now();
     var jwtPayload =  payload
-      .setAudience(this.options.serviceAccount.email)
-      .setIssuer(this.options.serviceAccount.email)
+      .setAudience(this.options.serviceAccount.value())
+      .setIssuer(this.options.serviceAccount.value())
       .setIssuedAtTimeSeconds(issueTime.getEpochSecond())
       .setExpirationTimeSeconds(expiry.getEpochSecond());
 
@@ -113,7 +114,7 @@ public class ServiceAccountSigner implements TokenSigner {
 
 
   public record Options(
-    @NotNull UserId serviceAccount
+    @NotNull ServiceAccountId serviceAccount
   ) {
     public Options {
       Preconditions.checkNotNull(serviceAccount);

@@ -71,7 +71,7 @@ public class Application {
   private static final String projectId;
   private static final String projectNumber;
   private static final @NotNull GoogleCredentials applicationCredentials;
-  private static final @NotNull UserId applicationPrincipal;
+  private static final @NotNull ServiceAccountId applicationPrincipal;
 
   private static final @NotNull Logger logger;
 
@@ -146,7 +146,11 @@ public class Application {
         projectNumber = projectMetadata.get("numericProjectId").toString();
 
         var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
-        applicationPrincipal = new UserId(defaultCredentials.getAccount());
+        applicationPrincipal = ServiceAccountId
+          .parse(ServiceAccountId.TYPE + ":" + defaultCredentials.getAccount())
+          .orElseThrow(() -> new IllegalArgumentException(
+            String.format("'%s' is not a valid service account email address",
+              defaultCredentials.getAccount())));
 
         if (defaultCredentials.getScopes().containsAll(configuration.requiredOauthScopes())) {
           //
@@ -161,7 +165,7 @@ public class Application {
           //
           applicationCredentials = ImpersonatedCredentials.create(
             defaultCredentials,
-            applicationPrincipal.email,
+            applicationPrincipal.value(),
             null,
             configuration.requiredOauthScopes().stream().toList(),
             0);
@@ -192,8 +196,8 @@ public class Application {
       try {
         var defaultCredentials = GoogleCredentials.getApplicationDefault();
 
-        var impersonateServiceAccount = System.getProperty(CONFIG_IMPERSONATE_SA);
-        if (impersonateServiceAccount != null && !impersonateServiceAccount.isEmpty()) {
+        var impersonateServiceAccount = ServiceAccountId.parse(System.getProperty(CONFIG_IMPERSONATE_SA));
+        if (impersonateServiceAccount.isPresent()) {
           //
           // Use the application default credentials (ADC) to impersonate a
           // service account. This step is necessary to ensure we have a
@@ -202,7 +206,7 @@ public class Application {
           //
           applicationCredentials = ImpersonatedCredentials.create(
             defaultCredentials,
-            impersonateServiceAccount,
+            impersonateServiceAccount.get().value(),
             null,
             configuration.requiredOauthScopes().stream().toList(),
             0);
@@ -216,15 +220,16 @@ public class Application {
           // refresh fails, fail application startup.
           //
           applicationCredentials.refresh();
-          applicationPrincipal = new UserId(impersonateServiceAccount);
+          applicationPrincipal = impersonateServiceAccount.get();
         }
         else if (defaultCredentials instanceof ServiceAccountCredentials) {
           //
           // Use ADC as-is.
           //
           applicationCredentials = defaultCredentials;
-          applicationPrincipal = new UserId(
-              ((ServiceAccountCredentials) applicationCredentials).getServiceAccountUser());
+          applicationPrincipal = ServiceAccountId
+            .parse(((ServiceAccountCredentials) applicationCredentials).getServiceAccountUser()) // TODO: add helper
+            .get();
         }
         else {
           throw new RuntimeException(String.format(

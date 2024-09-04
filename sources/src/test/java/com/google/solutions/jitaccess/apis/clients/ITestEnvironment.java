@@ -26,6 +26,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,12 +55,12 @@ public class ITestEnvironment {
   /**
    * Service account that tests can use to grant temporary access to.
    */
-  public static final UserId TEMPORARY_ACCESS_USER;
+  public static final ServiceAccountId TEMPORARY_ACCESS_USER;
 
   /**
    * Service account that doesn't have access to anything.
    */
-  public static final UserId NO_ACCESS_USER;
+  public static final ServiceAccountId NO_ACCESS_USER;
 
   /**
    * Credentials with application-level access.
@@ -114,11 +115,9 @@ public class ITestEnvironment {
       // User settings.
       //
 
-      NO_ACCESS_USER = new UserId(
-        String.format("%s@%s.iam.gserviceaccount.com", "no-access", PROJECT_ID));
+      NO_ACCESS_USER = new ServiceAccountId("no-access", PROJECT_ID);
 
-      TEMPORARY_ACCESS_USER = new UserId(
-        String.format("%s@%s.iam.gserviceaccount.com", "temporary-access", PROJECT_ID));
+      TEMPORARY_ACCESS_USER = new ServiceAccountId("temporary-access", PROJECT_ID);
 
       var defaultCredentials = GoogleCredentials
         .getApplicationDefault()
@@ -132,8 +131,8 @@ public class ITestEnvironment {
         APPLICATION_CREDENTIALS = defaultCredentials;
       }
 
-      NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.email);
-      TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.email);
+      NO_ACCESS_CREDENTIALS = impersonate(defaultCredentials, NO_ACCESS_USER.value());
+      TEMPORARY_ACCESS_CREDENTIALS = impersonate(defaultCredentials, TEMPORARY_ACCESS_USER.value());
 
       //
       // Pub/Sub settings.
