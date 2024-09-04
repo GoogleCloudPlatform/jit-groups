@@ -34,10 +34,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
@@ -63,7 +60,7 @@ public class SubjectResolver {
     this.logger = logger;
   }
 
-  @NotNull Set<Principal> resolveMemberships(
+  @NotNull Set<Principal> resolveJitGroupMemberships(
     @NotNull EndUserId user,
     @NotNull List<UnresolvedMembership> memberships
   ) {
@@ -145,15 +142,15 @@ public class SubjectResolver {
   }
 
   /**
-   * Build a subject for a given user. The subject includes all the user's
-   * principals, including:
+   * Lookup all of a user's principals. These include:
    *
-   * - the user's ID
-   * - roles
-   * - groups
-   *
+   * <ul>
+   *   <li>The user itself</li>
+   *   <li>JIT Group memberships</li>
+   *   <li>Other group memberships</li>
+   * </ul>
    */
-  public @NotNull Subject resolve(
+  protected @NotNull Set<Principal> lookupPrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     //
@@ -216,7 +213,7 @@ public class SubjectResolver {
       .flatMap(m -> m.getRoles().stream())
       .allMatch(r -> r.getExpiryDetail() == null);
 
-    var jitGroupPrincipals = resolveMemberships(user, jitGroupMemberships);
+    var jitGroupPrincipals = resolveJitGroupMemberships(user, jitGroupMemberships);
 
     var allPrincipals = new HashSet<Principal>();
     allPrincipals.add(new Principal(UserClassId.IAP_USERS));
@@ -231,10 +228,34 @@ public class SubjectResolver {
         jitGroupPrincipals.size(),
         otherGroupPrincipals.size()));
 
+    return allPrincipals;
+  }
+
+  /**
+   * Build a subject for a given user. The subject includes all the user's
+   * principals, including:
+   *
+   * - the user's ID
+   * - roles
+   * - groups
+   *
+   */
+  public @NotNull Subject resolve(
+    @NotNull EndUserId user,
+    @NotNull Directory directory
+  ) throws AccessException, IOException {
+    var allPrincipals = lookupPrincipals(user);
+    assert allPrincipals.stream().anyMatch(p -> p.id().equals(user));
+
     return new Subject() {
       @Override
       public @NotNull EndUserId user() {
         return user;
+      }
+
+      @Override
+      public @NotNull Directory directory() {
+        return directory;
       }
 
       @Override

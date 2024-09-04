@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.catalog.Subjects;
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.*;
 public class TestRequestContext {
   private static final EndUserId SAMPLE_USER = new EndUserId("user-1@example.com");
   private static final GroupId SAMPLE_GROUP = new GroupId("group-1@example.com");
+  private static final Directory SAMPLE_DIRECTORY = new Directory("example.com");
 
   @Test
   public void whenNotAuthenticated() {
@@ -61,11 +63,11 @@ public class TestRequestContext {
     var subject = Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of(SAMPLE_GROUP));
 
     var resolver = Mockito.mock(SubjectResolver.class);
-    when(resolver.resolve(eq(SAMPLE_USER)))
+    when(resolver.resolve(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY)))
       .thenReturn(subject);
 
     var context = new RequestContext(resolver);
-    context.authenticate(SAMPLE_USER, new IapDevice("device-1", List.of()));
+    context.authenticate(SAMPLE_USER, SAMPLE_DIRECTORY, new IapDevice("device-1", List.of()));
 
     assertEquals(SAMPLE_USER.email, context.subject().user().email);
     assertEquals(3, context.subject().principals().size());
@@ -73,6 +75,6 @@ public class TestRequestContext {
 
     assertEquals("device-1", context.device().deviceId());
 
-    verify(resolver, times(1)).resolve(eq(SAMPLE_USER));
+    verify(resolver, times(1)).resolve(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY));
   }
 }

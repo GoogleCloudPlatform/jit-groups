@@ -30,12 +30,17 @@ import java.util.Set;
  */
 public interface Subject {
   /**
-   * @return Primary id.
+   * Get the ID of the authenticated user.
    */
   @NotNull EndUserId user();
 
   /**
-   * @return full set of principals, including groups and roles.
+   * Get directory that the user originates from.
+   */
+  public @NotNull Directory directory();
+
+  /**
+   * Get the user's full set of principals, including groups and roles.
    */
   @NotNull Set<Principal> principals();
 }

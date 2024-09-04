@@ -21,10 +21,8 @@
 
 package com.google.solutions.jitaccess.catalog.policy;
 
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.Principal;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.*;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -37,10 +35,12 @@ public class TestAccessControlList {
   private static final EndUserId TEST_USER = new EndUserId("test-1@example.com");
   private static final EndUserId TEST_USER_OTHER = new EndUserId("test-2@example.com");
   private static final GroupId TEST_GROUP_1 = new GroupId("group-1@example.com");
+  private static final Directory TEST_DIRECTORY = new Directory("example.com");
 
   private record TestSubject(
-    EndUserId user,
-    Set<Principal> principals) implements Subject {
+    @NotNull EndUserId user,
+    @NotNull Directory directory,
+    @NotNull Set<Principal> principals) implements Subject {
   }
 
   private static class Rights {
@@ -56,7 +56,7 @@ public class TestAccessControlList {
   @Test
   public void isAllowed_whenAclEmpty() {
     var acl = new AccessControlList(Set.of());
-    var subject = new TestSubject(TEST_USER, Set.of());
+    var subject = new TestSubject(TEST_USER, TEST_DIRECTORY, Set.of());
 
     assertFalse(acl.isAllowed(subject, Rights.READ));
     assertFalse(acl.isAllowed(subject, Rights.WRITE));
@@ -71,6 +71,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER)));
 
     assertFalse(acl.isAllowed(subject, Rights.READ));
@@ -87,6 +88,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER)));
 
     assertTrue(acl.isAllowed(subject, Rights.READ));
@@ -104,6 +106,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER), new Principal(TEST_GROUP_1)));
 
     assertTrue(acl.isAllowed(subject, Rights.READ));
@@ -120,6 +123,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER), new Principal(TEST_GROUP_1)));
 
     assertFalse(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
@@ -134,6 +138,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(
         new Principal(TEST_USER),
         new Principal(TEST_GROUP_1, Instant.now().minusSeconds(10))));
@@ -155,6 +160,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER), new Principal(TEST_GROUP_1)));
 
     assertFalse(acl.isAllowed(subject, Rights.READ));
@@ -171,6 +177,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER), new Principal(TEST_GROUP_1)));
 
     assertTrue(acl.isAllowed(subject, Rights.READ | Rights.WRITE));
@@ -187,6 +194,7 @@ public class TestAccessControlList {
 
     var subject = new TestSubject(
       TEST_USER,
+      TEST_DIRECTORY,
       Set.of(new Principal(TEST_USER)));
 
     assertFalse(acl.isAllowed(subject, Rights.READ));

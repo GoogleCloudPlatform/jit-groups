@@ -196,7 +196,8 @@ public class Application {
       try {
         var defaultCredentials = GoogleCredentials.getApplicationDefault();
 
-        var impersonateServiceAccount = ServiceAccountId.parse(System.getProperty(CONFIG_IMPERSONATE_SA));
+        var impersonateServiceAccount = ServiceAccountId.parse(
+          ServiceAccountId.TYPE + ":" + System.getProperty(CONFIG_IMPERSONATE_SA));
         if (impersonateServiceAccount.isPresent()) {
           //
           // Use the application default credentials (ADC) to impersonate a

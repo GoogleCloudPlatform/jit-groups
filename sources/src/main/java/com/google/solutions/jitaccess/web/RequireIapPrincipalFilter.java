@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
@@ -86,6 +87,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
       if (verifiedAssertion.user() instanceof EndUserId endUserId) {
         this.requestContext.authenticate(
           endUserId,
+          verifiedAssertion.directory(),
           verifiedAssertion.device());
       }
       else  {
@@ -127,6 +129,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
 
     this.requestContext.authenticate(
       new EndUserId(debugPrincipalName),
+      new Directory("DEBUG"),
       IapDevice.UNKNOWN);
   }
 

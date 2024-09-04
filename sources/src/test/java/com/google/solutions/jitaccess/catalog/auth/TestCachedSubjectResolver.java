@@ -34,9 +34,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestCachedSubjectResolver {
-  private final String SAMPLE_DOMAIN = "example.com";
-  private final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
-  private final Executor EXECUTOR = command -> command.run();
+  private static final String SAMPLE_DOMAIN = "example.com";
+  private static final Directory SAMPLE_DIRECTORY = new Directory(SAMPLE_DOMAIN);
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
+  private static final Executor EXECUTOR = command -> command.run();
 
   //---------------------------------------------------------------------------
   // resolve
@@ -57,8 +58,8 @@ public class TestCachedSubjectResolver {
       Mockito.mock(Logger.class),
       new CachedSubjectResolver.Options(Duration.ofMinutes(1)));
 
-    resolver.resolve(SAMPLE_USER); // Triggers load
-    resolver.resolve(SAMPLE_USER); // Triggers cache
+    resolver.resolve(SAMPLE_USER, SAMPLE_DIRECTORY); // Triggers load
+    resolver.resolve(SAMPLE_USER, SAMPLE_DIRECTORY); // Triggers cache
 
     verify(groupsClient, times(1)).listMembershipsByUser(eq(SAMPLE_USER));
   }
