@@ -22,25 +22,81 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestIapAssertion {
   // -------------------------------------------------------------------------
-  // getUserId.
+  // user.
   // -------------------------------------------------------------------------
 
   @Test
-  public void getUserId() {
+  public void user_whenServiceAgent() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new IapAssertion(new JsonWebToken.Payload()
+        .setSubject("subject-1")
+        .set("email", "123@appspot.gserviceaccount.com")));
+  }
+
+  @Test
+  public void user_whenServiceAccount() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
       .setSubject("subject-1")
-      .set("email", "email-1"));
+      .set("email", "IAP-USER@project-1.iam.gserviceaccount.com"));
 
-    assertEquals("email-1", assertion.email().email);
+    assertInstanceOf(ServiceAccountId.class, assertion.user());
+    assertEquals("iap-user@project-1.iam.gserviceaccount.com", assertion.user().value());
+  }
+  
+  @Test
+  public void user_whenEndUser() {
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .setSubject("subject-1")
+      .set("email", "USER@example.com"));
+
+    assertInstanceOf(EndUserId.class, assertion.user());
+    assertEquals("user@example.com", assertion.user().value());
+  }
+
+  // -------------------------------------------------------------------------
+  // directory.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void directory_whenServiceAccount() {
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .setSubject("subject-1")
+      .set("email", "IAP-USER@project-1.iam.gserviceaccount.com"));
+
+    assertEquals(Directory.PROJECT, assertion.directory());
+  }
+
+  @Test
+  public void directory_whenHostedDomainNotSet() {
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .setSubject("subject-1")
+      .set("email", "user@example.com"));
+
+    assertEquals(Directory.CONSUMER, assertion.directory());
+  }
+
+  @Test
+  public void directory_whenHostedDomainSet() {
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .setSubject("subject-1")
+      .set("email", "user@example.com")
+      .set("hd", "example.COM"));
+
+    assertEquals(Directory.Type.CLOUD_IDENTITY, assertion.directory().type());
+    assertEquals("example.com", assertion.directory().hostedDomain());
   }
 
   // -------------------------------------------------------------------------
@@ -49,7 +105,8 @@ public class TestIapAssertion {
 
   @Test
   public void device_whenGoogleClaimSetMissing() {
-    var assertion = new IapAssertion(new JsonWebToken.Payload());
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .set("email", "user@example.com"));
 
     assertEquals(IapDevice.UNKNOWN, assertion.device());
   }
@@ -57,6 +114,7 @@ public class TestIapAssertion {
   @Test
   public void device_whenGoogleClaimSetEmpty() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .set("email", "user@example.com")
       .set("google", Map.of()));
 
     assertEquals(IapDevice.UNKNOWN, assertion.device());
@@ -65,6 +123,7 @@ public class TestIapAssertion {
   @Test
   public void device_whenGoogleClaimSetPresent() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .set("email", "user@example.com")
       .set("google", Map.of("device_id", "device-1")));
 
     assertEquals("device-1", assertion.device().deviceId());
@@ -74,6 +133,7 @@ public class TestIapAssertion {
   @Test
   public void device_whenGoogleClaimContainsAccessLevelsSet() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .set("email", "user@example.com")
       .set("google", Map.of(
         "device_id", "device-1",
         "access_levels", List.of("level-1", "level-2"))));

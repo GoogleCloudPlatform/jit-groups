@@ -55,7 +55,10 @@ public class RequestContext {
   /**
    * Authenticate the request context.
    */
-  void authenticate(EndUserId userId, Device device) {
+  void authenticate(
+    @NotNull EndUserId userId,
+    @NotNull Device device
+  ) {
     if (isAuthenticated()) {
       throw new IllegalStateException(
         "Request context has been authenticated before");

@@ -24,29 +24,79 @@ package com.google.solutions.jitaccess.web;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * JWT assertion issued by IAP.
+ */
 class IapAssertion {
-  private final JsonWebToken.Payload payload;
+  private final @NotNull JsonWebToken.Payload payload;
+  private final @NotNull UserId userId;
 
-  public IapAssertion(JsonWebToken.Payload payload) {
+  IapAssertion(@NotNull JsonWebToken.Payload payload) {
     this.payload = payload;
+
+    var email = this.payload.get("email").toString().toLowerCase();
+    if (email.endsWith(".gserviceaccount.com")) {
+      //
+      // This is some kind of service account, but it could also be
+      // a service agent.
+      //
+      this.userId = ServiceAccountId.parse(ServiceAccountId.TYPE + ":" + email)
+        .orElseThrow(() -> new IllegalArgumentException(
+          "The service account type is not supported"));
+    }
+    else {
+      this.userId = new EndUserId(email);
+    }
   }
 
-  public IapAssertion(@NotNull JsonWebSignature payload) {
+  IapAssertion(@NotNull JsonWebSignature payload) {
     this(payload.getPayload());
   }
 
   /**
-   * Extract user information
+   * Get ID of the authenticated user.
    */
-  public @NotNull EndUserId email() {
-    return new EndUserId(this.payload.get("email").toString());
+  public @NotNull UserId user() {
+    return this.userId;
+  }
+
+  /**
+   * Get directory that the user originates from.
+   */
+  public @NotNull Directory directory() {
+    if (this.userId instanceof ServiceAccountId) {
+      //
+      // Service accounts are owned by a project. We can't be sure
+      // if that's a standalone project or a project that belongs
+      // to a Google Cloud organization.
+      //
+      // In either case, the 'hd' claim will be empty.
+      //
+      return Directory.PROJECT;
+    }
+    else {
+      //
+      // If the assertion contains a 'hd' claim, then it's a 'managed user',
+      // i.e., a user that's managed by Cloud Identity or Workspace.
+      //
+      // If the 'hd' claim is missing, it must be a consumer account.
+      //
+      return Optional
+        .ofNullable((String)this.payload.get("hd"))
+        .map(hd -> new Directory(hd.toLowerCase()))
+        .orElse(Directory.CONSUMER);
+    }
   }
 
   /**
