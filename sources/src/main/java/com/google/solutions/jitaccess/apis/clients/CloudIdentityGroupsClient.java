@@ -29,7 +29,7 @@ import com.google.api.services.groupssettings.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 
@@ -385,14 +385,14 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId lookupGroupMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserId userId
+    @NotNull IamPrincipalId member
   ) throws AccessException, IOException {
     try {
       return new MembershipId(client
         .groups()
         .memberships()
         .lookup(groupKey.toString())
-        .setMemberKeyId(userId.email)
+        .setMemberKeyId(member.value())
         .execute()
         .getName());
     }
@@ -448,10 +448,10 @@ public class CloudIdentityGroupsClient {
    */
   public @NotNull Membership getMembership(
     @NotNull GroupKey groupKey,
-    @NotNull UserId userId
+    @NotNull IamPrincipalId member
   ) throws AccessException, IOException {
     var client = createClient();
-    var id = lookupGroupMembership(client, groupKey, userId);
+    var id = lookupGroupMembership(client, groupKey, member);
     return getMembership(client, id);
   }
 
@@ -483,10 +483,10 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId updateMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserId userId,
+    @NotNull IamPrincipalId member,
     @NotNull MembershipRole role
   ) throws AccessException, IOException {
-    var membershipId = lookupGroupMembership(client, groupKey, userId);
+    var membershipId = lookupGroupMembership(client, groupKey, member);
     try {
       client
         .groups()
@@ -514,7 +514,7 @@ public class CloudIdentityGroupsClient {
   private @NotNull MembershipId addMembership(
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
-    @NotNull UserId userId,
+    @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
     var role = new MembershipRole()
@@ -535,7 +535,7 @@ public class CloudIdentityGroupsClient {
         .create(
           groupKey.toString(),
           new Membership()
-            .setPreferredMemberKey(new EntityKey().setId(userId.email))
+            .setPreferredMemberKey(new EntityKey().setId(member.value()))
             .setRoles(List.of(role)))
         .execute();
 
@@ -553,7 +553,7 @@ public class CloudIdentityGroupsClient {
         //
         // Membership exists, but the expiry might be incorrect.
         //
-        return updateMembership(client, groupKey, userId, role);
+        return updateMembership(client, groupKey, member, role);
       }
       else {
         translateAndThrowApiException(e);
@@ -567,10 +567,10 @@ public class CloudIdentityGroupsClient {
    */
   public @NotNull MembershipId addMembership(
     @NotNull GroupKey groupKey,
-    @NotNull UserId userId,
+    @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
-    return addMembership(createClient(), groupKey, userId, expiry);
+    return addMembership(createClient(), groupKey, member, expiry);
   }
 
   /**
@@ -578,14 +578,14 @@ public class CloudIdentityGroupsClient {
    */
   public @NotNull MembershipId addMembership(
     @NotNull GroupId groupId,
-    @NotNull UserId userId,
+    @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
     var client = createClient();
     return addMembership(
       client,
       lookupGroup(client, groupId),
-      userId,
+      member,
       expiry);
   }
 
@@ -649,9 +649,9 @@ public class CloudIdentityGroupsClient {
    * List groups a user is a member of.
    */
   public @NotNull List<MembershipRelation> listMembershipsByUser(
-    @NotNull UserId userId
+    @NotNull IamPrincipalId member
   ) throws AccessException, IOException {
-    Preconditions.checkArgument(userId.email.indexOf('\'') < 0);
+    Preconditions.checkArgument(member.value().indexOf('\'') < 0);
 
     try {
       var client = createClient();
@@ -662,7 +662,7 @@ public class CloudIdentityGroupsClient {
           .groups()
           .memberships()
           .searchDirectGroups("groups/-")
-          .setQuery(String.format("member_key_id=='%s'", userId.email))
+          .setQuery(String.format("member_key_id=='%s'", member.value()))
           .setPageToken(pageToken)
           .setPageSize(SEARCH_PAGE_SIZE)
           .execute();
