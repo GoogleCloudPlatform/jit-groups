@@ -28,6 +28,9 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -642,5 +645,36 @@ public class ITestCloudIdentityGroupsClient {
     assertTrue(foundGroup.isPresent());
     assertNotNull(foundGroup.get().getDescription());
     assertNotEquals("", foundGroup.get().getDescription());
+  }
+
+  @Test
+  public void searchGroupsById_whenSomeGroupsDoNotExist() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    client.createGroup(
+      TEST_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description");
+
+    var groupIds = IntStream.range(1, 200)
+      .mapToObj(i -> new GroupId(
+        String.format(
+          "jitaccess-%d@%s",
+          i,
+          ITestEnvironment.CLOUD_IDENTITY_DOMAIN)))
+      .collect(Collectors.toSet());
+    groupIds.add(TEST_GROUP_EMAIL);
+
+    var foundGroup = client.searchGroupsById(groupIds, false)
+      .stream()
+      .filter(g -> g.getGroupKey().getId().equals(TEST_GROUP_EMAIL.email))
+      .findFirst();
+
+    assertTrue(foundGroup.isPresent());
   }
 }
