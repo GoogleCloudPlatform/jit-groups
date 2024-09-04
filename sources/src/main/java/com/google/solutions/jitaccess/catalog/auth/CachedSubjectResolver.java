@@ -33,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -40,7 +41,7 @@ import java.util.concurrent.Executor;
  */
 @Singleton
 public class CachedSubjectResolver extends SubjectResolver {
-  private final @NotNull LoadingCache<EndUserId, Subject> cache;
+  private final @NotNull LoadingCache<EndUserId, Set<Principal>> cache;
 
   public CachedSubjectResolver(
     @NotNull CloudIdentityGroupsClient groupsClient,
@@ -56,14 +57,16 @@ public class CachedSubjectResolver extends SubjectResolver {
       .build(new CacheLoader<>() {
 
         @Override
-        public @NotNull Subject load(@NotNull EndUserId userId) throws Exception {
-          return CachedSubjectResolver.super.resolve(userId);
+        public @NotNull Set<Principal> load(@NotNull EndUserId userId) throws Exception {
+          return CachedSubjectResolver.super.lookupPrincipals(userId);
         }
       });
   }
 
   @Override
-  public @NotNull Subject resolve(@NotNull EndUserId user) throws AccessException, IOException {
+  protected @NotNull Set<Principal> lookupPrincipals(
+    @NotNull EndUserId user
+  ) throws AccessException, IOException {
     try {
       return this.cache.getUnchecked(user);
     }
@@ -80,6 +83,9 @@ public class CachedSubjectResolver extends SubjectResolver {
     }
   }
 
+  /**
+   * Constructor options, injectable using CDI.
+   */
   public record Options(
     @NotNull Duration cacheDuration
   ) {}

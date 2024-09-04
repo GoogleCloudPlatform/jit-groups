@@ -52,7 +52,7 @@ public class TestSubjectResolver {
   //---------------------------------------------------------------------------
 
   @Test
-  public void resolveMemberships_whenGroupHasMultipleExpiries_thenPrincipalUsesMinimum() throws Exception {
+  public void resolveJitGroupMemberships_whenGroupHasMultipleExpiries_thenPrincipalUsesMinimum() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
     var membershipId = new CloudIdentityGroupsClient.MembershipId("m1");
 
@@ -76,7 +76,7 @@ public class TestSubjectResolver {
       EXECUTOR,
       Mockito.mock(Logger.class));
 
-    var principals = resolver.resolveMemberships(
+    var principals = resolver.resolveJitGroupMemberships(
       SAMPLE_USER,
       List.of(new SubjectResolver.UnresolvedMembership(
         mapping.groupFromJitGroup(SAMPLE_JITGROUP),
@@ -90,7 +90,7 @@ public class TestSubjectResolver {
   }
 
   @Test
-  public void resolveMemberships_whenGroupLacksExpiry_thenGrouplIsIgnored() throws Exception {
+  public void resolveJitGroupMemberships_whenGroupLacksExpiry_thenGrouplIsIgnored() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
     var membershipId = new CloudIdentityGroupsClient.MembershipId("m1");
 
@@ -109,7 +109,7 @@ public class TestSubjectResolver {
       EXECUTOR,
       logger);
 
-    var principals = resolver.resolveMemberships(
+    var principals = resolver.resolveJitGroupMemberships(
       SAMPLE_USER,
       List.of(new SubjectResolver.UnresolvedMembership(
         mapping.groupFromJitGroup(SAMPLE_JITGROUP),
@@ -120,7 +120,7 @@ public class TestSubjectResolver {
   }
 
   @Test
-  public void resolveMemberships_whenLookupFails_thenGroupIsIgnored() throws Exception {
+  public void resolveJitGroupMemberships_whenLookupFails_thenGroupIsIgnored() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
     var membershipId = new CloudIdentityGroupsClient.MembershipId("m1");
 
@@ -135,7 +135,7 @@ public class TestSubjectResolver {
       EXECUTOR,
       logger);
 
-    var principals = resolver.resolveMemberships(
+    var principals = resolver.resolveJitGroupMemberships(
       SAMPLE_USER,
       List.of(new SubjectResolver.UnresolvedMembership(
         mapping.groupFromJitGroup(SAMPLE_JITGROUP),
