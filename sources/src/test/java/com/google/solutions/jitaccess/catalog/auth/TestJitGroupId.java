@@ -36,7 +36,7 @@ public class TestJitGroupId {
   @Test
   public void toString_returnsPolicyAndName() {
     Assertions.assertEquals(
-      "env.system.name",
+      "jit-group:env.system.name",
       new JitGroupId("env", "system", "name").toString());
   }
 
@@ -45,15 +45,29 @@ public class TestJitGroupId {
   // -------------------------------------------------------------------------
 
   @ParameterizedTest
-  @ValueSource(strings = {"", ".", "..", "a. .c", ".b.", "a.b." ,".b.c"})
+  @ValueSource(strings = {
+    "jit-group:",
+    "jit-group:.",
+    "jit-group:..",
+    "jit-group:a. .c",
+    "jit-group:.b.",
+    "jit-group:a.b.",
+    "jit-group:.b.c"
+  })
   public void parse_whenNullOrEmpty_returnsEmpty(String s) {
     assertFalse(JitGroupId.parse(s).isPresent());
   }
 
-  @Test
-  public void parse_toString() {
-    var g = new JitGroupId("env", "system", "name");
-    assertEquals(g, JitGroupId.parse(g.toString()).get());
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "jit-group:env.system.name",
+    "  jit-group:env.system.name  ",
+    "JIT-GROUP:ENV.SYSTEM.NAME"
+  })
+  public void parse(String s) {
+    assertEquals(
+      new JitGroupId("env", "system", "name"),
+      JitGroupId.parse(s).get());
   }
 
   // -------------------------------------------------------------------------

@@ -75,7 +75,8 @@ public class ServiceAccountId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax <code>serviceAccount:email</code>.
+   * Parse a service account ID that uses the
+   * syntax <code>serviceAccount:email</code>.
    */
   public static Optional<ServiceAccountId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {

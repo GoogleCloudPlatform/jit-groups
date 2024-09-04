@@ -139,7 +139,7 @@ public class TestAbstractProposalHandler {
     assertEquals(
       "{\"jti\":\"AAAAAAAA\"," +
         "\"rcp\":[\"group:group@example.com\",\"user:user-2@example.com\",\"user:user-3@example.com\"]," +
-        "\"grp\":\"env.sys.group-1\",\"usr\":\"user-1@example.com\",\"inp\":{}}",
+        "\"grp\":\"jit-group:env.sys.group-1\",\"usr\":\"user:user-1@example.com\",\"inp\":{}}",
       token.value());
   }
 
@@ -170,7 +170,7 @@ public class TestAbstractProposalHandler {
     assertEquals(
       "{\"jti\":\"AAAAAAAA\"," +
         "\"rcp\":[\"group:group@example.com\",\"user:user-2@example.com\",\"user:user-3@example.com\"]," +
-        "\"grp\":\"env.sys.group-1\",\"usr\":\"user-1@example.com\",\"inp\":{\"prop1\":\"value1\"}}",
+        "\"grp\":\"jit-group:env.sys.group-1\",\"usr\":\"user:user-1@example.com\",\"inp\":{\"prop1\":\"value1\"}}",
       token.value());
   }
 
@@ -193,8 +193,9 @@ public class TestAbstractProposalHandler {
 
   @Test
   public void accept_whenInputEmpty() throws Exception {
-    var token = "{\"rcp\":[\"user:user-2@example.com\",\"group:group@example.com\"],\"grp\":\"env.sys.group-1\"," +
-      "\"usr\":\"user-1@example.com\",\"inp\":{}}";
+    var token = "{\"rcp\":[\"user:user-2@example.com\",\"group:group@example.com\"]," +
+      "\"grp\":\"jit-group:env.sys.group-1\"," +
+      "\"usr\":\"user:user-1@example.com\",\"inp\":{}}";
 
     var signer = new PseudoSigner();
     var proposalHandler = new SampleProposalHandler(signer);
@@ -210,8 +211,9 @@ public class TestAbstractProposalHandler {
 
   @Test
   public void accept_whenInputNotEmpty() throws Exception {
-    var token = "{\"rcp\":[\"user:user-2@example.com\",\"group:group@example.com\"],\"grp\":\"env.sys.group-1\"," +
-      "\"usr\":\"user-1@example.com\",\"inp\":{\"prop1\":\"value1\"}}";
+    var token = "{\"rcp\":[\"user:user-2@example.com\",\"group:group@example.com\"]," +
+      "\"grp\":\"jit-group:env.sys.group-1\"," +
+      "\"usr\":\"user:user-1@example.com\",\"inp\":{\"prop1\":\"value1\"}}";
 
     var signer = new PseudoSigner();
     var proposalHandler = new SampleProposalHandler(signer);

@@ -23,11 +23,13 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Identifier of a JIT group.
@@ -38,7 +40,10 @@ import java.util.Optional;
  * JitGroupIds are principals, but they can't be used for IAM.
  */
 public class JitGroupId implements Comparable<JitGroupId>, PrincipalId {
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^jit-group:(.+)\\.(.+)\\.(.+)$");
+
   public static final String TYPE = "jit-group";
+  private static final String TYPE_PREFIX = TYPE + ":";
 
   private final @NotNull String environment;
   private final @NotNull String system;
@@ -102,7 +107,7 @@ public class JitGroupId implements Comparable<JitGroupId>, PrincipalId {
 
   @Override
   public String toString() {
-    return this.value();
+    return TYPE_PREFIX + this.value();
   }
 
   // -------------------------------------------------------------------------
@@ -171,18 +176,18 @@ public class JitGroupId implements Comparable<JitGroupId>, PrincipalId {
    * @return ID if parsing was successful, empty otherwise.
    */
   public static @NotNull Optional<JitGroupId> parse(@Nullable String s) {
-    if (Strings.isNullOrEmpty(s) || s.isBlank()) {
+    if (s == null || s.isBlank()) {
       return Optional.empty();
     }
 
-    var parts = s.split("\\.");
-    if (parts.length != 3 ||
-      parts[0].isBlank() ||
-      parts[1].isBlank() ||
-      parts[2].isBlank()) {
-      return Optional.empty();
-    }
+    s = s.trim();
 
-    return Optional.of(new JitGroupId(parts[0], parts[1], parts[2]));
+    var matcher = PATTERN.matcher(s.trim().toLowerCase());
+    return NullaryOptional
+      .ifTrue(matcher.matches() &&
+        !matcher.group(1).isBlank() &&
+        !matcher.group(2).isBlank() &&
+        !matcher.group(3).isBlank())
+      .map(() -> new JitGroupId(matcher.group(1), matcher.group(2), matcher.group(3)));
   }
 }
