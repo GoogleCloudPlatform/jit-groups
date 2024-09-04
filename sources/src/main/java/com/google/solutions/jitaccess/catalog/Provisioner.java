@@ -200,10 +200,9 @@ public class Provisioner {
       // We might still find some groups that just happen to match
       // the prefix, so we additionally consult the mapping.
       //
-      var query = this.groupsClient.createSearchQueryForPrefix(
-        this.mapping.groupPrefix(environmentName));
-
-      return this.groupsClient.searchGroups(query, false)
+      return this.groupsClient.searchGroupsByPrefix(
+          this.mapping.groupPrefix(environmentName),
+          false)
         .stream()
         .map(grp -> new GroupId(grp.getGroupKey().getId()))
         .filter(this.mapping::isJitGroup)

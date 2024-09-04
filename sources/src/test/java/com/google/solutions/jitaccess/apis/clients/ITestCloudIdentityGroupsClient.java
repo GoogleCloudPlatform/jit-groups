@@ -619,7 +619,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void searchGroups() throws Exception {
+  public void searchGroupsByPrefix() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -631,8 +631,8 @@ public class ITestCloudIdentityGroupsClient {
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
       "description");
-    var groups = client.searchGroups(
-      client.createSearchQueryForPrefix("jitaccess-"),
+    var groups = client.searchGroupsByPrefix(
+      "jitaccess-",
       true);
 
     var foundGroup = groups.stream()
