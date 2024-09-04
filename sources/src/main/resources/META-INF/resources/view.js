@@ -128,6 +128,13 @@ mdc.list.MDCList.prototype.addRow = function (column) {
 
     if (column.primary) {
         const span = $(`<span class="mdc-list-item__primary-text"></span>`);
+        if (column.primaryTitle) {
+            span.attr("title", column.primaryTitle);
+        }
+        if (column.primaryClass) {
+            span.attr("class", column.primaryClass);
+        }
+
         span.text(column.primary)
         textSpan.append(span);
     }
@@ -148,6 +155,26 @@ mdc.list.MDCList.prototype.addRow = function (column) {
 //-----------------------------------------------------------------------------
 // Utility classes.
 //-----------------------------------------------------------------------------
+
+class Instant {
+    constructor(date) {
+        this.date = date;
+    }
+
+    /**
+     * Convert UNIX timestamp to Instant.
+     */
+    static fromUnixTime(unixTime) {
+        return new Instant(new Date(unixTime * 1000));
+    }
+
+    /**
+     * Return the local date representation.
+     */
+    toString() {
+        return this.date.toLocaleString();
+    }
+}
 
 class Duration {
     constructor(days, hours, minutes, seconds) {

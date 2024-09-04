@@ -644,17 +644,19 @@
                 if (groupInfo.join.membership.active) {
                     this.membership.addRow({
                         icon: 'check',
-                        primary: 'You are a member of this group'
+                        primary: `${Duration.untilUnixTime(groupInfo.join.membership.expiry).format()} left`,
+                        primaryTitle: `Your membership expires on ${Instant.fromUnixTime(groupInfo.join.membership.expiry)}`,
+                        primaryClass: 'activated'
                     });
                     this.membership.addRow({
-                        icon: 'schedule',
-                        primary: `Your membership expires on ${new Date(groupInfo.join.membership.expiry * 1000).toLocaleString()}`
+                        primary: "You can extend your membership before it expires",
+                        icon: 'check'
                     });
                 }
                 else if (groupInfo.join.status != 'JOIN_PROPOSED') {
                     this.membership.addRow({
                         primary: "You are not a member of this group",
-                        icon: 'close'
+                        icon: 'group_off'
                     });
                 }
 
@@ -667,19 +669,19 @@
                 else if (groupInfo.join.status == 'JOIN_ALLOWED_WITH_APPROVAL') {
                     this.membership.addRow({
                         primary: "You can request to join this group",
-                        icon: 'check'
+                        icon: 'mail'
                     });
                 }
                 else if (groupInfo.join.status == 'JOIN_ALLOWED_WITHOUT_APPROVAL') {
                     this.membership.addRow({
                         primary: "You can join this group without approval",
-                        icon: 'check'
+                        icon: 'person_add'
                     });
                 }
                 else if (groupInfo.join.status == 'JOIN_PROPOSED') {
                     this.membership.addRow({
                         primary: "Your request to join the group was sent for approval",
-                        icon: 'check'
+                        icon: 'outgoing_mail'
                     });
                 }
             }
