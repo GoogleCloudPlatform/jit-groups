@@ -96,13 +96,13 @@
                 <span class="jit-group-name"></span>
             </h1>
 
-            <div class="jit-card-subsection" title="Group details">
+            <div class="jit-card-subsection" title="About this group">
                 <span class="jit-group-description"></span>
                 <ul class="mdc-list jit-group-privileges" title="This group grants the following privileges:"></ul>
                 <ul class="mdc-list jit-group-details" title="Group email address:"></ul>
             </div>
-            <div class="jit-card-subsection" title="Membership details">
-                <ul class="mdc-list jit-group-membership" title="Your membership:"></ul>
+            <div class="jit-card-subsection" title="My Membership">
+                <ul class="mdc-list jit-group-membership"></ul>
             </div>
             <div class="jit-card-subsection jit-form" title="Join this group">
                 <ul class="mdc-list jit-group-constraints" title="Membership constraints:"></ul>
@@ -415,7 +415,7 @@
                     groupInfo.privileges.forEach(item => {
                         this.privileges.addRow({
                             primary: item.description,
-                            icon: 'badge'
+                            icon: 'license'
                         });
                     });
                 }
@@ -652,6 +652,8 @@
                         primary: "You can extend your membership before it expires",
                         icon: 'check'
                     });
+
+                    $('.jit-form').attr('title', 'Extend my membership');
                 }
                 else if (groupInfo.join.status != 'JOIN_PROPOSED') {
                     this.membership.addRow({
