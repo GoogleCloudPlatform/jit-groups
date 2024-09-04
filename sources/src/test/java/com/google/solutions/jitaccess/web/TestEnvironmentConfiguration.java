@@ -106,7 +106,7 @@ public class TestEnvironmentConfiguration {
       IllegalArgumentException.class,
       () -> EnvironmentConfiguration.forServiceAccount(
         new ServiceAccountId("no-prefix", new ProjectId("project-1")),
-        new UserId("app@example.com"),
+        new ServiceAccountId("app", new ProjectId("project-1")),
         Mockito.mock(GoogleCredentials.class),
         HttpTransport.Options.DEFAULT));
   }
@@ -115,7 +115,7 @@ public class TestEnvironmentConfiguration {
   public void forServiceAccount() {
     var configuration = EnvironmentConfiguration.forServiceAccount(
       new ServiceAccountId("jit-environment", new ProjectId("project-1")),
-      new UserId("app@example.com"),
+      new ServiceAccountId("app", new ProjectId("project-1")),
       Mockito.mock(GoogleCredentials.class),
       HttpTransport.Options.DEFAULT);
 

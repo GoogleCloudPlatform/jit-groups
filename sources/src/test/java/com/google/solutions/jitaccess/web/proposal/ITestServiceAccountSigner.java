@@ -67,14 +67,14 @@ public class ITestServiceAccountSigner {
     var verifiedPayload = TokenVerifier
       .newBuilder()
       .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.email)
-      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.value())
+      .setAudience(serviceAccount.value())
       .build()
       .verify(token.token())
       .getPayload();
 
-    assertEquals(serviceAccount.email, verifiedPayload.getIssuer());
-    assertEquals(serviceAccount.email, verifiedPayload.getAudience());
+    assertEquals(serviceAccount.value(), verifiedPayload.getIssuer());
+    assertEquals(serviceAccount.value(), verifiedPayload.getAudience());
     assertEquals(token.issueTime().getEpochSecond(), verifiedPayload.getIssuedAtTimeSeconds());
     assertEquals(token.expiryTime().getEpochSecond(), verifiedPayload.getExpirationTimeSeconds());
   }
@@ -95,7 +95,7 @@ public class ITestServiceAccountSigner {
       new ServiceAccountSigner.Options(serviceAccount));
 
     var payload = new JsonWebToken.Payload()
-      .setIssuer(serviceAccount.email);
+      .setIssuer(serviceAccount.value());
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
     assertThrows(
@@ -115,7 +115,7 @@ public class ITestServiceAccountSigner {
       new ServiceAccountSigner.Options(serviceAccount));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email);
+      .setAudience(serviceAccount.value());
 
     var jwt = credentialsAdapter.signJwt(serviceAccount, payload);
 
@@ -136,8 +136,8 @@ public class ITestServiceAccountSigner {
       new ServiceAccountSigner.Options(serviceAccount));
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
+      .setAudience(serviceAccount.value())
+      .setIssuer(serviceAccount.value());
 
     var jwt = credentialsAdapter.signJwt(ITestEnvironment.NO_ACCESS_USER, payload);
 

@@ -55,8 +55,8 @@ public class ITestIamCredentialsClient {
     var serviceAccount = ITestEnvironment.NO_ACCESS_USER;
 
     var payload = new JsonWebToken.Payload()
-      .setAudience(serviceAccount.email)
-      .setIssuer(serviceAccount.email);
+      .setAudience(serviceAccount.value())
+      .setIssuer(serviceAccount.value());
 
     var jwt = adapter.signJwt(serviceAccount, payload);
     assertNotNull(jwt);
@@ -64,8 +64,8 @@ public class ITestIamCredentialsClient {
     TokenVerifier
       .newBuilder()
       .setCertificatesLocation(IamCredentialsClient.getJwksUrl(serviceAccount))
-      .setIssuer(serviceAccount.email)
-      .setAudience(serviceAccount.email)
+      .setIssuer(serviceAccount.value())
+      .setAudience(serviceAccount.value())
       .build()
       .verify(jwt);
   }
@@ -79,7 +79,7 @@ public class ITestIamCredentialsClient {
     assertEquals(
       String.format(
         "https://www.googleapis.com/service_accounts/v1/metadata/jwk/%s",
-        ITestEnvironment.NO_ACCESS_USER.email),
+        ITestEnvironment.NO_ACCESS_USER.value()),
       IamCredentialsClient.getJwksUrl(ITestEnvironment.NO_ACCESS_USER));
   }
 }

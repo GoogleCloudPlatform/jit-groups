@@ -534,7 +534,7 @@ public class ITestCloudIdentityGroupsClient {
 
     var membership = memberships
       .stream()
-      .filter(m -> m.getPreferredMemberKey().getId().equals(ITestEnvironment.TEMPORARY_ACCESS_USER.toString()))
+      .filter(m -> m.getPreferredMemberKey().getId().equals(ITestEnvironment.TEMPORARY_ACCESS_USER.value()))
       .findFirst();
 
     assertTrue(membership.isPresent());
