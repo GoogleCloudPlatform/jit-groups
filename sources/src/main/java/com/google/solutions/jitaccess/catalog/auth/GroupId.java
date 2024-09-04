@@ -22,11 +22,13 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Principal identifier for a group.
@@ -35,6 +37,8 @@ import java.util.Optional;
  *     be an actual email address.
  */
 public class GroupId implements IamPrincipalId {
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^group:(.+)@(.+)$");
+
   public static final String TYPE = "group";
   private static final String TYPE_PREFIX = TYPE + ":";
 
@@ -56,7 +60,7 @@ public class GroupId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax user:email.
+   * Parse a group ID that uses the syntax <code>group:email</code>.
    */
   public static Optional<GroupId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
@@ -65,12 +69,10 @@ public class GroupId implements IamPrincipalId {
 
     s = s.trim();
 
-    if (s.startsWith(TYPE_PREFIX) && s.length() > TYPE_PREFIX.length()) {
-      return Optional.of(new GroupId(s.substring(TYPE.length() + 1)));
-    }
-    else {
-      return Optional.empty();
-    }
+    var matcher = PATTERN.matcher(s.trim().toLowerCase());
+    return NullaryOptional
+      .ifTrue(matcher.matches())
+      .map(() -> new GroupId(matcher.group(1) + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------

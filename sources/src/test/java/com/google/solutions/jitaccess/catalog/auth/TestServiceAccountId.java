@@ -137,7 +137,8 @@ public class TestServiceAccountId {
     "user:",
     "invalid",
     "serviceaccount:test",
-    "123@cloudservices.gserviceaccount.com"
+    "123@cloudservices.gserviceaccount.com",
+    "  test@project-1.IAM.GSERVICEACCOUNT.COM "
   })
   public void parse_whenInvalid(String s) {
     assertFalse(ServiceAccountId.parse(null).isPresent());
@@ -148,8 +149,7 @@ public class TestServiceAccountId {
   @ValueSource(strings = {
     "serviceaccount:test@project-1.iam.gserviceaccount.com",
     "  serviceaccount:test@project-1.iam.gserviceaccount.com ",
-    "ServiceAccount:test@project-1.IAM.GSERVICEACCOUNT.COM",
-    "  test@project-1.IAM.GSERVICEACCOUNT.COM "
+    "ServiceAccount:test@project-1.IAM.GSERVICEACCOUNT.COM"
   })
   public void parse(String id) {
     assertEquals(

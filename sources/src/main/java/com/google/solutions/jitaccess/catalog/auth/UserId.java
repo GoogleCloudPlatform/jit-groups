@@ -37,8 +37,7 @@ import java.util.regex.Pattern;
  *     be a route-able email address.
  */
 public class UserId implements IamPrincipalId {
-  static final @NotNull Pattern PATTERN =
-    Pattern.compile("^(user:)?(.+)@(.+)$");
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^user:(.+)@(.+)$");
 
   public static final String TYPE = "user";
   private static final String TYPE_PREFIX = TYPE + ":";
@@ -61,8 +60,7 @@ public class UserId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax <code>user:email</code>
-   * or <code>email</code>.
+   * Parse a user ID that uses the syntax <code>user:email</code>.
    */
   public static Optional<UserId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
@@ -74,7 +72,7 @@ public class UserId implements IamPrincipalId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new UserId(matcher.group(2) + "@" + matcher.group(3)));
+      .map(() -> new UserId(matcher.group(1) + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------
