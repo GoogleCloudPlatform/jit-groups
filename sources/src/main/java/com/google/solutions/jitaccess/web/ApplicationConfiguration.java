@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
@@ -42,7 +43,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Cloud Identity/Workspace customer ID.
    */
-  final @NotNull String customerId;
+  final @NotNull CustomerId customerId;
 
   /**
    * Domain to use for JIT groups. This can be the primary
@@ -167,6 +168,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
     this.customerId = readStringSetting(
       "CUSTOMER_ID",
       "RESOURCE_CUSTOMER_ID") // Name used in 1.x
+      .map(CustomerId::new)
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'CUSTOMER_ID' must be set to the customer ID " +
           "of a Cloud Identity or Workspace account"));

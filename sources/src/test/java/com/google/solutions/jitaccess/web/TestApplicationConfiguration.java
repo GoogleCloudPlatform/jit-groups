@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.solutions.jitaccess.apis.CustomerId;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public class TestApplicationConfiguration {
   public void constructor_whenMandatorySettingsProvided() {
     var configuration = new ApplicationConfiguration(createMandatorySettings());
     assertEquals("example.com", configuration.groupsDomain);
-    assertEquals("C123", configuration.customerId);
+    assertEquals(new CustomerId("C123"), configuration.customerId);
   }
 
   // -------------------------------------------------------------------------

@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestCloudIdentityGroupsClient {
-  private final String INVALID_CUSTOMER_ID = "Cinvalid";
+  private final CustomerId INVALID_CUSTOMER_ID = new CustomerId("Cinvalid");
   private static final GroupId TEST_GROUP_EMAIL = new GroupId(
     String.format(
       "jitaccess-test@%s",

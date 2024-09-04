@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
+import com.google.api.services.cloudresourcemanager.v3.model.Organization;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.auth.Credentials;
