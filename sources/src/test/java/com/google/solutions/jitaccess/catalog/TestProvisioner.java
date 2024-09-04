@@ -332,10 +332,8 @@ public class TestProvisioner {
     @Test
     public void provisionedGroups() throws Exception {
       var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
-      when(groupsClient.createSearchQueryForPrefix(eq("jit.env-1.")))
-        .thenReturn("query");
-      when(groupsClient.searchGroups(
-        eq("query"),
+      when(groupsClient.searchGroupsByPrefix(
+        eq("jit.env-1."),
         eq(false)))
         .thenReturn(List.of(
           // Invalid groups

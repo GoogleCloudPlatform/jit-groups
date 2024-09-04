@@ -738,16 +738,41 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
-   * Create a CEL query that filters based on the account ID and group prefix.
+   * Search for groups by prefix.
    */
-  public @NotNull String createSearchQueryForPrefix(
-    @NotNull String groupNamePrefix
-  ) {
+  public @NotNull List<Group> searchGroupsByPrefix(
+    @NotNull String groupNamePrefix,
+    boolean fullDetails
+  ) throws AccessException, IOException {
     Preconditions.checkArgument(groupNamePrefix.indexOf('\'') < 0);
 
-    return String.format("parent=='customers/%s' && group_key.startsWith('%s')",
-      this.options.customerId,
-      groupNamePrefix);
+    return searchGroups(
+      String.format("parent=='customers/%s' && group_key.startsWith('%s')",
+        this.options.customerId,
+        groupNamePrefix),
+      fullDetails);
+  }
+
+  /**
+   * Search groups by email address, can be used to validate if a
+   * set of groups exists.
+   */
+  public @NotNull List<Group> searchGroupsById(
+    @NotNull Set<GroupId> groupIds,
+    boolean fullDetails
+  ) throws AccessException, IOException {
+    Preconditions.checkArgument(groupIds
+      .stream()
+      .allMatch(g -> g.email.indexOf('\'') < 0));
+
+    return searchGroups(
+      String.format(
+        "parent=='customers/%s' && (%s)",
+        this.options.customerId,
+        String.join("||", groupIds.stream()
+          .map(g -> String.format("group_key=='%s'", g.email))
+          .toList())),
+      fullDetails);
   }
 
   //---------------------------------------------------------------------------
