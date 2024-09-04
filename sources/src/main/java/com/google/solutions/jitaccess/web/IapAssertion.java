@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
-import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.catalog.auth.UserType;
@@ -36,6 +35,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * JWT assertion issued by IAP.
+ */
 class IapAssertion {
   private final @NotNull JsonWebToken.Payload payload;
   private final @NotNull UserId userId;
@@ -43,14 +45,19 @@ class IapAssertion {
   public IapAssertion(@NotNull JsonWebToken.Payload payload) {
     this.payload = payload;
 
-    //
-    // Extract email address, which could identify a service account
-    // or a user account.
-    //
     var email = this.payload.get("email").toString().toLowerCase();
-    this.userId = Optional.<UserId>empty()
-      .or(() -> ServiceAccountId.parse("serviceAccount:" + email)) // TODO: service agents
-      .orElse(new EndUserId(email));
+    if (email.endsWith(".gserviceaccount.com")) {
+      //
+      // This is some kind of service account, but it could also be
+      // a service agent.
+      //
+      this.userId = ServiceAccountId.parse(ServiceAccountId.TYPE + ":" + email)
+        .orElseThrow(() -> new IllegalArgumentException(
+          "The service account type is not supported"));
+    }
+    else {
+      this.userId = new EndUserId(email);
+    }
   }
 
   public IapAssertion(@NotNull JsonWebSignature payload) {
@@ -60,10 +67,9 @@ class IapAssertion {
   /**
    * Get email of the authenticated user.
    */
-  public @NotNull EndUserId email() {
-    return (EndUserId) this.userId; // TODO: Change type to allow service account -- UserPrincipalId?
+  public @NotNull UserId user() {
+    return this.userId;
   }
-
 
   /**
    * Get email the hosted domain of the authenticated user, if present.

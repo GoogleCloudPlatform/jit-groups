@@ -83,9 +83,14 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
           .build()
           .verify(assertion));
 
-      this.requestContext.authenticate(
-        verifiedAssertion.email(),
-        verifiedAssertion.device());
+      if (verifiedAssertion.user() instanceof EndUserId endUserId) {
+        this.requestContext.authenticate(
+          endUserId,
+          verifiedAssertion.device());
+      }
+      else  {
+        throw new ForbiddenException("Access is limited to end users");
+      }
     }
     catch (TokenVerifier.VerificationException | IllegalArgumentException e) {
       if (this.options.expectedAudience != null) {

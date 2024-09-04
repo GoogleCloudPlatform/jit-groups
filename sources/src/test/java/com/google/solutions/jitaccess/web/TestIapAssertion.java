@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
 import com.google.solutions.jitaccess.catalog.auth.UserType;
@@ -34,21 +35,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestIapAssertion {
   // -------------------------------------------------------------------------
-  // email.
+  // user.
   // -------------------------------------------------------------------------
 
   @Test
-  public void email() {
-    var assertion = new IapAssertion(new JsonWebToken.Payload()
-      .setSubject("subject-1")
-      .set("email", "user@example.com"));
-
-    assertEquals("user@example.com", assertion.email().email);
+  public void user_whenServiceAgent() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new IapAssertion(new JsonWebToken.Payload()
+        .setSubject("subject-1")
+        .set("email", "123@appspot.gserviceaccount.com")));
   }
-
-  // -------------------------------------------------------------------------
-  // principal.
-  // -------------------------------------------------------------------------
 
   @Test
   public void user_whenServiceAccount() {
@@ -62,12 +59,12 @@ public class TestIapAssertion {
   }
   
   @Test
-  public void user_whenUser() {
+  public void user_whenEndUser() {
     var assertion = new IapAssertion(new JsonWebToken.Payload()
       .setSubject("subject-1")
       .set("email", "USER@example.com"));
 
-    assertInstanceOf(UserId.class, assertion.user());
+    assertInstanceOf(EndUserId.class, assertion.user());
     assertEquals("user@example.com", assertion.user().value());
   }
 
@@ -95,6 +92,16 @@ public class TestIapAssertion {
     assertTrue(assertion.hostedDomain().isPresent());
     assertEquals("example.com", assertion.hostedDomain().get());
     assertEquals(UserType.MANAGED, assertion.userType());
+  }
+
+  @Test
+  public void hostedDomain_whenServiceAccount() {
+    var assertion = new IapAssertion(new JsonWebToken.Payload()
+      .setSubject("subject-1")
+      .set("email", "iap-user@project-1.iam.gserviceaccount.com"));
+
+    assertFalse(assertion.hostedDomain().isPresent());
+    assertEquals(UserType.SERVICE_ACCOUNT, assertion.userType());
   }
 
   // -------------------------------------------------------------------------
