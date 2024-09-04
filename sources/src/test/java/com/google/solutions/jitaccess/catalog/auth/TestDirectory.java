@@ -21,22 +21,27 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
-/**
- * Type of user account.
- */
-public enum UserType {
-  /**
-   * Consumer account.
-   */
-  CONSUMER,
+import org.junit.jupiter.api.Test;
 
-  /**
-   * User account managed by Cloud Identity or Workspace.
-   */
-  MANAGED,
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  /**
-   * Service account.
-   */
-  SERVICE_ACCOUNT
+public class TestDirectory {
+  //---------------------------------------------------------------------------
+  // toString.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void toString_whenConsumer() {
+    assertEquals("CONSUMER", Directory.CONSUMER.toString());
+  }
+
+  @Test
+  public void toString_whenProject() {
+    assertEquals("PROJECT", Directory.PROJECT.toString());
+  }
+
+  @Test
+  public void toString_whenCloudIdentity() {
+    assertEquals("example.com", new Directory("example.com").toString());
+  }
 }

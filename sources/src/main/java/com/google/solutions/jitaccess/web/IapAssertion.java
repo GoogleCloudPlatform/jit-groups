@@ -26,7 +26,7 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.auth.UserId;
-import com.google.solutions.jitaccess.catalog.auth.UserType;
+import com.google.solutions.jitaccess.catalog.auth.Directory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -42,7 +42,7 @@ class IapAssertion {
   private final @NotNull JsonWebToken.Payload payload;
   private final @NotNull UserId userId;
 
-  public IapAssertion(@NotNull JsonWebToken.Payload payload) {
+  IapAssertion(@NotNull JsonWebToken.Payload payload) {
     this.payload = payload;
 
     var email = this.payload.get("email").toString().toLowerCase();
@@ -60,45 +60,42 @@ class IapAssertion {
     }
   }
 
-  public IapAssertion(@NotNull JsonWebSignature payload) {
+  IapAssertion(@NotNull JsonWebSignature payload) {
     this(payload.getPayload());
   }
 
   /**
-   * Get email of the authenticated user.
+   * Get ID of the authenticated user.
    */
   public @NotNull UserId user() {
     return this.userId;
   }
 
   /**
-   * Get email the hosted domain of the authenticated user, if present.
+   * Get directory that the user originates from.
    */
-  public @NotNull Optional<String> hostedDomain() {
-    return Optional
-      .ofNullable((String)this.payload.get("hd"))
-      .map(String::toLowerCase);
-  }
-
-  /**
-   * Get the user account type of the current user.
-   */
-  public UserType userType() {
+  public @NotNull Directory directory() {
     if (this.userId instanceof ServiceAccountId) {
       //
-      // NB. JWT assertions for service accounts never contain a 'hd' claim,
-      // even if they belong to an organization-owned project.
+      // Service accounts are owned by a project. We can't be sure
+      // if that's a standalone project or a project that belongs
+      // to a Google Cloud organization.
       //
-      return UserType.SERVICE_ACCOUNT;
+      // In either case, the 'hd' claim will be empty.
+      //
+      return Directory.PROJECT;
     }
     else {
       //
-      // For users, the presence of the 'hd' claim is a reliable indicator
-      // of a managed user account.
+      // If the assertion contains a 'hd' claim, then it's a 'managed user',
+      // i.e., a user that's managed by Cloud Identity or Workspace.
       //
-      return hostedDomain().isPresent()
-        ? UserType.MANAGED
-        : UserType.CONSUMER;
+      // If the 'hd' claim is missing, it must be a consumer account.
+      //
+      return Optional
+        .ofNullable((String)this.payload.get("hd"))
+        .map(hd -> new Directory(hd.toLowerCase()))
+        .orElse(Directory.CONSUMER);
     }
   }
 
