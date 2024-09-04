@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.*;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
@@ -48,8 +48,8 @@ import static org.mockito.Mockito.*;
 
 
 public class TestGroupsResource {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
-  private static final UserId SAMPLE_APPROVING_USER = new UserId("approver@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
+  private static final EndUserId SAMPLE_APPROVING_USER = new EndUserId("approver@example.com");
 
   private static Catalog createCatalog(JitGroupPolicy group, Subject subject) {
     return new Catalog(

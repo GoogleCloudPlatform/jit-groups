@@ -33,7 +33,7 @@ import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.AccessControlList;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
@@ -57,8 +57,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestProvisioner {
-  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
+  private static final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
   private static final GroupId SAMPLE_GROUP = new GroupId("group@example.com");
   private static final ProjectId SAMPLE_PROJECT_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_2 = new ProjectId("project-2");

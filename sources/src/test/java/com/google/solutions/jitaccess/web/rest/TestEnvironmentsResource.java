@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.*;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TestEnvironmentsResource {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private static final Policy.Metadata METADATA = new Policy.Metadata("test", Instant.EPOCH);
 
   //---------------------------------------------------------------------------

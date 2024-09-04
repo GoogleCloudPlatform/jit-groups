@@ -54,8 +54,8 @@ public class GroupResolver {
   private static @NotNull Optional<PrincipalId> principalFromMembership(
     @NotNull Membership membership
   ) {
-    if (UserId.TYPE.equalsIgnoreCase(membership.getType())) {
-      return Optional.of(new UserId(membership.getPreferredMemberKey().getId()));
+    if (EndUserId.TYPE.equalsIgnoreCase(membership.getType())) {
+      return Optional.of(new EndUserId(membership.getPreferredMemberKey().getId()));
     }
     else if (GroupId.TYPE.equalsIgnoreCase(membership.getType())) {
       return Optional.of(new GroupId(membership.getPreferredMemberKey().getId()));

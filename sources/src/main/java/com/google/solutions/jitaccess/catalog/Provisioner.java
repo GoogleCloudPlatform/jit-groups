@@ -82,7 +82,7 @@ public class Provisioner {
    */
   public void provisionMembership(
     @NotNull JitGroupPolicy group,
-    @NotNull UserId member,
+    @NotNull EndUserId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
     //
@@ -217,7 +217,7 @@ public class Provisioner {
      */
     public void provision(
       @NotNull JitGroupPolicy group,
-      @NotNull UserId member,
+      @NotNull EndUserId member,
       @NotNull Instant expiry
     ) throws AccessException, IOException {
       //

@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.*;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.verify;
 
 public class TestSystemsResource {
 
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
 
   private static Catalog createCatalog(EnvironmentPolicy environment, Subject subject) {
     return new Catalog(

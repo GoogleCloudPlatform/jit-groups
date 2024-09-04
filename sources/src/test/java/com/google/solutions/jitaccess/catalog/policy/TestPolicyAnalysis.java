@@ -39,7 +39,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 public class TestPolicyAnalysis {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private static final JitGroupId SAMPLE_GROUPID = new JitGroupId("env-1", "system-1", "group-1");
 
 
@@ -69,7 +69,7 @@ public class TestPolicyAnalysis {
   }
 
   private static Subject createSubject(
-    UserId user,
+    EndUserId user,
     Set<PrincipalId> otherPrincipals
   ) {
     var subject = Mockito.mock(Subject.class);

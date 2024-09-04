@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestEnvironmentContext {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user-1@example.com");
 
   @NotNull
   private static Provisioner createProvisioner(JitGroupId... groupIds) throws AccessException, IOException {

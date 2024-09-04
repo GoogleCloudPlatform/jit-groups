@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -22,71 +22,57 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Principal identifier for a user-managed service account.
+ * Principal identifier for an end user.
+ *
+ * NB. The ID looks like an email address, but it might not
+ *     be a route-able email address.
  */
-public class ServiceAccountId implements UserId {
-  private static final @NotNull Pattern PATTERN =
-    Pattern.compile("^serviceaccount:(.+)@(.+).iam.gserviceaccount.com$");
+public class EndUserId implements UserId {
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^user:(.+)@(.+)$");
 
-  public static final String TYPE = "serviceAccount";
+  public static final String TYPE = "user";
   private static final String TYPE_PREFIX = TYPE + ":";
 
-  public final @NotNull String id;
-  public final @NotNull ProjectId projectId;
+  public final @NotNull String email;
 
-  public ServiceAccountId(@NotNull String id, @NotNull ProjectId projectId) {
-    Preconditions.checkNotNull(id, "id");
-    Preconditions.checkNotNull(projectId, "projectId");
-    Preconditions.checkArgument(!id.isBlank());
+  public EndUserId(@NotNull String email) {
+    Preconditions.checkNotNull(email, "email");
+    Preconditions.checkArgument(!email.isBlank());
 
     //
     // Use lower-case as canonical format.
     //
-    this.id = id.toLowerCase();
-    this.projectId = projectId;
+    this.email = email.toLowerCase();
   }
 
   @Override
   public String toString() {
-    return TYPE_PREFIX + this.value();
+    return TYPE_PREFIX + this.email;
   }
 
   /**
-   * Project that contains the service account.
+   * Parse a user ID that uses the syntax <code>user:email</code>.
    */
-  public ProjectId projectId() {
-    return this.projectId;
-  }
-
-  /**
-   *  Return email of service account.
-   */
-  public String email() {
-    return String.format("%s@%s.iam.gserviceaccount.com", this.id, this.projectId);
-  }
-
-  /**
-   * Parse a service account ID that uses the
-   * syntax <code>serviceAccount:email</code>.
-   */
-  public static Optional<ServiceAccountId> parse(@Nullable String s) {
+  public static Optional<EndUserId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
       return Optional.empty();
     }
 
+    s = s.trim();
+
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new ServiceAccountId(matcher.group(1), new ProjectId(matcher.group(2))));
+      .map(() -> new EndUserId(matcher.group(1) + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------
@@ -103,13 +89,13 @@ public class ServiceAccountId implements UserId {
       return false;
     }
 
-    ServiceAccountId other = (ServiceAccountId) o;
-    return this.id.equals(other.id) && this.projectId.equals(other.projectId);
+    EndUserId userId = (EndUserId) o;
+    return this.email.equals(userId.email);
   }
 
   @Override
   public int hashCode() {
-    return this.id.hashCode() ^ this.projectId.hashCode();
+    return Objects.hash(this.email);
   }
 
   // -------------------------------------------------------------------------
@@ -121,12 +107,8 @@ public class ServiceAccountId implements UserId {
     return TYPE;
   }
 
-  /**
-   * Return email of service account.
-   */
   @Override
   public @NotNull String value() {
-    return email();
+    return this.email;
   }
 }
-

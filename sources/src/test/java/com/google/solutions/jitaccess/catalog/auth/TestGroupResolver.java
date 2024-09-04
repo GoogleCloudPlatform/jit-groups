@@ -36,8 +36,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TestGroupResolver {
-  private static final UserId TEST_USER_1 = new UserId("test-1@example.com");
-  private static final UserId TEST_USER_2 = new UserId("test-2@example.com");
+  private static final EndUserId TEST_USER_1 = new EndUserId("test-1@example.com");
+  private static final EndUserId TEST_USER_2 = new EndUserId("test-2@example.com");
   private static final GroupId TEST_GROUP_1 = new GroupId("group-1@example.com");
   private static final GroupId TEST_GROUP_2 = new GroupId("group-2@example.com");
 
@@ -76,7 +76,7 @@ public class TestGroupResolver {
 
   @Test
   public void expand_whenSetContainsGroups() throws Exception {
-    var member1 = new UserId("member-1@example.com");
+    var member1 = new EndUserId("member-1@example.com");
     var member2 = new GroupId("member-1@example.com");
 
     var groupsClient = mock(CloudIdentityGroupsClient.class);

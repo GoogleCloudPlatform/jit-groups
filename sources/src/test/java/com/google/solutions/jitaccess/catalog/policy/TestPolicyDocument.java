@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.auth.UserClassId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestPolicyDocument {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
 
   private static final Policy.Metadata METADATA = new Policy.Metadata("test", Instant.EPOCH);
 

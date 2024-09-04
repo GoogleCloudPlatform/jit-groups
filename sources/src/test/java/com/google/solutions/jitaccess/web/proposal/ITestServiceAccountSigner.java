@@ -26,7 +26,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ITestEnvironment;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -34,9 +34,9 @@ import java.time.Instant;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestServiceAccountSigner {
-  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
-  private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
+  private static final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
+  private static final EndUserId SAMPLE_USER_3 = new EndUserId("user-3@example.com");
 
 
   // -------------------------------------------------------------------------

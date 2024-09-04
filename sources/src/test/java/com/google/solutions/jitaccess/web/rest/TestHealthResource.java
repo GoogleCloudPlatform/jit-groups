@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.clients.DiagnosticsResult;
 import com.google.solutions.jitaccess.catalog.Logger;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.web.MockitoUtils;
 import com.google.solutions.jitaccess.web.RestDispatcher;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,7 @@ import java.util.concurrent.Executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestHealthResource {
-  private static final UserId SAMPLE_USER = new UserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user-1@example.com");
 
   //---------------------------------------------------------------------------
   // /health/alive

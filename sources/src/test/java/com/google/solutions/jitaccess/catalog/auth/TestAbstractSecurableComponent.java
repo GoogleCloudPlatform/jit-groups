@@ -34,7 +34,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAbstractSecurableComponent {
-  private static final UserId SAMPLE_USER = new UserId("user@example.com");
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   
   private static final int SAMPLE_PERMISSION = 1;
 

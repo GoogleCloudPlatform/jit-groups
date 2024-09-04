@@ -122,8 +122,17 @@ public class TestServiceAccountId {
   }
 
   @Test
+  public void userId() {
+    assertInstanceOf(
+      UserId.class,
+      new ServiceAccountId("test", new ProjectId("project-1")));
+  }
+
+  @Test
   public void iamPrincipalId() {
-    assertInstanceOf(IamPrincipalId.class, new ServiceAccountId("test", new ProjectId("project-1")));
+    assertInstanceOf(
+      IamPrincipalId.class,
+      new ServiceAccountId("test", new ProjectId("project-1")));
   }
 
   // -------------------------------------------------------------------------

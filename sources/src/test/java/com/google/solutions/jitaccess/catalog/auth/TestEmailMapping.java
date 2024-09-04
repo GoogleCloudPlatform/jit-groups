@@ -34,7 +34,7 @@ public class TestEmailMapping {
     var mapping = new EmailMapping();
     assertEquals(
       "user@example.com",
-      mapping.emailFromPrincipalId(new UserId("user@example.com")).value());
+      mapping.emailFromPrincipalId(new EndUserId("user@example.com")).value());
   }
 
   @Test
@@ -42,7 +42,7 @@ public class TestEmailMapping {
     var mapping = new EmailMapping("");
     assertEquals(
       "user@example.com",
-      mapping.emailFromPrincipalId(new UserId("user@example.com")).value());
+      mapping.emailFromPrincipalId(new EndUserId("user@example.com")).value());
   }
 
   @Test
@@ -50,7 +50,7 @@ public class TestEmailMapping {
     var expression ="user.email";
     assertEquals(
       "user@example.com",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("user@example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("user@example.com")).value());
   }
 
   @Test
@@ -58,7 +58,7 @@ public class TestEmailMapping {
     var expression ="principal.id";
     assertEquals(
       "user@example.com",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("user@example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("user@example.com")).value());
   }
 
   @ParameterizedTest
@@ -69,7 +69,7 @@ public class TestEmailMapping {
   public void emailFromPrincipalId_withSubstituteDomainExpression(String expression) {
     assertEquals(
       "user@test.example.com",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("user@example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("user@example.com")).value());
     assertEquals(
       "group@test.example.com",
       new EmailMapping(expression).emailFromPrincipalId(new GroupId("group@example.com")).value());
@@ -84,10 +84,10 @@ public class TestEmailMapping {
 
     assertEquals(
       "contractor@otherdomain.example",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("contractor@external.example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("contractor@external.example.com")).value());
     assertEquals(
       "user@example.com",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("user@example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("user@example.com")).value());
   }
 
   @Test
@@ -99,7 +99,7 @@ public class TestEmailMapping {
 
     assertEquals(
       "user@users.example.com",
-      new EmailMapping(expression).emailFromPrincipalId(new UserId("user@example.com")).value());
+      new EmailMapping(expression).emailFromPrincipalId(new EndUserId("user@example.com")).value());
     assertEquals(
       "group@groups.example.com",
       new EmailMapping(expression).emailFromPrincipalId(new GroupId("group@example.com")).value());
@@ -110,7 +110,7 @@ public class TestEmailMapping {
     assertThrows(
       EmailMapping.MappingException.class,
       () -> new EmailMapping("user.email.extract(")
-        .emailFromPrincipalId(new UserId("user@example.com"))
+        .emailFromPrincipalId(new EndUserId("user@example.com"))
         .value());
   }
 }

@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -336,7 +336,7 @@ public class ITestCloudIdentityGroupsClient {
       NotAuthenticatedException.class,
       () -> client.addMembership(
         new GroupKey("test"),
-        new UserId("user@example.com"),
+        new EndUserId("user@example.com"),
         Instant.now().plusSeconds(300)));
   }
 
@@ -352,7 +352,7 @@ public class ITestCloudIdentityGroupsClient {
       IllegalArgumentException.class,
       () -> client.addMembership(
         new GroupKey("invalid"),
-        new UserId("user@example.com"),
+        new EndUserId("user@example.com"),
         Instant.now().plusSeconds(300)));
   }
 
@@ -573,7 +573,7 @@ public class ITestCloudIdentityGroupsClient {
     assertThrows(
       ResourceNotFoundException.class,
       () -> client.listMembershipsByUser(
-      new UserId("doesnotexist@" + ITestEnvironment.CLOUD_IDENTITY_DOMAIN)));
+      new EndUserId("doesnotexist@" + ITestEnvironment.CLOUD_IDENTITY_DOMAIN)));
   }
 
   @Test

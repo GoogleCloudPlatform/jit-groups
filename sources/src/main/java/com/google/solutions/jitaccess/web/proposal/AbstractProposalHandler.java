@@ -32,7 +32,7 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -155,7 +155,7 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       throw new AccessDeniedException("The proposal token is invalid", e);
     }
 
-    var user = UserId
+    var user = EndUserId
       .parse((String)payload.get(Claims.USER_ID))
       .orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
 
@@ -176,7 +176,7 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
 
     return new Proposal() {
       @Override
-      public @NotNull UserId user() {
+      public @NotNull EndUserId user() {
         return user;
       }
 

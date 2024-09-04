@@ -29,7 +29,7 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
 import com.google.solutions.jitaccess.catalog.auth.EmailMapping;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.Property;
 import com.google.solutions.jitaccess.cel.EvaluationException;
 import com.google.solutions.jitaccess.cel.StringTemplate;
@@ -265,7 +265,7 @@ public class MailProposalHandler extends AbstractProposalHandler {
     @SuppressWarnings("UnusedReturnValue")
     public Context addContext(
       @NotNull String name,
-      @NotNull UserId user
+      @NotNull EndUserId user
     ) {
       return addContext(name)
         .set("email", user.email);

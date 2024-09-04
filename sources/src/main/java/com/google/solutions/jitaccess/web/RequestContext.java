@@ -17,8 +17,8 @@ public class RequestContext {
    */
   private static final @NotNull Subject ANONYMOUS_SUBJECT = new Subject() {
     @Override
-    public @NotNull UserId user() {
-      return new UserId("anonymous");
+    public @NotNull EndUserId user() {
+      return new EndUserId("anonymous");
     }
 
     @Override
@@ -55,7 +55,7 @@ public class RequestContext {
   /**
    * Authenticate the request context.
    */
-  void authenticate(UserId userId, Device device) {
+  void authenticate(EndUserId userId, Device device) {
     if (isAuthenticated()) {
       throw new IllegalStateException(
         "Request context has been authenticated before");
@@ -66,7 +66,7 @@ public class RequestContext {
       private final @NotNull Object cachedPrincipalsLock = new Object();
 
       @Override
-      public @NotNull UserId user() {
+      public @NotNull EndUserId user() {
         return userId;
       }
 
@@ -105,7 +105,7 @@ public class RequestContext {
     return this.authenticationContext;
   }
 
-  public @NotNull UserId user() {
+  public @NotNull EndUserId user() {
     return this.authenticationContext.user();
   }
 
@@ -127,7 +127,7 @@ public class RequestContext {
 
 
     @Override
-    public @NotNull UserId user() {
+    public @NotNull EndUserId user() {
       return this.subject.user();
     }
 

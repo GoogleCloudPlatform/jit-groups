@@ -59,7 +59,7 @@ public class TestUserClassId {
   @Test
   public void equals_whenObjectIsDifferentType() {
     assertFalse(UserClassId.IAP_USERS.equals(""));
-    assertFalse(UserClassId.IAP_USERS.equals(new UserId("user@example.com")));
+    assertFalse(UserClassId.IAP_USERS.equals(new EndUserId("user@example.com")));
   }
 
   // -------------------------------------------------------------------------

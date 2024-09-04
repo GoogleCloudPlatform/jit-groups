@@ -42,7 +42,7 @@ import static org.mockito.Mockito.*;
 
 public class TestSubjectResolver {
   private final String SAMPLE_DOMAIN = "example.com";
-  private final UserId SAMPLE_USER = new UserId("user@example.com");
+  private final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
   private final GroupId SAMPLE_GROUP = new GroupId("other@" + SAMPLE_DOMAIN);
   private final Executor EXECUTOR = command -> command.run();

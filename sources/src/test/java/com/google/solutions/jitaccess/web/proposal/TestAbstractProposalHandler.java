@@ -29,7 +29,7 @@ import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import jakarta.ws.rs.core.UriBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -47,9 +47,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TestAbstractProposalHandler {
-  private static final UserId SAMPLE_USER_1 = new UserId("user-1@example.com");
-  private static final UserId SAMPLE_USER_2 = new UserId("user-2@example.com");
-  private static final UserId SAMPLE_USER_3 = new UserId("user-3@example.com");
+  private static final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
+  private static final EndUserId SAMPLE_USER_3 = new EndUserId("user-3@example.com");
   private static final GroupId SAMPLE_GROUP = new GroupId("group@example.com");
   private static final JitGroupId SAMPLE_JITGROUP_ID =  new JitGroupId("env", "sys", "group-1");
 

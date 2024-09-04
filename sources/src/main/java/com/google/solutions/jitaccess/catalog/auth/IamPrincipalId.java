@@ -37,7 +37,7 @@ public interface IamPrincipalId extends PrincipalId, Comparable<IamPrincipalId> 
    */
   static Optional<IamPrincipalId> parse(@Nullable String s) {
     return Optional.<IamPrincipalId>empty()
-      .or(() -> UserId.parse(s))
+      .or(() -> EndUserId.parse(s))
       .or(() -> GroupId.parse(s))
       .or(() -> ServiceAccountId.parse(s));
   }

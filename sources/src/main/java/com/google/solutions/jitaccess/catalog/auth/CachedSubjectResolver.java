@@ -40,7 +40,7 @@ import java.util.concurrent.Executor;
  */
 @Singleton
 public class CachedSubjectResolver extends SubjectResolver {
-  private final @NotNull LoadingCache<UserId, Subject> cache;
+  private final @NotNull LoadingCache<EndUserId, Subject> cache;
 
   public CachedSubjectResolver(
     @NotNull CloudIdentityGroupsClient groupsClient,
@@ -56,14 +56,14 @@ public class CachedSubjectResolver extends SubjectResolver {
       .build(new CacheLoader<>() {
 
         @Override
-        public @NotNull Subject load(@NotNull UserId userId) throws Exception {
+        public @NotNull Subject load(@NotNull EndUserId userId) throws Exception {
           return CachedSubjectResolver.super.resolve(userId);
         }
       });
   }
 
   @Override
-  public @NotNull Subject resolve(@NotNull UserId user) throws AccessException, IOException {
+  public @NotNull Subject resolve(@NotNull EndUserId user) throws AccessException, IOException {
     try {
       return this.cache.getUnchecked(user);
     }

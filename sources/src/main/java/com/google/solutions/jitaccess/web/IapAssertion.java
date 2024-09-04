@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
+import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -45,8 +45,8 @@ class IapAssertion {
   /**
    * Extract user information
    */
-  public @NotNull UserId email() {
-    return new UserId(this.payload.get("email").toString());
+  public @NotNull EndUserId email() {
+    return new EndUserId(this.payload.get("email").toString());
   }
 
   /**

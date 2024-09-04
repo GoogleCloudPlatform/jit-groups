@@ -57,7 +57,7 @@ public class TestIamPrincipalId {
       IamPrincipalId.parse("group:group@example.com").get());
 
     assertEquals(
-      new UserId("user@example.com"),
+      new EndUserId("user@example.com"),
       IamPrincipalId.parse("user:user@example.com").get());
 
     assertEquals(

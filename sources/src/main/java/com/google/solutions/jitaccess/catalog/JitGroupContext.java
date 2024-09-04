@@ -189,7 +189,7 @@ public class JitGroupContext {
     /**
      * Get user that is performing the operation.
      */
-    public @NotNull UserId user() {
+    public @NotNull EndUserId user() {
       return JitGroupContext.this.subject.user();
     }
 
@@ -222,7 +222,7 @@ public class JitGroupContext {
      * Get user that's asking to join (in case of a proposal,
      * this user is not the current subject).
      */
-    protected abstract @NotNull UserId joiningUser();
+    protected abstract @NotNull EndUserId joiningUser();
 
     /**
      * Input provided by the joining user.
@@ -297,7 +297,7 @@ public class JitGroupContext {
     /**
      * Get current user, i.e, the user wants to join.
      */
-    public @NotNull UserId joiningUser() {
+    public @NotNull EndUserId joiningUser() {
       return JitGroupContext.this.subject.user();
     }
 
@@ -355,7 +355,7 @@ public class JitGroupContext {
 
       return new Proposal() {
         @Override
-        public @NotNull UserId user() {
+        public @NotNull EndUserId user() {
           return user;
         }
 
@@ -417,7 +417,7 @@ public class JitGroupContext {
     /**
      * Get user that wants to join.
      */
-    public @NotNull UserId joiningUser() {
+    public @NotNull EndUserId joiningUser() {
       return this.proposal.user();
     }
 

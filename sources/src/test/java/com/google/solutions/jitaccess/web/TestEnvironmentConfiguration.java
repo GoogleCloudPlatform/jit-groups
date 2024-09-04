@@ -26,7 +26,6 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
-import com.google.solutions.jitaccess.catalog.auth.UserId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
