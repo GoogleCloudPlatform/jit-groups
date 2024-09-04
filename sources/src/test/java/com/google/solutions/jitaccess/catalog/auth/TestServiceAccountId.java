@@ -135,7 +135,9 @@ public class TestServiceAccountId {
     "",
     "user",
     "user:",
-    "invalid"
+    "invalid",
+    "serviceaccount:test",
+    "123@cloudservices.gserviceaccount.com"
   })
   public void parse_whenInvalid(String s) {
     assertFalse(ServiceAccountId.parse(null).isPresent());
