@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -21,37 +21,8 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
-import com.google.common.base.Preconditions;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.time.Instant;
-
 /**
- * A principal that can be used in access checks.
- *
- * @param id unique principal Id.
- * @param expiry optional expiry date.
+ * Principal identifier for a human or service user.
  */
-public record Principal(
-  @NotNull PrincipalId id,
-  @Nullable Instant expiry
-  ) {
-  public Principal {
-    Preconditions.checkArgument(
-      expiry == null || !(id instanceof UserId),
-      "User principals cannot expire");
-  }
-
-  public Principal(@NotNull PrincipalId id) {
-    this(id, null);
-  }
-
-  public boolean isPermanent() {
-    return this.expiry == null;
-  }
-
-  public boolean isValid() {
-    return this.expiry == null || Instant.now().isBefore(this.expiry);
-  }
+public interface UserId extends IamPrincipalId {
 }

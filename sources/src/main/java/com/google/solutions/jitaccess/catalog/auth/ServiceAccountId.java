@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 /**
  * Principal identifier for a user-managed service account.
  */
-public class ServiceAccountId implements IamPrincipalId {
+public class ServiceAccountId implements UserId {
   private static final @NotNull Pattern PATTERN =
     Pattern.compile("^serviceaccount:(.+)@(.+).iam.gserviceaccount.com$");
 

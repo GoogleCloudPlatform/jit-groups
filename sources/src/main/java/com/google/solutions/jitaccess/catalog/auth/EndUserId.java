@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * NB. The ID looks like an email address, but it might not
  *     be a route-able email address.
  */
-public class EndUserId implements IamPrincipalId {
+public class EndUserId implements UserId {
   private static final @NotNull Pattern PATTERN = Pattern.compile("^user:(.+)@(.+)$");
 
   public static final String TYPE = "user";

@@ -106,6 +106,11 @@ public class TestEndUserId {
   }
 
   @Test
+  public void userId() {
+    assertInstanceOf(UserId.class, new EndUserId("bob@example.com"));
+  }
+
+  @Test
   public void iamPrincipalId() {
     assertInstanceOf(IamPrincipalId.class, new EndUserId("bob@example.com"));
   }
