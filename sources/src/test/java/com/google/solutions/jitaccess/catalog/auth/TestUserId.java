@@ -119,17 +119,25 @@ public class TestUserId {
     "",
     "user",
     "user:",
-    "invalid"
+    "user:joe@",
+    "@example.com",
+    "invalid",
+    "user@example.com",
+    "  user@EXAMPLE.COM "
   })
   public void parse_whenInvalid(String s) {
     assertFalse(UserId.parse(null).isPresent());
     assertFalse(UserId.parse(s).isPresent());
   }
 
-  @Test
-  public void parse() {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "user:user@example.com",
+    "  user:USER@example.com "
+  })
+  public void parse(String id) {
     assertEquals(
       new UserId("user@example.com"),
-      UserId.parse("user:user@example.com").get());
+      UserId.parse(id).get());
   }
 }

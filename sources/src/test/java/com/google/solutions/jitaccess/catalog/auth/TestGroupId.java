@@ -120,17 +120,25 @@ public class TestGroupId {
     "",
     "group",
     "group:",
-    "invalid"
+    "invalid",
+    "invalid@",
+    "@invalid",
+    "group@example.com",
+    "  group@EXAMPLE.COM "
   })
   public void parse_whenInvalid(String s) {
     assertFalse(GroupId.parse(null).isPresent());
     assertFalse(GroupId.parse(s).isPresent());
   }
 
-  @Test
-  public void parse() {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "group:group@example.com",
+    "  group:GROUP@example.com "
+  })
+  public void parse(String id) {
     assertEquals(
       new GroupId("group@example.com"),
-      GroupId.parse("group:group@example.com").get());
+      GroupId.parse(id).get());
   }
 }

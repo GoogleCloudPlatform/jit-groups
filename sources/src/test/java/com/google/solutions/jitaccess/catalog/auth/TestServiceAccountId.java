@@ -135,7 +135,10 @@ public class TestServiceAccountId {
     "",
     "user",
     "user:",
-    "invalid"
+    "invalid",
+    "serviceaccount:test",
+    "123@cloudservices.gserviceaccount.com",
+    "  test@project-1.IAM.GSERVICEACCOUNT.COM "
   })
   public void parse_whenInvalid(String s) {
     assertFalse(ServiceAccountId.parse(null).isPresent());
@@ -148,9 +151,9 @@ public class TestServiceAccountId {
     "  serviceaccount:test@project-1.iam.gserviceaccount.com ",
     "ServiceAccount:test@project-1.IAM.GSERVICEACCOUNT.COM"
   })
-  public void parse() {
+  public void parse(String id) {
     assertEquals(
       new ServiceAccountId("test", new ProjectId("project-1")),
-      ServiceAccountId.parse("ServiceAccount:test@project-1.iam.gserviceaccount.com").get());
+      ServiceAccountId.parse(id).get());
   }
 }

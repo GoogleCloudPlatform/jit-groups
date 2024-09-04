@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  * Principal identifier for a service account.
  */
 public class ServiceAccountId implements IamPrincipalId {
-  static final @NotNull Pattern PATTERN =
+  private static final @NotNull Pattern PATTERN =
     Pattern.compile("^serviceaccount:(.+)@(.+).iam.gserviceaccount.com$");
 
   public static final String TYPE = "serviceAccount";
@@ -75,7 +75,8 @@ public class ServiceAccountId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax serviceAccount:email.
+   * Parse a service account ID that uses the
+   * syntax <code>serviceAccount:email</code>.
    */
   public static Optional<ServiceAccountId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {

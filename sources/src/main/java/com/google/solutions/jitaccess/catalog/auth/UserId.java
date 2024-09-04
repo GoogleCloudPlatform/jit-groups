@@ -22,11 +22,13 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Principal identifier for a user.
@@ -35,6 +37,8 @@ import java.util.Optional;
  *     be a route-able email address.
  */
 public class UserId implements IamPrincipalId {
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^user:(.+)@(.+)$");
+
   public static final String TYPE = "user";
   private static final String TYPE_PREFIX = TYPE + ":";
 
@@ -56,7 +60,7 @@ public class UserId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax user:email.
+   * Parse a user ID that uses the syntax <code>user:email</code>.
    */
   public static Optional<UserId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
@@ -65,12 +69,10 @@ public class UserId implements IamPrincipalId {
 
     s = s.trim();
 
-    if (s.startsWith(TYPE_PREFIX) && s.length() > TYPE_PREFIX.length()) {
-      return Optional.of(new UserId(s.substring(TYPE.length() + 1)));
-    }
-    else {
-      return Optional.empty();
-    }
+    var matcher = PATTERN.matcher(s.trim().toLowerCase());
+    return NullaryOptional
+      .ifTrue(matcher.matches())
+      .map(() -> new UserId(matcher.group(1) + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------

@@ -114,8 +114,8 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
         .sorted()
         .map(PrincipalId::toString)
         .toArray())
-      .set(Claims.GROUP_ID, joinOperation.group().value())
-      .set(Claims.USER_ID, proposal.user().value())
+      .set(Claims.GROUP_ID, joinOperation.group().toString())
+      .set(Claims.USER_ID, proposal.user().toString())
       .set(Claims.INPUT, inputs);
 
     try {
@@ -155,7 +155,9 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       throw new AccessDeniedException("The proposal token is invalid", e);
     }
 
-    var user = new UserId((String)payload.get(Claims.USER_ID));
+    var user = UserId
+      .parse((String)payload.get(Claims.USER_ID))
+      .orElseThrow(() -> new IllegalArgumentException("Invalid user ID"));
 
     var group = JitGroupId
       .parse((String)payload.get(Claims.GROUP_ID))
