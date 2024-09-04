@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class ServiceAccountId implements IamPrincipalId {
   static final @NotNull Pattern PATTERN =
-    Pattern.compile("^serviceaccount:(.+)@(.+).iam.gserviceaccount.com$");
+    Pattern.compile("^(serviceaccount:)?(.+)@(.+).iam.gserviceaccount.com$");
 
   public static final String TYPE = "serviceAccount";
   private static final String TYPE_PREFIX = TYPE + ":";
@@ -75,7 +75,8 @@ public class ServiceAccountId implements IamPrincipalId {
   }
 
   /**
-   * Parse a user ID that uses the syntax serviceAccount:email.
+   * Parse a user ID that uses the syntax <code>serviceAccount:email</code> or
+   * <code>email</code>.
    */
   public static Optional<ServiceAccountId> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
@@ -85,7 +86,7 @@ public class ServiceAccountId implements IamPrincipalId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new ServiceAccountId(matcher.group(1), new ProjectId(matcher.group(2))));
+      .map(() -> new ServiceAccountId(matcher.group(2), new ProjectId(matcher.group(3))));
   }
 
   // -------------------------------------------------------------------------

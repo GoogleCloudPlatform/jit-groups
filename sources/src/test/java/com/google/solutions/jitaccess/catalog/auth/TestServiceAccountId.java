@@ -146,11 +146,12 @@ public class TestServiceAccountId {
   @ValueSource(strings = {
     "serviceaccount:test@project-1.iam.gserviceaccount.com",
     "  serviceaccount:test@project-1.iam.gserviceaccount.com ",
-    "ServiceAccount:test@project-1.IAM.GSERVICEACCOUNT.COM"
+    "ServiceAccount:test@project-1.IAM.GSERVICEACCOUNT.COM",
+    "  test@project-1.IAM.GSERVICEACCOUNT.COM "
   })
-  public void parse() {
+  public void parse(String id) {
     assertEquals(
       new ServiceAccountId("test", new ProjectId("project-1")),
-      ServiceAccountId.parse("ServiceAccount:test@project-1.iam.gserviceaccount.com").get());
+      ServiceAccountId.parse(id).get());
   }
 }
