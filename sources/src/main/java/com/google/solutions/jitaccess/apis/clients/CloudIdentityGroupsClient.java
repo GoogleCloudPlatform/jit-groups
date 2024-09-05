@@ -28,6 +28,7 @@ import com.google.api.services.groupssettings.Groupssettings;
 import com.google.api.services.groupssettings.model.Groups;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
 import jakarta.inject.Singleton;
@@ -782,13 +783,10 @@ public class CloudIdentityGroupsClient {
   public record MembershipId(String id) {}
 
   public record Options(
-    @NotNull String customerId
+    @NotNull CustomerId customerId
   ) {
     public Options {
       Preconditions.checkNotNull(customerId, "customerId");
-      Preconditions.checkArgument(
-        customerId.startsWith("C"),
-        "Customer ID must use format Cxxxxxxxx");
     }
   }
 

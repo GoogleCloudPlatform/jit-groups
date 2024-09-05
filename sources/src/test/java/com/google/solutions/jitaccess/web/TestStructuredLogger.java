@@ -163,6 +163,7 @@ public class TestStructuredLogger {
         "{\"severity\":\"INFO\",\"logging.googleapis.com/labels\":" +
           "{\"auth/device_id\":\"device-id\",\"event/id\":\"event-1\"," +
           "\"auth/user_id\":\"id\",\"event/type\":\"operational\"," +
+          "\"auth/directory\":\"CONSUMER\"," +
           "\"auth/device_access_levels\":\"\",\"request/path\":\"/\"," +
           "\"request/method\":\"GET\"},\"message\":\"message-1\",\"logging.googleapis.com/trace\":\"trace-1\"}\n",
         buffer.toString());
@@ -185,6 +186,7 @@ public class TestStructuredLogger {
         "{\"severity\":\"INFO\",\"logging.googleapis.com/labels\":" +
           "{\"auth/device_id\":\"device-id\",\"event/id\":\"event-1\"," +
           "\"auth/user_id\":\"id\",\"event/type\":\"operational\"," +
+          "\"auth/directory\":\"CONSUMER\"," +
           "\"auth/device_access_levels\":\"level-1, level-2\"," +
           "\"request/path\":\"/\",\"request/method\":\"GET\"}," +
           "\"message\":\"message-1\",\"logging.googleapis.com/trace\":\"trace-1\"}\n",

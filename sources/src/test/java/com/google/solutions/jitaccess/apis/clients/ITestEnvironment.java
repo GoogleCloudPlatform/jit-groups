@@ -25,6 +25,7 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
 import org.jetbrains.annotations.NotNull;
@@ -79,7 +80,7 @@ public class ITestEnvironment {
   /**
    * Account/customer ID (Cxxxxx) of a Cloud Identity/Workspace account.
    */
-  public static final String CLOUD_IDENTITY_ACCOUNT_ID;
+  public static final CustomerId CLOUD_IDENTITY_ACCOUNT_ID;
 
   /**
    * Domain name of the Cloud Identity/Workspace account.
@@ -107,7 +108,7 @@ public class ITestEnvironment {
       //
 
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
-      CLOUD_IDENTITY_ACCOUNT_ID = getMandatory(settings, "test.cloudIdentity.accountId");
+      CLOUD_IDENTITY_ACCOUNT_ID = new CustomerId(getMandatory(settings, "test.cloudIdentity.accountId"));
       CLOUD_IDENTITY_DOMAIN = getMandatory(settings, "test.cloudIdentity.domain");
 
       //
