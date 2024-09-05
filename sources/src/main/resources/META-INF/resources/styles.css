@@ -167,6 +167,11 @@ div.jit-card-subsection[title]:not(:empty)::before {
     width: 100%;
 }
 
+#jit-banner-details {
+    font-size: 12px;
+    color: #9e9e9e;
+}
+
 .mdc-text-field, .mdc-select {
     margin-top: 10px !important;
     width: 100%;

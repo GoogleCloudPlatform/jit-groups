@@ -23,19 +23,39 @@ class LocalSettings {
 }
 
 /**
+ * Error caused by a failed API call.
+ */
+class ModelError extends Error {
+    constructor(httpStatus, httpStatusText, message, traceId) {
+        super(message);
+        this.httpStatus = httpStatus;
+        this.httpStatusText = httpStatusText;
+        this.traceId = traceId;
+    }
+
+    static fromAjaxError(error) {
+        if (error.status === 0) {
+            return new Error("The server did not respond, please try again");
+        }
+        else {
+            return new ModelError(
+                error.status,
+                error.statusText,
+                (error.responseJSON && error.responseJSON.message)
+                    ? error.responseJSON.message
+                    : "",
+                error.getResponseHeader("x-cloud-trace-context"));
+        }
+    }
+}
+
+/**
  * Model backing the current view. There's a 1:1:1 mapping between
  * views, models, and REST resources.
  */
 class Model {
     _getHeaders() {
         return { "X-JITGROUPS": "1" };
-    }
-
-    _formatError(error) {
-        let message = (error.responseJSON && error.responseJSON.message)
-            ? error.responseJSON.message
-            : "";
-        return `${message} (HTTP ${error.status}: ${error.statusText})`;
     }
 
     get context() {
@@ -66,7 +86,7 @@ class Model {
             this.content = await contentCall;
         }
         catch (error) {
-            throw this._formatError(error);
+            throw ModelError.fromAjaxError(error);
         }
     }
 
@@ -79,7 +99,7 @@ class Model {
             });
         }
         catch (error) {
-            throw this._formatError(error);
+            throw ModelError.fromAjaxError(error);
         }
     }
 
@@ -97,7 +117,7 @@ class Model {
             });
         }
         catch (error) {
-            throw this._formatError(error);
+            throw ModelError.fromAjaxError(error);
         }
     }
 }

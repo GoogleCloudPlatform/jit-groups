@@ -414,7 +414,7 @@ class SelectScopeDialog extends DialogBase {
             });
         }
         else {
-            throw "There are currently no environments available"
+            throw new Error("There are currently no environments available");
         }
 
         const dialog = this.element;
@@ -481,7 +481,13 @@ class AppBar {
         //
         const settings = new LocalSettings();
         let resource;
-        if (window.location.hash && window.location.hash.startsWith('#!')) {
+        if (window.location.hash && window.location.hash.startsWith('#reload')) {
+            //
+            // Force environment dialog.
+            //
+            this.environment = null;
+        }
+        else if (window.location.hash && window.location.hash.startsWith('#!')) {
             resource = window.location.hash.substring(2);
 
             if (resource) {
@@ -531,15 +537,23 @@ class AppBar {
     /** 
      * Display an error bar at the top of the screen 
      */
-    showError(message, isSevere) {
+    showError(error, isSevere) {
         console.assert(this._banner);
+
+        const message = error.message;
 
         this._banner.open();
         $('#jit-banner-text').text(message);
 
+        if (error instanceof ModelError) {
+            $('#jit-banner-details').text(
+                `HTTP ${error.httpStatus}: ${error.httpStatusText}` +
+                (error.traceId ? ` (Trace ID: ${error.traceId})` : ''));
+        }
+
         if (isSevere) {
             $('#jit-banner-reloadbutton').on('click', () => {
-                this._reloadPage();
+                window.location = '/#reload';
             });
         }
         else {
@@ -582,7 +596,9 @@ $(document).ready(async () => {
         <div class="mdc-banner" role="banner">
             <div class="mdc-banner__content" role="alertdialog" aria-live="assertive">
                 <div class="mdc-banner__graphic-text-wrapper">
-                    <div class="mdc-banner__text" id="jit-banner-text">
+                    <div class="mdc-banner__text">
+                        <div id="jit-banner-text"></div>
+                        <div id="jit-banner-details"></div>
                     </div>
                 </div>
                 <div class="mdc-banner__actions" id="jit-banner-reloadbutton">
