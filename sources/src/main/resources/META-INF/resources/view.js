@@ -481,7 +481,13 @@ class AppBar {
         //
         const settings = new LocalSettings();
         let resource;
-        if (window.location.hash && window.location.hash.startsWith('#!')) {
+        if (window.location.hash && window.location.hash.startsWith('#reload')) {
+            //
+            // Force environment dialog.
+            //
+            this.environment = null;
+        }
+        else if (window.location.hash && window.location.hash.startsWith('#!')) {
             resource = window.location.hash.substring(2);
 
             if (resource) {
@@ -539,7 +545,7 @@ class AppBar {
 
         if (isSevere) {
             $('#jit-banner-reloadbutton').on('click', () => {
-                this._reloadPage();
+                window.location = '/#reload';
             });
         }
         else {
