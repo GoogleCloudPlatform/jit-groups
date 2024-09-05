@@ -26,10 +26,11 @@ class LocalSettings {
  * Error caused by a failed API call.
  */
 class ModelError extends Error {
-    constructor(httpStatus, httpStatusText, message) {
+    constructor(httpStatus, httpStatusText, message, traceId) {
         super(message);
         this.httpStatus = httpStatus;
         this.httpStatusText = httpStatusText;
+        this.traceId = traceId;
     }
 
     static fromAjaxError(error) {
@@ -42,7 +43,8 @@ class ModelError extends Error {
                 error.statusText,
                 (error.responseJSON && error.responseJSON.message)
                     ? error.responseJSON.message
-                    : "");
+                    : "",
+                error.getResponseHeader("x-cloud-trace-context"));
         }
     }
 }

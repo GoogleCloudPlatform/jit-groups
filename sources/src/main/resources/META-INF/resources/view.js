@@ -546,7 +546,9 @@ class AppBar {
         $('#jit-banner-text').text(message);
 
         if (error instanceof ModelError) {
-            $('#jit-banner-details').text(`HTTP ${error.httpStatus}: ${error.httpStatusText}`);
+            $('#jit-banner-details').text(
+                `HTTP ${error.httpStatus}: ${error.httpStatusText}` +
+                (error.traceId ? ` (Trace ID: ${error.traceId})` : ''));
         }
 
         if (isSevere) {
