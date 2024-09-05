@@ -29,12 +29,15 @@ import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.auth.Credentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ResourceId;
+import com.google.solutions.jitaccess.util.Coalesce;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -132,6 +135,37 @@ public class ResourceManagerClient extends AbstractIamClient {
         throw new NotAuthenticatedException("Not authenticated", e);
       }
       throw (GoogleJsonResponseException) e.fillInStackTrace();
+    }
+  }
+
+  /**
+   * Look up an organization by its associated Cloud Identity/Workspace account ID.
+   */
+  public @NotNull Optional<Organization> getOrganization(
+    @NotNull CustomerId customerId
+  ) throws AccessException, IOException {
+    Preconditions.checkNotNull(customerId, "customerId");
+
+    try {
+      var client = createClient();
+
+      var matches = client.organizations()
+        .search()
+        .setQuery(String.format("directorycustomerid:%s", customerId))
+        .execute();
+
+      return Coalesce.emptyIfNull(matches.getOrganizations())
+        .stream()
+        .filter(o -> o.getDirectoryCustomerId().equals(customerId.id()))
+        .findFirst();
+    }
+    catch (GoogleJsonResponseException e) {
+      switch (e.getStatusCode()) {
+        case 401:
+          throw new NotAuthenticatedException("Not authenticated", e);
+        default:
+          throw (GoogleJsonResponseException)e.fillInStackTrace();
+      }
     }
   }
 }

@@ -21,11 +21,12 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
+import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public class ITestResourceManagerClient {
@@ -40,13 +41,13 @@ public class ITestResourceManagerClient {
     var id = Mockito.mock(ResourceId.class);
     when(id.service()).thenReturn("other.googleapis.com");
     
-    var service = new ResourceManagerClient(
+    var client = new ResourceManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       IllegalArgumentException.class,
-      () ->  service.modifyIamPolicy(
+      () ->  client.modifyIamPolicy(
       id,
         policy -> {},
         REQUEST_REASON));
@@ -54,13 +55,60 @@ public class ITestResourceManagerClient {
   
   @Test
   public void modifyIamPolicy_project() throws Exception {
-    var service = new ResourceManagerClient(
+    var client = new ResourceManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
-    service.modifyIamPolicy(
+    client.modifyIamPolicy(
       ITestEnvironment.PROJECT_ID,
       policy -> {},
       REQUEST_REASON);
+  }
+
+  //---------------------------------------------------------------------
+  // getOrganization.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void getOrganization_whenUnauthenticated_thenThrowsException() {
+    var client = new ResourceManagerClient(
+      ITestEnvironment.INVALID_CREDENTIAL,
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> client.getOrganization(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID));
+  }
+
+  @Test
+  public void getOrganization_whenCallerLacksPermission_thenThrowsException() throws Exception {
+    var client = new ResourceManagerClient(
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    assertFalse(client
+      .getOrganization(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID)
+      .isPresent());
+  }
+
+  @Test
+  public void getOrganization_whenOrganizationNotFound() throws Exception {
+    var client = new ResourceManagerClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    assertFalse(client.getOrganization(new CustomerId("C0000000")).isPresent());
+  }
+
+  @Test
+  public void getOrganization() throws Exception {
+    var client = new ResourceManagerClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      HttpTransport.Options.DEFAULT);
+
+    var organization = client.getOrganization(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID);
+    assertTrue(organization.isPresent());
+    assertEquals(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID.id(), organization.get().getDirectoryCustomerId());
+    assertNotNull(organization.get().getDisplayName());
   }
 }
