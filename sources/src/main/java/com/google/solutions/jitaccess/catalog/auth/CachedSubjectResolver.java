@@ -58,13 +58,13 @@ public class CachedSubjectResolver extends SubjectResolver {
 
         @Override
         public @NotNull Set<Principal> load(@NotNull EndUserId userId) throws Exception {
-          return CachedSubjectResolver.super.resolvePrincipals(userId);
+          return CachedSubjectResolver.super.resolveGroupPrincipals(userId);
         }
       });
   }
 
   @Override
-  public @NotNull Set<Principal> resolvePrincipals(
+  protected @NotNull Set<Principal> resolveGroupPrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     try {

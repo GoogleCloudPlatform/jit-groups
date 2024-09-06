@@ -142,15 +142,9 @@ public class SubjectResolver {
   }
 
   /**
-   * Lookup all of a user's principals. These include:
-   *
-   * <ul>
-   *   <li>The user itself</li>
-   *   <li>JIT Group memberships</li>
-   *   <li>Other group memberships</li>
-   * </ul>
+   * Create principals for all of a user's group memberships.
    */
-  public @NotNull Set<Principal> resolvePrincipals(
+  protected @NotNull Set<Principal> resolveGroupPrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     //
@@ -215,18 +209,36 @@ public class SubjectResolver {
 
     var jitGroupPrincipals = resolveJitGroupMemberships(user, jitGroupMemberships);
 
-    var allPrincipals = new HashSet<Principal>();
-    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
-    allPrincipals.add(new Principal(user));
-    allPrincipals.addAll(otherGroupPrincipals);
-    allPrincipals.addAll(jitGroupPrincipals);
-
     this.logger.info(
       EventIds.SUBJECT_RESOLUTION,
       String.format("The user '%s' is a member of %d JIT groups and %d other groups",
         user,
         jitGroupPrincipals.size(),
         otherGroupPrincipals.size()));
+
+    var allGroupPrincipals = new HashSet<Principal>();
+    allGroupPrincipals.addAll(otherGroupPrincipals);
+    allGroupPrincipals.addAll(jitGroupPrincipals);
+    return allGroupPrincipals;
+  }
+
+  /**
+   * Lookup all of a user's principals. These include:
+   *
+   * <ul>
+   *   <li>The user itself</li>
+   *   <li>JIT Group memberships</li>
+   *   <li>Other group memberships</li>
+   * </ul>
+   */
+  public @NotNull Set<Principal> resolvePrincipals(
+    @NotNull EndUserId user
+  ) throws AccessException, IOException {
+
+    var allPrincipals = new HashSet<Principal>();
+    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
+    allPrincipals.add(new Principal(user));
+    allPrincipals.addAll(resolveGroupPrincipals(user));
 
     return allPrincipals;
   }

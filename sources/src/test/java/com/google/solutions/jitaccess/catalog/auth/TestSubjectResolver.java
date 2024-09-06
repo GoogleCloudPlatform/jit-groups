@@ -23,15 +23,19 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.solutions.jitaccess.apis.Domain;
+import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -149,7 +153,7 @@ public class TestSubjectResolver {
   //---------------------------------------------------------------------------
 
   @Test
-  public void resolvePrincipals() throws Exception {
+  public void resolveGroupPrincipals() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
 
     var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
@@ -174,14 +178,40 @@ public class TestSubjectResolver {
       EXECUTOR,
       Mockito.mock(Logger.class));
 
+    var principals = resolver.resolveGroupPrincipals(SAMPLE_USER)
+      .stream()
+      .map(p -> p.id())
+      .collect(Collectors.toSet());
+
+    assertEquals(2, principals.size());
+    assertTrue(principals.contains(SAMPLE_GROUP), "other group");
+    assertTrue(principals.contains(SAMPLE_JITGROUP), "JIT group");
+  }
+
+  //---------------------------------------------------------------------------
+  // resolvePrincipals
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void resolvePrincipals_whenUserHasNoGroupMemberships() throws Exception {
+    var mapping = new GroupMapping(SAMPLE_DOMAIN);
+
+    var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
+    when(groupsClient.listMembershipsByUser(eq(SAMPLE_USER)))
+      .thenReturn(List.of());
+
+    var resolver = new SubjectResolver(
+      groupsClient,
+      mapping,
+      EXECUTOR,
+      Mockito.mock(Logger.class));
+
     var principals = resolver.resolvePrincipals(SAMPLE_USER)
       .stream()
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
-    assertTrue(principals.contains(SAMPLE_GROUP), "other group");
-    assertTrue(principals.contains(SAMPLE_JITGROUP), "JIT group");
     assertTrue(principals.contains(UserClassId.IAP_USERS), "All");
   }
 }
