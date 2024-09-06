@@ -36,23 +36,25 @@ import java.util.regex.Pattern;
  * <code>domain:</code> principal identifier used by IAM.
  */
 public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
-  private static final @NotNull Pattern PATTERN = Pattern.compile("^domain:(.+)$");
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^domain:([^:]+)$");
 
   public static final String TYPE = "domain";
   private static final String TYPE_PREFIX = TYPE + ":";
 
-  private final @NotNull Domain primaryDomain;
+  private final @NotNull String primaryDomain;
 
-  CloudIdentityDirectoryPrincipalSet(@NotNull Domain primaryDomain) {
-    Preconditions.checkArgument(primaryDomain.type() == Domain.Type.PRIMARY, "primary domain");
+  CloudIdentityDirectoryPrincipalSet(@NotNull String primaryDomain) {
     this.primaryDomain = primaryDomain;
   }
 
   @Override
   public String toString() {
-    return TYPE_PREFIX + this.primaryDomain.name();
+    return TYPE_PREFIX + this.primaryDomain;
   }
 
+  public @NotNull Domain domain() {
+    return new Domain(this.primaryDomain, Domain.Type.PRIMARY);
+  }
 
   /**
    * Parse a group ID that uses the syntax <code>domain:PRIMARY_DOMAIN</code>.
@@ -67,10 +69,7 @@ public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new CloudIdentityDirectoryPrincipalSet(
-        new Domain(
-          matcher.group(1).trim(),
-          Domain.Type.PRIMARY)));
+      .map(() -> new CloudIdentityDirectoryPrincipalSet(matcher.group(1).trim()));
   }
 
   // -------------------------------------------------------------------------
@@ -107,6 +106,6 @@ public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
 
   @Override
   public @NotNull String value() {
-    return this.primaryDomain.name();
+    return this.primaryDomain;
   }
 }

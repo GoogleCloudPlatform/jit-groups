@@ -32,16 +32,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIdentityDirectoryPrincipalSet> {
-  private static final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
-
   @Override
   protected @NotNull CloudIdentityDirectoryPrincipalSet createInstance() {
-    return new CloudIdentityDirectoryPrincipalSet(SAMPLE_DOMAIN);
+    return new CloudIdentityDirectoryPrincipalSet("example.com");
   }
 
   @Override
   protected @NotNull CloudIdentityDirectoryPrincipalSet createDifferentInstance() {
-    return new CloudIdentityDirectoryPrincipalSet(new Domain("example.org", Domain.Type.PRIMARY));
+    return new CloudIdentityDirectoryPrincipalSet("example.org");
   }
 
   // -------------------------------------------------------------------------
@@ -52,7 +50,21 @@ public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIden
   public void toString_returnsPrefixedValue() {
     assertEquals(
       "domain:example.com",
-      new CloudIdentityDirectoryPrincipalSet(SAMPLE_DOMAIN).toString());
+      new CloudIdentityDirectoryPrincipalSet("example.com").toString());
+  }
+
+  // -------------------------------------------------------------------------
+  // domain.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void domain() {
+    assertEquals(
+      new Domain("example.com", Domain.Type.PRIMARY),
+      new CloudIdentityDirectoryPrincipalSet("example.com").domain());
+    assertEquals(
+      Domain.Type.PRIMARY,
+      new CloudIdentityDirectoryPrincipalSet("example.com").domain().type());
   }
 
   // -------------------------------------------------------------------------
@@ -63,7 +75,7 @@ public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIden
   public void value() {
     assertEquals(
       "example.com",
-      new CloudIdentityDirectoryPrincipalSet(SAMPLE_DOMAIN).value());
+      new CloudIdentityDirectoryPrincipalSet("example.com").value());
   }
 
   // -------------------------------------------------------------------------
@@ -75,6 +87,7 @@ public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIden
     "",
     "domain",
     "domain:  ",
+    "domain:domain:example.com  ",
     "domain"
   })
   public void parse_whenInvalid(String s) {
@@ -90,7 +103,7 @@ public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIden
   })
   public void parse(String s) {
     assertEquals(
-      new CloudIdentityDirectoryPrincipalSet(SAMPLE_DOMAIN),
+      new CloudIdentityDirectoryPrincipalSet("example.com"),
       CloudIdentityDirectoryPrincipalSet.parse(s).get());
   }
 }
