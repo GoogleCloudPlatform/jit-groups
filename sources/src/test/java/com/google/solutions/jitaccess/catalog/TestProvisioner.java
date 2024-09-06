@@ -25,10 +25,7 @@ import com.google.api.services.cloudidentity.v1.model.EntityKey;
 import com.google.api.services.cloudidentity.v1.model.Group;
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.api.services.cloudresourcemanager.v3.model.Policy;
-import com.google.solutions.jitaccess.apis.FolderId;
-import com.google.solutions.jitaccess.apis.IamRole;
-import com.google.solutions.jitaccess.apis.OrganizationId;
-import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
@@ -344,7 +341,7 @@ public class TestProvisioner {
           new Group().setGroupKey(new EntityKey().setId("jit.env-1.system-1.group-1@example.com")),
           new Group().setGroupKey(new EntityKey().setId("jit.env-1.system-1.group-2@example.com"))));
 
-      var mapping = new GroupMapping("example.com");
+      var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
 
       var provisioner = new Provisioner.GroupProvisioner(
         mapping,

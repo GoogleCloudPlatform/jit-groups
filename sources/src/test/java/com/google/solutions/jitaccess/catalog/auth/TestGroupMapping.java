@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.apis.Domain;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -43,13 +44,13 @@ public class TestGroupMapping {
     "jit.a.b.c@d.example.com",
   })
   public void isJitGroup_whenInvalid_thenReturnsFalse(String email) {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
     assertFalse(mapping.isJitGroup(new GroupId(email)));
   }
 
   @Test
   public void isJitGroup_whenValid_thenReturnsTrue() {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
     assertTrue(mapping.isJitGroup(new GroupId("jit.a.b.c@example.com")));
     assertTrue(mapping.isJitGroup(new GroupId("JIT.A.B.C@EXAMPLE.COM")));
   }
@@ -64,7 +65,7 @@ public class TestGroupMapping {
     "jit.a.b.c@d.example.com",
   })
   public void jitGroupFromGroup_whenInValid_thenThrowsException(String email) {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -73,7 +74,7 @@ public class TestGroupMapping {
 
   @Test
   public void jitGroupFromGroup_whenValid_thenReturnsJitGroupId() {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
 
     assertEquals(
       new JitGroupId("a", "b", "c"),
@@ -86,7 +87,7 @@ public class TestGroupMapping {
 
   @Test
   public void groupFromJitGroup() {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
 
     assertEquals(
       new GroupId("jit.a.b.c@example.com"),
@@ -99,7 +100,7 @@ public class TestGroupMapping {
 
   @Test
   public void groupPrefix() {
-    var mapping = new GroupMapping("example.com");
+    var mapping = new GroupMapping(new Domain("example.com", Domain.Type.PRIMARY));
     assertEquals("jit.env-1.", mapping.groupPrefix("env-1"));
   }
 }

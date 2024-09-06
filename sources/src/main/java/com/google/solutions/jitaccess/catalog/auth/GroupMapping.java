@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.apis.Domain;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.regex.Pattern;
@@ -32,9 +33,9 @@ public class GroupMapping {
   private static final String PREFIX = "jit";
   static final String NAME_PATTERN = "[a-zA-Z0-9\\-]+";
   private final @NotNull Pattern pattern;
-  private final @NotNull String domain;
+  private final @NotNull Domain domain;
 
-  public GroupMapping(@NotNull String domain) {
+  public GroupMapping(@NotNull Domain domain) {
     this.domain = domain;
     this.pattern = Pattern.compile(
       String.format(
@@ -80,7 +81,7 @@ public class GroupMapping {
       group.name()
     });
 
-    return new GroupId(String.format("%s@%s", handle, this.domain));
+    return new GroupId(String.format("%s@%s", handle, this.domain.name()));
   }
 
   /**

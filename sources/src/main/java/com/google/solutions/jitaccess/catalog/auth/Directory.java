@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.Domain;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public record Directory(
   @NotNull Directory.Type type,
-  @Nullable String hostedDomain
+  @Nullable Domain hostedDomain
 ) {
   public static final @NotNull Directory CONSUMER = new Directory(
     Type.CONSUMER,
@@ -45,17 +46,18 @@ public record Directory(
 
   public Directory {
     Preconditions.checkArgument(hostedDomain == null || type == Type.CLOUD_IDENTITY);
+    Preconditions.checkArgument(hostedDomain == null || hostedDomain.type() == Domain.Type.PRIMARY);
   }
 
   public Directory(@NotNull String hostedDomain) {
-    this(Type.CLOUD_IDENTITY, hostedDomain);
+    this(Type.CLOUD_IDENTITY, new Domain(hostedDomain, Domain.Type.PRIMARY));
   }
 
   @Override
   public String toString() {
     return switch (this.type) {
       case CONSUMER, PROJECT -> this.type.toString();
-      case CLOUD_IDENTITY -> this.hostedDomain;
+      case CLOUD_IDENTITY -> this.hostedDomain.toString();
     };
   }
 
