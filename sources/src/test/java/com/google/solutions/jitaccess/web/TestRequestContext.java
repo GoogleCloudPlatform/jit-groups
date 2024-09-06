@@ -57,7 +57,7 @@ public class TestRequestContext {
   @Test
   public void whenAuthenticated() throws Exception {
     var resolver = Mockito.mock(SubjectResolver.class);
-    when(resolver.resolvePrincipals(eq(SAMPLE_USER)))
+    when(resolver.resolvePrincipals(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY)))
       .thenReturn(Set.of(
         new Principal(SAMPLE_USER),
         new Principal(SAMPLE_GROUP)));
@@ -71,6 +71,6 @@ public class TestRequestContext {
 
     assertEquals("device-1", context.device().deviceId());
 
-    verify(resolver, times(1)).resolvePrincipals(eq(SAMPLE_USER));
+    verify(resolver, times(1)).resolvePrincipals(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY));
   }
 }

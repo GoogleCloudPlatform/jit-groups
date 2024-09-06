@@ -49,6 +49,10 @@ public record Directory(
     Preconditions.checkArgument(hostedDomain == null || hostedDomain.type() == Domain.Type.PRIMARY);
   }
 
+  public Directory(@NotNull Domain hostedDomain) {
+    this(Type.CLOUD_IDENTITY, hostedDomain);
+  }
+
   public Directory(@NotNull String hostedDomain) {
     this(Type.CLOUD_IDENTITY, new Domain(hostedDomain, Domain.Type.PRIMARY));
   }

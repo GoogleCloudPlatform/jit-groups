@@ -44,7 +44,8 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
 
   /**
    * Principal identifier that identifies all users that
-   * belong to the local Cloud Identity/Workspace account.
+   * belong to the "internal" Cloud Identity/Workspace account, i.e.,
+   * the account that this instance of JIT Groups is associated with.
    *
    * Consumer accounts and service accounts are not considered
    * internal.
@@ -53,7 +54,7 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
 
   /**
    * Principal identifier that identifies all users that
-   * do not belong to the local Cloud Identity/Workspace account,
+   * do not belong to the internal Cloud Identity/Workspace account,
    * including consumer accounts and service accounts.
    */
   public static final @NotNull UserClassId EXTERNAL_USERS = new UserClassId("externalUsers");

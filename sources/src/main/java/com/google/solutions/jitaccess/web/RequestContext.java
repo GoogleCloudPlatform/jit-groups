@@ -95,7 +95,7 @@ public class RequestContext {
             try {
               this.cachedPrincipals = RequestContext.this
                 .subjectResolver
-                .resolvePrincipals(this.user());
+                .resolvePrincipals(this.user(), directory);
             }
             catch (AccessException | IOException e) {
               throw new UncheckedExecutionException(e);
