@@ -21,16 +21,19 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Principal set that matches a class of users.
  */
 public class ClassPrincipalSet implements PrincipalId, Comparable<ClassPrincipalSet> {
+  private static final @NotNull Pattern PATTERN = Pattern.compile("^class:(.+)$");
   public static final String TYPE = "class";
   private static final String TYPE_PREFIX = TYPE + ":";
 
@@ -60,9 +63,9 @@ public class ClassPrincipalSet implements PrincipalId, Comparable<ClassPrincipal
   public static final @NotNull ClassPrincipalSet EXTERNAL_USERS = new ClassPrincipalSet("externalUsers");
 
   private static final Map<String, ClassPrincipalSet> PARSE_MAP = Map.of(
-    IAP_USERS.toString().toLowerCase(), IAP_USERS,
-    INTERNAL_USERS.toString().toLowerCase(), INTERNAL_USERS,
-    EXTERNAL_USERS.toString().toLowerCase(), EXTERNAL_USERS);
+    IAP_USERS.value.toLowerCase(), IAP_USERS,
+    INTERNAL_USERS.value.toLowerCase(), INTERNAL_USERS,
+    EXTERNAL_USERS.value.toLowerCase(), EXTERNAL_USERS);
 
   @SuppressWarnings("SameParameterValue")
   private ClassPrincipalSet(@NotNull String value) {
@@ -77,7 +80,10 @@ public class ClassPrincipalSet implements PrincipalId, Comparable<ClassPrincipal
       return Optional.empty();
     }
 
-    return Optional.ofNullable(PARSE_MAP.get(s.trim().toLowerCase()));
+    var matcher = PATTERN.matcher(s.trim().toLowerCase());
+    return NullaryOptional
+      .ifTrue(matcher.matches())
+      .map(() -> PARSE_MAP.get(matcher.group(1).trim().toLowerCase()));
   }
 
   // -------------------------------------------------------------------------

@@ -90,6 +90,7 @@ public class TestGroupId extends TestRecord<GroupId> {
   @ParameterizedTest
   @ValueSource(strings = {
     "group:group@example.com",
+    "group: group@example.com ",
     "  group:GROUP@example.com "
   })
   public void parse(String id) {

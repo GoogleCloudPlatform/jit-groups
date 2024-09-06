@@ -94,6 +94,7 @@ public class TestEndUserId extends TestRecord<EndUserId> {
   @ParameterizedTest
   @ValueSource(strings = {
     "user:user@example.com",
+    "user:  user@example.com  ",
     "  user:USER@example.com "
   })
   public void parse(String id) {
