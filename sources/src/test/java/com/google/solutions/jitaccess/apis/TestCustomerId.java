@@ -21,12 +21,28 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TestCustomerId {
+public class TestCustomerId extends TestRecord<CustomerId> {
+
+  @Override
+  protected @NotNull CustomerId createInstance() {
+    return new CustomerId("C1");
+  }
+
+  @Override
+  protected @NotNull CustomerId createDifferentInstance() {
+    return new CustomerId("C2");
+  }
+
+  // -------------------------------------------------------------------------
+  // Constructor.
+  // -------------------------------------------------------------------------
+
   @Test
   public void constructor_whenMalformed() {
     assertThrows(
@@ -34,53 +50,14 @@ public class TestCustomerId {
       () -> new CustomerId("123"));
   }
 
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
   public void toString_returnsId() {
     assertEquals(
       "C123",
       new CustomerId("C123").toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    CustomerId id1 = new CustomerId("C1");
-    CustomerId id2 = new CustomerId("C1");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    CustomerId id1 = new CustomerId("C1");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    CustomerId id1 = new CustomerId("C1");
-    CustomerId id2 = new CustomerId("C2");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    CustomerId id1 = new CustomerId("C1");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    CustomerId id1 = new CustomerId("C1");
-
-    assertFalse(id1.equals(""));
   }
 }

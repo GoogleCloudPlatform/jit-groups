@@ -21,6 +21,8 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,7 +30,17 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupId {
+public class TestGroupId extends TestRecord<GroupId> {
+  @Override
+  protected @NotNull GroupId createInstance() {
+    return new GroupId("group-1@example.com");
+  }
+
+  @Override
+  protected @NotNull GroupId createDifferentInstance() {
+    return new GroupId("group-2@example.com");
+  }
+
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
@@ -37,62 +49,6 @@ public class TestGroupId {
   public void toString_returnsEmailInLowerCase() {
     Assertions.assertEquals("group:test@example.com", new GroupId("test@example.com").toString());
     Assertions.assertEquals("group:test@example.com", new GroupId("Test@Example.com").toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    GroupId id1 = new GroupId("group@example.com");
-    GroupId id2 = new GroupId("group@example.com");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-    assertEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectAreEquivalentButDifferInCasing() {
-    GroupId id1 = new GroupId("Group@Example.com");
-    GroupId id2 = new GroupId("group@example.com");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-    assertEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    GroupId id1 = new GroupId("group@example.com");
-
-    assertTrue(id1.equals(id1));
-    assertEquals(0, id1.compareTo(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    GroupId id1 = new GroupId("alice@example.com");
-    GroupId id2 = new GroupId("group@example.com");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-    assertNotEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    GroupId id1 = new GroupId("group@example.com");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    GroupId id1 = new GroupId("group@example.com");
-
-    assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------

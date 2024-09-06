@@ -21,11 +21,23 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestEmailAddress {
+public class TestEmailAddress extends TestRecord<EmailAddress> {
+  @Override
+  protected @NotNull EmailAddress createInstance() {
+    return new EmailAddress("alice@example.com");
+  }
+
+  @Override
+  protected @NotNull EmailAddress createDifferentInstance() {
+    return new EmailAddress("bob@example.com");
+  }
+  
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
@@ -33,48 +45,5 @@ public class TestEmailAddress {
   @Test
   public void toString_returnsEmail() {
     assertEquals("test@example.com", new EmailAddress("test@example.com").toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    EmailAddress id1 = new EmailAddress("bob@example.com");
-    EmailAddress id2 = new EmailAddress("bob@example.com");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    EmailAddress id1 = new EmailAddress("bob@example.com");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    EmailAddress id1 = new EmailAddress("alice@example.com");
-    EmailAddress id2 = new EmailAddress("bob@example.com");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    EmailAddress id1 = new EmailAddress("bob@example.com");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    EmailAddress id1 = new EmailAddress("bob@example.com");
-
-    assertFalse(id1.equals(""));
   }
 }

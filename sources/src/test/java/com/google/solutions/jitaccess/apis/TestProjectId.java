@@ -21,7 +21,9 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.TestRecord;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,7 +33,21 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestProjectId {
+public class TestProjectId extends TestRecord<ProjectId> {
+  @Override
+  protected @NotNull ProjectId createInstance() {
+    return  new ProjectId("project-1");
+  }
+
+  @Override
+  protected @NotNull ProjectId createDifferentInstance() {
+    return  new ProjectId("project-2");
+  }
+
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
   public void toString_returnsId() {
     assertEquals("project-1", new ProjectId("project-1").toString());
@@ -105,49 +121,6 @@ public class TestProjectId {
   @Test
   public void path() {
     assertEquals("projects/project-1", new ProjectId("project-1").path());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    ProjectId id1 = new ProjectId("project-1");
-    ProjectId id2 = new ProjectId("project-1");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    ProjectId id1 = new ProjectId("project-1");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    ProjectId id1 = new ProjectId("project-1");
-    ProjectId id2 = new ProjectId("project-2");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    ProjectId id1 = new ProjectId("project-1");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    ProjectId id1 = new ProjectId("project-1");
-
-    assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------
