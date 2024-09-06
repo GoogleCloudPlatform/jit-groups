@@ -98,7 +98,25 @@ public class TestUserClassId {
     " class:iapUsers",
     "class:IAPUSERS  "
   })
-  public void parse(String s) {
+  public void parse_iapUsers(String s) {
     assertEquals(UserClassId.IAP_USERS, UserClassId.parse(s).get());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    " class:internalUsers",
+    "class:INTERNALUSERS  "
+  })
+  public void parse_internalUsers(String s) {
+    assertEquals(UserClassId.INTERNAL_USERS, UserClassId.parse(s).get());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    " class:externalUsers",
+    "class:EXTERNALUSERS  "
+  })
+  public void parse_externalUsers(String s) {
+    assertEquals(UserClassId.EXTERNAL_USERS, UserClassId.parse(s).get());
   }
 }
