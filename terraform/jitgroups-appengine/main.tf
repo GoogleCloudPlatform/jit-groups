@@ -31,17 +31,38 @@ variable "project_id" {
 variable "location" {          
     description                = "AppEngine location, see https://cloud.google.com/about/locations#region"
     type                       = string
-}                              
+}         
 
-variable "admin_email" {       
-    description                = "Contact email address, must be a Cloud Identity/Workspace user"
+variable "customer_id" {       
+    description                = "Cloud Identity/Workspace customer ID"
     type                       = string
-}                              
+                               
+    validation {               
+        condition              = startswith(var.customer_id, "C")
+        error_message          = "customer_id must be a valid customer ID, starting with C"
+    }                          
+}                       
+     
+variable "primary_domain" {     
+    description                = "Primary domain of the Cloud Identity/Workspace account"
+    type                       = string
+}      
+
+variable "organization_id" {     
+    description                = "Organization ID of the Google Cloud organization"
+    type                       = string
+}                               
                                
 variable "groups_domain" {     
     description                = "Domain to use for JIT groups, this can be the primary or a secondary domain"
     type                       = string
-}                              
+    default                    = null
+}    
+
+variable "admin_email" {       
+    description                = "Contact email address, must be a Cloud Identity/Workspace user"
+    type                       = string
+}                            
                                
 variable "resource_scope" {    
     description                = "JIT Access 1.x compatibility: Project, folder, or organization that JIT Access can manage access for"
@@ -67,17 +88,7 @@ variable "environments" {
         condition              = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
         error_message          = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
     }                          
-}                              
-                               
-variable "customer_id" {       
-    description                = "Cloud Identity/Workspace customer ID"
-    type                       = string
-                               
-    validation {               
-        condition              = startswith(var.customer_id, "C")
-        error_message          = "customer_id must be a valid customer ID, starting with C"
-    }                          
-}                              
+}                                                           
                                
 variable "iap_users" {         
     description                = "Users and groups to allow IAP-access to the application, prefixed with 'user:', 'group:', or domain:"
@@ -380,6 +391,8 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     env_variables              = merge({
       "RESOURCE_SCOPE"         = var.resource_scope
       "CUSTOMER_ID"            = var.customer_id
+      "PRIMARY_DOMAIN"         = var.primary_domain
+      "ORGANIZATION_ID"        = var.organization_id
       "GROUPS_DOMAIN"          = var.groups_domain
       "SMTP_HOST"              = var.smtp_host
       "SMTP_SENDER_ADDRESS"    = var.smtp_user
