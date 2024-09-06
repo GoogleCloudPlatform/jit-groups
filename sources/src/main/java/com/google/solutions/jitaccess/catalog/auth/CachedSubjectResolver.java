@@ -50,7 +50,7 @@ public class CachedSubjectResolver extends SubjectResolver {
     @NotNull Logger logger,
     @NotNull Options options
   ) {
-    super(groupsClient, groupMapping, executor, logger);
+    super(groupsClient, groupMapping, options.internalDirectory, executor, logger);
 
     this.cache =  CacheBuilder.newBuilder()
       .expireAfterWrite(options.cacheDuration)
@@ -58,13 +58,13 @@ public class CachedSubjectResolver extends SubjectResolver {
 
         @Override
         public @NotNull Set<Principal> load(@NotNull EndUserId userId) throws Exception {
-          return CachedSubjectResolver.super.resolvePrincipals(userId);
+          return CachedSubjectResolver.super.resolveGroupPrincipals(userId);
         }
       });
   }
 
   @Override
-  public @NotNull Set<Principal> resolvePrincipals(
+  protected @NotNull Set<Principal> resolveGroupPrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     try {
@@ -87,6 +87,7 @@ public class CachedSubjectResolver extends SubjectResolver {
    * Constructor options, injectable using CDI.
    */
   public record Options(
-    @NotNull Duration cacheDuration
+    @NotNull Duration cacheDuration,
+    @NotNull Directory internalDirectory
   ) {}
 }

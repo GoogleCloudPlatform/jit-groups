@@ -45,17 +45,20 @@ import java.util.stream.Collectors;
 public class SubjectResolver {
   private final @NotNull CloudIdentityGroupsClient groupsClient;
   private final @NotNull GroupMapping groupMapping;
+  private final @NotNull Directory internalDirectory;
   private final @NotNull Executor executor;
   private final @NotNull Logger logger;
 
   public SubjectResolver(
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull GroupMapping groupMapping,
+    @NotNull Directory internalDirectory,
     @NotNull Executor executor,
     @NotNull Logger logger
   ) {
     this.groupsClient = groupsClient;
     this.groupMapping = groupMapping;
+    this.internalDirectory = internalDirectory;
     this.executor = executor;
     this.logger = logger;
   }
@@ -142,15 +145,9 @@ public class SubjectResolver {
   }
 
   /**
-   * Lookup all of a user's principals. These include:
-   *
-   * <ul>
-   *   <li>The user itself</li>
-   *   <li>JIT Group memberships</li>
-   *   <li>Other group memberships</li>
-   * </ul>
+   * Create principals for all of a user's group memberships.
    */
-  public @NotNull Set<Principal> resolvePrincipals(
+  protected @NotNull Set<Principal> resolveGroupPrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     //
@@ -215,18 +212,57 @@ public class SubjectResolver {
 
     var jitGroupPrincipals = resolveJitGroupMemberships(user, jitGroupMemberships);
 
-    var allPrincipals = new HashSet<Principal>();
-    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
-    allPrincipals.add(new Principal(user));
-    allPrincipals.addAll(otherGroupPrincipals);
-    allPrincipals.addAll(jitGroupPrincipals);
-
     this.logger.info(
       EventIds.SUBJECT_RESOLUTION,
       String.format("The user '%s' is a member of %d JIT groups and %d other groups",
         user,
         jitGroupPrincipals.size(),
         otherGroupPrincipals.size()));
+
+    var allGroupPrincipals = new HashSet<Principal>();
+    allGroupPrincipals.addAll(otherGroupPrincipals);
+    allGroupPrincipals.addAll(jitGroupPrincipals);
+    return allGroupPrincipals;
+  }
+
+  /**
+   * Lookup all of a user's principals. These include:
+   *
+   * <ul>
+   *   <li>The user itself</li>
+   *   <li>JIT Group memberships</li>
+   *   <li>Other group memberships</li>
+   * </ul>
+   */
+  public @NotNull Set<Principal> resolvePrincipals(
+    @NotNull EndUserId user,
+    @NotNull Directory directory
+  ) throws AccessException, IOException {
+
+    var allPrincipals = new HashSet<Principal>();
+    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
+    allPrincipals.add(new Principal(user));
+    allPrincipals.addAll(resolveGroupPrincipals(user));
+
+    //
+    // Add an extra principal based on the directory the user
+    // belongs to. This principal can be used for deny-purposes,
+    // for example to deny external users from viewing or joining
+    // a group.
+    //
+    if (directory.type() == Directory.Type.CLOUD_IDENTITY &&
+      directory.equals(this.internalDirectory)) {
+      //
+      // This user belongs to the internal directory.
+      //
+      allPrincipals.add(new Principal(UserClassId.INTERNAL_USERS));
+    }
+    else {
+      //
+      // This user does not belong to the internal directory.
+      //
+      allPrincipals.add(new Principal(UserClassId.EXTERNAL_USERS));
+    }
 
     return allPrincipals;
   }

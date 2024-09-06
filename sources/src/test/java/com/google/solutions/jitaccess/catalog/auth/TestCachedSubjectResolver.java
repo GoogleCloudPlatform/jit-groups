@@ -56,10 +56,12 @@ public class TestCachedSubjectResolver {
       mapping,
       EXECUTOR,
       Mockito.mock(Logger.class),
-      new CachedSubjectResolver.Options(Duration.ofMinutes(1)));
+      new CachedSubjectResolver.Options(
+        Duration.ofMinutes(1),
+        new Directory(SAMPLE_DOMAIN)));
 
-    resolver.resolvePrincipals(SAMPLE_USER); // Triggers load
-    resolver.resolvePrincipals(SAMPLE_USER); // Triggers cache
+    resolver.resolveGroupPrincipals(SAMPLE_USER); // Triggers load
+    resolver.resolveGroupPrincipals(SAMPLE_USER); // Triggers cache
 
     verify(groupsClient, times(1)).listMembershipsByUser(eq(SAMPLE_USER));
   }

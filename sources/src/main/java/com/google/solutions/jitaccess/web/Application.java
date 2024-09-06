@@ -340,7 +340,9 @@ public class Application {
     // load can benefit from it, but short enough so that new group
     // memberships are applied without substantial extra delay.
     //
-    return new CachedSubjectResolver.Options(Duration.ofSeconds(30));
+    return new CachedSubjectResolver.Options(
+      Duration.ofSeconds(30),
+      new Directory(configuration.primaryDomain));
   }
 
   @Produces

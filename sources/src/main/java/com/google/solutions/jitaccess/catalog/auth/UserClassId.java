@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.catalog.auth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -41,6 +42,28 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
    */
   public static final @NotNull UserClassId IAP_USERS = new UserClassId("iapUsers");
 
+  /**
+   * Principal identifier that identifies all users that
+   * belong to the "internal" Cloud Identity/Workspace account, i.e.,
+   * the account that this instance of JIT Groups is associated with.
+   *
+   * Consumer accounts and service accounts are not considered
+   * internal.
+   */
+  public static final @NotNull UserClassId INTERNAL_USERS = new UserClassId("internalUsers");
+
+  /**
+   * Principal identifier that identifies all users that
+   * do not belong to the internal Cloud Identity/Workspace account,
+   * including consumer accounts and service accounts.
+   */
+  public static final @NotNull UserClassId EXTERNAL_USERS = new UserClassId("externalUsers");
+
+  private static final Map<String, UserClassId> PARSE_MAP = Map.of(
+    IAP_USERS.toString().toLowerCase(), IAP_USERS,
+    INTERNAL_USERS.toString().toLowerCase(), INTERNAL_USERS,
+    EXTERNAL_USERS.toString().toLowerCase(), EXTERNAL_USERS);
+
   @SuppressWarnings("SameParameterValue")
   private UserClassId(@NotNull String value) {
     this.value = value;
@@ -54,14 +77,7 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
       return Optional.empty();
     }
 
-    s = s.trim();
-
-    if (s.equalsIgnoreCase(IAP_USERS.toString())) {
-      return Optional.of(IAP_USERS);
-    }
-    else {
-      return Optional.empty();
-    }
+    return Optional.ofNullable(PARSE_MAP.get(s.trim().toLowerCase()));
   }
 
   // -------------------------------------------------------------------------
