@@ -23,19 +23,15 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.solutions.jitaccess.apis.Domain;
-import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -217,8 +213,8 @@ public class TestSubjectResolver {
       .collect(Collectors.toSet());
 
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
-    assertTrue(principals.contains(UserClassId.IAP_USERS), "All");
-    assertTrue(principals.contains(UserClassId.INTERNAL_USERS), "Internal");
+    assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
+    assertTrue(principals.contains(ClassPrincipalSet.INTERNAL_USERS), "Internal");
   }
 
   @Test
@@ -242,8 +238,8 @@ public class TestSubjectResolver {
       .collect(Collectors.toSet());
 
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
-    assertTrue(principals.contains(UserClassId.IAP_USERS), "All");
-    assertTrue(principals.contains(UserClassId.EXTERNAL_USERS), "External");
+    assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
+    assertTrue(principals.contains(ClassPrincipalSet.EXTERNAL_USERS), "External");
   }
 
   @Test
@@ -267,7 +263,7 @@ public class TestSubjectResolver {
       .collect(Collectors.toSet());
 
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
-    assertTrue(principals.contains(UserClassId.IAP_USERS), "All");
-    assertTrue(principals.contains(UserClassId.EXTERNAL_USERS), "External");
+    assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
+    assertTrue(principals.contains(ClassPrincipalSet.EXTERNAL_USERS), "External");
   }
 }

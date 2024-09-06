@@ -21,45 +21,32 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestUserClassId {
+public class TestClassPrincipalSet extends TestRecord<ClassPrincipalSet> {
+  @Override
+  protected @NotNull ClassPrincipalSet createInstance() {
+    return ClassPrincipalSet.IAP_USERS;
+  }
+
+  @Override
+  protected @NotNull ClassPrincipalSet createDifferentInstance() {
+    return ClassPrincipalSet.INTERNAL_USERS;
+  }
+
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
 
   @Test
   public void toString_returnsPrefixedValue() {
-    assertEquals("class:iapUsers", UserClassId.IAP_USERS.toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    UserClassId id1 = UserClassId.IAP_USERS;
-    UserClassId id2 = UserClassId.IAP_USERS;
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-    assertEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    assertFalse(UserClassId.IAP_USERS.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    assertFalse(UserClassId.IAP_USERS.equals(""));
-    assertFalse(UserClassId.IAP_USERS.equals(new EndUserId("user@example.com")));
+    assertEquals("class:iapUsers", ClassPrincipalSet.IAP_USERS.toString());
   }
 
   // -------------------------------------------------------------------------
@@ -68,12 +55,12 @@ public class TestUserClassId {
 
   @Test
   public void value() {
-    assertEquals("iapUsers", UserClassId.IAP_USERS.value());
+    assertEquals("iapUsers", ClassPrincipalSet.IAP_USERS.value());
   }
 
   @Test
   public void iamPrincipalId() {
-    assertFalse(((Object)UserClassId.IAP_USERS) instanceof IamPrincipalId);
+    assertFalse(((Object) ClassPrincipalSet.IAP_USERS) instanceof IamPrincipalId);
   }
 
   // -------------------------------------------------------------------------
@@ -89,8 +76,8 @@ public class TestUserClassId {
     "class"
   })
   public void parse_whenInvalid(String s) {
-    assertFalse(UserClassId.parse(null).isPresent());
-    assertFalse(UserClassId.parse(s).isPresent());
+    assertFalse(ClassPrincipalSet.parse(null).isPresent());
+    assertFalse(ClassPrincipalSet.parse(s).isPresent());
   }
 
   @ParameterizedTest
@@ -99,7 +86,7 @@ public class TestUserClassId {
     "class:IAPUSERS  "
   })
   public void parse_iapUsers(String s) {
-    assertEquals(UserClassId.IAP_USERS, UserClassId.parse(s).get());
+    assertEquals(ClassPrincipalSet.IAP_USERS, ClassPrincipalSet.parse(s).get());
   }
 
   @ParameterizedTest
@@ -108,7 +95,7 @@ public class TestUserClassId {
     "class:INTERNALUSERS  "
   })
   public void parse_internalUsers(String s) {
-    assertEquals(UserClassId.INTERNAL_USERS, UserClassId.parse(s).get());
+    assertEquals(ClassPrincipalSet.INTERNAL_USERS, ClassPrincipalSet.parse(s).get());
   }
 
   @ParameterizedTest
@@ -117,6 +104,6 @@ public class TestUserClassId {
     "class:EXTERNALUSERS  "
   })
   public void parse_externalUsers(String s) {
-    assertEquals(UserClassId.EXTERNAL_USERS, UserClassId.parse(s).get());
+    assertEquals(ClassPrincipalSet.EXTERNAL_USERS, ClassPrincipalSet.parse(s).get());
   }
 }

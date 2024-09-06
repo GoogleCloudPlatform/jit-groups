@@ -27,7 +27,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
+import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.junit.jupiter.api.Nested;
@@ -60,7 +60,7 @@ public class TestLegacyPolicy {
 
     var aces = List.copyOf(policy.effectiveAccessControlList().entries());
     assertEquals(1, aces.size());
-    assertEquals(UserClassId.IAP_USERS, aces.get(0).principal);
+    assertEquals(ClassPrincipalSet.IAP_USERS, aces.get(0).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(0).accessRights);
   }
 
@@ -95,7 +95,7 @@ public class TestLegacyPolicy {
     assertEquals(new EndUserId("admin-1@example.com"), aces.get(0).principal);
     assertEquals(PolicyPermission.EXPORT.toMask(), aces.get(0).accessRights);
 
-    assertEquals(UserClassId.IAP_USERS, aces.get(1).principal);
+    assertEquals(ClassPrincipalSet.IAP_USERS, aces.get(1).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(1).accessRights);
   }
 
@@ -130,7 +130,7 @@ public class TestLegacyPolicy {
     assertEquals(new EndUserId("admin-1@example.com"), aces.get(1).principal);
     assertEquals(PolicyPermission.RECONCILE.toMask(), aces.get(1).accessRights);
 
-    assertEquals(UserClassId.IAP_USERS, aces.get(2).principal);
+    assertEquals(ClassPrincipalSet.IAP_USERS, aces.get(2).principal);
     assertEquals(PolicyPermission.VIEW.toMask(), aces.get(2).accessRights);
   }
 
