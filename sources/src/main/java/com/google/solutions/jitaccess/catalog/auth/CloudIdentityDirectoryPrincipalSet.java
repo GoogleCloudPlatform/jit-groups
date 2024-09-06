@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
-import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +51,9 @@ public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
     return TYPE_PREFIX + this.primaryDomain;
   }
 
+  /**
+   * Get the (primary) domain identified by this principal set.
+   */
   public @NotNull Domain domain() {
     return new Domain(this.primaryDomain, Domain.Type.PRIMARY);
   }
