@@ -145,11 +145,11 @@ public class TestSubjectResolver {
   }
 
   //---------------------------------------------------------------------------
-  // resolve
+  // resolvePrincipals
   //---------------------------------------------------------------------------
 
   @Test
-  public void resolve() throws Exception {
+  public void resolvePrincipals() throws Exception {
     var mapping = new GroupMapping(SAMPLE_DOMAIN);
 
     var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
@@ -174,13 +174,11 @@ public class TestSubjectResolver {
       EXECUTOR,
       Mockito.mock(Logger.class));
 
-    var subject = resolver.resolve(SAMPLE_USER, Directory.CONSUMER);
-    var principals = subject.principals().stream()
+    var principals = resolver.resolvePrincipals(SAMPLE_USER)
+      .stream()
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
-    assertEquals(SAMPLE_USER, subject.user());
-    assertSame(Directory.CONSUMER, subject.directory());
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(SAMPLE_GROUP), "other group");
     assertTrue(principals.contains(SAMPLE_JITGROUP), "JIT group");

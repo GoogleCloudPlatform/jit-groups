@@ -22,10 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.catalog.Subjects;
-import com.google.solutions.jitaccess.catalog.auth.Directory;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -60,21 +57,21 @@ public class TestRequestContext {
 
   @Test
   public void whenAuthenticated() throws Exception {
-    var subject = Subjects.createWithPrincipalIds(SAMPLE_USER, Set.of(SAMPLE_GROUP));
-
     var resolver = Mockito.mock(SubjectResolver.class);
-    when(resolver.resolve(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY)))
-      .thenReturn(subject);
+    when(resolver.resolvePrincipals(eq(SAMPLE_USER)))
+      .thenReturn(Set.of(
+        new Principal(SAMPLE_USER),
+        new Principal(SAMPLE_GROUP)));
 
     var context = new RequestContext(resolver);
     context.authenticate(SAMPLE_USER, SAMPLE_DIRECTORY, new IapDevice("device-1", List.of()));
 
     assertEquals(SAMPLE_USER.email, context.subject().user().email);
-    assertEquals(3, context.subject().principals().size());
-    assertEquals(3, context.subject().principals().size()); // Invoke again to trigger cache
+    assertEquals(2, context.subject().principals().size());
+    assertEquals(2, context.subject().principals().size()); // Invoke again to trigger cache
 
     assertEquals("device-1", context.device().deviceId());
 
-    verify(resolver, times(1)).resolve(eq(SAMPLE_USER), eq(SAMPLE_DIRECTORY));
+    verify(resolver, times(1)).resolvePrincipals(eq(SAMPLE_USER));
   }
 }
