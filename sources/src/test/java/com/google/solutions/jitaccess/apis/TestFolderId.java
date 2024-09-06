@@ -21,7 +21,9 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.TestRecord;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,7 +33,22 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestFolderId {
+public class TestFolderId extends TestRecord<FolderId> {
+
+  @Override
+  protected @NotNull FolderId createInstance() {
+    return new FolderId("100000000000000001");
+  }
+
+  @Override
+  protected @NotNull FolderId createDifferentInstance() {
+    return new FolderId("100000000000000002");
+  }
+
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
   public void toString_returnsId() {
     assertEquals("100000000000000001", new FolderId("100000000000000001").toString());
@@ -107,49 +124,6 @@ public class TestFolderId {
   @Test
   public void path() {
     assertEquals("folders/100000000000000001", new FolderId("100000000000000001").path());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    FolderId id1 = new FolderId("100000000000000001");
-    FolderId id2 = new FolderId("100000000000000001");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    FolderId id1 = new FolderId("100000000000000001");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    FolderId id1 = new FolderId("100000000000000001");
-    FolderId id2 = new FolderId("100000000000000002");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    FolderId id1 = new FolderId("100000000000000001");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    FolderId id1 = new FolderId("100000000000000001");
-
-    assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------

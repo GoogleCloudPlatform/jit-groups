@@ -21,7 +21,9 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.TestRecord;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,7 +33,22 @@ import java.util.TreeSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestOrganizationId {
+public class TestOrganizationId extends TestRecord<OrganizationId> {
+
+  @Override
+  protected @NotNull OrganizationId createInstance() {
+    return new OrganizationId("100000000000000001");
+  }
+
+  @Override
+  protected @NotNull OrganizationId createDifferentInstance() {
+    return new OrganizationId("100000000000000002");
+  }
+
+  // -------------------------------------------------------------------------
+  // toString.
+  // -------------------------------------------------------------------------
+
   @Test
   public void toString_returnsId() {
     assertEquals("100000000000000001", new OrganizationId("100000000000000001").toString());
@@ -106,49 +123,6 @@ public class TestOrganizationId {
   @Test
   public void path() {
     assertEquals("organizations/100000000000000001", new OrganizationId("100000000000000001").path());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    OrganizationId id1 = new OrganizationId("100000000000000001");
-    OrganizationId id2 = new OrganizationId("100000000000000001");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    OrganizationId id1 = new OrganizationId("100000000000000001");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    OrganizationId id1 = new OrganizationId("100000000000000001");
-    OrganizationId id2 = new OrganizationId("100000000000000002");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    OrganizationId id1 = new OrganizationId("100000000000000001");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    OrganizationId id1 = new OrganizationId("100000000000000001");
-
-    assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------

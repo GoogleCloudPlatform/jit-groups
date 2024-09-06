@@ -21,13 +21,25 @@
 
 package com.google.solutions.jitaccess.apis;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestIamRole {
+public class TestIamRole extends TestRecord<IamRole> {
+
+  @Override
+  protected @NotNull IamRole createInstance() {
+    return new IamRole("roles/viewer");
+  }
+
+  @Override
+  protected @NotNull IamRole createDifferentInstance() {
+    return new IamRole("roles/editor");
+  }
 
   // -------------------------------------------------------------------------
   // toString.

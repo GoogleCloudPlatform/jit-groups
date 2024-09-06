@@ -21,13 +21,23 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
+import com.google.solutions.jitaccess.TestRecord;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestGroupKey {
+public class TestGroupKey extends TestRecord<GroupKey> {
+  @Override
+  protected @NotNull GroupKey createInstance() {
+    return new GroupKey("1");
+  }
 
+  @Override
+  protected @NotNull GroupKey createDifferentInstance() {
+    return new GroupKey("2");
+  }
   // -------------------------------------------------------------------------
   // Constructor.
   // -------------------------------------------------------------------------
@@ -45,49 +55,5 @@ public class TestGroupKey {
   @Test
   public void toString_returnsPrefixedId() {
     assertEquals("groups/1", new GroupKey("1").toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    GroupKey id1 = new GroupKey("group-1");
-    GroupKey id2 = new GroupKey("group-1");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    GroupKey id1 = new GroupKey("group-1");
-
-    assertTrue(id1.equals(id1));
-  }
-
-  @Test
-  public void equals_whenObjectAreMotEquivalent() {
-    GroupKey id1 = new GroupKey("id-1");
-    GroupKey id2 = new GroupKey("id-2");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    GroupKey id1 = new GroupKey("group-1");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    var id = new GroupKey("group-1");
-    var email = new EndUserId("group-1@example.com");
-
-    assertFalse(id.equals(email));
   }
 }

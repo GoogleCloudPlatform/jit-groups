@@ -21,13 +21,25 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.TestRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TestEndUserId {
+public class TestEndUserId extends TestRecord<EndUserId> {
+  @Override
+  protected @NotNull EndUserId createInstance() {
+    return new EndUserId("alice@example.com");
+  }
+
+  @Override
+  protected @NotNull EndUserId createDifferentInstance() {
+    return new EndUserId("bob@example.com");
+  }
+
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------
@@ -36,62 +48,6 @@ public class TestEndUserId {
   public void toString_returnsEmailInLowerCase() {
     assertEquals("user:test@example.com", new EndUserId("test@example.com").toString());
     assertEquals("user:test@example.com", new EndUserId("Test@Example.com").toString());
-  }
-
-  // -------------------------------------------------------------------------
-  // Equality.
-  // -------------------------------------------------------------------------
-
-  @Test
-  public void equals_whenObjectAreEquivalent() {
-    var id1 = new EndUserId("bob@example.com");
-    var id2 = new EndUserId("bob@example.com");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-    assertEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectAreEquivalentButDifferInCasing() {
-    var id1 = new EndUserId("Bob@Example.Com");
-    var id2 = new EndUserId("bob@example.com");
-
-    assertTrue(id1.equals(id2));
-    assertEquals(id1.hashCode(), id2.hashCode());
-    assertEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectAreSame() {
-    var id1 = new EndUserId("bob@example.com");
-
-    assertTrue(id1.equals(id1));
-    assertEquals(0, id1.compareTo(id1));
-  }
-
-  @Test
-  public void equals_whenEmailsDiffer() {
-    var id1 = new EndUserId("alice@example.com");
-    var id2 = new EndUserId("bob@example.com");
-
-    assertFalse(id1.equals(id2));
-    assertNotEquals(id1.hashCode(), id2.hashCode());
-    assertNotEquals(0, id1.compareTo(id2));
-  }
-
-  @Test
-  public void equals_whenObjectIsNull() {
-    var id1 = new EndUserId("bob@example.com");
-
-    assertFalse(id1.equals(null));
-  }
-
-  @Test
-  public void equals_whenObjectIsDifferentType() {
-    var id1 = new EndUserId("bob@example.com");
-
-    assertFalse(id1.equals(""));
   }
 
   // -------------------------------------------------------------------------
