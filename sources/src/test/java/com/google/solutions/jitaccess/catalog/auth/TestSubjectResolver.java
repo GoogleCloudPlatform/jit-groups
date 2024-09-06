@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.api.services.cloudidentity.v1.model.*;
+import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
@@ -40,7 +41,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestSubjectResolver {
-  private final String SAMPLE_DOMAIN = "example.com";
+  private final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
   private final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
   private final GroupId SAMPLE_GROUP = new GroupId("other@" + SAMPLE_DOMAIN);

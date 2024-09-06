@@ -33,7 +33,8 @@ public class TestApplicationConfiguration {
 
   private Map<String, String> createMandatorySettings() {
     return Map.of(
-      "GROUPS_DOMAIN", "  example.com ",
+      "PRIMARY_DOMAIN", "  example.com ",
+      "ORGANIZATION_ID", "10000000000000001 ",
       "CUSTOMER_ID", " C123 ");
   }
 
@@ -43,7 +44,8 @@ public class TestApplicationConfiguration {
 
   @Test
   public void constructor_whenCustomerIdMissing_thenThrows() {
-    var data = Map.of("GROUPS_DOMAIN", "example.com");
+    var data = new HashMap<>(createMandatorySettings());
+    data.remove("CUSTOMER_ID");
 
     assertThrows(
       IllegalStateException.class,
@@ -51,8 +53,19 @@ public class TestApplicationConfiguration {
   }
 
   @Test
-  public void constructor_whenGroupDomainMissing_thenThrows() {
-    var data = Map.of("CUSTOMER_ID", "C123");
+  public void constructor_whenPrimaryDomainMissing_thenThrows() {
+    var data = new HashMap<>(createMandatorySettings());
+    data.remove("PRIMARY_DOMAIN");
+
+    assertThrows(
+      IllegalStateException.class,
+      () -> new ApplicationConfiguration(data));
+  }
+
+  @Test
+  public void constructor_whenOrganizationIdMissing_thenThrows() {
+    var data = new HashMap<>(createMandatorySettings());
+    data.remove("ORGANIZATION_ID");
 
     assertThrows(
       IllegalStateException.class,
@@ -62,8 +75,28 @@ public class TestApplicationConfiguration {
   @Test
   public void constructor_whenMandatorySettingsProvided() {
     var configuration = new ApplicationConfiguration(createMandatorySettings());
-    assertEquals("example.com", configuration.groupsDomain);
+    assertEquals("example.com", configuration.groupsDomain.name());
     assertEquals(new CustomerId("C123"), configuration.customerId);
+  }
+
+  // -------------------------------------------------------------------------
+  // groupsDomain.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void groupsDomain_whenNotSpecified() {
+    var configuration = new ApplicationConfiguration(createMandatorySettings());
+
+    assertEquals(configuration.primaryDomain, configuration.groupsDomain);
+  }
+
+  @Test
+  public void groupsDomain_whenSpecified() {
+    var settings = new HashMap<>(createMandatorySettings());
+    settings.put("GROUPS_DOMAIN", " groups.example.com ");
+    var configuration = new ApplicationConfiguration(settings);
+
+    assertEquals("groups.example.com", configuration.groupsDomain.name());
   }
 
   // -------------------------------------------------------------------------

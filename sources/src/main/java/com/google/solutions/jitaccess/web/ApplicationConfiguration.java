@@ -22,6 +22,8 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.solutions.jitaccess.apis.CustomerId;
+import com.google.solutions.jitaccess.apis.Domain;
+import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
@@ -46,11 +48,22 @@ class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull CustomerId customerId;
 
   /**
+   * Cloud Identity/Workspace primary domain.
+   */
+  final @NotNull Domain primaryDomain;
+
+
+  /**
+   * Google Cloud organization ID.
+   */
+  final @NotNull OrganizationId organizationId;
+
+  /**
    * Domain to use for JIT groups. This can be the primary
    * or a secondary domain of the account identified
    * by @see customerId.
    */
-  final @NotNull String groupsDomain;
+  final @NotNull Domain groupsDomain;
 
   /**
    * list of environments.
@@ -150,7 +163,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
    */
   final @NotNull Duration backendWriteTimeout;
 
-
   final @NotNull String legacyCatalog;
   final @NotNull Optional<String> legacyScope;
   final @NotNull Duration legacyActivationTimeout;
@@ -158,23 +170,51 @@ class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull String legacyJustificationHint;
   final @NotNull String legacyProjectsQuery;
 
-
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     super(settingsData);
 
     //
-    // Basic settings.
+    // Read required settings.
+    //
+    // NB. CustomerIDs, primary domains, organization IDs can be translated
+    //     into each other by using the organization.search API, but this
+    //     API requires the `resourcemanager.organizations.get` permission.
+    //
+    //     Service accounts don't have this permission by default, and granting
+    //     the corresponding `Organization Viewer` role requires changing the
+    //     organzization's IAM policy, which is a lot to ask for.
+    //
+    //     Therefore, we require the configuration to contain all 3 pieces of
+    //     information, even if it's somewhat redundant.
     //
     this.customerId = readStringSetting(
       "CUSTOMER_ID",
       "RESOURCE_CUSTOMER_ID") // Name used in 1.x
       .map(CustomerId::new)
       .orElseThrow(() -> new IllegalStateException(
-        "The environment variable 'CUSTOMER_ID' must be set to the customer ID " +
-          "of a Cloud Identity or Workspace account"));
-    this.groupsDomain = readStringSetting("GROUPS_DOMAIN")
+        "The environment variable 'CUSTOMER_ID' must contain the customer ID " +
+          "of a Cloud Identity or Workspace account, see" +
+          "https://support.google.com/a/answer/10070793"));
+    this.primaryDomain = readStringSetting("PRIMARY_DOMAIN")
+      .map(d -> new Domain(d, Domain.Type.PRIMARY))
       .orElseThrow(() -> new IllegalStateException(
-        "The environment variable 'GROUPS_DOMAIN' must contain a (verified) domain name"));
+        "The environment variable 'PRIMARY_DOMAIN' must contain the primary domain name " +
+          "of a Cloud Identity/Workspace account, see https://support.google.com/a/answer/182080"));
+    this.organizationId = readStringSetting("ORGANIZATION_ID")
+      .map(OrganizationId::new)
+      .orElseThrow(() -> new IllegalStateException(
+        "The environment variable 'ORGANIZATION_ID' must contain the organization ID of " +
+          "a Google Cloud organization, see " +
+          "https://cloud.google.com/resource-manager/docs/creating-managing-organization"));
+
+    //
+    // Read optional settings.
+    //
+    this.groupsDomain = readStringSetting("GROUPS_DOMAIN")
+      .map(d -> new Domain(d, d.equalsIgnoreCase(this.primaryDomain.name())
+        ? Domain.Type.PRIMARY
+        : Domain.Type.SECONDARY))
+      .orElse(this.primaryDomain);
     this.proposalTimeout = readDurationSetting(
       ChronoUnit.MINUTES,
       "APPROVAL_TIMEOUT",

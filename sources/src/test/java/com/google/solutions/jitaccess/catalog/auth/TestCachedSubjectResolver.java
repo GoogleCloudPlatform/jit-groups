@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.catalog.Logger;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestCachedSubjectResolver {
-  private static final String SAMPLE_DOMAIN = "example.com";
-  private static final Directory SAMPLE_DIRECTORY = new Directory(SAMPLE_DOMAIN);
+  private static final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
+  private static final Directory SAMPLE_DIRECTORY = new Directory(Directory.Type.CLOUD_IDENTITY, SAMPLE_DOMAIN);
   private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private static final Executor EXECUTOR = command -> command.run();
 

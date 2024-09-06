@@ -33,13 +33,34 @@ variable "location" {
     type                       = string
 }
 
+variable "customer_id" {       
+    description                = "Cloud Identity/Workspace customer ID"
+    type                       = string
+                               
+    validation {               
+        condition              = startswith(var.customer_id, "C")
+        error_message          = "customer_id must be a valid customer ID, starting with C"
+    }                          
+}                       
+     
+variable "primary_domain" {     
+    description                = "Primary domain of the Cloud Identity/Workspace account"
+    type                       = string
+}      
+
+variable "organization_id" {     
+    description                = "Organization ID of the Google Cloud organization"
+    type                       = string
+}                                     
+                               
+variable "groups_domain" {     
+    description                = "Domain to use for JIT groups, this can be the primary or a secondary domain"
+    type                       = string
+    default                    = null
+}    
+
 variable "admin_email" {
     description                = "Contact email address, must be a Cloud Identity/Workspace user"
-    type                       = string
-}
-
-variable "groups_domain" {
-    description                = "Domain to use for JIT groups, this can be the primary or a secondary domain"
     type                       = string
 }
 
@@ -66,16 +87,6 @@ variable "environments" {
     validation {
         condition              = alltrue([for e in var.environments : startswith(lower(e), "serviceaccount:")])
         error_message          = "environments must use the format 'serviceAccount:jit-NAME@PROJECT.iam.gserviceaccount.com'"
-    }
-}
-
-variable "customer_id" {
-    description                = "Cloud Identity/Workspace customer ID"
-    type                       = string
-
-    validation {
-        condition              = startswith(var.customer_id, "C")
-        error_message          = "customer_id must be a valid customer ID, starting with C"
     }
 }
 
@@ -396,6 +407,8 @@ resource "google_cloud_run_v2_service" "service" {
                                    "IAP_VERIFY_AUDIENCE"    = "false"
                                    "RESOURCE_SCOPE"         = var.resource_scope
                                    "CUSTOMER_ID"            = var.customer_id
+                                   "PRIMARY_DOMAIN"         = var.primary_domain
+                                   "ORGANIZATION_ID"        = var.organization_id
                                    "GROUPS_DOMAIN"          = var.groups_domain
                                    "SMTP_HOST"              = var.smtp_host
                                    "SMTP_SENDER_ADDRESS"    = var.smtp_user

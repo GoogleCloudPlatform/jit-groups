@@ -96,7 +96,7 @@ public class TestIapAssertion {
       .set("hd", "example.COM"));
 
     assertEquals(Directory.Type.CLOUD_IDENTITY, assertion.directory().type());
-    assertEquals("example.com", assertion.directory().hostedDomain());
+    assertEquals("example.com", assertion.directory().hostedDomain().name());
   }
 
   // -------------------------------------------------------------------------
