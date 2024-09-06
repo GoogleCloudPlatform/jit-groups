@@ -150,7 +150,7 @@ public class SubjectResolver {
    *   <li>Other group memberships</li>
    * </ul>
    */
-  protected @NotNull Set<Principal> lookupPrincipals(
+  public @NotNull Set<Principal> resolvePrincipals(
     @NotNull EndUserId user
   ) throws AccessException, IOException {
     //
@@ -229,40 +229,6 @@ public class SubjectResolver {
         otherGroupPrincipals.size()));
 
     return allPrincipals;
-  }
-
-  /**
-   * Build a subject for a given user. The subject includes all the user's
-   * principals, including:
-   *
-   * - the user's ID
-   * - roles
-   * - groups
-   *
-   */
-  public @NotNull Subject resolve(
-    @NotNull EndUserId user,
-    @NotNull Directory directory
-  ) throws AccessException, IOException {
-    var allPrincipals = lookupPrincipals(user);
-    assert allPrincipals.stream().anyMatch(p -> p.id().equals(user));
-
-    return new Subject() {
-      @Override
-      public @NotNull EndUserId user() {
-        return user;
-      }
-
-      @Override
-      public @NotNull Directory directory() {
-        return directory;
-      }
-
-      @Override
-      public @NotNull Set<Principal> principals() {
-        return allPrincipals;
-      }
-    };
   }
 
   record UnresolvedMembership(

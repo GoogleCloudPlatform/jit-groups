@@ -36,7 +36,6 @@ import static org.mockito.Mockito.*;
 
 public class TestCachedSubjectResolver {
   private static final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
-  private static final Directory SAMPLE_DIRECTORY = new Directory(Directory.Type.CLOUD_IDENTITY, SAMPLE_DOMAIN);
   private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
   private static final Executor EXECUTOR = command -> command.run();
 
@@ -59,8 +58,8 @@ public class TestCachedSubjectResolver {
       Mockito.mock(Logger.class),
       new CachedSubjectResolver.Options(Duration.ofMinutes(1)));
 
-    resolver.resolve(SAMPLE_USER, SAMPLE_DIRECTORY); // Triggers load
-    resolver.resolve(SAMPLE_USER, SAMPLE_DIRECTORY); // Triggers cache
+    resolver.resolvePrincipals(SAMPLE_USER); // Triggers load
+    resolver.resolvePrincipals(SAMPLE_USER); // Triggers cache
 
     verify(groupsClient, times(1)).listMembershipsByUser(eq(SAMPLE_USER));
   }
