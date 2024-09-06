@@ -32,7 +32,7 @@ import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
+import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import com.google.solutions.jitaccess.util.Exceptions;
@@ -642,7 +642,7 @@ public class PolicyDocument {
             return Optional.<PrincipalId>empty()
               .or(() -> EndUserId.parse(s))
               .or(() -> GroupId.parse(s))
-              .or(() -> UserClassId.parse(s))
+              .or(() -> ClassPrincipalSet.parse(s))
               .orElse(null);
           }
           catch (IllegalArgumentException e) {

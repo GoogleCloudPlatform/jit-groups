@@ -28,9 +28,9 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Pseudo-principal identifier for a class of users.
+ * Principal set that matches a class of users.
  */
-public class UserClassId implements PrincipalId, Comparable<UserClassId> {
+public class ClassPrincipalSet implements PrincipalId, Comparable<ClassPrincipalSet> {
   public static final String TYPE = "class";
   private static final String TYPE_PREFIX = TYPE + ":";
 
@@ -40,7 +40,7 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
    * Principal identifier that identifies all users that
    * have been authorized by IAP.
    */
-  public static final @NotNull UserClassId IAP_USERS = new UserClassId("iapUsers");
+  public static final @NotNull ClassPrincipalSet IAP_USERS = new ClassPrincipalSet("iapUsers");
 
   /**
    * Principal identifier that identifies all users that
@@ -50,29 +50,29 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
    * Consumer accounts and service accounts are not considered
    * internal.
    */
-  public static final @NotNull UserClassId INTERNAL_USERS = new UserClassId("internalUsers");
+  public static final @NotNull ClassPrincipalSet INTERNAL_USERS = new ClassPrincipalSet("internalUsers");
 
   /**
    * Principal identifier that identifies all users that
    * do not belong to the internal Cloud Identity/Workspace account,
    * including consumer accounts and service accounts.
    */
-  public static final @NotNull UserClassId EXTERNAL_USERS = new UserClassId("externalUsers");
+  public static final @NotNull ClassPrincipalSet EXTERNAL_USERS = new ClassPrincipalSet("externalUsers");
 
-  private static final Map<String, UserClassId> PARSE_MAP = Map.of(
+  private static final Map<String, ClassPrincipalSet> PARSE_MAP = Map.of(
     IAP_USERS.toString().toLowerCase(), IAP_USERS,
     INTERNAL_USERS.toString().toLowerCase(), INTERNAL_USERS,
     EXTERNAL_USERS.toString().toLowerCase(), EXTERNAL_USERS);
 
   @SuppressWarnings("SameParameterValue")
-  private UserClassId(@NotNull String value) {
+  private ClassPrincipalSet(@NotNull String value) {
     this.value = value;
   }
 
   /**
    * Parse a user ID that uses prefixed syntax.
    */
-  public static Optional<UserClassId> parse(@Nullable String s) {
+  public static Optional<ClassPrincipalSet> parse(@Nullable String s) {
     if (s == null || s.isBlank()) {
       return Optional.empty();
     }
@@ -114,12 +114,12 @@ public class UserClassId implements PrincipalId, Comparable<UserClassId> {
       return false;
     }
 
-    UserClassId id = (UserClassId) o;
+    ClassPrincipalSet id = (ClassPrincipalSet) o;
     return this.value.equals(id.value);
   }
 
   @Override
-  public int compareTo(@NotNull UserClassId o) {
+  public int compareTo(@NotNull ClassPrincipalSet o) {
     return this.value.compareTo(o.value());
   }
 }

@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
+import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -42,7 +42,7 @@ public class EnvironmentPolicy extends AbstractPolicy {
    * Default ACL for environments.
    */
   static final AccessControlList DEFAULT_ACCESS_CONTROL_LIST = new AccessControlList(
-    List.of(new AccessControlList.AllowedEntry(UserClassId.IAP_USERS, PolicyPermission.VIEW.toMask())));
+    List.of(new AccessControlList.AllowedEntry(ClassPrincipalSet.IAP_USERS, PolicyPermission.VIEW.toMask())));
 
   private final @NotNull Map<String, SystemPolicy> systems = new TreeMap<>();
 

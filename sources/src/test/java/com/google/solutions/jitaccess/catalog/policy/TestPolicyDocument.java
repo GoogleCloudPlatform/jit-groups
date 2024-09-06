@@ -26,7 +26,7 @@ import com.google.solutions.jitaccess.apis.FolderId;
 import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.catalog.auth.UserClassId;
+import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
@@ -335,7 +335,7 @@ public class TestPolicyDocument {
 
       var aces = List.copyOf(policy.get().accessControlList().get().entries());
       assertEquals(1, aces.size());
-      assertEquals(UserClassId.IAP_USERS, aces.get(0).principal);
+      assertEquals(ClassPrincipalSet.IAP_USERS, aces.get(0).principal);
       assertEquals(PolicyPermission.VIEW.toMask(), aces.get(0).accessRights);
     }
 

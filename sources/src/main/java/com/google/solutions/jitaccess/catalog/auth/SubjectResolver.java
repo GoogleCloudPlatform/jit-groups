@@ -240,7 +240,7 @@ public class SubjectResolver {
   ) throws AccessException, IOException {
 
     var allPrincipals = new HashSet<Principal>();
-    allPrincipals.add(new Principal(UserClassId.IAP_USERS));
+    allPrincipals.add(new Principal(ClassPrincipalSet.IAP_USERS));
     allPrincipals.add(new Principal(user));
     allPrincipals.addAll(resolveGroupPrincipals(user));
 
@@ -255,13 +255,13 @@ public class SubjectResolver {
       //
       // This user belongs to the internal directory.
       //
-      allPrincipals.add(new Principal(UserClassId.INTERNAL_USERS));
+      allPrincipals.add(new Principal(ClassPrincipalSet.INTERNAL_USERS));
     }
     else {
       //
       // This user does not belong to the internal directory.
       //
-      allPrincipals.add(new Principal(UserClassId.EXTERNAL_USERS));
+      allPrincipals.add(new Principal(ClassPrincipalSet.EXTERNAL_USERS));
     }
 
     return allPrincipals;
