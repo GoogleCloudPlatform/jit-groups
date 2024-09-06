@@ -30,21 +30,13 @@ JIT Groups application or a separate project:
 
    1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="10 17-28"
+       ```hcl  hl_lines="4 9-20"
        module "application" {
-           source                      = "./target/terraform/jitgroups-appengine"
-           project_id                  = local.project_id
-           customer_id                 = "CUSTOMER_ID"
-           groups_domain               = "DOMAIN"
-           admin_email                 = "ADMIN_EMAIL"
-           location                    = "LOCATION"
-           iap_users                   = []
+           ...
            environments                = [ # List of environments, identified by service account
                "serviceAccount:${module.environment.service_account}"
            ]
-           options                     = {
-               # "APPROVAL_TIMEOUT"    = "90"
-           }
+           ...
        }
 
        module "environment" {

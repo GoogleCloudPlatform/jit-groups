@@ -56,7 +56,8 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     ```
     You can skip this step if you're using Cloud Shell.
 
-1.  Set an environment variable to contain [your project ID](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
+1.  Set an environment variable to contain 
+    [your project ID :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-projects):
 
     ```sh
     gcloud config set project PROJECT_ID
@@ -79,6 +80,15 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     mkdir -p deployment && cd deployment
     ```
     
+1.  Set an environment variable to contain the [primary domain :octicons-link-external-16:](https://support.google.com/a/answer/182080)
+    of your Cloud Identity or Workspace account:
+
+    ```sh
+    PRIMARY_DOMAIN=MY_DOMAIN
+    ```
+    
+    Replace `MY_DOMAIN` with the primary domain of your Cloud Identity or Workspace account.
+
 1.  Create a configuration file that instructs Terraform to store its state in the Cloud Storage bucket:
 
     ```hcl
@@ -92,6 +102,9 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
 
     locals {
       project_id = "$PROJECT_ID"
+      primary_domain = "$PRIMARY_DOMAIN"
+      organization_id = "$(gcloud organizations list --filter "displayName=$PRIMARY_DOMAIN" --format "value(name)")"
+      customer_id = "$(gcloud organizations list --filter "displayName=$PRIMARY_DOMAIN" --format "value(owner.directoryCustomerId)")"
     }
 
     provider "google" {
@@ -100,6 +113,18 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
 
     EOF
     ```
+
+1.  Print the `locals` section of the configuration file:
+
+    ```shell
+    grep locals _project.tf  -A 5
+    ```
+
+    Verify that the values for `project_id`, `primary_domain`, `organization_id`, and `account_id`
+    are set correctly.
+
+    If some of the values are empty, then it's possible that you dont' have _Organization Viewer_ access to
+    the Google Cloud organization. In this case, amend the values manually.
 
 1.  Authorize `terraform`:
 
@@ -134,12 +159,18 @@ Use Terraform to deploy JIT Groups to App Engine.
     module "application" {
         source                      = "./target/terraform/jitgroups-appengine"
         project_id                  = local.project_id
-        customer_id                 = "CUSTOMER_ID"
-        groups_domain               = "DOMAIN"
+        customer_id                 = local.customer_id
+        primary_domain              = local.primary_domain
+        organization_id             = local.organization_id
+    
         admin_email                 = "ADMIN_EMAIL"
         location                    = "LOCATION"
-        iap_users                   = []
+        iap_users                   = [
+            # "domain:${local.primary_domain}"
+        ]
         environments                = []
+    
+        # groups_domain             = "GROUPS_DOMAIN"
         options                     = {
             # "APPROVAL_TIMEOUT"    = "90"
         }
@@ -154,22 +185,23 @@ Use Terraform to deploy JIT Groups to App Engine.
     }
     ```
 
-    Replace the following:
+    Replace values of the following variables:
 
-    +   `CUSTOMER_ID`: your [Cloud Identity or Google Workspace account's customer ID](https://support.google.com/a/answer/10070793).
-    +   `DOMAIN`: the domain to use for Cloud Identity groups, this can be the primary or a secondary domain of
-        your Cloud Identity or Google Workspace account.
-    +   `ADMIN_EMAIL`: the email address to show as contact on the OAuth consent screen,
+    +   `admin_email`: the email address to show as contact on the OAuth consent screen,
         this must be the email address of a Cloud Identity/Workspace user.
-    +   `LOCATION`: a supported [App Engine location](https://cloud.google.com/about/locations#region).
+    +   `location`: a supported [App Engine location](https://cloud.google.com/about/locations#region).
     +   `iap_users` (optional): List of users or groups to allow access to the JIT Groups application.
 
         *   Prefix users with `user:`, for example `user:bob@example.com`.
         *   Prefix groups with `group:`, for example `user:eng@example.com`.
-        *   To allow all users of your Cloud Identity or Workspace account, use `domain:PRIMARY_DOMAIN` where
-            `PRIMARY_DOMAIN` is the primary domain of your Cloud Identity or Google Workspace account.
+        
+        To allow all users of your Cloud Identity or Workspace account, uncomment the line
+    
+            "domain:${local.primary_domain}"
 
     +   `environments` List of environment service accounts, leave empty for now.
+    +   `groups_domain` (optional): the domain to use for Cloud Identity groups. By default, the application 
+        uses the primary domain for groups.
     +   `options` (optional): Map of additional
         [configuration options](jitgroups-options.md).
 
