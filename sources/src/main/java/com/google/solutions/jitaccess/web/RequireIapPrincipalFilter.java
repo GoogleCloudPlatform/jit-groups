@@ -129,7 +129,7 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
 
     this.requestContext.authenticate(
       new EndUserId(debugPrincipalName),
-      new Directory("DEBUG"),
+      Directory.PROJECT,
       IapDevice.UNKNOWN);
   }
 
