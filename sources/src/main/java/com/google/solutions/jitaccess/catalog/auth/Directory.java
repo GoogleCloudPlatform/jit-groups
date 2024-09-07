@@ -59,6 +59,7 @@ public record Directory(
 
   @Override
   public String toString() {
+    assert this.type != Type.CLOUD_IDENTITY || this.hostedDomain != null;
     return switch (this.type) {
       case CONSUMER, PROJECT -> this.type.toString();
       case CLOUD_IDENTITY -> this.hostedDomain.toString();

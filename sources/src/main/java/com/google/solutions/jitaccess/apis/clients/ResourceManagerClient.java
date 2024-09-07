@@ -141,6 +141,7 @@ public class ResourceManagerClient extends AbstractIamClient {
   /**
    * Look up an organization by its associated Cloud Identity/Workspace account ID.
    */
+  @SuppressWarnings("SwitchStatementWithTooFewBranches")
   public @NotNull Optional<Organization> getOrganization(
     @NotNull CustomerId customerId
   ) throws AccessException, IOException {
