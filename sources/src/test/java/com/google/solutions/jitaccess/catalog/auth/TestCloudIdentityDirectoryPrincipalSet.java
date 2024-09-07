@@ -28,8 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIdentityDirectoryPrincipalSet> {
   @Override
@@ -40,6 +39,20 @@ public class TestCloudIdentityDirectoryPrincipalSet extends TestRecord<CloudIden
   @Override
   protected @NotNull CloudIdentityDirectoryPrincipalSet createDifferentInstance() {
     return new CloudIdentityDirectoryPrincipalSet("example.org");
+  }
+
+  // -------------------------------------------------------------------------
+  // Constructor.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void constructor_whenWrongDirectoryType() {
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new CloudIdentityDirectoryPrincipalSet(Directory.CONSUMER));
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> new CloudIdentityDirectoryPrincipalSet(Directory.PROJECT));
   }
 
   // -------------------------------------------------------------------------

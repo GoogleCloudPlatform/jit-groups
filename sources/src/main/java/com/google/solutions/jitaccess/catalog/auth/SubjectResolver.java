@@ -264,6 +264,13 @@ public class SubjectResolver {
       allPrincipals.add(new Principal(ClassPrincipalSet.EXTERNAL_USERS));
     }
 
+    //
+    // Add a domain:DOMAIN principal if this is a managed user.
+    //
+    if (directory.type() == Directory.Type.CLOUD_IDENTITY) {
+      allPrincipals.add(new Principal(new CloudIdentityDirectoryPrincipalSet(directory)));
+    }
+
     return allPrincipals;
   }
 

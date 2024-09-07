@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.auth;
 
+import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
@@ -44,6 +45,13 @@ public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
 
   CloudIdentityDirectoryPrincipalSet(@NotNull String primaryDomain) {
     this.primaryDomain = primaryDomain;
+  }
+
+  CloudIdentityDirectoryPrincipalSet(@NotNull Directory directory) {
+    Preconditions.checkArgument(directory.type() == Directory.Type.CLOUD_IDENTITY);
+    Preconditions.checkArgument(directory.hostedDomain().type() == Domain.Type.PRIMARY);
+
+    this.primaryDomain = directory.hostedDomain().name();
   }
 
   @Override
