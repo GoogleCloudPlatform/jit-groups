@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -32,5 +33,12 @@ public abstract class MoreStrings {
    */
   public static boolean isNullOrBlank(@Nullable String s) {
     return s == null || s.isBlank();
+  }
+
+  /**
+   * Quote the string using single quotes.
+   */
+  public static @NotNull String quote(@NotNull String s) {
+    return '\'' + s + '\'';
   }
 }

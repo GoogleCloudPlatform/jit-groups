@@ -28,6 +28,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestMoreStrings {
+
+  //---------------------------------------------------------------------------
+  // isNullOrBlank.
+  //---------------------------------------------------------------------------
+
   @Test
   public void isNullOrBlank_whenNull() {
     assertTrue(MoreStrings.isNullOrBlank(null));
@@ -43,5 +48,14 @@ public class TestMoreStrings {
   @ValueSource(strings = {"x", " x",  "\n\tx"})
   public void isNullOrBlank_whenNotBlank(String s) {
     assertFalse(MoreStrings.isNullOrBlank(s));
+  }
+
+  //---------------------------------------------------------------------------
+  // quote.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void quote() {
+    assertEquals("'test'", MoreStrings.quote("test"));
   }
 }
