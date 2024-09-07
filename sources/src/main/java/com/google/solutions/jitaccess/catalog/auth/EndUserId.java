@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 /**
  * Principal identifier for an end user.
- *
+ * <p>
  * NB. The ID looks like an email address, but it might not
  *     be a route-able email address.
  */

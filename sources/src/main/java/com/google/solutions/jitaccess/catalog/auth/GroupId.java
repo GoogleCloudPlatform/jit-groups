@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 /**
  * Principal identifier for a group.
- *
+ * <p>
  * NB. The ID looks like an email address, but it might not
  *     be an actual email address.
  */

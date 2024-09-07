@@ -36,7 +36,7 @@ public abstract class CompletableFutures {
   /**
    * Returns a new CompletableFuture, similar to
    * CompletableFuture.supplyAsync, but accepts a Callable.
-   *
+   * <p>
    * Any checked exceptions thrown by the callable are wrapped
    * so that future.get() throws an ExecutionException with the
    * checked exception as cause.
@@ -61,7 +61,7 @@ public abstract class CompletableFutures {
   /**
    * Invokes a function for each supplied argument and returns a
    * CompletableFuture.
-   *
+   * <p>
    * If one of the function throws an exception, the future
    * will throw an AggregateException.
    */

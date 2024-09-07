@@ -49,7 +49,7 @@ public record FolderId(
 
   /**
    * Parse a folder ID from one of the formats
-   *
+   * <p>
    * * folders/123
    * * 123
    *

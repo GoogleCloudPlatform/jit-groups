@@ -27,7 +27,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.api.services.iam.v1.Iam;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.IamRole;
-import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import jakarta.inject.Singleton;
@@ -109,7 +108,7 @@ public class IamClient {
   }
 
   /**
-   * List all roles (predefined and custom) that an be granted on a given resource.
+   * List all roles (predefined and custom) that can be granted on a given resource.
    */
   public @NotNull Collection<IamRole> listGrantableRoles(
     @NotNull ResourceId resourceId

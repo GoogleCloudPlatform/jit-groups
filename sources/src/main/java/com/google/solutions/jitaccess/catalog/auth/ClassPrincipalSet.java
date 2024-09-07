@@ -49,7 +49,7 @@ public class ClassPrincipalSet implements PrincipalId, Comparable<ClassPrincipal
    * Principal identifier that identifies all users that
    * belong to the "internal" Cloud Identity/Workspace account, i.e.,
    * the account that this instance of JIT Groups is associated with.
-   *
+   * <p>
    * Consumer accounts and service accounts are not considered
    * internal.
    */

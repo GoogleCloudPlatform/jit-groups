@@ -67,7 +67,7 @@ public class PolicyDocument {
   /**
    * List of warnings encountered when parsing the policy
    */
-  public @NotNull List<Issue> warnings() {
+  @NotNull List<Issue> warnings() {
     return this.warnings;
   }
 

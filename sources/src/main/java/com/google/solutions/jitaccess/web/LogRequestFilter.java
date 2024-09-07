@@ -15,7 +15,7 @@ import jakarta.ws.rs.ext.Provider;
 public class LogRequestFilter implements ContainerRequestFilter {
   /**
    * Header that contains a unique identifier for the request, cf.
-   * https://cloud.google.com/appengine/docs/standard/java11/reference/request-response-headers
+   * <a href="https://cloud.google.com/appengine/docs/standard/java11/reference/request-response-headers">...</a>
    */
   private static final String TRACE_CONTEXT_HEADER_NAME = "X-Cloud-Trace-Context";
 

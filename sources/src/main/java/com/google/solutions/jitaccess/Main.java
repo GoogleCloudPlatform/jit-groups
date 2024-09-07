@@ -62,7 +62,7 @@ public class Main implements QuarkusApplication {
   }
 
   @Override
-  public int run(String... args) throws Exception {
+  public int run(String... args) {
     Quarkus.waitForExit();
     return 0;
   }

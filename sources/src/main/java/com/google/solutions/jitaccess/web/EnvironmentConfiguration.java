@@ -300,7 +300,7 @@ class EnvironmentConfiguration implements PolicyHeader {
   /**
    * Create inert example configuration that can be used for the
    * out-of-the-box experience.
-   *
+   * <p>
    * The example configuration is inert in that it doesn't provision
    * any resources or access.
    */

@@ -54,7 +54,7 @@ public abstract class AbstractIamClient {
 
   /**
    * Read IAM policy of resource.
-   *
+   * <p>
    * Deriving classes should provide an overload that accepts a ResourceId
    * instead of a resource path.
    */
@@ -67,7 +67,7 @@ public abstract class AbstractIamClient {
 
   /**
    * Set IAM policy on resource.
-   *
+   * <p>
    * Deriving classes should provide an overload that accepts a ResourceId
    * instead of a resource path.
    */

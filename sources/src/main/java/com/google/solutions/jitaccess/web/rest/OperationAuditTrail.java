@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
@@ -101,6 +102,8 @@ class OperationAuditTrail {
     @NotNull JitGroupContext.JoinOperation joinOp,
     @NotNull Principal principal
   ) {
+    Preconditions.checkNotNull(principal.expiry());
+
     var expiry = principal.expiry()
       .atOffset(ZoneOffset.UTC)
       .truncatedTo(ChronoUnit.SECONDS);
@@ -124,6 +127,8 @@ class OperationAuditTrail {
     @NotNull JitGroupContext.ApprovalOperation approveOp,
     @NotNull Principal principal
   ) {
+    Preconditions.checkNotNull(principal.expiry());
+
     var expiry = principal.expiry()
       .atOffset(ZoneOffset.UTC)
       .truncatedTo(ChronoUnit.SECONDS);

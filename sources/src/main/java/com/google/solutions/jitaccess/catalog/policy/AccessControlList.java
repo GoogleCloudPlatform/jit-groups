@@ -45,7 +45,7 @@ public record AccessControlList(
   /**
    * Check whether access is allowed access for any of the provided
    * principals.
-   *
+   * <p>
    * Access control list entries are evaluated in order. Access is
    * denied as soon as a matching deny-entry is encountered.
    */
@@ -115,7 +115,7 @@ public record AccessControlList(
 
   /**
    * Check whether a subject is allowed access.
-   *
+   * <p>
    * Access control list entries are evaluated in order. Access is
    * denied as soon as a matching deny-entry is encountered.
    */

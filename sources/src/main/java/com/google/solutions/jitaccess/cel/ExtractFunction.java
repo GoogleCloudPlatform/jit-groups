@@ -30,7 +30,7 @@ import java.util.List;
 
 /**
  * Extract function as documented in
- * https://cloud.google.com/iam/docs/conditions-attribute-reference#extract.
+ * <a href="https://cloud.google.com/iam/docs/conditions-attribute-reference#extract">...</a>.
  */
 public class ExtractFunction  {
   public static final CelFunctionDecl DECLARATION =

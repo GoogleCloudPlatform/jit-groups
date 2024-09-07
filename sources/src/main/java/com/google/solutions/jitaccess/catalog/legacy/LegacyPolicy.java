@@ -50,7 +50,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
   /**
    * Predefined basic, IAM-, and CRM roles that contain the
    * resourcemanager.projects.getIamPolicy permission.
-   *
+   * <p>
    * Principals that have these roles can view the IAM policy,
    * and should therefore be allowed to export.
    */
@@ -73,7 +73,7 @@ public class LegacyPolicy extends EnvironmentPolicy {
   /**
    * Predefined basic, IAM-, and CRM roles that contain the
    * resourcemanager.projects.setIamPolicy permission.
-   *
+   * <p>
    * Principals that have these roles can modify the IAM policy,
    * and should therefore be allowed to reconcile.
    */

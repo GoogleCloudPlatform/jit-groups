@@ -114,12 +114,10 @@ public class Application {
   /**
    * Force initialization by triggering the static constructor.
    */
+  @SuppressWarnings("EmptyMethod")
   public static void initialize() {
   }
 
-  /**
-   * Perform all one-time initialization work.
-   */
   static {
     //
     // Create a logger. We can't rely on injection as we're not in the
@@ -230,7 +228,9 @@ public class Application {
           applicationCredentials = defaultCredentials;
           applicationPrincipal = ServiceAccountId
             .parse(saCredentials.getServiceAccountUser())
-            .get();
+            .orElseThrow(() -> new RuntimeException(String.format(
+              "The email '%s' is not a valid service account email address",
+              saCredentials.getServiceAccountUser())));
         }
         else {
           throw new RuntimeException(String.format(
@@ -357,7 +357,7 @@ public class Application {
   @Produces
   @Singleton
   public @NotNull ServiceAccountSigner.Options produceServiceAccountSignerOptions() {
-    return new ServiceAccountSigner.Options(this.applicationPrincipal);
+    return new ServiceAccountSigner.Options(applicationPrincipal);
   }
 
   @Produces
@@ -374,7 +374,7 @@ public class Application {
 
   @Produces
   public GoogleCredentials produceApplicationCredentials() {
-    return this.applicationCredentials;
+    return applicationCredentials;
   }
 
   @Produces
@@ -493,7 +493,7 @@ public class Application {
         // Value contains a file path, which is only allowed for development.
         //
         if (!isDebugModeEnabled()) {
-          this.logger.warn(
+          logger.warn(
             EventIds.LOAD_ENVIRONMENT,
             "File-based policies are only allowed in debug mode, ignoring environment '%s'",
             environment);
@@ -503,11 +503,11 @@ public class Application {
         try {
           var configuration = EnvironmentConfiguration.forFile(
             environment,
-            this.applicationCredentials);
+            applicationCredentials);
           configurations.put(configuration.name(), configuration);
         }
         catch (Exception e) {
-          this.logger.warn(
+          logger.warn(
             EventIds.LOAD_ENVIRONMENT,
             "Encountered an invalid environment configuration, ignoring",
             e);
@@ -518,13 +518,13 @@ public class Application {
         try {
           var configuration = EnvironmentConfiguration.forServiceAccount(
             ServiceAccountId.parse(environment).get(),
-            this.applicationPrincipal,
-            this.applicationCredentials,
+            applicationPrincipal,
+            applicationCredentials,
             produceHttpTransportOptions());
           configurations.put(configuration.name(), configuration);
         }
         catch (Exception e) {
-          this.logger.error(
+          logger.error(
             EventIds.LOAD_ENVIRONMENT,
             "Encountered an invalid environment configuration",
             e);
@@ -533,7 +533,7 @@ public class Application {
         }
       }
       else {
-        this.logger.error(
+        logger.error(
           EventIds.LOAD_ENVIRONMENT,
           "Encountered an unrecognized entry in environment configuration, " +
             "this might be because of a missing or invalid prefix: %s",
@@ -548,15 +548,15 @@ public class Application {
       // Load an extra environment that surfaces JIT Access 1.x roles.
       //
       var legacyLoader = new LegacyPolicyLoader(
-        () -> new ResourceManagerClient(this.applicationCredentials, produceHttpTransportOptions()),
-        () -> new AssetInventoryClient(this.applicationCredentials, produceHttpTransportOptions()));
+        () -> new ResourceManagerClient(applicationCredentials, produceHttpTransportOptions()),
+        () -> new AssetInventoryClient(applicationCredentials, produceHttpTransportOptions()));
 
       configurations.put(
         LegacyPolicy.NAME,
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
           LegacyPolicy.DESCRIPTION,
-          this.applicationCredentials, // Use app service account, as in 1.x
+          applicationCredentials, // Use app service account, as in 1.x
           () -> {
             try {
               return legacyLoader.load(
@@ -565,7 +565,7 @@ public class Application {
                 configuration.legacyActivationTimeout,
                 configuration.legacyJustificationPattern,
                 configuration.legacyJustificationHint,
-                this.logger);
+                logger);
             }
             catch (Exception e) {
               throw new UncheckedExecutionException(e);
@@ -584,7 +584,7 @@ public class Application {
           example);
       }
       catch (IOException e) {
-        this.logger.warn(EventIds.LOAD_ENVIRONMENT, e);
+        logger.warn(EventIds.LOAD_ENVIRONMENT, e);
       }
     }
 
@@ -600,8 +600,8 @@ public class Application {
       groupsClient,
       isDebugModeEnabled()
         ? Duration.ofSeconds(20)
-        : this.configuration.environmentCacheTimeout,
+        : configuration.environmentCacheTimeout,
       executor,
-      this.logger);
+      logger);
   }
 }

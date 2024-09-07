@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Dependent
 @Path("/api")
@@ -102,9 +103,7 @@ public class PolicyResource {
             return this.roleResolver.lintRoleBinding(b.resource(), b.role(), b.condition()).stream();
           }
           catch (IOException ignored) {
-            return List
-              .of(new IamRoleResolver.LintingIssue("Linting role binding failed"))
-              .stream();
+            return Stream.of(new IamRoleResolver.LintingIssue("Linting role binding failed"));
           }
         })
         .map(iss -> IssueInfo.fromLintingIssue(grp.name(), iss)))

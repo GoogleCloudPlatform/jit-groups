@@ -49,7 +49,7 @@ public record ProjectId(
 
   /**
    * Parse a project ID from one of the formats
-   *
+   * <p>
    * * projects/project-123
    * * project-123
    *
