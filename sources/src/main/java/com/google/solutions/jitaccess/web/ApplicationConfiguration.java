@@ -182,7 +182,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
     //
     //     Service accounts don't have this permission by default, and granting
     //     the corresponding `Organization Viewer` role requires changing the
-    //     organzization's IAM policy, which is a lot to ask for.
+    //     organization's IAM policy, which is a lot to ask for.
     //
     //     Therefore, we require the configuration to contain all 3 pieces of
     //     information, even if it's somewhat redundant.
