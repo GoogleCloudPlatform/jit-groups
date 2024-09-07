@@ -224,6 +224,7 @@ Each ACE can have the following attributes:
     |-----------------------|------------------|------------------|
     | `user:USER_EMAIL`     | User with primary email address `USER_EMAIL`. | `user:bob@example.com` |
     | `group:GROUP_EMAIL`   | Includes all _direct_ members of the Cloud Identity/Workspace group `GROUP_EMAIL`.| `group:devops-staff@example.com`|
+    | `domain:DOMAIN`       | Includes all users from the Cloud Identity/Workspace account `DOMAIN`, where `DOMAIN` is the account's primary domain.| `domain:example.com`|
     | `class:iapUsers`      | Includes all users that have been authorized by IAP to access the application ||
     | `class:internalUsers` | Includes all users that belong to the internal Cloud Identity/Workspace account||
     | `class:externalUsers` | Includes all users that don't belong to the internal Cloud Identity/Workspace account, all consumer accounts, and all service accounts||
@@ -233,6 +234,8 @@ Each ACE can have the following attributes:
     +   The principal identifier `group:GROUP_EMAIL` does not apply to JIT groups, it only applies to regular
         Cloud Identity/Workspace security and discussion-forum groups.
     +   You can grant access to users and groups from external Cloud Identity/Workspace accounts, as well as consumer accounts. 
+    +   The principal identifier `domain:DOMAIN` captures all users of the Cloud Identity/Workspace account `DOMAIN`, including
+        those users whose email address uses one of the account's secondary domains.
     +   The principal identifiers `class:internalUsers` and `class:externalUsers` are primarily intended for denying access.
         For example, you can deny external users from viewing or joining a group by using the following access control entry:
 
