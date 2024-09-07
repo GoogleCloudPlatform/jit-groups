@@ -37,7 +37,7 @@ public interface Subject {
   /**
    * Get directory that the user originates from.
    */
-  public @NotNull Directory directory();
+  @NotNull Directory directory();
 
   /**
    * Get the user's full set of principals, including groups and roles.

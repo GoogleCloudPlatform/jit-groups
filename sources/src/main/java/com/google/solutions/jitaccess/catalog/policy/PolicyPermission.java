@@ -30,7 +30,7 @@ import java.util.LinkedList;
 
 /**
  * Access permissions that can be granted on a policy.
- *
+ * <p>
  * Permissions are bit fields and are intended to be used
  * in an AccessControlList.
  */

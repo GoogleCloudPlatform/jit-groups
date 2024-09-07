@@ -116,7 +116,7 @@ public class PolicyAnalysis {
 
   /**
    * Execute analysis.
-   *
+   * <p>
    * It's safe to execute the analysis multiple times.
    */
   public Result execute() {

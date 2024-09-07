@@ -111,7 +111,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
 
   /**
    * Parent policy, if any.
-   *
+   * <p>
    * If a policy has a parent, the parent's ACL and constraints
    * are inherited, with the current policy taking precedence.
    */
@@ -129,7 +129,7 @@ abstract class AbstractPolicy extends AbstractSecurableComponent implements Poli
 
   /**
    * List of constraints.
-   *
+   * <p>
    * Constraints must have a unique name. If a parent and child policy
    * both contain a constraint with the same class and name, the child's
    * policy's constraint takes priority.

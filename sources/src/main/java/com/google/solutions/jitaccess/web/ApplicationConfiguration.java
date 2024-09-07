@@ -128,7 +128,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Path to a SecretManager secret that contains the SMTP password.
    * For Gmail, this should be an application-specific password.
-   *
+   * <p>
    * The path must be in the format projects/x/secrets/y/versions/z.
    */
   final @NotNull Optional<String> smtpSecret;

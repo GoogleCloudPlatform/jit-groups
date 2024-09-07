@@ -150,16 +150,14 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
       "Authenticated IAP principal");
   }
 
+  /**
+   *
+   * @param enableDebugAuthentication enable pseudo-authentication for debugging.
+   * @param expectedAudience expected audience in IAP assertions. If null, the audience
+   *                         check is skipped.
+   */
   public record Options(
-    /**
-     * Enable pseudo-authentication for debugging.
-     */
     boolean enableDebugAuthentication,
-    
-    /**
-     * Expected audience in IAP assertions. If null, the audience
-     * check is skipped.
-     */
     @Nullable String expectedAudience
   ) {
     public Options {

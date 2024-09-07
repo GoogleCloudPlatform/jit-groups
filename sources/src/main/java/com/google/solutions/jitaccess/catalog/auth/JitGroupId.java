@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.util.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,10 +32,10 @@ import java.util.regex.Pattern;
 
 /**
  * Identifier of a JIT group.
- *
+ * <p>
  * A JitGroupId uniquely identifies a group across
  * all environments and systems.
- *
+ * <p>
  * JitGroupIds are principals, but they can't be used for IAM.
  */
 public class JitGroupId implements Comparable<JitGroupId>, PrincipalId {

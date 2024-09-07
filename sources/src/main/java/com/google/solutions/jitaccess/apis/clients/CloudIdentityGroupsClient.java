@@ -60,7 +60,7 @@ public class CloudIdentityGroupsClient {
 
   /**
    * Settings for new groups:
-   *
+   * <p>
    * - Allow external members.
    * - Disable most self-service features on groups.google.com to
    *   the extent possible.

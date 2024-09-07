@@ -39,7 +39,7 @@ public interface ResourceId {
 
   /**
    * Path, in notation type/id.
-   *
+   * <p>
    * For example, projects/test-123 folders/234, organizations/345.
    */
   @NotNull String path();

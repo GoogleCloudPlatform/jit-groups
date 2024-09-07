@@ -70,12 +70,12 @@ public class GroupResolver {
 
   /**
    * Expand all groups in a list of principals.
-   *
+   * <p>
    * Group resolution is done non-recursively, so the resulting
    * set of principals might again contain a set of groups.
    * To fully resolve all groups, call this method until the
    * set contains no more groups.
-   *
+   * <p>
    * While Cloud Identity API does support looking
    * up nested group memberships, the functionality is only
    * available in premium SKUs, and we therefore don't use

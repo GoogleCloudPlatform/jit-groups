@@ -294,7 +294,7 @@ abstract class AbstractBooleanProperty extends AbstractProperty<Boolean> {
 
 /**
  * A String-typed property.
- *
+ * <p>
  * Minimum and maximum are interpreted as minimum and maximum
  * string lengths, not values.
  */

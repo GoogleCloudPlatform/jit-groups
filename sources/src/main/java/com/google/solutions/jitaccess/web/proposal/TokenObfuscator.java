@@ -26,12 +26,12 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Obfuscator for JWTs.
- *
+ * <p>
  * Token obfuscation is not a security feature. Instead, it's used to
  * prevent false flagging by web filters or phishing filters: Some filters
  * (naively) assume that anything that looks like a JWT must be confidential,
  * and that "leaking such a credential" in a URL must be a phishing attempt.
- *
+ * <p>
  * Some JWTs aren't credentials, and aren't even confidential. By obfuscating
  * such non-confidential JWTs, we can reduce the risk that an overzealous
  * filter falsely flags and blocks requests that contain such JWTs.

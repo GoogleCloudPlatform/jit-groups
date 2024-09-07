@@ -36,9 +36,9 @@ import java.util.regex.Pattern;
  * A template that embeds CEL expressions. Embedded expressions
  * are enclosed in {{ and }} tokens, for example, the embedded
  * expression
- *
+ * <p>
  * {{ 1+1 }}
- *
+ * <p>
  * would be evaluated to 2.
  */
 public class StringTemplate implements Expression<String> {

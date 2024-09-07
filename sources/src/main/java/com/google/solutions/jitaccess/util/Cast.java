@@ -31,7 +31,7 @@ import java.util.Optional;
 public abstract class Cast {
   /**
    * Cast the object to TTarget if possible, otherwise return empty.
-   *
+   * <p>
    * Similar to the C# 'as' operator.
    */
   public static <TSource, TTarget extends TSource> @NotNull Optional<TTarget> tryCast(

@@ -284,7 +284,7 @@ public class Provisioner {
 
     /**
      * Update an IAM policy in-place:
-     *
+     * <p>
      * - Remove existing bindings for principal.
      * - Add new bindings.
      */

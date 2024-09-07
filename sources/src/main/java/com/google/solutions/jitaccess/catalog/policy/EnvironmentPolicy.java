@@ -30,7 +30,7 @@ import java.util.*;
 /**
  * Policy for an environment. Environments comprise a number
  * of systems that are managed together. That could be because:
- *
+ * <p>
  * - They share the same lifecycle (for ex, "prod" vs "dev")
  * - They are closely related to another (for ex, "backend-systems")
  * - They belong to the same part of the organization (for ex, "marketing")

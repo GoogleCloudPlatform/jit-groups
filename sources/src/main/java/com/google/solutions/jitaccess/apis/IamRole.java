@@ -44,7 +44,7 @@ public record IamRole(
 
   /**
    * Parse a role that uses one of the following formats:
-   *
+   * <p>
    * - roles/... (predefined)
    * - projects/... (custom project role)
    * - organizations/... (custom organization role)

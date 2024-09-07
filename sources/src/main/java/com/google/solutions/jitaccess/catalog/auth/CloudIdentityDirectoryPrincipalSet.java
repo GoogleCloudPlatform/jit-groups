@@ -49,6 +49,7 @@ public class CloudIdentityDirectoryPrincipalSet implements PrincipalId {
 
   CloudIdentityDirectoryPrincipalSet(@NotNull Directory directory) {
     Preconditions.checkArgument(directory.type() == Directory.Type.CLOUD_IDENTITY);
+    Preconditions.checkNotNull(directory.hostedDomain());
     Preconditions.checkArgument(directory.hostedDomain().type() == Domain.Type.PRIMARY);
 
     this.primaryDomain = directory.hostedDomain().name();

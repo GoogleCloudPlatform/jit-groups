@@ -29,7 +29,7 @@ import java.util.Objects;
 
 /**
  * Unique group key as used by the Cloud Identity Groups API.
- *
+ * <p>
  * Group keys are not email addresses, and also aren't GAIA IDs.
  */
 public class GroupKey {

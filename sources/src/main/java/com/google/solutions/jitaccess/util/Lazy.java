@@ -47,7 +47,7 @@ public abstract class Lazy<T> implements Supplier<T> {
   public static @NotNull <T> Lazy<T> initializeOpportunistically(
     @NotNull Callable<T> initialize
   ) {
-    return new Lazy<T>() {
+    return new Lazy<>() {
       @Override
       public T get() {
         var obj = cached.get();

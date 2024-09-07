@@ -35,7 +35,7 @@ import java.util.Optional;
 
 /**
  * Catalog of groups that a subject can access.
- *
+ * <p>
  * This class serves as the "entry point" for the API/UI to
  * lookup or join groups.
  */

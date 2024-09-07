@@ -29,7 +29,7 @@ import java.util.Optional;
 /**
  * A variant property. Properties are used to manage input for
  * evaluating constraints.
- *
+ * <p>
  * Properties are typed, but support conversion from and to String.
  */
 public interface Property {

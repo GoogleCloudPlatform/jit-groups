@@ -64,7 +64,7 @@ public class EnvironmentContext {
 
   /**
    * Check if the current user is allowed to export the policy.
-   *
+   * <p>
    * Requires EXPORT access.
    */
   public boolean canExport() {
@@ -84,7 +84,7 @@ public class EnvironmentContext {
 
   /**
    * Check if the current user is allowed to reconcile the policy.
-   *
+   * <p>
    * Requires RECONCILE access.
    */
   public boolean canReconcile() {

@@ -205,7 +205,7 @@ public class SmtpClient {
 
     /**
      * Set a JavaMail SMTP property, see
-     * https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html.
+     * <a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html">...</a>.
      */
     public @NotNull Options setSmtpProperty(@NotNull String name, String value) {
       Preconditions.checkArgument(name.startsWith("mail.smtp"), "The property is not an SMTP property");
