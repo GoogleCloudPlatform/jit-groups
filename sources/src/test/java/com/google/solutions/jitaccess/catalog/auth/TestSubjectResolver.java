@@ -212,9 +212,11 @@ public class TestSubjectResolver {
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
+    assertEquals(4, principals.size());
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
     assertTrue(principals.contains(ClassPrincipalSet.INTERNAL_USERS), "Internal");
+    assertTrue(principals.contains(new CloudIdentityDirectoryPrincipalSet(new Directory(SAMPLE_DOMAIN))));
   }
 
   @Test
@@ -237,9 +239,11 @@ public class TestSubjectResolver {
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
+    assertEquals(4, principals.size());
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
     assertTrue(principals.contains(ClassPrincipalSet.EXTERNAL_USERS), "External");
+    assertTrue(principals.contains(new CloudIdentityDirectoryPrincipalSet(new Directory("other.tld"))));
   }
 
   @Test
@@ -262,6 +266,7 @@ public class TestSubjectResolver {
       .map(p -> p.id())
       .collect(Collectors.toSet());
 
+    assertEquals(3, principals.size());
     assertTrue(principals.contains(SAMPLE_USER), "user principal");
     assertTrue(principals.contains(ClassPrincipalSet.IAP_USERS), "All");
     assertTrue(principals.contains(ClassPrincipalSet.EXTERNAL_USERS), "External");

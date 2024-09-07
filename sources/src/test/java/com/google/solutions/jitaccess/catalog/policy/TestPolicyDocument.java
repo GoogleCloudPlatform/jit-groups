@@ -863,16 +863,22 @@ public class TestPolicyDocument {
         issues.issues().get(0).code());
     }
 
-    @Test
-    public void toPolicy() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+      "user:user@example.com",
+      "group:group@example.com",
+      "class:internalUsers",
+      "domain:example.com",
+    })
+    public void toPolicy(String principalId) {
       var element = new PolicyDocument.AccessControlEntryElement(
-        "user:" + SAMPLE_USER.email,
+        principalId,
         "JOIN",
         null);
 
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
-      assertEquals(SAMPLE_USER, policy.get().principal);
+      assertEquals(principalId, policy.get().principal.toString());
       assertEquals(PolicyPermission.JOIN.toMask(), policy.get().accessRights);
     }
   }
