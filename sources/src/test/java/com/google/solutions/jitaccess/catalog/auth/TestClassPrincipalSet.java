@@ -72,7 +72,6 @@ public class TestClassPrincipalSet extends TestRecord<ClassPrincipalSet> {
     "",
     "class",
     "class:",
-    " class:  iapUsers",
     "class"
   })
   public void parse_whenInvalid(String s) {
@@ -83,6 +82,7 @@ public class TestClassPrincipalSet extends TestRecord<ClassPrincipalSet> {
   @ParameterizedTest
   @ValueSource(strings = {
     " class:iapUsers",
+    " class:  iapUsers",
     "class:IAPUSERS  "
   })
   public void parse_iapUsers(String s) {
@@ -101,6 +101,7 @@ public class TestClassPrincipalSet extends TestRecord<ClassPrincipalSet> {
   @ParameterizedTest
   @ValueSource(strings = {
     " class:externalUsers",
+    " class: externalUsers",
     "class:EXTERNALUSERS  "
   })
   public void parse_externalUsers(String s) {

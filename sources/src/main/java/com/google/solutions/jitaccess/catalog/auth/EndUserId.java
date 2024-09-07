@@ -72,7 +72,7 @@ public class EndUserId implements UserId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new EndUserId(matcher.group(1) + "@" + matcher.group(2)));
+      .map(() -> new EndUserId(matcher.group(1).trim() + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------

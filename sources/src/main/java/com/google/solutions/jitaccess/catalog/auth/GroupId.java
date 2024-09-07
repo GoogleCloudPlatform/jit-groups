@@ -72,7 +72,7 @@ public class GroupId implements IamPrincipalId {
     var matcher = PATTERN.matcher(s.trim().toLowerCase());
     return NullaryOptional
       .ifTrue(matcher.matches())
-      .map(() -> new GroupId(matcher.group(1) + "@" + matcher.group(2)));
+      .map(() -> new GroupId(matcher.group(1).trim() + "@" + matcher.group(2)));
   }
 
   // -------------------------------------------------------------------------
