@@ -25,26 +25,20 @@ import com.google.common.base.Preconditions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-
 /**
  * Unique group key as used by the Cloud Identity Groups API.
  * <p>
  * Group keys are not email addresses, and also aren't GAIA IDs.
  */
-public class GroupKey {
+public record GroupKey(@NotNull String id) {
   private static final String GROUPS_PREFIX = "groups/";
 
-  public final transient @NotNull String id;
-
-  public GroupKey(@NotNull String id) {
+  public GroupKey {
     Preconditions.checkNotNull(id, "id");
 
     if (id.startsWith(GROUPS_PREFIX)) {
       id = id.substring(GROUPS_PREFIX.length());
     }
-
-    this.id = id;
   }
 
   @Override
@@ -59,11 +53,6 @@ public class GroupKey {
 
     GroupKey other = (GroupKey) o;
     return this.id.equals(other.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id);
   }
 
   /**

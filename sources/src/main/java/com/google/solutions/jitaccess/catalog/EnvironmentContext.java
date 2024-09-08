@@ -108,7 +108,7 @@ public class EnvironmentContext {
     // Enumerate groups in Cloud Identity and check then one-by-one.
     //
     for (var groupId : this.provisioner.provisionedGroups()) {
-      var cloudIdentityGroupId = this.provisioner.provisionedGroupId(groupId);
+      var cloudIdentityGroupId = this.provisioner.cloudIdentityGroupId(groupId);
 
       var policy =  this.policy
         .system(groupId.system())

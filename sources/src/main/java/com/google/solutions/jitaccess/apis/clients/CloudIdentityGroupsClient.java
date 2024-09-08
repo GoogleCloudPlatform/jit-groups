@@ -152,7 +152,7 @@ public class CloudIdentityGroupsClient {
   //---------------------------------------------------------------------
 
   /**
-   * Look up a group ID by email.
+   * Lookup a group ID by email.
    */
   @SuppressWarnings({"DataFlowIssue"})
   private @NotNull GroupKey lookupGroup(
@@ -211,6 +211,15 @@ public class CloudIdentityGroupsClient {
   ) throws AccessException, IOException {
     var client = createClient();
     return getGroup(client, lookupGroup(client, groupId));
+  }
+
+  /**
+   * Lookup a group ID by email.
+   */
+  public @NotNull GroupKey lookupGroup(
+    @NotNull GroupId groupId
+  ) throws AccessException, IOException {
+    return lookupGroup(createClient(), groupId);
   }
 
   public enum GroupType {

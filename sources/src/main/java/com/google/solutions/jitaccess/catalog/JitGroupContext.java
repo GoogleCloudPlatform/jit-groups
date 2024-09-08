@@ -24,16 +24,15 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
+import com.google.solutions.jitaccess.apis.clients.GroupKey;
+import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -62,10 +61,20 @@ public class JitGroupContext {
   }
 
   /**
-   * Resolve the Cloud Identity group that backs this JIT group.
+   * Get ID of the Cloud Identity group that corresponds to this JIT group. The
+   * Cloud Identity group may or may not exist yet.
    */
   public @NotNull GroupId cloudIdentityGroupId() {
-    return this.provisioner.provisionedGroupId(this.policy().id());
+    return this.provisioner.cloudIdentityGroupId(this.policy().id());
+  }
+
+  /**
+   * Lookup the Cloud Identity group key for this JIT group.
+   *
+   * @return GroupKey or empty of the group hasn't been created yet.
+   */
+  public @NotNull Optional<GroupKey> cloudIdentityGroupKey() throws AccessException, IOException {
+    return this.provisioner.cloudIdentityGroupKey(this.policy().id());
   }
 
   /**

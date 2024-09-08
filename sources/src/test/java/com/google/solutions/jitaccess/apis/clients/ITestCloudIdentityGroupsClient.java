@@ -61,6 +61,69 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------
+  // lookupGroup.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void lookupGroup_whenUnauthenticated_thenThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.INVALID_CREDENTIAL,
+      new CloudIdentityGroupsClient.Options(INVALID_CUSTOMER_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      NotAuthenticatedException.class,
+      () -> client.lookupGroup(new GroupId("test@example.com")));
+  }
+
+  @Test
+  public void lookupGroup_whenCallerLacksPermission_thenThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.lookupGroup(new GroupId("test@example.com")));
+  }
+
+  @Test
+  public void lookupGroup_whenGroupNotFound_thenThrowsException() {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.lookupGroup(new GroupId(String.format(
+        "jitaccess-doesnotexist@%s",
+        ITestEnvironment.CLOUD_IDENTITY_DOMAIN))));
+  }
+
+  @Test
+  public void lookupGroup() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupKey = client.createGroup(
+      TEST_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description");
+
+    assertEquals(
+      groupKey,
+      client.lookupGroup(TEST_GROUP_EMAIL));
+  }
+
+  //---------------------------------------------------------------------
   // getGroup.
   //---------------------------------------------------------------------
 
