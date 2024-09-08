@@ -73,9 +73,7 @@ public class JitGroupContext {
    *
    * @return GroupKey or empty of the group hasn't been created yet.
    */
-  @NotNull Optional<GroupKey> cloudIdentityGroupKey(
-    @NotNull GroupId groupId
-  ) throws AccessException, IOException {
+  public @NotNull Optional<GroupKey> cloudIdentityGroupKey() throws AccessException, IOException {
     return this.provisioner.cloudIdentityGroupKey(this.policy().id());
   }
 
