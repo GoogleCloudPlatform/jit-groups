@@ -149,6 +149,20 @@ public class Provisioner {
   }
 
   /**
+   * Lookup the Cloud Identity group key for a group.
+   *
+   * @return GroupKey or empty of the group hasn't been created yet.
+   */
+  @NotNull Optional<GroupKey> cloudIdentityGroupKey(
+    @NotNull JitGroupId groupId
+  ) throws AccessException, IOException {
+    Preconditions.checkArgument(groupId.environment().equals(this.environmentName));
+
+    var ciGroupId = this.groupProvisioner.cloudIdentityGroupId(groupId);
+    return this.groupProvisioner.cloudIdentityGroupKey(ciGroupId);
+  }
+
+  /**
    * Provisioner for Cloud Identity groups and memberships.
    */
   public static class GroupProvisioner {
