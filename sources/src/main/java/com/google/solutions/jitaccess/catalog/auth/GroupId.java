@@ -111,4 +111,29 @@ public class GroupId implements IamPrincipalId {
   public @NotNull String value() {
     return this.email;
   }
+
+  // -------------------------------------------------------------------------
+  // Components.
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get the components of the group's email address.
+   */
+  public @NotNull Components components() {
+    var matcher = PATTERN.matcher("group:" + this.email);
+
+    Preconditions.checkState(
+      matcher.matches(),
+      "The email address is invalid");
+
+    return new Components(
+      matcher.group(1),
+      matcher.group(2));
+  }
+
+  public record Components(
+    @NotNull String name,
+    @NotNull String domain
+  ) {
+  }
 }

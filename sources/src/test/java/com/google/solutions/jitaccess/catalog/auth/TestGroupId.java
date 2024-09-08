@@ -98,4 +98,22 @@ public class TestGroupId extends TestRecord<GroupId> {
       new GroupId("group@example.com"),
       GroupId.parse(id).get());
   }
+
+  // -------------------------------------------------------------------------
+  // Components.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void components_whenEmailInvalid() {
+    assertThrows(
+      IllegalStateException.class,
+      () -> new GroupId("invalid").components());
+  }
+
+  @Test
+  public void components() {
+    var components = new GroupId("GROUP-1@SUB.EXAMPLE.COM").components();
+    assertEquals("group-1", components.name());
+    assertEquals("sub.example.com", components.domain());
+  }
 }
