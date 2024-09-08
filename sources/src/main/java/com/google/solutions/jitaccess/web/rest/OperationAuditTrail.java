@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.util.MoreStrings;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import jakarta.enterprise.context.Dependent;
@@ -45,12 +46,12 @@ import java.util.stream.Collectors;
 class OperationAuditTrail {
   private final @NotNull Logger logger;
 
-  private static final String LABEL_GROUP_ID = "group/id";
-  private static final String LABEL_GROUP_EXPIRY = "group/expiry";
-  private static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
-  private static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
-  private static final String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
-  private static final String LABEL_EVENT_TYPE = "event/type";
+  static final String LABEL_GROUP_ID = "group/id";
+  static final String LABEL_GROUP_EXPIRY = "group/expiry";
+  static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
+  static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
+  static final String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
+  static final String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
     this.logger = logger;
@@ -83,6 +84,7 @@ class OperationAuditTrail {
       .addLabel(LABEL_PREFIX_PROPOSAL_RECIPIENTS, proposal.audience()
         .stream()
         .map(IamPrincipalId::toString)
+        .sorted()
         .collect(Collectors.joining(",")))
       .addLabels(joinOp.input()
         .stream()
@@ -94,6 +96,8 @@ class OperationAuditTrail {
         proposal.audience()
           .stream()
           .map(IamPrincipalId::toString)
+          .sorted()
+          .map(MoreStrings::quote)
           .collect(Collectors.joining(", ")))
       .write();
   }
@@ -144,7 +148,7 @@ class OperationAuditTrail {
         .stream()
         .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
       .setMessage(
-        "User '%s' approved proposal of '%s' to join group '%s' with expiry %s",
+        "User '%s' approved '%s' to join group '%s' with expiry %s",
         approveOp.user(),
         approveOp.joiningUser(),
         approveOp.group(),
