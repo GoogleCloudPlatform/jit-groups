@@ -152,7 +152,7 @@ public class CloudIdentityGroupsClient {
   //---------------------------------------------------------------------
 
   /**
-   * Look up a group ID by email.
+   * Lookup a group ID by email.
    */
   @SuppressWarnings({"DataFlowIssue"})
   private @NotNull GroupKey lookupGroup(
@@ -214,7 +214,7 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
-   * Get details for an existing group.
+   * Lookup a group ID by email.
    */
   public @NotNull GroupKey lookupGroup(
     @NotNull GroupId groupId

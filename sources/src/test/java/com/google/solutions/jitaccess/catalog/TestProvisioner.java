@@ -42,10 +42,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -163,6 +160,30 @@ public class TestProvisioner {
     verify(iamProvisioner, times(1)).provisionAccess(
       eq(SAMPLE_GROUP),
       any());
+  }
+
+  //---------------------------------------------------------------------------
+  // cloudIdentityGroupKey.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void cloudIdentityGroupKey_whenGroupNotCreatedYet() throws Exception {
+    var groupProvisioner = Mockito.mock(Provisioner.GroupProvisioner.class);
+    when(groupProvisioner.cloudIdentityGroupKey(any()))
+      .thenReturn(Optional.empty());
+
+    var group = Policies.createJitGroupPolicy(
+      "group",
+      AccessControlList.EMPTY,
+      Map.of(),
+      List.of());
+
+    var provisioner = new Provisioner(
+      group.id().environment(),
+      groupProvisioner,
+      Mockito.mock(Provisioner.IamProvisioner.class));
+
+    assertFalse(provisioner.cloudIdentityGroupKey(group.id()).isPresent());
   }
 
   @Nested
