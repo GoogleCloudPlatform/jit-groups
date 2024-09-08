@@ -412,6 +412,12 @@ public class Application {
   }
 
   @Produces
+  @Singleton
+  public @NotNull Consoles produceConsoles() {
+    return new Consoles(configuration.organizationId);
+  }
+
+  @Produces
   public @NotNull ProposalHandler produceProposalHandler(
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient
