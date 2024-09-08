@@ -22,7 +22,6 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.solutions.jitaccess.TestRecord;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -44,8 +43,8 @@ public class TestGroupKey extends TestRecord<GroupKey> {
 
   @Test
   public void constructor_whenIdHasPrefix() {
-    assertEquals("1", new GroupKey("1").id);
-    assertEquals("1", new GroupKey("groups/1").id);
+    assertEquals("1", new GroupKey("1").id());
+    assertEquals("1", new GroupKey("groups/1").id());
   }
 
   // -------------------------------------------------------------------------
