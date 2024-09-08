@@ -213,6 +213,15 @@ public class CloudIdentityGroupsClient {
     return getGroup(client, lookupGroup(client, groupId));
   }
 
+  /**
+   * Get details for an existing group.
+   */
+  public @NotNull GroupKey lookupGroup(
+    @NotNull GroupId groupId
+  ) throws AccessException, IOException {
+    return lookupGroup(createClient(), groupId);
+  }
+
   public enum GroupType {
     /**
      * Normal group. Creating this type of group doesn't require special

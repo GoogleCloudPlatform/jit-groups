@@ -94,7 +94,7 @@ public class Provisioner {
     // Provision IAM role bindings in case they have changed.
     //
     this.iamProvisioner.provisionAccess(
-      provisionedGroupId(group.id()),
+      cloudIdentityGroupId(group.id()),
       group.privileges()
         .stream().filter(p -> p instanceof IamRoleBinding)
         .map(p -> (IamRoleBinding)p)
@@ -107,7 +107,7 @@ public class Provisioner {
   public void reconcile(
     @NotNull JitGroupPolicy group
   ) throws AccessException, IOException {
-    var groupId = provisionedGroupId(group.id());
+    var groupId = cloudIdentityGroupId(group.id());
 
     if (!this.groupProvisioner.isProvisioned(groupId)) {
       //
@@ -139,12 +139,13 @@ public class Provisioner {
   }
 
   /**
-   * Lookup the Cloud Identity group ID for a group.
+   * Get ID of the Cloud Identity group that corresponds to a JIT group. The
+   * Cloud Identity group may or may not exist yet.
    */
-  public @NotNull GroupId provisionedGroupId(@NotNull JitGroupId groupId) {
+  public @NotNull GroupId cloudIdentityGroupId(@NotNull JitGroupId groupId) {
     Preconditions.checkArgument(groupId.environment().equals(this.environmentName));
 
-    return this.groupProvisioner.provisionedGroupId(groupId);
+    return this.groupProvisioner.cloudIdentityGroupId(groupId);
   }
 
   /**
@@ -166,16 +167,33 @@ public class Provisioner {
     }
 
     /**
-     * Lookup the Cloud Identity group ID for a group.
+     * Get ID of the Cloud Identity group that corresponds to a JIT group. The
+     * Cloud Identity group may or may not exist yet.
      */
-    public @NotNull GroupId provisionedGroupId(@NotNull JitGroupId groupId) {
+    @NotNull GroupId cloudIdentityGroupId(@NotNull JitGroupId groupId) {
       return this.mapping.groupFromJitGroup(groupId);
+    }
+
+    /**
+     * Lookup the Cloud Identity group key for a group.
+     *
+     * @return GroupKey or empty of the group hasn't been created yet.
+     */
+    @NotNull Optional<GroupKey> cloudIdentityGroupKey(
+      @NotNull GroupId groupId
+    ) throws AccessException, IOException {
+      try {
+        return Optional.of(this.groupsClient.lookupGroup(groupId));
+      }
+      catch (ResourceNotFoundException e) {
+        return Optional.empty();
+      }
     }
 
     /**
      * Check if a group has been provisioned yet.
      */
-    public boolean isProvisioned(
+    boolean isProvisioned(
       @NotNull GroupId groupId
     ) throws AccessException, IOException {
       try {
@@ -219,11 +237,11 @@ public class Provisioner {
       @NotNull EndUserId member,
       @NotNull Instant expiry
     ) throws AccessException, IOException {
+      var groupId = this.mapping.groupFromJitGroup(group.id());
+
       //
       // Create group if it doesn't exist yet.
       //
-      var groupId = this.mapping.groupFromJitGroup(group.id());
-
       try {
         var groupKey = this.groupsClient.createGroup(
           groupId,

@@ -58,7 +58,7 @@ public class CatalogSources {
         @NotNull String name
       ) {
         var provisioner = Mockito.mock(Provisioner.class);
-        when(provisioner.provisionedGroupId(any()))
+        when(provisioner.cloudIdentityGroupId(any()))
           .thenAnswer(a -> new GroupId(((JitGroupId)a.getArgument(0)) + "@example.com"));
 
         return Optional.of(provisioner);

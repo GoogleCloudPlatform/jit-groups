@@ -65,7 +65,7 @@ public class JitGroupContext {
    * Resolve the Cloud Identity group that backs this JIT group.
    */
   public @NotNull GroupId cloudIdentityGroupId() {
-    return this.provisioner.provisionedGroupId(this.policy().id());
+    return this.provisioner.cloudIdentityGroupId(this.policy().id());
   }
 
   /**

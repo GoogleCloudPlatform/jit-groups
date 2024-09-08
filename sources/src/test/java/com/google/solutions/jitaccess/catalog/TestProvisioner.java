@@ -74,7 +74,7 @@ public class TestProvisioner {
   @Test
   public void provisionMembership() throws Exception {
     var groupProvisioner = Mockito.mock(Provisioner.GroupProvisioner.class);
-    when(groupProvisioner.provisionedGroupId(any()))
+    when(groupProvisioner.cloudIdentityGroupId(any()))
       .thenAnswer(a -> SAMPLE_GROUP);
 
     var iamProvisioner = Mockito.mock(Provisioner.IamProvisioner.class);
@@ -112,7 +112,7 @@ public class TestProvisioner {
   @Test
   public void reconcile_whenGroupNotProvisionedYet() throws Exception {
     var groupProvisioner = Mockito.mock(Provisioner.GroupProvisioner.class);
-    when(groupProvisioner.provisionedGroupId(any()))
+    when(groupProvisioner.cloudIdentityGroupId(any()))
       .thenAnswer(a -> SAMPLE_GROUP);
     when(groupProvisioner.isProvisioned(eq(SAMPLE_GROUP)))
       .thenReturn(false);
@@ -140,7 +140,7 @@ public class TestProvisioner {
   @Test
   public void reconcile_whenGroupProvisioned() throws Exception {
     var groupProvisioner = Mockito.mock(Provisioner.GroupProvisioner.class);
-    when(groupProvisioner.provisionedGroupId(any()))
+    when(groupProvisioner.cloudIdentityGroupId(any()))
       .thenAnswer(a -> SAMPLE_GROUP);
     when(groupProvisioner.isProvisioned(eq(SAMPLE_GROUP)))
       .thenReturn(true);
@@ -169,11 +169,11 @@ public class TestProvisioner {
   public static class GroupProvisioner {
 
     // -------------------------------------------------------------------------
-    // provisionedGroupId.
+    // cloudIdentityGroupId.
     // -------------------------------------------------------------------------
 
     @Test
-    public void provisionedGroupId() {
+    public void cloudIdentityGroupId() {
 
       var groupId = new JitGroupId("env-1", "system-1", "group-1");
       var groupPolicy = Mockito.mock(JitGroupPolicy.class);
@@ -191,7 +191,46 @@ public class TestProvisioner {
 
       assertEquals(
         new GroupId("mapped@example.com"),
-        provisioner.provisionedGroupId(groupPolicy.id()));
+        provisioner.cloudIdentityGroupId(groupPolicy.id()));
+    }
+
+    // -------------------------------------------------------------------------
+    // cloudIdentityGroupKey.
+    // -------------------------------------------------------------------------
+
+    @Test
+    public void cloudIdentityGroupKey_whenGroupNotFound() throws Exception {
+      var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
+      when(groupsClient
+        .lookupGroup(eq(SAMPLE_GROUP)))
+        .thenThrow(new ResourceNotFoundException("mock"));
+
+      var logger = Mockito.mock(Logger.class);
+      var provisioner = new Provisioner.GroupProvisioner(
+        Mockito.mock(GroupMapping.class),
+        groupsClient,
+        logger);
+
+      assertFalse(provisioner.cloudIdentityGroupKey(SAMPLE_GROUP).isPresent());
+    }
+
+    @Test
+    public void cloudIdentityGroupKey_whenGroupFound() throws Exception {
+      var groupKey = new GroupKey("groups/123");
+
+      var groupsClient = Mockito.mock(CloudIdentityGroupsClient.class);
+      when(groupsClient
+        .lookupGroup(eq(SAMPLE_GROUP)))
+        .thenReturn(groupKey);
+
+      var logger = Mockito.mock(Logger.class);
+      var provisioner = new Provisioner.GroupProvisioner(
+        Mockito.mock(GroupMapping.class),
+        groupsClient,
+        logger);
+
+      assertTrue(provisioner.cloudIdentityGroupKey(SAMPLE_GROUP).isPresent());
+      assertEquals(groupKey, provisioner.cloudIdentityGroupKey(SAMPLE_GROUP).get());
     }
 
     // -------------------------------------------------------------------------

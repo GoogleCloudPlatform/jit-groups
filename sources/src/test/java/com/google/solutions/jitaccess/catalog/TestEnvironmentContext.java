@@ -49,7 +49,7 @@ public class TestEnvironmentContext {
   @NotNull
   private static Provisioner createProvisioner(JitGroupId... groupIds) throws AccessException, IOException {
     var provisioner = Mockito.mock(Provisioner.class);
-    when(provisioner.provisionedGroupId(any()))
+    when(provisioner.cloudIdentityGroupId(any()))
       .thenReturn(new GroupId("provisioned-id@example.com"));
     when(provisioner.provisionedGroups())
       .thenReturn(List.of(groupIds));
