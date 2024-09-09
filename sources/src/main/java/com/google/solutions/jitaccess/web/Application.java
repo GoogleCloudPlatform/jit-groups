@@ -21,16 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonObjectParser;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.GenericData;
-import com.google.auth.oauth2.ComputeEngineCredentials;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.apis.clients.*;
@@ -50,11 +41,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,15 +52,9 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class Application {
-  private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
-  private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
-  private static final String CONFIG_PROJECT = "jitaccess.project";
-
-  private static final String projectId;
-  private static final String projectNumber;
-  private static final @NotNull GoogleCredentials applicationCredentials;
-  private static final @NotNull ServiceAccountId applicationPrincipal;
-
+  /**
+   * Application logger, not tied to a request context.
+   */
   private static final @NotNull Logger logger;
 
   /**
@@ -80,32 +62,10 @@ public class Application {
    */
   private static final @NotNull ApplicationConfiguration configuration;
 
-  // -------------------------------------------------------------------------
-  // Private helpers.
-  // -------------------------------------------------------------------------
-
-  private static HttpResponse getMetadata() throws IOException {
-    var genericUrl = new GenericUrl(
-      ComputeEngineCredentials.getMetadataServerUrl() +
-        "/computeMetadata/v1/project/?recursive=true");
-
-    var request = new NetHttpTransport()
-      .createRequestFactory()
-      .buildGetRequest(genericUrl);
-
-    request.setParser(new JsonObjectParser(GsonFactory.getDefaultInstance()));
-    request.getHeaders().set("Metadata-Flavor", "Google");
-    request.setThrowExceptionOnExecuteError(true);
-
-    try {
-      return request.execute();
-    }
-    catch (UnknownHostException exception) {
-      throw new IOException(
-        "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
-        exception);
-    }
-  }
+  /**
+   * Information about the application's runtime.
+   */
+  private static final @NotNull ApplicationRuntime runtime;
 
   // -------------------------------------------------------------------------
   // Application startup.
@@ -132,138 +92,31 @@ public class Application {
         "The SMTP configuration is incomplete");
     }
 
-    if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
-      //
-      // Initialize using service account attached to AppEngine or Cloud Run.
-      //
-      try {
-        GenericData projectMetadata =
-          getMetadata().parseAs(GenericData.class);
-
-        projectId = (String) projectMetadata.get("projectId");
-        projectNumber = projectMetadata.get("numericProjectId").toString();
-
-        var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
-        applicationPrincipal = ServiceAccountId
-          .parse(ServiceAccountId.TYPE + ":" + defaultCredentials.getAccount())
-          .orElseThrow(() -> new IllegalArgumentException(
-            String.format("'%s' is not a valid service account email address",
-              defaultCredentials.getAccount())));
-
-        if (defaultCredentials.getScopes().containsAll(configuration.requiredOauthScopes())) {
-          //
-          // Default credential has all the right scopes, use it as-is.
-          //
-          applicationCredentials = defaultCredentials;
-        }
-        else {
-          //
-          // Extend the set of scopes to include required non-cloud APIs by
-          // letting the service account impersonate itself.
-          //
-          applicationCredentials = ImpersonatedCredentials.create(
-            defaultCredentials,
-            applicationPrincipal.value(),
-            null,
-            configuration.requiredOauthScopes().stream().toList(),
-            0);
-        }
-
-        logger.info(
-          EventIds.STARTUP,
-          String.format("Running in project %s (%s) as %s, version %s",
-            projectId,
-            projectNumber,
-            applicationPrincipal,
-            ApplicationVersion.VERSION_STRING));
-      }
-      catch (IOException e) {
-        logger.error(
-          EventIds.STARTUP,
-          "Failed to lookup instance metadata", e);
-        throw new RuntimeException("Failed to initialize runtime environment", e);
-      }
+    try {
+      runtime = ApplicationRuntime.detect(new HashSet<>(List.of(
+        IamCredentialsClient.OAUTH_SCOPE,
+        SecretManagerClient.OAUTH_SCOPE,
+        CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
+        CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE)));
     }
-    else if (isDebugModeEnabled()) {
-      //
-      // Initialize using development settings and credential.
-      //
-      projectId = System.getProperty(CONFIG_PROJECT, "dev");
-      projectNumber = "0";
+    catch (IOException e) {
+      throw new RuntimeException("Initializing runtime failed, aborting startup", e);
+    }
 
-      try {
-        var defaultCredentials = GoogleCredentials.getApplicationDefault();
-
-        var impersonateServiceAccount = ServiceAccountId.parse(
-          ServiceAccountId.TYPE + ":" + System.getProperty(CONFIG_IMPERSONATE_SA));
-        if (impersonateServiceAccount.isPresent()) {
-          //
-          // Use the application default credentials (ADC) to impersonate a
-          // service account. This step is necessary to ensure we have a
-          // credential for the right set of scopes, and that we're not running
-          // with end-user credentials.
-          //
-          applicationCredentials = ImpersonatedCredentials.create(
-            defaultCredentials,
-            impersonateServiceAccount.get().value(),
-            null,
-            configuration.requiredOauthScopes().stream().toList(),
-            0);
-
-          //
-          // If we lack impersonation permissions, ImpersonatedCredentials
-          // will keep retrying until the call timeout expires. The effect
-          // is that the application seems hung.
-          //
-          // To prevent this from happening, force a refresh here. If the
-          // refresh fails, fail application startup.
-          //
-          applicationCredentials.refresh();
-          applicationPrincipal = impersonateServiceAccount.get();
-        }
-        else if (defaultCredentials instanceof ServiceAccountCredentials saCredentials) {
-          //
-          // Use ADC as-is.
-          //
-          applicationCredentials = defaultCredentials;
-          applicationPrincipal = ServiceAccountId
-            .parse(saCredentials.getServiceAccountUser())
-            .orElseThrow(() -> new RuntimeException(String.format(
-              "The email '%s' is not a valid service account email address",
-              saCredentials.getServiceAccountUser())));
-        }
-        else {
-          throw new RuntimeException(String.format(
-            "You're using user credentials as application default "
-              + "credentials (ADC). Use -D%s=<service-account-email> to impersonate "
-              + "a service account during development",
-            CONFIG_IMPERSONATE_SA));
-        }
-      }
-      catch (IOException e) {
-        throw new RuntimeException("Failed to lookup application credentials", e);
-      }
-
+    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
       logger.warn(
         EventIds.STARTUP,
-        String.format("Running in development mode as %s", applicationPrincipal));
+        String.format("Running in development mode as %s", runtime.applicationPrincipal()));
     }
     else {
-      throw new RuntimeException(
-        "Application is not running on AppEngine or Cloud Run, and debug mode is disabled. Aborting startup");
+      logger.info(
+        EventIds.STARTUP,
+        String.format("Running in project %s (%s) as %s, version %s",
+          runtime.projectId(),
+          runtime.projectNumber(),
+          runtime.applicationPrincipal(),
+          ApplicationVersion.VERSION_STRING));
     }
-  }
-
-  private static boolean isRunningOnAppEngine() {
-    return System.getenv().containsKey("GAE_SERVICE");
-  }
-
-  private static boolean isRunningOnCloudRun() {
-    return System.getenv().containsKey("K_SERVICE");
-  }
-
-  private static boolean isDebugModeEnabled() {
-    return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
   //---------------------------------------------------------------------------
@@ -273,37 +126,52 @@ public class Application {
   @Produces
   @Singleton
   public RequireIapPrincipalFilter.Options produceIapRequestFilterOptions() {
-    if (isDebugModeEnabled() || !configuration.verifyIapAudience){
-      //
-      // Disable expected audience-check.
-      //
-      return new RequireIapPrincipalFilter.Options(
-        isDebugModeEnabled(),
-        null);
-    }
-    else if (isRunningOnAppEngine()) {
-      //
-      // For AppEngine, we can derive the expected audience
-      // from the project number and name.
-      //
-      return new RequireIapPrincipalFilter.Options(
-        isDebugModeEnabled(),
-        String.format("/projects/%s/apps/%s", projectNumber, projectId));
-    }
-    else  if (configuration.backendServiceId.isPresent()) {
-      //
-      // For Cloud Run, we need the backend service id.
-      //
-      return new RequireIapPrincipalFilter.Options(
-        isDebugModeEnabled(),
-        String.format(
-          "/projects/%s/global/backendServices/%s",
-          projectNumber,
-          configuration.backendServiceId.get()));
-    }
-    else {
-      throw new RuntimeException(
-        "Initializing application failed because the backend service ID is empty");
+    switch (runtime.type())
+    {
+      case APPENGINE:
+        //
+        // For AppEngine, we can derive the expected audience
+        // from the project number and name.
+        //
+        return new RequireIapPrincipalFilter.Options(
+          false,
+          String.format("/projects/%s/apps/%s", runtime.projectNumber(), runtime.projectId()));
+
+      case DEVELOPMENT:
+        //
+        // Disable expected audience-check.
+        //
+        return new RequireIapPrincipalFilter.Options(
+          true, // Allow pseudo-authentication
+          null);
+
+      case CLOUDRUN:
+        if (configuration.verifyIapAudience && configuration.backendServiceId.isPresent()) {
+          //
+          // Use backend service id to determine expected audience.
+          //
+          return new RequireIapPrincipalFilter.Options(
+            false,
+            String.format(
+              "/projects/%s/global/backendServices/%s",
+              runtime.projectNumber(),
+              configuration.backendServiceId.get()));
+        }
+        else if (!configuration.verifyIapAudience) {
+          //
+          // Disable expected audience-check.
+          //
+          return new RequireIapPrincipalFilter.Options(
+            false,
+            null);
+        }
+        else {
+          throw new RuntimeException(
+            "Initializing application failed because the backend service ID is empty");
+        }
+
+      default:
+        throw new IllegalStateException("Unexpected value: " + runtime.type());
     }
   }
 
@@ -314,15 +182,15 @@ public class Application {
     return new Diagnosable() {
       @Override
       public Collection<DiagnosticsResult> diagnose() {
-        if (!isDebugModeEnabled()) {
-          return List.of(new DiagnosticsResult(name));
-        }
-        else {
+        if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
           return List.of(
             new DiagnosticsResult(
               name,
               false,
               "Application is running in development mode"));
+        }
+        else {
+          return List.of(new DiagnosticsResult(name));
         }
       }
     };
@@ -357,24 +225,28 @@ public class Application {
   @Produces
   @Singleton
   public @NotNull ServiceAccountSigner.Options produceServiceAccountSignerOptions() {
-    return new ServiceAccountSigner.Options(applicationPrincipal);
+    return new ServiceAccountSigner.Options(runtime.applicationPrincipal());
   }
 
   @Produces
   @Singleton
   public IamClient.Options produceIamClientOptions() {
-    return new IamClient.Options(isDebugModeEnabled() ? 500 : Integer.MAX_VALUE);
+    return new IamClient.Options(
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
+        ? 500
+        : Integer.MAX_VALUE);
   }
 
   @Produces
   @Singleton
   public UserResource.Options produceUserResourceOptions() {
-    return new UserResource.Options(isDebugModeEnabled());
+    return new UserResource.Options(
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT);
   }
 
   @Produces
   public GoogleCredentials produceApplicationCredentials() {
-    return applicationCredentials;
+    return runtime.applicationCredentials();
   }
 
   @Produces
@@ -391,7 +263,9 @@ public class Application {
   public @NotNull LinkBuilder produceLinkBuilder() {
     return uriInfo -> uriInfo
       .getBaseUriBuilder()
-      .scheme(isRunningOnAppEngine() || isRunningOnCloudRun() ? "https" : "http");
+      .scheme(runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
+        ? "http"
+        : "https");
   }
 
   @Produces
@@ -422,7 +296,7 @@ public class Application {
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient
   ) {
-    if (isDebugModeEnabled()) {
+    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
       return new DebugProposalHandler(tokenSigner);
     }
     else if (configuration.isSmtpConfigured()) {
@@ -498,10 +372,10 @@ public class Application {
         //
         // Value contains a file path, which is only allowed for development.
         //
-        if (!isDebugModeEnabled()) {
+        if (runtime.type() != ApplicationRuntime.Type.DEVELOPMENT) {
           logger.warn(
             EventIds.LOAD_ENVIRONMENT,
-            "File-based policies are only allowed in debug mode, ignoring environment '%s'",
+            "File-based policies are only allowed in development mode, ignoring environment '%s'",
             environment);
           break;
         }
@@ -509,7 +383,7 @@ public class Application {
         try {
           var configuration = EnvironmentConfiguration.forFile(
             environment,
-            applicationCredentials);
+            runtime.applicationCredentials());
           configurations.put(configuration.name(), configuration);
         }
         catch (Exception e) {
@@ -524,8 +398,8 @@ public class Application {
         try {
           var configuration = EnvironmentConfiguration.forServiceAccount(
             ServiceAccountId.parse(environment).get(),
-            applicationPrincipal,
-            applicationCredentials,
+            runtime.applicationPrincipal(),
+            runtime.applicationCredentials(),
             produceHttpTransportOptions());
           configurations.put(configuration.name(), configuration);
         }
@@ -554,15 +428,15 @@ public class Application {
       // Load an extra environment that surfaces JIT Access 1.x roles.
       //
       var legacyLoader = new LegacyPolicyLoader(
-        () -> new ResourceManagerClient(applicationCredentials, produceHttpTransportOptions()),
-        () -> new AssetInventoryClient(applicationCredentials, produceHttpTransportOptions()));
+        () -> new ResourceManagerClient(runtime.applicationCredentials(), produceHttpTransportOptions()),
+        () -> new AssetInventoryClient(runtime.applicationCredentials(), produceHttpTransportOptions()));
 
       configurations.put(
         LegacyPolicy.NAME,
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
           LegacyPolicy.DESCRIPTION,
-          applicationCredentials, // Use app service account, as in 1.x
+          runtime.applicationCredentials(), // Use app service account, as in 1.x
           () -> {
             try {
               return legacyLoader.load(
@@ -604,7 +478,7 @@ public class Application {
         produceHttpTransportOptions()),
       groupMapping,
       groupsClient,
-      isDebugModeEnabled()
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? Duration.ofSeconds(20)
         : configuration.environmentCacheTimeout,
       executor,
