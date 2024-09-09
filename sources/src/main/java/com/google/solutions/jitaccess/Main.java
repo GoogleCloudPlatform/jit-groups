@@ -73,10 +73,6 @@ public class Main implements QuarkusApplication {
       //
       Application.initialize(runtime, configuration, logger);
 
-      //
-      // At this point, the application and all CDI beans are set up,
-      // and we're ready to go.
-      //
       if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
         logger.warn(
           EventIds.STARTUP,
