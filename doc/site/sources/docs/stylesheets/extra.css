@@ -106,3 +106,17 @@ h1 > sup.preview {
     font-style: italic;
     font-weight: normal;
 }
+
+/* Use constant font size */
+
+@media screen and (min-width: 100em) {
+    html {
+        font-size: 125%;
+    }
+}
+
+@media screen and (min-width: 125em) {
+    html {
+        font-size: 125%;
+    }
+}
