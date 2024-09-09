@@ -105,7 +105,7 @@ public class ApplicationRuntime {
    * Detect runtime based on environment variables and system properties
    * and initialize an ApplicationRuntime instance.
    */
-  static ApplicationRuntime detect(
+  public static ApplicationRuntime detect(
     @NotNull Set<String> requiredOauthScopes
   ) throws IOException {
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
