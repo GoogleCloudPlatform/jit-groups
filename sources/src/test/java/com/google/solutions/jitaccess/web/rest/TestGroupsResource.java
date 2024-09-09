@@ -37,7 +37,6 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.time.Duration;
@@ -403,11 +402,11 @@ public class TestGroupsResource {
   }
 
   //---------------------------------------------------------------------------
-  // redirectTo.
+  // linkTo.
   //---------------------------------------------------------------------------
 
   @Test
-  public void redirectTo_whenGroupIdInvalid() throws Exception {
+  public void linkTo_whenGroupIdInvalid() throws Exception {
     var group = Policies.createJitGroupPolicy("g-1", AccessControlList.EMPTY, Map.of());
 
     var resource = new GroupsResource();
@@ -417,14 +416,14 @@ public class TestGroupsResource {
 
     assertThrows(
       IllegalArgumentException.class,
-      () -> resource.redirectTo(group.id().environment(), null, group.name(), "cloud-console"));
+      () -> resource.linkTo(group.id().environment(), null, group.name(), "cloud-console"));
     assertThrows(
       IllegalArgumentException.class,
-      () -> resource.redirectTo(group.id().environment(), group.id().system(), null, "cloud-console"));
+      () -> resource.linkTo(group.id().environment(), group.id().system(), null, "cloud-console"));
   }
 
   @Test
-  public void redirectTo_whenGroupNotFound() throws Exception {
+  public void linkTo_whenGroupNotFound() throws Exception {
     var groupId = new JitGroupId("env-1", "system-1", "group-1");
 
     var resource = new GroupsResource();
@@ -436,7 +435,7 @@ public class TestGroupsResource {
 
     assertThrows(
       AccessDeniedException.class,
-      () -> resource.redirectTo(
+      () -> resource.linkTo(
         groupId.environment(),
         groupId.system(),
         groupId.name(),
@@ -444,7 +443,7 @@ public class TestGroupsResource {
   }
 
   @Test
-  public void redirectTo_whenGroupNotCreatedYet() throws Exception {
+  public void linkTo_whenGroupNotCreatedYet() throws Exception {
     var groupId = new JitGroupId("env-1", "system-1", "group-1");
     var group = Mockito.mock(JitGroupContext.class);
     when(group.cloudIdentityGroupKey())
@@ -459,7 +458,7 @@ public class TestGroupsResource {
 
     assertThrows(
       NotFoundException.class,
-      () -> resource.redirectTo(
+      () -> resource.linkTo(
         groupId.environment(),
         groupId.system(),
         groupId.name(),
@@ -467,7 +466,7 @@ public class TestGroupsResource {
   }
 
   @Test
-  public void redirectTo_whenConsoleNotFound() throws Exception {
+  public void linkTo_whenConsoleNotFound() throws Exception {
     var groupId = new JitGroupId("env-1", "system-1", "group-1");
     var group = Mockito.mock(JitGroupContext.class);
     when(group.cloudIdentityGroupKey())
@@ -483,7 +482,7 @@ public class TestGroupsResource {
 
     assertThrows(
       NotFoundException.class,
-      () -> resource.redirectTo(
+      () -> resource.linkTo(
         groupId.environment(),
         groupId.system(),
         groupId.name(),
@@ -494,7 +493,7 @@ public class TestGroupsResource {
   @ValueSource(
     strings = {"cloud-console", "admin-console", "groups-console"}
   )
-  public void redirectTo_whenGroupCreated_thenReturnsRedirect(String console) throws Exception {
+  public void linkTo_whenGroupCreated_thenReturnsLink(String console) throws Exception {
     var groupId = new JitGroupId("env-1", "system-1", "group-1");
     var group = Mockito.mock(JitGroupContext.class);
     when(group.cloudIdentityGroupKey())
@@ -510,13 +509,13 @@ public class TestGroupsResource {
     when(resource.catalog.group(groupId))
       .thenReturn(Optional.of(group));
 
-    var response = resource.redirectTo(
+    var link = resource.linkTo(
       groupId.environment(),
       groupId.system(),
       groupId.name(),
       console);
 
-    assertEquals(307, response.getStatus());
-    assertNotNull(response.getHeaderString("Location"));
+    assertEquals("ExternalLinkInfo", link.type());
+    assertNotNull(link.location().target());
   }
 }

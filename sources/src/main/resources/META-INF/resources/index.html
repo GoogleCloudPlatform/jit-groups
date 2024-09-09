@@ -920,6 +920,10 @@
                         view = new ProposalInfoView(model);
                         await view.showAsync();
                         break;
+
+                    case "ExternalLinkInfo":
+                        window.location.href = model.content.location.href;
+                        break;
                 }
                 
             }

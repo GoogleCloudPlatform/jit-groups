@@ -181,16 +181,16 @@ public class GroupsResource {
   }
 
   /**
-   * Redirect to this group in a different console.
+   * Return a link to one of the consoles.
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("environments/{environment}/systems/{system}/groups/{name}/in/{console}")
-  public @NotNull Response redirectTo(
+  @Path("environments/{environment}/systems/{system}/groups/{name}/link/{target}")
+  public @NotNull ExternalLinkInfo linkTo(
     @PathParam("environment") @NotNull String environment,
     @PathParam("system") @NotNull String system,
     @PathParam("name") @NotNull String name,
-    @PathParam("console") @NotNull String console
+    @PathParam("target") @NotNull String target
   ) throws Exception {
     try {
       var groupId = new JitGroupId(environment, system, name);
@@ -210,8 +210,8 @@ public class GroupsResource {
         .cloudIdentityGroupKey()
         .orElseThrow(() -> new NotFoundException("The group has not been created yet"));
 
-      var target = Optional
-        .ofNullable(switch (console) {
+      var targetUri = Optional
+        .ofNullable(switch (target) {
           case "cloud-console" -> consoles.cloudConsole().groupDetails(groupKey);
           case "admin-console" -> consoles.adminConsole().groupDetails(groupKey);
           case "groups-console" -> consoles.groupsConsole().groupDetails(group.cloudIdentityGroupId());
@@ -219,9 +219,14 @@ public class GroupsResource {
         })
         .orElseThrow(() -> new NotFoundException("Unknown console"));
 
-      return Response
-        .temporaryRedirect(UriBuilder.fromUri(target).build())
-        .build();
+      return new ExternalLinkInfo(
+        new Link(
+          "environments/%s/systems/%s/groups/%s/link/%s",
+          groupId.environment(),
+          groupId.system(),
+          groupId.name(),
+          target),
+        new Link(targetUri));
     }
     catch (Exception e) {
       this.logger.warn(EventIds.API_VIEW_GROUPS, e);
@@ -359,6 +364,11 @@ public class GroupsResource {
           .toList());
     }
   }
+
+  public record ExternalLinkInfo(
+    @NotNull Link self,
+    @NotNull Link location
+  ) implements MediaInfo {}
 
   public enum JoinStatusInfo {
     /**
