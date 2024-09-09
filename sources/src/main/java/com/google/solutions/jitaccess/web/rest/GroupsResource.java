@@ -31,19 +31,13 @@ import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
 import com.google.solutions.jitaccess.catalog.policy.Property;
 import com.google.solutions.jitaccess.util.Coalesce;
-import com.google.solutions.jitaccess.web.EventIds;
-import com.google.solutions.jitaccess.web.LinkBuilder;
-import com.google.solutions.jitaccess.web.LogRequest;
-import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.*;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import com.google.solutions.jitaccess.web.proposal.TokenObfuscator;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,6 +72,9 @@ public class GroupsResource {
   @Inject
   LinkBuilder linkBuilder;
 
+  @Inject
+  Consoles consoles;
+
   /**
    * Get group details, including information about requirements
    * to join the group.
@@ -95,7 +92,7 @@ public class GroupsResource {
 
       return this.catalog
         .group(groupId)
-        .map(grp -> GroupsResource.GroupInfo.create(
+        .map(grp -> GroupInfo.create(
           grp,
           JoinInfo.forJoinAnalysis(grp)))
         .orElseThrow(() -> NOT_FOUND);
@@ -179,6 +176,60 @@ public class GroupsResource {
     }
     catch (Exception e) {
       this.logger.warn(EventIds.API_JOIN_GROUP, e);
+      throw (Exception)e.fillInStackTrace();
+    }
+  }
+
+  /**
+   * Return a link to one of the consoles.
+   */
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("environments/{environment}/systems/{system}/groups/{name}/link/{target}")
+  public @NotNull ExternalLinkInfo linkTo(
+    @PathParam("environment") @NotNull String environment,
+    @PathParam("system") @NotNull String system,
+    @PathParam("name") @NotNull String name,
+    @PathParam("target") @NotNull String target
+  ) throws Exception {
+    try {
+      var groupId = new JitGroupId(environment, system, name);
+
+      //
+      // Lookup group, implicitly verifying VIEW access.
+      //
+      var group = this.catalog
+        .group(groupId)
+        .orElseThrow(() -> NOT_FOUND);
+
+      //
+      // Lookup the group key, this may return empty if the group
+      // hasn't been created yet.
+      //
+      var groupKey = group
+        .cloudIdentityGroupKey()
+        .orElseThrow(() -> new NotFoundException("The group has not been created yet"));
+
+      var targetUri = Optional
+        .ofNullable(switch (target) {
+          case "cloud-console" -> consoles.cloudConsole().groupDetails(groupKey);
+          case "admin-console" -> consoles.adminConsole().groupDetails(groupKey);
+          case "groups-console" -> consoles.groupsConsole().groupDetails(group.cloudIdentityGroupId());
+          default -> null;
+        })
+        .orElseThrow(() -> new NotFoundException("Unknown console"));
+
+      return new ExternalLinkInfo(
+        new Link(
+          "environments/%s/systems/%s/groups/%s/link/%s",
+          groupId.environment(),
+          groupId.system(),
+          groupId.name(),
+          target),
+        new Link(targetUri));
+    }
+    catch (Exception e) {
+      this.logger.warn(EventIds.API_VIEW_GROUPS, e);
       throw (Exception)e.fillInStackTrace();
     }
   }
@@ -313,6 +364,11 @@ public class GroupsResource {
           .toList());
     }
   }
+
+  public record ExternalLinkInfo(
+    @NotNull Link self,
+    @NotNull Link location
+  ) implements MediaInfo {}
 
   public enum JoinStatusInfo {
     /**

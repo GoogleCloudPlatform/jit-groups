@@ -22,23 +22,28 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
+import com.google.solutions.jitaccess.apis.clients.GroupKey;
 import com.google.solutions.jitaccess.catalog.*;
-import com.google.solutions.jitaccess.catalog.auth.Principal;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.web.Consoles;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -394,5 +399,123 @@ public class TestGroupsResource {
     assertFalse(groupInfo.join().membership().active());
     assertEquals(0, groupInfo.join().satisfiedConstraints().size());
     assertEquals(0, groupInfo.join().unsatisfiedConstraints().size());
+  }
+
+  //---------------------------------------------------------------------------
+  // linkTo.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void linkTo_whenGroupIdInvalid() throws Exception {
+    var group = Policies.createJitGroupPolicy("g-1", AccessControlList.EMPTY, Map.of());
+
+    var resource = new GroupsResource();
+    resource.logger = Mockito.mock(Logger.class);
+    resource.auditTrail = Mockito.mock(OperationAuditTrail.class);
+    resource.catalog = createCatalog(group);
+
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> resource.linkTo(group.id().environment(), null, group.name(), "cloud-console"));
+    assertThrows(
+      IllegalArgumentException.class,
+      () -> resource.linkTo(group.id().environment(), group.id().system(), null, "cloud-console"));
+  }
+
+  @Test
+  public void linkTo_whenGroupNotFound() throws Exception {
+    var groupId = new JitGroupId("env-1", "system-1", "group-1");
+
+    var resource = new GroupsResource();
+    resource.logger = Mockito.mock(Logger.class);
+    resource.auditTrail = Mockito.mock(OperationAuditTrail.class);
+    resource.catalog = Mockito.mock(Catalog.class);
+    when(resource.catalog.group(groupId))
+      .thenReturn(Optional.empty());
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> resource.linkTo(
+        groupId.environment(),
+        groupId.system(),
+        groupId.name(),
+        "cloud-console"));
+  }
+
+  @Test
+  public void linkTo_whenGroupNotCreatedYet() throws Exception {
+    var groupId = new JitGroupId("env-1", "system-1", "group-1");
+    var group = Mockito.mock(JitGroupContext.class);
+    when(group.cloudIdentityGroupKey())
+      .thenReturn(Optional.empty());
+
+    var resource = new GroupsResource();
+    resource.logger = Mockito.mock(Logger.class);
+    resource.auditTrail = Mockito.mock(OperationAuditTrail.class);
+    resource.catalog = Mockito.mock(Catalog.class);
+    when(resource.catalog.group(groupId))
+      .thenReturn(Optional.of(group));
+
+    assertThrows(
+      NotFoundException.class,
+      () -> resource.linkTo(
+        groupId.environment(),
+        groupId.system(),
+        groupId.name(),
+        "cloud-console"));
+  }
+
+  @Test
+  public void linkTo_whenConsoleNotFound() throws Exception {
+    var groupId = new JitGroupId("env-1", "system-1", "group-1");
+    var group = Mockito.mock(JitGroupContext.class);
+    when(group.cloudIdentityGroupKey())
+      .thenReturn(Optional.of(new GroupKey("abc")));
+
+    var resource = new GroupsResource();
+    resource.consoles = new Consoles(new OrganizationId("123"));
+    resource.logger = Mockito.mock(Logger.class);
+    resource.auditTrail = Mockito.mock(OperationAuditTrail.class);
+    resource.catalog = Mockito.mock(Catalog.class);
+    when(resource.catalog.group(groupId))
+      .thenReturn(Optional.of(group));
+
+    assertThrows(
+      NotFoundException.class,
+      () -> resource.linkTo(
+        groupId.environment(),
+        groupId.system(),
+        groupId.name(),
+        "invalid-console"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+    strings = {"cloud-console", "admin-console", "groups-console"}
+  )
+  public void linkTo_whenGroupCreated_thenReturnsLink(String console) throws Exception {
+    var groupId = new JitGroupId("env-1", "system-1", "group-1");
+    var group = Mockito.mock(JitGroupContext.class);
+    when(group.cloudIdentityGroupKey())
+      .thenReturn(Optional.of(new GroupKey("abc")));
+    when(group.cloudIdentityGroupId())
+      .thenReturn(new GroupId("group@example.com"));
+
+    var resource = new GroupsResource();
+    resource.consoles = new Consoles(new OrganizationId("123"));
+    resource.logger = Mockito.mock(Logger.class);
+    resource.auditTrail = Mockito.mock(OperationAuditTrail.class);
+    resource.catalog = Mockito.mock(Catalog.class);
+    when(resource.catalog.group(groupId))
+      .thenReturn(Optional.of(group));
+
+    var link = resource.linkTo(
+      groupId.environment(),
+      groupId.system(),
+      groupId.name(),
+      console);
+
+    assertEquals("ExternalLinkInfo", link.type());
+    assertNotNull(link.location().target());
   }
 }
