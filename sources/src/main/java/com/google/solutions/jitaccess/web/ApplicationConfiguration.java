@@ -298,14 +298,6 @@ class ApplicationConfiguration extends AbstractConfiguration {
       (this.smtpPassword.isPresent() || this.smtpSecret.isPresent());
   }
 
-  @NotNull Set<String> requiredOauthScopes() {
-    return new HashSet<>(List.of(
-      IamCredentialsClient.OAUTH_SCOPE,
-      SecretManagerClient.OAUTH_SCOPE,
-      CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
-      CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE));
-  }
-
   public @NotNull Map<String, String> smtpExtraOptionsMap() {
     var map = new HashMap<String, String>();
 
