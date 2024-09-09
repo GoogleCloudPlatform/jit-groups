@@ -42,10 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -96,17 +93,17 @@ public class Application {
     }
 
     try {
-      runtime = ApplicationRuntime.autodetect(Set.of(
+      runtime = ApplicationRuntime.detect(new HashSet<>(List.of(
         IamCredentialsClient.OAUTH_SCOPE,
         SecretManagerClient.OAUTH_SCOPE,
         CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
-        CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE));
+        CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE)));
     }
     catch (IOException e) {
       throw new RuntimeException("Initializing runtime failed, aborting startup", e);
     }
 
-    if (runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT) {
+    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
       logger.warn(
         EventIds.STARTUP,
         String.format("Running in development mode as %s", runtime.applicationPrincipal()));
@@ -129,7 +126,7 @@ public class Application {
   @Produces
   @Singleton
   public RequireIapPrincipalFilter.Options produceIapRequestFilterOptions() {
-    switch (runtime.environment())
+    switch (runtime.type())
     {
       case APPENGINE:
         //
@@ -174,7 +171,7 @@ public class Application {
         }
 
       default:
-        throw new IllegalStateException("Unexpected value: " + runtime.environment());
+        throw new IllegalStateException("Unexpected value: " + runtime.type());
     }
   }
 
@@ -185,7 +182,7 @@ public class Application {
     return new Diagnosable() {
       @Override
       public Collection<DiagnosticsResult> diagnose() {
-        if (runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT) {
+        if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
           return List.of(
             new DiagnosticsResult(
               name,
@@ -235,7 +232,7 @@ public class Application {
   @Singleton
   public IamClient.Options produceIamClientOptions() {
     return new IamClient.Options(
-      runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? 500
         : Integer.MAX_VALUE);
   }
@@ -244,7 +241,7 @@ public class Application {
   @Singleton
   public UserResource.Options produceUserResourceOptions() {
     return new UserResource.Options(
-      runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT);
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT);
   }
 
   @Produces
@@ -266,7 +263,7 @@ public class Application {
   public @NotNull LinkBuilder produceLinkBuilder() {
     return uriInfo -> uriInfo
       .getBaseUriBuilder()
-      .scheme(runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT
+      .scheme(runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? "http"
         : "https");
   }
@@ -299,7 +296,7 @@ public class Application {
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient
   ) {
-    if (runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT) {
+    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
       return new DebugProposalHandler(tokenSigner);
     }
     else if (configuration.isSmtpConfigured()) {
@@ -375,7 +372,7 @@ public class Application {
         //
         // Value contains a file path, which is only allowed for development.
         //
-        if (runtime.environment() != ApplicationRuntime.Environment.DEVELOPMENT) {
+        if (runtime.type() != ApplicationRuntime.Type.DEVELOPMENT) {
           logger.warn(
             EventIds.LOAD_ENVIRONMENT,
             "File-based policies are only allowed in development mode, ignoring environment '%s'",
@@ -481,7 +478,7 @@ public class Application {
         produceHttpTransportOptions()),
       groupMapping,
       groupsClient,
-      runtime.environment() == ApplicationRuntime.Environment.DEVELOPMENT
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? Duration.ofSeconds(20)
         : configuration.environmentCacheTimeout,
       executor,

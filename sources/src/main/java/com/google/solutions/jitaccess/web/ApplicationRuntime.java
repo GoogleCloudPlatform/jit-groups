@@ -50,16 +50,16 @@ public class ApplicationRuntime {
   private final @NotNull String projectNumber;
   private final @NotNull GoogleCredentials applicationCredentials;
   private final @NotNull ServiceAccountId applicationPrincipal;
-  private final @NotNull Environment environment;
+  private final @NotNull ApplicationRuntime.Type type;
 
   private ApplicationRuntime(
-    @NotNull Environment environment,
+    @NotNull ApplicationRuntime.Type type,
     @NotNull ProjectId projectId,
     @NotNull String projectNumber,
     @NotNull GoogleCredentials applicationCredentials,
     @NotNull ServiceAccountId applicationPrincipal
   ) {
-    this.environment = environment;
+    this.type = type;
     this.projectId = projectId;
     this.projectNumber = projectNumber;
     this.applicationCredentials = applicationCredentials;
@@ -102,9 +102,10 @@ public class ApplicationRuntime {
   }
 
   /**
-   * Autodetect runtime environment.
+   * Detect runtime based on environment variables and system properties
+   * and initialize an ApplicationRuntime instance.
    */
-  static ApplicationRuntime autodetect(
+  static ApplicationRuntime detect(
     @NotNull Set<String> requiredOauthScopes
   ) throws IOException {
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {
@@ -143,7 +144,7 @@ public class ApplicationRuntime {
       }
 
       return new ApplicationRuntime(
-        isRunningOnAppEngine() ? Environment.APPENGINE : Environment.CLOUDRUN,
+        isRunningOnAppEngine() ? Type.APPENGINE : Type.CLOUDRUN,
         new ProjectId(projectId),
         projectNumber,
         applicationCredentials,
@@ -205,7 +206,7 @@ public class ApplicationRuntime {
       }
 
       return new ApplicationRuntime(
-        Environment.DEVELOPMENT,
+        Type.DEVELOPMENT,
         new ProjectId(System.getProperty(CONFIG_PROJECT, "dev")),
         "0",
         applicationCredentials,
@@ -217,27 +218,42 @@ public class ApplicationRuntime {
     }
   }
 
+  /**
+   * Project the application is deployed in.
+   */
   public @NotNull ProjectId projectId() {
     return projectId;
   }
 
+  /**
+   * Project the application is deployed in.
+   */
   public @NotNull String projectNumber() {
     return projectNumber;
   }
 
+  /**
+   * Application credentials.
+   */
   public @NotNull GoogleCredentials applicationCredentials() {
     return applicationCredentials;
   }
 
+  /**
+   * Service account used by the application.
+   */
   public @NotNull ServiceAccountId applicationPrincipal() {
     return applicationPrincipal;
   }
 
-  public @NotNull Environment environment() {
-    return environment;
+  /**
+   * Type of runtime environment the application is running in.
+   */
+  public @NotNull ApplicationRuntime.Type type() {
+    return type;
   }
 
-  public enum Environment {
+  public enum Type {
     APPENGINE,
     CLOUDRUN,
     DEVELOPMENT
