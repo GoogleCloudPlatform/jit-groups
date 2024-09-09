@@ -277,28 +277,6 @@ abstract class StructuredLogger implements Logger {
 
   /**
    * Logger for operations that run in the context of
-   * an environment.
-   */
-  static class EnvironmentContextLogger extends StructuredLogger {
-    private final @NotNull String environmentName;
-
-    EnvironmentContextLogger(
-      @NotNull Appendable output,
-      @NotNull String environmentName) {
-      super(output);
-      this.environmentName = environmentName;
-    }
-
-    @Override
-    protected @NotNull Map<String, String> createLabels(String eventId) {
-      var labels = super.createLabels(eventId);
-      labels.put("environment", this.environmentName);
-      return labels;
-    }
-  }
-
-  /**
-   * Logger for operations that run in the context of
    * a user request.
    */
   static class RequestContextLogger extends StructuredLogger {
