@@ -50,7 +50,7 @@ class OperationAuditTrail {
   static final String LABEL_GROUP_EXPIRY = "group/expiry";
   static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
   static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
-  static final String LABEL_PREFIX_PROPOSAL_RECIPIENTS = "proposal/recipients/";
+  static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
   static final String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
@@ -81,7 +81,7 @@ class OperationAuditTrail {
     this.logger.buildInfo(EventIds.API_JOIN_GROUP)
       .addLabel(LABEL_EVENT_TYPE, "audit")
       .addLabel(LABEL_GROUP_ID, joinOp.group())
-      .addLabel(LABEL_PREFIX_PROPOSAL_RECIPIENTS, proposal.audience()
+      .addLabel(LABEL_PROPOSAL_RECIPIENTS, proposal.audience()
         .stream()
         .map(IamPrincipalId::toString)
         .sorted()

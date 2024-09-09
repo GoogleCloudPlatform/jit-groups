@@ -152,7 +152,7 @@ public class TestOperationAuditTrail {
       entry.labels.get(OperationAuditTrail.LABEL_GROUP_ID));
     assertEquals(
       "user:user-2@example.com,user:user-3@example.com",
-      entry.labels.get(OperationAuditTrail.LABEL_PREFIX_PROPOSAL_RECIPIENTS));
+      entry.labels.get(OperationAuditTrail.LABEL_PROPOSAL_RECIPIENTS));
     assertEquals(
       "User 'user:user-1@example.com' asked to join group 'jit-group:env-1.system-1.group-1', " +
         "proposed to 'user:user-2@example.com', 'user:user-3@example.com' for approval",
