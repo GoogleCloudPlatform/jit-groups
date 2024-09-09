@@ -95,7 +95,7 @@ public class ApplicationRuntime {
       return request.execute();
     }
     catch (Exception exception) {
-      throw new RuntimeException(
+      throw new IOException(
         "Cannot find the metadata server. This is likely because code is not running on Google Cloud.",
         exception);
     }
