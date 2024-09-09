@@ -86,7 +86,7 @@ public class Application {
   public static void initialize(
     @NotNull ApplicationRuntime runtime,
     @NotNull ApplicationConfiguration configuration,
-    @NotNull StructuredLogger logger
+    @NotNull Logger logger
   ) {
     Application.logger = logger;
     Application.configuration = configuration;
