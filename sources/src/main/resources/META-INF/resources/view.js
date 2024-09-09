@@ -363,6 +363,9 @@ class ViewBase {
         document.appbar.clearError();
         $('.jit-view').hide();
         $(this.selector).show();
+
+        const heading = $(`${this.selector} h1`).text().replaceAll('chevron_right', '>');
+        $('title').text(`JIT Groups: ${heading}`);
         
         return Promise.resolve({});
     }
@@ -512,7 +515,6 @@ class AppBar {
             resource = `/environments/${this.environment}`;
 
             $('#jit-scope').text(this.environment);
-            $('title').text(`JIT Groups: ${this.environment}`);
         }
 
         if (!this.environment) {
