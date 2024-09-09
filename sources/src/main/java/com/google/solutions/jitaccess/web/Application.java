@@ -24,7 +24,6 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.Catalog;
@@ -39,7 +38,6 @@ import com.google.solutions.jitaccess.web.rest.UserResource;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -51,7 +49,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Initializes the application and produces and produces CDI beans.
+ * Produces CDI beans to initialize application components.
  */
 @Singleton
 public class Application {
