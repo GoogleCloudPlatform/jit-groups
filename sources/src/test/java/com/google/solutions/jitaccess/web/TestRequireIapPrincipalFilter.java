@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.container.ContainerRequestContext;

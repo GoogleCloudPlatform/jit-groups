@@ -22,6 +22,7 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;

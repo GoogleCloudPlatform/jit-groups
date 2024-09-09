@@ -24,10 +24,11 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationVersion;
+import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
@@ -83,7 +84,7 @@ public class Application {
     // Create a logger. We can't rely on injection as we're not in the
     // scope of a specific request here.
     //
-    logger = new StructuredLogger.ApplicationContextLogger(System.out);
+    logger = new StructuredLogger(System.out);
     configuration = new ApplicationConfiguration(System.getenv());
 
     if (!configuration.isSmtpConfigured()) {
@@ -250,8 +251,8 @@ public class Application {
   }
 
   @Produces
-  public @NotNull StructuredLogger.RequestContextLogger produceLogger(@NotNull RequestContext context) {
-    return new StructuredLogger.RequestContextLogger(context);
+  public @NotNull RequestContextLogger produceLogger(@NotNull RequestContext context) {
+    return new RequestContextLogger(context);
   }
 
   @Produces

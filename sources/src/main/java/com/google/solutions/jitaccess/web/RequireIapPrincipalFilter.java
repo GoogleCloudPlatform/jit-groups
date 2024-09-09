@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.Directory;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import jakarta.annotation.Priority;
