@@ -137,9 +137,7 @@ public class Application {
       // Initialize using service account attached to AppEngine or Cloud Run.
       //
       try {
-        GenericData projectMetadata =
-          getMetadata().parseAs(GenericData.class);
-
+        var projectMetadata = getMetadata().parseAs(GenericData.class);
         projectId = (String) projectMetadata.get("projectId");
         projectNumber = projectMetadata.get("numericProjectId").toString();
 
@@ -180,8 +178,8 @@ public class Application {
       catch (IOException e) {
         logger.error(
           EventIds.STARTUP,
-          "Failed to lookup instance metadata", e);
-        throw new RuntimeException("Failed to initialize runtime environment", e);
+          "Looking up instance metadata failed", e);
+        throw new RuntimeException("Application initialization failed, aborting startup", e);
       }
     }
     else if (isDebugModeEnabled()) {
@@ -241,7 +239,7 @@ public class Application {
         }
       }
       catch (IOException e) {
-        throw new RuntimeException("Failed to lookup application credentials", e);
+        throw new RuntimeException("Initializing application credentials failed, aborting startup", e);
       }
 
       logger.warn(
