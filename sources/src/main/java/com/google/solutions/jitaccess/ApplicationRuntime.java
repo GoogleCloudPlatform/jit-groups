@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;

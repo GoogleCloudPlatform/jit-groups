@@ -28,7 +28,6 @@ import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.ApplicationConfiguration;
-import com.google.solutions.jitaccess.web.ApplicationRuntime;
 import com.google.solutions.jitaccess.web.EventIds;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
