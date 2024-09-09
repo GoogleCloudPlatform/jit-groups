@@ -65,7 +65,7 @@ public class TestConsoles {
     var consoles = new Consoles(new OrganizationId("123"));
 
     assertEquals(
-      "https://groups.google.com/a/example.com/g/group",
+      "https://groups.google.com/a/example.com/g/group/about",
       consoles.groupsConsole().groupDetails(new GroupId("group@example.com")));
   }
 }
