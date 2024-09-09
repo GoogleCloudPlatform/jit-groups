@@ -94,7 +94,7 @@ public class Consoles {
     public String groupDetails(@NotNull GroupId group) {
       var components = group.components();
       return String.format(
-        "https://groups.google.com/a/%s/g/%s",
+        "https://groups.google.com/a/%s/g/%s/about",
         components.domain(),
         components.name());
     }
