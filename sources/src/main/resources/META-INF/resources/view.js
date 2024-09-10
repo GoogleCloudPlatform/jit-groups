@@ -49,22 +49,29 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
         if (value.menu) {
             // Drop-down menu.
             const menuAnchor = $('<span class="jit-material-icons jit-dropdown">more_vert</span>');
-            const menuFlyout = $(`
-            <div class="mdc-menu mdc-menu-surface">
+            const menuFlyout = $(`<div class="mdc-menu mdc-menu-surface"></div>`);
+            const list = $(`
               <ul class="mdc-deprecated-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
-                <li class="mdc-deprecated-list-item" role="menuitem">
-                  <span class="mdc-deprecated-list-item__ripple"></span>
-                  <span class="mdc-deprecated-list-item__text">A Menu Item</span>
-                </li>
-                <li class="mdc-deprecated-list-item" role="menuitem">
-                  <span class="mdc-deprecated-list-item__ripple"></span>
-                  <span class="mdc-deprecated-list-item__text">Another Menu Item...................</span>
-                </li>
-              </ul>
-            </div>`);
+              </ul>`);
 
+            menuFlyout.append(list);
             td.append(menuAnchor);
             td.append(menuFlyout);
+
+            value.menu.forEach(item => {
+                const span = $(`<span class="mdc-deprecated-list-item__text"></span>`);
+                span.text(item.text);
+
+                const a = $(`<a class="jit-dropdown-item"></a>`);
+                a.prop('href', item.href);
+
+                const li = $(`<li class="mdc-deprecated-list-item" role="menuitem"></li>`);
+                li.append(a);
+
+                a.append(`<span class="mdc-deprecated-list-item__ripple"></span>`)
+                a.append(span);
+                list.append(li);
+            })
 
             const menu = new mdc.menu.MDCMenu(menuFlyout.get(0));
 

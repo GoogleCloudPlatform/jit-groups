@@ -352,7 +352,12 @@
                                 { 
                                     icon: item.join.status == 'JOIN_DISALLOWED' ? 'close': 'check'
                                 },
-                                { menu: [] }
+                                {
+                                    menu: [
+                                        { text: 'One', href:'#' },
+                                        { text: 'Two..........................' }
+                                    ]
+                                }
                             ],
                             false);
                     });

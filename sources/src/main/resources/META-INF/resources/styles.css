@@ -167,6 +167,11 @@ div.jit-card-subsection[title]:not(:empty)::before {
     cursor:pointer;
 }
 
+.jit-dropdown-item {
+    text-decoration: none;
+    color: #000;
+}
+
 .jit-policy-editor {
     width: 100%;
     height: 55vh;
