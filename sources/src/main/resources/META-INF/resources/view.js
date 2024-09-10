@@ -59,18 +59,23 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
             td.append(menuFlyout);
 
             value.menu.forEach(item => {
-                const span = $(`<span class="mdc-deprecated-list-item__text"></span>`);
-                span.text(item.text);
+                if (item.text) {
+                    const span = $(`<span class="mdc-deprecated-list-item__text"></span>`);
+                    span.text(item.text);
 
-                const a = $(`<a class="jit-dropdown-item"></a>`);
-                a.prop('href', item.href);
+                    const a = $(`<a class="jit-dropdown-item"></a>`);
+                    a.prop('href', item.href);
 
-                const li = $(`<li class="mdc-deprecated-list-item" role="menuitem"></li>`);
-                li.append(a);
+                    const li = $(`<li class="mdc-deprecated-list-item" role="menuitem"></li>`);
+                    li.append(a);
 
-                a.append(`<span class="mdc-deprecated-list-item__ripple"></span>`)
-                a.append(span);
-                list.append(li);
+                    a.append(`<span class="mdc-deprecated-list-item__ripple"></span>`)
+                    a.append(span);
+                    list.append(li);
+                }
+                else {
+                    list.append($(`<li class="mdc-deprecated-list-divider" role="separator"></li>`));
+                }
             })
 
             const menu = new mdc.menu.MDCMenu(menuFlyout.get(0));

@@ -100,10 +100,6 @@
             <div class="jit-card-subsection" title="About this group">
                 <span class="jit-group-description"></span>
                 <ul class="mdc-list jit-group-privileges" title="This group grants the following privileges:"></ul>
-
-                <a href="#" class="jit-externallink-cloudconsole">Cloud Console</a> |
-                <a href="#" class="jit-externallink-adminconsole">Admin Console</a> |
-                <a href="#" class="jit-externallink-groupsconsole">Google Groups</a>
             </div>
             <div class="jit-card-subsection" title="My Membership">
                 <ul class="mdc-list jit-group-membership"></ul>
@@ -225,9 +221,6 @@
             <div class="jit-card-subsection" title="Group details">
                 <span class="jit-group-description"></span>
                 <ul class="mdc-list jit-group-privileges" title="This group grants the following privileges:"></ul>
-                <a href="#" class="jit-externallink-cloudconsole">Cloud Console</a> |
-                <a href="#" class="jit-externallink-adminconsole">Admin Console</a> |
-                <a href="#" class="jit-externallink-groupsconsole">Google Groups</a>
             </div>
             <div class="jit-card-subsection" title="Request details">
                 <ul class="mdc-list jit-join-inputs" title="Details:"></ul>
@@ -354,8 +347,11 @@
                                 },
                                 {
                                     menu: [
-                                        { text: 'One', href:'#' },
-                                        { text: 'Two..........................' }
+                                        { text: 'Details', href: `#!/${item.self.href}` },
+                                        {},
+                                        { text: 'Open in Cloud Console', href: `#!/${item.self.href}/link/cloud-console` },
+                                        { text: 'Open in Admin Console', href: `#!/${item.self.href}/link/admin-console` },
+                                        { text: 'Open in Google Groups', href: `#!/${item.self.href}/link/groups-console` },
                                     ]
                                 }
                             ],
@@ -409,13 +405,6 @@
                     .prop('href', `#!/${groupInfo.system.self.href}`);
                 this.select('.jit-group-name').text(groupInfo.displayName);
                 this.select('.jit-group-description').text(groupInfo.description);
-
-                this.select('.jit-externallink-cloudconsole')
-                    .prop('href', `#!/${groupInfo.self.href}/link/cloud-console`);
-                this.select('.jit-externallink-adminconsole')
-                    .prop('href', `#!/${groupInfo.self.href}/link/admin-console`);
-                this.select('.jit-externallink-groupsconsole')
-                    .prop('href', `#!/${groupInfo.self.href}/link/groups-console`);
             }
 
             _bindGroupPrivileges(groupInfo) {
