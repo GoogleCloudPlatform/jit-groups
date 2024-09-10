@@ -51,7 +51,6 @@ import java.util.function.Supplier;
 class EnvironmentConfiguration implements PolicyHeader {
   private static final String DEFAULT_DESCRIPTION = "JIT Groups environment";
 
-
   private static final String OOBE_POLICY_NAME = "example";
   private static final String OOBE_POLICY_DESCRIPTION = "Example policy";
   private static final String OOBE_POLICY_PATH = "oobe/policy.yaml";
@@ -87,7 +86,7 @@ class EnvironmentConfiguration implements PolicyHeader {
     return this.resourceCredentials;
   }
 
-  public EnvironmentPolicy loadPolicy() {
+  public EnvironmentPolicy loadPolicy() { // TODO: Return PolicyDocument
     return this.loadPolicy.get();
   }
 

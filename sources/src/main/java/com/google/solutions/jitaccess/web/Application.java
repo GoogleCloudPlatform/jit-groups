@@ -340,7 +340,7 @@ public class Application {
     // Prepare configuration for all environments, but don't load their
     // policy yet (because that's expensive).
     //
-    final var configurations = new HashMap<String, EnvironmentConfiguration>();
+    final var configurations = new LinkedList<EnvironmentConfiguration>();
     for (var environment : configuration.environments) {
       if (environment.startsWith("file:")) {
         //
@@ -355,10 +355,9 @@ public class Application {
         }
 
         try {
-          var configuration = EnvironmentConfiguration.forFile(
+          configurations.add(EnvironmentConfiguration.forFile(
             environment,
-            runtime.applicationCredentials());
-          configurations.put(configuration.name(), configuration);
+            runtime.applicationCredentials()));
         }
         catch (Exception e) {
           logger.warn(
@@ -370,12 +369,11 @@ public class Application {
       }
       else if (ServiceAccountId.parse(environment).isPresent()) {
         try {
-          var configuration = EnvironmentConfiguration.forServiceAccount(
+          configurations.add(EnvironmentConfiguration.forServiceAccount(
             ServiceAccountId.parse(environment).get(),
             runtime.applicationPrincipal(),
             runtime.applicationCredentials(),
-            produceHttpTransportOptions());
-          configurations.put(configuration.name(), configuration);
+            produceHttpTransportOptions()));
         }
         catch (Exception e) {
           logger.error(
@@ -405,8 +403,7 @@ public class Application {
         () -> new ResourceManagerClient(runtime.applicationCredentials(), produceHttpTransportOptions()),
         () -> new AssetInventoryClient(runtime.applicationCredentials(), produceHttpTransportOptions()));
 
-      configurations.put(
-        LegacyPolicy.NAME,
+      configurations.add(
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
           LegacyPolicy.DESCRIPTION,
@@ -432,10 +429,7 @@ public class Application {
       // No policy configured yet, use the "OOBE" example policy.
       //
       try {
-        var example = EnvironmentConfiguration.inertExample();
-        configurations.put(
-          example.name(),
-          example);
+        configurations.add(EnvironmentConfiguration.inertExample());
       }
       catch (IOException e) {
         logger.warn(EventIds.LOAD_ENVIRONMENT, e);
@@ -443,19 +437,14 @@ public class Application {
     }
 
     return new LazyCatalogSource(
-      configurations.entrySet()
-        .stream()
-        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())),
-      envName -> configurations.get(envName).loadPolicy(),
-      policy -> new ResourceManagerClient(
-        configurations.get(policy.name()).resourceCredentials(),
-        produceHttpTransportOptions()),
+      configurations,
       groupMapping,
       groupsClient,
       runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? Duration.ofSeconds(20)
         : configuration.environmentCacheTimeout,
       executor,
+      produceHttpTransportOptions(),
       logger);
   }
 }
