@@ -37,20 +37,6 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
 
     let first = true;
     columns.forEach((value) => {
-        const div = $("<div></div>");
-
-        if (value.text && value.maxLength && value.text.length > value.maxLength) {
-            div.prop('title', value.text);
-            div.text(value.text.substring(0, value.maxLength) + '...');
-        }
-        else {
-            div.text(value.text);
-        }
-
-        if (value.class) {
-            div.attr("class", value.class);
-        }
-
         let td;
         if (first) {
             td = $(`<th class="mdc-data-table__cell" scope="row" id="${id}"></th>`);
@@ -60,20 +46,69 @@ mdc.dataTable.MDCDataTable.prototype.addRow = function(id, columns, showCheckbox
             td = $(`<td class="mdc-data-table__cell"></td>`);
         }
 
-        if (value.icon) {
-            const icon = $("<span class='material-symbols-outlined'></span>");
-            icon.text(value.icon);
-            div.prepend(icon);
-        }
+        if (value.menu) {
+            // Drop-down menu.
+            const menuAnchor = $('<span class="jit-material-icons jit-dropdown">more_vert</span>');
+            const menuFlyout = $(`
+            <div class="mdc-menu mdc-menu-surface">
+              <ul class="mdc-deprecated-list" role="menu" aria-hidden="true" aria-orientation="vertical" tabindex="-1">
+                <li class="mdc-deprecated-list-item" role="menuitem">
+                  <span class="mdc-deprecated-list-item__ripple"></span>
+                  <span class="mdc-deprecated-list-item__text">A Menu Item</span>
+                </li>
+                <li class="mdc-deprecated-list-item" role="menuitem">
+                  <span class="mdc-deprecated-list-item__ripple"></span>
+                  <span class="mdc-deprecated-list-item__text">Another Menu Item...................</span>
+                </li>
+              </ul>
+            </div>`);
 
-        if (value.href) {
-            const a = $("<a></a>");
-            a.prop('href', value.href);
-            a.append(div);
-            td.append(a);
+            td.append(menuAnchor);
+            td.append(menuFlyout);
+
+            const menu = new mdc.menu.MDCMenu(menuFlyout.get(0));
+
+            menuAnchor.get(0).addEventListener('click', () => {
+                const menuAnchorRect = menuAnchor.get(0).getBoundingClientRect();
+                const tableRect = menuAnchor.get(0).closest('table').getBoundingClientRect();
+
+                menu.setAbsolutePosition(
+                    menuAnchorRect.left - tableRect.left + 100,
+                    menuAnchorRect.bottom - tableRect.top + 5);
+                
+                menu.open = !menu.open;
+            });
         }
         else {
-            td.append(div);
+            // Text cell.
+            const div = $("<div></div>");
+            if (value.text && value.maxLength && value.text.length > value.maxLength) {
+                div.prop('title', value.text);
+                div.text(value.text.substring(0, value.maxLength) + '...');
+            }
+            else {
+                div.text(value.text);
+            }
+
+            if (value.class) {
+                div.attr("class", value.class);
+            }
+
+            if (value.icon) {
+                const icon = $("<span class='material-symbols-outlined'></span>");
+                icon.text(value.icon);
+                div.prepend(icon);
+            }
+
+            if (value.href) {
+                const a = $("<a></a>");
+                a.prop('href', value.href);
+                a.append(div);
+                td.append(a);
+            }
+            else {
+                td.append(div);
+            }
         }
         
         tr.append(td);
