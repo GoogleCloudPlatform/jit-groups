@@ -26,6 +26,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
+import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.apis.Logger;
@@ -41,46 +42,43 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Catalog source that lazily loads policies on demand and caches them.
  */
 public class LazyCatalogSource implements Catalog.Source {
   private final @NotNull LoadingCache<String, Entry> environmentCache;
-  private final @NotNull Map<String, PolicyHeader> environments;
+  private final @NotNull Map<String, EnvironmentConfiguration> environments;
   private final @NotNull Logger logger;
 
   LazyCatalogSource(
-    @NotNull Map<String, PolicyHeader> environments,
-    @NotNull Function<String, EnvironmentPolicy> producePolicy,
-    @NotNull Function<EnvironmentPolicy, ResourceManagerClient> produceResourceManagerClient,
+    @NotNull Collection<EnvironmentConfiguration> environments,
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
-    @NotNull Duration cacheDuration,
     @NotNull Executor executor,
+    @NotNull Options options,
     @NotNull Logger logger
   ) {
-    Preconditions.checkArgument(environments
-      .entrySet()
+    this.environments = environments
       .stream()
-      .allMatch(e -> e.getKey().equals(e.getValue().name())),
-      "Key must match name of policy");
-
-    this.environments = environments;
+      .collect(Collectors.toMap(e -> e.name(), e -> e));
     this.logger = logger;
 
     //
     // Prepare policy cache.
     //
     this.environmentCache = CacheBuilder.newBuilder()
-      .expireAfterWrite(cacheDuration)
+      .expireAfterWrite(options.cacheDuration())
       .build(new CacheLoader<>() {
         @Override
         public @NotNull Entry load(
           @NotNull String environmentName
         ) {
-          var policy = producePolicy.apply(environmentName);
+          var configuration = LazyCatalogSource.this.environments.get(environmentName);
+          assert configuration != null; // In lookup(), we check that the key exists.
+
+          var policy = configuration.loadPolicy();
 
           Preconditions.checkState(
             policy.name().equals(environmentName),
@@ -89,16 +87,23 @@ public class LazyCatalogSource implements Catalog.Source {
               policy.name(),
               environmentName));
 
+          //
+          // Create a CRM client that uses this environment's credential
+          // (as opposed to the application credential).
+          //
+          var crmClient = new ResourceManagerClient(
+            configuration.resourceCredentials(),
+            options.httpTransportOptions());
+
           return new Entry(
             policy,
             new Provisioner(
               environmentName,
               groupMapping,
               groupsClient,
-              produceResourceManagerClient.apply(policy),
+              crmClient,
               executor,
-              logger)
-          );
+              logger));
         }
       });
   }
@@ -135,7 +140,11 @@ public class LazyCatalogSource implements Catalog.Source {
     // Avoid eagerly loading all policies just to retrieve their
     // name and descriptions.
     //
-    return this.environments.values();
+    return this.environments
+      .values()
+      .stream()
+      .map(e -> (PolicyHeader)e)
+      .toList();
   }
 
   @Override
@@ -154,5 +163,14 @@ public class LazyCatalogSource implements Catalog.Source {
   private record Entry(
     @NotNull EnvironmentPolicy policy,
     @NotNull Provisioner provisioner
+  ) {}
+
+  // -------------------------------------------------------------------------
+  // Options.
+  // -------------------------------------------------------------------------
+
+  public record Options(
+    @NotNull Duration cacheDuration,
+    @NotNull HttpTransport.Options httpTransportOptions
   ) {}
 }

@@ -21,23 +21,22 @@
 
 package com.google.solutions.jitaccess.web;
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
+import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,11 +46,8 @@ import static org.mockito.Mockito.verify;
 
 public class TestLazyCatalogSource {
   private static final Executor EXECUTOR = command -> command.run();
-
-  private record SampleEnvironment(
-    @NotNull String name,
-    @NotNull String description
-  ) implements PolicyHeader {}
+  private static final LazyCatalogSource.Options OPTIONS =
+    new LazyCatalogSource.Options(Duration.ZERO, HttpTransport.Options.DEFAULT);
 
   // -------------------------------------------------------------------------
   // environments.
@@ -60,15 +56,21 @@ public class TestLazyCatalogSource {
   @Test
   public void environments() {
     var loader = new LazyCatalogSource(
-      Map.of(
-        "one", new SampleEnvironment("one", "One"),
-        "two", new SampleEnvironment("two", "Two")),
-      env -> { throw new UnsupportedOperationException(); },
-      policy -> { throw new UnsupportedOperationException(); },
+      List.of(
+        new EnvironmentConfiguration(
+          "one",
+          "One",
+          Mockito.mock(GoogleCredentials.class),
+          () -> { throw new UnsupportedOperationException(); }),
+        new EnvironmentConfiguration(
+          "two",
+          "Two",
+          Mockito.mock(GoogleCredentials.class),
+          () -> { throw new UnsupportedOperationException(); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
+      OPTIONS,
       Mockito.mock(Logger.class));
 
     assertEquals(2, loader.environmentPolicies().size());
@@ -97,13 +99,11 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Map.of(),
-      env -> { throw new UnsupportedOperationException(); },
-      policy -> { throw new UnsupportedOperationException(); },
+      List.of(),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -121,13 +121,16 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Map.of("env", new SampleEnvironment("env", "Env")),
-      env -> { throw new UnsupportedOperationException(); },
-      policy -> { throw new UnsupportedOperationException(); },
+      List.of(
+        new EnvironmentConfiguration(
+          "env",
+          "Env",
+          Mockito.mock(GoogleCredentials.class),
+          () -> { throw new UnsupportedOperationException(); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -145,13 +148,16 @@ public class TestLazyCatalogSource {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Map.of("env", new SampleEnvironment("env", "Env")),
-      env -> { throw new UncheckedExecutionException(new FileNotFoundException()); },
-      policy -> { throw new UnsupportedOperationException(); },
+      List.of(
+        new EnvironmentConfiguration(
+          "env",
+          "Env",
+          Mockito.mock(GoogleCredentials.class),
+          () -> { throw new  UncheckedExecutionException(new FileNotFoundException()); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -165,41 +171,20 @@ public class TestLazyCatalogSource {
   }
 
   @Test
-  public void lookup_whenEnvironmentNameMismatchesWithPolicy() throws Exception {
-    var logger = Mockito.mock(Logger.class);
-
-    var loader = new LazyCatalogSource(
-      Map.of("env", new SampleEnvironment("env", "Env")),
-      env -> new EnvironmentPolicy("different", "", new Policy.Metadata("mock", Instant.now())),
-      policy -> { throw new UnsupportedOperationException(); },
-      Mockito.mock(GroupMapping.class),
-      Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
-      EXECUTOR,
-      logger);
-
-    assertFalse(loader
-      .provisioner(Mockito.mock(Catalog.class), "env")
-      .isPresent());
-
-    verify(logger, times(1)).error(
-      eq(EventIds.LOAD_ENVIRONMENT),
-      anyString(),
-      any(IllegalStateException.class));
-  }
-
-  @Test
   public void lookup() {
     var logger = Mockito.mock(Logger.class);
 
     var loader = new LazyCatalogSource(
-      Map.of("env", new SampleEnvironment("env", "Env")),
-      env -> new EnvironmentPolicy("env", "", new Policy.Metadata("mock", Instant.now())),
-      policy -> Mockito.mock(ResourceManagerClient.class),
+      List.of(
+        new EnvironmentConfiguration(
+          "env",
+          "Env",
+          Mockito.mock(GoogleCredentials.class),
+          () -> new EnvironmentPolicy("env", "", new Policy.Metadata("mock", Instant.now())))),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
+      OPTIONS,
       logger);
 
     var environment = loader.provisioner(Mockito.mock(Catalog.class), "env");
