@@ -82,11 +82,11 @@ class EnvironmentConfiguration implements PolicyHeader {
     return this.description;
   }
 
-  public GoogleCredentials resourceCredentials() {
+  GoogleCredentials resourceCredentials() {
     return this.resourceCredentials;
   }
 
-  public EnvironmentPolicy loadPolicy() { // TODO: Return PolicyDocument
+  EnvironmentPolicy loadPolicy() { // TODO: Return PolicyDocument
     return this.loadPolicy.get();
   }
 
