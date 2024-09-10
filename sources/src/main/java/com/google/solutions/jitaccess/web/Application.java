@@ -436,15 +436,18 @@ public class Application {
       }
     }
 
+    var options = new LazyCatalogSource.Options(
+      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
+        ? Duration.ofSeconds(20)
+        : configuration.environmentCacheTimeout,
+      produceHttpTransportOptions());
+
     return new LazyCatalogSource(
       configurations,
       groupMapping,
       groupsClient,
-      runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
-        ? Duration.ofSeconds(20)
-        : configuration.environmentCacheTimeout,
       executor,
-      produceHttpTransportOptions(),
+      options,
       logger);
   }
 }

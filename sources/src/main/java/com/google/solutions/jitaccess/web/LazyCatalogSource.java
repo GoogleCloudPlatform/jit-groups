@@ -56,9 +56,8 @@ public class LazyCatalogSource implements Catalog.Source {
     @NotNull Collection<EnvironmentConfiguration> environments,
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
-    @NotNull Duration cacheDuration,
     @NotNull Executor executor,
-    @NotNull HttpTransport.Options httpOptions,
+    @NotNull Options options,
     @NotNull Logger logger
   ) {
     this.environments = environments
@@ -70,7 +69,7 @@ public class LazyCatalogSource implements Catalog.Source {
     // Prepare policy cache.
     //
     this.environmentCache = CacheBuilder.newBuilder()
-      .expireAfterWrite(cacheDuration)
+      .expireAfterWrite(options.cacheDuration())
       .build(new CacheLoader<>() {
         @Override
         public @NotNull Entry load(
@@ -88,13 +87,21 @@ public class LazyCatalogSource implements Catalog.Source {
               policy.name(),
               environmentName));
 
+          //
+          // Create a CRM client that uses this environment's credential
+          // (as opposed to the application credential).
+          //
+          var crmClient = new ResourceManagerClient(
+            configuration.resourceCredentials(),
+            options.httpTransportOptions());
+
           return new Entry(
             policy,
             new Provisioner(
               environmentName,
               groupMapping,
               groupsClient,
-              new ResourceManagerClient(configuration.resourceCredentials(), httpOptions),
+              crmClient,
               executor,
               logger));
         }
@@ -156,5 +163,14 @@ public class LazyCatalogSource implements Catalog.Source {
   private record Entry(
     @NotNull EnvironmentPolicy policy,
     @NotNull Provisioner provisioner
+  ) {}
+
+  // -------------------------------------------------------------------------
+  // Options.
+  // -------------------------------------------------------------------------
+
+  public record Options(
+    @NotNull Duration cacheDuration,
+    @NotNull HttpTransport.Options httpTransportOptions
   ) {}
 }

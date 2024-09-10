@@ -25,7 +25,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
-import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
@@ -40,7 +39,6 @@ import java.io.FileNotFoundException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,11 +48,8 @@ import static org.mockito.Mockito.verify;
 
 public class TestLazyCatalogSource {
   private static final Executor EXECUTOR = command -> command.run();
-
-  private record SampleEnvironment(
-    @NotNull String name,
-    @NotNull String description
-  ) implements PolicyHeader {}
+  private static final LazyCatalogSource.Options OPTIONS =
+    new LazyCatalogSource.Options(Duration.ZERO, HttpTransport.Options.DEFAULT);
 
   // -------------------------------------------------------------------------
   // environments.
@@ -76,9 +71,8 @@ public class TestLazyCatalogSource {
           () -> { throw new UnsupportedOperationException(); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
-      HttpTransport.Options.DEFAULT,
+      OPTIONS,
       Mockito.mock(Logger.class));
 
     assertEquals(2, loader.environmentPolicies().size());
@@ -110,9 +104,8 @@ public class TestLazyCatalogSource {
       List.of(),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
-      HttpTransport.Options.DEFAULT,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -138,9 +131,8 @@ public class TestLazyCatalogSource {
           () -> { throw new UnsupportedOperationException(); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
-      HttpTransport.Options.DEFAULT,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -166,9 +158,8 @@ public class TestLazyCatalogSource {
           () -> { throw new  UncheckedExecutionException(new FileNotFoundException()); })),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
-      HttpTransport.Options.DEFAULT,
+      OPTIONS,
       logger);
 
     assertFalse(loader
@@ -194,9 +185,8 @@ public class TestLazyCatalogSource {
           () -> new EnvironmentPolicy("env", "", new Policy.Metadata("mock", Instant.now())))),
       Mockito.mock(GroupMapping.class),
       Mockito.mock(CloudIdentityGroupsClient.class),
-      Duration.ZERO,
       EXECUTOR,
-      HttpTransport.Options.DEFAULT,
+      OPTIONS,
       logger);
 
     var environment = loader.provisioner(Mockito.mock(Catalog.class), "env");
