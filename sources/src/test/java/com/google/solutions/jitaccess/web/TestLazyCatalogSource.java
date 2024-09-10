@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.catalog.Catalog;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;

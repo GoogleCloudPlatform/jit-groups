@@ -1,4 +1,4 @@
-package com.google.solutions.jitaccess.catalog;
+package com.google.solutions.jitaccess.apis;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

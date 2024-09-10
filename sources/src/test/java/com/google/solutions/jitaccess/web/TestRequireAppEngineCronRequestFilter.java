@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

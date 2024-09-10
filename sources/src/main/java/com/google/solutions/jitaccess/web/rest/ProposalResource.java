@@ -25,7 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.auth.Principal;

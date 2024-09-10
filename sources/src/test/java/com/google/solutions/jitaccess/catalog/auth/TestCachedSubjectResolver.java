@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.catalog.auth;
 
 import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

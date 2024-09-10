@@ -21,6 +21,7 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.*;
 import com.google.solutions.jitaccess.catalog.auth.Principal;

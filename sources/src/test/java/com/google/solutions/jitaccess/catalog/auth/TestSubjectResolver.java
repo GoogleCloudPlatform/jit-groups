@@ -26,7 +26,7 @@ import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
 import com.google.solutions.jitaccess.catalog.EventIds;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

@@ -19,12 +19,11 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess.apis;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.solutions.jitaccess.catalog.Logger;
 import com.google.solutions.jitaccess.util.Exceptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,16 +34,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Basic logger implementation that writes JSON-structured output.
+ * Basic logger implementation that writes JSON-structured output using
+ * a format that's compatible with Cloud Logging.
  */
-abstract class StructuredLogger implements Logger {
+public class StructuredLogger implements Logger {
   private static final String LABEL_EXCEPTION_TRACE = "exception/stacktrace";
   private static final ObjectMapper JSON_MAPPER = new ObjectMapper()
     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
   protected final @NotNull Appendable output;
 
-  StructuredLogger(@NotNull Appendable output) {
+  public StructuredLogger(@NotNull Appendable output) {
     this.output = output;
   }
 
@@ -261,82 +261,6 @@ abstract class StructuredLogger implements Logger {
         catch (IOException ignored) {
         }
       }
-    }
-  }
-
-  /**
-   * Logger for operations that run in the context of
-   * the application.
-   */
-  static class ApplicationContextLogger extends StructuredLogger {
-    @SuppressWarnings("SameParameterValue")
-    ApplicationContextLogger(@NotNull Appendable output) {
-      super(output);
-    }
-  }
-
-  /**
-   * Logger for operations that run in the context of
-   * an environment.
-   */
-  static class EnvironmentContextLogger extends StructuredLogger {
-    private final @NotNull String environmentName;
-
-    EnvironmentContextLogger(
-      @NotNull Appendable output,
-      @NotNull String environmentName) {
-      super(output);
-      this.environmentName = environmentName;
-    }
-
-    @Override
-    protected @NotNull Map<String, String> createLabels(String eventId) {
-      var labels = super.createLabels(eventId);
-      labels.put("environment", this.environmentName);
-      return labels;
-    }
-  }
-
-  /**
-   * Logger for operations that run in the context of
-   * a user request.
-   */
-  static class RequestContextLogger extends StructuredLogger {
-    private final @NotNull RequestContext requestContext;
-
-    RequestContextLogger(
-      @NotNull Appendable output,
-      @NotNull RequestContext requestContext
-    ) {
-      super(output);
-      this.requestContext = requestContext;
-    }
-
-    RequestContextLogger(@NotNull RequestContext requestContext) {
-      this(System.out, requestContext);
-    }
-
-    @Override
-    protected @Nullable String traceId() {
-      return this.requestContext.requestTraceId();
-    }
-
-    @Override
-    protected @NotNull Map<String, String> createLabels(String eventId) {
-      var labels = super.createLabels(eventId);
-
-      if (this.requestContext.isAuthenticated()) {
-        labels.put("auth/user_id", this.requestContext.user().email);
-        labels.put("auth/directory", this.requestContext.subject().directory().toString());
-        labels.put("auth/device_id", this.requestContext.device().deviceId());
-        labels.put("auth/device_access_levels",
-          String.join(", ", this.requestContext.device().accessLevels()));
-      }
-
-      labels.put("request/method", this.requestContext.requestMethod());
-      labels.put("request/path", this.requestContext.requestPath());
-
-      return labels;
     }
   }
 }

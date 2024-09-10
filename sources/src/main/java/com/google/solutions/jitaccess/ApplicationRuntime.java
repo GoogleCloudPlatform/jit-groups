@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web;
+package com.google.solutions.jitaccess;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
@@ -105,7 +105,7 @@ public class ApplicationRuntime {
    * Detect runtime based on environment variables and system properties
    * and initialize an ApplicationRuntime instance.
    */
-  static ApplicationRuntime detect(
+  public static ApplicationRuntime detect(
     @NotNull Set<String> requiredOauthScopes
   ) throws IOException {
     if (isRunningOnAppEngine() || isRunningOnCloudRun()) {

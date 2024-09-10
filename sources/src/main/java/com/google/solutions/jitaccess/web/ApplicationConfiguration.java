@@ -24,9 +24,6 @@ package com.google.solutions.jitaccess.web;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.Domain;
 import com.google.solutions.jitaccess.apis.OrganizationId;
-import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
-import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -36,7 +33,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-class ApplicationConfiguration extends AbstractConfiguration {
+public class ApplicationConfiguration extends AbstractConfiguration {
   /**
    * Prefix for environment service accounts.
    */
@@ -289,7 +286,7 @@ class ApplicationConfiguration extends AbstractConfiguration {
       .orElse("state:ACTIVE");
   }
 
-  boolean isSmtpConfigured() {
+  public boolean isSmtpConfigured() {
     return this.smtpSenderAddress.isPresent();
   }
 

@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.util.Exceptions;

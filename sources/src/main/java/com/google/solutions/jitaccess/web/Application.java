@@ -22,12 +22,14 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.solutions.jitaccess.ApplicationVersion;
+import com.google.solutions.jitaccess.ApplicationRuntime;
+import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
-import com.google.solutions.jitaccess.catalog.Logger;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
@@ -48,75 +50,47 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Initializes the application and produces and produces CDI beans.
+ * Produces CDI beans to initialize application components.
  */
 @Singleton
 public class Application {
   /**
    * Application logger, not tied to a request context.
    */
-  private static final @NotNull Logger logger;
+  private static @NotNull Logger logger;
 
   /**
    * Configuration, based on app.yaml environment variables.
    */
-  private static final @NotNull ApplicationConfiguration configuration;
+  private static @NotNull ApplicationConfiguration configuration;
 
   /**
    * Information about the application's runtime.
    */
-  private static final @NotNull ApplicationRuntime runtime;
+  private static @NotNull ApplicationRuntime runtime;
 
   // -------------------------------------------------------------------------
   // Application startup.
   // -------------------------------------------------------------------------
 
-  /**
-   * Force initialization by triggering the static constructor.
-   */
-  @SuppressWarnings("EmptyMethod")
-  public static void initialize() {
+  public Application() {
+    Preconditions.checkState(
+      logger != null && configuration != null && runtime != null,
+      "Class has not been initialized");
   }
 
-  static {
-    //
-    // Create a logger. We can't rely on injection as we're not in the
-    // scope of a specific request here.
-    //
-    logger = new StructuredLogger.ApplicationContextLogger(System.out);
-    configuration = new ApplicationConfiguration(System.getenv());
-
-    if (!configuration.isSmtpConfigured()) {
-      logger.warn(
-        EventIds.STARTUP,
-        "The SMTP configuration is incomplete");
-    }
-
-    try {
-      runtime = ApplicationRuntime.detect(new HashSet<>(List.of(
-        IamCredentialsClient.OAUTH_SCOPE,
-        SecretManagerClient.OAUTH_SCOPE,
-        CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
-        CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE)));
-    }
-    catch (IOException e) {
-      throw new RuntimeException("Initializing runtime failed, aborting startup", e);
-    }
-
-    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
-      logger.warn(
-        EventIds.STARTUP,
-        String.format("Running in development mode as %s", runtime.applicationPrincipal()));
-    }
-    else {
-      logger.info(
-        EventIds.STARTUP,
-        String.format("Running in project %s (%s) as %s, version %s",
-          runtime.projectId(),
-          runtime.projectNumber(),
-          runtime.applicationPrincipal(),
-          ApplicationVersion.VERSION_STRING));
-    }
+  /**
+   * Initialize static variables. This method is intended to be called
+   * from outside the CDI context, in the application's main method.
+   */
+  public static void initialize(
+    @NotNull ApplicationRuntime runtime,
+    @NotNull ApplicationConfiguration configuration,
+    @NotNull Logger logger
+  ) {
+    Application.logger = logger;
+    Application.configuration = configuration;
+    Application.runtime = runtime;
   }
 
   //---------------------------------------------------------------------------
@@ -250,8 +224,8 @@ public class Application {
   }
 
   @Produces
-  public @NotNull StructuredLogger.RequestContextLogger produceLogger(@NotNull RequestContext context) {
-    return new StructuredLogger.RequestContextLogger(context);
+  public @NotNull RequestContextLogger produceLogger(@NotNull RequestContext context) {
+    return new RequestContextLogger(context);
   }
 
   @Produces
