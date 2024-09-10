@@ -188,6 +188,10 @@ div.jit-card-subsection[title]:not(:empty)::before {
     color: #9e9e9e;
 }
 
+.mdc-deprecated-list {
+    font-size: revert;
+}
+
 .mdc-text-field, .mdc-select {
     margin-top: 10px !important;
     width: 100%;
