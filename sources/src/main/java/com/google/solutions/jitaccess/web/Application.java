@@ -25,7 +25,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationRuntime;
-import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
@@ -47,7 +46,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Produces CDI beans to initialize application components.

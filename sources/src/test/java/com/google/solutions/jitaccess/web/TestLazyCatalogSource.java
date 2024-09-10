@@ -30,8 +30,6 @@ import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
