@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.apis.clients;
 
-import com.google.solutions.jitaccess.catalog.auth.EmailAddress;
+import com.google.solutions.jitaccess.auth.EmailAddress;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

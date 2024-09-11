@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog;
 
-import com.google.solutions.jitaccess.catalog.auth.Subject;
+import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import com.google.solutions.jitaccess.catalog.policy.SystemPolicy;

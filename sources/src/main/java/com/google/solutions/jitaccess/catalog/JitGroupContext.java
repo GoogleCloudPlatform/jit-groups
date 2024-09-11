@@ -25,8 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.GroupKey;
-import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 

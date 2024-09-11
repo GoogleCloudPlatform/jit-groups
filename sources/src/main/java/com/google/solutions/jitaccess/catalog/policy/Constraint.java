@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.policy;
 
-import com.google.solutions.jitaccess.cel.Expression;
+import com.google.solutions.jitaccess.common.cel.Expression;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

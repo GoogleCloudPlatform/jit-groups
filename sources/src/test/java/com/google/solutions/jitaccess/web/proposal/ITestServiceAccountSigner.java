@@ -26,7 +26,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ITestEnvironment;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

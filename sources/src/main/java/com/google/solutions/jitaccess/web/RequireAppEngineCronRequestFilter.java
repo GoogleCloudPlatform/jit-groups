@@ -21,8 +21,8 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.Logger;
+import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;

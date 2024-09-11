@@ -23,11 +23,11 @@ package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.api.client.json.GenericJson;
 import com.google.solutions.jitaccess.apis.FolderId;
-import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.ClassPrincipalSet;
+import com.google.solutions.jitaccess.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.IamRole;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

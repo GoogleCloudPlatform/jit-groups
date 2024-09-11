@@ -22,14 +22,14 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.apis.Logger;
-import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.Principal;
+import com.google.solutions.jitaccess.auth.IamPrincipalId;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.Principal;
+import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
-import com.google.solutions.jitaccess.util.Exceptions;
-import com.google.solutions.jitaccess.util.MoreStrings;
+import com.google.solutions.jitaccess.common.Exceptions;
+import com.google.solutions.jitaccess.common.MoreStrings;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;

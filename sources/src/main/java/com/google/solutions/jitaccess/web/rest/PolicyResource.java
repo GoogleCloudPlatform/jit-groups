@@ -22,13 +22,13 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.auth.IamRoleResolver;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.apis.IamRoleResolver;
 import com.google.solutions.jitaccess.catalog.policy.PolicyIssue;
-import com.google.solutions.jitaccess.util.Cast;
-import com.google.solutions.jitaccess.util.MoreStrings;
+import com.google.solutions.jitaccess.common.Cast;
+import com.google.solutions.jitaccess.common.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import jakarta.enterprise.context.Dependent;

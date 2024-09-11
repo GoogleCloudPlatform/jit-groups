@@ -27,7 +27,7 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

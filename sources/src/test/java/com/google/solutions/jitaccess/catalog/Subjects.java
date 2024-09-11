@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog;
 
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import org.mockito.Mockito;
 
 import java.util.Set;

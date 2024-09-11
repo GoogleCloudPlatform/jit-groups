@@ -23,9 +23,9 @@ package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
-import com.google.solutions.jitaccess.apis.IamRole;
 import com.google.solutions.jitaccess.apis.ResourceId;
-import com.google.solutions.jitaccess.util.Coalesce;
+import com.google.solutions.jitaccess.auth.IamRole;
+import com.google.solutions.jitaccess.common.Coalesce;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

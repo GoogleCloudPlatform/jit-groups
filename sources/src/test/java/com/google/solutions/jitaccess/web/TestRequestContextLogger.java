@@ -21,9 +21,9 @@
 
 package com.google.solutions.jitaccess.web;
 
-import com.google.solutions.jitaccess.catalog.auth.Directory;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
-import com.google.solutions.jitaccess.catalog.auth.SubjectResolver;
+import com.google.solutions.jitaccess.auth.Directory;
+import com.google.solutions.jitaccess.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.SubjectResolver;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

@@ -23,11 +23,11 @@ package com.google.solutions.jitaccess.catalog.legacy;
 
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.AssetInventoryClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
-import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import org.jetbrains.annotations.NotNull;
 

@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.catalog;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

@@ -24,14 +24,12 @@ package com.google.solutions.jitaccess.web;
 import com.google.solutions.jitaccess.ApplicationRuntime;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.apis.StructuredLogger;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;

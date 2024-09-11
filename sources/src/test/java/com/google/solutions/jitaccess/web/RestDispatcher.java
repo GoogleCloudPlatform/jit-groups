@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.gson.Gson;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.core.SynchronousExecutionContext;
