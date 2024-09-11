@@ -1,81 +1,86 @@
 ﻿<html>
 <body>
-    <div style="width:100%; max-width: 600px; margin: auto; -ms-text-size-adjust:100%; -webkit-text-size-adjust:100%; background: rgba(255, 255, 255, 1);">
+    <div style="width:100%; max-width: 600px; margin: auto; -ms-text-size-adjust:100%; -webkit-text-size-adjust:100%; background: white;">
         <div style="width:100%; max-width: 600px; height: auto; margin: auto; border:1px solid #e0e0e0; border-radius: 4px;">
-            <div style="color: #3c4043; text-align: left; font-family: Roboto, sans-serif; font-size: 14px; font-weight: normal; line-height: 24px; text-decoration: none; border: solid 30px #ffffff">
-                {{user.email}} requests to join the group {{group.name}}.
-                <div style="margin-top: 16px;">
-                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">User details</div>
-                    <table  style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                Username
-                            </td>
-                            <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                <a style="text-decoration: none;" href="https://contacts.google.com/search/{{joining_user.email}}">{{joining_user.email}}</a>
-                            </td>
-                        </tr>
-                    </table>
+            <table style="width:100%;">
+                <tr>
+                    <td style="color: #3c4043; text-align: left; font-family: Roboto, sans-serif; font-size: 14px; font-weight: normal; line-height: 24px; text-decoration: none; border: solid 30px #ffffff">
+                        {{user.email}} requests to join the group {{group.name}}.
+                        <div style="margin-top: 16px;">
+                            <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">User details</div>
+                            <table  style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        Username
+                                    </td>
+                                    <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        <a style="text-decoration: none;" href="https://contacts.google.com/search/{{joining_user.email}}">{{joining_user.email}}</a>
+                                    </td>
+                                </tr>
+                            </table>
 
-                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">Group details</div>
-                    <table  style="width: 100%; border-collapse: collapse;">
-                        <tr>
-                            <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                Group
-                            </td>
-                            <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                {{group.name}}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                System
-                            </td>
-                            <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                {{group.system}}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                Environment
-                            </td>
-                            <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
-                                {{group.environment}}
-                            </td>
-                        </tr>
-                    </table>
+                            <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">Group details</div>
+                            <table  style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        Group
+                                    </td>
+                                    <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        {{group.name}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        System
+                                    </td>
+                                    <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        {{group.system}}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        Environment
+                                    </td>
+                                    <td style="width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;">
+                                        {{group.environment}}
+                                    </td>
+                                </tr>
+                            </table>
 
-                    <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">{{size(input) > 0 ? "Request details" : ""}}</div>
-                    <table  style="width: 100%; border-collapse: collapse;">
-                        {{
-                        input.map(name,
-                            "<tr>" +
-                                "<td style=\"width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;\">" +
-                                input[name].display_name +
-                                "</td>" +
-                                "<td style=\"width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;\">" +
-                                input[name].value +
-                                "</td>" +
-                            "</tr>").join()
-                        }}
-                    </table>
-                </div>
-                <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
-                    <!-- Button, use table to that it renders properly in classic Outlook -->
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                        <tr>
-                            <td style="border-radius: 4px; background: #1a73e8; text-align: center;">
-                                <a href="{{proposal.action_uri}}" style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; border: 5px solid #1a73e8; mso-height-rule: exactly; line-height: 25px; text-align: center; text-decoration: none; display: block; border-radius: 4px;">
-                                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffffff">Show details</span>&nbsp;&nbsp;&nbsp;&nbsp;
-                                </a>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 14px; margin-top: 32px;">
-                    This request expires on {{proposal.expiry}}.
-                </div>
-            </div>
+                            <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 56px; letter-spacing: 0.1px; font-weight: 700;">{{size(input) > 0 ? "Request details" : ""}}</div>
+                            <table  style="width: 100%; border-collapse: collapse;">
+                                {{
+                                input.map(name,
+                                    "<tr>" +
+                                        "<td style=\"width: 30%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;\">" +
+                                        input[name].display_name +
+                                        "</td>" +
+                                        "<td style=\"width: 70%; border-bottom: 1px solid #e0e0e0; border-top: 1px solid #e0e0e0;color: #3c4043; font-family: Roboto, Arial, sans-serif; font-style: normal; font-size: 14px; line-height: 24px; letter-spacing: 0.1px; font-weight: 400;\">" +
+                                        input[name].value +
+                                        "</td>" +
+                                    "</tr>").join()
+                                }}
+                            </table>
+                        </div>
+                        <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
+                            <br>
+                            <!-- Button, use table to that it renders properly in classic Outlook -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td style="border-radius: 4px; background: #1a73e8; text-align: center;">
+                                        <a href="{{proposal.action_uri}}" style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; border: 5px solid #1a73e8; mso-height-rule: exactly; line-height: 25px; text-align: center; text-decoration: none; display: block; border-radius: 4px;">
+                                            &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffffff">Show details</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 14px; margin-top: 32px;">
+                            This request expires on {{proposal.expiry}}.
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
         <div style="margin: auto; width: 100%;">
             <div style="color: #3c4043; font-family: Roboto, Arial, sans-serif; font-size: 12px; line-height: 16px; padding-top: 24px; padding-right: 40px; padding-bottom: 0; padding-left: 40px; text-align: center; word-break: break-word;">
