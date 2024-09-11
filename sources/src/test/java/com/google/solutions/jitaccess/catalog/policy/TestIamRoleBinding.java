@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.catalog.policy;
 
-import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import org.junit.jupiter.api.Test;
 

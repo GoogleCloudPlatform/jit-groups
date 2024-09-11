@@ -19,9 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.apis;
+package com.google.solutions.jitaccess.auth;
 
 import com.google.common.base.Strings;
+import com.google.solutions.jitaccess.apis.ResourceId;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
 import com.google.solutions.jitaccess.util.Lazy;
 import com.google.solutions.jitaccess.util.MoreStrings;

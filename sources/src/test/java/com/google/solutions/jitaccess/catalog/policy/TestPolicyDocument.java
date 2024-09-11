@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.api.client.json.GenericJson;
 import com.google.solutions.jitaccess.apis.FolderId;
-import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.auth.ClassPrincipalSet;

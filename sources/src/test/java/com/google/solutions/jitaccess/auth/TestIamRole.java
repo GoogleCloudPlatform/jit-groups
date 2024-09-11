@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.apis;
+package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
 import org.jetbrains.annotations.NotNull;

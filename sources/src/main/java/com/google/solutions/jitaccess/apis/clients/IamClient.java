@@ -26,7 +26,7 @@ import com.google.api.services.iam.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.api.services.iam.v1.Iam;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.ResourceId;
 import com.google.solutions.jitaccess.util.Coalesce;
 import jakarta.inject.Singleton;

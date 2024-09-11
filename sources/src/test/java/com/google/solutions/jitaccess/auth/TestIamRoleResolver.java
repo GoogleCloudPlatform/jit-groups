@@ -19,9 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.apis;
+package com.google.solutions.jitaccess.auth;
 
 import com.google.api.services.iam.v1.model.LintResult;
+import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.apis.clients.IamClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

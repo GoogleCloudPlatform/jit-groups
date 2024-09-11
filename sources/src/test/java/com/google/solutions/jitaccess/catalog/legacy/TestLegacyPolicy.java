@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.catalog.legacy;
 import com.google.api.services.cloudasset.v1.model.Binding;
 import com.google.api.services.cloudasset.v1.model.Expr;
 import com.google.api.services.cloudresourcemanager.v3.model.Project;
-import com.google.solutions.jitaccess.apis.IamRole;
+import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.ClassPrincipalSet;
