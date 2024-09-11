@@ -22,12 +22,8 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.apis.Domain;
-import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.Logger;
-import com.google.solutions.jitaccess.auth.CachedSubjectResolver;
-import com.google.solutions.jitaccess.auth.Directory;
-import com.google.solutions.jitaccess.auth.EndUserId;
-import com.google.solutions.jitaccess.auth.GroupMapping;
+import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

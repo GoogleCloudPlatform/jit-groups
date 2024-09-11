@@ -21,8 +21,6 @@
 
 package com.google.solutions.jitaccess.auth;
 
-import com.google.solutions.jitaccess.auth.AbstractSecurableComponent;
-import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.Subjects;
 import com.google.solutions.jitaccess.catalog.policy.AccessControlList;
 import org.jetbrains.annotations.NotNull;

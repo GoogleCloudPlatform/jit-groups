@@ -21,8 +21,6 @@
 
 package com.google.solutions.jitaccess.common.cel;
 
-import com.google.solutions.jitaccess.common.cel.InvalidExpressionException;
-import com.google.solutions.jitaccess.common.cel.StringTemplate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

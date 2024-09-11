@@ -21,8 +21,6 @@
 
 package com.google.solutions.jitaccess.auth;
 
-import com.google.solutions.jitaccess.auth.GroupId;
-import com.google.solutions.jitaccess.auth.Principal;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

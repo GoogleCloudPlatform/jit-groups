@@ -21,12 +21,12 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
-import com.google.solutions.jitaccess.catalog.Catalog;
-import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.apis.Logger;
+import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.auth.Principal;
+import com.google.solutions.jitaccess.catalog.Catalog;
+import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
 import com.google.solutions.jitaccess.catalog.policy.Property;
@@ -37,7 +37,10 @@ import com.google.solutions.jitaccess.web.proposal.TokenObfuscator;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.UriInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

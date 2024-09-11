@@ -23,11 +23,10 @@ package com.google.solutions.jitaccess.auth;
 
 import com.google.api.services.cloudidentity.v1.model.*;
 import com.google.solutions.jitaccess.apis.Domain;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
-import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.EventIds;
-import com.google.solutions.jitaccess.apis.Logger;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -36,7 +35,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;

@@ -22,9 +22,9 @@
 package com.google.solutions.jitaccess.web.proposal;
 
 import com.google.solutions.jitaccess.apis.clients.AccessException;
+import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
-import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URI;

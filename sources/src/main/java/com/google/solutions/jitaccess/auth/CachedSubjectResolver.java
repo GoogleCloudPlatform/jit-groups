@@ -25,9 +25,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.apis.Logger;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 

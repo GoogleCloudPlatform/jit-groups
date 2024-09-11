@@ -24,10 +24,6 @@ package com.google.solutions.jitaccess.auth;
 import com.google.api.services.cloudidentity.v1.model.EntityKey;
 import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.auth.EndUserId;
-import com.google.solutions.jitaccess.auth.GroupId;
-import com.google.solutions.jitaccess.auth.GroupResolver;
-import com.google.solutions.jitaccess.auth.PrincipalId;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -23,8 +23,6 @@ package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
 import com.google.solutions.jitaccess.apis.Domain;
-import com.google.solutions.jitaccess.auth.CloudIdentityDirectoryPrincipalSet;
-import com.google.solutions.jitaccess.auth.Directory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

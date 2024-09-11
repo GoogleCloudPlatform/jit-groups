@@ -22,10 +22,10 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.auth.IamRoleResolver;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.auth.IamRoleResolver;
 import com.google.solutions.jitaccess.catalog.policy.PolicyIssue;
 import com.google.solutions.jitaccess.common.Cast;
 import com.google.solutions.jitaccess.common.MoreStrings;

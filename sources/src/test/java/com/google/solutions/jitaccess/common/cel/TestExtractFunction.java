@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.common.cel;
 
-import com.google.solutions.jitaccess.common.cel.ExtractFunction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

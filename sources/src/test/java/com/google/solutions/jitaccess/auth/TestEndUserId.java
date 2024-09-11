@@ -22,9 +22,6 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
-import com.google.solutions.jitaccess.auth.EndUserId;
-import com.google.solutions.jitaccess.auth.IamPrincipalId;
-import com.google.solutions.jitaccess.auth.UserId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

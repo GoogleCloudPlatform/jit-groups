@@ -22,11 +22,11 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.auth.Principal;
+import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.common.Exceptions;
 import com.google.solutions.jitaccess.common.MoreStrings;

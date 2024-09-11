@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.auth;
 
-import com.google.solutions.jitaccess.auth.Directory;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

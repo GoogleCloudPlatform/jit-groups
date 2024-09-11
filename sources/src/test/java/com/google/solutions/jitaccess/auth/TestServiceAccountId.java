@@ -1,9 +1,6 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.apis.ProjectId;
-import com.google.solutions.jitaccess.auth.IamPrincipalId;
-import com.google.solutions.jitaccess.auth.ServiceAccountId;
-import com.google.solutions.jitaccess.auth.UserId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

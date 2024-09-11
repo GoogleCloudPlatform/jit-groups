@@ -22,8 +22,6 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
-import com.google.solutions.jitaccess.auth.GroupId;
-import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

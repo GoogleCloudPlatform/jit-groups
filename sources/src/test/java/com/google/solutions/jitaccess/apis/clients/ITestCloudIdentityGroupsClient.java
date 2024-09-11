@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.solutions.jitaccess.apis.CustomerId;
-import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.GroupId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

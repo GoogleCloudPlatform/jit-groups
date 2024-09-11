@@ -22,11 +22,10 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
-import com.google.solutions.jitaccess.auth.EmailAddress;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestEmailAddress extends TestRecord<EmailAddress> {
   @Override

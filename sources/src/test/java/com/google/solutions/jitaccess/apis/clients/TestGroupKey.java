@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.TestRecord;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestGroupKey extends TestRecord<GroupKey> {
   @Override

@@ -22,12 +22,12 @@
 package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.services.iam.v1.Iam;
 import com.google.api.services.iam.v1.model.*;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.api.services.iam.v1.Iam;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.ResourceId;
+import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.common.Coalesce;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;

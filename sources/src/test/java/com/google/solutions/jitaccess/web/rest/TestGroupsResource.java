@@ -21,7 +21,6 @@
 
 package com.google.solutions.jitaccess.web.rest;
 
-import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.ProjectId;

@@ -22,14 +22,13 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.solutions.jitaccess.TestRecord;
-import com.google.solutions.jitaccess.auth.ClassPrincipalSet;
-import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class TestClassPrincipalSet extends TestRecord<ClassPrincipalSet> {
   @Override

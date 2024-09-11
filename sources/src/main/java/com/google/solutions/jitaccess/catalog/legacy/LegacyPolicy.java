@@ -27,7 +27,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Streams;
-import com.google.solutions.jitaccess.auth.IamRole;
 import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.JitGroupCompliance;

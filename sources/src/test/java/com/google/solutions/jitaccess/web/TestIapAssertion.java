@@ -22,9 +22,9 @@
 package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.solutions.jitaccess.auth.Directory;
 import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
-import com.google.solutions.jitaccess.auth.Directory;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

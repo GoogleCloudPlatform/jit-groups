@@ -23,10 +23,10 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.json.webtoken.JsonWebToken;
+import com.google.solutions.jitaccess.auth.Directory;
 import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.auth.UserId;
-import com.google.solutions.jitaccess.auth.Directory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
