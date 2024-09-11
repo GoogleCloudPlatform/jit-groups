@@ -492,7 +492,7 @@ public class TestGroupsResource {
 
   @ParameterizedTest
   @ValueSource(
-    strings = {"cloud-console", "admin-console", "groups-console"}
+    strings = {"cloud-console", "admin-console", "groups-console", "cloud-logging"}
   )
   public void linkTo_whenGroupCreated_thenReturnsLink(String console) throws Exception {
     var groupId = new JitGroupId("env-1", "system-1", "group-1");

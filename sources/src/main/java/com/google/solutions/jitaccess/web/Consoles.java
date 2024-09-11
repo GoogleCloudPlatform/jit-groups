@@ -24,7 +24,16 @@ package com.google.solutions.jitaccess.web;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.clients.GroupKey;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
+import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
+import com.google.solutions.jitaccess.web.rest.OperationAuditTrail;
 import org.jetbrains.annotations.NotNull;
+
+import java.net.URLEncoder;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Generates links to various consoles.
@@ -63,6 +72,22 @@ public class Consoles {
         "https://console.cloud.google.com/iam-admin/groups/%s?organizationId=%s",
         group.id(),
         Consoles.this.organizationId.id());
+    }
+
+    public String groupAuditLogs(
+      @NotNull JitGroupId groupId,
+      @NotNull Instant startDate) {
+      var query = String.format(
+        "labels.\"%s\"=\"%s\"",
+        OperationAuditTrail.LABEL_GROUP_ID,
+        groupId);
+
+      return String.format(
+        "https://console.cloud.google.com/logs/query;query=%s;startTime=%s",
+        URLEncoder.encode(query),
+        startDate
+          .truncatedTo(ChronoUnit.SECONDS)
+          .atOffset(ZoneOffset.UTC));
     }
   }
 

@@ -43,15 +43,15 @@ import java.util.stream.Collectors;
  * Audit trail for group operations.
  */
 @Dependent
-class OperationAuditTrail {
+public class OperationAuditTrail {
   private final @NotNull Logger logger;
 
-  static final String LABEL_GROUP_ID = "group/id";
-  static final String LABEL_GROUP_EXPIRY = "group/expiry";
-  static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
-  static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
-  static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
-  static final String LABEL_EVENT_TYPE = "event/type";
+  public static final String LABEL_GROUP_ID = "group/id";
+  public static final String LABEL_GROUP_EXPIRY = "group/expiry";
+  public static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
+  public static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
+  public static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
+  public static final String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
     this.logger = logger;
