@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.apis.Logger;
-import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
+import com.google.solutions.jitaccess.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import org.junit.jupiter.api.Test;

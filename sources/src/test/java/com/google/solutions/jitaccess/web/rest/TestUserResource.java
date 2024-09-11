@@ -22,10 +22,10 @@
 package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.ApplicationVersion;
-import com.google.solutions.jitaccess.catalog.auth.GroupId;
-import com.google.solutions.jitaccess.catalog.auth.Principal;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.GroupId;
+import com.google.solutions.jitaccess.auth.Principal;
+import com.google.solutions.jitaccess.auth.Subject;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.web.RequestContext;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

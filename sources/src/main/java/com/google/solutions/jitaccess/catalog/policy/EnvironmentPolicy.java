@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.ClassPrincipalSet;
+import com.google.solutions.jitaccess.auth.ClassPrincipalSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;

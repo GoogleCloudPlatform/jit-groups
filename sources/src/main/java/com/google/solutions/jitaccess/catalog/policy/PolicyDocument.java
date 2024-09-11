@@ -30,7 +30,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.*;
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.util.Coalesce;
 import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.util.MoreStrings;

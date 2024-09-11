@@ -2,7 +2,7 @@ package com.google.solutions.jitaccess.web;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import jakarta.enterprise.context.RequestScoped;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

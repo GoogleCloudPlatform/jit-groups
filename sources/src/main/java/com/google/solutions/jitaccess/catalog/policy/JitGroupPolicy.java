@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.Subject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

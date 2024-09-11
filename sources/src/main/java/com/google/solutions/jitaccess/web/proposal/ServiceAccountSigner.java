@@ -26,7 +26,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
-import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 

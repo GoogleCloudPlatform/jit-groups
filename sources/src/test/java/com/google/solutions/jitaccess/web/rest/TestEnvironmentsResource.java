@@ -24,7 +24,7 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.*;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
 import org.jetbrains.annotations.NotNull;

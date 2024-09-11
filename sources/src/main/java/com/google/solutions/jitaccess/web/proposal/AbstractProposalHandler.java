@@ -29,10 +29,10 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
-import com.google.solutions.jitaccess.catalog.auth.IamPrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.PrincipalId;
-import com.google.solutions.jitaccess.catalog.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.IamPrincipalId;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.PrincipalId;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

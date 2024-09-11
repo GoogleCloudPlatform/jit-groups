@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.catalog;
 
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
-import com.google.solutions.jitaccess.catalog.auth.*;
+import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.cel.EvaluationException;
 import com.google.solutions.jitaccess.cel.Expression;

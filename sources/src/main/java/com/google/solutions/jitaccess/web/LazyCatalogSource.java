@@ -31,7 +31,7 @@ import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.catalog.Provisioner;
-import com.google.solutions.jitaccess.catalog.auth.GroupMapping;
+import com.google.solutions.jitaccess.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.util.Exceptions;

@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.catalog;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
+import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;

@@ -28,7 +28,7 @@ import com.google.api.services.iamcredentials.v1.IAMCredentials;
 import com.google.api.services.iamcredentials.v1.model.SignJwtRequest;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.ServiceAccountId;
+import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 

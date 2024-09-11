@@ -22,8 +22,8 @@
 package com.google.solutions.jitaccess.catalog;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.catalog.auth.Subject;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;

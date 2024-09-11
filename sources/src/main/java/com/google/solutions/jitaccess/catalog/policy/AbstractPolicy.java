@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.catalog.policy;
 
 import com.google.common.base.Preconditions;
-import com.google.solutions.jitaccess.catalog.auth.AbstractSecurableComponent;
+import com.google.solutions.jitaccess.auth.AbstractSecurableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
