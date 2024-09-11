@@ -25,8 +25,8 @@ import com.google.api.services.cloudidentity.v1.model.Membership;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
-import com.google.solutions.jitaccess.util.CompletableFutures;
-import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.common.CompletableFutures;
+import com.google.solutions.jitaccess.common.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;

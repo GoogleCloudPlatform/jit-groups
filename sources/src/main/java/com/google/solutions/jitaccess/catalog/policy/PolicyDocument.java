@@ -31,10 +31,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.auth.*;
-import com.google.solutions.jitaccess.util.Coalesce;
-import com.google.solutions.jitaccess.util.Exceptions;
-import com.google.solutions.jitaccess.util.MoreStrings;
-import com.google.solutions.jitaccess.util.NullaryOptional;
+import com.google.solutions.jitaccess.common.Coalesce;
+import com.google.solutions.jitaccess.common.Exceptions;
+import com.google.solutions.jitaccess.common.MoreStrings;
+import com.google.solutions.jitaccess.common.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

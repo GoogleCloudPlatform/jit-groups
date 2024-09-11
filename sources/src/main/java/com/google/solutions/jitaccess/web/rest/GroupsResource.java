@@ -30,7 +30,7 @@ import com.google.solutions.jitaccess.auth.Principal;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
 import com.google.solutions.jitaccess.catalog.policy.Property;
-import com.google.solutions.jitaccess.util.Coalesce;
+import com.google.solutions.jitaccess.common.Coalesce;
 import com.google.solutions.jitaccess.web.*;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import com.google.solutions.jitaccess.web.proposal.TokenObfuscator;

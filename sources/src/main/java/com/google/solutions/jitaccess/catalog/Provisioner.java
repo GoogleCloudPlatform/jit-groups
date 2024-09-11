@@ -32,9 +32,9 @@ import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
-import com.google.solutions.jitaccess.util.Coalesce;
-import com.google.solutions.jitaccess.util.CompletableFutures;
-import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.common.Coalesce;
+import com.google.solutions.jitaccess.common.CompletableFutures;
+import com.google.solutions.jitaccess.common.Exceptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -31,7 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.IamPrincipalId;
-import com.google.solutions.jitaccess.util.Coalesce;
+import com.google.solutions.jitaccess.common.Coalesce;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 

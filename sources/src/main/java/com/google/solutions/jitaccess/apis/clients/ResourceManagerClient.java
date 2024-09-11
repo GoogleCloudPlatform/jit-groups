@@ -31,7 +31,7 @@ import com.google.auth.Credentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ResourceId;
-import com.google.solutions.jitaccess.util.Coalesce;
+import com.google.solutions.jitaccess.common.Coalesce;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

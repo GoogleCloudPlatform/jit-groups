@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.NotAuthenticatedException;
 import com.google.solutions.jitaccess.apis.clients.ResourceNotFoundException;
-import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.common.Exceptions;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAcceptableException;
 import jakarta.ws.rs.NotAllowedException;

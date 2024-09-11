@@ -22,7 +22,7 @@
 package com.google.solutions.jitaccess.auth;
 
 import com.google.api.client.json.GenericJson;
-import com.google.solutions.jitaccess.cel.Cel;
+import com.google.solutions.jitaccess.common.cel.Cel;
 import dev.cel.common.CelException;
 import dev.cel.common.types.CelTypes;
 import dev.cel.compiler.CelCompiler;

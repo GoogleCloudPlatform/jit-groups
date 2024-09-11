@@ -31,9 +31,9 @@ import com.google.solutions.jitaccess.auth.EmailMapping;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.Property;
-import com.google.solutions.jitaccess.cel.EvaluationException;
-import com.google.solutions.jitaccess.cel.StringTemplate;
-import com.google.solutions.jitaccess.util.DurationFormatter;
+import com.google.solutions.jitaccess.common.cel.EvaluationException;
+import com.google.solutions.jitaccess.common.cel.StringTemplate;
+import com.google.solutions.jitaccess.common.DurationFormatter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;

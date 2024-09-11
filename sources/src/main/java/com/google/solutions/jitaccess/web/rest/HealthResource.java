@@ -23,7 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.clients.Diagnosable;
 import com.google.solutions.jitaccess.apis.Logger;
-import com.google.solutions.jitaccess.util.CompletableFutures;
+import com.google.solutions.jitaccess.common.CompletableFutures;
 import com.google.solutions.jitaccess.web.EventIds;
 import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Instance;

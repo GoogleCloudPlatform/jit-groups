@@ -25,7 +25,7 @@ import com.google.api.client.json.GenericJson;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
-import com.google.solutions.jitaccess.cel.Cel;
+import com.google.solutions.jitaccess.common.cel.Cel;
 import dev.cel.common.CelException;
 import dev.cel.common.types.CelTypes;
 import dev.cel.compiler.CelCompiler;

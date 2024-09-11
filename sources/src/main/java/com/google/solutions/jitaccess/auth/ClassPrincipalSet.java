@@ -21,7 +21,7 @@
 
 package com.google.solutions.jitaccess.auth;
 
-import com.google.solutions.jitaccess.util.NullaryOptional;
+import com.google.solutions.jitaccess.common.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

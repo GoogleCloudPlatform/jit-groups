@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
-import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.common.Exceptions;
 import com.google.solutions.jitaccess.web.Application;
 import com.google.solutions.jitaccess.web.ApplicationConfiguration;
 import com.google.solutions.jitaccess.web.EventIds;

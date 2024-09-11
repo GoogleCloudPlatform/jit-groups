@@ -34,7 +34,7 @@ import com.google.solutions.jitaccess.catalog.Provisioner;
 import com.google.solutions.jitaccess.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
-import com.google.solutions.jitaccess.util.Exceptions;
+import com.google.solutions.jitaccess.common.Exceptions;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
