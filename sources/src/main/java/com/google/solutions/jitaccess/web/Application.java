@@ -268,10 +268,7 @@ public class Application {
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient
   ) {
-    if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
-      return new DebugProposalHandler(tokenSigner);
-    }
-    else if (configuration.isSmtpConfigured()) {
+    if (configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
         configuration.smtpHost,
         configuration.smtpPort,
@@ -304,6 +301,9 @@ public class Application {
         new MailProposalHandler.Options(
           configuration.notificationTimeZone,
           configuration.proposalTimeout));
+    }
+    else if (runtime.type() == ApplicationRuntime.Type.DEVELOPMENT) {
+      return new DebugProposalHandler(tokenSigner);
     }
     else {
       return new ProposalHandler() {

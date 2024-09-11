@@ -54,9 +54,16 @@
                     </ul>
                 </div>
                 <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 16px; margin-top: 32px;">
-                    <a style="display: flex; flex-direction: column; align-items: center; padding: 8px 24px; gap: 8px; ; background: #1a73e8; box-sizing: border-box; border-radius: 4px; text-decoration: none;" href="{{proposal.action_uri}}">
-                        <div style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; line-height: 20px; display: flex; align-items: center; text-align: center; letter-spacing: 0.25px; color: #1a73e8; white-space: nowrap; color: white;">Show details</div>
-                    </a>
+                    <!-- Button, use table to that it renders properly in classic Outlook -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                            <td style="border-radius: 4px; background: #1a73e8; text-align: center;">
+                                <a href="{{proposal.action_uri}}" style="font-family: Roboto, Arial, sans-serif; font-style: normal; font-weight: 500; font-size: 14px; border: 5px solid #1a73e8; mso-height-rule: exactly; line-height: 25px; text-align: center; text-decoration: none; display: block; border-radius: 4px;">
+                                    &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffffff">Show details</span>&nbsp;&nbsp;&nbsp;&nbsp;
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
                 <div style="display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 14px; margin-top: 32px;">
                     This request automatically expires on {{proposal.expiry}}.
