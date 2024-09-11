@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.web.rest;
+package com.google.solutions.jitaccess.web;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
@@ -30,7 +30,6 @@ import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.util.Exceptions;
 import com.google.solutions.jitaccess.util.MoreStrings;
-import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import jakarta.enterprise.context.Dependent;
 import org.jetbrains.annotations.NotNull;
@@ -46,18 +45,18 @@ import java.util.stream.Collectors;
 public class OperationAuditTrail {
   private final @NotNull Logger logger;
 
-  public static final String LABEL_GROUP_ID = "group/id";
-  public static final String LABEL_GROUP_EXPIRY = "group/expiry";
-  public static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
-  public static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
-  public static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
-  public static final String LABEL_EVENT_TYPE = "event/type";
+  static final String LABEL_GROUP_ID = "group/id";
+  static final String LABEL_GROUP_EXPIRY = "group/expiry";
+  static final String LABEL_PREFIX_JOIN_INPUT = "join/input/";
+  static final String LABEL_PREFIX_PROPOSAL_INPUT = "proposal/input/";
+  static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
+  static final String LABEL_EVENT_TYPE = "event/type";
 
   public OperationAuditTrail(@NotNull Logger logger) {
     this.logger = logger;
   }
 
-  void constraintFailed(
+  public void constraintFailed(
     @NotNull JitGroupId groupId,
     @NotNull PolicyAnalysis.ConstraintFailedException e
   ) {
@@ -74,7 +73,7 @@ public class OperationAuditTrail {
     }
   }
 
-  void joinProposed(
+  public void joinProposed(
     @NotNull JitGroupContext.JoinOperation joinOp,
     @NotNull ProposalHandler.ProposalToken proposal
   ) {
@@ -102,7 +101,7 @@ public class OperationAuditTrail {
       .write();
   }
 
-  void joinExecuted(
+  public void joinExecuted(
     @NotNull JitGroupContext.JoinOperation joinOp,
     @NotNull Principal principal
   ) {
@@ -127,7 +126,7 @@ public class OperationAuditTrail {
       .write();
   }
 
-  void joinExecuted(
+  public void joinExecuted(
     @NotNull JitGroupContext.ApprovalOperation approveOp,
     @NotNull Principal principal
   ) {

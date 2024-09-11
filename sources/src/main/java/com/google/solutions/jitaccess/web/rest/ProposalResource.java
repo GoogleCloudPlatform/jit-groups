@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Property;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.LogRequest;
+import com.google.solutions.jitaccess.web.OperationAuditTrail;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import com.google.solutions.jitaccess.web.proposal.TokenObfuscator;

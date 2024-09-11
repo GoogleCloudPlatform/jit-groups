@@ -25,14 +25,11 @@ import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.clients.GroupKey;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
 import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
-import com.google.solutions.jitaccess.web.rest.OperationAuditTrail;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URLEncoder;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 /**
