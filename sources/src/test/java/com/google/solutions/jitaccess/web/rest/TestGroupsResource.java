@@ -32,6 +32,7 @@ import com.google.solutions.jitaccess.catalog.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.Consoles;
 import com.google.solutions.jitaccess.web.EventIds;
+import com.google.solutions.jitaccess.web.OperationAuditTrail;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedHashMap;

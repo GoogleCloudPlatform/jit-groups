@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.catalog.auth.Principal;
 import com.google.solutions.jitaccess.catalog.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.web.EventIds;
+import com.google.solutions.jitaccess.web.OperationAuditTrail;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.MultivaluedHashMap;
