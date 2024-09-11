@@ -24,7 +24,10 @@ package com.google.solutions.jitaccess.web;
 import com.google.solutions.jitaccess.apis.OrganizationId;
 import com.google.solutions.jitaccess.apis.clients.GroupKey;
 import com.google.solutions.jitaccess.catalog.auth.GroupId;
+import com.google.solutions.jitaccess.catalog.auth.JitGroupId;
 import org.junit.jupiter.api.Test;
+
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -41,6 +44,23 @@ public class TestConsoles {
     assertEquals(
       "https://console.cloud.google.com/iam-admin/groups/abc?organizationId=123",
       consoles.cloudConsole().groupDetails(new GroupKey("abc")));
+  }
+
+  //---------------------------------------------------------------------------
+  // cloudConsole_groupAuditLogs.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void groupsConsole_groupAuditLogs() {
+    var consoles = new Consoles(new OrganizationId("123"));
+
+    assertEquals(
+      "https://console.cloud.google.com/logs/query;" +
+        "query=labels.%22group%2Fid%22%3D%22jit-group%3Aenv-1.system-1.group-1%22;" +
+        "startTime=1970-01-01T00:00Z",
+      consoles.cloudConsole().groupAuditLogs(
+        new JitGroupId("env-1", "system-1", "group-1"),
+        Instant.EPOCH));
   }
 
   //---------------------------------------------------------------------------

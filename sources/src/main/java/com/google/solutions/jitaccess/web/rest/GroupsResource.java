@@ -41,6 +41,7 @@ import jakarta.ws.rs.core.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -215,6 +216,9 @@ public class GroupsResource {
           case "cloud-console" -> consoles.cloudConsole().groupDetails(groupKey);
           case "admin-console" -> consoles.adminConsole().groupDetails(groupKey);
           case "groups-console" -> consoles.groupsConsole().groupDetails(group.cloudIdentityGroupId());
+          case "cloud-logging" -> consoles.cloudConsole().groupAuditLogs(
+            groupId,
+            Instant.now().minus(Duration.ofDays(7)));
           default -> null;
         })
         .orElseThrow(() -> new NotFoundException("Unknown console"));
