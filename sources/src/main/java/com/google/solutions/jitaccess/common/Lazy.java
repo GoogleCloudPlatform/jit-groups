@@ -21,7 +21,9 @@
 
 package com.google.solutions.jitaccess.common;
 
+import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.*;
@@ -44,12 +46,12 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
    *
    * @throws UncheckedExecutionException if the initializer fails.
    */
-  public static @NotNull <T> Lazy<T> initializeOpportunistically(
+  public static @NotNull <T> Lazy<T> opportunistic(
     @NotNull Callable<T> initialize
   ) {
     return new Lazy<>() {
       @Override
-      public T get() {
+      public @NotNull T get() {
         var obj = cached.get();
         if (obj != null) {
           return obj;
@@ -86,6 +88,65 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
     };
   }
 
+  /**
+   * Initialize using a pessimistic approach that runs the initializer
+   * at most once.
+   *
+   * @throws UncheckedExecutionException if the initializer fails.
+   */
+  public static @NotNull <T> Lazy<T> pessimistic(
+    @NotNull Callable<T> initialize
+  ) {
+    return new Lazy<>() {
+      private Exception initializationException = null;
+
+      @Override
+      public @NotNull T get() {
+        var value = this.cached.get();
+
+        if (value == null) {
+          //
+          // Initialize a new instance.
+          //
+          synchronized (this.cached) {
+            if (this.initializationException != null) {
+              //
+              // Another thread tried initializing before,
+              // but failed.
+              //
+              throw new UncheckedExecutionException(this.initializationException);
+            }
+            else if ((value = this.cached.get()) != null) {
+              //
+              // Another thread acquired the lock before us and
+              // completed initialization already.
+              //
+            }
+            else {
+              //
+              // Try to initialize.
+              //
+              try {
+                value = initialize.call();
+                Preconditions.checkNotNull(value);
+
+                this.cached.set(value);
+              }
+              catch (Exception e) {
+                this.initializationException = e;
+                throw new UncheckedExecutionException(e);
+              }
+            }
+          }
+
+          assert value != null;
+        }
+
+        return value;
+      }
+    };
+  }
+
   @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
     return false;
@@ -102,10 +163,10 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   }
 
   @Override
-  public T get(long timeout, @NotNull TimeUnit unit) {
+  public @NotNull T get(long timeout, @NotNull TimeUnit unit) {
     return get();
   }
 
   @Override
-  public abstract T get();
+  public abstract @NotNull T get();
 }

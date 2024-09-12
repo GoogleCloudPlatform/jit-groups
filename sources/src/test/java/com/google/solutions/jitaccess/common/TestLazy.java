@@ -31,14 +31,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestLazy {
 
   // -------------------------------------------------------------------------
-  // initializeOpportunistically.
+  // opportunistic.
   // -------------------------------------------------------------------------
 
   @Test
-  public void initializeOpportunistically_whenSingleThreaded() {
+  public void opportunistic_whenSingleThreaded() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.initializeOpportunistically(
+    var lazy = Lazy.opportunistic(
       () -> {
         initializations.incrementAndGet();
         return "test";
@@ -55,10 +55,10 @@ public class TestLazy {
   }
 
   @Test
-  public void initializeOpportunistically_whenInitializerFails() {
+  public void opportunistic_whenInitializerFails() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.initializeOpportunistically(
+    var lazy = Lazy.opportunistic(
       () -> {
         initializations.incrementAndGet();
         throw new IllegalStateException();
@@ -73,6 +73,52 @@ public class TestLazy {
 
     assertInstanceOf(IllegalStateException.class, e.getCause());
     assertEquals(2, initializations.get());
+    assertFalse(lazy.isDone());
+  }
+
+  // -------------------------------------------------------------------------
+  // pessimistic.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void pessimistic_whenSingleThreaded() {
+    final var initializations = new AtomicInteger(0);
+
+    var lazy = Lazy.pessimistic(
+      () -> {
+        initializations.incrementAndGet();
+        return "test";
+      });
+
+    assertFalse(lazy.isDone());
+    assertEquals("test", lazy.get());
+    assertTrue(lazy.isDone());
+
+    assertEquals("test", lazy.get());
+    assertEquals("test", lazy.get());
+
+    assertEquals(1, initializations.get());
+  }
+
+  @Test
+  public void pessimistic_whenInitializerFails() {
+    final var initializations = new AtomicInteger(0);
+
+    var lazy = Lazy.pessimistic(
+      () -> {
+        initializations.incrementAndGet();
+        throw new IllegalStateException();
+      });
+
+    assertThrows(
+      UncheckedExecutionException.class,
+      () -> lazy.get());
+    var e = assertThrows(
+      UncheckedExecutionException.class,
+      () -> lazy.get());
+
+    assertInstanceOf(IllegalStateException.class, e.getCause());
+    assertEquals(1, initializations.get());
     assertFalse(lazy.isDone());
   }
 }
