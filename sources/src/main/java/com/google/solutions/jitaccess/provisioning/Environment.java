@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 /**
  * Environment that can be provisioned to.
  */
-public abstract class Environment {
+public abstract class Environment implements PolicyHeader {
   private final @NotNull String name;
   private final @NotNull String description;
   private final @NotNull Lazy<EnvironmentPolicy> policy;
@@ -40,28 +40,30 @@ public abstract class Environment {
   /**
    * Name of the policy.
    */
-  @NotNull String name() {
+  @Override
+  public @NotNull String name() {
     return this.name;
   }
 
   /**
    * Description of the environment.
    */
-  @NotNull String description() {
+  @Override
+  public @NotNull String description() {
     return this.description;
   }
 
   /**
    * Policy for this environment, can be delay-loaded.
    */
-  @NotNull Supplier<EnvironmentPolicy> policy() {
+  public @NotNull Supplier<EnvironmentPolicy> policy() {
     return this.policy;
   }
 
   /**
    * Provisioner for managing access to this environment.
    */
-  @NotNull Provisioner provisioner() {
+  public @NotNull Provisioner provisioner() {
     return this.provisioner;
   }
 
