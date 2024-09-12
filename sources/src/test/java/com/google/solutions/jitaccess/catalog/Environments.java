@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 import org.mockito.Mockito;
 

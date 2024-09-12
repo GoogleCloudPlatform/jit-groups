@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.apis.clients.GroupKey;
 import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

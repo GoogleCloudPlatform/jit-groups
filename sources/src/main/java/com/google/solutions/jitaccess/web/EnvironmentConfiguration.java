@@ -86,7 +86,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
   /**
    * Load policy from file or backend.
    */
-  abstract EnvironmentPolicy loadPolicy(); // TODO: Return PolicyDocument
+  abstract EnvironmentPolicy loadPolicy();
 
   /**
    * Create configuration for a file-based policy.

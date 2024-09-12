@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog;
+package com.google.solutions.jitaccess.catalog.provisioning;
 
 import com.google.api.services.cloudresourcemanager.v3.model.Binding;
 import com.google.api.services.cloudresourcemanager.v3.model.Expr;
@@ -30,6 +30,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.*;
+import com.google.solutions.jitaccess.catalog.EventIds;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.common.Coalesce;
@@ -49,7 +50,7 @@ import java.util.stream.Collectors;
 /**
  * Provisions access to the resources in an environment.
  */
-public class Provisioner { // TODO: move to provider package
+public class Provisioner {
   private final @NotNull String environmentName;
   private final @NotNull GroupProvisioner groupProvisioner;
   private final @NotNull IamProvisioner iamProvisioner;
@@ -154,7 +155,7 @@ public class Provisioner { // TODO: move to provider package
    *
    * @return GroupKey or empty of the group hasn't been created yet.
    */
-  @NotNull Optional<GroupKey> cloudIdentityGroupKey(
+  public @NotNull Optional<GroupKey> cloudIdentityGroupKey(
     @NotNull JitGroupId groupId
   ) throws AccessException, IOException {
     Preconditions.checkArgument(groupId.environment().equals(this.environmentName));
