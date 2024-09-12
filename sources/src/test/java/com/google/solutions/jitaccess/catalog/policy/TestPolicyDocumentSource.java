@@ -44,6 +44,23 @@ public class TestPolicyDocumentSource {
   }
 
   //---------------------------------------------------------------------------
+  // fromMemory.
+  //---------------------------------------------------------------------------
+
+  @Test
+  public void fromString() throws Exception {
+    var yaml =
+      "schemaVersion: 1\n" +
+        "environment: \n" +
+        "  name: 'env-1'";
+
+    var source = PolicyDocumentSource.fromMemory(yaml);
+    assertEquals(yaml, source.yaml());
+    assertEquals("memory", source.metadata().source());
+    assertFalse(source.metadata().lastModified().isAfter(Instant.now()));
+  }
+
+  //---------------------------------------------------------------------------
   // fromFile.
   //---------------------------------------------------------------------------
 

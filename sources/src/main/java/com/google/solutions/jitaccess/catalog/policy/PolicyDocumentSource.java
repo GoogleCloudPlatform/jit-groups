@@ -37,6 +37,22 @@ public record PolicyDocumentSource(
   @NotNull Policy.Metadata metadata
   ) {
 
+  /**
+   * Create a policy document from an in-memory string.
+   */
+  public static @NotNull PolicyDocumentSource fromMemory(
+    @NotNull String yaml
+  ) {
+    return new PolicyDocumentSource(
+      yaml,
+      new Policy.Metadata(
+        "memory",
+        Instant.now()));
+  }
+
+  /**
+   * Read policy document from a local file.
+   */
   public static @NotNull PolicyDocumentSource fromFile(
     @NotNull File file
   ) throws IOException {
