@@ -24,14 +24,14 @@ package com.google.solutions.jitaccess.common;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 /**
  * Lazily initializes an object
  */
-public abstract class Lazy<T> implements Supplier<T> {
+public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   protected final @NotNull AtomicReference<T> cached;
 
   private Lazy() {
@@ -85,4 +85,27 @@ public abstract class Lazy<T> implements Supplier<T> {
       }
     };
   }
+
+  @Override
+  public boolean cancel(boolean mayInterruptIfRunning) {
+    return false;
+  }
+
+  @Override
+  public boolean isCancelled() {
+    return false;
+  }
+
+  @Override
+  public boolean isDone() {
+    return this.cached.get() != null;
+  }
+
+  @Override
+  public T get(long timeout, @NotNull TimeUnit unit) {
+    return get();
+  }
+
+  @Override
+  public abstract T get();
 }

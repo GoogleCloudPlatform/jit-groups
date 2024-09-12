@@ -44,7 +44,10 @@ public class TestLazy {
         return "test";
       });
 
+    assertFalse(lazy.isDone());
     assertEquals("test", lazy.get());
+    assertTrue(lazy.isDone());
+
     assertEquals("test", lazy.get());
     assertEquals("test", lazy.get());
 
@@ -70,5 +73,6 @@ public class TestLazy {
 
     assertInstanceOf(IllegalStateException.class, e.getCause());
     assertEquals(2, initializations.get());
+    assertFalse(lazy.isDone());
   }
 }
