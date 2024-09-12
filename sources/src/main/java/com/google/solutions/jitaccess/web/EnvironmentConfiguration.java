@@ -29,10 +29,7 @@ import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
-import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.Policy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
+import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -126,7 +123,8 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       @Override
       EnvironmentPolicy loadPolicy() {
         try {
-          return PolicyDocument.fromFile(file)
+          return PolicyDocument
+            .parse(PolicyDocumentSource.fromFile(file))
             .policy();
         }
         catch (Exception e) {
@@ -179,7 +177,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
 
           var policy = new String(stream.readAllBytes());
           return PolicyDocument
-            .fromString(policy, metadata)
+            .parse(new PolicyDocumentSource(policy, metadata))
             .policy();
         }
         catch (Exception e) {
@@ -289,10 +287,10 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             null,
             environmentName);
 
-          return PolicyDocument
-            .fromString(
+          return PolicyDocument.parse(
+            new PolicyDocumentSource(
               secretClient.accessSecret(secretPath),
-              metadata)
+              metadata))
             .policy();
         }
         catch (Exception e) {
