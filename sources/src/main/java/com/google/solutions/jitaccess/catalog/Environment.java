@@ -1,6 +1,5 @@
-package com.google.solutions.jitaccess.provisioning;
+package com.google.solutions.jitaccess.catalog;
 
-import com.google.solutions.jitaccess.catalog.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.common.Lazy;
 import org.jetbrains.annotations.NotNull;
@@ -55,14 +54,14 @@ public abstract class Environment implements PolicyHeader {
   /**
    * Policy for this environment, can be delay-loaded.
    */
-  public @NotNull Supplier<EnvironmentPolicy> policy() {
-    return this.policy;
+  protected @NotNull EnvironmentPolicy policy() {
+    return this.policy.get();
   }
 
   /**
    * Provisioner for managing access to this environment.
    */
-  public @NotNull Provisioner provisioner() {
+  protected @NotNull Provisioner provisioner() {
     return this.provisioner;
   }
 

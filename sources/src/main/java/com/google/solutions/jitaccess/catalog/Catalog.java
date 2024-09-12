@@ -24,14 +24,14 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.auth.Subject;
-import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Catalog of groups that a subject can access.
@@ -40,15 +40,17 @@ import java.util.Optional;
  * lookup or join groups.
  */
 public class Catalog {
-  private final @NotNull Catalog.Source source;
+  private final @NotNull Map<String, Environment> environments;
   private final @NotNull Subject subject;
 
   public Catalog(
     @NotNull Subject subject,
-    @NotNull Catalog.Source source
+    @NotNull Collection<Environment> environments
   ) {
     this.subject = subject;
-    this.source = source;
+    this.environments = environments
+      .stream()
+      .collect(Collectors.toMap(e -> e.name(), e -> e));
   }
 
   /**
@@ -57,8 +59,8 @@ public class Catalog {
    * policy. To compensate, the method only returns a bare
    * minimum of data.
    */
-  public @NotNull Collection<PolicyHeader> environments() {
-    return this.source.environmentPolicies();
+  public @NotNull Collection<Environment> environments() {
+    return this.environments.values();
   }
 
   /**
@@ -67,12 +69,9 @@ public class Catalog {
   public @NotNull Optional<EnvironmentContext> environment(@NotNull String name) {
     Preconditions.checkArgument(name != null, "Environment name must not be null");
 
-    var provisioner = this.source.provisioner(this, name);
-
-    return this.source
-      .environmentPolicy(name)
-      .filter(env -> env.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
-      .map(policy -> new EnvironmentContext(policy, this.subject, provisioner.get()));
+    return Optional.ofNullable(this.environments.get(name))
+      .filter(env -> env.policy().isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
+      .map(env -> new EnvironmentContext(env.policy(), this.subject, env.provisioner()));
   }
 
   /**
@@ -88,30 +87,5 @@ public class Catalog {
     return environment(groupId.environment())
       .flatMap(env -> env.system(groupId.system()))
       .flatMap(sys -> sys.group(groupId.name()));
-  }
-
-  /**
-   * Source for environment configuration.
-   */
-  public interface Source {
-    /**
-     * Get list of summaries for available policies.
-     */
-    @NotNull Collection<PolicyHeader> environmentPolicies();
-
-    /**
-     * Get policy for an environment.
-     */
-    @NotNull Optional<EnvironmentPolicy> environmentPolicy(
-      @NotNull String environmentName
-    );
-
-    /**
-     * Get provisioner for an environment
-     */
-    @NotNull Optional<Provisioner> provisioner(
-      @NotNull Catalog catalog,
-      @NotNull String environmentName
-    );
   }
 }

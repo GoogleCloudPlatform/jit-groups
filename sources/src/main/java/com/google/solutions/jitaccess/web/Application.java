@@ -247,11 +247,11 @@ public class Application {
   @RequestScoped
   public @NotNull Catalog produceCatalog(
     @NotNull Subject subject,
-    @NotNull LazyCatalogSource catalogSource
+    @NotNull EnvironmentRegistry environmentRegistry
   ) {
     return new Catalog(
       subject,
-      catalogSource);
+      environmentRegistry.environments());
   }
 
   @Produces
@@ -332,7 +332,7 @@ public class Application {
 
   @Produces
   @Singleton
-  public @NotNull LazyCatalogSource produceEnvironments(
+  public @NotNull EnvironmentRegistry produceEnvironments(
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Executor executor
@@ -439,13 +439,13 @@ public class Application {
       }
     }
 
-    var options = new LazyCatalogSource.Options(
+    var options = new EnvironmentRegistry.Options(
       runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? Duration.ofSeconds(20)
         : configuration.environmentCacheTimeout,
       produceHttpTransportOptions());
 
-    return new LazyCatalogSource(
+    return new EnvironmentRegistry(
       configurations,
       groupMapping,
       groupsClient,

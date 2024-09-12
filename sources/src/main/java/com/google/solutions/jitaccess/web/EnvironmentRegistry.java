@@ -7,7 +7,7 @@ import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.provisioning.Environment;
+import com.google.solutions.jitaccess.catalog.Environment;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -25,7 +25,7 @@ public class EnvironmentRegistry {// TODO: test
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Executor executor,
-    @NotNull LazyCatalogSource.Options options,
+    @NotNull Options options,
     @NotNull Logger logger
   ) {
     //
