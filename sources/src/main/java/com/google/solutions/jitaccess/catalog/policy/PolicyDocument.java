@@ -100,9 +100,11 @@ public class PolicyDocument {
   // Parsing.
   //---------------------------------------------------------------------------
 
-  private static @NotNull PolicyDocument parse(
-    @NotNull Callable<DocumentElement> parser,
-    @NotNull Policy.Metadata metadata
+  /**
+   * Parse a YAML-formatted document and validate its content.
+   */
+  public static @NotNull PolicyDocument parse(
+    @NotNull PolicyDocumentSource source
   ) throws SyntaxException {
     var issues = new IssueCollection();
 
@@ -111,10 +113,8 @@ public class PolicyDocument {
       //
       // Parse YAML and validate it.
       //
-      policy = parser
-        .call()
-        .toPolicy(issues, metadata);
-
+      var element = new YAMLMapper().readValue(source.yaml(), DocumentElement.class);
+      policy = element.toPolicy(issues, source.metadata());
     }
     catch (PropertyBindingException e) {
       //
@@ -165,56 +165,6 @@ public class PolicyDocument {
     }
 
     return new PolicyDocument(policy.get(), issues.issues);
-  }
-
-  /**
-   * Parse a YAML-formatted document.
-   *
-   * @throws SyntaxException if the document is invalid
-   * @return the parsed and validated document, including warnings that may
-   *         have been encountered
-   */
-  public static @NotNull PolicyDocument fromString(
-    @NotNull String yaml,
-    @NotNull Policy.Metadata metadata) throws SyntaxException {
-    return parse(
-      () -> new YAMLMapper().readValue(yaml, DocumentElement.class),
-      metadata);
-  }
-
-  /**
-   * Parse a YAML-formatted document.
-   *
-   * @throws SyntaxException if the document is invalid
-   * @return the parsed and validated document, including warnings that may
-   *         have been encountered
-   */
-  static @NotNull PolicyDocument fromString(@NotNull String yaml) throws SyntaxException {
-    return fromString(
-      yaml,
-      new Policy.Metadata(
-        "memory",
-        Instant.now()));
-  }
-
-  /**
-   * Parse a YAML-formatted document.
-   *
-   * @throws SyntaxException if the document is invalid
-   * @return the parsed and validated document, including warnings that may
-   *         have been encountered
-   */
-  public static @NotNull PolicyDocument fromFile(@NotNull File file) throws SyntaxException, IOException {
-    if (!file.exists()) {
-      throw new FileNotFoundException(
-        String.format("The file '%s' does not exist", file.getAbsolutePath()));
-    }
-
-    return parse(
-      () -> new YAMLMapper().readValue(file, DocumentElement.class),
-      new Policy.Metadata(
-        file.getName(),
-        Instant.ofEpochMilli(file.lastModified())));
   }
 
   /**

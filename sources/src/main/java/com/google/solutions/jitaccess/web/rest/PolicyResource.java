@@ -23,10 +23,7 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.auth.IamRoleResolver;
-import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
-import com.google.solutions.jitaccess.catalog.policy.Policy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
-import com.google.solutions.jitaccess.catalog.policy.PolicyIssue;
+import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.common.Cast;
 import com.google.solutions.jitaccess.common.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
@@ -75,13 +72,14 @@ public class PolicyResource {
       // NB. It's possible that the user is validating that doesn't
       //     explicitly specify a name (because it's implied).
       //
-      document = PolicyDocument.fromString(
-        source,
-        new Policy.Metadata(
-          "user-provided",
-          Instant.now(),
-          null,
-          "anonymous")); // Accept policies without name.
+      document = PolicyDocument.parse(
+        new PolicyDocumentSource(
+          source,
+          new Policy.Metadata(
+            "user-provided",
+            Instant.now(),
+            null,
+            "anonymous"))); // Accept policies without name.
     }
     catch (PolicyDocument.SyntaxException e) {
       return LintingResultInfo.create(e);

@@ -71,14 +71,14 @@ public class TestPolicyDocument {
   }
 
   //---------------------------------------------------------------------------
-  // fromString.
+  // parse.
   //---------------------------------------------------------------------------
 
   @Test
-  public void fromString_whenYamlIsEmpty() {
+  public void parse_whenYamlIsEmpty() {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString("  "));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory("  ")));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
@@ -86,10 +86,10 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenYamlMalformed() {
+  public void parse_whenYamlMalformed() {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString("}"));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory("}")));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_SYNTAX,
@@ -97,12 +97,12 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenFieldUnrecognized() {
+  public void parse_whenFieldUnrecognized() {
     var yaml = "foo: 1";
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
@@ -110,12 +110,12 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenSchemaVersionInvalid() {
+  public void parse_whenSchemaVersionInvalid() {
     var yaml = "schemaVersion: 0";
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
@@ -123,12 +123,12 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenSchemaVersionMissing() {
+  public void parse_whenSchemaVersionMissing() {
     var yaml = "schemaVersion: ";
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
@@ -136,7 +136,7 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenEnvironmentMissing() {
+  public void parse_whenEnvironmentMissing() {
     var yaml =
       "schemaVersion: 1\n" +
       "environment: ";
@@ -144,7 +144,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_MISSING,
@@ -152,7 +152,7 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenEnvironmentNameInvalid() {
+  public void parse_whenEnvironmentNameInvalid() {
     var yaml =
       "schemaVersion: 1\n" +
       "environment: \n" +
@@ -160,7 +160,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_INVALID,
@@ -168,7 +168,7 @@ public class TestPolicyDocument {
   }
 
   @Test
-  public void fromString_whenSystemNameInvalid() {
+  public void parse_whenSystemNameInvalid() {
     var yaml =
       "schemaVersion: 1\n" +
       "environment: \n" +
@@ -178,7 +178,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.fromString(yaml));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.SYSTEM_INVALID,
@@ -192,35 +192,9 @@ public class TestPolicyDocument {
         "environment: \n" +
         "  name: 'env-1'";
 
-    var doc = PolicyDocument.fromString(yaml);
+    var doc = PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml));
     assertEquals("env-1", doc.policy().name());
     assertEquals("memory", doc.policy().metadata().source());
-    assertFalse(doc.policy().metadata().lastModified().isAfter(Instant.now()));
-  }
-
-  //---------------------------------------------------------------------------
-  // fromFile.
-  //---------------------------------------------------------------------------
-
-  @Test
-  public void fromFile_whenFileNotFound() {
-    assertThrows(
-      FileNotFoundException.class,
-      () -> PolicyDocument.fromFile(new File("doesnotexist.yaml")));
-  }
-
-  @Test
-  public void fromFile() throws Exception {
-    var yaml = "schemaVersion: 1\n" +
-      "environment: \n" +
-      "  name: 'env-1'";
-
-    var tempFile = File.createTempFile("policy", "yaml");
-    Files.writeString(tempFile.toPath(), yaml);
-
-    var doc = PolicyDocument.fromFile(tempFile);
-    assertEquals("env-1", doc.policy().name());
-    assertEquals(tempFile.getName(), doc.policy().metadata().source());
     assertFalse(doc.policy().metadata().lastModified().isAfter(Instant.now()));
   }
 
