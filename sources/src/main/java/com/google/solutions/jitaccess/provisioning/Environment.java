@@ -8,7 +8,6 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-
 /**
  * Environment that can be provisioned to.
  */
@@ -70,5 +69,5 @@ public abstract class Environment implements PolicyHeader {
   /**
    * Load policy from file or backing store.
    */
-  abstract EnvironmentPolicy loadPolicy();
+  protected abstract EnvironmentPolicy loadPolicy();
 }

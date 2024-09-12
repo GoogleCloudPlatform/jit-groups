@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
+import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.web.proposal.*;
 import com.google.solutions.jitaccess.web.rest.UserResource;
 import jakarta.enterprise.context.RequestScoped;
@@ -407,8 +408,10 @@ public class Application {
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
           LegacyPolicy.DESCRIPTION,
-          runtime.applicationCredentials(), // Use app service account, as in 1.x
-          () -> {
+          runtime.applicationCredentials() // Use app service account, as in 1.x
+        ) {
+          @Override
+          EnvironmentPolicy loadPolicy() {
             try {
               return legacyLoader.load(
                 configuration.legacyProjectsQuery,
@@ -421,7 +424,7 @@ public class Application {
             catch (Exception e) {
               throw new UncheckedExecutionException(e);
             }
-          }));
+          }});
     }
 
     if (configurations.isEmpty()) {
