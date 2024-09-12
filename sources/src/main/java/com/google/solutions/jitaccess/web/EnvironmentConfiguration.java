@@ -123,8 +123,8 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       @Override
       EnvironmentPolicy loadPolicy() {
         try {
-          return PolicyDocument
-            .parse(PolicyDocumentSource.fromFile(file))
+          return PolicyDocumentSource.fromFile(file)
+            .parse()
             .policy();
         }
         catch (Exception e) {
@@ -176,8 +176,8 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
           }
 
           var policy = new String(stream.readAllBytes());
-          return PolicyDocument
-            .parse(new PolicyDocumentSource(policy, metadata))
+          return new PolicyDocumentSource(policy, metadata)
+            .parse()
             .policy();
         }
         catch (Exception e) {
@@ -287,10 +287,10 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             null,
             environmentName);
 
-          return PolicyDocument.parse(
-            new PolicyDocumentSource(
+          return new PolicyDocumentSource(
               secretClient.accessSecret(secretPath),
-              metadata))
+              metadata)
+            .parse()
             .policy();
         }
         catch (Exception e) {

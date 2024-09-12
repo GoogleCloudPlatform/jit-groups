@@ -103,7 +103,7 @@ public class PolicyDocument {
   /**
    * Parse a YAML-formatted document and validate its content.
    */
-  public static @NotNull PolicyDocument parse(
+  static @NotNull PolicyDocument parse(
     @NotNull PolicyDocumentSource source
   ) throws SyntaxException {
     var issues = new IssueCollection();

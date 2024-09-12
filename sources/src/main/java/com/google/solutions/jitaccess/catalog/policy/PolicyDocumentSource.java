@@ -68,6 +68,13 @@ public record PolicyDocumentSource(
         Instant.ofEpochMilli(file.lastModified())));
   }
 
+  /**
+   * Parse and validate source.
+   */
+  public PolicyDocument parse() throws PolicyDocument.SyntaxException {
+    return PolicyDocument.parse(this);
+  }
+
   @Override
   public String toString() {
     return this.yaml;
