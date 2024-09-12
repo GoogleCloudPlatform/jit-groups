@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.common;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,26 +34,6 @@ public class TestLazy {
   // -------------------------------------------------------------------------
   // opportunistic.
   // -------------------------------------------------------------------------
-
-  @Test
-  public void opportunistic_whenSingleThreaded() {
-    final var initializations = new AtomicInteger(0);
-
-    var lazy = Lazy.opportunistic(
-      () -> {
-        initializations.incrementAndGet();
-        return "test";
-      });
-
-    assertFalse(lazy.isDone());
-    assertEquals("test", lazy.get());
-    assertTrue(lazy.isDone());
-
-    assertEquals("test", lazy.get());
-    assertEquals("test", lazy.get());
-
-    assertEquals(1, initializations.get());
-  }
 
   @Test
   public void opportunistic_whenInitializerFails() {
@@ -74,17 +55,23 @@ public class TestLazy {
     assertInstanceOf(IllegalStateException.class, e.getCause());
     assertEquals(2, initializations.get());
     assertFalse(lazy.isDone());
+
+    //
+    // Reset and do again.
+    //
+    lazy.reset();
+    assertFalse(lazy.isDone());
+    assertThrows(
+      UncheckedExecutionException.class,
+      () -> lazy.get());
+    assertEquals(3, initializations.get());
   }
 
-  // -------------------------------------------------------------------------
-  // pessimistic.
-  // -------------------------------------------------------------------------
-
   @Test
-  public void pessimistic_whenSingleThreaded() {
+  public void opportunistic() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.pessimistic(
+    var lazy = Lazy.opportunistic(
       () -> {
         initializations.incrementAndGet();
         return "test";
@@ -99,6 +86,10 @@ public class TestLazy {
 
     assertEquals(1, initializations.get());
   }
+
+  // -------------------------------------------------------------------------
+  // pessimistic.
+  // -------------------------------------------------------------------------
 
   @Test
   public void pessimistic_whenInitializerFails() {
@@ -119,6 +110,80 @@ public class TestLazy {
 
     assertInstanceOf(IllegalStateException.class, e.getCause());
     assertEquals(1, initializations.get());
+    assertTrue(lazy.isDone());
+
+    //
+    // Reset and do again.
+    //
+    lazy.reset();
     assertFalse(lazy.isDone());
+    assertThrows(
+      UncheckedExecutionException.class,
+      () -> lazy.get());
+    assertEquals(2, initializations.get());
+  }
+
+  @Test
+  public void pessimistic() {
+    final var initializations = new AtomicInteger(0);
+
+    var lazy = Lazy.pessimistic(
+      () -> {
+        initializations.incrementAndGet();
+        return "test";
+      });
+
+    assertFalse(lazy.isDone());
+    assertEquals("test", lazy.get());
+    assertTrue(lazy.isDone());
+
+    assertEquals("test", lazy.get());
+    assertEquals("test", lazy.get());
+
+    assertEquals(1, initializations.get());
+  }
+
+  // -------------------------------------------------------------------------
+  // cached.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void cached() throws Exception {
+    final var initializations = new AtomicInteger(0);
+
+    var lazy = Lazy
+      .pessimistic(() -> {
+          initializations.incrementAndGet();
+          return "test";
+        })
+      .resetAfter(Duration.ofMillis(200));
+
+    assertFalse(lazy.isDone());
+    assertEquals("test", lazy.get());
+    assertEquals(1, initializations.get());
+    assertTrue(lazy.isDone());
+
+    Thread.sleep(300);
+
+    assertFalse(lazy.isDone());
+    assertEquals("test", lazy.get());
+    assertEquals(2, initializations.get());
+  }
+
+  @Test
+  public void cached_reset() throws Exception {
+    final var initializations = new AtomicInteger(0);
+
+    var lazy = Lazy
+      .pessimistic(() -> {
+        initializations.incrementAndGet();
+        return "test";
+      })
+      .resetAfter(Duration.ofMillis(200));
+
+    assertEquals("test", lazy.get());
+    lazy.reset();
+    assertEquals("test", lazy.get());
+    assertEquals(2, initializations.get());
   }
 }

@@ -23,10 +23,12 @@ package com.google.solutions.jitaccess.common;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.checkerframework.checker.units.qual.N;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -41,111 +43,18 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   }
 
   /**
-   * Initialize using an opportunistic approach in which the initializer
-   * might be run more than once.
-   *
-   * @throws UncheckedExecutionException if the initializer fails.
+   * Check if initialization has been performed yet.
    */
-  public static @NotNull <T> Lazy<T> opportunistic(
-    @NotNull Callable<T> initialize
-  ) {
-    return new Lazy<>() {
-      @Override
-      public @NotNull T get() {
-        var obj = cached.get();
-        if (obj != null) {
-          return obj;
-        }
-        else {
-          //
-          // Initialize a new instance and try to set it as
-          // cached reference. There might be another thread
-          // doing the same.
-          //
-          try {
-            obj = initialize.call();
-          }
-          catch (Exception e) {
-            throw new UncheckedExecutionException(e);
-          }
+  @Override
+  public abstract boolean isDone();
 
-          if (cached.compareAndSet(null, obj)) {
-            //
-            // We won the race, use this instance.
-            //
-            return obj;
-          }
-          else {
-            //
-            // Another thread was faster.
-            //
-            var existing = this.cached.get();
-            assert existing != null;
-            return existing;
-          }
-        }
-      }
-    };
-  }
+  @Override
+  public abstract @NotNull T get();
 
   /**
-   * Initialize using a pessimistic approach that runs the initializer
-   * at most once.
-   *
-   * @throws UncheckedExecutionException if the initializer fails.
+   * Reset value and reinitialize on next access.
    */
-  public static @NotNull <T> Lazy<T> pessimistic(
-    @NotNull Callable<T> initialize
-  ) {
-    return new Lazy<>() {
-      private Exception initializationException = null;
-
-      @Override
-      public @NotNull T get() {
-        var value = this.cached.get();
-
-        if (value == null) {
-          //
-          // Initialize a new instance.
-          //
-          synchronized (this.cached) {
-            if (this.initializationException != null) {
-              //
-              // Another thread tried initializing before,
-              // but failed.
-              //
-              throw new UncheckedExecutionException(this.initializationException);
-            }
-            else if ((value = this.cached.get()) != null) {
-              //
-              // Another thread acquired the lock before us and
-              // completed initialization already.
-              //
-            }
-            else {
-              //
-              // Try to initialize.
-              //
-              try {
-                value = initialize.call();
-                Preconditions.checkNotNull(value);
-
-                this.cached.set(value);
-              }
-              catch (Exception e) {
-                this.initializationException = e;
-                throw new UncheckedExecutionException(e);
-              }
-            }
-          }
-
-          assert value != null;
-        }
-
-        return value;
-      }
-    };
-  }
+  abstract void reset();
 
   @Override
   public boolean cancel(boolean mayInterruptIfRunning) {
@@ -158,15 +67,220 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   }
 
   @Override
-  public boolean isDone() {
-    return this.cached.get() != null;
-  }
-
-  @Override
   public @NotNull T get(long timeout, @NotNull TimeUnit unit) {
     return get();
   }
 
-  @Override
-  public abstract @NotNull T get();
+  /**
+   * Initialize using an opportunistic approach in which the initializer
+   * might be run more than once.
+   *
+   * @throws UncheckedExecutionException if the initializer fails.
+   */
+  public static @NotNull <T> Lazy<T> opportunistic(
+    @NotNull Callable<T> initialize
+  ) {
+    return  new OptimisticLazy<>(initialize);
+  }
+
+  /**
+   * Initialize using a pessimistic approach that runs the initializer
+   * at most once.
+   *
+   * @throws UncheckedExecutionException if the initializer fails.
+   */
+  public static @NotNull <T> Lazy<T> pessimistic(
+    @NotNull Callable<T> initialize
+  ) {
+    return new PessimisticLazy(initialize);
+  }
+
+  /**
+   * Wrap a Lazy<T> so that the source is being reset automatically
+   * after a certain duration elapses, effectively turning the
+   * Lazy<T> into a cache.
+   */
+  public @NotNull Lazy<T> resetAfter(
+    @NotNull Duration duration
+  ) {
+    return new CachingLazy<>(this, duration);
+  }
+
+  //---------------------------------------------------------------------------
+  // Optimistic strategy.
+  //---------------------------------------------------------------------------
+
+  private static class OptimisticLazy<T> extends Lazy<T> {
+    private final @NotNull AtomicReference<T> cached = new AtomicReference<>(null);
+    private final @NotNull Callable<T> initializer;
+
+    public OptimisticLazy(@NotNull Callable<T> initializer) {
+      this.initializer = initializer;
+    }
+
+    void reset() {
+      this.cached.set(null);
+    }
+
+    @Override
+    public boolean isDone() {
+      return this.cached.get() != null;
+    }
+
+    @Override
+    public @NotNull T get() {
+      var obj = cached.get();
+      if (obj != null) {
+        return obj;
+      }
+      else {
+        //
+        // Initialize a new instance and try to set it as
+        // cached reference. There might be another thread
+        // doing the same.
+        //
+        try {
+          obj = this.initializer.call();
+        }
+        catch (Exception e) {
+          throw new UncheckedExecutionException(e);
+        }
+
+        if (cached.compareAndSet(null, obj)) {
+          //
+          // We won the race, use this instance.
+          //
+          return obj;
+        }
+        else {
+          //
+          // Another thread was faster.
+          //
+          var existing = this.cached.get();
+          assert existing != null;
+          return existing;
+        }
+      }
+    }
+  }
+
+  //---------------------------------------------------------------------------
+  // Pessimistic strategy.
+  //---------------------------------------------------------------------------
+
+  private static class PessimisticLazy<T> extends Lazy<T> {
+    private final @NotNull AtomicReference<ExceptionOr<T>> cached = new AtomicReference<>(null);
+    private final @NotNull Callable<T> initializer;
+
+    public PessimisticLazy(@NotNull Callable<T> initializer) {
+      this.initializer = initializer;
+    }
+
+    void reset() {
+      this.cached.set(null);
+    }
+
+    @Override
+    public boolean isDone() {
+      return this.cached.get() != null;
+    }
+
+    @Override
+    public @NotNull T get() {
+      var cachedValue = this.cached.get();
+
+      if (cachedValue == null) {
+        //
+        // Initialize a new instance.
+        //
+        synchronized (this.cached) {
+          if ((cachedValue = this.cached.get()) != null) {
+            //
+            // Another thread acquired the lock before us and
+            // completed initialization already.
+            //
+          }
+          else {
+            //
+            // Try to initialize.
+            //
+            try {
+              var newValue = this.initializer.call();
+              Preconditions.checkNotNull(newValue);
+
+              cachedValue = new ExceptionOr<>(newValue, null);
+            }
+            catch (Exception e) {
+              cachedValue = new ExceptionOr<>(null, e);
+            }
+
+            this.cached.set(cachedValue);
+          }
+        }
+
+        assert cachedValue != null;
+      }
+
+      if (cachedValue.value != null) {
+        return cachedValue.value;
+      }
+      else {
+        assert cachedValue.exception != null;
+        throw new UncheckedExecutionException(cachedValue.exception);
+      }
+    }
+
+    private record ExceptionOr<T>(
+      @Nullable T value,
+      @Nullable Exception exception
+    ) {}
+  }
+
+  //---------------------------------------------------------------------------
+  // Caching strategy.
+  //---------------------------------------------------------------------------
+
+  private class CachingLazy<T> extends Lazy<T> {
+    private final @NotNull Duration duration;
+    private final @NotNull Lazy<T> source;
+    private final @NotNull AtomicLong lastInitializedTimestamp = new AtomicLong(0);
+
+    private void resetSourceIfDue() {
+      var now = System.currentTimeMillis();
+      var lastInitialized = this.lastInitializedTimestamp.get();
+      if (now > lastInitialized + duration.toMillis()) {
+        //
+        // The value is too old.
+        //
+        if (this.lastInitializedTimestamp.compareAndSet(lastInitialized, now)) {
+          reset();
+        }
+      }
+    }
+
+    public CachingLazy(
+      @NotNull Lazy<T> source,
+      @NotNull Duration duration
+    ) {
+      this.source = source;
+      this.duration = duration;
+    }
+
+    @Override
+    void reset() {
+      this.source.reset();
+    }
+
+    @Override
+    public boolean isDone() {
+      resetSourceIfDue();
+      return this.source.isDone();
+    }
+
+    @Override
+    public @NotNull T get() {
+      resetSourceIfDue();
+      return this.source.get();
+    }
+  }
 }
