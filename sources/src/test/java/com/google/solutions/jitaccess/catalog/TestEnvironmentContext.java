@@ -87,7 +87,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of(environmentPolicy)));
+      Environments.create(List.of(environmentPolicy)));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     var systems = environment.systems();
@@ -109,7 +109,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertFalse(environment.system("notfound").isPresent());
@@ -132,7 +132,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertFalse(environment.system(systemPolicy.name()).isPresent());
@@ -157,7 +157,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       subject,
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertTrue(environment.system(systemPolicy.name()).isPresent());

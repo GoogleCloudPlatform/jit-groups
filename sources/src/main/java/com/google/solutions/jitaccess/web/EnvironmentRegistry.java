@@ -15,9 +15,9 @@ import java.util.Collection;
 import java.util.concurrent.Executor;
 
 /**
- * Environment provider that lazily loads environments.
+ * Registry for environments and their associated provisioners.
  */
-public class EnvironmentRegistry {// TODO: test
+class EnvironmentRegistry {// TODO: test
   private final @NotNull Collection<Environment> environments;
 
   public EnvironmentRegistry(

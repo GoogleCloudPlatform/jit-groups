@@ -52,7 +52,7 @@ public class TestCatalog {
   public void environments() {
     var catalog = new Catalog(
       Mockito.mock(Subject.class),
-      CatalogSources.create(List.of(
+      Environments.create(List.of(
         createEnvironmentPolicy("env-1"),
         createEnvironmentPolicy("env-2"))));
 
@@ -67,7 +67,7 @@ public class TestCatalog {
   public void environment_whenNotFound() {
     var catalog = new Catalog(
       Mockito.mock(Subject.class),
-      CatalogSources.create(createEnvironmentPolicy("env-1")));
+      Environments.create(createEnvironmentPolicy("env-1")));
 
     assertFalse(catalog.environment("").isPresent());
     assertFalse(catalog.environment("ENV-1").isPresent());
@@ -84,7 +84,7 @@ public class TestCatalog {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertFalse(catalog.environment(environment.name()).isPresent());
   }
@@ -103,7 +103,7 @@ public class TestCatalog {
 
     var catalog = new Catalog(
       subject,
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertTrue(catalog.environment(environment.name()).isPresent());
   }
@@ -129,7 +129,7 @@ public class TestCatalog {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     assertFalse(catalog.group(groupPolicy.id()).isPresent());
   }
@@ -151,7 +151,7 @@ public class TestCatalog {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var details = catalog.group(groupPolicy.id());
     assertTrue(details.isPresent());

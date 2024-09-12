@@ -25,7 +25,7 @@ import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.catalog.Catalog;
-import com.google.solutions.jitaccess.catalog.CatalogSources;
+import com.google.solutions.jitaccess.catalog.Environments;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.Subjects;
 import com.google.solutions.jitaccess.catalog.policy.*;
@@ -50,31 +50,30 @@ public class TestEnvironmentsResource {
   // list.
   //---------------------------------------------------------------------------
 
-  //TODO: Fix
-//  @Test
-//  public void environments_returnsSortedList() throws Exception {
-//    var resource = new EnvironmentsResource();
-//    resource.logger = Mockito.mock(Logger.class);
-//    resource.catalog = Mockito.mock(Catalog.class);
-//
-//    when(resource.catalog.environments())
-//      .thenReturn(List.of(
-//        new EnvironmentPolicy("env-1", "One", METADATA),
-//        new EnvironmentPolicy("env-3", "Three", METADATA),
-//        new EnvironmentPolicy("env-2", "Two", METADATA)));
-//
-//    var envInfo = resource.list();
-//    assertEquals(3, envInfo.environments().size());
-//
-//    assertEquals("env-1", envInfo.environments().get(0).name());
-//    assertEquals("One", envInfo.environments().get(0).description());
-//
-//    assertEquals("env-2", envInfo.environments().get(1).name());
-//    assertEquals("Two", envInfo.environments().get(1).description());
-//
-//    assertEquals("env-3", envInfo.environments().get(2).name());
-//    assertEquals("Three", envInfo.environments().get(2).description());
-//  }
+  @Test
+  public void environments_returnsSortedList() throws Exception {
+    var resource = new EnvironmentsResource();
+    resource.logger = Mockito.mock(Logger.class);
+    resource.catalog = Mockito.mock(Catalog.class);
+
+    when(resource.catalog.environments())
+      .thenReturn(List.of(
+        new EnvironmentPolicy("env-1", "One", METADATA),
+        new EnvironmentPolicy("env-3", "Three", METADATA),
+        new EnvironmentPolicy("env-2", "Two", METADATA)));
+
+    var envInfo = resource.list();
+    assertEquals(3, envInfo.environments().size());
+
+    assertEquals("env-1", envInfo.environments().get(0).name());
+    assertEquals("One", envInfo.environments().get(0).description());
+
+    assertEquals("env-2", envInfo.environments().get(1).name());
+    assertEquals("Two", envInfo.environments().get(1).description());
+
+    assertEquals("env-3", envInfo.environments().get(2).name());
+    assertEquals("Three", envInfo.environments().get(2).description());
+  }
 
   //---------------------------------------------------------------------------
   // get.
@@ -91,7 +90,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -104,7 +103,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of()));
+      Environments.create(List.of()));
 
     assertThrows(
       AccessDeniedException.class,
@@ -128,7 +127,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       AccessDeniedException.class,
@@ -167,7 +166,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     var environmentInfo = resource.get(environment.name());
     assertEquals(environment.name(), environmentInfo.name());
@@ -196,7 +195,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     var environmentInfo = resource.get(environment.name());
     var systems = List.copyOf(environmentInfo.systems());
@@ -220,7 +219,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -233,7 +232,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of()));
+      Environments.create(List.of()));
 
     assertThrows(
       AccessDeniedException.class,
@@ -257,7 +256,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       AccessDeniedException.class,
@@ -284,7 +283,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       subject,
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     var policy = resource.getPolicy(environment.name());
     assertTrue(policy.policy().contains("schemaVersion: 1"));
@@ -311,7 +310,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -324,7 +323,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of()));
+      Environments.create(List.of()));
 
     assertThrows(
       AccessDeniedException.class,
@@ -350,7 +349,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       IllegalArgumentException.class,
@@ -363,7 +362,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of()));
+      Environments.create(List.of()));
 
     assertThrows(
       AccessDeniedException.class,
@@ -390,7 +389,7 @@ public class TestEnvironmentsResource {
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = new Catalog(
       subject,
-      CatalogSources.create(environment));
+      Environments.create(environment));
 
     assertThrows(
       AccessDeniedException.class,

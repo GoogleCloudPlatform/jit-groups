@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.auth.Subject;
+import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import org.jetbrains.annotations.NotNull;
 
@@ -59,8 +60,24 @@ public class Catalog {
    * policy. To compensate, the method only returns a bare
    * minimum of data.
    */
-  public @NotNull Collection<Environment> environments() {
-    return this.environments.values();
+  public @NotNull Collection<PolicyHeader> environments() {
+    //
+    // Return basic information without loading the policies.
+    //
+    return this.environments.values()
+      .stream()
+      .map(env -> (PolicyHeader)new PolicyHeader() {
+        @Override
+        public @NotNull String name() {
+          return env.name();
+        }
+
+        @Override
+        public @NotNull String description() {
+          return env.description();
+        }
+      })
+      .toList();
   }
 
   /**

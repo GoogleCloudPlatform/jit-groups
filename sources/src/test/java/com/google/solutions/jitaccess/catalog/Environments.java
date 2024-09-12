@@ -24,20 +24,17 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import org.jetbrains.annotations.NotNull;
 import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-public class CatalogSources { // TODO: rename
-
+public class Environments {
   public static Collection<Environment> create(
     @NotNull List<EnvironmentPolicy> policies
   ) {

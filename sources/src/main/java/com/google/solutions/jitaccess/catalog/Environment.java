@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 /**
  * Environment that can be provisioned to.
  */
-public abstract class Environment implements PolicyHeader {
+public abstract class Environment {
   private final @NotNull String name;
   private final @NotNull String description;
   private final @NotNull Lazy<EnvironmentPolicy> policy;
@@ -38,7 +38,6 @@ public abstract class Environment implements PolicyHeader {
   /**
    * Name of the policy.
    */
-  @Override
   public @NotNull String name() {
     return this.name;
   }
@@ -46,7 +45,6 @@ public abstract class Environment implements PolicyHeader {
   /**
    * Description of the environment.
    */
-  @Override
   public @NotNull String description() {
     return this.description;
   }

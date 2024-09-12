@@ -332,7 +332,7 @@ public class Application {
 
   @Produces
   @Singleton
-  public @NotNull EnvironmentRegistry produceEnvironments(
+  public @NotNull EnvironmentRegistry produceEnvironmentRegistry(
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Executor executor

@@ -54,7 +54,7 @@ public class TestProposalResource {
   private static Catalog createCatalog(JitGroupPolicy group) {
     return new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(group.system().environment()));
+      Environments.create(group.system().environment()));
   }
 
   private static ProposalHandler createProposalHandler(

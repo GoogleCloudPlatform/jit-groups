@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Summary information about a policy.
  */
-public interface PolicyHeader { // TODO: remove?
+public interface PolicyHeader {
   /**
    * Name of the policy.
    */
