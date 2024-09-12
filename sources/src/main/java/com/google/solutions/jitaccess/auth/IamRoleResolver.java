@@ -53,7 +53,7 @@ public class IamRoleResolver {
     // Load list of predefined roles from IAM API, but do so
     // on first access only.
     //
-    this.predefinedRoles = Lazy.opportunistic(
+    this.predefinedRoles = Lazy.initializeOpportunistically(
       () -> new HashSet<>(iamClient.listPredefinedRoles()));
   }
 

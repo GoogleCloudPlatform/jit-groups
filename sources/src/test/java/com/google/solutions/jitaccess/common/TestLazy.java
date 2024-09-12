@@ -36,10 +36,10 @@ public class TestLazy {
   // -------------------------------------------------------------------------
 
   @Test
-  public void opportunistic_whenInitializerFails() {
+  public void initializeOpportunistically_whenInitializerFails() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.opportunistic(
+    var lazy = Lazy.initializeOpportunistically(
       () -> {
         initializations.incrementAndGet();
         throw new IllegalStateException();
@@ -68,10 +68,10 @@ public class TestLazy {
   }
 
   @Test
-  public void opportunistic() {
+  public void initializeOpportunistically() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.opportunistic(
+    var lazy = Lazy.initializeOpportunistically(
       () -> {
         initializations.incrementAndGet();
         return "test";
@@ -88,14 +88,14 @@ public class TestLazy {
   }
 
   // -------------------------------------------------------------------------
-  // pessimistic.
+  // initializePessimistically.
   // -------------------------------------------------------------------------
 
   @Test
-  public void pessimistic_whenInitializerFails() {
+  public void initializePessimistically_whenInitializerFails() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.pessimistic(
+    var lazy = Lazy.initializePessimistically(
       () -> {
         initializations.incrementAndGet();
         throw new IllegalStateException();
@@ -124,10 +124,10 @@ public class TestLazy {
   }
 
   @Test
-  public void pessimistic() {
+  public void initializePessimistically() {
     final var initializations = new AtomicInteger(0);
 
-    var lazy = Lazy.pessimistic(
+    var lazy = Lazy.initializePessimistically(
       () -> {
         initializations.incrementAndGet();
         return "test";
@@ -144,19 +144,19 @@ public class TestLazy {
   }
 
   // -------------------------------------------------------------------------
-  // cached.
+  // reinitializeAfter.
   // -------------------------------------------------------------------------
 
   @Test
-  public void cached() throws Exception {
+  public void reinitializeAfter() throws Exception {
     final var initializations = new AtomicInteger(0);
 
     var lazy = Lazy
-      .pessimistic(() -> {
+      .initializePessimistically(() -> {
           initializations.incrementAndGet();
           return "test";
         })
-      .resetAfter(Duration.ofMillis(200));
+      .reinitializeAfter(Duration.ofMillis(200));
 
     assertFalse(lazy.isDone());
     assertEquals("test", lazy.get());
@@ -171,18 +171,20 @@ public class TestLazy {
   }
 
   @Test
-  public void cached_reset() throws Exception {
+  public void reinitializeAfter_reset() throws Exception {
     final var initializations = new AtomicInteger(0);
 
     var lazy = Lazy
-      .pessimistic(() -> {
+      .initializePessimistically(() -> {
         initializations.incrementAndGet();
         return "test";
       })
-      .resetAfter(Duration.ofMillis(200));
+      .reinitializeAfter(Duration.ofMillis(200));
 
     assertEquals("test", lazy.get());
     lazy.reset();
+    assertEquals("test", lazy.get());
+    assertEquals("test", lazy.get());
     assertEquals("test", lazy.get());
     assertEquals(2, initializations.get());
   }

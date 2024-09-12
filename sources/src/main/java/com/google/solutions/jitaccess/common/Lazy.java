@@ -77,7 +77,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
    *
    * @throws UncheckedExecutionException if the initializer fails.
    */
-  public static @NotNull <T> Lazy<T> opportunistic(
+  public static @NotNull <T> Lazy<T> initializeOpportunistically(
     @NotNull Callable<T> initialize
   ) {
     return  new OptimisticLazy<>(initialize);
@@ -89,7 +89,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
    *
    * @throws UncheckedExecutionException if the initializer fails.
    */
-  public static @NotNull <T> Lazy<T> pessimistic(
+  public static @NotNull <T> Lazy<T> initializePessimistically(
     @NotNull Callable<T> initialize
   ) {
     return new PessimisticLazy(initialize);
@@ -100,10 +100,10 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
    * after a certain duration elapses, effectively turning the
    * Lazy<T> into a cache.
    */
-  public @NotNull Lazy<T> resetAfter(
+  public @NotNull Lazy<T> reinitializeAfter(
     @NotNull Duration duration
   ) {
-    return new CachingLazy<>(this, duration);
+    return new AutoResetLazy<>(this, duration);
   }
 
   //---------------------------------------------------------------------------
@@ -237,31 +237,33 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   }
 
   //---------------------------------------------------------------------------
-  // Caching strategy.
+  // Auto-reset strategy.
   //---------------------------------------------------------------------------
 
-  private class CachingLazy<T> extends Lazy<T> {
+  private class AutoResetLazy<T> extends Lazy<T> {
     private final @NotNull Duration duration;
     private final @NotNull Lazy<T> source;
-    private final @NotNull AtomicLong lastInitializedTimestamp = new AtomicLong(0);
+    private final @NotNull AtomicLong lastResetTimestamp = new AtomicLong(0);
 
     private void resetSourceIfDue() {
       var now = System.currentTimeMillis();
-      var lastInitialized = this.lastInitializedTimestamp.get();
-      if (now > lastInitialized + duration.toMillis()) {
+      var lastReset = this.lastResetTimestamp.get();
+      if (now > lastReset + duration.toMillis()) {
         //
         // The value is too old.
         //
-        if (this.lastInitializedTimestamp.compareAndSet(lastInitialized, now)) {
+        if (this.lastResetTimestamp.compareAndSet(lastReset, now)) {
           reset();
         }
       }
     }
 
-    public CachingLazy(
+    public AutoResetLazy(
       @NotNull Lazy<T> source,
       @NotNull Duration duration
     ) {
+      Preconditions.checkArgument(!duration.isNegative(), "Duration must be positive");
+
       this.source = source;
       this.duration = duration;
     }
