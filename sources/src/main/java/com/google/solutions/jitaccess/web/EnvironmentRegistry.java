@@ -28,7 +28,7 @@ import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.auth.GroupMapping;
 import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.Environment;
+import com.google.solutions.jitaccess.catalog.provisioning.Environment;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;

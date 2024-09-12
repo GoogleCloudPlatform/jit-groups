@@ -19,11 +19,10 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog;
+package com.google.solutions.jitaccess.catalog.provisioning;
 
 import com.google.solutions.jitaccess.catalog.policy.*;
 import com.google.solutions.jitaccess.common.Lazy;
-import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -73,14 +72,14 @@ public abstract class Environment {
   /**
    * Policy for this environment, can be delay-loaded.
    */
-  protected @NotNull EnvironmentPolicy policy() {
+  public @NotNull EnvironmentPolicy policy() {
     return this.policy.get();
   }
 
   /**
    * Provisioner for managing access to this environment.
    */
-  protected @NotNull Provisioner provisioner() {
+  public @NotNull Provisioner provisioner() {
     return this.provisioner;
   }
 
