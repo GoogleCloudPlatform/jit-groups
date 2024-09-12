@@ -48,7 +48,7 @@ import java.util.function.Supplier;
 /**
  * Configuration for an environment.
  */
-class EnvironmentConfiguration implements PolicyHeader {
+abstract class EnvironmentConfiguration implements PolicyHeader {
   private static final String DEFAULT_DESCRIPTION = "JIT Groups environment";
 
   private static final String OOBE_POLICY_NAME = "example";
@@ -58,18 +58,15 @@ class EnvironmentConfiguration implements PolicyHeader {
   private final @NotNull String name;
   private final @NotNull String description;
   private final @NotNull GoogleCredentials resourceCredentials;
-  private final @NotNull Supplier<EnvironmentPolicy> loadPolicy;
 
   EnvironmentConfiguration(
     @NotNull String name,
     @NotNull String description,
-    @NotNull GoogleCredentials resourceCredentials,
-    @NotNull Supplier<EnvironmentPolicy> loadPolicy
+    @NotNull GoogleCredentials resourceCredentials
   ) {
     this.name = name;
     this.description = description;
     this.resourceCredentials = resourceCredentials;
-    this.loadPolicy = loadPolicy;
   }
 
   @Override
@@ -86,9 +83,10 @@ class EnvironmentConfiguration implements PolicyHeader {
     return this.resourceCredentials;
   }
 
-  EnvironmentPolicy loadPolicy() { // TODO: Return PolicyDocument
-    return this.loadPolicy.get();
-  }
+  /**
+   * Load policy from file or backend.
+   */
+  abstract EnvironmentPolicy loadPolicy();
 
   /**
    * Create configuration for a file-based policy.
@@ -123,16 +121,19 @@ class EnvironmentConfiguration implements PolicyHeader {
     return new EnvironmentConfiguration(
       environmentName,
       DEFAULT_DESCRIPTION, // We don't know the description yet.
-      applicationCredentials,
-      () -> {
+      applicationCredentials
+    ) {
+      @Override
+      EnvironmentPolicy loadPolicy() {
         try {
-          return PolicyDocument.fromFile(file).policy();
+          return PolicyDocument.fromFile(file)
+            .policy();
         }
         catch (Exception e) {
           throw new UncheckedExecutionException(e);
         }
       }
-    );
+    };
   }
 
   /**
@@ -165,8 +166,10 @@ class EnvironmentConfiguration implements PolicyHeader {
     return new EnvironmentConfiguration(
       environmentName,
       description,
-      applicationCredentials,
-      () -> {
+      applicationCredentials
+    ) {
+      @Override
+      EnvironmentPolicy loadPolicy() {
         try (var stream = EnvironmentConfiguration.class
           .getClassLoader()
           .getResourceAsStream(resourcePath)) {
@@ -183,7 +186,7 @@ class EnvironmentConfiguration implements PolicyHeader {
           throw new UncheckedExecutionException(e);
         }
       }
-    );
+    };
   }
 
   /**
@@ -245,8 +248,10 @@ class EnvironmentConfiguration implements PolicyHeader {
     return new EnvironmentConfiguration(
       environmentName,
       DEFAULT_DESCRIPTION, // We don't know the description yet.
-      environmentCredentials,
-      () -> {
+      environmentCredentials
+    ) {
+      @Override
+      EnvironmentPolicy loadPolicy() {
         //
         // If we lack impersonation permissions, ImpersonatedCredentials
         // will keep retrying until the call timeout expires. The effect
@@ -293,7 +298,8 @@ class EnvironmentConfiguration implements PolicyHeader {
         catch (Exception e) {
           throw new UncheckedExecutionException(e);
         }
-      });
+      }
+    };
   }
 
   /**

@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -87,7 +88,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(List.of(environmentPolicy)));
+      Environments.create(List.of(environmentPolicy)));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     var systems = environment.systems();
@@ -109,7 +110,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertFalse(environment.system("notfound").isPresent());
@@ -132,7 +133,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertFalse(environment.system(systemPolicy.name()).isPresent());
@@ -157,7 +158,7 @@ public class TestEnvironmentContext {
 
     var catalog = new Catalog(
       subject,
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var environment = catalog.environment(environmentPolicy.name()).get();
     assertTrue(environment.system(systemPolicy.name()).isPresent());

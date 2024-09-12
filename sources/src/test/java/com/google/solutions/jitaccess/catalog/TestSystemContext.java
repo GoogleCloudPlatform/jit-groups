@@ -69,7 +69,7 @@ public class TestSystemContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var system = catalog
       .environment(environmentPolicy.name()).get()
@@ -105,7 +105,7 @@ public class TestSystemContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var system = catalog
       .environment(environmentPolicy.name()).get()
@@ -134,7 +134,7 @@ public class TestSystemContext {
 
     var catalog = new Catalog(
       Subjects.create(SAMPLE_USER),
-      CatalogSources.create(environmentPolicy));
+      Environments.create(environmentPolicy));
 
     var system = catalog
       .environment(environmentPolicy.name()).get()

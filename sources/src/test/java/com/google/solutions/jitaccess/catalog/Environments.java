@@ -24,49 +24,39 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
+import com.google.solutions.jitaccess.catalog.provisioning.Environment;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 import org.mockito.Mockito;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-public class CatalogSources {
-
-  public static Catalog.Source create(List<EnvironmentPolicy> policies) {
-    return new Catalog.Source() {
-      @Override
-      public @NotNull Collection<PolicyHeader> environmentPolicies() {
-        return policies.stream().map(p -> (PolicyHeader)p).toList();
-      }
-
-      @Override
-      public @NotNull Optional<EnvironmentPolicy> environmentPolicy(@NotNull String name) {
-        return policies
-          .stream()
-          .filter(p -> p.name().equals(name))
-          .findFirst();
-      }
-
-      @Override
-      public @NotNull Optional<Provisioner> provisioner(
-        @NotNull Catalog catalog,
-        @NotNull String name
-      ) {
+public class Environments {
+  public static Collection<Environment> create(
+    @NotNull List<EnvironmentPolicy> policies
+  ) {
+    return policies.stream()
+      .map(p -> {
         var provisioner = Mockito.mock(Provisioner.class);
         when(provisioner.cloudIdentityGroupId(any()))
           .thenAnswer(a -> new GroupId(((JitGroupId)a.getArgument(0)) + "@example.com"));
 
-        return Optional.of(provisioner);
-      }
-    };
+        return (Environment)new Environment(p.name(), p.description(), provisioner, Duration.ofDays(1)) {
+          @Override
+          protected EnvironmentPolicy loadPolicy() {
+            return p;
+          }
+        };
+      })
+      .toList();
   }
 
-  public static Catalog.Source create(EnvironmentPolicy policy) {
+  public static Collection<Environment> create(EnvironmentPolicy policy) {
     return create(List.of(policy));
   }
 }

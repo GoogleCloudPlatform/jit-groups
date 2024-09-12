@@ -19,7 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.catalog;
+package com.google.solutions.jitaccess.catalog.provisioning;
 
 import com.google.api.services.cloudidentity.v1.model.EntityKey;
 import com.google.api.services.cloudidentity.v1.model.Group;
@@ -28,10 +28,13 @@ import com.google.api.services.cloudresourcemanager.v3.model.Policy;
 import com.google.solutions.jitaccess.apis.*;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.*;
+import com.google.solutions.jitaccess.catalog.EventIds;
+import com.google.solutions.jitaccess.catalog.Policies;
 import com.google.solutions.jitaccess.catalog.policy.AccessControlList;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

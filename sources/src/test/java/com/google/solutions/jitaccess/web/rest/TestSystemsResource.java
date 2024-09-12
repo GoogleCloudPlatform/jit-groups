@@ -27,7 +27,7 @@ import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.Principal;
 import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.Catalog;
-import com.google.solutions.jitaccess.catalog.CatalogSources;
+import com.google.solutions.jitaccess.catalog.Environments;
 import com.google.solutions.jitaccess.catalog.Policies;
 import com.google.solutions.jitaccess.catalog.Subjects;
 import com.google.solutions.jitaccess.catalog.policy.*;
@@ -54,7 +54,7 @@ public class TestSystemsResource {
   private static Catalog createCatalog(EnvironmentPolicy environment, Subject subject) {
     return new Catalog(
       subject,
-      CatalogSources.create(environment));
+      Environments.create(environment));
   }
 
   private static Catalog createCatalog(EnvironmentPolicy environment) {

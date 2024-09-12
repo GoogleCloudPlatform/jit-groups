@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
+import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.web.proposal.*;
 import com.google.solutions.jitaccess.web.rest.UserResource;
 import jakarta.enterprise.context.RequestScoped;
@@ -246,11 +247,11 @@ public class Application {
   @RequestScoped
   public @NotNull Catalog produceCatalog(
     @NotNull Subject subject,
-    @NotNull LazyCatalogSource catalogSource
+    @NotNull EnvironmentRegistry environmentRegistry
   ) {
     return new Catalog(
       subject,
-      catalogSource);
+      environmentRegistry.environments());
   }
 
   @Produces
@@ -331,7 +332,7 @@ public class Application {
 
   @Produces
   @Singleton
-  public @NotNull LazyCatalogSource produceEnvironments(
+  public @NotNull EnvironmentRegistry produceEnvironmentRegistry(
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Executor executor
@@ -407,8 +408,10 @@ public class Application {
         new EnvironmentConfiguration(
           LegacyPolicy.NAME,
           LegacyPolicy.DESCRIPTION,
-          runtime.applicationCredentials(), // Use app service account, as in 1.x
-          () -> {
+          runtime.applicationCredentials() // Use app service account, as in 1.x
+        ) {
+          @Override
+          EnvironmentPolicy loadPolicy() {
             try {
               return legacyLoader.load(
                 configuration.legacyProjectsQuery,
@@ -421,7 +424,7 @@ public class Application {
             catch (Exception e) {
               throw new UncheckedExecutionException(e);
             }
-          }));
+          }});
     }
 
     if (configurations.isEmpty()) {
@@ -436,13 +439,13 @@ public class Application {
       }
     }
 
-    var options = new LazyCatalogSource.Options(
+    var options = new EnvironmentRegistry.Options(
       runtime.type() == ApplicationRuntime.Type.DEVELOPMENT
         ? Duration.ofSeconds(20)
         : configuration.environmentCacheTimeout,
       produceHttpTransportOptions());
 
-    return new LazyCatalogSource(
+    return new EnvironmentRegistry(
       configurations,
       groupMapping,
       groupsClient,

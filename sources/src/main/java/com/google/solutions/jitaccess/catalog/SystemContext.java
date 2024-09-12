@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import com.google.solutions.jitaccess.catalog.policy.SystemPolicy;
+import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
