@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
 /**
  * Provisions access to the resources in an environment.
  */
-public class Provisioner {
+public class Provisioner { // TODO: move to provider package
   private final @NotNull String environmentName;
   private final @NotNull GroupProvisioner groupProvisioner;
   private final @NotNull IamProvisioner iamProvisioner;
