@@ -72,7 +72,7 @@ public class PolicyResource {
       // NB. It's possible that the user is validating that doesn't
       //     explicitly specify a name (because it's implied).
       //
-      var documentSource = new PolicyDocumentSource(
+      var documentSource = PolicyDocumentSource.fromString(
         source,
         new Policy.Metadata(
           "user-provided",

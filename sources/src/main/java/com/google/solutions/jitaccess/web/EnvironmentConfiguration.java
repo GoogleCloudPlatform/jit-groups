@@ -40,7 +40,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Configuration for an environment.
@@ -176,7 +175,8 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
           }
 
           var policy = new String(stream.readAllBytes());
-          return new PolicyDocumentSource(policy, metadata)
+          return PolicyDocumentSource
+            .fromString(policy, metadata)
             .parse()
             .policy();
         }
@@ -287,7 +287,8 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             null,
             environmentName);
 
-          return new PolicyDocumentSource(
+          return PolicyDocumentSource
+            .fromString(
               secretClient.accessSecret(secretPath),
               metadata)
             .parse()

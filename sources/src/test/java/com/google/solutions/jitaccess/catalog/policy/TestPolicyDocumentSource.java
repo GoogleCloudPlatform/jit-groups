@@ -40,7 +40,7 @@ public class TestPolicyDocumentSource {
   public void toString_returnsYaml() {
     assertEquals(
       "yaml",
-      new PolicyDocumentSource("yaml", new Policy.Metadata("test", Instant.now())).toString());
+      PolicyDocumentSource.fromString("yaml").toString());
   }
 
   //---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ public class TestPolicyDocumentSource {
         "environment: \n" +
         "  name: 'env-1'";
 
-    var source = PolicyDocumentSource.fromMemory(yaml);
+    var source = PolicyDocumentSource.fromString(yaml);
     assertEquals(yaml, source.yaml());
     assertEquals("memory", source.metadata().source());
     assertFalse(source.metadata().lastModified().isAfter(Instant.now()));

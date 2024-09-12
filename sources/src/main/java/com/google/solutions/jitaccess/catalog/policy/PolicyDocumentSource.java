@@ -32,18 +32,55 @@ import java.time.Instant;
 /**
  * Raw, unparsed source of a policy document.
  */
-public record PolicyDocumentSource(
-  @NotNull String yaml,
-  @NotNull Policy.Metadata metadata
-  ) {
+public abstract class PolicyDocumentSource {
+  /**
+   * Get YAML-formatted source.
+   */
+  public abstract @NotNull String yaml();
+
+  /**
+   * Get metadata about the origin of the policy.
+   */
+  public abstract @NotNull Policy.Metadata metadata();
+
+  /**
+   * Parse and validate source.
+   */
+  public abstract PolicyDocument parse() throws PolicyDocument.SyntaxException;
 
   /**
    * Create a policy document from an in-memory string.
    */
-  public static @NotNull PolicyDocumentSource fromMemory(
+  public static @NotNull PolicyDocumentSource fromString(
+    @NotNull String yaml,
+    @NotNull Policy.Metadata metadata
+  ) {
+    return new PolicyDocumentSource() {
+      @Override
+      public @NotNull String yaml() {
+        return yaml;
+      }
+
+      @Override
+      public @NotNull Policy.Metadata metadata() {
+        return metadata;
+      }
+
+      @Override
+      public PolicyDocument parse() throws PolicyDocument.SyntaxException {
+        return PolicyDocument.parse(this);
+      }
+    };
+  }
+
+  /**
+   * Create a policy document from an in-memory string
+   * using default metadata.
+   */
+  public static @NotNull PolicyDocumentSource fromString(
     @NotNull String yaml
   ) {
-    return new PolicyDocumentSource(
+    return fromString(
       yaml,
       new Policy.Metadata(
         "memory",
@@ -61,7 +98,7 @@ public record PolicyDocumentSource(
         String.format("The file '%s' does not exist", file.getAbsolutePath()));
     }
 
-    return new PolicyDocumentSource(
+    return fromString(
       Files.readString(file.toPath()),
       new Policy.Metadata(
         file.getName(),
@@ -69,14 +106,31 @@ public record PolicyDocumentSource(
   }
 
   /**
-   * Parse and validate source.
+   * Reconstruct a source from a document.
    */
-  public PolicyDocument parse() throws PolicyDocument.SyntaxException {
-    return PolicyDocument.parse(this);
+  public static @NotNull PolicyDocumentSource fromPolicyDocument(
+    @NotNull PolicyDocument document
+  ) {
+    return new PolicyDocumentSource() {
+      @Override
+      public @NotNull String yaml() {
+        return document.toString();
+      }
+
+      @Override
+      public @NotNull Policy.Metadata metadata() {
+        return document.policy().metadata();
+      }
+
+      @Override
+      public PolicyDocument parse() {
+        return document;
+      }
+    };
   }
 
   @Override
   public String toString() {
-    return this.yaml;
+    return this.yaml();
   }
 }
