@@ -4,6 +4,9 @@ import com.google.solutions.jitaccess.catalog.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Future;
+import java.util.function.Supplier;
+
 
 /**
  * Environment that can be provisioned to.
@@ -20,9 +23,9 @@ public interface Environment {
   @NotNull String description();
 
   /**
-   * Policy for this environment.
+   * Policy for this environment, can be delay-loaded.
    */
-  @NotNull EnvironmentPolicy policy();
+  @NotNull Supplier<EnvironmentPolicy> policy();
 
   /**
    * Provisioner for managing access to this environment.

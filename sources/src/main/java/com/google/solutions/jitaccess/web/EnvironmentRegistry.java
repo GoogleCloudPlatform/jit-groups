@@ -1,6 +1,5 @@
 package com.google.solutions.jitaccess.web;
 
-import com.google.api.client.util.Preconditions;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
@@ -10,20 +9,20 @@ import com.google.solutions.jitaccess.catalog.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.common.Lazy;
 import com.google.solutions.jitaccess.provisioning.Environment;
-import com.google.solutions.jitaccess.provisioning.EnvironmentRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Environment provider that lazily loads environments.
  */
-public class DelayLoadedEnvironmentRegistry implements EnvironmentRegistry {// TODO: test
+public class EnvironmentRegistry {// TODO: test
   private final @NotNull Collection<Environment> environments;
 
-  public DelayLoadedEnvironmentRegistry(
+  public EnvironmentRegistry(
     @NotNull Collection<EnvironmentConfiguration> environments,
     @NotNull GroupMapping groupMapping,
     @NotNull CloudIdentityGroupsClient groupsClient,
@@ -36,29 +35,31 @@ public class DelayLoadedEnvironmentRegistry implements EnvironmentRegistry {// T
     // that's slow.
     //
     this.environments = environments.stream()
-      .map(c -> {
+      .map(cfg -> {
         //
         // Create a CRM client that uses this environment's credential
         // (as opposed to the application credential).
         //
         var crmClient = new ResourceManagerClient(
-          c.resourceCredentials(),
+          cfg.resourceCredentials(),
           options.httpTransportOptions());
 
         var provisioner = new Provisioner(
-          c.name(),
+          cfg.name(),
           groupMapping,
           groupsClient,
           crmClient,
           executor,
           logger);
 
-        return (Environment)new DelayLoadedEnvironment(c, provisioner);
+        return (Environment)new DelayLoadedEnvironment(
+          cfg,
+          provisioner,
+          options.cacheDuration());
       })
       .toList();
   }
 
-  @Override
   public @NotNull Collection<Environment> environments() {
     return this.environments;
   }
@@ -74,11 +75,14 @@ public class DelayLoadedEnvironmentRegistry implements EnvironmentRegistry {// T
 
     public DelayLoadedEnvironment(
       @NotNull EnvironmentConfiguration configuration,
-      @NotNull Provisioner provisioner
+      @NotNull Provisioner provisioner,
+      @NotNull Duration policyCacheDuration
     ) {
       this.configuration = configuration;
       this.provisioner = provisioner;
-      this.policy = Lazy.initializeOpportunistically(configuration::loadPolicy); // TODO: Use Lazy.cached?!
+      this.policy = Lazy
+        .initializeOpportunistically(configuration::loadPolicy)
+        .reinitializeAfter(policyCacheDuration);
     }
 
     @Override
@@ -92,17 +96,8 @@ public class DelayLoadedEnvironmentRegistry implements EnvironmentRegistry {// T
     }
 
     @Override
-    public @NotNull EnvironmentPolicy policy() {
-      var policy = this.policy.get();
-
-      Preconditions.checkState(
-        policy.name().equals(this.configuration.name()),
-        String.format(
-          "The name in the policy ('%s') must match the name used in the configuration ('%s')",
-          policy.name(),
-          this.configuration.name()));
-
-      return policy;
+    public @NotNull Supplier<EnvironmentPolicy> policy() {
+      return this.policy;
     }
 
     @Override
