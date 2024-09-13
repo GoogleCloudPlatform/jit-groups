@@ -34,7 +34,6 @@ import com.google.solutions.jitaccess.catalog.policy.AccessControlList;
 import com.google.solutions.jitaccess.catalog.policy.IamRoleBinding;
 import com.google.solutions.jitaccess.catalog.policy.JitGroupPolicy;
 import com.google.solutions.jitaccess.catalog.policy.Privilege;
-import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

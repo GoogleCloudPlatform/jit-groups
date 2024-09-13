@@ -33,7 +33,6 @@ import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
-import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.web.proposal.*;
 import com.google.solutions.jitaccess.web.rest.UserResource;
