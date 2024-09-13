@@ -25,15 +25,50 @@ import com.google.solutions.jitaccess.apis.ProjectId;
 import com.google.solutions.jitaccess.auth.IamRole;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TestIamRoleBinding {
   private static final ProjectId SAMPLE_PROJECT_1 = new ProjectId("project-1");
   private static final ProjectId SAMPLE_PROJECT_2 = new ProjectId("project-2");
   private static final IamRole SAMPLE_ROLE_1 = new IamRole("roles/role-1");
   private static final IamRole SAMPLE_ROLE_2 = new IamRole("roles/role-2");
+
+  // -------------------------------------------------------------------------
+  // name.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void name() {
+    assertEquals(
+      SAMPLE_ROLE_1.name(),
+      new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1).name());
+  }
+
+  // -------------------------------------------------------------------------
+  // resourceName.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void resourceName() {
+    assertEquals(
+      SAMPLE_PROJECT_1.path(),
+      new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1).resourceName());
+  }
   
+  // -------------------------------------------------------------------------
+  // hasResourceCondition.
+  // -------------------------------------------------------------------------
+
+  @Test
+  public void hasResourceCondition() {
+    assertFalse(
+      new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1)
+        .hasResourceCondition());
+    assertTrue(
+      new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1, null, "condition")
+        .hasResourceCondition());
+  }
+
   // -------------------------------------------------------------------------
   // toString.
   // -------------------------------------------------------------------------

@@ -46,6 +46,21 @@ public record IamRoleBinding(
   @Nullable String condition
 ) implements Privilege {
   @Override
+  public @NotNull String name() {
+    return this.role.name();
+  }
+
+  @Override
+  public @NotNull String resourceName() {
+    return this.resource.path();
+  }
+
+  @Override
+  public boolean hasResourceCondition() {
+    return this.condition != null;
+  }
+
+  @Override
   public String toString() {
     return Coalesce.nonEmpty(
       this.description,
