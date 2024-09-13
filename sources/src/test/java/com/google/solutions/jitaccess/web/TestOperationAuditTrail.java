@@ -46,7 +46,7 @@ public class TestOperationAuditTrail {
   private static final EndUserId SAMPLER_USER_3 = new EndUserId("user-3@example.com");
   public static final Instant INSTANT_2030 = Instant.ofEpochMilli(1893456000000L);
 
-  private class LogEntry implements Logger.LogEntry {
+  private static class LogEntry implements Logger.LogEntry {
     private final @NotNull Map<String, String> labels = new HashMap<>();
     private @Nullable String message;
 
@@ -174,11 +174,10 @@ public class TestOperationAuditTrail {
     when(joinOp.group()).thenReturn(SAMPLE_JITGROUP);
     when(joinOp.input()).thenReturn(List.of());
 
-    var expiry = INSTANT_2030;
     var trail = new OperationAuditTrail(logger);
     trail.joinExecuted(
       joinOp,
-      new Principal(SAMPLE_JITGROUP, expiry));
+      new Principal(SAMPLE_JITGROUP, INSTANT_2030));
 
     assertEquals(
       "audit",
@@ -212,11 +211,10 @@ public class TestOperationAuditTrail {
     when(joinOp.group()).thenReturn(SAMPLE_JITGROUP);
     when(joinOp.input()).thenReturn(List.of());
 
-    var expiry = INSTANT_2030;
     var trail = new OperationAuditTrail(logger);
     trail.joinExecuted(
       joinOp,
-      new Principal(SAMPLE_JITGROUP, expiry));
+      new Principal(SAMPLE_JITGROUP, INSTANT_2030));
 
     assertEquals(
       "audit",

@@ -42,11 +42,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class TestSubjectResolver {
-  private final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
-  private final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
-  private final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
-  private final GroupId SAMPLE_GROUP = new GroupId("other@" + SAMPLE_DOMAIN);
-  private final Executor EXECUTOR = command -> command.run();
+  private static final Domain SAMPLE_DOMAIN = new Domain("example.com", Domain.Type.PRIMARY);
+  private static final EndUserId SAMPLE_USER = new EndUserId("user@example.com");
+  private static final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
+  private static final GroupId SAMPLE_GROUP = new GroupId("other@" + SAMPLE_DOMAIN);
+  private static final Executor EXECUTOR = command -> command.run();
 
   //---------------------------------------------------------------------------
   // resolveJitGroupMemberships

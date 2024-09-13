@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestAbstractConfiguration {
 
-  private class SampleConfiguration extends AbstractConfiguration {
+  private static class SampleConfiguration extends AbstractConfiguration {
     public SampleConfiguration(@NotNull Map<String, String> settingsData) {
       super(settingsData);
     }

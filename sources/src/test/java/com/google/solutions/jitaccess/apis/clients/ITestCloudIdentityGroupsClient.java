@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestCloudIdentityGroupsClient {
-  private final CustomerId INVALID_CUSTOMER_ID = new CustomerId("Cinvalid");
+  private static final CustomerId INVALID_CUSTOMER_ID = new CustomerId("Cinvalid");
   private static final GroupId TEST_GROUP_EMAIL = new GroupId(
     String.format(
       "jitaccess-test@%s",

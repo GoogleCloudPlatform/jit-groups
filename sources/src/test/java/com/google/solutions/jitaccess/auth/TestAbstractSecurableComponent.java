@@ -39,8 +39,8 @@ public class TestAbstractSecurableComponent {
   private static final int SAMPLE_PERMISSION = 1;
 
   private static class SampleComponent extends AbstractSecurableComponent {
-    private @Nullable AbstractSecurableComponent parent;
-    private @Nullable AccessControlList acl;
+    private final @Nullable AbstractSecurableComponent parent;
+    private final @Nullable AccessControlList acl;
 
     public SampleComponent(
       @Nullable AbstractSecurableComponent parent,

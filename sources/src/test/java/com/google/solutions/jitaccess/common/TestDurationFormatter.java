@@ -32,23 +32,23 @@ public class TestDurationFormatter {
   public void format_minutes() {
     assertEquals(
       "0 minutes",
-      DurationFormatter.format(Duration.ofMinutes(0)));;
+      DurationFormatter.format(Duration.ofMinutes(0)));
     assertEquals(
       "1 minute",
-      DurationFormatter.format(Duration.ofMinutes(1)));;
+      DurationFormatter.format(Duration.ofMinutes(1)));
     assertEquals(
       "2 minutes",
-      DurationFormatter.format(Duration.ofMinutes(2)));;
+      DurationFormatter.format(Duration.ofMinutes(2)));
   }
 
   @Test
   public void hours() {
     assertEquals(
       "1 hour",
-      DurationFormatter.format(Duration.ofHours(1)));;
+      DurationFormatter.format(Duration.ofHours(1)));
     assertEquals(
       "2 hours, 59 minutes",
-      DurationFormatter.format(Duration.ofHours(2).plusMinutes(59)));;
+      DurationFormatter.format(Duration.ofHours(2).plusMinutes(59)));
   }
 
   @Test
@@ -61,6 +61,6 @@ public class TestDurationFormatter {
       DurationFormatter.format(Duration.ofDays(720)));
     assertEquals(
       "2 days, 59 minutes",
-      DurationFormatter.format(Duration.ofDays(2).plusMinutes(59)));;
+      DurationFormatter.format(Duration.ofDays(2).plusMinutes(59)));
   }
 }

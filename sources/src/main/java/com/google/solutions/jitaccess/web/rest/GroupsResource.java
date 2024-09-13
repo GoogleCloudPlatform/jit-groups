@@ -216,10 +216,10 @@ public class GroupsResource {
 
       var targetUri = Optional
         .ofNullable(switch (target) {
-          case "cloud-console" -> consoles.cloudConsole().groupDetails(groupKey);
-          case "admin-console" -> consoles.adminConsole().groupDetails(groupKey);
-          case "groups-console" -> consoles.groupsConsole().groupDetails(group.cloudIdentityGroupId());
-          case "cloud-logging" -> consoles.cloudConsole().groupAuditLogs(
+          case "cloud-console" -> this.consoles.cloudConsole().groupDetails(groupKey);
+          case "admin-console" -> this.consoles.adminConsole().groupDetails(groupKey);
+          case "groups-console" -> this.consoles.groupsConsole().groupDetails(group.cloudIdentityGroupId());
+          case "cloud-logging" -> this.consoles.cloudConsole().groupAuditLogs(
             groupId,
             Instant.now().minus(Duration.ofDays(7)));
           default -> null;

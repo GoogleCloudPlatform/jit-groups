@@ -53,7 +53,7 @@ public class TestAbstractProposalHandler {
   private static final GroupId SAMPLE_GROUP = new GroupId("group@example.com");
   private static final JitGroupId SAMPLE_JITGROUP_ID =  new JitGroupId("env", "sys", "group-1");
 
-  private class SampleProposalHandler extends AbstractProposalHandler {
+  private static class SampleProposalHandler extends AbstractProposalHandler {
     public SampleProposalHandler(
       @NotNull TokenSigner tokenSigner) {
       super(
@@ -79,7 +79,7 @@ public class TestAbstractProposalHandler {
     }
   }
 
-  private class PseudoSigner implements TokenSigner {
+  private static class PseudoSigner implements TokenSigner {
     @Override
     public @NotNull TokenWithExpiry sign(
       @NotNull JsonWebToken.Payload payload,
