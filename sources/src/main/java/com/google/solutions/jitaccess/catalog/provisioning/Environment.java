@@ -88,5 +88,5 @@ public abstract class Environment {
   /**
    * Load the raw, unparsed policy from file or backing store.
    */
-  protected abstract PolicyDocumentSource loadPolicy();
+  public abstract PolicyDocumentSource loadPolicy();
 }

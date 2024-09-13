@@ -49,7 +49,7 @@ public class Environments {
 
         return (Environment)new Environment(p.name(), p.description(), provisioner, Duration.ofDays(1)) {
           @Override
-          protected PolicyDocumentSource loadPolicy() {
+          public PolicyDocumentSource loadPolicy() {
             return PolicyDocumentSource.fromPolicy(p);
           }
         };

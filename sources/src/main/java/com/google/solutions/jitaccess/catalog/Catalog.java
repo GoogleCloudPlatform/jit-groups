@@ -89,7 +89,7 @@ public class Catalog {
 
     return Optional.ofNullable(this.environments.get(name))
       .filter(env -> env.policy().isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
-      .map(env -> new EnvironmentContext(env.policy(), this.subject, env.provisioner()));
+      .map(env -> new EnvironmentContext(env, this.subject));
   }
 
   /**

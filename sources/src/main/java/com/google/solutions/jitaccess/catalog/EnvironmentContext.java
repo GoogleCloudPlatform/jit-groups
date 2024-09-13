@@ -26,10 +26,10 @@ import com.google.solutions.jitaccess.apis.clients.AccessException;
 import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
+import com.google.solutions.jitaccess.catalog.provisioning.Environment;
 import com.google.solutions.jitaccess.common.NullaryOptional;
-import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -42,25 +42,22 @@ import java.util.Optional;
  * Environment in the context of a specific subject.
  */
 public class EnvironmentContext {
-  private final @NotNull EnvironmentPolicy policy;
+  private final @NotNull Environment environment;
   private final @NotNull Subject subject;
-  private final @NotNull Provisioner provisioner;
 
   EnvironmentContext(
-    @NotNull EnvironmentPolicy policy,
-    @NotNull Subject subject,
-    @NotNull Provisioner provisioner
+    @NotNull Environment environment,
+    @NotNull Subject subject
   ) {
-    this.policy = policy;
+    this.environment = environment;
     this.subject = subject;
-    this.provisioner = provisioner;
   }
 
   /**
    * Get environment policy.
    */
   public @NotNull EnvironmentPolicy policy() {
-    return this.policy;
+    return this.environment.policy();
   }
 
   /**
@@ -69,18 +66,24 @@ public class EnvironmentContext {
    * Requires EXPORT access.
    */
   public boolean canExport() {
-    return this.policy.isAccessAllowed(
-      this.subject,
-      EnumSet.of(PolicyPermission.EXPORT));
+    return this.environment
+      .policy()
+      .isAccessAllowed(
+        this.subject,
+        EnumSet.of(PolicyPermission.EXPORT));
   }
 
   /**
    * Export the environment policy. Requires EXPORT access.
    */
-  public Optional<PolicyDocument> export() {
+  public Optional<PolicyDocumentSource> export() {
+    //
+    // NB. Load and return original source to ensure that
+    // any formatting and comments are retained.
+    //
     return NullaryOptional
       .ifTrue(canExport())
-      .map(() -> new PolicyDocument(this.policy));
+      .map(() -> this.environment.loadPolicy());
   }
 
   /**
@@ -89,9 +92,11 @@ public class EnvironmentContext {
    * Requires RECONCILE access.
    */
   public boolean canReconcile() {
-    return this.policy.isAccessAllowed(
-      this.subject,
-      EnumSet.of(PolicyPermission.RECONCILE));
+    return this.environment
+      .policy()
+      .isAccessAllowed(
+        this.subject,
+        EnumSet.of(PolicyPermission.RECONCILE));
   }
 
   /**
@@ -108,10 +113,10 @@ public class EnvironmentContext {
     //
     // Enumerate groups in Cloud Identity and check then one-by-one.
     //
-    for (var groupId : this.provisioner.provisionedGroups()) {
-      var cloudIdentityGroupId = this.provisioner.cloudIdentityGroupId(groupId);
+    for (var groupId : this.environment.provisioner().provisionedGroups()) {
+      var cloudIdentityGroupId = this.environment.provisioner().cloudIdentityGroupId(groupId);
 
-      var policy =  this.policy
+      var policy =  this.environment.policy()
         .system(groupId.system())
         .flatMap(sys -> sys.group(groupId.name()));
       if (policy.isEmpty()) {
@@ -125,7 +130,7 @@ public class EnvironmentContext {
         // There's a policy for this group, so we can reconcile it.
         //
         try {
-          this.provisioner.reconcile(policy.get());
+          this.environment.provisioner().reconcile(policy.get());
           result.add(new JitGroupCompliance(groupId, cloudIdentityGroupId, policy.get(), null));
         }
         catch (AccessException | IOException e) {
@@ -138,7 +143,7 @@ public class EnvironmentContext {
     // If this is a legacy policy, add any incompatibilities that
     // prevented the mapping of legacy roles.
     //
-    if (this.policy instanceof LegacyPolicy legacyPolicy) {
+    if (this.environment.policy() instanceof LegacyPolicy legacyPolicy) {
       result.addAll(legacyPolicy.incompatibilities());
     }
 
@@ -149,11 +154,11 @@ public class EnvironmentContext {
    * List system policies for which the subject has VIEW access.
    */
   public @NotNull Collection<SystemContext> systems() {
-    return this.policy
+    return this.environment.policy()
       .systems()
       .stream()
       .filter(sys -> sys.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
-      .map(sys -> new SystemContext(sys, this.subject, this.provisioner))
+      .map(sys -> new SystemContext(sys, this.subject, this.environment.provisioner()))
       .toList();
   }
 
@@ -163,10 +168,10 @@ public class EnvironmentContext {
   public @NotNull Optional<SystemContext> system(@NotNull String name) {
     Preconditions.checkArgument(name != null, "Name must not be null");
 
-    return this.policy
+    return this.environment.policy()
       .system(name)
       .filter(env -> env.isAccessAllowed(this.subject, EnumSet.of(PolicyPermission.VIEW)))
-      .map(sys -> new SystemContext(sys, this.subject, this.provisioner));
+      .map(sys -> new SystemContext(sys, this.subject, this.environment.provisioner()));
   }
 
 }
