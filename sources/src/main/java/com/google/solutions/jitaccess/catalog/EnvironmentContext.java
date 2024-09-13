@@ -27,6 +27,7 @@ import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.catalog.policy.PolicyPermission;
 import com.google.solutions.jitaccess.common.NullaryOptional;
 import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
@@ -77,10 +78,10 @@ public class EnvironmentContext {
   /**
    * Export the environment policy. Requires EXPORT access.
    */
-  public Optional<PolicyDocument> export() {
+  public Optional<PolicyDocumentSource> export() {
     return NullaryOptional
       .ifTrue(canExport())
-      .map(() -> new PolicyDocument(this.policy));
+      .map(() -> PolicyDocumentSource.fromPolicy(this.policy));
   }
 
   /**

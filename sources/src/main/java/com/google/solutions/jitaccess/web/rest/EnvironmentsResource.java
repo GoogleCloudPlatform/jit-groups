@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
+import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.common.Exceptions;
@@ -118,8 +119,9 @@ public class EnvironmentsResource {
     try {
       return this.catalog
         .environment(environmentName)
-        .flatMap(EnvironmentContext::export)
-        .map(doc -> PolicyInfo.create(doc))
+        .flatMap(env -> env
+          .export()
+          .map(source -> PolicyInfo.create(env.policy(), source.yaml())))
         .orElseThrow(() -> NOT_FOUND);
     }
     catch (Exception e) {
@@ -246,13 +248,16 @@ public class EnvironmentsResource {
     @NotNull String source,
     @NotNull Long lastModified
   ) implements MediaInfo {
-    static PolicyInfo create(@NotNull PolicyDocument doc) {
+    static PolicyInfo create(
+      @NotNull EnvironmentPolicy policy,
+      @NotNull String policySource
+    ) {
       return new PolicyInfo(
-        new Link("environments/%s", doc.policy().name()),
-        EnvironmentInfo.createSummary(doc.policy()),
-        doc.toString(),
-        doc.policy().metadata().source(),
-        doc.policy().metadata().lastModified().getEpochSecond());
+        new Link("environments/%s", policy.name()),
+        EnvironmentInfo.createSummary(policy),
+        policySource,
+        policy.metadata().source(),
+        policy.metadata().lastModified().getEpochSecond());
     }
   }
 
