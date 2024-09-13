@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.catalog.provisioning.Environment;
 import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -170,36 +171,40 @@ public class TestEnvironmentContext {
 
   @Test
   public void export_whenAccessDenied() {
-    var policy = new EnvironmentPolicy(
-      "env",
-      "env",
-      new Policy.Metadata("test", Instant.EPOCH));
-    var environment = new EnvironmentContext(
-      policy,
-      Subjects.create(SAMPLE_USER),
-      Mockito.mock(Provisioner.class));
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(new EnvironmentPolicy(
+        "env",
+        "env",
+        new Policy.Metadata("test", Instant.EPOCH)));
 
-    assertFalse(environment.canExport());
-    assertFalse(environment.export().isPresent());
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
+
+    assertFalse(context.canExport());
+    assertFalse(context.export().isPresent());
   }
 
   @Test
   public void export() {
-    var policy = new EnvironmentPolicy(
-      "env",
-      "env",
-      new AccessControlList.Builder()
-        .allow(SAMPLE_USER, PolicyPermission.EXPORT.toMask())
-        .build(),
-      Map.of(),
-      new Policy.Metadata("test", Instant.EPOCH));
-    var environment = new EnvironmentContext(
-      policy,
-      Subjects.create(SAMPLE_USER),
-      Mockito.mock(Provisioner.class));
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(new EnvironmentPolicy(
+        "env",
+        "env",
+        new AccessControlList.Builder()
+          .allow(SAMPLE_USER, PolicyPermission.EXPORT.toMask())
+          .build(),
+        Map.of(),
+        new Policy.Metadata("test", Instant.EPOCH)));
 
-    assertTrue(environment.canExport());
-    assertTrue(environment.export().isPresent());
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
+
+    assertTrue(context.canExport());
+    assertTrue(context.export().isPresent());
   }
 
   // -------------------------------------------------------------------------
@@ -208,17 +213,19 @@ public class TestEnvironmentContext {
 
   @Test
   public void reconcile_whenAccessDenied() throws Exception {
-    var policy = new EnvironmentPolicy(
-      "env",
-      "env",
-      new Policy.Metadata("test", Instant.EPOCH));
-    var environment = new EnvironmentContext(
-      policy,
-      Subjects.create(SAMPLE_USER),
-      Mockito.mock(Provisioner.class));
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(
+        new EnvironmentPolicy(
+        "env",
+        "env",
+        new Policy.Metadata("test", Instant.EPOCH)));
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
 
-    assertFalse(environment.canReconcile());
-    assertFalse(environment.reconcile().isPresent());
+    assertFalse(context.canReconcile());
+    assertFalse(context.reconcile().isPresent());
   }
 
   @Test
@@ -236,16 +243,20 @@ public class TestEnvironmentContext {
 
     var orphanedJitGroupId = new JitGroupId("env", "orphaned", "orphaned");
 
-    Provisioner provisioner = createProvisioner(orphanedJitGroupId);
+    var provisioner = createProvisioner(orphanedJitGroupId);
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(environmentPolicy);
+    when(environment.provisioner())
+      .thenReturn(provisioner);
 
-    var environment = new EnvironmentContext(
-      environmentPolicy,
-      Subjects.create(SAMPLE_USER),
-      provisioner);
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
 
-    assertTrue(environment.canReconcile());
+    assertTrue(context.canReconcile());
 
-    var result = environment.reconcile();
+    var result = context.reconcile();
     assertTrue(result.isPresent());
 
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
@@ -272,14 +283,19 @@ public class TestEnvironmentContext {
     var provisioner = createProvisioner(brokenJitGroup.id());
     doThrow(new AccessDeniedException("mock")).when(provisioner).reconcile(eq(brokenJitGroup));
 
-    var environment = new EnvironmentContext(
-      environmentPolicy,
-      Subjects.create(SAMPLE_USER),
-      provisioner);
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(environmentPolicy);
+    when(environment.provisioner())
+      .thenReturn(provisioner);
 
-    assertTrue(environment.canReconcile());
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
 
-    var result = environment.reconcile();
+    assertTrue(context.canReconcile());
+
+    var result = context.reconcile();
     assertTrue(result.isPresent());
 
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
@@ -308,14 +324,19 @@ public class TestEnvironmentContext {
     var provisioner = createProvisioner(compliantJitGroup.id());
     doNothing().when(provisioner).reconcile(eq(compliantJitGroup));
 
-    var environment = new EnvironmentContext(
-      environmentPolicy,
-      Subjects.create(SAMPLE_USER),
-      provisioner);
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(environmentPolicy);
+    when(environment.provisioner())
+      .thenReturn(provisioner);
 
-    assertTrue(environment.canReconcile());
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
 
-    var result = environment.reconcile();
+    assertTrue(context.canReconcile());
+
+    var result = context.reconcile();
     assertTrue(result.isPresent());
 
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
@@ -339,13 +360,19 @@ public class TestEnvironmentContext {
         null,
         new IllegalArgumentException("mock"))));
 
-    var environment = new EnvironmentContext(
-      legacyPolicy,
-      Subjects.create(SAMPLE_USER),
-      createProvisioner());
+    var provisioner = createProvisioner();
+    var environment = Mockito.mock(Environment.class);
+    when(environment.policy())
+      .thenReturn(legacyPolicy);
+    when(environment.provisioner())
+      .thenReturn(provisioner);
 
-    assertTrue(environment.canReconcile());
-    var result = environment.reconcile();
+    var context = new EnvironmentContext(
+      environment,
+      Subjects.create(SAMPLE_USER));
+
+    assertTrue(context.canReconcile());
+    var result = context.reconcile();
     var resultMap = result.get().stream().collect(Collectors.toMap(r -> r.groupId(), r -> r));
     assertFalse(resultMap.get(incompatibleGroupId).isCompliant());
     assertInstanceOf(
