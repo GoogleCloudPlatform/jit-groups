@@ -77,9 +77,13 @@ public class EnvironmentContext {
    * Export the environment policy. Requires EXPORT access.
    */
   public Optional<PolicyDocumentSource> export() {
+    //
+    // NB. Load and return original source to ensure that
+    // any formatting and comments are retained.
+    //
     return NullaryOptional
       .ifTrue(canExport())
-      .map(() -> PolicyDocumentSource.fromPolicy(this.environment.policy()));
+      .map(() -> this.environment.loadPolicy());
   }
 
   /**

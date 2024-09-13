@@ -189,6 +189,8 @@ public class TestEnvironmentContext {
   @Test
   public void export() {
     var environment = Mockito.mock(Environment.class);
+    when(environment.loadPolicy())
+      .thenReturn(PolicyDocumentSource.fromString("original yaml"));
     when(environment.policy())
       .thenReturn(new EnvironmentPolicy(
         "env",
@@ -205,6 +207,7 @@ public class TestEnvironmentContext {
 
     assertTrue(context.canExport());
     assertTrue(context.export().isPresent());
+    assertEquals("original yaml", context.export().get().yaml());
   }
 
   // -------------------------------------------------------------------------

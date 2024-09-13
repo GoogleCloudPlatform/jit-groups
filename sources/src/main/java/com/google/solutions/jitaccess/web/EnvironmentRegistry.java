@@ -78,7 +78,7 @@ class EnvironmentRegistry {
           options.cacheDuration()
         ) {
           @Override
-          protected PolicyDocumentSource loadPolicy() {
+          public PolicyDocumentSource loadPolicy() {
             return cfg.loadPolicy();
           }
         };
