@@ -99,10 +99,8 @@ public class TestAbstractProposalHandler {
     public JsonWebToken.Payload verify(
       @NotNull String token
     ) throws TokenVerifier.VerificationException {
-      try {
-        return new GsonFactory()
-          .createJsonParser(token)
-          .parse(JsonWebToken.Payload.class);
+      try (var parser = new GsonFactory().createJsonParser(token)) {
+        return parser.parse(JsonWebToken.Payload.class);
       }
       catch (IOException e) {
         throw new TokenVerifier.VerificationException(e.getMessage());

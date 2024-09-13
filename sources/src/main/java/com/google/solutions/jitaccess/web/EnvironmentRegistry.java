@@ -39,7 +39,7 @@ import java.util.concurrent.Executor;
 /**
  * Registry for environments and their associated provisioners.
  */
-class EnvironmentRegistry {
+public class EnvironmentRegistry {
   private final @NotNull Collection<Environment> environments;
 
   public EnvironmentRegistry(
