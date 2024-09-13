@@ -29,7 +29,9 @@ import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
-import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.catalog.policy.Policy;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
+import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;

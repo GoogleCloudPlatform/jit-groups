@@ -38,14 +38,14 @@ public class RestDispatcher<TResource> {
   private final Dispatcher dispatcher;
 
   public RestDispatcher(TResource resource, final EndUserId userId) {
-    dispatcher = MockDispatcherFactory.createDispatcher();
-    dispatcher.getRegistry().addSingletonResource(resource);
+    this.dispatcher = MockDispatcherFactory.createDispatcher();
+    this.dispatcher.getRegistry().addSingletonResource(resource);
 
     //
     // Register all exception mappers.
     //
     for (var mapper : ExceptionMappers.ALL) {
-      dispatcher.getProviderFactory().registerProvider(mapper);
+      this.dispatcher.getProviderFactory().registerProvider(mapper);
     }
   }
 
@@ -55,12 +55,12 @@ public class RestDispatcher<TResource> {
   ) {
     var response = new MockHttpResponse();
     var synchronousExecutionContext = new SynchronousExecutionContext(
-      (SynchronousDispatcher)dispatcher,
+      (SynchronousDispatcher) this.dispatcher,
       request,
       response);
 
     request.setAsynchronousContext(synchronousExecutionContext);
-    dispatcher.invoke(request, response);
+    this.dispatcher.invoke(request, response);
     return new Response<>(response, responseType);
   }
 
@@ -105,7 +105,7 @@ public class RestDispatcher<TResource> {
     }
 
     public T getBody() throws UnsupportedEncodingException {
-      return new Gson().fromJson(this.mockResponse.getContentAsString(), responseType);
+      return new Gson().fromJson(this.mockResponse.getContentAsString(), this.responseType);
     }
   }
 }

@@ -222,35 +222,35 @@ public class ApplicationRuntime {
    * Project the application is deployed in.
    */
   public @NotNull ProjectId projectId() {
-    return projectId;
+    return this.projectId;
   }
 
   /**
    * Project the application is deployed in.
    */
   public @NotNull String projectNumber() {
-    return projectNumber;
+    return this.projectNumber;
   }
 
   /**
    * Application credentials.
    */
   public @NotNull GoogleCredentials applicationCredentials() {
-    return applicationCredentials;
+    return this.applicationCredentials;
   }
 
   /**
    * Service account used by the application.
    */
   public @NotNull ServiceAccountId applicationPrincipal() {
-    return applicationPrincipal;
+    return this.applicationPrincipal;
   }
 
   /**
    * Type of runtime environment the application is running in.
    */
   public @NotNull ApplicationRuntime.Type type() {
-    return type;
+    return this.type;
   }
 
   public enum Type {

@@ -53,7 +53,7 @@ public class TestAbstractProposalHandler {
   private static final GroupId SAMPLE_GROUP = new GroupId("group@example.com");
   private static final JitGroupId SAMPLE_JITGROUP_ID =  new JitGroupId("env", "sys", "group-1");
 
-  private class SampleProposalHandler extends AbstractProposalHandler {
+  private static class SampleProposalHandler extends AbstractProposalHandler {
     public SampleProposalHandler(
       @NotNull TokenSigner tokenSigner) {
       super(
@@ -79,7 +79,7 @@ public class TestAbstractProposalHandler {
     }
   }
 
-  private class PseudoSigner implements TokenSigner {
+  private static class PseudoSigner implements TokenSigner {
     @Override
     public @NotNull TokenWithExpiry sign(
       @NotNull JsonWebToken.Payload payload,
@@ -99,10 +99,8 @@ public class TestAbstractProposalHandler {
     public JsonWebToken.Payload verify(
       @NotNull String token
     ) throws TokenVerifier.VerificationException {
-      try {
-        return new GsonFactory()
-          .createJsonParser(token)
-          .parse(JsonWebToken.Payload.class);
+      try (var parser = new GsonFactory().createJsonParser(token)) {
+        return parser.parse(JsonWebToken.Payload.class);
       }
       catch (IOException e) {
         throw new TokenVerifier.VerificationException(e.getMessage());

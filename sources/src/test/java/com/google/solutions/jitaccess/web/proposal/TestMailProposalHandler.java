@@ -45,9 +45,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class TestMailProposalHandler {
-  private final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
-  private final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
-  private final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
+  private static final EndUserId SAMPLE_USER_1 = new EndUserId("user-1@example.com");
+  private static final EndUserId SAMPLE_USER_2 = new EndUserId("user-2@example.com");
+  private static final JitGroupId SAMPLE_JITGROUP = new JitGroupId("env-1", "sys-1", "grp-1");
 
   //-------------------------------------------------------------------------
   // onJoinOperationProposed.

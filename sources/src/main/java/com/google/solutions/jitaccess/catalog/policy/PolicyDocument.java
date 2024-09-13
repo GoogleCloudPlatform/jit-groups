@@ -41,13 +41,8 @@ import com.google.solutions.jitaccess.common.NullaryOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * YAML representation of an environment policy.

@@ -30,7 +30,7 @@ import java.util.concurrent.Executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCompletableFutures {
-  private class CheckedException extends Exception {}
+  private static class CheckedException extends Exception {}
   private static final Executor EXECUTOR = (Runnable r) -> r.run();
 
   //---------------------------------------------------------------------------

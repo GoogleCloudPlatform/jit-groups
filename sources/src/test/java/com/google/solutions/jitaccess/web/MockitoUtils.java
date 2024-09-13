@@ -33,6 +33,7 @@ public class MockitoUtils {
   /**
    * Create an Instance for a given object.
    */
+  @SuppressWarnings("unchecked")
   public static <T> @NotNull Instance<T> toCdiInstance(T obj) {
     var instance = Mockito.mock(Instance.class);
     when(instance.stream()).thenReturn(List.of(obj).stream());

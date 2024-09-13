@@ -27,7 +27,6 @@ import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
-import com.google.solutions.jitaccess.catalog.policy.PolicyDocument;
 import com.google.solutions.jitaccess.catalog.policy.PolicyHeader;
 import com.google.solutions.jitaccess.common.Exceptions;
 import com.google.solutions.jitaccess.web.EventIds;

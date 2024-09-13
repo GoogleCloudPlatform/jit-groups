@@ -21,7 +21,8 @@
 
 package com.google.solutions.jitaccess.catalog.provisioning;
 
-import com.google.solutions.jitaccess.catalog.policy.*;
+import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.common.Lazy;
 import org.jetbrains.annotations.NotNull;
 

@@ -27,7 +27,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -92,7 +94,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   public static @NotNull <T> Lazy<T> initializePessimistically(
     @NotNull Callable<T> initialize
   ) {
-    return new PessimisticLazy(initialize);
+    return new PessimisticLazy<>(initialize);
   }
 
   /**
@@ -129,7 +131,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
 
     @Override
     public @NotNull T get() {
-      var obj = cached.get();
+      var obj = this.cached.get();
       if (obj != null) {
         return obj;
       }
@@ -146,7 +148,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
           throw new UncheckedExecutionException(e);
         }
 
-        if (cached.compareAndSet(null, obj)) {
+        if (this.cached.compareAndSet(null, obj)) {
           //
           // We won the race, use this instance.
           //
@@ -240,7 +242,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
   // Auto-reset strategy.
   //---------------------------------------------------------------------------
 
-  private class AutoResetLazy<T> extends Lazy<T> {
+  private static class AutoResetLazy<T> extends Lazy<T> {
     private final @NotNull Duration duration;
     private final @NotNull Lazy<T> source;
     private final @NotNull AtomicLong lastResetTimestamp = new AtomicLong(0);
@@ -248,7 +250,7 @@ public abstract class Lazy<T> implements Supplier<T>, Future<T> {
     private void resetSourceIfDue() {
       var now = System.currentTimeMillis();
       var lastReset = this.lastResetTimestamp.get();
-      if (now > lastReset + duration.toMillis()) {
+      if (now > lastReset + this.duration.toMillis()) {
         //
         // The value is too old.
         //
