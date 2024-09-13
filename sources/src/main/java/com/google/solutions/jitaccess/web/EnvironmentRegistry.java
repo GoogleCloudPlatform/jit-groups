@@ -26,6 +26,7 @@ import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
 import com.google.solutions.jitaccess.auth.GroupMapping;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
 import com.google.solutions.jitaccess.catalog.provisioning.Environment;
@@ -77,7 +78,7 @@ class EnvironmentRegistry {
           options.cacheDuration()
         ) {
           @Override
-          protected EnvironmentPolicy loadPolicy() {
+          protected PolicyDocumentSource loadPolicy() {
             return cfg.loadPolicy();
           }
         };

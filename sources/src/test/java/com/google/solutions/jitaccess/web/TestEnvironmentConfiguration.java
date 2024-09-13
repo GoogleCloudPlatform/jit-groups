@@ -130,7 +130,9 @@ public class TestEnvironmentConfiguration {
   public void inertExample() throws Exception {
     var policy = EnvironmentConfiguration
       .inertExample()
-      .loadPolicy();
+      .loadPolicy()
+      .parse()
+      .policy();
     assertNotEquals(0, policy.systems().size());
   }
 }

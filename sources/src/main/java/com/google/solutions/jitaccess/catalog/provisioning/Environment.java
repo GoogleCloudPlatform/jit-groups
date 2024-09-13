@@ -51,7 +51,9 @@ public abstract class Environment {
     // might be slow.
     //
     this.policy = Lazy
-      .initializeOpportunistically(this::loadPolicy)
+      .initializeOpportunistically(() -> loadPolicy()
+        .parse()
+        .policy())
       .reinitializeAfter(policyCacheDuration);
   }
 
@@ -84,7 +86,7 @@ public abstract class Environment {
   }
 
   /**
-   * Load policy from file or backing store.
+   * Load the raw, unparsed policy from file or backing store.
    */
-  protected abstract EnvironmentPolicy loadPolicy();
+  protected abstract PolicyDocumentSource loadPolicy();
 }

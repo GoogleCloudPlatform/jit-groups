@@ -106,11 +106,13 @@ public abstract class PolicyDocumentSource {
   }
 
   /**
-   * Reconstruct a source from a document.
+   * Reconstruct source for a policy.
    */
-  public static @NotNull PolicyDocumentSource fromPolicyDocument(
-    @NotNull PolicyDocument document
+  public static @NotNull PolicyDocumentSource fromPolicy(
+    @NotNull EnvironmentPolicy policy
   ) {
+    var document = new PolicyDocument(policy);
+
     return new PolicyDocumentSource() {
       @Override
       public @NotNull String yaml() {

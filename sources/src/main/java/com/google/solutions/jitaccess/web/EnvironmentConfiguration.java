@@ -82,7 +82,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
   /**
    * Load policy from file or backend.
    */
-  abstract EnvironmentPolicy loadPolicy();
+  abstract PolicyDocumentSource loadPolicy();
 
   /**
    * Create configuration for a file-based policy.
@@ -120,11 +120,9 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       applicationCredentials
     ) {
       @Override
-      EnvironmentPolicy loadPolicy() {
+      PolicyDocumentSource loadPolicy() {
         try {
-          return PolicyDocumentSource.fromFile(file)
-            .parse()
-            .policy();
+          return PolicyDocumentSource.fromFile(file);
         }
         catch (Exception e) {
           throw new UncheckedExecutionException(e);
@@ -166,7 +164,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       applicationCredentials
     ) {
       @Override
-      EnvironmentPolicy loadPolicy() {
+      PolicyDocumentSource loadPolicy() {
         try (var stream = EnvironmentConfiguration.class
           .getClassLoader()
           .getResourceAsStream(resourcePath)) {
@@ -175,10 +173,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
           }
 
           var policy = new String(stream.readAllBytes());
-          return PolicyDocumentSource
-            .fromString(policy, metadata)
-            .parse()
-            .policy();
+          return PolicyDocumentSource.fromString(policy, metadata);
         }
         catch (Exception e) {
           throw new UncheckedExecutionException(e);
@@ -249,7 +244,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       environmentCredentials
     ) {
       @Override
-      EnvironmentPolicy loadPolicy() {
+      PolicyDocumentSource loadPolicy() {
         //
         // If we lack impersonation permissions, ImpersonatedCredentials
         // will keep retrying until the call timeout expires. The effect
@@ -287,12 +282,9 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             null,
             environmentName);
 
-          return PolicyDocumentSource
-            .fromString(
-              secretClient.accessSecret(secretPath),
-              metadata)
-            .parse()
-            .policy();
+          return PolicyDocumentSource.fromString(
+            secretClient.accessSecret(secretPath),
+            metadata);
         }
         catch (Exception e) {
           throw new UncheckedExecutionException(e);
