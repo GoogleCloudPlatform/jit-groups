@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicy;
 import com.google.solutions.jitaccess.catalog.legacy.LegacyPolicyLoader;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.web.proposal.*;
 import com.google.solutions.jitaccess.web.rest.UserResource;
 import jakarta.enterprise.context.RequestScoped;
@@ -411,15 +412,15 @@ public class Application {
           runtime.applicationCredentials() // Use app service account, as in 1.x
         ) {
           @Override
-          EnvironmentPolicy loadPolicy() {
+          PolicyDocumentSource loadPolicy() {
             try {
-              return legacyLoader.load(
+              return PolicyDocumentSource.fromPolicy(legacyLoader.load(
                 configuration.legacyProjectsQuery,
                 configuration.legacyScope.get(),
                 configuration.legacyActivationTimeout,
                 configuration.legacyJustificationPattern,
                 configuration.legacyJustificationHint,
-                logger);
+                logger));
             }
             catch (Exception e) {
               throw new UncheckedExecutionException(e);

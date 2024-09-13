@@ -34,9 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -78,7 +75,7 @@ public class TestPolicyDocument {
   public void parse_whenYamlIsEmpty() {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory("  ")));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString("  ")));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
@@ -89,7 +86,7 @@ public class TestPolicyDocument {
   public void parse_whenYamlMalformed() {
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory("}")));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString("}")));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_SYNTAX,
@@ -102,7 +99,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_UNKNOWN_PROPERTY,
@@ -115,7 +112,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
@@ -128,7 +125,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.FILE_INVALID_VERSION,
@@ -144,7 +141,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_MISSING,
@@ -160,7 +157,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.ENVIRONMENT_INVALID,
@@ -178,7 +175,7 @@ public class TestPolicyDocument {
 
     var e = assertThrows(
       PolicyDocument.SyntaxException.class,
-      () -> PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml)));
+      () -> PolicyDocument.parse(PolicyDocumentSource.fromString(yaml)));
     assertTrue(e.issues().get(0).severe());
     assertEquals(
       PolicyDocument.Issue.Code.SYSTEM_INVALID,
@@ -192,7 +189,7 @@ public class TestPolicyDocument {
         "environment: \n" +
         "  name: 'env-1'";
 
-    var doc = PolicyDocument.parse(PolicyDocumentSource.fromMemory(yaml));
+    var doc = PolicyDocument.parse(PolicyDocumentSource.fromString(yaml));
     assertEquals("env-1", doc.policy().name());
     assertEquals("memory", doc.policy().metadata().source());
     assertFalse(doc.policy().metadata().lastModified().isAfter(Instant.now()));

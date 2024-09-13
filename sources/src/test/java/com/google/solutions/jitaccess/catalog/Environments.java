@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.catalog;
 import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.JitGroupId;
 import com.google.solutions.jitaccess.catalog.policy.EnvironmentPolicy;
+import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
 import com.google.solutions.jitaccess.catalog.provisioning.Environment;
 import com.google.solutions.jitaccess.catalog.provisioning.Provisioner;
 import org.jetbrains.annotations.NotNull;
@@ -48,8 +49,8 @@ public class Environments {
 
         return (Environment)new Environment(p.name(), p.description(), provisioner, Duration.ofDays(1)) {
           @Override
-          protected EnvironmentPolicy loadPolicy() {
-            return p;
+          protected PolicyDocumentSource loadPolicy() {
+            return PolicyDocumentSource.fromPolicy(p);
           }
         };
       })

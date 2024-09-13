@@ -72,14 +72,15 @@ public class PolicyResource {
       // NB. It's possible that the user is validating that doesn't
       //     explicitly specify a name (because it's implied).
       //
-      document = PolicyDocument.parse(
-        new PolicyDocumentSource(
-          source,
-          new Policy.Metadata(
-            "user-provided",
-            Instant.now(),
-            null,
-            "anonymous"))); // Accept policies without name.
+      var documentSource = PolicyDocumentSource.fromString(
+        source,
+        new Policy.Metadata(
+          "user-provided",
+          Instant.now(),
+          null,
+          "anonymous")); // Accept policies without name.
+
+      document = documentSource.parse();
     }
     catch (PolicyDocument.SyntaxException e) {
       return LintingResultInfo.create(e);
