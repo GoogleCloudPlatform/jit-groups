@@ -282,7 +282,7 @@ public class GroupsResource {
     }
   }
 
-  public record PrivilegeInfo( // TODO: test
+  public record PrivilegeInfo(
     @NotNull String description,
     @NotNull String resourceName,
     boolean hasResourceCondition
