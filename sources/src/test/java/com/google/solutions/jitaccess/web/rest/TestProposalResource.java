@@ -158,7 +158,7 @@ public class TestProposalResource {
       Map.of(),
       List.of(
         new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1")),
-        new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1"), "description", null)));
+        new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1"), "description", "condition")));
 
     var resource = new ProposalResource();
     resource.logger = Mockito.mock(Logger.class);
@@ -175,9 +175,16 @@ public class TestProposalResource {
     var groupInfo = proposalInfo.approval().group();
     assertEquals(group.name(), groupInfo.name());
     assertEquals(group.description(), groupInfo.description());
+
     assertEquals(2, groupInfo.privileges().size());
-    assertEquals("roles/role-1 on projects/project-1", groupInfo.privileges().get(0).description());
+    assertEquals("roles/role-1", groupInfo.privileges().get(0).description());
+    assertEquals("projects/project-1", groupInfo.privileges().get(0).resourceName());
+    assertFalse(groupInfo.privileges().get(0).hasResourceCondition());
+
     assertEquals("description", groupInfo.privileges().get(1).description());
+    assertEquals("projects/project-1", groupInfo.privileges().get(1).resourceName());
+    assertTrue(groupInfo.privileges().get(1).hasResourceCondition());
+    
     assertEquals(group.system().name(), groupInfo.system().name());
     assertEquals(group.system().description(), groupInfo.system().description());
     assertEquals(group.system().environment().name(), groupInfo.environment().name());
