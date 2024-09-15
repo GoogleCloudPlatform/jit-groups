@@ -54,7 +54,7 @@ public class TestIamRoleBinding {
       SAMPLE_PROJECT_1.path(),
       new IamRoleBinding(SAMPLE_PROJECT_1, SAMPLE_ROLE_1).resourceName());
   }
-  
+
   // -------------------------------------------------------------------------
   // hasResourceCondition.
   // -------------------------------------------------------------------------

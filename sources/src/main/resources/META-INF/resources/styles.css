@@ -236,8 +236,6 @@ div.jit-card-subsection[title]:not(:empty)::before {
     width: 130px;
 }
 
-
-
 ul[title]:not(:empty)::before {
     content: attr(title);
     font-size: var(--mdc-typography-body2-font-size, 0.875rem);
@@ -248,6 +246,10 @@ form[title]:has(input)::before {
     font-size: var(--mdc-typography-body2-font-size, 0.875rem);
 }
 
+
+.jit-hide-if-table-empty:not(:has(.mdc-data-table__row)) {
+    display: none; /* Hide table when empty */
+}
 
 /* ==== MDC Overrides === */
 
@@ -265,6 +267,7 @@ form[title]:has(input)::before {
 .mdc-data-table__header-row {
     height: 30px; /* Set row height */
 }
+
 
 .mdc-top-app-bar__row {
     background-color: #FAFAFA;
