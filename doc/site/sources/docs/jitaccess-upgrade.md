@@ -108,13 +108,19 @@ To upgrade your existing JIT Access deployment, do the following:
     [you must switch to the  `AssetInventory` catalog](http://localhost:8000/jit-access/configure-catalogs/#assetinventory-catalog)
     first before you can proceed with the upgrade.
 
-1.  Add an environment variable to `app.yaml`:
+1.  Add two environment variables to `app.yaml`:
 
     ```yaml
-    GROUPS_DOMAIN: DOMAIN
+    PRIMARY_DOMAIN: "DOMAIN"
+    ORGANIZATION_ID: "ORG_ID"
     ```
-    Replace `DOMAIN` with the domain to use for Cloud Identity groups, this can be the primary or a secondary domain of
-    your Cloud Identity or Google Workspace account.
+    
+    Replace the following:
+
+    +   `DOMAIN`: the [primary domain :octicons-link-external-16:](https://support.google.com/a/answer/182080)
+        of your Cloud Identity/Workspace account domain.
+    +   `ORG_ID`: the [organization ID  :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-organization#acquiring)
+        of your Google Cloud organization.
 
 1.  Enable the Cloud Identity and Groups Settings APIs:
 
