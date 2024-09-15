@@ -1,11 +1,52 @@
+//
+// Copyright 2024 Google LLC
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
 package com.google.solutions.jitaccess.catalog.policy;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Represents the right to access a resource or perform a certain action.
  */
 public interface Privilege {
   /**
-   * Description of the privilege.
+   * Name or ID of the privilege.
    */
-  String description();
+  @NotNull String name();
+
+  /**
+   * Name or ID of the resource this privilege applies to.
+   */
+  @NotNull String resourceName();
+
+  /**
+   * Indicates whether there are any resource condition
+   * that constrain which (sub) resources this privilege
+   * applies to.
+   */
+  boolean hasResourceCondition();
+
+  /**
+   * Optional description of the privilege.
+   */
+  @Nullable String description();
 }

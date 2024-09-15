@@ -99,7 +99,23 @@
 
             <div class="jit-card-subsection" title="About this group">
                 <span class="jit-group-description"></span>
-                <ul class="mdc-list jit-group-privileges" title="This group grants the following privileges:"></ul>
+            </div>
+            <div class="jit-card-subsection jit-hide-if-table-empty" title="Privileges">
+                This group grants the following privileges:
+                <div class="mdc-data-table">
+                    <div class="mdc-data-table__table-container">
+                        <table class="mdc-data-table__table jit-group-privileges">
+                            <thead>
+                                <tr class="mdc-data-table__header-row">
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Privilege</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Resource</th>
+                                </tr>
+                            </thead>
+                            <tbody class="mdc-data-table__content">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="jit-card-subsection" title="My Membership">
                 <ul class="mdc-list jit-group-membership"></ul>
@@ -220,7 +236,23 @@
 
             <div class="jit-card-subsection" title="Group details">
                 <span class="jit-group-description"></span>
-                <ul class="mdc-list jit-group-privileges" title="This group grants the following privileges:"></ul>
+            </div>
+            <div class="jit-card-subsection jit-hide-if-table-empty" title="Privileges">
+                This group grants the following privileges:
+                <div class="mdc-data-table">
+                    <div class="mdc-data-table__table-container">
+                        <table class="mdc-data-table__table jit-group-privileges">
+                            <thead>
+                                <tr class="mdc-data-table__header-row">
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Privilege</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Resource</th>
+                                </tr>
+                            </thead>
+                            <tbody class="mdc-data-table__content">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <div class="jit-card-subsection" title="Request details">
                 <ul class="mdc-list jit-join-inputs" title="Details:"></ul>
@@ -369,7 +401,7 @@
 
                 console.assert(model);
 
-                this.privileges = new mdc.list.MDCList(this.select('.jit-group-privileges').get(0));
+                this.privileges = new mdc.dataTable.MDCDataTable(this.select('.jit-group-privileges').get(0));
                 this.constraints = new mdc.list.MDCList(this.select('.jit-group-constraints').get(0));
                 this.formFields = []
                 this.form = this.select('form');
@@ -416,10 +448,20 @@
 
                 if (groupInfo.privileges) {
                     groupInfo.privileges.forEach(item => {
-                        this.privileges.addRow({
-                            primary: item.description,
-                            icon: 'license'
-                        });
+                        this.privileges.addRow(
+                            null,
+                            [
+                                {
+                                    text: item.description,
+                                    maxLength: 40,
+                                    icon: 'folder_shared'
+                                },
+                                {
+                                    text: `${item.hasResourceCondition ? 'Subset of ' : '' }${item.resourceName}`,
+                                    maxLength: 40
+                                }
+                            ],
+                            false);
                     });
                 }
             }

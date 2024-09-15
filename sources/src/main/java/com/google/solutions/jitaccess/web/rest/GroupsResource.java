@@ -283,10 +283,15 @@ public class GroupsResource {
   }
 
   public record PrivilegeInfo(
-    @NotNull String description
+    @NotNull String description,
+    @NotNull String resourceName,
+    boolean hasResourceCondition
   ) {
     static @NotNull PrivilegeInfo fromPrivilege(@NotNull Privilege p) {
-      return new PrivilegeInfo(Coalesce.nonEmpty(p.description(), p.toString()));
+      return new PrivilegeInfo(
+        Coalesce.nonEmpty(p.description(), p.name()),
+        p.resourceName(),
+        p.hasResourceCondition());
     }
   }
 
