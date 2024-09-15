@@ -99,7 +99,10 @@
 
             <div class="jit-card-subsection" title="About this group">
                 <span class="jit-group-description"></span>
-                <div class="mdc-data-table jit-hide-if-table-empty" title="This group grants the following privileges:">
+            </div>
+            <div class="jit-card-subsection jit-hide-if-table-empty" title="Privileges">
+                This group grants the following privileges:
+                <div class="mdc-data-table">
                     <div class="mdc-data-table__table-container">
                         <table class="mdc-data-table__table jit-group-privileges">
                             <thead>
@@ -233,7 +236,10 @@
 
             <div class="jit-card-subsection" title="Group details">
                 <span class="jit-group-description"></span>
-                <div class="mdc-data-table jit-hide-if-table-empty" title="This group grants the following privileges:">
+            </div>
+            <div class="jit-card-subsection jit-hide-if-table-empty" title="Privileges">
+                This group grants the following privileges:
+                <div class="mdc-data-table">
                     <div class="mdc-data-table__table-container">
                         <table class="mdc-data-table__table jit-group-privileges">
                             <thead>
@@ -448,7 +454,7 @@
                                 {
                                     text: item.description,
                                     maxLength: 40,
-                                    icon: 'license'
+                                    icon: 'folder_shared'
                                 },
                                 {
                                     text: `${item.hasResourceCondition ? 'Subset of ' : '' }${item.resourceName}`,

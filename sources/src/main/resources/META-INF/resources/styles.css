@@ -260,6 +260,7 @@ form[title]:has(input)::before {
 }
 
 .mdc-data-table {
+    margin-top: 10px;
     width: 100%;
 }
 
