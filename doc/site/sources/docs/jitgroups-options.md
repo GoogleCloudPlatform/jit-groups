@@ -6,13 +6,14 @@ The following table lists all available configuration options.
 
 ## Basic options
 
-| Name                                      | Terraform variable | Description                                                                                                          | Required | Default | Available since |
-|-------------------------------------------|--------------------|----------------------------------------------------------------------------------------------------------------------|----------|---------|-----------------|
-| `CUSTOMER_ID` or `RESOURCE_CUSTOMER_ID`   | `customer_id`      | [Cloud Identity/Workspace customer ID :octicons-link-external-16:](https://support.google.com/a/answer/10070793)     | Yes      |         | 1.6             |
-| `PRIMARY_DOMAIN`                          | `primary_domain`   | Primary domain of the Cloud Identity/Workspace account                                                               | Yes      |         | 2.1             |
-| `ORGANIZATION_ID`                         | `organization_id`  | Organization ID of the Google Cloud organization                                                                     | Yes      |         | 2.1             |
-| `GROUPS_DOMAIN`                           | `groups_domain`    | Domain to use for JIT groups, this can be the primary or a secondary domain                                          | No       |         | 2.0             |
-| `APPROVAL_TIMEOUT`                        | -                  | Duration (in minutes) for approval requests to remains valid.                                                        | No       | 60      | 2.0             |
+| Name                                      | Terraform variable | Description                                                                                                      | Required | Default | Available since |
+|-------------------------------------------|--------------------|------------------------------------------------------------------------------------------------------------------|----------|---------|-----------------|
+| `CUSTOMER_ID` or `RESOURCE_CUSTOMER_ID`   | `customer_id`      | [Cloud Identity/Workspace customer ID :octicons-link-external-16:](https://support.google.com/a/answer/10070793) | Yes      |         | 1.6             |
+| `PRIMARY_DOMAIN`                          | `primary_domain`   | Primary domain of the Cloud Identity/Workspace account                                                           | Yes      |         | 2.1             |
+| `ORGANIZATION_ID`                         | `organization_id`  | Organization ID of the Google Cloud organization                                                                 | Yes      |         | 2.1             |
+| `GROUPS_DOMAIN`                           | `groups_domain`    | Domain to use for JIT groups, this can be the primary or a secondary domain                                      | No       |         | 2.0             |
+| `RESOURCE_CACHE_TIMEOUT`                  | -                  | Duration (in seconds) for which to cache policy documents.                                                       | No       | 5       | 2.0             |
+| `APPROVAL_TIMEOUT`                        | -                  | Duration (in minutes) for approval requests to remain valid.                                                     | No       | 60      | 2.0             |
 
 ## Email options
 
