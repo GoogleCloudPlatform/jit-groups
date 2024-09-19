@@ -24,60 +24,25 @@ environment:
         expression: "false"
         variables: []
   systems:
-    - name: "network"
-      description: "Groups related to network administration"
-      groups:
-        - name: "shared-vpc-admins"
-          description: |
-            Administer Shared VPC networks and firewalls
-          access:
-            - principal: "class:iapUsers"
-              allow: "VIEW, JOIN"
-          privileges:
-            iam:
-              - project: example-project
-                role: roles/compute.networkAdmin
-              - project: example-project
-                role: roles/compute.xpnAdmin
-          constraints:
-            join:
-              - type: "expiry"
-                min: "PT1H"
-                max: "P7D"
 
-        - name: "security-admins"
-          description: |
-            Manage Identity-Aware Proxy and other security settings
-          access:
-            - principal: "class:iapUsers"
-              allow: "VIEW"
-          privileges:
-            iam:
-              - project: example-project
-                role: roles/iap.settingsAdmin
-              - project: example-project
-                role: roles/compute.securityAdmin
-          constraints:
-            join:
-              - type: "expiry"
-                min: "P7D"
-                max: "P30D"
+    #--------------------------------------------------------------------------
+    # logging.
+    #--------------------------------------------------------------------------
 
-
-    - name: "logging"
+    - name: "Logging"
       description: "Groups related to logging and auditing"
       groups:
-        - name: "log-viewers"
+        - name: "Log-Viewers"
           description: |
-            View audit logs
+            Provides access to audit logs for all projects in folder '123'
           access:
             - principal: "class:iapUsers"
               allow: "VIEW, JOIN, APPROVE_SELF"
           privileges:
             iam:
-              - project: example-project
+              - resource: "folders/123"
                 role: roles/logging.privateLogViewer
-              - project: example-project
+              - resource: "folders/123"
                 role: roles/logging.viewer
           constraints:
             join:
@@ -90,7 +55,130 @@ environment:
                     name: "justification"
                     displayName: "Explanation"
                     min: 10
-                    max: 1000
+                    max: 100
               - type: "expiry"
                 min: "P7D"
                 max: "P90D"
+                
+    #--------------------------------------------------------------------------
+    # Servers.
+    #--------------------------------------------------------------------------
+
+    - name: "Servers"
+      description: "Groups for a Compute-Engine based workload"
+      groups:
+        - name: "Server-Admins"
+          description: |
+            Provides full access to Compute Engine resources
+          access:
+            - principal: "class:iapUsers"
+              allow: "VIEW"
+          constraints:
+            join:
+              - type: "expiry"
+                min: "PT1H"
+                max: "PT24H"
+            approve: []
+          privileges:
+            iam:
+              - resource: "projects/example-server-project"
+                role: "roles/compute.osAdminLogin"
+                description: "List and view VMs, use SSH as root user"
+              - resource: "projects/example-server-project"
+                role: "roles/iap.tunnelResourceAccessor"
+                description: "Access VMs through IAP"
+              - resource: "projects/example-server-project"
+                role: "roles/compute.admin"
+                description: "Full access to GCE resources"
+              - resource: "projects/example-server-project"
+                role: "roles/iam.serviceAccountUser"
+                description: "Log into VMs that have an attached service account"
+              - resource: "projects/example-server-project"
+                role: "roles/logging.privateLogViewer"
+                description: "View access logs"
+              - resource: "projects/example-shared-vpc-project"
+                role: "roles/compute.networkUser"
+                description: "Access the shared VPC"
+              - resource: "projects/example-images-project"
+                role: "roles/compute.imageUser"
+                description: "Use custom Compute images"
+
+
+        - name: "Server-Power-Users"
+          description: |
+            Provides root login-access to servers
+          access:
+            - principal: "class:iapUsers"
+              allow: "JOIN"
+          constraints:
+            join:
+              - type: "expiry"
+                min: "PT1H"
+                max: "P1D"
+            approve: []
+          privileges:
+            iam:
+              - resource: "projects/example-server-project"
+                role: "roles/compute.osAdminLogin"
+                description: "Use SSH as root user"
+              - resource: "projects/example-server-project"
+                role: "roles/compute.viewer"
+                description: "List and view all Compute Engine resources"
+              - resource: "projects/example-server-project"
+                role: "roles/iap.tunnelResourceAccessor"
+                description: "Access VMs through IAP"
+              - resource: "projects/example-server-project"
+                role: "roles/logging.privateLogViewer"
+                description: "View access logs"
+
+
+        - name: "Server-Users"
+          description: |
+            Provides standard login-access to servers
+          access:
+            - principal: "class:iapUsers"
+              allow: "JOIN, APPROVE_SELF"
+          constraints:
+            join:
+              - type: "expiry"
+                min: "PT1H"
+                max: "P30D"
+            approve: []
+          privileges:
+            iam:
+              - resource: "projects/example-server-project"
+                role: "roles/compute.osLogin"
+                description: "List and view VMs, use SSH as standard user"
+              - resource: "projects/example-server-project"
+                role: "roles/iap.tunnelResourceAccessor"
+                description: "Access VMs through IAP"
+
+    #--------------------------------------------------------------------------
+    # Servers.
+    #--------------------------------------------------------------------------
+  
+    - name: "VPC-Network"
+      description: "Groups for managing a shared VPC network"
+      groups:
+        - name: "Network-Admins"
+          description: |
+            Provides admin-level access to network and infrastructure
+          access:
+            - principal: "class:iapUsers"
+              allow: "VIEW"
+          constraints:
+            join:
+              - type: "expiry"
+                min: "PT1H"
+                max: "P1D"
+            approve: [ ]
+          privileges:
+            iam:
+              - resource: "projects/example-shared-vpc-project"
+                role: "roles/compute.admin"
+              - resource: "projects/example-shared-vpc-project"
+                role: "roles/compute.osAdminLogin"
+              - resource: "projects/example-shared-vpc-project"
+                role: "roles/iap.tunnelResourceAccessor"
+              - resource: "projects/example-shared-vpc-project"
+                role: "roles/iam.serviceAccountUser"                
