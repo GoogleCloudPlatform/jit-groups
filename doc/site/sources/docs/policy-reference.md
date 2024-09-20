@@ -220,17 +220,29 @@ Each ACE can have the following attributes:
 
 :   The principal identifier that selects the user or group that this ACE applies to:
 
-    | Principal        | Description      | Example          |
-    |------------------|------------------|------------------|
-    | `user:USER_EMAIL` | User with primary email address `USER_EMAIL`. | `user:bob@example.com` |
-    | `group:GROUP_EMAIL` | Includes all _direct_ members of the Cloud Identity/Workspace group `GROUP_EMAIL`.| `group:devops-staff@example.com`|
-    | `class:iapUsers` |  Includes all users that have been authorized by IAP to access the application ||
+    | Principal             | Description      | Example          |
+    |-----------------------|------------------|------------------|
+    | `user:USER_EMAIL`     | User with primary email address `USER_EMAIL`. | `user:bob@example.com` |
+    | `group:GROUP_EMAIL`   | Includes all _direct_ members of the Cloud Identity/Workspace group `GROUP_EMAIL`.| `group:devops-staff@example.com`|
+    | `domain:DOMAIN`       | Includes all users from the Cloud Identity/Workspace account `DOMAIN`, where `DOMAIN` is the account's primary domain.| `domain:example.com`|
+    | `class:iapUsers`      | Includes all users that have been authorized by IAP to access the application ||
+    | `class:internalUsers` | Includes all users that belong to the internal Cloud Identity/Workspace account||
+    | `class:externalUsers` | Includes all users that don't belong to the internal Cloud Identity/Workspace account, all consumer accounts, and all service accounts||
 
     **Remarks**:
 
     +   The principal identifier `group:GROUP_EMAIL` does not apply to JIT groups, it only applies to regular
         Cloud Identity/Workspace security and discussion-forum groups.
-    +   You can grant access to users and groups from external Cloud Identity/Workspace accounts. 
+    +   You can grant access to users and groups from external Cloud Identity/Workspace accounts, as well as consumer accounts. 
+    +   The principal identifier `domain:DOMAIN` captures all users of the Cloud Identity/Workspace account `DOMAIN`, including
+        those users whose email address uses one of the account's secondary domains.
+    +   The principal identifiers `class:internalUsers` and `class:externalUsers` are primarily intended for denying access.
+        For example, you can deny external users from viewing or joining a group by using the following access control entry:
+
+        ```yaml
+        - principal: "class:externalUsers"
+          deny: "ALL"
+        ```
 
 `allow` or `deny` **Required**
 
@@ -430,10 +442,10 @@ Privileges define the projects that members of a JIT groups are granted access t
 ```yaml hl_lines="2-9"
 privileges:
   iam:
-  - project: "project-1"                # Allow view-access to project-1
+  - resource: "projects/project-1"      # Allow view-access to project-1
     role: "roles/compute.viewer"
     
-  - project: "project-3"                # Allow limited view-access to project-3
+  - resource: "projects/project-3"      # Allow limited view-access to project-3
     role: "roles/compute.viewer"
     description: "View Compute Engine instances"
     condition: "resource.type == 'compute.googleapis.com/Instance'"
@@ -441,9 +453,17 @@ privileges:
 
 You can list any number of privileges under the `iam` key. Each privilege can have the following attributes:
 
-`project` **Required**
+`resource` **Required**
 
-:   Project ID of a Google Cloud project that you want to grant access to.
+:   Resource that you want to grant access to, this can be one of the following:
+    
+    | Resource                                                  | Example                 |
+    |-----------------------------------------------------------|-------------------------|
+    | `projects/ID`, where `ID` is a [project ID :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-projects#before_you_begin)                 | `projects/my-project-1`, `my-project-1` |
+    | `folders/ID`, where `ID` is a folder ID                   | `folders/1234567890`|
+    | `organizations/ID` where `ID` is [an organization ID :octicons-link-external-16:](https://cloud.google.com/resource-manager/docs/creating-managing-organization#retrieving_your_organization_id)|`organizations/1234567890`|
+
+    The `projects/` prefix is optional.
 
 `role` **Required**
 
@@ -458,3 +478,6 @@ You can list any number of privileges under the `iam` key. Each privilege can ha
 
 :   An [IAM condition :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-overview). The application adds this
     condition when creating the respective IAM bindings.
+
+    You can use an IAM condition to grant access to [individual resources such as storage buckets,
+    billing accounts, or VM instances :octicons-link-external-16:](https://cloud.google.com/iam/docs/conditions-resource-attributes).
