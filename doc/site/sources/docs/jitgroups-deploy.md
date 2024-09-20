@@ -87,7 +87,8 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
     PRIMARY_DOMAIN=MY_DOMAIN
     ```
     
-    Replace `MY_DOMAIN` with the primary domain of your Cloud Identity or Workspace account.
+    Replace `MY_DOMAIN` with the primary domain of your Cloud Identity or Workspace account. The primary domain
+    is equivalent to the name of your Google Cloud organization (such as `example.com`).
 
 1.  Create a configuration file that instructs Terraform to store its state in the Cloud Storage bucket:
 
