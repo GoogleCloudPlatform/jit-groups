@@ -27,7 +27,7 @@ If you've used JIT Access prior to version 1.6, you're already using the **Polic
 
 To switch from the **AssetInventory** catalog to the **PolicyAnalyzer** catalog, do the following:
 
-1.  [Redeploy the application](https://cloud.devsite.corp.google.com/architecture/manage-just-in-time-privileged-access-to-project#upgrade_just-in-time_access) and apply the following changes to your `app.yaml` configuration file:
+1.  [Redeploy the application](jitaccess-deploy.md) and apply the following changes to your `app.yaml` configuration file:
 
         RESOURCE_CATALOG=PolicyAnalyzer
 
@@ -50,7 +50,7 @@ To switch from the **PolicyAnalyzer** catalog to the **AssetInventory** catalog,
             --role "roles/iam.serviceAccountTokenCreator"
             
     Replace `app-service-account` with the email address of the 
-    [application's service account :octicons-link-external-16:](https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project#configure-your-google-cloud-project).
+    [application's service account :octicons-link-external-16:](jitaccess-deploy.md).
 
 1.  Update the IAM policy of the project, folder, or organization that you manage using Just-in-Time Access:
 
@@ -68,7 +68,7 @@ To switch from the **PolicyAnalyzer** catalog to the **AssetInventory** catalog,
             --role "roles/iam.securityAdmin" \
             --condition None
 
-1.  [Redeploy the application](https://cloud.devsite.corp.google.com/architecture/manage-just-in-time-privileged-access-to-project#upgrade_just-in-time_access) and apply the following changes to your `app.yaml` configuration file:
+1.  [Redeploy the application](jitaccess-deploy.md#upgrade-just-in-time-access) and apply the following changes to your `app.yaml` configuration file:
 
         RESOURCE_CATALOG=AssetInventory
         RESOURCE_CUSTOMER_ID=customer-id

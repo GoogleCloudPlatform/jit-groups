@@ -49,8 +49,8 @@ extra_css:
 repo_name: jit-groups
 repo_url: https://github.com/GoogleCloudPlatform/jit-groups
 copyright: |
-    JIT Access is an open-source project developed and maintained by the Google Cloud Solutions Architects team.<br>
-    Copyright &copy; 2019-2024 Google LLC<br>
+    JIT Groups is an open-source project developed and maintained by the Google Cloud Solutions Architects team.<br>
+    Copyright &copy; 2019-2025 Google LLC<br>
     <a href='https://cloud.google.com/'><img src='https://googlecloudplatform.github.io/jit-groups/images/cloud.svg' width='240' height='160'/></a>
 
 markdown_extensions:
@@ -89,7 +89,7 @@ nav:
       - 'Multi-party approval': multi-party-approval.md
       - 'Notifications': pubsub-notifications.md
     - 'Deploy JIT Access':
-      - 'Deploy or upgrade JIT Access': https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project#deploy_just-in-time_access
+      - 'Deploy or upgrade JIT Access': jitaccess-deploy.md
       - 'Configure multi party approval': configure-multi-party-approval.md
       - 'Configure notifications': configure-pubsub-notifications.md
       - 'Configure catalogs': configure-catalogs.md

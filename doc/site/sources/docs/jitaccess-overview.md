@@ -109,4 +109,4 @@ and the [Cloud Asset API :octicons-link-external-16:](https://cloud.google.com/a
 [IAM API :octicons-link-external-16:](https://cloud.google.com/iam/docs/reference/rest) to manage access.
 
 For detailed instructions on deploying Just-In-Time Access, see
-[Manage just-in-time privileged access to projects :octicons-link-external-16:](https://cloud.google.com/architecture/manage-just-in-time-privileged-access-to-project) on the Google Cloud website.
+[Deploy JIT Access](jitaccess-deploy.md).
