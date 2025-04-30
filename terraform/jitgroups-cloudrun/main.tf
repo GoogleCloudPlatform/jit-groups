@@ -234,12 +234,6 @@ resource "google_project_service" "run" {
     disable_on_destroy         = false
 }
 
-###resource "google_project_service" "compute" {
-###    project                    = var.project_id
-###    service                    = "compute.googleapis.com"
-###    disable_on_destroy         = false
-###}
-
 #------------------------------------------------------------------------------
 # Project.
 #------------------------------------------------------------------------------
@@ -297,14 +291,6 @@ resource "google_iap_brand" "iap_brand" {
         prevent_destroy = true
     }
 }
-### 
-### #
-### # Create an OAuth client ID for IAP.
-### #
-### resource "google_iap_client" "iap_client" {
-###     display_name               = "JIT Groups"
-###     brand                      = google_iap_brand.iap_brand.name
-### }
 
 #
 # Allow users to access IAP.
@@ -313,6 +299,16 @@ resource "google_project_iam_binding" "iap_binding_users" {
     project                    = var.project_id
     role                       = "roles/iap.httpsResourceAccessor"
     members                    = concat([ "user:${var.admin_email}" ], var.iap_users)
+}
+
+#
+# Force-create service identity. Enabling the IAP API should do that automatically,
+# but it doesn't.
+#
+resource "google_project_service_identity" "iap" {
+    provider                   = google-beta
+    project                    = var.project_id
+    service                    = "iap.googleapis.com"
 }
 
 #------------------------------------------------------------------------------
@@ -424,112 +420,6 @@ resource "google_cloud_run_v2_service" "service" {
     }
 }
 
-### #------------------------------------------------------------------------------
-### # SSL certificate.
-### #------------------------------------------------------------------------------
-### 
-### #
-### # NB. Certificates take 5-10 minutes to be usable after resource creation.
-### #     To check the provisioning status of the certificate, run
-### #     gcloud compute ssl-certificates describe jitgroups
-### #
-### resource "google_compute_managed_ssl_certificate" "certificate" {
-###     depends_on                 = [ google_project_service.compute ]
-###     project                    = var.project_id
-###     name                       = "jitgroups"
-### 
-###     managed {
-###         domains                = [var.domain]
-###     }
-### }
-
-### #------------------------------------------------------------------------------
-### # Load balancer backend.
-### #------------------------------------------------------------------------------
-### 
-### #
-### # Create serverless NEG for the Cloud Run service.
-### #
-### resource "google_compute_region_network_endpoint_group" "neg" {
-###     depends_on                 = [ google_project_service.compute ]
-###     project                    = var.project_id
-###     name                       = "jitgroups-neg"
-###     network_endpoint_type      = "SERVERLESS"
-###     region                     = var.location
-###     cloud_run {
-###         service                = google_cloud_run_v2_service.service.name
-###     }
-### }
-### 
-### resource "google_compute_backend_service" "backend" {
-###     project                    = var.project_id
-###     name                       = "jitgroups-backend"
-###     load_balancing_scheme      = "EXTERNAL"
-###     backend {
-###         group = google_compute_region_network_endpoint_group.neg.id
-###     }
-###     iap {
-###         oauth2_client_id     = google_iap_client.iap_client.client_id
-###         oauth2_client_secret = google_iap_client.iap_client.secret
-###     }
-### }
-### 
-### #------------------------------------------------------------------------------
-### # Load balancer frontend.
-### #------------------------------------------------------------------------------
-### 
-### resource "google_compute_global_address" "ip" {
-###     depends_on                 = [ google_project_service.compute ]
-###     project                    = var.project_id
-###     name                       = "jitgroups"
-###     address_type               = "EXTERNAL"
-### }
-### 
-### resource "google_compute_url_map" "url_map" {
-###     project                    = var.project_id
-###     name                       = "jitgroups"
-###     default_service            = google_compute_backend_service.backend.id
-### }
-### 
-### resource "google_compute_target_https_proxy" "proxy" {
-###     project                    = var.project_id
-###     name                       = "jitgroups"
-###     url_map                    = google_compute_url_map.url_map.id
-###     ssl_certificates           = [google_compute_managed_ssl_certificate.certificate.name]
-###     depends_on                 = [google_compute_managed_ssl_certificate.certificate]
-### }
-### 
-### resource "google_compute_global_forwarding_rule" "google_compute_forwarding_rule" {
-###     project                    = var.project_id
-###     name                       = "jitgroups"
-###     load_balancing_scheme      = "EXTERNAL"
-###     port_range                 = "443"
-###     target                     = google_compute_target_https_proxy.proxy.id
-###     ip_address                 = google_compute_global_address.ip.id
-### }
-### 
-#
-# Force-create service identity. Enabling the IAP API should do that automatically,
-# but it doesn't.
-#
-resource "google_project_service_identity" "iap" {
-    provider = google-beta
-    project                    = var.project_id
-    service                    = "iap.googleapis.com"
-}
-### 
-### #
-### # Allow IAP to access Cloud Run service.
-### #
-### resource "google_project_iam_binding" "iap_invoker" {
-###     depends_on                 = [ google_project_service.iap, google_project_service_identity.iap ]
-###     project                    = var.project_id
-###     role                       = "roles/run.invoker"
-###     members = [
-###         "serviceAccount:service-${data.google_project.project.number}@gcp-sa-iap.iam.gserviceaccount.com"
-###     ]
-### }
-
 #------------------------------------------------------------------------------
 # Outputs.
 #------------------------------------------------------------------------------
@@ -538,11 +428,6 @@ output "url" {
     description                = "URL to application"
     value                      = google_cloud_run_v2_service.service.uri
 }
-
-### output "ip" {
-###     description                = "IP address to point DNS record to"
-###     value                      = google_compute_global_address.ip.address
-### }
 
 output "service_account" {
     description                = "Service account used by the application"
