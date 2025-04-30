@@ -141,12 +141,6 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
 
 Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
 
-!!!note
-
-    JIT Groups can be deployed to either App Engine or Cloud Run. App Engine is preferred because
-    it requires a less complex configuration.
-
-
 1.  Clone the GitHub repository to the `target` directory and switch 
     to the `jitgroups/latest` branch:
 
@@ -162,12 +156,18 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
         module "application" {
             source                      = "./target/terraform/jitgroups-appengine"
             project_id                  = local.project_id
-            customer_id                 = "CUSTOMER_ID"
-            groups_domain               = "DOMAIN"
+            customer_id                 = local.customer_id
+            primary_domain              = local.primary_domain
+            organization_id             = local.organization_id
+ 
             admin_email                 = "ADMIN_EMAIL"
             location                    = "LOCATION"
-            iap_users                   = []
+            iap_users                   = [
+                # "domain:${local.primary_domain}"
+            ]
             environments                = []
+
+            # groups_domain             = "GROUPS_DOMAIN"
             options                     = {
                 # "APPROVAL_TIMEOUT"    = "90"
             }
@@ -194,14 +194,19 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
         module "application" {
             source                      = "./target/terraform/jitgroups-cloudrun"
             project_id                  = local.project_id
-            image_tag                   = var.image_tag
-            customer_id                 = "CUSTOMER_ID"
-            domain                      = "DOMAIN"
-            groups_domain               = "GROUPS_DOMAIN"
+            customer_id                 = local.customer_id
+            primary_domain              = local.primary_domain
+            organization_id             = local.organization_id
+ 
             admin_email                 = "ADMIN_EMAIL"
             location                    = "LOCATION"
-            iap_users                   = []
+            image_tag                   = var.image_tag
+            iap_users                   = [
+                # "domain:${local.primary_domain}"
+            ]
             environments                = []
+
+            # groups_domain             = "GROUPS_DOMAIN"
             options                     = {
                 # "APPROVAL_TIMEOUT"    = "90"
             }
@@ -223,19 +228,9 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
 
     Replace values of the following variables:
 
-    +   `CUSTOMER_ID`: your [Cloud Identity or Google Workspace account's customer ID](https://support.google.com/a/answer/10070793).
-    +   `DOMAIN` (Cloud Run only): the fully-qualified domain name to use for the Cloud Run service,
-        for example `jitgroups.example.com`.
-
-        You must use a domain name that you own, and you'll need to create a DNS record for this domain name in a 
-        later step. The domain can be different from the primary or secondary domains that uou use for your
-        Cloud Identity or Google Workspace account.
-
-    +   `GROUPS_DOMAIN`: the domain to use for Cloud Identity groups, this can be the primary or a secondary domain of
-        your Cloud Identity or Google Workspace account.
-    +   `ADMIN_EMAIL`: the email address to show as contact on the OAuth consent screen,
+    +   `admin_email`: the email address to show as contact on the OAuth consent screen,
         this must be the email address of a Cloud Identity/Workspace user.
-    +   `LOCATION`: a supported [App Engine location :octicons-link-external-16:](https://cloud.google.com/about/locations#region)
+    +   `location`: a supported [App Engine location :octicons-link-external-16:](https://cloud.google.com/about/locations#region)
         or [Cloud Run region :octicons-link-external-16:](https://cloud.google.com/run/docs/locations).
     +   `iap_users` (optional): List of users or groups to allow access to the JIT Groups application.
 
