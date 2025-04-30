@@ -46,6 +46,7 @@ runConfigurations/
 .metals
 .vscode
 .vs/
+doc/site/.idea/
 
 # Terraform files 
 .terraform/

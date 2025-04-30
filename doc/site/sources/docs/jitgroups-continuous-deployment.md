@@ -63,11 +63,19 @@ enable required APIs:
 
     Replace `PROJECT_ID` with the ID of the project to deploy JIT Groups in.
 
-1.  Enable the App Engine Admin API and Service Usage API:
+1.  Enable required APIs:
 
-    ```sh
-    gcloud services enable appengine.googleapis.com serviceusage.googleapis.com
-    ```
+    === "App Engine"
+
+        ```sh
+        gcloud services enable appengine.googleapis.com serviceusage.googleapis.com
+        ```
+
+    === "Cloud Run"
+
+        ```sh
+        gcloud services enable cloudbuild.googleapis.com
+        ```
     
 1.  Connect Cloud Build to your Git repository. 
 
@@ -105,25 +113,50 @@ when your repository's mainline branch (`main` or `master`) changes:
 
 1.  Grant the service account the necessary roles to perform deployments:
 
-    ```sh
-    PROJECT_ID=$(gcloud config get core/project)
-    echo -n \
-      roles/viewer \
-      roles/logging.logWriter \
-      roles/oauthconfig.editor \
-      roles/cloudbuild.builds.editor \
-      roles/secretmanager.admin \
-      roles/resourcemanager.projectIamAdmin \
-      roles/appengine.appAdmin \
-      roles/storage.objectAdmin \
-      roles/iam.serviceAccountUser \
-      roles/iam.serviceAccountAdmin \
-      | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
-        --member "serviceAccount:$DEPLOY_ACCOUNT" \
-        --condition None \
-        --format "value(etag)" \
-        --role
-    ```
+    === "App Engine"
+
+        ```sh
+        PROJECT_ID=$(gcloud config get core/project)
+        echo -n \
+          roles/viewer \
+          roles/logging.logWriter \
+          roles/oauthconfig.editor \
+          roles/cloudbuild.builds.editor \
+          roles/secretmanager.admin \
+          roles/resourcemanager.projectIamAdmin \
+          roles/appengine.appAdmin \
+          roles/storage.objectAdmin \
+          roles/iam.serviceAccountUser \
+          roles/iam.serviceAccountAdmin \
+          | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member "serviceAccount:$DEPLOY_ACCOUNT" \
+            --condition None \
+            --format "value(etag)" \
+            --role
+        ```
+
+    === "Cloud Run"
+
+        ```sh
+        PROJECT_ID=$(gcloud config get core/project)
+        echo -n \
+          roles/viewer \
+          roles/logging.logWriter \
+          roles/oauthconfig.editor \
+          roles/cloudbuild.builds.editor \
+          roles/secretmanager.admin \
+          roles/resourcemanager.projectIamAdmin \
+          roles/run.admin \
+          roles/storage.objectAdmin \
+          roles/iam.serviceAccountUser \
+          roles/iam.serviceAccountAdmin \
+          roles/artifactregistry.writer \
+          | xargs -n 1 gcloud projects add-iam-policy-binding $PROJECT_ID \
+            --member "serviceAccount:$DEPLOY_ACCOUNT" \
+            --condition None \
+            --format "value(etag)" \
+            --role
+        ```
 
     !!! note
         This service account is now highly-privileged.
@@ -157,42 +190,92 @@ when your repository's mainline branch (`main` or `master`) changes:
     ```
         
 1.  Open the file `cloudbuild.yaml` and paste the following workflow configuration:
-    
-    ```yaml
-    substitutions:
-      _JITGROUPS_REF: 'JITGROUPS_REF'
-      _JITGROUPS_URL: https://github.com/GoogleCloudPlatform/jit-access.git
-    
-    steps:
-    
-    # Clone JIT Groups repository
-    - name: 'alpine/git'
-      script: |
-        git clone $_JITGROUPS_URL --branch $_JITGROUPS_REF target
-    
-    # Terraform: Init
-    - name: 'hashicorp/terraform:1.9'
-      script: |
-        terraform init -no-color
-    
-    # Terraform: Plan/Apply
-    - name: 'hashicorp/terraform:1.9'
-      script: |
-        if [ "$TRIGGER_NAME" == "deploy" ]
-        then
-          terraform apply -no-color -input=false -auto-approve
-        else
-          terraform plan -no-color -input=false
-        fi
-      timeout: '600s'
-    
-    options:
-      automapSubstitutions: true
-      logging: CLOUD_LOGGING_ONLY
-    ```
+
+    === "App Engine"    
+
+        ```yaml
+        substitutions:
+          _JITGROUPS_REF: 'JITGROUPS_REF'
+          _JITGROUPS_URL: https://github.com/GoogleCloudPlatform/jit-access.git
         
-    Replace `JITGROUPS_REF` with the JIT Groups tag or branch that you want to deploy, for example `tags/2.0.0` or
-    `jitgroups/latest`.
+        steps:
+        
+        # Clone JIT Groups repository
+        - name: 'alpine/git'
+          script: |
+            git clone $_JITGROUPS_URL --branch $_JITGROUPS_REF target
+        
+        # Terraform: Init
+        - name: 'hashicorp/terraform:1.9'
+          script: |
+            terraform init -no-color
+        
+        # Terraform: Plan/Apply
+        - name: 'hashicorp/terraform:1.9'
+          script: |
+            if [ "$TRIGGER_NAME" == "deploy" ]
+            then
+              terraform apply -no-color -input=false -auto-approve
+            else
+              terraform plan -no-color -input=false
+            fi
+          timeout: '600s'
+        
+        options:
+          automapSubstitutions: true
+          logging: CLOUD_LOGGING_ONLY
+        ```
+
+    === "Cloud Run"
+
+        ```yaml
+        substitutions:
+          _JITGROUPS_REF: 'JITGROUPS_REF'
+          _LOCATION: 'LOCATION'
+          _JITGROUPS_URL: https://github.com/GoogleCloudPlatform/jit-access.git
+        
+        steps:
+        
+        # Clone JIT Groups repository
+        - name: 'alpine/git'
+          script: |
+            git clone $_JITGROUPS_URL --branch $_JITGROUPS_REF target
+
+        # Build image
+        - name: 'gcr.io/cloud-builders/docker'
+          script: |
+            docker build -t ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/jitgroups/jitgroups:$COMMIT_SHA target/sources &&
+            docker push ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/jitgroups/jitgroups:$COMMIT_SHA
+
+        # Terraform: Init
+        - name: 'hashicorp/terraform:1.9'
+          script: |
+            terraform init -no-color
+        
+        # Terraform: Plan/Apply
+        - name: 'hashicorp/terraform:1.9'
+          script: |
+            if [ "$TRIGGER_NAME" == "deploy" ]
+            then
+              terraform apply -no-color -input=false -auto-approve -var="image_tag=$COMMIT_SHA"
+            else
+              terraform plan -no-color -input=false -var="image_tag=$COMMIT_SHA"
+            fi
+          timeout: '600s'
+
+        images:
+          - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/jitgroups/jitgroups:$COMMIT_SHA'
+
+        options:
+          automapSubstitutions: true
+          logging: CLOUD_LOGGING_ONLY
+        ```
+
+    Replace the following:
+
+    +   `JITGROUPS_REF`: the JIT Groups tag or branch that you want to deploy, for example `tags/2.0.0` or
+        `jitgroups/latest`.
+    +   `LOCATION` (Cloud Run only): the  region you're deploying to.
     
    1.  Commit your changes and push them to the remote repository:
     
