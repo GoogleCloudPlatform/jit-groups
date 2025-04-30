@@ -216,10 +216,6 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
             value                       = module.application.url
         }
 
-        output "ip" {
-            value                       = module.application.ip
-        }
-
         output "service_account" {
             value                       = module.application.service_account
         }
