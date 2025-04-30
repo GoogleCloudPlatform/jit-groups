@@ -316,6 +316,12 @@ You only need to perform these steps once.
 You can now access the JIT Groups web interface:
 
 1.  Open a browser and navigate to the URL that you obtained after running `terraform apply`.
+
+    !!! note
+
+        It can take up to 10 minutes for the IAP configuration to take effect. During this time, you
+        might see a `Your client does not have permission` error when trying to access the web interface.
+
 1.  Authenticate with a user account that's allowed to access the JIT Groups application. 
     These user accounts include:
 
