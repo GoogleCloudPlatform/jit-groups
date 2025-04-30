@@ -284,19 +284,19 @@ resource "google_service_account_iam_member" "service_account_member" {
 # IAP.
 #------------------------------------------------------------------------------
 
-### #
-### # Create an OAuth consent screen for IAP.
-### #
-### resource "google_iap_brand" "iap_brand" {
-###     depends_on                 = [ google_project_service.iap ]
-###     project                    = var.project_id
-###     support_email              = var.admin_email
-###     application_title          = "JIT Groups"
-###     lifecycle {
-###         # This resource can't be deleted.
-###         prevent_destroy = true
-###     }
-### }
+#
+# Create an OAuth consent screen for IAP.
+#
+resource "google_iap_brand" "iap_brand" {
+    depends_on                 = [ google_project_service.iap ]
+    project                    = var.project_id
+    support_email              = var.admin_email
+    application_title          = "JIT Groups"
+    lifecycle {
+        # This resource can't be deleted.
+        prevent_destroy = true
+    }
+}
 ### 
 ### #
 ### # Create an OAuth client ID for IAP.
@@ -388,7 +388,7 @@ resource "google_cloud_run_v2_service" "service" {
     location                   = var.location
     name                       = "default"
     project                    = var.project_id
-    ingress                    = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+    ingress                    = "INGRESS_TRAFFIC_ALL"
     
     template {
         service_account        = google_service_account.jitgroups.email
@@ -508,15 +508,15 @@ resource "google_cloud_run_v2_service" "service" {
 ###     ip_address                 = google_compute_global_address.ip.id
 ### }
 ### 
-### #
-### # Force-create service identity. Enabling the IAP API should do that automatically,
-### # but it doesn't.
-### #
-### resource "google_project_service_identity" "iap" {
-###     provider = google-beta
-###     project                    = var.project_id
-###     service                    = "iap.googleapis.com"
-### }
+#
+# Force-create service identity. Enabling the IAP API should do that automatically,
+# but it doesn't.
+#
+resource "google_project_service_identity" "iap" {
+    provider = google-beta
+    project                    = var.project_id
+    service                    = "iap.googleapis.com"
+}
 ### 
 ### #
 ### # Allow IAP to access Cloud Run service.
@@ -536,7 +536,7 @@ resource "google_cloud_run_v2_service" "service" {
 
 output "url" {
     description                = "URL to application"
-    value                      = "https://${google_cloud_run_v2_service.service.uri}/"
+    value                      = google_cloud_run_v2_service.service.uri
 }
 
 ### output "ip" {

@@ -255,39 +255,41 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
     terraform apply 
     ```
 
-    !!!note
-        Because of internal provisioning delays, you might encounter the following
-        error when you run `terraform apply` for the first time:
+    === "App Engine"
 
-        ```
-        Error waiting for Creating StandardAppVersion: Error code 13, message:
-        Failed to create cloud build
-        ```
+        !!!note
+            Because of internal provisioning delays, you might encounter the following
+            error when you run `terraform apply` for the first time:
+    
+            ```
+            Error waiting for Creating StandardAppVersion: Error code 13, message:
+            Failed to create cloud build
+            ```
+    
+            If you encounter this error, rerun `terraform apply`.
 
-        If you encounter this error, rerun `terraform apply`.
+    === "Cloud Run"
+
+        !!!note
+
+            If you haven't used Artifact Registry before, the command might fail with the
+            following error:
+            ```
+            │ denied: Unauthenticated request. Unauthenticated requests do not have permission
+            │ "artifactregistry.repositories.uploadArtifacts" on resource
+            ```
+
+            You can fix this error by running the following command:
+            ```
+            gcloud auth configure-docker LOCATION-docker.pkg.dev
+            ```
+            
+            Replace `LOCATION` with the Cloud Run region that you're deploying to.
+            Then re-run `terraform apply`
 
     When the command completes, it prints the URL of the application and the
     email address of the application's service account. You need this URL and email address
     later.
-
-1.  Create a DNS record for JIT Groups:
-
-    === "App Engine"
-
-        App Engine automatically creates a DNS record for you.
-
-    === "Cloud Run"
-
-        Create a DNS `A` record in your public DNS zone:
-
-        + Name: the name that you provided in `domain`.
-        + Address: the IP address that's shown in the output of `terraform apply`.
-
-        !!! note
-            The Terraform module automatically creates a Google-managed SSL certificate
-            for the domain. It typically takes around 10 minutes until the certificate 
-            is fully provisioned and during this time, the managed SSL certificate can't be used. For details,
-            see [Troubleshooting Google-managed certificates :octicons-link-external-16:](https://cloud.google.com/load-balancing/docs/ssl-certificates/troubleshooting#troubleshooting_google-managed_certificates).
 
 ### Grant access to Cloud Identity/Workspace
 
