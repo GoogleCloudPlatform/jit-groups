@@ -120,6 +120,12 @@ variable "smtp_host" {
     default                    = "smtp.gmail.com"
 }
 
+variable "secret_location" {
+    description                = "Region to replicate secrets to. If this variable is set, automatic replication is used."
+    type                       = string
+    default                    = null
+}
+
 #------------------------------------------------------------------------------
 # Provider.
 #------------------------------------------------------------------------------
@@ -283,7 +289,19 @@ resource "google_secret_manager_secret" "smtp" {
     secret_id                  = "smtp"
 
     replication {
-        auto {}
+        dynamic "auto" {
+            for_each = var.secret_location == null ? [1] : []
+            content {}
+        }
+    
+        dynamic "user_managed" {
+            for_each = var.secret_location != null ? [1] : []
+            content {
+                replicas {
+                    location = var.secret_location
+                }
+            }
+        }
     }
 }
 
