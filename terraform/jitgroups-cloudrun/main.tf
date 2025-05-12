@@ -378,7 +378,7 @@ resource "null_resource" "docker_image" {
     count                      = var.image_tag != null ? 0 : 1
     provisioner "local-exec" {
         command = join("&&", [
-            "docker build -t ${local.image_name}:${local.image_tag} ${local.sources}",
+            "docker build --platform linux/amd64 -t ${local.image_name}:${local.image_tag} ${local.sources}",
             "docker push ${local.image_name}:${local.image_tag}"
         ])
         interpreter = ["bash", "-c"]
