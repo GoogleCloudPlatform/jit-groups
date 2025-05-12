@@ -45,7 +45,13 @@ variable "application_service_account" {
         condition              = endswith(var.application_service_account, ".iam.gserviceaccount.com")
         error_message          = "application_service_account must be a service account email address"
     }
-}                            
+}     
+
+variable "secret_location" {
+    description                = "Region to replicate secrets to. If this variable is set, automatic replication is used."
+    type                       = string
+    default                    = null
+}                       
 
 #------------------------------------------------------------------------------
 # Required APIs.
@@ -98,7 +104,19 @@ resource "google_secret_manager_secret" "policy" {
     secret_id                  = "jit-${var.name}"
     
     replication {
-        auto {}
+        dynamic "auto" {
+            for_each = var.secret_location == null ? [1] : []
+            content {}
+        }
+    
+        dynamic "user_managed" {
+            for_each = var.secret_location != null ? [1] : []
+            content {
+                replicas {
+                    location = var.secret_location
+                }
+            }
+        }
     }
 }
 resource "google_secret_manager_secret_version" "v1" {

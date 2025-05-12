@@ -168,6 +168,7 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
             environments                = []
 
             # groups_domain             = "GROUPS_DOMAIN"
+            # secret_location           = "SECRET_LOCATION"
             options                     = {
                 # "APPROVAL_TIMEOUT"    = "90"
             }
@@ -207,6 +208,7 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
             environments                = []
 
             # groups_domain             = "GROUPS_DOMAIN"
+            # secret_location           = "SECRET_LOCATION"
             options                     = {
                 # "APPROVAL_TIMEOUT"    = "90"
             }
@@ -240,6 +242,8 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
     +   `environments` List of environment service accounts, leave empty for now.
     +   `groups_domain` (optional): the domain to use for Cloud Identity groups. By default, the application 
         uses the primary domain for groups.
+    +   `secret_location` (optional): the region to [replicate the SMTP secret to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
+        By default, the secret is replicated automatically.
     +   `options` (optional): Map of additional
         [configuration options](jitgroups-options.md).
 

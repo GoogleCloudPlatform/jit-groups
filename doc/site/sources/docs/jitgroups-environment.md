@@ -30,7 +30,7 @@ JIT Groups application or a separate project:
 
    1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="4 9-20"
+       ```hcl  hl_lines="4 9-22"
        module "application" {
            ...
            environments                = [ # List of environments, identified by service account
@@ -46,6 +46,8 @@ JIT Groups application or a separate project:
     
            name                        = "NAME"
            policy                      = file("environment.yaml")
+           
+           # secret_location           = "SECRET_LOCATION"
        }
 
        output "environment"  {
@@ -62,7 +64,13 @@ JIT Groups application or a separate project:
        ```
 
 
-    Replace `NAME` with the name of the environment. 
+    
+    Replace values of the following variables:
+    
+    +   `name`: the name of the environment.
+    +   `secret_location` (optional): the region to [replicate Secret Manager secrets to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
+        By default, the secrets used for storing policy documents are replicated automatically.
+    
 
     The application uses the environment name as unique identifier and 
     incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
