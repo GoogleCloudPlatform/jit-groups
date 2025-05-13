@@ -375,12 +375,14 @@ resource "google_artifact_registry_repository" "registry" {
 #
 resource "null_resource" "docker_image" {
     depends_on                 = [google_artifact_registry_repository.registry]
-    count                      = var.image_tag != null ? 0 : 1
+    triggers = {
+        always_rebuild = timestamp()
+    }
     provisioner "local-exec" {
-        command = join("&&", [
-            "docker build --platform linux/amd64 -t ${local.image_name}:${local.image_tag} ${local.sources}",
-            "docker push ${local.image_name}:${local.image_tag}"
-        ])
+        command = var.image_tag == null ? join("&&", [
+                    "docker build --platform linux/amd64 -t ${local.image_name}:${local.image_tag} ${local.sources}",
+                    "docker push ${local.image_name}:${local.image_tag}"
+                ]) : "echo Using predefined image tag, skipping Docker build"
         interpreter = ["bash", "-c"]
     }
 }
