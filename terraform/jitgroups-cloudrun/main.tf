@@ -383,7 +383,7 @@ resource "null_resource" "docker_image" {
                     "docker build --platform linux/amd64 -t ${local.image_name}:${local.image_tag} ${local.sources}",
                     "docker push ${local.image_name}:${local.image_tag}"
                 ]) : "echo Using predefined image tag, skipping Docker build"
-        interpreter = ["bash", "-c"]
+        interpreter = ["sh", "-c"]
     }
 }
 
