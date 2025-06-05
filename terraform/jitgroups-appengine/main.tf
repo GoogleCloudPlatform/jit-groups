@@ -428,6 +428,12 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     entrypoint {
         shell                  = ""
     }
+
+    timeouts {
+        create = "10m"
+        update = "10m"
+        delete = "10m"
+    }
 }
 
 #
