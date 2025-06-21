@@ -254,10 +254,10 @@ resource "google_iap_brand" "iap_brand" {
     project                    = var.project_id
     support_email              = var.admin_email
     application_title          = "JIT Groups"
-    lifecycle {
-        # This resource can't be deleted.
-        prevent_destroy = true
-    }
+    # lifecycle {
+    #     # This resource can't be deleted.
+    #     prevent_destroy = true
+    # }
 }
 
 #
@@ -405,6 +405,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     project                    = var.project_id
     runtime                    = "java17"
     instance_class             = "F2"
+    service_account            = google_service_account.jitgroups.email
     env_variables              = merge({
       "RESOURCE_SCOPE"         = var.resource_scope
       "CUSTOMER_ID"            = var.customer_id
