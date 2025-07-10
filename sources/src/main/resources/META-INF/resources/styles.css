@@ -348,3 +348,7 @@ main .mdc-button {
     z-index: 2;
     padding: 10px;
 }
+
+.jit-system-description {
+  white-space: pre-line;   /* pre-wrap also works */
+}
