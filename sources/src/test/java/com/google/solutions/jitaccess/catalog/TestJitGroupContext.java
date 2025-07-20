@@ -138,7 +138,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(createFailingConstraint("join")),
         Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -170,7 +171,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(createFailingConstraint("join")),
         Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -201,7 +203,8 @@ public class TestJitGroupContext {
         .build(),
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(createUnsatisfiedConstraint("join"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -232,7 +235,8 @@ public class TestJitGroupContext {
         .build(),
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(createSatisfiedConstraint("join"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -296,7 +300,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(createFailingConstraint("join")),
         Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -325,7 +330,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(),
         Policy.ConstraintClass.APPROVE, List.of()),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -392,7 +398,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(new ExpiryConstraint(Duration.ofMinutes(1))),
         Policy.ConstraintClass.APPROVE, List.of()),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -434,7 +441,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_USER, PolicyPermission.APPROVE_SELF.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -466,7 +474,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_USER, PolicyPermission.JOIN.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -508,7 +517,8 @@ public class TestJitGroupContext {
             "join-constraint",
             List.of(),
             "false"))), // Unsatisfied
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -552,7 +562,8 @@ public class TestJitGroupContext {
 
         Policy.ConstraintClass.APPROVE,
         List.of(createUnsatisfiedConstraint("approve-constraint"))), // Unsatisfied -> does not matter here
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -660,7 +671,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_USER, PolicyPermission.APPROVE_SELF.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createSatisfiedConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -698,7 +710,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_USER, PolicyPermission.JOIN.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createSatisfiedConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -736,7 +749,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_GROUP, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("failing"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -775,7 +789,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_1, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("failing"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -812,7 +827,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_1, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createUnsatisfiedConstraint("failing"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -850,7 +866,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_1, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createSatisfiedConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -924,7 +941,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_1, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createFailingConstraint("failing"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -958,7 +976,8 @@ public class TestJitGroupContext {
         .allow(SAMPLE_APPROVER_1, PolicyPermission.APPROVE_OTHERS.toMask())
         .build(),
       Map.of(Policy.ConstraintClass.APPROVE, List.of(createUnsatisfiedConstraint("failing"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")
@@ -994,7 +1013,8 @@ public class TestJitGroupContext {
       Map.of(
         Policy.ConstraintClass.JOIN, List.of(new ExpiryConstraint(Duration.ofSeconds(30), Duration.ofMinutes(2))),
         Policy.ConstraintClass.APPROVE, List.of(createSatisfiedConstraint("approve"))),
-      List.of());
+      List.of(),
+      false);
 
     createEnvironmentPolicy()
       .add(new SystemPolicy("system-1", "System")

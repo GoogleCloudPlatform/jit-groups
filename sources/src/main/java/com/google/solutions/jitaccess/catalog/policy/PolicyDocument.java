@@ -490,7 +490,8 @@ public class PolicyDocument {
     @JsonProperty("description") String description,
     @JsonProperty("access") List<AccessControlEntryElement> acl,
     @JsonProperty("constraints") ConstraintsElement constraints,
-    @JsonProperty("privileges") PrivilegesElement privileges
+    @JsonProperty("privileges") PrivilegesElement privileges,
+    @JsonProperty("gkeEnabled") boolean gkeEnabled
   ) {
 
     static GroupElement toYaml(@NotNull JitGroupPolicy policy) {
@@ -510,7 +511,8 @@ public class PolicyDocument {
             .stream()
             .filter(p -> p instanceof IamRoleBinding)
             .map(p -> IamRoleBindingElement.toYaml((IamRoleBinding)p))
-            .toList()));
+            .toList()),
+        policy.isGkeEnabled());
     }
 
     @NotNull Optional<JitGroupPolicy> toPolicy(@NotNull IssueCollection issues) {
@@ -548,7 +550,8 @@ public class PolicyDocument {
                 .stream()
                 .map(Optional::get)
                 .map(b -> (Privilege)b)
-                .toList());
+                .toList(),
+              this.gkeEnabled);
           }
           catch (Exception e) {
             issues.error(

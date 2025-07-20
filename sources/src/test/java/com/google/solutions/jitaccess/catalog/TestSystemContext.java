@@ -54,7 +54,8 @@ public class TestSystemContext {
           SAMPLE_USER,
           PolicyPermission.VIEW.toMask()))),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     var deniedGroupPolicy = new JitGroupPolicy(
       "group-1",
       "Group 1",
@@ -62,7 +63,8 @@ public class TestSystemContext {
         .deny(SAMPLE_USER, -1)
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     systemPolicy.add(allowedGroupPolicy);
     systemPolicy.add(deniedGroupPolicy);
     environmentPolicy.add(systemPolicy);
@@ -99,7 +101,8 @@ public class TestSystemContext {
         .deny(SAMPLE_USER, PolicyPermission.VIEW.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     systemPolicy.add(groupPolicy);
     environmentPolicy.add(systemPolicy);
 
@@ -128,7 +131,8 @@ public class TestSystemContext {
         .allow(SAMPLE_USER, PolicyPermission.VIEW.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     systemPolicy.add(groupPolicy);
     environmentPolicy.add(systemPolicy);
 
