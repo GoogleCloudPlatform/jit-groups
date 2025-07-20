@@ -151,7 +151,7 @@ A JIT group represents a job function or role and bundles all access that's requ
 perform this job function or role.
 
 
-```yaml hl_lines="7-12"
+```yaml hl_lines="7-13"
 ...
 environment:
   ...
@@ -160,6 +160,7 @@ environment:
     groups:
     - name: "datamart-admins"
       description: "Admin-level access to data and stuff"
+      gkeEnabled: true
       access: []
       constraints:
         join: []
@@ -181,6 +182,12 @@ environment:
 
 :   Text that describes the purpose of the JIT group. The text is shown in the user interface and
     is for informational purposes only.
+
+`gkeEnabled` **Optional** (Default: `false`)
+
+:   When set to `true`, JIT Groups automatically adds the Cloud Identity group to `gke-security-groups`
+    so that it can be used for
+    [Google Kubernetes Engine RBAC](https://cloud.google.com/kubernetes-engine/docs/how-to/google-groups-rbac).
 
 `access` **Optional**
 
