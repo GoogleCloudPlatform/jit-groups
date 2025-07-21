@@ -366,6 +366,10 @@ public class TestProvisioner {
         .thenReturn(new GroupKey("1"));
       when(groupsClient.getGroup(eq(SAMPLE_GROUP)))
         .thenReturn(new Group());
+      when(groupsClient.searchGroupsByPrefix(eq(Provisioner.GKE_SECURITY_GROUPS_PREFIX), eq(false)))
+        .thenReturn(List.of(new Group()
+            .setName("groups/gke")
+          .setGroupKey(new EntityKey().setId(Provisioner.GKE_SECURITY_GROUPS_PREFIX))));
 
       var provisioner = new Provisioner.GroupProvisioner(
         mapping,
@@ -387,6 +391,13 @@ public class TestProvisioner {
         eq(new GroupKey("1")),
         eq(SAMPLE_USER_1),
         eq(expiry));
+
+      verify(groupsClient, times(gkeEnabled ? 1 : 0)).addPermanentMembership(
+        new GroupKey("groups/gke"),
+        SAMPLE_GROUP);
+      verify(groupsClient, times(gkeEnabled ? 0 : 1)).deleteMembership(
+        new GroupKey("groups/gke"),
+        SAMPLE_GROUP);
     }
 
     //---------------------------------------------------------------------------

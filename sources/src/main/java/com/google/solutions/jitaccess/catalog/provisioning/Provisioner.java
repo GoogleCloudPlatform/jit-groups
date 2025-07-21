@@ -54,7 +54,7 @@ public class Provisioner {
   /**
    * Prefix used by GKE to identify the group that contains all RBAC-enabled groups.
    */
-  private static final @NotNull String GKE_SECURITY_GROUPS_PREFIX = "gke-security-groups@";
+  static final @NotNull String GKE_SECURITY_GROUPS_PREFIX = "gke-security-groups@";
 
   private final @NotNull String environmentName;
   private final @NotNull GroupProvisioner groupProvisioner;
