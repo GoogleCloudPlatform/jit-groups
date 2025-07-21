@@ -30,6 +30,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -638,6 +639,65 @@ public class ITestCloudIdentityGroupsClient {
     //
     // Check deletion was effective.
     //
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> client.getMembership(id));
+  }
+
+  //---------------------------------------------------------------------
+  // deleteMembership - by ID.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void deleteMembership_byId_whenGroupIdInvalid() throws AccessException, IOException {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    client.deleteMembership(NONEXISTING_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
+  }
+
+  @Test
+  public void deleteMembership_byId_whenMembershipNotFound() throws AccessException, IOException {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    client.createGroup(
+      TEMPORARY_ACCESS_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+
+    client.deleteMembership(TEMPORARY_ACCESS_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
+  }
+
+  @Test
+  public void deleteMembership_byId() throws AccessException, IOException {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(
+      TEMPORARY_ACCESS_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+    var id = client.addMembership(
+      groupId,
+      ITestEnvironment.TEMPORARY_ACCESS_USER,
+      Instant.now().plusSeconds(300));
+
+    client.deleteMembership(TEMPORARY_ACCESS_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
+
     assertThrows(
       ResourceNotFoundException.class,
       () -> client.getMembership(id));

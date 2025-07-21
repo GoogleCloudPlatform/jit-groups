@@ -294,6 +294,12 @@ public class Provisioner {
 
 
         //TODO: Add (and remove!) from gke-security-groups (w/o expiry, w/ view permission)
+        // - gke-security-groups uses the primary domain, not the groups domain
+        // - Skip and log if gke-security-groups doesn't exist
+        //
+        //   call searchGroup "gke-security-groups", if found:
+        // - ON -> call addMembership(groupId, principalId)
+        // - OFF -> call  overload deleteMembership(groupId, principalId) -> handles 404
       }
       catch (AccessException e) {
         this.logger.error(

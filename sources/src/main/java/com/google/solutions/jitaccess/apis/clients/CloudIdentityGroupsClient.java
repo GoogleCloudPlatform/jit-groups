@@ -33,6 +33,7 @@ import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.common.Coalesce;
 import jakarta.inject.Singleton;
+import org.crac.Resource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -154,7 +155,6 @@ public class CloudIdentityGroupsClient {
         throw (GoogleJsonResponseException)e.fillInStackTrace();
     }
   }
-
 
   /**
    * Update group settings to restrictive defaults.
@@ -515,11 +515,12 @@ public class CloudIdentityGroupsClient {
   /**
    * Delete a group membership in an idempotent way.
    */
-  public void deleteMembership(
+  private void deleteMembership(
+    @NotNull CloudIdentity client,
     @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
-      createClient()
+      client
         .groups()
         .memberships()
         .delete(membershipId.id)
@@ -535,6 +536,46 @@ public class CloudIdentityGroupsClient {
         translateAndThrowApiException(e);
       }
     }
+  }
+
+  /**
+   * Delete a group membership in an idempotent way.
+   */
+  public void deleteMembership(
+    @NotNull MembershipId membershipId
+  ) throws AccessException, IOException {
+    deleteMembership(createClient(), membershipId);
+  }
+
+  /**
+   * Delete a group membership in an idempotent way.
+   */
+  public void deleteMembership(
+    @NotNull GroupId groupId,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    var client = createClient();
+
+    //
+    // Lookup membership, assuming it exists.
+    //
+    MembershipId membershipId;
+    try
+    {
+      membershipId = lookupGroupMembership(
+        client,
+        lookupGroup(groupId),
+        member);
+    }
+    catch (AccessException e)
+    {
+      //
+      // Membership doesn't exist, so there's nothing to delete.
+      //
+      return;
+    }
+
+    deleteMembership(client, membershipId);
   }
 
   private @NotNull MembershipId updateMembership(
