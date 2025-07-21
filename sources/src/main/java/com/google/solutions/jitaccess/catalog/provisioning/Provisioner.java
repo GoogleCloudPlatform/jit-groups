@@ -321,10 +321,11 @@ public class Provisioner {
             new GroupKey(gkeSecurityGroup.get().getName()),
             groupId);
         }
-        else {
+        else if (group.isGkeEnabled()) {
           this.logger.warn(
             EventIds.PROVISION_MEMBER,
-            "GKE-enabling the group %s failed because there is no group that matches '%s'",
+            "GKE-enabling the group %s failed because the Cloud Identity account doesn't" +
+              " contain any group that matches '%s'.",
             groupId,
             GKE_SECURITY_GROUPS_PREFIX);
         }
