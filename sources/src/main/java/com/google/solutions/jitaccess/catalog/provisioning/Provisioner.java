@@ -298,7 +298,7 @@ public class Provisioner {
           expiry);
 
         //
-        // TODO: Test - GKE-enable (or disable) the group.
+        // GKE-enable (or disable) the group.
         //
         var gkeSecurityGroup = this.groupsClient
           .searchGroupsByPrefix(GKE_SECURITY_GROUPS_PREFIX, false)
