@@ -185,9 +185,12 @@ environment:
 
 `gkeEnabled` **Optional** (Default: `false`)
 
-:   When set to `true`, JIT Groups automatically adds the Cloud Identity group to `gke-security-groups`
-    so that it can be used for
-    [Google Kubernetes Engine RBAC](https://cloud.google.com/kubernetes-engine/docs/how-to/google-groups-rbac).
+:   When set to `true`, JIT Groups configures the group so that it can be used for
+    [Google Kubernetes Engine RBAC](https://cloud.google.com/kubernetes-engine/docs/how-to/google-groups-rbac):
+
+    +   The Cloud Identity group's access settings are relaxed so that members of the group are 
+        allowed to list all group members.
+    +   The Cloud Identity group is added to `gke-security-groups`.
 
 `access` **Optional**
 
