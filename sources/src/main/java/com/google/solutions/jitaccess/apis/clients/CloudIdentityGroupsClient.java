@@ -54,6 +54,7 @@ public class CloudIdentityGroupsClient {
   private static final int SEARCH_PAGE_SIZE = 1000;
   public static final String LABEL_DISCUSSION_FORUM = "cloudidentity.googleapis.com/groups.discussion_forum";
   public static final String LABEL_SECURITY = "cloudidentity.googleapis.com/groups.security";
+  private static final int MAX_GROUP_SETTINGS_PATCH_ATTEMPTS = 5;
 
   private final @NotNull Options options;
   private final @NotNull GoogleCredentials credentials;
@@ -144,6 +145,54 @@ public class CloudIdentityGroupsClient {
         throw new ResourceNotFoundException("The group or membership does not exist", e);
       default:
         throw (GoogleJsonResponseException)e.fillInStackTrace();
+    }
+  }
+
+
+  /**
+   * Update group settings to restrictive defaults.
+   */
+  private void restrictGroupSettings(@NotNull GroupId emailAddress) throws IOException {
+    var settingsClient = createSettingsClient();
+
+    //
+    // The group settings API is prone to fail for newly created groups.
+    //
+    for (int attempt = 0; attempt < MAX_GROUP_SETTINGS_PATCH_ATTEMPTS; attempt++) {
+      try {
+        settingsClient
+          .groups()
+          .update(emailAddress.email, this.RESTRICTED_SETTINGS)
+          .execute();
+
+        //
+        // Successful update -> quit loop.
+        //
+        return;
+      }
+      catch (GoogleJsonResponseException e) {
+        if (
+          e.getStatusCode() == 404 ||
+          e.getStatusCode() == 400 &&
+          e.getDetails() != null &&
+          e.getDetails().getErrors() != null &&
+          e.getDetails().getErrors()
+            .stream()
+            .anyMatch(err -> e.getMessage() != null && err.getMessage().contains("INVALID_GAIA_GROUP"))) {
+
+          //
+          // This is most likely an intermittent error.
+          //
+          try {
+            Thread.sleep(200);
+          }
+          catch (InterruptedException ignored) {
+          }
+        }
+        else {
+          throw (GoogleJsonResponseException) e.fillInStackTrace();
+        }
+      }
     }
   }
 
@@ -323,10 +372,7 @@ public class CloudIdentityGroupsClient {
       //
       // Lock down group settings.
       //
-      createSettingsClient()
-        .groups()
-        .update(emailAddress.email, this.RESTRICTED_SETTINGS)
-        .execute();
+      restrictGroupSettings(emailAddress);
 
       return groupKey;
     }
