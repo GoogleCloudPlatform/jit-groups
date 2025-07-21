@@ -186,7 +186,7 @@ public class TestProvisioner {
   }
 
   @Nested
-  public static class GroupProvisioner {
+  public class GroupProvisioner {
 
     // -------------------------------------------------------------------------
     // cloudIdentityGroupId.
@@ -423,7 +423,7 @@ public class TestProvisioner {
   }
   
   @Nested
-  public static class IamProvisioner {
+  public class IamProvisioner {
 
     // -------------------------------------------------------------------------
     // replaceBindingsForPrincipals.

@@ -551,7 +551,7 @@ public class CloudIdentityGroupsClient {
    * Delete a group membership in an idempotent way.
    */
   public void deleteMembership(
-    @NotNull GroupId groupId,
+    @NotNull GroupKey groupKey,
     @NotNull IamPrincipalId member
   ) throws AccessException, IOException {
     var client = createClient();
@@ -564,7 +564,7 @@ public class CloudIdentityGroupsClient {
     {
       membershipId = lookupGroupMembership(
         client,
-        lookupGroup(groupId),
+        groupKey,
         member);
     }
     catch (AccessException e)

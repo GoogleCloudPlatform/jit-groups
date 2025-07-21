@@ -649,17 +649,6 @@ public class ITestCloudIdentityGroupsClient {
   //---------------------------------------------------------------------
 
   @Test
-  public void deleteMembership_byId_whenGroupIdInvalid() throws AccessException, IOException {
-    var client = new CloudIdentityGroupsClient(
-      ITestEnvironment.APPLICATION_CREDENTIALS,
-      new CloudIdentityGroupsClient.Options(
-        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
-      HttpTransport.Options.DEFAULT);
-
-    client.deleteMembership(NONEXISTING_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
-  }
-
-  @Test
   public void deleteMembership_byId_whenMembershipNotFound() throws AccessException, IOException {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
@@ -667,14 +656,14 @@ public class ITestCloudIdentityGroupsClient {
         ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
 
-    client.createGroup(
+    var groupId = client.createGroup(
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
 
-    client.deleteMembership(TEMPORARY_ACCESS_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
+    client.deleteMembership(groupId, ITestEnvironment.TEMPORARY_ACCESS_USER);
   }
 
   @Test
@@ -696,7 +685,7 @@ public class ITestCloudIdentityGroupsClient {
       ITestEnvironment.TEMPORARY_ACCESS_USER,
       Instant.now().plusSeconds(300));
 
-    client.deleteMembership(TEMPORARY_ACCESS_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER);
+    client.deleteMembership(groupId, ITestEnvironment.TEMPORARY_ACCESS_USER);
 
     assertThrows(
       ResourceNotFoundException.class,

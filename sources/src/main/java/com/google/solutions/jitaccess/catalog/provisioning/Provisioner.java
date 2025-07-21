@@ -51,6 +51,11 @@ import java.util.stream.Collectors;
  * Provisions access to the resources in an environment.
  */
 public class Provisioner {
+  /**
+   * Prefix used by GKE to identify the group that contains all RBAC-enabled groups.
+   */
+  private static final @NotNull String GKE_SECURITY_GROUPS_PREFIX = "gke-security-groups@";
+
   private final @NotNull String environmentName;
   private final @NotNull GroupProvisioner groupProvisioner;
   private final @NotNull IamProvisioner iamProvisioner;
@@ -292,14 +297,37 @@ public class Provisioner {
           groupId,
           expiry);
 
-
-        //TODO: Add (and remove!) from gke-security-groups (w/o expiry, w/ view permission)
-        // - gke-security-groups uses the primary domain, not the groups domain
-        // - Skip and log if gke-security-groups doesn't exist
         //
-        //   call searchGroup "gke-security-groups", if found:
-        // - ON -> call addMembership(groupId, principalId)
-        // - OFF -> call  overload deleteMembership(groupId, principalId) -> handles 404
+        // TODO: Test - GKE-enable (or disable) the group.
+        //
+        var gkeSecurityGroup = this.groupsClient
+          .searchGroupsByPrefix(GKE_SECURITY_GROUPS_PREFIX, false)
+          .stream()
+          .filter(g -> g.getGroupKey().getId().startsWith(GKE_SECURITY_GROUPS_PREFIX))
+          .findFirst();
+        if (gkeSecurityGroup.isPresent() && group.isGkeEnabled()) {
+          //
+          // Add group to gke-security-groups in case it's not a member already.
+          //
+          this.groupsClient.addPermanentMembership(
+            new GroupKey(gkeSecurityGroup.get().getName()),
+            groupId);
+        }
+        else if (gkeSecurityGroup.isPresent() && !group.isGkeEnabled()) {
+          //
+          // Remove from gke-security-groups in case it used to be a member.
+          //
+          this.groupsClient.deleteMembership(
+            new GroupKey(gkeSecurityGroup.get().getName()),
+            groupId);
+        }
+        else {
+          this.logger.warn(
+            EventIds.PROVISION_MEMBER,
+            "GKE-enabling the group %s failed because there is no group that matches '%s'",
+            groupId,
+            GKE_SECURITY_GROUPS_PREFIX);
+        }
       }
       catch (AccessException e) {
         this.logger.error(
