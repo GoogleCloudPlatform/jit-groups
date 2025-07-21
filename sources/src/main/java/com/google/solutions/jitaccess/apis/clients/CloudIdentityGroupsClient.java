@@ -34,6 +34,7 @@ import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.common.Coalesce;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -572,15 +573,18 @@ public class CloudIdentityGroupsClient {
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
     @NotNull IamPrincipalId member,
-    @NotNull Instant expiry
+    @Nullable Instant expiry
   ) throws AccessException, IOException {
     var role = new MembershipRole()
-      .setName("MEMBER")
-      .setExpiryDetail(new ExpiryDetail()
+      .setName("MEMBER");
+
+    if (expiry != null) {
+      role.setExpiryDetail(new ExpiryDetail()
         .setExpireTime(expiry
           .atOffset(ZoneOffset.UTC)
           .truncatedTo(ChronoUnit.SECONDS)
           .format(DateTimeFormatter.ISO_DATE_TIME)));
+    }
 
     try {
       //
@@ -620,6 +624,16 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
+   * Permanently add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addPermanentMembership(
+    @NotNull GroupKey groupKey,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    return addMembership(createClient(), groupKey, member, null);
+  }
+
+  /**
    * Add a member to a group in an idempotent way.
    */
   public @NotNull MembershipId addMembership(
@@ -627,6 +641,7 @@ public class CloudIdentityGroupsClient {
     @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
+    Preconditions.checkNotNull(expiry, "expiry");
     return addMembership(createClient(), groupKey, member, expiry);
   }
 
@@ -638,6 +653,8 @@ public class CloudIdentityGroupsClient {
     @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
+    Preconditions.checkNotNull(expiry, "expiry");
+
     var client = createClient();
     return addMembership(
       client,
