@@ -259,6 +259,13 @@ public class Provisioner {
       // Create group if it doesn't exist yet.
       //
       try {
+        //
+        // Choose access settings based on whether this group is intended to use for GKE RBAC.
+        //
+        var accessProfile = group.isGkeEnabled()
+          ? CloudIdentityGroupsClient.AccessProfile.GkeCompatible
+          : CloudIdentityGroupsClient.AccessProfile.Restricted;
+
         var groupKey = this.groupsClient.createGroup(
           groupId,
           CloudIdentityGroupsClient.GroupType.Security,
@@ -267,7 +274,8 @@ public class Provisioner {
             group.id().environment(),
             group.id().system(),
             group.id().name()),
-          group.description());
+          group.description(),
+          accessProfile);
 
         //
         // Add user to group.
@@ -283,6 +291,8 @@ public class Provisioner {
           member,
           groupId,
           expiry);
+
+        //TODO: Add (and remove!) from gke-security-groups (w/o expiry, w/ view permission)
       }
       catch (AccessException e) {
         this.logger.error(

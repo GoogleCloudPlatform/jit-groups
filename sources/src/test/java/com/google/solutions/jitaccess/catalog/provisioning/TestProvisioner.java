@@ -315,7 +315,8 @@ public class TestProvisioner {
           eq(SAMPLE_GROUP),
           eq(CloudIdentityGroupsClient.GroupType.Security),
           anyString(),
-          any()))
+          any(),
+          eq(CloudIdentityGroupsClient.AccessProfile.Restricted)))
         .thenThrow(new AccessDeniedException("mock"));
 
       var logger = Mockito.mock(Logger.class);
@@ -335,8 +336,9 @@ public class TestProvisioner {
           any(AccessDeniedException.class));
     }
 
-    @Test
-    public void provision() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    public void provision(boolean gkeEnabled) throws Exception {
       var jitGroupId = new JitGroupId("env", "system", "group");
 
       var groupPolicy = Mockito.mock(JitGroupPolicy.class);
@@ -346,6 +348,8 @@ public class TestProvisioner {
         .thenReturn("Test group");
       when(groupPolicy.privileges())
         .thenReturn(Set.of());
+      when(groupPolicy.isGkeEnabled())
+        .thenReturn(gkeEnabled);
 
       var mapping = Mockito.mock(GroupMapping.class);
       when(mapping.groupFromJitGroup(eq(jitGroupId)))
@@ -357,6 +361,7 @@ public class TestProvisioner {
           eq(SAMPLE_GROUP),
           eq(CloudIdentityGroupsClient.GroupType.Security),
           anyString(),
+          any(),
           any()))
         .thenReturn(new GroupKey("1"));
       when(groupsClient.getGroup(eq(SAMPLE_GROUP)))
@@ -374,7 +379,10 @@ public class TestProvisioner {
         eq(SAMPLE_GROUP),
         eq(CloudIdentityGroupsClient.GroupType.Security),
         anyString(),
-        eq("Test group"));
+        eq("Test group"),
+        eq(gkeEnabled
+          ? CloudIdentityGroupsClient.AccessProfile.GkeCompatible
+          : CloudIdentityGroupsClient.AccessProfile.Restricted));
       verify(groupsClient, times(1)).addMembership(
         eq(new GroupKey("1")),
         eq(SAMPLE_USER_1),

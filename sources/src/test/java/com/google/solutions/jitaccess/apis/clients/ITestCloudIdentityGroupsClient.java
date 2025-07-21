@@ -26,6 +26,9 @@ import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.GroupId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -120,7 +123,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     assertEquals(
       groupKey,
@@ -183,7 +187,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var group = client.getGroup(TEMPORARY_ACCESS_GROUP_EMAIL);
 
     assertEquals(TEMPORARY_ACCESS_GROUP_EMAIL.email, group.getGroupKey().getId());
@@ -208,7 +213,8 @@ public class ITestCloudIdentityGroupsClient {
         new GroupId("test@example.com"),
         CloudIdentityGroupsClient.GroupType.DiscussionForum,
         "name",
-        "description"));
+        "description",
+        CloudIdentityGroupsClient.AccessProfile.Restricted));
   }
 
   @Test
@@ -225,11 +231,15 @@ public class ITestCloudIdentityGroupsClient {
         new GroupId("doesnotexist@google.com"),
         CloudIdentityGroupsClient.GroupType.DiscussionForum,
         "name",
-        "description"));
+        "description",
+        CloudIdentityGroupsClient.AccessProfile.Restricted));
   }
 
-  @Test
-  public void createGroup_createGroupIsIdempotent() throws Exception {
+  @ParameterizedTest
+  @EnumSource(CloudIdentityGroupsClient.AccessProfile.class)
+  public void createGroup_createGroupIsIdempotent(
+    CloudIdentityGroupsClient.AccessProfile accessProfile
+  ) throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
@@ -242,7 +252,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     client.deleteGroup(oldId);
 
     //
@@ -252,7 +263,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     assertNotEquals(oldId, createdId);
 
     //
@@ -262,7 +274,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     assertNotEquals(oldId, createdId);
   }
 
@@ -306,7 +319,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     client.patchGroup(createdId, "new description");
 
@@ -375,7 +389,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     var membershipExpiry = Instant.now().plusSeconds(300);
     var id = client.addMembership(
@@ -437,7 +452,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
@@ -461,7 +477,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     assertThrows(
       IllegalArgumentException.class,
@@ -482,7 +499,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
@@ -531,7 +549,8 @@ public class ITestCloudIdentityGroupsClient {
       PERMANENT_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
     client.addPermanentMembership(groupId, userEmail);
@@ -571,7 +590,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var id = client.addMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER,
@@ -619,7 +639,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var membershipExpiry = Instant.now().plusSeconds(300);
     client.addMembership(
       groupId,
@@ -731,7 +752,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var groups = client.searchGroupsByPrefix(
       "jitaccess-",
       true);
@@ -787,7 +809,8 @@ public class ITestCloudIdentityGroupsClient {
       TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     var groupIds = IntStream.range(1, 200)
       .mapToObj(i -> new GroupId(

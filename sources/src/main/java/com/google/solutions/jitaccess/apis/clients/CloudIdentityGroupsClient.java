@@ -62,8 +62,8 @@ public class CloudIdentityGroupsClient {
   private final @NotNull HttpTransport.Options httpOptions;
 
   /**
-   * Settings for new groups:
-   * <p>
+   * Default, restrictive access settings:
+   *
    * - Allow external members.
    * - Disable most self-service features on groups.google.com to
    *   the extent possible.
@@ -87,6 +87,12 @@ public class CloudIdentityGroupsClient {
     .setWhoCanPostMessage("ALL_OWNERS_CAN_POST")
     .setWhoCanViewGroup("ALL_MANAGERS_CAN_VIEW")
     .setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+
+  /**
+   * GKE compatible access settings.
+   */
+  private  final @NotNull Groups GKE_COMPATIBLE = RESTRICTED_SETTINGS
+    .setWhoCanViewMembership("ALL_MEMBERS_CAN_VIEW");
 
   public CloudIdentityGroupsClient(
     @NotNull GoogleCredentials credentials,
@@ -153,8 +159,15 @@ public class CloudIdentityGroupsClient {
   /**
    * Update group settings to restrictive defaults.
    */
-  private void restrictGroupSettings(@NotNull GroupId emailAddress) throws IOException {
+  private void setGroupAccess(
+    @NotNull GroupId emailAddress,
+    @NotNull AccessProfile profile
+  ) throws IOException {
     var settingsClient = createSettingsClient();
+
+    var settings = profile == AccessProfile.GkeCompatible
+      ? this.GKE_COMPATIBLE
+      : this.RESTRICTED_SETTINGS;
 
     //
     // The group settings API is prone to fail for newly created groups.
@@ -163,7 +176,7 @@ public class CloudIdentityGroupsClient {
       try {
         settingsClient
           .groups()
-          .update(emailAddress.email, this.RESTRICTED_SETTINGS)
+          .update(emailAddress.email, settings)
           .execute();
 
         //
@@ -272,21 +285,6 @@ public class CloudIdentityGroupsClient {
     return lookupGroup(createClient(), groupId);
   }
 
-  public enum GroupType {
-    /**
-     * Normal group. Creating this type of group doesn't require special
-     * privileges.
-     */
-    DiscussionForum,
-
-    /**
-     * Security group. Creating this type of group requires the 'Groups Admin'
-     * admin role, or an equivalent custom role that has the privilege to
-     * assign security labels.
-     */
-    Security
-  }
-
   /**
    * Create group in an idempotent way.
    */
@@ -294,7 +292,8 @@ public class CloudIdentityGroupsClient {
     @NotNull GroupId emailAddress,
     @NotNull GroupType type,
     @NotNull String displayName,
-    @NotNull String description
+    @NotNull String description,
+    @NotNull AccessProfile accessProfile
   ) throws AccessException, IOException {
     try {
       var labels = new HashMap<String, String>();
@@ -373,7 +372,7 @@ public class CloudIdentityGroupsClient {
       //
       // Lock down group settings.
       //
-      restrictGroupSettings(emailAddress);
+      setGroupAccess(emailAddress, accessProfile);
 
       return groupKey;
     }
@@ -850,8 +849,35 @@ public class CloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------------
-  // Inner classes.
+  // Inner types.
   //---------------------------------------------------------------------------
+
+  public enum GroupType {
+    /**
+     * Normal group. Creating this type of group doesn't require special
+     * privileges.
+     */
+    DiscussionForum,
+
+    /**
+     * Security group. Creating this type of group requires the 'Groups Admin'
+     * admin role, or an equivalent custom role that has the privilege to
+     * assign security labels.
+     */
+    Security
+  }
+
+  public enum AccessProfile {
+    /**
+     * Use restrictive access settings.
+     */
+    Restricted,
+
+    /**
+     * Use access settings that are restrictive, but still compatible GKE RBAC.
+     */
+    GkeCompatible
+  }
 
   public record MembershipId(String id) {}
 
