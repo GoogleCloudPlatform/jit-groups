@@ -48,6 +48,10 @@ public class ITestCloudIdentityGroupsClient {
     String.format(
       "jitaccess-test-permanent@%s",
       ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
+  private static final GroupId NONEXISTING_GROUP_EMAIL = new GroupId(
+    String.format(
+      "jitaccess-test-nonexisting@%s",
+      ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -427,7 +431,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void addMembership_whenGroupIdInvalid_thenThrowsException() {
+  public void addMembership_whenGroupKeyInvalid_thenThrowsException() {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -439,6 +443,21 @@ public class ITestCloudIdentityGroupsClient {
       () -> client.addMembership(
         new GroupKey("invalid"),
         new EndUserId("user@example.com"),
+        Instant.now().plusSeconds(300)));
+  }
+
+  @Test
+  public void addMembership_whenGroupIdInvalid_thenThrowsException() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.addMembership(
+        NONEXISTING_GROUP_EMAIL,
+        ITestEnvironment.TEMPORARY_ACCESS_USER,
         Instant.now().plusSeconds(300)));
   }
 
@@ -537,6 +556,19 @@ public class ITestCloudIdentityGroupsClient {
   //---------------------------------------------------------------------
   // addPermanentMembership.
   //---------------------------------------------------------------------
+
+  @Test
+  public void addPermanentMembership_whenGroupIdInvalid_thenThrowsException() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.addPermanentMembership(
+        NONEXISTING_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER));
+  }
 
   @Test
   public void addPermanentMembership() throws Exception {

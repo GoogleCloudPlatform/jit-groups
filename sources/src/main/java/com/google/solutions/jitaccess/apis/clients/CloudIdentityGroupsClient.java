@@ -633,6 +633,21 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
+   * Permanently add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addPermanentMembership(
+    @NotNull GroupId groupId,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    var client = createClient();
+    return addMembership(
+      client,
+      lookupGroup(client, groupId),
+      member,
+      null);
+  }
+
+  /**
    * Add a member to a group in an idempotent way.
    */
   public @NotNull MembershipId addMembership(
