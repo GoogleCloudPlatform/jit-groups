@@ -75,7 +75,8 @@ public class TestSystemPolicy {
       "description",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     system.add(group);
     assertThrows(IllegalArgumentException.class, () -> system.add(group));
   }
@@ -103,7 +104,8 @@ public class TestSystemPolicy {
       "description",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     system.add(group);
 
     assertTrue(system.group("group-1").isPresent());

@@ -113,7 +113,8 @@ public class TestJitGroupPolicy {
       "description",
       AccessControlList.EMPTY,
       Map.of(),
-      privileges);
+      privileges,
+      false);
 
     assertEquals(privileges, group.privileges());
   }
@@ -129,7 +130,8 @@ public class TestJitGroupPolicy {
       "description",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of());
+      List.of(),
+      false);
 
     assertTrue(group.accessControlList().isPresent());
   }

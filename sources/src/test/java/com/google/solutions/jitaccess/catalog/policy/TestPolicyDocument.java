@@ -494,7 +494,7 @@ public class TestPolicyDocument {
         "",
         List.of(),
         null,
-        List.of(new PolicyDocument.GroupElement(null, null, List.of(), null, null)));
+        List.of(new PolicyDocument.GroupElement(null, null, List.of(), null, null, false)));
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -514,7 +514,7 @@ public class TestPolicyDocument {
           List.of(new PolicyDocument.ConstraintElement("invalid", null, null, null, null, null, null)),
           null
         ),
-        List.of(new PolicyDocument.GroupElement("group", "Group", List.of(), null, null)));
+        List.of(new PolicyDocument.GroupElement("group", "Group", List.of(), null, null, false)));
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -531,7 +531,7 @@ public class TestPolicyDocument {
         "",
         List.of(),
         null,
-        List.of(new PolicyDocument.GroupElement("group", "Group", List.of(), null, null)));
+        List.of(new PolicyDocument.GroupElement("group", "Group", List.of(), null, null, false)));
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -553,12 +553,14 @@ public class TestPolicyDocument {
         "Group",
         AccessControlList.EMPTY,
         Map.of(),
-        List.of());
+        List.of(),
+        false);
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals("group", element.name());
       assertEquals("Group", element.description());
       assertEquals(0, element.acl().size());
+      assertFalse(element.gkeEnabled());
     }
 
     @Test
@@ -568,12 +570,14 @@ public class TestPolicyDocument {
         "Group",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of(),
-        List.of());
+        List.of(),
+        false);
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals("group", element.name());
       assertEquals("Group", element.description());
       assertEquals(1, element.acl().size());
+      assertFalse(element.gkeEnabled());
     }
 
     @Test
@@ -585,7 +589,8 @@ public class TestPolicyDocument {
         Map.of(
           Policy.ConstraintClass.JOIN, List.of(new CelConstraint("join", "", List.of(), "true")),
           Policy.ConstraintClass.APPROVE, List.of(new CelConstraint("approve", "", List.of(), "true"))),
-        List.of());
+        List.of(),
+        false);
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals(1, element.constraints().join().size());
@@ -593,6 +598,7 @@ public class TestPolicyDocument {
 
       assertEquals(1, element.constraints().approve().size());
       assertEquals("approve", element.constraints().approve().get(0).name());
+      assertFalse(element.gkeEnabled());
     }
 
     @Test
@@ -602,34 +608,55 @@ public class TestPolicyDocument {
         "Group",
         new AccessControlList(List.of(new AccessControlList.AllowedEntry(SAMPLE_USER, 1))),
         Map.of(),
-        List.of(new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1"))));
+        List.of(new IamRoleBinding(new ProjectId("project-1"), new IamRole("roles/role-1"))),
+        false);
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals(1, element.privileges().iamRoleBindings().size());
       assertNull(element.privileges().iamRoleBindings().get(0).project());
       assertEquals("projects/project-1", element.privileges().iamRoleBindings().get(0).resource());
       assertEquals("roles/role-1", element.privileges().iamRoleBindings().get(0).role());
+      assertFalse(element.gkeEnabled());
+    }
+
+    @Test
+    public void toYaml_whenGkeEnabled() {
+      var policy = new JitGroupPolicy(
+        "group",
+        "Group",
+        AccessControlList.EMPTY,
+        Map.of(),
+        List.of(),
+        false);
+      var element = PolicyDocument.GroupElement.toYaml(policy);
+
+      assertEquals("group", element.name());
+      assertEquals("Group", element.description());
+      assertEquals(0, element.acl().size());
+      assertTrue(element.gkeEnabled());
     }
 
     @Test
     public void toPolicy_whenAclIsNull() {
-      var element = new PolicyDocument.GroupElement("group", "", null, null, null);
+      var element = new PolicyDocument.GroupElement("group", "", null, null, null, false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
       assertTrue(policy.isPresent());
       assertTrue(policy.get().accessControlList().get().entries().isEmpty());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
     public void toPolicy_whenAclIsEmpty() {
-      var element = new PolicyDocument.GroupElement("group", "", List.of(), null, null);
+      var element = new PolicyDocument.GroupElement("group", "", List.of(), null, null, false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
       assertTrue(policy.isPresent());
       assertTrue(policy.get().accessControlList().isPresent());
       assertTrue(policy.get().accessControlList().get().entries().isEmpty());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -639,7 +666,8 @@ public class TestPolicyDocument {
         "",
         List.of(new PolicyDocument.AccessControlEntryElement("invalid", "JOIN", null)),
         null,
-        null);
+        null,
+        false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -647,6 +675,7 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.ACL_INVALID_PRINCIPAL,
         issues.issues().get(0).code());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -659,7 +688,8 @@ public class TestPolicyDocument {
           List.of(new PolicyDocument.ConstraintElement("invalid", null, null, null, null, null, null)),
           null
         ),
-        null);
+        null,
+        false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -667,6 +697,7 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_TYPE,
         issues.issues().get(0).code());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -681,7 +712,8 @@ public class TestPolicyDocument {
             new PolicyDocument.ConstraintElement("expiry", null, null, "P1D", "P1D", null, null)),
           null
         ),
-        null);
+        null,
+        false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -689,6 +721,7 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
         issues.issues().get(0).code());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -700,7 +733,8 @@ public class TestPolicyDocument {
         new PolicyDocument.ConstraintsElement(
           null,
           List.of(new PolicyDocument.ConstraintElement("expiry", null, null, "P1D", "P1D", null, null))),
-        null);
+        null,
+        false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -708,6 +742,7 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
         issues.issues().get(0).code());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -719,7 +754,8 @@ public class TestPolicyDocument {
         null,
         new PolicyDocument.PrivilegesElement(List.of(
           new PolicyDocument.IamRoleBindingElement("1", null, null, null, null)
-        )));
+        )),
+        false);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -727,6 +763,7 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.PRIVILEGE_INVALID_RESOURCE_ID,
         issues.issues().get(0).code());
+      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -738,7 +775,8 @@ public class TestPolicyDocument {
         null,
         new PolicyDocument.PrivilegesElement(List.of(
           new PolicyDocument.IamRoleBindingElement("project-1", null, "roles/viewer", "d", "c")
-        )));
+        )),
+        true);
       var issues = new PolicyDocument.IssueCollection();
       var policy = element.toPolicy(issues);
 
@@ -746,6 +784,7 @@ public class TestPolicyDocument {
       assertEquals("group", policy.get().name());
       assertEquals(1, policy.get().privileges().size());
       assertEquals("d", policy.get().privileges().stream().findFirst().get().description());
+      assertTrue(policy.get().isGkeEnabled());
     }
   }
 

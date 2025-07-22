@@ -38,7 +38,9 @@ import java.util.Map;
 public class JitGroupPolicy extends AbstractPolicy {
   static final String NAME_PATTERN = "^[a-zA-Z0-9\\-]+$";
   static final int NAME_MAX_LENGTH = 24;
+
   private final @NotNull List<Privilege> privileges;
+  private final boolean gkeEnabled;
 
   protected JitGroupPolicy(
     @NotNull String name,
@@ -46,6 +48,7 @@ public class JitGroupPolicy extends AbstractPolicy {
     @Nullable AccessControlList acl,
     @NotNull Map<ConstraintClass, Collection<Constraint>> constraints,
     @NotNull List<Privilege> privileges,
+    boolean gkeEnabled,
     int maxNameLength
   ) {
     super(name, description, acl, constraints);
@@ -60,6 +63,7 @@ public class JitGroupPolicy extends AbstractPolicy {
     Preconditions.checkNotNull(privileges, "Privileges must not be null");
 
     this.privileges = privileges;
+    this.gkeEnabled = gkeEnabled;
   }
 
   public JitGroupPolicy(
@@ -67,9 +71,10 @@ public class JitGroupPolicy extends AbstractPolicy {
     @NotNull String description,
     @Nullable AccessControlList acl,
     @NotNull Map<ConstraintClass, Collection<Constraint>> constraints,
-    @NotNull List<Privilege> privileges
+    @NotNull List<Privilege> privileges,
+    boolean gkeEnabled
   ) {
-    this(name, description, acl, constraints, privileges, NAME_MAX_LENGTH);
+    this(name, description, acl, constraints, privileges, gkeEnabled, NAME_MAX_LENGTH);
   }
 
   public JitGroupPolicy(
@@ -77,14 +82,14 @@ public class JitGroupPolicy extends AbstractPolicy {
     @NotNull String description,
     @Nullable AccessControlList acl
   ) {
-    this(name, description, acl, Map.of(), List.of());
+    this(name, description, acl, Map.of(), List.of(), false);
   }
 
   public JitGroupPolicy(
     @NotNull String name,
     @NotNull String description
   ) {
-    this(name, description, null, Map.of(), List.of());
+    this(name, description, null, Map.of(), List.of(), false);
   }
 
   /**
@@ -110,6 +115,13 @@ public class JitGroupPolicy extends AbstractPolicy {
    */
   public @NotNull Collection<Privilege> privileges() {
     return this.privileges;
+  }
+
+  /**
+   * Indicates if this group can be used for GKE RBAC.
+   */
+  public boolean isGkeEnabled() {
+    return this.gkeEnabled;
   }
 
   /**

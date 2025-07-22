@@ -33,7 +33,9 @@ import com.google.solutions.jitaccess.auth.GroupId;
 import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.common.Coalesce;
 import jakarta.inject.Singleton;
+import org.crac.Resource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -61,8 +63,8 @@ public class CloudIdentityGroupsClient {
   private final @NotNull HttpTransport.Options httpOptions;
 
   /**
-   * Settings for new groups:
-   * <p>
+   * Default, restrictive access settings:
+   *
    * - Allow external members.
    * - Disable most self-service features on groups.google.com to
    *   the extent possible.
@@ -86,6 +88,12 @@ public class CloudIdentityGroupsClient {
     .setWhoCanPostMessage("ALL_OWNERS_CAN_POST")
     .setWhoCanViewGroup("ALL_MANAGERS_CAN_VIEW")
     .setWhoCanViewMembership("ALL_MANAGERS_CAN_VIEW");
+
+  /**
+   * GKE compatible access settings.
+   */
+  private  final @NotNull Groups GKE_COMPATIBLE = RESTRICTED_SETTINGS
+    .setWhoCanViewMembership("ALL_MEMBERS_CAN_VIEW");
 
   public CloudIdentityGroupsClient(
     @NotNull GoogleCredentials credentials,
@@ -148,12 +156,18 @@ public class CloudIdentityGroupsClient {
     }
   }
 
-
   /**
    * Update group settings to restrictive defaults.
    */
-  private void restrictGroupSettings(@NotNull GroupId emailAddress) throws IOException {
+  private void setGroupAccess(
+    @NotNull GroupId emailAddress,
+    @NotNull AccessProfile profile
+  ) throws IOException {
     var settingsClient = createSettingsClient();
+
+    var settings = profile == AccessProfile.GkeCompatible
+      ? this.GKE_COMPATIBLE
+      : this.RESTRICTED_SETTINGS;
 
     //
     // The group settings API is prone to fail for newly created groups.
@@ -162,7 +176,7 @@ public class CloudIdentityGroupsClient {
       try {
         settingsClient
           .groups()
-          .update(emailAddress.email, this.RESTRICTED_SETTINGS)
+          .update(emailAddress.email, settings)
           .execute();
 
         //
@@ -271,21 +285,6 @@ public class CloudIdentityGroupsClient {
     return lookupGroup(createClient(), groupId);
   }
 
-  public enum GroupType {
-    /**
-     * Normal group. Creating this type of group doesn't require special
-     * privileges.
-     */
-    DiscussionForum,
-
-    /**
-     * Security group. Creating this type of group requires the 'Groups Admin'
-     * admin role, or an equivalent custom role that has the privilege to
-     * assign security labels.
-     */
-    Security
-  }
-
   /**
    * Create group in an idempotent way.
    */
@@ -293,7 +292,8 @@ public class CloudIdentityGroupsClient {
     @NotNull GroupId emailAddress,
     @NotNull GroupType type,
     @NotNull String displayName,
-    @NotNull String description
+    @NotNull String description,
+    @NotNull AccessProfile accessProfile
   ) throws AccessException, IOException {
     try {
       var labels = new HashMap<String, String>();
@@ -372,7 +372,7 @@ public class CloudIdentityGroupsClient {
       //
       // Lock down group settings.
       //
-      restrictGroupSettings(emailAddress);
+      setGroupAccess(emailAddress, accessProfile);
 
       return groupKey;
     }
@@ -515,11 +515,12 @@ public class CloudIdentityGroupsClient {
   /**
    * Delete a group membership in an idempotent way.
    */
-  public void deleteMembership(
+  private void deleteMembership(
+    @NotNull CloudIdentity client,
     @NotNull MembershipId membershipId
   ) throws AccessException, IOException {
     try {
-      createClient()
+      client
         .groups()
         .memberships()
         .delete(membershipId.id)
@@ -535,6 +536,46 @@ public class CloudIdentityGroupsClient {
         translateAndThrowApiException(e);
       }
     }
+  }
+
+  /**
+   * Delete a group membership in an idempotent way.
+   */
+  public void deleteMembership(
+    @NotNull MembershipId membershipId
+  ) throws AccessException, IOException {
+    deleteMembership(createClient(), membershipId);
+  }
+
+  /**
+   * Delete a group membership in an idempotent way.
+   */
+  public void deleteMembership(
+    @NotNull GroupKey groupKey,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    var client = createClient();
+
+    //
+    // Lookup membership, assuming it exists.
+    //
+    MembershipId membershipId;
+    try
+    {
+      membershipId = lookupGroupMembership(
+        client,
+        groupKey,
+        member);
+    }
+    catch (AccessException e)
+    {
+      //
+      // Membership doesn't exist, so there's nothing to delete.
+      //
+      return;
+    }
+
+    deleteMembership(client, membershipId);
   }
 
   private @NotNull MembershipId updateMembership(
@@ -572,15 +613,18 @@ public class CloudIdentityGroupsClient {
     @NotNull CloudIdentity client,
     @NotNull GroupKey groupKey,
     @NotNull IamPrincipalId member,
-    @NotNull Instant expiry
+    @Nullable Instant expiry
   ) throws AccessException, IOException {
     var role = new MembershipRole()
-      .setName("MEMBER")
-      .setExpiryDetail(new ExpiryDetail()
+      .setName("MEMBER");
+
+    if (expiry != null) {
+      role.setExpiryDetail(new ExpiryDetail()
         .setExpireTime(expiry
           .atOffset(ZoneOffset.UTC)
           .truncatedTo(ChronoUnit.SECONDS)
           .format(DateTimeFormatter.ISO_DATE_TIME)));
+    }
 
     try {
       //
@@ -620,6 +664,31 @@ public class CloudIdentityGroupsClient {
   }
 
   /**
+   * Permanently add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addPermanentMembership(
+    @NotNull GroupKey groupKey,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    return addMembership(createClient(), groupKey, member, null);
+  }
+
+  /**
+   * Permanently add a member to a group in an idempotent way.
+   */
+  public @NotNull MembershipId addPermanentMembership(
+    @NotNull GroupId groupId,
+    @NotNull IamPrincipalId member
+  ) throws AccessException, IOException {
+    var client = createClient();
+    return addMembership(
+      client,
+      lookupGroup(client, groupId),
+      member,
+      null);
+  }
+
+  /**
    * Add a member to a group in an idempotent way.
    */
   public @NotNull MembershipId addMembership(
@@ -627,6 +696,7 @@ public class CloudIdentityGroupsClient {
     @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
+    Preconditions.checkNotNull(expiry, "expiry");
     return addMembership(createClient(), groupKey, member, expiry);
   }
 
@@ -638,6 +708,8 @@ public class CloudIdentityGroupsClient {
     @NotNull IamPrincipalId member,
     @NotNull Instant expiry
   ) throws AccessException, IOException {
+    Preconditions.checkNotNull(expiry, "expiry");
+
     var client = createClient();
     return addMembership(
       client,
@@ -833,8 +905,35 @@ public class CloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------------
-  // Inner classes.
+  // Inner types.
   //---------------------------------------------------------------------------
+
+  public enum GroupType {
+    /**
+     * Normal group. Creating this type of group doesn't require special
+     * privileges.
+     */
+    DiscussionForum,
+
+    /**
+     * Security group. Creating this type of group requires the 'Groups Admin'
+     * admin role, or an equivalent custom role that has the privilege to
+     * assign security labels.
+     */
+    Security
+  }
+
+  public enum AccessProfile {
+    /**
+     * Use restrictive access settings.
+     */
+    Restricted,
+
+    /**
+     * Use access settings that are restrictive, but still compatible GKE RBAC.
+     */
+    GkeCompatible
+  }
 
   public record MembershipId(String id) {}
 

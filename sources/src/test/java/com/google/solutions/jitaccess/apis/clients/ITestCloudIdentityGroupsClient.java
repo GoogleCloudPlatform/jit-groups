@@ -26,7 +26,11 @@ import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.GroupId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -37,9 +41,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ITestCloudIdentityGroupsClient {
   private static final CustomerId INVALID_CUSTOMER_ID = new CustomerId("Cinvalid");
-  private static final GroupId TEST_GROUP_EMAIL = new GroupId(
+  private static final GroupId TEMPORARY_ACCESS_GROUP_EMAIL = new GroupId(
     String.format(
       "jitaccess-test@%s",
+      ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
+  private static final GroupId PERMANENT_ACCESS_GROUP_EMAIL = new GroupId(
+    String.format(
+      "jitaccess-test-permanent@%s",
+      ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
+  private static final GroupId NONEXISTING_GROUP_EMAIL = new GroupId(
+    String.format(
+      "jitaccess-test-nonexisting@%s",
       ITestEnvironment.CLOUD_IDENTITY_DOMAIN));
 
   @BeforeEach
@@ -50,7 +62,7 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     try {
-      var groupId = new GroupKey(client.getGroup(TEST_GROUP_EMAIL).getName());
+      var groupId = new GroupKey(client.getGroup(TEMPORARY_ACCESS_GROUP_EMAIL).getName());
       client.deleteGroup(groupId);
     }
     catch (AccessDeniedException ignored) {
@@ -113,14 +125,15 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupKey = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     assertEquals(
       groupKey,
-      client.lookupGroup(TEST_GROUP_EMAIL));
+      client.lookupGroup(TEMPORARY_ACCESS_GROUP_EMAIL));
   }
 
   //---------------------------------------------------------------------
@@ -176,13 +189,14 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
-    var group = client.getGroup(TEST_GROUP_EMAIL);
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+    var group = client.getGroup(TEMPORARY_ACCESS_GROUP_EMAIL);
 
-    assertEquals(TEST_GROUP_EMAIL.email, group.getGroupKey().getId());
+    assertEquals(TEMPORARY_ACCESS_GROUP_EMAIL.email, group.getGroupKey().getId());
     assertEquals("name", group.getDisplayName());
     assertEquals("description", group.getDescription());
   }
@@ -204,7 +218,8 @@ public class ITestCloudIdentityGroupsClient {
         new GroupId("test@example.com"),
         CloudIdentityGroupsClient.GroupType.DiscussionForum,
         "name",
-        "description"));
+        "description",
+        CloudIdentityGroupsClient.AccessProfile.Restricted));
   }
 
   @Test
@@ -221,11 +236,15 @@ public class ITestCloudIdentityGroupsClient {
         new GroupId("doesnotexist@google.com"),
         CloudIdentityGroupsClient.GroupType.DiscussionForum,
         "name",
-        "description"));
+        "description",
+        CloudIdentityGroupsClient.AccessProfile.Restricted));
   }
 
-  @Test
-  public void createGroup_createGroupIsIdempotent() throws Exception {
+  @ParameterizedTest
+  @EnumSource(CloudIdentityGroupsClient.AccessProfile.class)
+  public void createGroup_createGroupIsIdempotent(
+    CloudIdentityGroupsClient.AccessProfile accessProfile
+  ) throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
@@ -235,30 +254,33 @@ public class ITestCloudIdentityGroupsClient {
     // Delete group if it exists.
     //
     var oldId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     client.deleteGroup(oldId);
 
     //
     // Create.
     //
     var createdId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     assertNotEquals(oldId, createdId);
 
     //
     // Create again.
     //
     var sameId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      accessProfile);
     assertNotEquals(oldId, createdId);
   }
 
@@ -299,10 +321,11 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var createdId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     client.patchGroup(createdId, "new description");
 
@@ -368,10 +391,11 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     var membershipExpiry = Instant.now().plusSeconds(300);
     var id = client.addMembership(
@@ -408,7 +432,7 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
-  public void addMembership_whenGroupIdInvalid_thenThrowsException() {
+  public void addMembership_whenGroupKeyInvalid_thenThrowsException() {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -424,16 +448,32 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   @Test
+  public void addMembership_whenGroupIdInvalid_thenThrowsException() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.addMembership(
+        NONEXISTING_GROUP_EMAIL,
+        ITestEnvironment.TEMPORARY_ACCESS_USER,
+        Instant.now().plusSeconds(300)));
+  }
+
+  @Test
   public void addMembership_isIdempotent() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
       HttpTransport.Options.DEFAULT);
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
@@ -454,10 +494,11 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     assertThrows(
       IllegalArgumentException.class,
@@ -475,10 +516,11 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
 
     //
@@ -513,6 +555,46 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------
+  // addPermanentMembership.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void addPermanentMembership_whenGroupIdInvalid_thenThrowsException() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    assertThrows(
+      AccessDeniedException.class,
+      () -> client.addPermanentMembership(
+        NONEXISTING_GROUP_EMAIL, ITestEnvironment.TEMPORARY_ACCESS_USER));
+  }
+
+  @Test
+  public void addPermanentMembership() throws Exception {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(
+      PERMANENT_ACCESS_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+
+    var userEmail = ITestEnvironment.TEMPORARY_ACCESS_USER;
+    client.addPermanentMembership(groupId, userEmail);
+
+    var membership = client.getMembership(groupId, userEmail);
+    assertNull(membership.getRoles().stream().findFirst().get().getExpiryDetail());
+
+    client.deleteMembership(new CloudIdentityGroupsClient.MembershipId(membership.getName()));
+  }
+
+  //---------------------------------------------------------------------
   // deleteMembership.
   //---------------------------------------------------------------------
 
@@ -538,10 +620,11 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var id = client.addMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER,
@@ -562,6 +645,54 @@ public class ITestCloudIdentityGroupsClient {
   }
 
   //---------------------------------------------------------------------
+  // deleteMembership - by ID.
+  //---------------------------------------------------------------------
+
+  @Test
+  public void deleteMembership_byId_whenMembershipNotFound() throws AccessException, IOException {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(
+      TEMPORARY_ACCESS_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+
+    client.deleteMembership(groupId, ITestEnvironment.TEMPORARY_ACCESS_USER);
+  }
+
+  @Test
+  public void deleteMembership_byId() throws AccessException, IOException {
+    var client = new CloudIdentityGroupsClient(
+      ITestEnvironment.APPLICATION_CREDENTIALS,
+      new CloudIdentityGroupsClient.Options(
+        ITestEnvironment.CLOUD_IDENTITY_ACCOUNT_ID),
+      HttpTransport.Options.DEFAULT);
+
+    var groupId = client.createGroup(
+      TEMPORARY_ACCESS_GROUP_EMAIL,
+      CloudIdentityGroupsClient.GroupType.DiscussionForum,
+      "name",
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
+    var id = client.addMembership(
+      groupId,
+      ITestEnvironment.TEMPORARY_ACCESS_USER,
+      Instant.now().plusSeconds(300));
+
+    client.deleteMembership(groupId, ITestEnvironment.TEMPORARY_ACCESS_USER);
+
+    assertThrows(
+      ResourceNotFoundException.class,
+      () -> client.getMembership(id));
+  }
+
+  //---------------------------------------------------------------------
   // listMemberships.
   //---------------------------------------------------------------------
 
@@ -574,7 +705,7 @@ public class ITestCloudIdentityGroupsClient {
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> client.listMemberships(TEST_GROUP_EMAIL));
+      () -> client.listMemberships(TEMPORARY_ACCESS_GROUP_EMAIL));
   }
 
   @Test
@@ -586,17 +717,18 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     var groupId = client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var membershipExpiry = Instant.now().plusSeconds(300);
     client.addMembership(
       groupId,
       ITestEnvironment.TEMPORARY_ACCESS_USER,
       membershipExpiry);
 
-    var memberships = client.listMemberships(TEST_GROUP_EMAIL);
+    var memberships = client.listMemberships(TEMPORARY_ACCESS_GROUP_EMAIL);
     assertEquals(2, memberships.size());
 
     var membership = memberships
@@ -698,16 +830,17 @@ public class ITestCloudIdentityGroupsClient {
       HttpTransport.Options.DEFAULT);
 
     client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
     var groups = client.searchGroupsByPrefix(
       "jitaccess-",
       true);
 
     var foundGroup = groups.stream()
-      .filter(g -> g.getGroupKey().getId().equals(TEST_GROUP_EMAIL.email))
+      .filter(g -> g.getGroupKey().getId().equals(TEMPORARY_ACCESS_GROUP_EMAIL.email))
       .findFirst();
 
     assertTrue(foundGroup.isPresent());
@@ -754,10 +887,11 @@ public class ITestCloudIdentityGroupsClient {
         HttpTransport.Options.DEFAULT);
 
     client.createGroup(
-      TEST_GROUP_EMAIL,
+      TEMPORARY_ACCESS_GROUP_EMAIL,
       CloudIdentityGroupsClient.GroupType.DiscussionForum,
       "name",
-      "description");
+      "description",
+      CloudIdentityGroupsClient.AccessProfile.Restricted);
 
     var groupIds = IntStream.range(1, 200)
       .mapToObj(i -> new GroupId(
@@ -766,11 +900,11 @@ public class ITestCloudIdentityGroupsClient {
           i,
           ITestEnvironment.CLOUD_IDENTITY_DOMAIN)))
       .collect(Collectors.toSet());
-    groupIds.add(TEST_GROUP_EMAIL);
+    groupIds.add(TEMPORARY_ACCESS_GROUP_EMAIL);
 
     var foundGroup = client.searchGroupsById(groupIds, false)
       .stream()
-      .filter(g -> g.getGroupKey().getId().equals(TEST_GROUP_EMAIL.email))
+      .filter(g -> g.getGroupKey().getId().equals(TEMPORARY_ACCESS_GROUP_EMAIL.email))
       .findFirst();
 
     assertTrue(foundGroup.isPresent());

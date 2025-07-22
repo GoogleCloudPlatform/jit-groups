@@ -151,7 +151,8 @@ public class TestSystemsResource {
           SAMPLE_USER,
           PolicyPermission.VIEW.toMask()))),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     var deniedGroup = new JitGroupPolicy(
       "denied-1",
       "Denied 1",
@@ -159,7 +160,8 @@ public class TestSystemsResource {
         .deny(SAMPLE_USER, -1)
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     system.add(allowedGroup);
     system.add(deniedGroup);
     environment.add(system);
@@ -190,19 +192,22 @@ public class TestSystemsResource {
       "Two",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of()));
+      List.of(),
+      false));
     system.add(new JitGroupPolicy(
       "group-3",
       "Three",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of()));
+      List.of(),
+      false));
     system.add(new JitGroupPolicy(
       "z-group-1",
       "One",
       AccessControlList.EMPTY,
       Map.of(),
-      List.of()) {
+      List.of(),
+      false) {
       @Override
       public @NotNull String displayName() {
         return "group-1";

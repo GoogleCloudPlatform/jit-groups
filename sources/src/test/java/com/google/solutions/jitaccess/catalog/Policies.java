@@ -42,7 +42,7 @@ public class Policies {
       "Env 1",
       new com.google.solutions.jitaccess.catalog.policy.Policy.Metadata("test", Instant.EPOCH));
     var system = new SystemPolicy("sys-1", "");
-    var group = new JitGroupPolicy(name, "", acl, constraints, privileges);
+    var group = new JitGroupPolicy(name, "", acl, constraints, privileges, false);
 
     environment.add(system);
     system.add(group);

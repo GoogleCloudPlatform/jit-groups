@@ -123,7 +123,8 @@ public class TestCatalog {
         .deny(SAMPLE_USER, PolicyPermission.VIEW.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     systemPolicy.add(groupPolicy);
     environmentPolicy.add(systemPolicy);
 
@@ -145,7 +146,8 @@ public class TestCatalog {
         .allow(SAMPLE_USER, PolicyPermission.VIEW.toMask())
         .build(),
       Map.of(),
-      List.of());
+      List.of(),
+      false);
     systemPolicy.add(groupPolicy);
     environmentPolicy.add(systemPolicy);
 
