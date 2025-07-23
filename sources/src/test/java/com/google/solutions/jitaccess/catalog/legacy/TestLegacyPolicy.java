@@ -302,7 +302,7 @@ public class TestLegacyPolicy {
   }
 
   @Nested
-  public static class ProjectPolicy {
+  public class ProjectPolicy {
 
     //---------------------------------------------------------------------------
     // createName.
@@ -316,7 +316,7 @@ public class TestLegacyPolicy {
   }
 
   @Nested
-  public static class RolePolicy {
+  public class RolePolicy {
 
     //---------------------------------------------------------------------------
     // createName.

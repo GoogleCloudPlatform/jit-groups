@@ -133,7 +133,7 @@ public class TestMailProposalHandler {
   }
 
   @Nested
-  public static class MailTemplate {
+  public class MailTemplate {
 
     //-------------------------------------------------------------------------
     // fromResource.

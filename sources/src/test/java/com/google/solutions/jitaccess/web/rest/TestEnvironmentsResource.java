@@ -401,7 +401,7 @@ public class TestEnvironmentsResource {
   }
 
   @Nested
-  public static class EnvironmentInfo {
+  public class EnvironmentInfo {
     @Test
     public void create_whenExportAndReconcileNotAllowed() {
       var environment = new EnvironmentPolicy(
