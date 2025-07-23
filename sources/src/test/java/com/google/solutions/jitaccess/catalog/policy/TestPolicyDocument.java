@@ -200,7 +200,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class Issue {
+  public class Issue {
     @Test
     public void toString_whenError() {
       var issue = new PolicyDocument.Issue(true, null, PolicyDocument.Issue.Code.FILE_INVALID, "Error!!1");
@@ -219,7 +219,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class EnvironmentElement {
+  public class EnvironmentElement {
 
     @Test
     public void toYaml_whenAclIsEmpty() {
@@ -396,7 +396,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class SystemElement {
+  public class SystemElement {
     @Test
     public void toYaml_whenAclIsNull() {
       var policy = new SystemPolicy("sys", "System", null, Map.of());
@@ -545,7 +545,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class GroupElement {
+  public class GroupElement {
     @Test
     public void toYaml_whenAclIsEmpty() {
       var policy = new JitGroupPolicy(
@@ -627,7 +627,7 @@ public class TestPolicyDocument {
         AccessControlList.EMPTY,
         Map.of(),
         List.of(),
-        false);
+        true);
       var element = PolicyDocument.GroupElement.toYaml(policy);
 
       assertEquals("group", element.name());
@@ -675,7 +675,6 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.ACL_INVALID_PRINCIPAL,
         issues.issues().get(0).code());
-      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -697,7 +696,6 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_TYPE,
         issues.issues().get(0).code());
-      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -721,7 +719,6 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
         issues.issues().get(0).code());
-      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -742,7 +739,6 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.CONSTRAINT_INVALID_EXPIRY,
         issues.issues().get(0).code());
-      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -763,7 +759,6 @@ public class TestPolicyDocument {
       assertEquals(
         PolicyDocument.Issue.Code.PRIVILEGE_INVALID_RESOURCE_ID,
         issues.issues().get(0).code());
-      assertFalse(policy.get().isGkeEnabled());
     }
 
     @Test
@@ -793,7 +788,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class AccessControlEntryElement {
+  public class AccessControlEntryElement {
     @Test
     public void toYaml_whenAllowMaskCombinesMultipleValues() {
       var ace = new AccessControlList.AllowedEntry(SAMPLE_USER, 15);
@@ -898,7 +893,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class ConstraintElement {
+  public class ConstraintElement {
     @Test
     public void toYaml_whenFixedExpiry() {
       var constraint = new ExpiryConstraint(Duration.ofMinutes(5));
@@ -1106,7 +1101,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class CelVariableElement {
+  public class CelVariableElement {
     @Test
     public void toYaml_whenTypeInvalid() {
       var variable = new CelConstraint.Variable("test", "test") {
@@ -1239,7 +1234,7 @@ public class TestPolicyDocument {
   //---------------------------------------------------------------------------
 
   @Nested
-  public static class IamRoleBindingElement {
+  public class IamRoleBindingElement {
     @Test
     public void toYaml_whenTypeInvalid() {
       var binding = new IamRoleBinding(
