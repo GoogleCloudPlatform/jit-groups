@@ -108,6 +108,9 @@ public class UserResource {
   // Options..
   //---------------------------------------------------------------------------
 
+  /**
+   * Constructor options, to be injected using CDI.
+   */
   public record Options(
     boolean isDebugModeEnabled
   ) {}

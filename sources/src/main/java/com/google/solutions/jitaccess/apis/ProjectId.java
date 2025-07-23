@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * ID of a Google Cloud project.
+ * Identifier for a Google Cloud project.
  */
 public record ProjectId(
   @NotNull String id
@@ -42,16 +42,13 @@ public record ProjectId(
     assert !id.contains("/");
   }
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
-
   /**
    * Parse a project ID from one of the formats
-   * <p>
-   * * projects/project-123
-   * * project-123
+   *
+   * <ul>
+   *   <li>projects/project-123</li>
+   *   <li>project-123</li>
+   * </ul>
    *
    * @return empty if the input string is malformed.
    */
@@ -95,18 +92,35 @@ public record ProjectId(
   // ResourceId.
   // -------------------------------------------------------------------------
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String service() {
     return ResourceManagerClient.SERVICE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String type() {
     return "project";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String path() {
     return PREFIX + this.id;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString() {
+    return this.id;
   }
 }

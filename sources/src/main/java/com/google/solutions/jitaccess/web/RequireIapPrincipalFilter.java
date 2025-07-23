@@ -151,7 +151,6 @@ public class RequireIapPrincipalFilter implements ContainerRequestFilter {
   }
 
   /**
-   *
    * @param enableDebugAuthentication enable pseudo-authentication for debugging.
    * @param expectedAudience expected audience in IAP assertions. If null, the audience
    *                         check is skipped.

@@ -27,6 +27,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
+/**
+ * Identifier for an IAM role.
+ */
 public record IamRole(
   @NotNull String name
 ) {

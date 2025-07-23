@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+
+.flex-box {
+    font-family: Roboto !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    background-color: #F1F3F4;
+
+.flex-content {
+    margin-top: 120px;
+    max-width: 61rem;
+    position: revert;
+}
+
+.jit-flex-box {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    height: 48px;
+}
+
+.jit-flex-content {
+    width: 61rem;
+    position: revert;
+}
+
+.jit-menubar {
+    background-color: #2866BB;
+}
+
+.jit-menubar ul {
+    list-style: none;
+    display: flex;
+    padding: 0;
+}
+
+.jit-menubar li {
+    padding-left: .6rem;
+    padding-right: .6rem;
+}
+.jit-menubar a {
+    font-size: 14px;
+    color: #B3C9E7;
+}
+
+.jit-menubar a:hover, a.jit-activemenu {
+    color: white !important;
+}
+
+.jit-topbar div {
+    background-image: url('data:image/png;base64,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');
+    background-repeat: no-repeat;
+}
+
+header {
+    position: absolute;
+    width: 100%;
+    background-color: white;
+}
+
+main {
+    background-color: white;
+    box-shadow: 0 0 0.1rem #0000001a, 0 0.1rem 0.2rem #0003;
+}
+
+.top-nav {
+    background-color: #2866BB;
+}
+
+
+footer {
+    color: gray;
+}
+
+hr {
+    border-top: 1px dashed lightgray;
+}
+
+.caption span {
+    background-color: revert;
+    padding-left: revert;
+}
+
+ul.nav-list li {
+    color: lightgray;
+}
+
+.nav-bar-cell1-rev {
+    background-color: revert;
+    color: white;
+    color: #253441;
+    margin: auto 5px;
+}
+
+a {
+    font-weight: normal !important;
+    color: #4051b5
+}
+
+.caption a:hover,
+.caption a:active,
+a[href]:hover, 
+a[href]:focus{
+    color: #526cfe;
+}
+
+h1, h2, h3 {
+    font-weight: normal !important;
+    font-style: normal !important;
+}
+
+div .block {
+    font-family: revert;
+}
+
+.odd-row-color, .odd-row-color .table-header {
+    background-color: #fafafa;
+}
+
+.class-uses .detail, .serialized-class-details {
+    background-color: #fafafa;
+}
+
+div.table-tabs > button.active-table-tab {
+   background: #dee3e9;
+   color: #253441;
+}
+div.table-tabs > button.table-tab {
+   background: revert;
+   color: gray;
+}
+
+section {
+    margin-top: 40px;
+    margin-bottom: 20px;
+}

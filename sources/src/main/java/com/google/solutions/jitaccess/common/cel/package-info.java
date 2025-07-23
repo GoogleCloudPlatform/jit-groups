@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -19,40 +19,7 @@
 // under the License.
 //
 
-package com.google.solutions.jitaccess.apis;
-
-import org.jetbrains.annotations.NotNull;
-
 /**
- * Identifier for a Resource Manager resource.
+ * Utility classes for parsing and evaluating CEL expressions.
  */
-public interface ResourceId {
-  /**
-   * Type of resource, for example project, folder, organization.
-   */
-  @NotNull String type();
-
-  /**
-   * Unique ID of the resource, without prefix.
-   */
-  @NotNull String id();
-
-  /**
-   * Path, in notation type/id.
-   * <p>
-   * For example, projects/test-123 folders/234, organizations/345.
-   */
-  @NotNull String path();
-
-  /**
-   * Service that this resource belongs to, in format xxx.googleapis.com.
-   */
-  @SuppressWarnings("SameReturnValue")
-  @NotNull String service();
-
-  /**
-   * Return the ID, without prefix.
-   */
-  @Override
-  public String toString();
-}
+package com.google.solutions.jitaccess.cel;

@@ -29,7 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 
 /**
- * ID of a Google Cloud folder.
+ * Identifier for a Google Cloud folder.
  */
 public record FolderId(
   @NotNull String id
@@ -42,16 +42,13 @@ public record FolderId(
     assert !id.contains("/");
   }
 
-  @Override
-  public String toString() {
-    return this.id;
-  }
-
   /**
    * Parse a folder ID from one of the formats
-   * <p>
-   * * folders/123
-   * * 123
+   *
+   * <ul>
+   *   <li>folders/123/li>
+   *   <li>123</li>
+   * </ul>
    *
    * @return empty if the input string is malformed.
    */
@@ -92,18 +89,35 @@ public record FolderId(
   // ResourceId.
   // -------------------------------------------------------------------------
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String service() {
     return ResourceManagerClient.SERVICE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String type() {
     return "folder";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public @NotNull String path() {
     return PREFIX + this.id;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String toString() {
+    return this.id;
   }
 }

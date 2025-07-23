@@ -30,6 +30,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+/**
+ * Base class for reading configuration settings.
+ */
 public abstract class AbstractConfiguration {
   /**
    * Raw settings data, typically sourced from the environment block.

@@ -96,6 +96,9 @@ public class HttpTransport {
     };
   }
 
+  /**
+   * Constructor options, to be injected using CDI.
+   */
   public record Options(
     Duration connectTimeout,
     Duration readTimeout,
