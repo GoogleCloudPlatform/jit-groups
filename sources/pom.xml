@@ -28,7 +28,7 @@
   <properties>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
-    <maven-javadoc-plugin.version>3.8.0</maven-javadoc-plugin.version>
+    <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.source>17</maven.compiler.source>
     <quarkus.version>3.25.0</quarkus.version>
