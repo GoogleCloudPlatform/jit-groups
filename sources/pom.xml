@@ -31,7 +31,7 @@
     <maven-javadoc-plugin.version>3.11.3</maven-javadoc-plugin.version>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.source>17</maven.compiler.source>
-    <quarkus.version>3.25.3</quarkus.version>
+    <quarkus.version>3.26.3</quarkus.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc.outputDirectory>${project.build.directory}/javadoc</javadoc.outputDirectory>
   </properties>
