@@ -57,58 +57,58 @@
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.24.1</version>
+      <version>1.42.0-rc1</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudresourcemanager</artifactId>
-      <version>v3-rev20240310-2.0.0</version>
+      <version>v3-rev20251103-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudasset</artifactId>
-      <version>v1-rev20240816-2.0.0</version>
+      <version>v1-rev20251102-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-pubsub</artifactId>
-      <version>v1-rev20240730-2.0.0</version>
+      <version>v1-rev20251104-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-iamcredentials</artifactId>
-      <version>v1-rev20240227-2.0.0</version>
+      <version>v1-rev20251022-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-secretmanager</artifactId>
-      <version>v1-rev20240726-2.0.0</version>
+      <version>v1-rev20251105-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-admin-directory</artifactId>
-      <version>directory_v1-rev20240709-2.0.0</version>
+      <version>directory_v1-rev20251107-2.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-cloudidentity</artifactId>
-      <version>v1-rev20240611-2.0.0</version>
+      <version>v1-rev20251118-2.0.0</version>
     </dependency>
 
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
-      <version>2.11.0</version>
+      <version>2.13.2</version>
     </dependency>
     <dependency>
       <groupId>com.sun.mail</groupId>
       <artifactId>jakarta.mail</artifactId>
-      <version>2.0.1</version>
+      <version>2.0.2</version>
     </dependency>
     <dependency>
       <groupId>dev.cel</groupId>
       <artifactId>cel</artifactId>
-      <version>0.6.0</version>
+      <version>0.7.1</version>
     </dependency>
 
     <!-- Test dependencies -->
@@ -120,7 +120,7 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.12.0</version>
+      <version>5.21.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
