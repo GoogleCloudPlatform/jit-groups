@@ -19,7 +19,7 @@
 # under the License.
 #
 
-name: Close inactive issues
+name: Mark and sweep inactive issues and pull-requests
 on:
   schedule:
     - cron: "0 0 * * *"
