@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/stale@v10
         with:
-          debug-only: true
+          debug-only: false
           days-before-stale: 60
           days-before-close: 10
           stale-issue-label: "stale"
