@@ -21,6 +21,7 @@
 
 name: Mark and sweep inactive issues and pull-requests
 on:
+  workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
 
