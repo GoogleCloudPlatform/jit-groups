@@ -129,6 +129,25 @@
       <version>0.7.1</version>
     </dependency>
 
+    <!--
+      Slack integration (wavemm fork).
+
+      slack-api-client provides the Slack Web API + Block Kit DSL.
+      google-cloud-firestore is the in-flight reviewer message registry,
+      used for cross-reviewer chat.update on approval. Both are gated
+      behind SLACK_NOTIFICATIONS_ENABLED at runtime.
+    -->
+    <dependency>
+      <groupId>com.slack.api</groupId>
+      <artifactId>slack-api-client</artifactId>
+      <version>1.45.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-firestore</artifactId>
+      <version>3.31.7</version>
+    </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>

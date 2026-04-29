@@ -126,6 +126,12 @@ variable "secret_location" {
     default                    = null
 }
 
+variable "promote_traffic" {
+    description                = "Whether to immediately route 100% of traffic to the newly deployed version. Set to false for staging deploys: the new version is reachable at its versioned URL (still behind IAP) but the default version keeps serving production traffic."
+    type                       = bool
+    default                    = true
+}
+
 #------------------------------------------------------------------------------
 # Provider.
 #------------------------------------------------------------------------------
@@ -431,9 +437,23 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
 }
 
 #
-# Force traffic to new version
+# Force traffic to new version, unless promote_traffic=false (staging deploys).
+# When count=0 the resource is not managed; the previously promoted version
+# keeps 100% traffic and the new version is reachable only at its versioned
+# URL (rev-<sha>-dot-default-dot-<project>.appspot.com), still behind IAP.
 #
+# The `moved` block tells Terraform that the resource went from a
+# non-counted form (in earlier wavemm fork revisions of this module) to a
+# counted form (here). Without it, plan would show destroy+create on the
+# traffic split which could momentarily disrupt traffic routing.
+#
+moved {
+    from                       = google_app_engine_service_split_traffic.appengine_app_version
+    to                         = google_app_engine_service_split_traffic.appengine_app_version[0]
+}
+
 resource "google_app_engine_service_split_traffic" "appengine_app_version" {
+    count                      = var.promote_traffic ? 1 : 0
     service                    = google_app_engine_standard_app_version.appengine_app_version.service
     migrate_traffic            = false
 

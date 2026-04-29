@@ -269,8 +269,54 @@ public class Application {
   @Produces
   public @NotNull ProposalHandler produceProposalHandler(
     @NotNull TokenSigner tokenSigner,
-    @NotNull SecretManagerClient secretManagerClient
+    @NotNull SecretManagerClient secretManagerClient,
+    @NotNull Executor executor
   ) {
+    //
+    // Wavemm fork: Slack notifications take precedence over SMTP when
+    // configured. See SLACK_INTEGRATION.md. Setting
+    // SLACK_NOTIFICATIONS_ENABLED=false (or leaving it unset) restores the
+    // upstream factory behaviour below — this is the documented rollback
+    // path.
+    //
+    if (configuration.isSlackConfigured()) {
+      try {
+        var botToken = secretManagerClient.accessSecret(
+          configuration.slackBotTokenSecret.get());
+        if (botToken == null || botToken.isBlank()) {
+          throw new IllegalStateException(
+            "SLACK_BOT_TOKEN_SECRET points to an empty secret value");
+        }
+
+        var slackClient = new SlackClient(botToken, executor, logger);
+        var registry = new SlackMessageRegistry(
+          configuration.slackFirestoreDatabase.get(),
+          executor,
+          logger);
+
+        return new SlackProposalHandler(
+          tokenSigner,
+          slackClient,
+          registry,
+          logger,
+          new AbstractProposalHandler.Options(configuration.proposalTimeout),
+          new SlackProposalHandler.Options(configuration.notificationTimeZone));
+      }
+      catch (AccessException | IOException e) {
+        //
+        // Fail loudly: a misconfigured Slack handler is worse than falling
+        // back, because the operator probably believes notifications are
+        // wired. Surfacing this at startup is preferable to silently
+        // dropping every approval request.
+        //
+        throw new IllegalStateException(
+          "Failed to initialise Slack notifications. Either fix the "
+            + "configuration or set SLACK_NOTIFICATIONS_ENABLED=false to "
+            + "restore the upstream notification path.",
+          e);
+      }
+    }
+
     if (configuration.isSmtpConfigured()) {
       var smtpOptions = new SmtpClient.Options(
         configuration.smtpHost,

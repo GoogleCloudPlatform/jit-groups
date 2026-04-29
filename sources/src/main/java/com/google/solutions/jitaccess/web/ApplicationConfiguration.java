@@ -167,6 +167,36 @@ public class ApplicationConfiguration extends AbstractConfiguration {
   final @NotNull String legacyJustificationHint;
   final @NotNull String legacyProjectsQuery;
 
+  // ---------------------------------------------------------------------------
+  // Slack notifications (wavemm fork — see SLACK_INTEGRATION.md).
+  //
+  // The Slack code path is gated by `slackNotificationsEnabled`. When false,
+  // Application.produceProposalHandler ignores Slack settings entirely and
+  // falls back to the upstream behaviour (SMTP if configured, otherwise the
+  // 501-throwing handler). This is the rollback contract: flipping this flag
+  // off and redeploying restores upstream behaviour, no other config changes
+  // required.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Master switch for Slack notifications. When false the entire Slack code
+   * path is bypassed, including Secret Manager and Firestore initialisation.
+   */
+  final boolean slackNotificationsEnabled;
+
+  /**
+   * Secret Manager resource path of the Slack bot token. Format:
+   * projects/X/secrets/Y/versions/Z. Required when
+   * {@link #slackNotificationsEnabled} is true.
+   */
+  final @NotNull Optional<String> slackBotTokenSecret;
+
+  /**
+   * Named Firestore database id holding the in-flight reviewer message
+   * registry. Required when {@link #slackNotificationsEnabled} is true.
+   */
+  final @NotNull Optional<String> slackFirestoreDatabase;
+
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     super(settingsData);
 
@@ -284,6 +314,27 @@ public class ApplicationConfiguration extends AbstractConfiguration {
       .orElse("Bug or case number");
     this.legacyProjectsQuery = readStringSetting("AVAILABLE_PROJECTS_QUERY")
       .orElse("state:ACTIVE");
+
+    //
+    // Slack notifications (wavemm fork).
+    //
+    this.slackNotificationsEnabled = readSetting(
+      Boolean::parseBoolean,
+      "SLACK_NOTIFICATIONS_ENABLED")
+      .orElse(false);
+    this.slackBotTokenSecret = readStringSetting("SLACK_BOT_TOKEN_SECRET");
+    this.slackFirestoreDatabase = readStringSetting("SLACK_FIRESTORE_DATABASE");
+  }
+
+  /**
+   * @return true iff the Slack code path is enabled and has the minimum
+   *         configuration needed to operate (bot token secret + Firestore
+   *         database id).
+   */
+  public boolean isSlackConfigured() {
+    return this.slackNotificationsEnabled
+      && this.slackBotTokenSecret.isPresent()
+      && this.slackFirestoreDatabase.isPresent();
   }
 
   public boolean isSmtpConfigured() {
