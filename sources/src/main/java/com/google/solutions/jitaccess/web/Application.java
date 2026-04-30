@@ -270,6 +270,7 @@ public class Application {
   public @NotNull ProposalHandler produceProposalHandler(
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient,
+    @NotNull CloudIdentityGroupsClient groupsClient,
     @NotNull Executor executor
   ) {
     //
@@ -279,7 +280,23 @@ public class Application {
     // upstream factory behaviour below — this is the documented rollback
     // path.
     //
-    if (configuration.isSlackConfigured()) {
+    if (configuration.slackNotificationsEnabled) {
+      //
+      // Operator's intent is clear ("turn Slack on"), so fail loudly if any
+      // companion variable is missing rather than silently falling through
+      // to the SMTP/501 branches. Silent fall-through hides a misconfig
+      // that the operator will only notice when the next MPA request lands
+      // and no DM goes out.
+      //
+      if (configuration.slackBotTokenSecret.isEmpty()
+        || configuration.slackFirestoreDatabase.isEmpty()) {
+        throw new IllegalStateException(
+          "SLACK_NOTIFICATIONS_ENABLED=true requires both SLACK_BOT_TOKEN_SECRET "
+            + "and SLACK_FIRESTORE_DATABASE. Either provide them or set "
+            + "SLACK_NOTIFICATIONS_ENABLED=false to restore the upstream "
+            + "notification path.");
+      }
+
       try {
         var botToken = secretManagerClient.accessSecret(
           configuration.slackBotTokenSecret.get());
@@ -288,16 +305,30 @@ public class Application {
             "SLACK_BOT_TOKEN_SECRET points to an empty secret value");
         }
 
+        //
+        // Build a Firestore client targeting the named database that
+        // wavemm-iam Terraform provisions. We construct it locally rather
+        // than producing a project-wide @Singleton to keep its IAM blast
+        // radius scoped to the Slack code path: only this factory branch,
+        // executed only when the flag is on, ever instantiates it.
+        //
+        var firestore = com.google.cloud.firestore.FirestoreOptions
+          .getDefaultInstance().toBuilder()
+          .setProjectId(runtime.projectId())
+          .setDatabaseId(configuration.slackFirestoreDatabase.get())
+          .setCredentials(runtime.applicationCredentials())
+          .build()
+          .getService();
+
         var slackClient = new SlackClient(botToken, executor, logger);
-        var registry = new SlackMessageRegistry(
-          configuration.slackFirestoreDatabase.get(),
-          executor,
-          logger);
+        var registry = new SlackMessageRegistry(firestore, executor, logger);
+        var groupResolver = new GroupResolver(groupsClient, executor);
 
         return new SlackProposalHandler(
           tokenSigner,
           slackClient,
           registry,
+          groupResolver,
           logger,
           new AbstractProposalHandler.Options(configuration.proposalTimeout),
           new SlackProposalHandler.Options(configuration.notificationTimeZone));

@@ -326,17 +326,6 @@ public class ApplicationConfiguration extends AbstractConfiguration {
     this.slackFirestoreDatabase = readStringSetting("SLACK_FIRESTORE_DATABASE");
   }
 
-  /**
-   * @return true iff the Slack code path is enabled and has the minimum
-   *         configuration needed to operate (bot token secret + Firestore
-   *         database id).
-   */
-  public boolean isSlackConfigured() {
-    return this.slackNotificationsEnabled
-      && this.slackBotTokenSecret.isPresent()
-      && this.slackFirestoreDatabase.isPresent();
-  }
-
   public boolean isSmtpConfigured() {
     return this.smtpSenderAddress.isPresent();
   }
