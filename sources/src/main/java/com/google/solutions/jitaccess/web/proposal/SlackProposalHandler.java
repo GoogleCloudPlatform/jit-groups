@@ -117,6 +117,13 @@ public class SlackProposalHandler extends AbstractProposalHandler {
     var reviewerEmails = expanded.stream()
       .filter(EndUserId.class::isInstance)
       .map(p -> ((EndUserId) p).email)
+      // Drop the requester from the expanded reviewer set. The upstream
+      // `JoinOperation.propose` filter excludes the requester at *principal*
+      // level (group ≠ user), so when the policy ACL names a group that the
+      // requester also belongs to (the typical "team approves team" pattern),
+      // the requester sneaks back in after group expansion. Without this we'd
+      // DM the requester their own approval request.
+      .filter(email -> !email.equalsIgnoreCase(beneficiary))
       .distinct()
       .sorted()
       .toList();
@@ -138,8 +145,34 @@ public class SlackProposalHandler extends AbstractProposalHandler {
     @NotNull ProposalHandler.ProposalToken token,
     @NotNull URI actionUri
   ) throws AccessException, IOException {
-    var fp = fingerprint(proposal);
+    RegistryFingerprint fp;
+    try {
+      fp = fingerprint(proposal);
+    }
+    catch (AccessException e) {
+      // Surface the underlying cause; AbstractProposalHandler will wrap
+      // this into AccessDeniedException("Creating a proposal failed", e)
+      // which the user sees as a 403 with no detail. Logging here makes
+      // sure the actual reason (typically a Cloud Identity Groups API
+      // permission gap) is visible in Cloud Logging.
+      this.logger.error(
+        "slack.fingerprint.failed",
+        "Resolving reviewers via GroupResolver failed for requester=%s "
+          + "group=%s — likely a Cloud Identity Groups API permission gap "
+          + "on the JIT service account.",
+        proposal.user().email,
+        proposal.group().toString(),
+        e);
+      throw e;
+    }
+
     if (fp.reviewerEmails().isEmpty()) {
+      this.logger.error(
+        "slack.noReviewers",
+        "Group %s expanded to zero individual users (after excluding the "
+          + "requester %s). Either the policy ACL is misconfigured or the "
+          + "approver group has no listable members.",
+        fp.groupId(), fp.beneficiary());
       throw new IOException(
         "No qualified reviewers resolved to individual users for " + fp.groupId());
     }
@@ -192,6 +225,13 @@ public class SlackProposalHandler extends AbstractProposalHandler {
     }
 
     if (posted.isEmpty()) {
+      this.logger.error(
+        "slack.allDmsFailed",
+        "Slack DM delivery failed for every one of %d reviewer(s) on %s. "
+          + "See preceding slack.dm.failed entries for the per-reviewer "
+          + "cause (typical: missing Slack scope, invalid bot token, or "
+          + "user not in the workspace).",
+        fp.reviewerEmails().size(), fp.groupId());
       throw new IOException(
         "Slack DM delivery failed for every reviewer (" + fp.reviewerEmails().size()
           + ") on " + fp.groupId());

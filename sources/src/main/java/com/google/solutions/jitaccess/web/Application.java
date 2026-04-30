@@ -267,6 +267,7 @@ public class Application {
   }
 
   @Produces
+  @Singleton
   public @NotNull ProposalHandler produceProposalHandler(
     @NotNull TokenSigner tokenSigner,
     @NotNull SecretManagerClient secretManagerClient,
