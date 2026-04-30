@@ -26,7 +26,8 @@ on:
     branches: [ master, "jitaccess" ]
   pull_request:
     branches: [ master, "jitaccess" ]
-  
+  workflow_dispatch:
+
 jobs:
   ci:
     runs-on: ubuntu-latest

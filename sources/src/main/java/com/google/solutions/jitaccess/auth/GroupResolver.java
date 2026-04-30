@@ -81,7 +81,7 @@ public class GroupResolver {
    * available in premium SKUs, and we therefore don't use
    * it here.
    */
-  @NotNull Set<PrincipalId> expand(
+  public @NotNull Set<PrincipalId> expand(
     @NotNull Set<PrincipalId> principals
   ) throws AccessException {
     var groups = principals

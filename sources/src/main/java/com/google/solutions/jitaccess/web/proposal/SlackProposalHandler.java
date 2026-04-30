@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletionException;
 
 /**
  * Proposal handler that delivers approval requests via Slack DMs instead
@@ -182,7 +181,7 @@ public class SlackProposalHandler extends AbstractProposalHandler {
         posted.add(new ReviewerMessage(
           email, userId, message.channelId(), message.messageTs()));
       }
-      catch (CompletionException | RuntimeException e) {
+      catch (RuntimeException e) {
         var cause = e.getCause() != null ? e.getCause() : e;
         this.logger.warn(
           "slack.dm.failed",
@@ -201,7 +200,7 @@ public class SlackProposalHandler extends AbstractProposalHandler {
     try {
       this.registry.record(fp.key(), posted, token.expiryTime()).join();
     }
-    catch (CompletionException | RuntimeException e) {
+    catch (RuntimeException e) {
       // Registry write failure is bad — siblings won't update on approval —
       // but the approval can still proceed via the live DM links. Log loud.
       this.logger.error(
@@ -251,7 +250,7 @@ public class SlackProposalHandler extends AbstractProposalHandler {
         this.slackClient.updateMessage(
           entry.channelId(), entry.messageTs(), siblingBlocks, siblingFallback).join();
       }
-      catch (CompletionException | RuntimeException e) {
+      catch (RuntimeException e) {
         var cause = e.getCause() != null ? e.getCause() : e;
         this.logger.warn(
           "slack.siblingUpdate.failed",
@@ -265,7 +264,7 @@ public class SlackProposalHandler extends AbstractProposalHandler {
     try {
       this.registry.delete(fp.key()).join();
     }
-    catch (CompletionException | RuntimeException e) {
+    catch (RuntimeException e) {
       // Best-effort; TTL will reap.
     }
 
@@ -294,7 +293,7 @@ public class SlackProposalHandler extends AbstractProposalHandler {
         SlackMessages.beneficiaryApproved(groupId, approverEmail),
         SlackMessages.beneficiaryApprovedFallback(groupId, approverEmail)).join();
     }
-    catch (CompletionException | RuntimeException e) {
+    catch (RuntimeException e) {
       var cause = e.getCause() != null ? e.getCause() : e;
       this.logger.warn(
         "slack.beneficiaryDM.failed",

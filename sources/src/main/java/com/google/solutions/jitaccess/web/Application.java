@@ -314,7 +314,7 @@ public class Application {
         //
         var firestore = com.google.cloud.firestore.FirestoreOptions
           .getDefaultInstance().toBuilder()
-          .setProjectId(runtime.projectId())
+          .setProjectId(runtime.projectId().id())
           .setDatabaseId(configuration.slackFirestoreDatabase.get())
           .setCredentials(runtime.applicationCredentials())
           .build()
