@@ -70,6 +70,7 @@ public class TestSystemsResource {
     var group = Policies.createJitGroupPolicy("g-1", AccessControlList.EMPTY, Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 
@@ -83,6 +84,7 @@ public class TestSystemsResource {
     var group = Policies.createJitGroupPolicy("g-1", AccessControlList.EMPTY, Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 
@@ -96,6 +98,7 @@ public class TestSystemsResource {
     var group = Policies.createJitGroupPolicy("g-1", AccessControlList.EMPTY, Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 
@@ -124,6 +127,7 @@ public class TestSystemsResource {
     environment.add(system);
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(environment, Subjects.create(SAMPLE_USER));
 
@@ -167,6 +171,7 @@ public class TestSystemsResource {
     environment.add(system);
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(environment, Subjects.create(SAMPLE_USER));
 
@@ -216,6 +221,7 @@ public class TestSystemsResource {
     environment.add(system);
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(environment, Subjects.create(SAMPLE_USER));
 
@@ -243,6 +249,7 @@ public class TestSystemsResource {
         new Principal(group.id(), expiry)));
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment(), subject);
 
@@ -267,6 +274,7 @@ public class TestSystemsResource {
       Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 
@@ -290,6 +298,7 @@ public class TestSystemsResource {
       Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 
@@ -315,6 +324,7 @@ public class TestSystemsResource {
       Map.of());
 
     var resource = new SystemsResource();
+    resource.groupsOptions = new GroupsResource.Options(false);
     resource.logger = Mockito.mock(Logger.class);
     resource.catalog = createCatalog(group.system().environment());
 

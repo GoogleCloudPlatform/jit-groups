@@ -22,10 +22,12 @@
 package com.google.solutions.jitaccess.web.proposal;
 
 import com.google.solutions.jitaccess.apis.clients.AccessException;
+import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.IamPrincipalId;
 import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.time.Instant;
@@ -40,10 +42,48 @@ public interface ProposalHandler {
    * Express the intent to join a group and solicit approval
    * from an authorized user.
    */
-  @NotNull ProposalHandler.ProposalToken propose(
+  default @NotNull ProposalHandler.ProposalToken propose(
     @NotNull JitGroupContext.JoinOperation joinOperation,
     @NotNull Function<String, URI> buildActionUri
+  ) throws AccessException {
+    return propose(joinOperation, buildActionUri, ProposeOptions.DEFAULT);
+  }
+
+  /**
+   * Variant accepting per-request options:
+   * <ul>
+   *   <li>{@link ProposeOptions#reviewerFilter()} — narrow the set of
+   *       qualified peers to a subset selected by the requester (the
+   *       picker UX in the wavemm fork). Null = no filter.
+   *   <li>{@link ProposeOptions#notifyReviewers()} — when false, the
+   *       handler skips out-of-band notification (Slack DMs / email) but
+   *       still generates and signs the JWT, returning the
+   *       {@link ProposalToken} to the caller. Used by the "copy
+   *       approval link" flow where the requester shares the link
+   *       manually.
+   * </ul>
+   */
+  @NotNull ProposalHandler.ProposalToken propose(
+    @NotNull JitGroupContext.JoinOperation joinOperation,
+    @NotNull Function<String, URI> buildActionUri,
+    @NotNull ProposeOptions options
   ) throws AccessException;
+
+  /**
+   * Per-request options for {@link #propose}.
+   *
+   * @param reviewerFilter when non-null, narrows the recipients to
+   *                       individuals selected by the requester
+   * @param notifyReviewers when false, the proposal token is generated
+   *                        but no Slack/email notification is delivered
+   */
+  record ProposeOptions(
+    @Nullable Set<EndUserId> reviewerFilter,
+    boolean notifyReviewers
+  ) {
+    public static final @NotNull ProposeOptions DEFAULT =
+      new ProposeOptions(null, true);
+  }
 
   /**
    * Accept a proposal.

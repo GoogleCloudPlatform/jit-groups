@@ -352,3 +352,147 @@ main .mdc-button {
 .jit-system-description {
   white-space: pre-line;   /* pre-wrap also works */
 }
+
+/* ==== Wavemm fork: reviewer picker + copy-link UI ==== */
+
+.jit-reviewer-picker {
+    margin-top: 16px;
+    padding: 12px 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.jit-reviewer-picker-degraded {
+    background: #fff8e1;
+    border: 1px solid #f0c674;
+    border-top: 1px solid #f0c674;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 16px;
+}
+
+.jit-reviewer-picker-degraded .jit-reviewer-picker-label {
+    color: #8b6914;
+}
+
+.jit-reviewer-picker-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #000000a8;
+}
+
+.jit-reviewer-picker-hint {
+    font-weight: normal;
+    color: #00000080;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.jit-reviewer-picker-filter {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+.jit-reviewer-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid #f0f0f0;
+    border-radius: 4px;
+}
+
+.jit-reviewer-picker-item {
+    padding: 4px 8px;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.jit-reviewer-picker-item:last-child {
+    border-bottom: none;
+}
+
+.jit-reviewer-picker-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.jit-reviewer-picker-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.jit-reviewer-picker-item.jit-reviewer-suggested {
+    background: #f0f7ff;
+}
+
+.jit-reviewer-display {
+    flex: 1;
+}
+
+.jit-reviewer-badge {
+    display: inline-block;
+    background: #1a73e8;
+    color: white;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    text-transform: uppercase;
+}
+
+.jit-notify-toggle {
+    margin-top: 12px;
+    padding: 10px;
+    background: #fafafa;
+    border-radius: 4px;
+}
+
+.jit-notify-toggle label {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.jit-notify-toggle input[type="checkbox"] {
+    margin-right: 10px;
+    margin-top: 2px;
+}
+
+/* Approval-link box rendered after JOIN_PROPOSED when approvalUrl is set */
+.jit-approval-link-box {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.jit-approval-link-label {
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: #000000a8;
+}
+
+.jit-approval-link-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    margin-bottom: 6px;
+}
+
+.jit-approval-link-url {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    background: white;
+}

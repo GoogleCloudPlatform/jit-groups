@@ -31,9 +31,25 @@ class Inputs {
   private Inputs() {}
 
   /**
+   * Absolute per-input length cap enforced at the REST boundary,
+   * independent of policy-defined {@code maxLength}.
+   *
+   * <p>Defense-in-depth: a misconfigured (or unbounded) string property
+   * in policy YAML must not let a hostile requester submit a multi-MB
+   * justification that downstream consumers — Slack Block Kit (3 KB
+   * field cap), Firestore documents, audit logs — would then have to
+   * carry, truncate, or reject. The cap is generous enough to never
+   * collide with a reasonable human-written justification (16 KB ≈
+   * several pages of dense prose) and well below the Quarkus request
+   * body limit (10 MB), so it's only triggered by abuse.
+   */
+  static final int INPUT_MAX_LENGTH = 16_384;
+
+  /**
    * Copy input values.
    *
-   * @throws IllegalArgumentException if the input values are incomplete.
+   * @throws IllegalArgumentException if the input values are incomplete
+   *         or any value exceeds {@link #INPUT_MAX_LENGTH}.
    */
   public static void copyValues(
     @NotNull MultivaluedMap<String, String> source,
@@ -41,7 +57,14 @@ class Inputs {
   ) {
     for (var input : target) {
       if (source.containsKey(input.name())) {
-        input.set(source.get(input.name()).get(0));
+        var value = source.get(input.name()).get(0);
+        if (value != null && value.length() > INPUT_MAX_LENGTH) {
+          throw new IllegalArgumentException(
+            String.format(
+              "'%s' is too long (got %d characters, max %d)",
+              input.displayName(), value.length(), INPUT_MAX_LENGTH));
+        }
+        input.set(value);
       }
       else if (input.isRequired()) {
         throw new IllegalArgumentException(

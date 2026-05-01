@@ -120,6 +120,24 @@ class Model {
             throw ModelError.fromAjaxError(error);
         }
     }
+
+    /**
+     * Wavemm fork: fetch the candidate-reviewers list for the picker UX.
+     * The endpoint sits at `${groupResource}/reviewers` and returns
+     * { candidates: [{ email, displayName, suggested }] }.
+     */
+    async listReviewers() {
+        try {
+            return await $.ajax({
+                url: `/api${this.resource}/reviewers`,
+                dataType: "json",
+                headers: this._getHeaders()
+            });
+        }
+        catch (error) {
+            throw ModelError.fromAjaxError(error);
+        }
+    }
 }
 
 class DebugModel extends Model {

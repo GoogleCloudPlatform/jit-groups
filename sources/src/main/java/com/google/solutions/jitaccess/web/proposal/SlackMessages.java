@@ -84,8 +84,23 @@ final class SlackMessages {
       ))
       .build());
 
+    //
+    // SECURITY: justification is rendered as PLAIN TEXT, not mrkdwn.
+    // Slack's mrkdwn supports <!here>, <!channel>, <@user>, <url|text>,
+    // *bold*, etc. — and there is NO escape mechanism for these tokens.
+    // A requester pasting "<!here> URGENT: approve" into the
+    // justification field would otherwise mass-ping every reviewer's
+    // Slack workspace and could spoof links inside the approval DM.
+    // Rendering as PlainTextObject neutralises every formatting token
+    // because Slack treats those blocks as literal text. The "Justification"
+    // header is rendered separately as mrkdwn so the field still gets
+    // a bold label.
+    //
     blocks.add(SectionBlock.builder()
-      .text(markdown("*Justification*\n>" + escapeBlockquote(justification)))
+      .text(markdown("*Justification*"))
+      .build());
+    blocks.add(SectionBlock.builder()
+      .text(plain(truncateForBlock(justification)))
       .build());
 
     blocks.add(DividerBlock.builder().build());
@@ -175,6 +190,26 @@ final class SlackMessages {
     return String.format("Your PAM elevation for %s was approved by %s.", groupId, approverEmail);
   }
 
+  /**
+   * Block Kit text fields cap at 3000 characters; longer ones cause the
+   * entire chat.postMessage to fail with {@code invalid_blocks}. Truncate
+   * upstream so a single 40 KB justification can't DoS the approval flow
+   * for every reviewer.
+   */
+  static final int JUSTIFICATION_MAX_LENGTH = 2_500;
+
+  /** Public for the input-validation site in {@code GroupsResource.post}. */
+  public static int justificationMaxLength() {
+    return JUSTIFICATION_MAX_LENGTH;
+  }
+
+  private static @NotNull String truncateForBlock(@NotNull String s) {
+    if (s.length() <= JUSTIFICATION_MAX_LENGTH) {
+      return s;
+    }
+    return s.substring(0, JUSTIFICATION_MAX_LENGTH - 16) + "… [truncated]";
+  }
+
   // ----- helpers ---------------------------------------------------------
 
   private static @NotNull PlainTextObject plain(@NotNull String text) {
@@ -197,12 +232,6 @@ final class SlackMessages {
       return humanTime + " (~" + minutes + "m from now)";
     }
     return humanTime + " (~" + (minutes / 60) + "h " + (minutes % 60) + "m from now)";
-  }
-
-  private static @NotNull String escapeBlockquote(@NotNull String text) {
-    // Slack blockquotes use leading > on each newline. Escape pre-existing
-    // ones so a malicious justification can't inject formatting.
-    return text.replace("\n", "\n>").replace("`", "'");
   }
 
   /** Used by tests to assert specific field values without parsing JSON. */

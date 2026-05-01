@@ -220,6 +220,13 @@ public class Application {
   }
 
   @Produces
+  @Singleton
+  public com.google.solutions.jitaccess.web.rest.GroupsResource.Options produceGroupsResourceOptions() {
+    return new com.google.solutions.jitaccess.web.rest.GroupsResource.Options(
+      configuration.slackCopyLinkEnabled);
+  }
+
+  @Produces
   public GoogleCredentials produceApplicationCredentials() {
     return runtime.applicationCredentials();
   }
@@ -290,12 +297,13 @@ public class Application {
       // and no DM goes out.
       //
       if (configuration.slackBotTokenSecret.isEmpty()
-        || configuration.slackFirestoreDatabase.isEmpty()) {
+        || configuration.slackFirestoreDatabase.isEmpty()
+        || configuration.slackRegistryKeySaltSecret.isEmpty()) {
         throw new IllegalStateException(
-          "SLACK_NOTIFICATIONS_ENABLED=true requires both SLACK_BOT_TOKEN_SECRET "
-            + "and SLACK_FIRESTORE_DATABASE. Either provide them or set "
-            + "SLACK_NOTIFICATIONS_ENABLED=false to restore the upstream "
-            + "notification path.");
+          "SLACK_NOTIFICATIONS_ENABLED=true requires SLACK_BOT_TOKEN_SECRET, "
+            + "SLACK_FIRESTORE_DATABASE, and SLACK_REGISTRY_KEY_SALT_SECRET. "
+            + "Either provide them or set SLACK_NOTIFICATIONS_ENABLED=false "
+            + "to restore the upstream notification path.");
       }
 
       try {
@@ -304,6 +312,19 @@ public class Application {
         if (botToken == null || botToken.isBlank()) {
           throw new IllegalStateException(
             "SLACK_BOT_TOKEN_SECRET points to an empty secret value");
+        }
+
+        //
+        // Wavemm fork P2-11: HMAC salt for SlackMessageRegistry document
+        // keys. Read at the same lifecycle point as the bot token so a
+        // misconfigured (missing/empty) salt fails app startup loudly,
+        // not silently at the first elevation request.
+        //
+        var registryKeySalt = secretManagerClient.accessSecret(
+          configuration.slackRegistryKeySaltSecret.get());
+        if (registryKeySalt == null || registryKeySalt.isBlank()) {
+          throw new IllegalStateException(
+            "SLACK_REGISTRY_KEY_SALT_SECRET points to an empty secret value");
         }
 
         //
@@ -322,7 +343,8 @@ public class Application {
           .getService();
 
         var slackClient = new SlackClient(botToken, executor, logger);
-        var registry = new SlackMessageRegistry(firestore, executor, logger);
+        var registry = new SlackMessageRegistry(
+          firestore, executor, logger, registryKeySalt);
         var groupResolver = new GroupResolver(groupsClient, executor);
 
         return new SlackProposalHandler(
@@ -391,7 +413,8 @@ public class Application {
         @Override
         public @NotNull ProposalHandler.ProposalToken propose(
           @NotNull JitGroupContext.JoinOperation joinOperation,
-          @NotNull Function<String, URI> buildActionUri
+          @NotNull Function<String, URI> buildActionUri,
+          @NotNull ProposalHandler.ProposeOptions options
           ) {
           throw new UnsupportedOperationException(
             "Approvals are not supported because the SMTP configuration is incomplete");

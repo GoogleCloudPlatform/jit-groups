@@ -59,6 +59,35 @@ public interface Proposal {
   @NotNull Map<String, String> input();
 
   /**
+   * Wavemm fork: whether the requester opted in to having the proposal
+   * handler deliver out-of-band notification (Slack DMs / email) to
+   * reviewers, vs. opting out to copy and share the approval URL
+   * manually.
+   *
+   * <p>When false:
+   * <ul>
+   *   <li>{@code AbstractProposalHandler.propose} skips the
+   *       {@code onOperationProposed} hook — no DMs, no Firestore
+   *       registry entry.
+   *   <li>{@code SlackProposalHandler.onProposalApproved} short-
+   *       circuits the sibling-update path (there are no siblings to
+   *       update because no DMs were sent), keeping only the
+   *       beneficiary-confirmation DM. The previous "no Slack
+   *       registry entry" warning becomes a routine INFO log.
+   * </ul>
+   *
+   * <p>The flag is encoded as a JWT claim so it survives the
+   * propose → accept round-trip and the approver doesn't need to
+   * re-derive the requester's intent from the request side.
+   *
+   * <p>Default: {@code true}, matching upstream behaviour where
+   * notification is always attempted.
+   */
+  default boolean notifyReviewers() {
+    return true;
+  }
+
+  /**
    * Invoked when the proposal was completed successfully.
    */
   void onCompleted(

@@ -127,7 +127,7 @@ public class TestAbstractProposalHandler {
       .thenReturn(SAMPLE_USER_1);
     when(operation.group())
       .thenReturn(SAMPLE_JITGROUP_ID);
-    when(operation.propose(any()))
+    when(operation.propose(any(), any()))
       .thenReturn(proposal);
 
     var signer = new PseudoSigner();
@@ -158,7 +158,7 @@ public class TestAbstractProposalHandler {
       .thenReturn(SAMPLE_USER_1);
     when(operation.group())
       .thenReturn(SAMPLE_JITGROUP_ID);
-    when(operation.propose(any()))
+    when(operation.propose(any(), any()))
       .thenReturn(proposal);
 
     var signer = new PseudoSigner();
@@ -225,5 +225,45 @@ public class TestAbstractProposalHandler {
     assertFalse(proposal.input().isEmpty());
     assertEquals(1, proposal.input().size());
     assertEquals("value1", proposal.input().get("prop1"));
+  }
+
+  /**
+   * Wavemm fork P1-2: a token without the `ntf` claim (legacy or
+   * propose-time default) decodes with {@code notifyReviewers() = true},
+   * matching upstream behaviour.
+   */
+  @Test
+  public void accept_whenNotifyClaimAbsent_defaultsToTrue() throws Exception {
+    var token = "{\"rcp\":[\"user:user-2@example.com\"]," +
+      "\"grp\":\"jit-group:env.sys.group-1\"," +
+      "\"usr\":\"user:user-1@example.com\",\"inp\":{}}";
+
+    var signer = new PseudoSigner();
+    var proposalHandler = new SampleProposalHandler(signer);
+    var proposal = proposalHandler.accept(token);
+
+    assertTrue(proposal.notifyReviewers(),
+      "Absent ntf claim must decode as the upstream default (true)");
+  }
+
+  /**
+   * Wavemm fork P1-2 round-trip: a token with `ntf=false` set at
+   * propose-time round-trips through accept and surfaces as
+   * {@code proposal.notifyReviewers() == false}, allowing downstream
+   * handlers (SlackProposalHandler) to short-circuit cleanly.
+   */
+  @Test
+  public void accept_whenNotifyClaimFalse_propagates() throws Exception {
+    var token = "{\"rcp\":[\"user:user-2@example.com\"]," +
+      "\"grp\":\"jit-group:env.sys.group-1\"," +
+      "\"usr\":\"user:user-1@example.com\",\"inp\":{},\"ntf\":false}";
+
+    var signer = new PseudoSigner();
+    var proposalHandler = new SampleProposalHandler(signer);
+    var proposal = proposalHandler.accept(token);
+
+    assertFalse(proposal.notifyReviewers(),
+      "ntf=false claim must decode so the Slack handler short-circuits "
+        + "the registry-lookup branch on opt-out approvals");
   }
 }

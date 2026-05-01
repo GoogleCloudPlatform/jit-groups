@@ -77,23 +77,66 @@ public class TestSlackMessages {
   }
 
   @Test
-  public void reviewRequest_escapesBlockquoteFormatting() {
-    // Inject newlines in the justification — they must be escaped so a
-    // crafted message can't break out of the >justification block.
+  public void reviewRequest_rendersJustificationAsPlainText() {
+    // SECURITY: a malicious requester pasting Slack mrkdwn tokens into
+    // the justification field MUST NOT have those tokens interpreted by
+    // Slack — otherwise <!here>/<!channel>, link-spoofing
+    // <https://evil/|innocent text>, or <@Uxxxx> mentions would reach
+    // every reviewer's DM with attacker-controlled formatting. The
+    // justification is rendered via PlainTextObject which Slack treats
+    // as literal text.
+    var hostile = "<!here> URGENT: <https://evil/|click here> *bold* <@U99999>";
     var blocks = SlackMessages.reviewRequest(
       "alice@example.com",
       "env/sys/grp",
-      "line one\nline two",
+      hostile,
       Instant.now().plus(1, ChronoUnit.HOURS),
       URI.create("https://pam.wavemm.net/?activation=jwt"),
       UTC);
 
-    var serialized = blocks.toString();
-    // Expect each new line to begin with a leading > so it stays inside the
-    // blockquote we opened in the template.
-    assertTrue(serialized.contains(">line one\n>line two")
-        || serialized.contains("\\n>line two"),
-      "justification newlines must be escaped to keep blockquote formatting");
+    // Find the SectionBlock that carries the justification — it's a
+    // PlainTextObject (type "plain_text"), distinct from the
+    // mrkdwn-typed "Justification" header section above it.
+    boolean justificationIsPlainText = blocks.stream()
+      .filter(b -> b instanceof com.slack.api.model.block.SectionBlock)
+      .map(b -> (com.slack.api.model.block.SectionBlock) b)
+      .filter(s -> s.getText() != null
+        && s.getText() instanceof com.slack.api.model.block.composition.PlainTextObject)
+      .map(s -> ((com.slack.api.model.block.composition.PlainTextObject) s.getText()).getText())
+      .anyMatch(t -> t.equals(hostile));
+    assertTrue(justificationIsPlainText,
+      "justification must reach Slack as a PlainTextObject so mrkdwn "
+        + "tokens are inert");
+  }
+
+  @Test
+  public void reviewRequest_truncatesOverlongJustification() {
+    // SECURITY/DoS: Block Kit text fields cap at 3000 chars. A 40 KB
+    // justification would otherwise fail the chat.postMessage call for
+    // every reviewer, blocking the elevation entirely.
+    var huge = "x".repeat(50_000);
+    var blocks = SlackMessages.reviewRequest(
+      "alice@example.com",
+      "env/sys/grp",
+      huge,
+      Instant.now().plus(1, ChronoUnit.HOURS),
+      URI.create("https://pam.wavemm.net/?activation=jwt"),
+      UTC);
+
+    var rendered = blocks.stream()
+      .filter(b -> b instanceof com.slack.api.model.block.SectionBlock)
+      .map(b -> (com.slack.api.model.block.SectionBlock) b)
+      .filter(s -> s.getText() != null
+        && s.getText() instanceof com.slack.api.model.block.composition.PlainTextObject)
+      .map(s -> ((com.slack.api.model.block.composition.PlainTextObject) s.getText()).getText())
+      .filter(t -> t.length() > 1)
+      .findFirst()
+      .orElseThrow();
+    assertTrue(rendered.length() <= SlackMessages.justificationMaxLength(),
+      "justification must be truncated to <= JUSTIFICATION_MAX_LENGTH");
+    assertTrue(rendered.endsWith("[truncated]"),
+      "truncation must be visible to reviewers so they don't act on "
+        + "an incomplete justification");
   }
 
   // -------------------------------------------------------------------------

@@ -36,8 +36,57 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 /**
- * Expands group memberships using the Cloud Identity
- * Groups API.
+ * Expands group memberships using the Cloud Identity Groups API.
+ *
+ * <p><b>Visibility &amp; trust boundary (wavemm fork P1-7).</b> The
+ * output of {@link #expand} is a flat set of {@link EndUserId}/{@link
+ * GroupId} principals derived from policy-ACL-supplied group ids. It
+ * is NOT itself an authorisation decision — it answers the question
+ * "who are the (one-level-resolved) members of these groups?", nothing
+ * more. Callers that use it to populate audit fields, message
+ * recipients, or picker candidate lists are fine; callers that use it
+ * to decide whether a specific principal can perform a privileged
+ * action MUST cross-check against the policy ACL, because:
+ *
+ * <ul>
+ *   <li>resolution is one level deep (nested groups are not flattened
+ *       — see method comment), so the absence of a user from
+ *       {@code expand(...)} does NOT prove they aren't an effective
+ *       member;</li>
+ *   <li>an empty/failed Cloud Identity response is silently equivalent
+ *       to "no members" inside this method (the per-group lambda in
+ *       {@link com.google.solutions.jitaccess.web.proposal.ReviewerCandidates}
+ *       turns errors into empty lists for picker robustness; do not
+ *       copy that pattern when correctness matters);</li>
+ *   <li>service-account members of approver groups are silently
+ *       dropped (see {@link #principalFromMembership}), so any
+ *       authorisation decision derived from {@code expand} must also
+ *       account for non-EndUser principals via the policy ACL
+ *       directly.</li>
+ * </ul>
+ *
+ * <p><b>Audit of in-tree callers</b> (re-verify when adding a new
+ * one):
+ *
+ * <ul>
+ *   <li>{@link com.google.solutions.jitaccess.web.rest.GroupsResource#post}
+ *       — selectedReviewers subset check: combines {@code expand} with
+ *       a separate ACL lookup, NOT a sole authorisation source. ✓
+ *   <li>{@link com.google.solutions.jitaccess.web.rest.GroupsResource#getReviewers}
+ *       — picker candidate listing: best-effort, output is for UX
+ *       only. ✓
+ *   <li>{@link com.google.solutions.jitaccess.web.proposal.ReviewerCandidates#compute}
+ *       — picker UI: same as above. ✓
+ *   <li>{@link com.google.solutions.jitaccess.web.proposal.SlackProposalHandler#fingerprint}
+ *       — registry key + DM dispatch: NOT an authorisation source;
+ *       the JWT verified by {@code JitGroupContext.approve} is. ✓
+ * </ul>
+ *
+ * <p>Any new caller that uses {@code expand} for an authorisation
+ * decision must add itself here AND ensure a separate ACL check is
+ * still performed. The catalog-side defense in {@link
+ * com.google.solutions.jitaccess.catalog.JitGroupContext.JoinOperation#propose(java.time.Instant,
+ * java.util.Set)} is the trust-boundary backstop that catches a forgotten check.
  */
 public class GroupResolver {
   private final @NotNull CloudIdentityGroupsClient groupsClient;

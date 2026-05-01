@@ -673,13 +673,246 @@
                         groupInfo.join.input.forEach(item => {
                             this.select('form').append(this._createInputForProperty(item));
                         });
+                        // Wavemm fork: show the reviewer picker only when MPA is required.
+                        // The picker UI fetches qualified peers and lets the requester
+                        // narrow the recipient list; with copyLinkEnabled the requester
+                        // can also opt out of Slack delivery and copy the JWT URL manually.
+                        if (groupInfo.join.status === 'JOIN_ALLOWED_WITH_APPROVAL') {
+                            this._renderReviewerPickerAsync(groupInfo.join.copyLinkEnabled);
+                        }
                         break;
 
                     case 'JOIN_COMPLETED':
-                    case 'JOIN_PROPOSED':
                     case 'JOIN_DISALLOWED':
                         this.select('.jit-form').hide();
+                        break;
+
+                    case 'JOIN_PROPOSED':
+                        this.select('.jit-form').hide();
+                        // Wavemm fork: surface the approval URL so the requester
+                        // can copy/share it manually when they opted out of Slack
+                        // (or as a fallback if Slack delivery had an issue).
+                        if (groupInfo.join.approvalUrl) {
+                            this._renderApprovalUrl(groupInfo.join.approvalUrl);
+                        }
+                        break;
                 }
+            }
+
+            /**
+             * Wavemm fork: fetch /reviewers and append the picker UI to the
+             * join form. Renders one checkbox per qualified peer, with
+             * suggested teammates visually highlighted (badge) but NOT
+             * pre-checked — leaving every box empty preserves the upstream
+             * "no action = notify all qualified peers" semantic, and makes
+             * the picker an opt-in narrowing tool rather than a silent
+             * narrowing default. When copyLinkEnabled is true, also renders
+             * a "Notify reviewers in Slack" toggle wired as a hidden+checkbox
+             * pair so the form submits notifyReviewers=false when the box is
+             * unchecked.
+             */
+            async _renderReviewerPickerAsync(copyLinkEnabled) {
+                let response;
+                try {
+                    response = await document.appbar.model.listReviewers();
+                }
+                catch (e) {
+                    // Hard /reviewers failure (5xx, network). Picker is
+                    // best-effort: user can still submit without selection
+                    // and the backend defaults to notifying every qualified
+                    // peer. Log + render the degraded notice for clarity.
+                    console.warn("Failed to load reviewer candidates:", e);
+                    this._renderPickerDegradedNotice();
+                    return;
+                }
+                if (response && response.degraded) {
+                    // Backend returned 200 with degraded:true — Cloud
+                    // Identity Groups API was unavailable or missing perms.
+                    // Show the notice instead of an empty picker.
+                    this._renderPickerDegradedNotice();
+                    return;
+                }
+                const candidates = response ? response.candidates : null;
+                if (!candidates || candidates.length === 0) {
+                    return;
+                }
+
+                const form = this.select('form');
+                const picker = $(`
+                    <div class="jit-reviewer-picker">
+                        <div class="jit-reviewer-picker-label">
+                            Select reviewers
+                            <span class="jit-reviewer-picker-hint">
+                                — pick one or more teammates (those tagged
+                                <strong>team</strong> are likely on yours).
+                                Leave all unchecked to notify every qualified peer.
+                            </span>
+                        </div>
+                        <input type="search"
+                               class="jit-reviewer-picker-filter"
+                               placeholder="Filter reviewers…"
+                               aria-label="Filter reviewers"/>
+                        <ul class="jit-reviewer-picker-list"></ul>
+                    </div>
+                `);
+                const list = picker.find('.jit-reviewer-picker-list');
+
+                // Build each picker item as DOM nodes (jQuery .text() / .attr())
+                // rather than HTML template literals — every field below comes
+                // from a server response that ultimately derives from
+                // operator-controlled policy YAML (ACL principals), so we
+                // never want unescaped interpolation. Construct elements +
+                // set their text/attrs via jQuery so injected content is
+                // always treated as data.
+                candidates.forEach(c => {
+                    const sanitisedId = ('jit-reviewer-' + (c.email || ''))
+                        .replace(/[^a-zA-Z0-9_-]/g, '_');
+                    const li = $('<li>')
+                        .addClass('jit-reviewer-picker-item')
+                        .toggleClass('jit-reviewer-suggested', !!c.suggested)
+                        .attr('data-email', c.email || '')
+                        .attr('data-display', c.displayName || '');
+                    const label = $('<label>').attr('for', sanitisedId);
+                    const checkbox = $('<input>')
+                        .attr('type', 'checkbox')
+                        .attr('id', sanitisedId)
+                        .attr('name', 'selectedReviewers')
+                        .attr('value', c.email || '');
+                    // Default unchecked even for suggested. The picker is
+                    // an opt-in narrowing tool: an untouched form must
+                    // continue to mean "notify every qualified peer", same
+                    // as before the picker existed. The badge remains as
+                    // a visual hint of who likely makes a good reviewer.
+                    const display = $('<span>')
+                        .addClass('jit-reviewer-display')
+                        .text(c.displayName || c.email || '');
+                    label.append(checkbox).append(display);
+                    if (c.suggested) {
+                        label.append($('<span>')
+                            .addClass('jit-reviewer-badge')
+                            .text('team'));
+                    }
+                    li.append(label);
+                    list.append(li);
+                });
+
+                // Client-side filter: hide list items whose email/display
+                // doesn't contain the search text (case-insensitive).
+                picker.find('.jit-reviewer-picker-filter').on('input', (e) => {
+                    const q = $(e.target).val().toLowerCase();
+                    list.find('.jit-reviewer-picker-item').each((_, el) => {
+                        const $el = $(el);
+                        const hay = ($el.data('email') + ' ' + $el.data('display')).toLowerCase();
+                        $el.toggle(!q || hay.includes(q));
+                    });
+                });
+
+                // The "notify reviewers in Slack" toggle. Hidden+checkbox
+                // pattern: when unchecked, only the hidden submits "false";
+                // when checked, both submit and the parser takes the last
+                // value ("true") — see GroupsResource.parseNotifyReviewers.
+                if (copyLinkEnabled) {
+                    picker.append(`
+                        <div class="jit-notify-toggle">
+                            <input type="hidden" name="notifyReviewers" value="false"/>
+                            <label>
+                                <input type="checkbox"
+                                       name="notifyReviewers"
+                                       value="true"
+                                       checked/>
+                                Notify selected reviewers in Slack
+                                <span class="jit-reviewer-picker-hint">
+                                    — uncheck to receive a copy-able approval link
+                                    instead and share it manually.
+                                </span>
+                            </label>
+                        </div>
+                    `);
+                }
+
+                form.append(picker);
+            }
+
+            /**
+             * Wavemm fork: render an explicit notice when /reviewers came
+             * back degraded (Cloud Identity outage or missing perms) or
+             * threw outright. Without this, an empty picker is
+             * indistinguishable from "no qualified peers" — the user
+             * would submit and get DM'd-everyone behaviour without
+             * realising suggestion-narrowing wasn't actually offered.
+             */
+            _renderPickerDegradedNotice() {
+                const form = this.select('form');
+                const notice = $('<div>')
+                    .addClass('jit-reviewer-picker jit-reviewer-picker-degraded')
+                    .append($('<div>')
+                        .addClass('jit-reviewer-picker-label')
+                        .text('Reviewer suggestions unavailable'))
+                    .append($('<div>')
+                        .addClass('jit-reviewer-picker-hint')
+                        .text(
+                            'Couldn\'t load the list of qualified reviewers ' +
+                            '(Cloud Identity API hiccup). Submitting will fall ' +
+                            'back to notifying every qualified peer per the policy.'));
+                form.append(notice);
+            }
+
+            /**
+             * Wavemm fork: render the approval URL the user can copy and
+             * forward. Only fires when JOIN_PROPOSED comes back with
+             * approvalUrl set (i.e., copyLinkEnabled is true on the
+             * deployment).
+             */
+            _renderApprovalUrl(url) {
+                const view = this.select('.jit-form').parent();
+                view.find('.jit-approval-link-box').remove();
+                // The structural HTML is a literal — only the URL is
+                // server-derived, and we set it as a value attribute via
+                // jQuery .val() so the URL never enters the HTML parser
+                // (the input's `value` attribute is a string, not a JS
+                // expression context). Defence-in-depth: even if the URL
+                // were attacker-controlled, .val() prevents <script>-tag
+                // injection, while .text() inside the row label below
+                // ensures any future mistake doesn't escalate.
+                const box = $(`
+                    <div class="jit-card-subsection jit-approval-link-box">
+                        <div class="jit-approval-link-label">
+                            Approval link — share this with the reviewer of your choice:
+                        </div>
+                        <div class="jit-approval-link-row">
+                            <input type="text"
+                                   class="jit-approval-link-url"
+                                   readonly
+                                   aria-label="Approval link"/>
+                            <button type="button"
+                                    class="mdc-button mdc-button--outlined jit-approval-link-copy">
+                                <span class="mdc-button__ripple"></span>
+                                <span class="mdc-button__label">Copy</span>
+                            </button>
+                        </div>
+                        <div class="jit-reviewer-picker-hint">
+                            The link is signed and only valid for the reviewers
+                            you selected when submitting. It expires when the
+                            request times out.
+                        </div>
+                    </div>
+                `);
+                box.find('.jit-approval-link-url').val(url);
+                box.find('.jit-approval-link-copy').on('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(url);
+                        box.find('.jit-approval-link-copy .mdc-button__label').text('Copied!');
+                        setTimeout(() => {
+                            box.find('.jit-approval-link-copy .mdc-button__label').text('Copy');
+                        }, 1500);
+                    }
+                    catch (e) {
+                        // Fallback for environments without Clipboard API access:
+                        // select the text so the user can Cmd/Ctrl-C manually.
+                        box.find('.jit-approval-link-url').get(0).select();
+                    }
+                });
+                view.append(box);
             }
 
             _bindGroupMembership(groupInfo) {

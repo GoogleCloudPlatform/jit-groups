@@ -197,6 +197,30 @@ public class ApplicationConfiguration extends AbstractConfiguration {
    */
   final @NotNull Optional<String> slackFirestoreDatabase;
 
+  /**
+   * Secret Manager resource path of the HMAC salt used to compute the
+   * registry document key (wavemm fork P2-11). Required when
+   * {@link #slackNotificationsEnabled} is true. Format:
+   * projects/X/secrets/Y/versions/Z. The salt MUST stay constant for
+   * the lifetime of any in-flight JWT — rotating it strands open
+   * approval requests because the propose-time and accept-time keys
+   * stop matching. Rotate during a quiet period (e.g. between
+   * deploys) and follow the secret-rotation runbook in
+   * SLACK_INTEGRATION.md.
+   */
+  final @NotNull Optional<String> slackRegistryKeySaltSecret;
+
+  /**
+   * When true, the {@code POST /api/.../groups/{name}} response includes
+   * the JWT-bearing approval URL so the requester can copy it manually,
+   * and the form accepts {@code notifyReviewers=false} to skip the
+   * automated Slack DM delivery entirely (the JWT is still generated and
+   * signed). Independent of {@link #slackNotificationsEnabled} —
+   * disabling this flag just hides the affordance; Slack DMs continue to
+   * fire as long as Slack is configured.
+   */
+  final boolean slackCopyLinkEnabled;
+
   public ApplicationConfiguration(@NotNull Map<String, String> settingsData) {
     super(settingsData);
 
@@ -324,6 +348,10 @@ public class ApplicationConfiguration extends AbstractConfiguration {
       .orElse(false);
     this.slackBotTokenSecret = readStringSetting("SLACK_BOT_TOKEN_SECRET");
     this.slackFirestoreDatabase = readStringSetting("SLACK_FIRESTORE_DATABASE");
+    this.slackRegistryKeySaltSecret = readStringSetting("SLACK_REGISTRY_KEY_SALT_SECRET");
+    this.slackCopyLinkEnabled = readSetting(
+      Boolean::parseBoolean, "SLACK_COPY_LINK_ENABLED")
+      .orElse(false);
   }
 
   public boolean isSmtpConfigured() {

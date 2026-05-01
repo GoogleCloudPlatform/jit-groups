@@ -52,6 +52,18 @@ public class OperationAuditTrail {
   static final String LABEL_PROPOSAL_RECIPIENTS = "proposal/recipients";
   static final String LABEL_EVENT_TYPE = "event/type";
 
+  /**
+   * Wavemm fork P1-8: distinguishes the regular "DM the qualified
+   * peer set" propose path from the opt-out copy-link path
+   * ({@code notifyReviewers=false}). Both stay under the same
+   * {@code api.groups.join} event id so existing log-based BigQuery
+   * dashboards keep counting them; the new label is what lets a
+   * security analyst slice "approval requests not visible to the
+   * normal reviewer set" — those flow only via the JWT URL the
+   * requester pastes into another channel.
+   */
+  static final String LABEL_PROPOSAL_NOTIFY_REVIEWERS = "proposal/notify_reviewers";
+
   public OperationAuditTrail(@NotNull Logger logger) {
     this.logger = logger;
   }
@@ -73,29 +85,60 @@ public class OperationAuditTrail {
     }
   }
 
+  /**
+   * Backwards-compatible single-arg overload. Defaults
+   * {@code notifyReviewers=true} to match upstream behaviour — every
+   * pre-fork caller assumed reviewers were notified by the proposal
+   * handler.
+   */
   public void joinProposed(
     @NotNull JitGroupContext.JoinOperation joinOp,
     @NotNull ProposalHandler.ProposalToken proposal
   ) {
+    joinProposed(joinOp, proposal, true);
+  }
+
+  /**
+   * Audit-log a proposed join.
+   *
+   * @param notifyReviewers wavemm fork P1-8/P2-10 — false means the
+   *                        requester opted out of automated reviewer
+   *                        notifications and intends to forward the
+   *                        approval URL out-of-band via copy-link.
+   *                        Surfaced as {@link
+   *                        #LABEL_PROPOSAL_NOTIFY_REVIEWERS} so the
+   *                        security log sink can distinguish the two
+   *                        flows; the message body is also tweaked so
+   *                        humans grepping the log see "via copy-link"
+   *                        for the opt-out case.
+   */
+  public void joinProposed(
+    @NotNull JitGroupContext.JoinOperation joinOp,
+    @NotNull ProposalHandler.ProposalToken proposal,
+    boolean notifyReviewers
+  ) {
+    var recipients = proposal.audience()
+      .stream()
+      .map(IamPrincipalId::toString)
+      .sorted()
+      .toList();
     this.logger.buildInfo(EventIds.API_JOIN_GROUP)
       .addLabel(LABEL_EVENT_TYPE, "audit")
       .addLabel(LABEL_GROUP_ID, joinOp.group())
-      .addLabel(LABEL_PROPOSAL_RECIPIENTS, proposal.audience()
-        .stream()
-        .map(IamPrincipalId::toString)
-        .sorted()
-        .collect(Collectors.joining(",")))
+      .addLabel(LABEL_PROPOSAL_RECIPIENTS, String.join(",", recipients))
+      .addLabel(LABEL_PROPOSAL_NOTIFY_REVIEWERS, Boolean.toString(notifyReviewers))
       .addLabels(joinOp.input()
         .stream()
         .collect(Collectors.toMap(i -> LABEL_PREFIX_JOIN_INPUT + i.name(), i -> i.get())))
       .setMessage(
-        "User '%s' asked to join group '%s', proposed to %s for approval",
+        notifyReviewers
+          ? "User '%s' asked to join group '%s', proposed to %s for approval"
+          : "User '%s' asked to join group '%s', approval URL issued via "
+              + "copy-link (notifyReviewers=false); reviewers %s were authorised "
+              + "but NOT auto-notified",
         joinOp.user(),
         joinOp.group(),
-        proposal.audience()
-          .stream()
-          .map(IamPrincipalId::toString)
-          .sorted()
+        recipients.stream()
           .map(MoreStrings::quote)
           .collect(Collectors.joining(", ")))
       .write();

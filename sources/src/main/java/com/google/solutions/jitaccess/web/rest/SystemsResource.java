@@ -56,6 +56,9 @@ public class SystemsResource {
   @Inject
   Logger logger;
 
+  @Inject
+  GroupsResource.Options groupsOptions;
+
   /**
    * Get system details, including the list of groups that
    * the current user is allowed to view.
@@ -68,10 +71,11 @@ public class SystemsResource {
     @PathParam("system") @NotNull String system
   ) throws Exception {
     try {
+      var copyLinkEnabled = this.groupsOptions.slackCopyLinkEnabled();
       return this.catalog
         .environment(environment)
         .flatMap(env -> env.system(system))
-        .map(sys -> SystemInfo.create(sys))
+        .map(sys -> SystemInfo.create(sys, copyLinkEnabled))
         .orElseThrow(() -> NOT_FOUND);
     }
     catch (Exception e) {
@@ -110,9 +114,16 @@ public class SystemsResource {
     }
 
     /**
-     * Create SystemInfo with full details.
+     * Create SystemInfo with full details. {@code copyLinkEnabled} is
+     * the deployment-wide flag that gates the picker's "Notify in Slack"
+     * toggle and the post-submit approval-link box; it's passed in by
+     * the resource method (where the injected GroupsResource.Options
+     * is reachable) because this factory is static.
      */
-    static SystemInfo create(@NotNull SystemContext system) {
+    static SystemInfo create(
+      @NotNull SystemContext system,
+      boolean copyLinkEnabled
+    ) {
       var policy = system.policy();
 
       return new SystemInfo(
@@ -126,7 +137,7 @@ public class SystemsResource {
           .sorted(Comparator.comparing(grp -> grp.policy().displayName()))
           .map(grp -> GroupsResource.GroupInfo.create(
             grp,
-            GroupsResource.JoinInfo.forJoinAnalysis(grp)))
+            GroupsResource.JoinInfo.forJoinAnalysis(grp, copyLinkEnabled)))
           .toList());
     }
   }

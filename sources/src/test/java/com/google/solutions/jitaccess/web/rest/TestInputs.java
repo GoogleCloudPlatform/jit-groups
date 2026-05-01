@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class TestInputs {
@@ -95,5 +96,49 @@ public class TestInputs {
 
     verify(property1, times(1)).set(eq("1"));
     verify(property2, times(1)).set(eq("2"));
+  }
+
+  /**
+   * Wavemm fork P0-1: defense-in-depth absolute cap on per-input
+   * length. Rejects oversize submissions at the REST boundary so a
+   * misconfigured (or unbounded) {@code maxLength} in a policy YAML
+   * can't let a hostile requester ship multi-MB justifications into
+   * Slack DMs / Firestore docs / audit logs.
+   */
+  @Test
+  public void copyValues_whenValueExceedsAbsoluteCap_throws() {
+    var huge = "x".repeat(Inputs.INPUT_MAX_LENGTH + 1);
+    var source = new MultivaluedHashMap<String, String>();
+    source.add("justification", huge);
+
+    var property = Mockito.mock(Property.class);
+    when(property.name()).thenReturn("justification");
+    when(property.displayName()).thenReturn("Justification");
+    when(property.isRequired()).thenReturn(true);
+
+    var ex = assertThrows(
+      IllegalArgumentException.class,
+      () -> Inputs.copyValues(source, List.of(property)));
+
+    // Confirm the cap fires before delegating to property.set — without
+    // this, a policy that forgot to set maxLength would still let the
+    // value through.
+    verify(property, never()).set(anyString());
+    assertTrue(ex.getMessage().contains("Justification"),
+      "error must name the field so the requester can fix the input");
+  }
+
+  @Test
+  public void copyValues_whenValueAtCapBoundary_passes() {
+    var atCap = "x".repeat(Inputs.INPUT_MAX_LENGTH);
+    var source = new MultivaluedHashMap<String, String>();
+    source.add("justification", atCap);
+
+    var property = Mockito.mock(Property.class);
+    when(property.name()).thenReturn("justification");
+    when(property.isRequired()).thenReturn(true);
+
+    Inputs.copyValues(source, List.of(property));
+    verify(property, times(1)).set(eq(atCap));
   }
 }

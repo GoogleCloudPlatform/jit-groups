@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class TestOperationAuditTrail {
@@ -156,6 +157,56 @@ public class TestOperationAuditTrail {
       "User 'user:user-1@example.com' asked to join group 'jit-group:env-1.system-1.group-1', " +
         "proposed to 'user:user-2@example.com', 'user:user-3@example.com' for approval",
       entry.message);
+    // Single-arg overload defaults to notifyReviewers=true, matching upstream.
+    assertEquals(
+      "true",
+      entry.labels.get(OperationAuditTrail.LABEL_PROPOSAL_NOTIFY_REVIEWERS));
+  }
+
+  /**
+   * Wavemm fork P1-8/P2-10: when the requester opted out of automated
+   * notification (copy-link path), the audit event must carry the
+   * distinct {@code proposal/notify_reviewers=false} label and a
+   * message body that names the copy-link mode. This is what lets a
+   * security analyst slice "approval requests not visible to the
+   * normal reviewer set" in the BigQuery sink.
+   */
+  @Test
+  public void joinProposed_whenNotifyReviewersFalse_emitsDistinctLabelAndMessage() {
+    var entry = new LogEntry();
+    var logger = Mockito.mock(Logger.class);
+    when(logger.buildInfo(EventIds.API_JOIN_GROUP))
+      .thenReturn(entry);
+
+    var joinOp = Mockito.mock(JitGroupContext.JoinOperation.class);
+    when(joinOp.user()).thenReturn(SAMPLER_USER_1);
+    when(joinOp.group()).thenReturn(SAMPLE_JITGROUP);
+    when(joinOp.input()).thenReturn(List.of());
+
+    var trail = new OperationAuditTrail(logger);
+    trail.joinProposed(
+      joinOp,
+      new ProposalHandler.ProposalToken(
+        "token",
+        Set.of(SAMPLER_USER_2, SAMPLER_USER_3),
+        Instant.now()),
+      false);
+
+    assertEquals(
+      "false",
+      entry.labels.get(OperationAuditTrail.LABEL_PROPOSAL_NOTIFY_REVIEWERS),
+      "copy-link path must surface notifyReviewers=false on the label");
+    assertTrue(entry.message.contains("copy-link"),
+      "message body must name the copy-link mode so log greps can spot "
+        + "out-of-band approvals; got: " + entry.message);
+    assertTrue(entry.message.contains("NOT auto-notified"),
+      "message body must make explicit that reviewers were authorised "
+        + "but not pinged; got: " + entry.message);
+    // Recipients label must still be populated — the qualified set is
+    // what got authorised, even though they weren't auto-notified.
+    assertEquals(
+      "user:user-2@example.com,user:user-3@example.com",
+      entry.labels.get(OperationAuditTrail.LABEL_PROPOSAL_RECIPIENTS));
   }
 
   //---------------------------------------------------------------------------

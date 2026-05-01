@@ -83,11 +83,13 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
   @Override
   public @NotNull ProposalHandler.ProposalToken propose(
     @NotNull JitGroupContext.JoinOperation joinOperation,
-    @NotNull Function<String, URI> buildActionUri
+    @NotNull Function<String, URI> buildActionUri,
+    @NotNull ProposeOptions options
   ) throws AccessException {
 
     var proposal = joinOperation.propose(
-      Instant.now().plus(this.options.tokenExpiry));
+      Instant.now().plus(this.options.tokenExpiry),
+      options.reviewerFilter());
 
     Preconditions.checkArgument(
       !proposal.recipients().isEmpty(),
@@ -118,6 +120,16 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       .set(Claims.USER_ID, proposal.user().toString())
       .set(Claims.INPUT, inputs);
 
+    //
+    // Wavemm fork: encode the notify-reviewers flag in the JWT only when
+    // the requester opted out. Default-on means we don't pollute every
+    // existing token with a redundant claim, and the accept() path
+    // treats absence as the upstream "true" default.
+    //
+    if (!options.notifyReviewers()) {
+      payload.set(Claims.NOTIFY, Boolean.FALSE);
+    }
+
     try {
       var signedToken = this.tokenSigner.sign(
         payload,
@@ -127,11 +139,19 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
         proposal.recipients(),
         signedToken.expiryTime());
 
-      onOperationProposed(
-        joinOperation,
-        proposal,
-        proposalToken,
-        buildActionUri.apply(proposalToken.value()));
+      //
+      // Skip notification delivery when the caller opted out — the JWT
+      // is still generated, signed, and returned, so the requester can
+      // copy/share the action URL manually (e.g. send to a specific
+      // reviewer in Slack DM themselves).
+      //
+      if (options.notifyReviewers()) {
+        onOperationProposed(
+          joinOperation,
+          proposal,
+          proposalToken,
+          buildActionUri.apply(proposalToken.value()));
+      }
 
       return proposalToken;
     }
@@ -174,6 +194,12 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       .stream()
       .collect(Collectors.toMap(e -> e.getKey(), e-> (String)e.getValue()));
 
+    // Wavemm fork: read the opt-out claim. Absent or true → default
+    // upstream behaviour; explicit false → requester chose to share
+    // the link manually, no DMs were sent at propose-time.
+    var notifyClaim = payload.get(Claims.NOTIFY);
+    final boolean notifyReviewers = !(notifyClaim instanceof Boolean && !((Boolean) notifyClaim));
+
     return new Proposal() {
       @Override
       public @NotNull EndUserId user() {
@@ -201,6 +227,11 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
       }
 
       @Override
+      public boolean notifyReviewers() {
+        return notifyReviewers;
+      }
+
+      @Override
       public void onCompleted(
         @NotNull JitGroupContext.ApprovalOperation op
       ) throws AccessException, IOException {
@@ -214,6 +245,10 @@ public abstract class AbstractProposalHandler implements ProposalHandler {
     static final String GROUP_ID = "grp";
     static final String USER_ID = "usr";
     static final String INPUT = "inp";
+    /** Wavemm fork: only present when the requester opted out of
+     *  automated reviewer notification. Absence means the upstream
+     *  default — notify reviewers — applies. */
+    static final String NOTIFY = "ntf";
   }
 
   public record Options(

@@ -18,8 +18,10 @@ import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.common.CompletableFutures;
 import org.jetbrains.annotations.NotNull;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -44,10 +46,11 @@ import java.util.concurrent.Executor;
  *
  * <p>Storage: a named Firestore Native database in the same GCP project as
  * JIT. The collection is {@value #COLLECTION}; each document key is the
- * SHA-256 of (beneficiary, group, sorted recipient emails). Each document
- * carries a TTL field {@code expires_at} aligned with the JWT expiry; the
- * Firestore TTL policy (managed in wavemm-iam Terraform) auto-deletes
- * stale entries — best-effort, can lag up to 24h.
+ * HMAC-SHA-256 of (beneficiary, group, sorted recipient emails) under a
+ * Secret Manager-backed salt (wavemm fork P2-11). Each document carries a
+ * TTL field {@code expires_at} aligned with the JWT expiry; the Firestore
+ * TTL policy (managed in wavemm-iam Terraform) auto-deletes stale entries
+ * — best-effort, can lag up to 24h.
  */
 public class SlackMessageRegistry {
   static final String COLLECTION = "requests";
@@ -58,14 +61,35 @@ public class SlackMessageRegistry {
   private final @NotNull Executor executor;
   private final @NotNull Logger logger;
 
+  /**
+   * HMAC key bytes for the registry-document fingerprint. Read once at
+   * startup from Secret Manager via {@code SLACK_REGISTRY_KEY_SALT_SECRET}
+   * and held in memory for the JVM lifetime — same lifecycle as the
+   * Slack bot token.
+   *
+   * <p>Without the HMAC the registry document key would be a plain
+   * SHA-256 of inputs that an attacker who reads {@code (beneficiary,
+   * group, recipient)} tuples can guess (e.g. via leaked logs or a
+   * compromised audit pipeline). HMAC-ing under a secret salt means
+   * an attacker without {@code roles/secretmanager.secretAccessor} on
+   * the salt secret can't enumerate registry contents even with
+   * Firestore read access.
+   */
+  private final byte @NotNull [] hmacKey;
+
   public SlackMessageRegistry(
     @NotNull Firestore firestore,
     @NotNull Executor executor,
-    @NotNull Logger logger
+    @NotNull Logger logger,
+    @NotNull String hmacKeySalt
   ) {
+    Preconditions.checkArgument(
+      !hmacKeySalt.isBlank(),
+      "hmacKeySalt must not be blank — set SLACK_REGISTRY_KEY_SALT_SECRET");
     this.firestore = firestore;
     this.executor = executor;
     this.logger = logger;
+    this.hmacKey = hmacKeySalt.getBytes(StandardCharsets.UTF_8);
   }
 
   private @NotNull CollectionReference collection() {
@@ -87,8 +111,17 @@ public class SlackMessageRegistry {
    * <p>Justification is intentionally excluded (large, unstable). Time
    * fields are excluded because they have second-precision drift between
    * propose and accept.
+   *
+   * <p>Wavemm fork P2-11: HMAC-SHA-256 under {@link #hmacKey} replaces
+   * the previous bare SHA-256, so an attacker without secret-manager
+   * access can't recover the key from leaked input tuples. The output
+   * shape (hex string) is unchanged so existing Firestore documents
+   * remain reachable for in-flight requests across the upgrade — but
+   * note that the salt MUST stay constant across propose and accept
+   * for a given JWT, otherwise the lookup misses and sibling DMs
+   * silently won't be updated.
    */
-  public static @NotNull String requestKey(
+  public @NotNull String requestKey(
     @NotNull String beneficiary,
     @NotNull String groupId,
     @NotNull List<String> recipientEmails
@@ -99,13 +132,20 @@ public class SlackMessageRegistry {
       groupId,
       String.join(",", sorted));
     try {
-      var digest = MessageDigest.getInstance("SHA-256")
-        .digest(canonical.getBytes(StandardCharsets.UTF_8));
+      var mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(this.hmacKey, "HmacSHA256"));
+      var digest = mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8));
       return HexFormat.of().formatHex(digest);
     }
     catch (NoSuchAlgorithmException e) {
-      // SHA-256 is mandatory in every JRE.
-      throw new AssertionError("SHA-256 not available", e);
+      // HmacSHA256 is mandatory in every JRE.
+      throw new AssertionError("HmacSHA256 not available", e);
+    }
+    catch (InvalidKeyException e) {
+      // We only construct this with a non-blank salt, so this should
+      // be impossible — surface as a hard failure so a future change
+      // that introduces a bad key is caught immediately.
+      throw new AssertionError("HMAC key rejected by Mac.init", e);
     }
   }
 

@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
-  <version>2.3.0-wavemm.2</version>
+  <version>2.3.0-wavemm.6</version>
   <properties>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
     <surefire-plugin.version>3.5.3</surefire-plugin.version>
@@ -206,6 +206,41 @@
             <phase>test</phase>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <!--
+          Wavemm fork P2-13: OWASP dependency-check. Surfaces known CVEs
+          in our (mostly Google-owned) transitive dep tree as part of
+          the Maven build so a CVE that lands in slack-api-client,
+          google-cloud-firestore, or any other dependency triggers a
+          build failure once the CVSS exceeds the configured threshold.
+
+          Run via `mvn org.owasp:dependency-check-maven:check` in CI or
+          locally; not bound to a default phase to keep `mvn test` fast.
+          A reviewer who runs the standard test target (`mvn -DskipITs
+          test`) won't pay the NVD-feed download cost.
+        -->
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>11.1.1</version>
+        <configuration>
+          <!-- Fail the build on CVSS >= 8 (high+). Lower-severity CVEs
+               surface in the report but don't break CI; we triage them
+               through the regular dependency-bump cadence. -->
+          <failBuildOnCVSS>8</failBuildOnCVSS>
+          <suppressionFiles>
+            <!-- Optional suppression file — created if/when we need to
+                 silence a reviewed-and-acknowledged finding. Absent by
+                 default; the plugin tolerates a missing file. -->
+            <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+          </suppressionFiles>
+          <!-- Skip unused analyzers to shorten a CI run from ~5 min
+               to ~2 min on a warm cache. -->
+          <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
+          <nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>
+          <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
+          <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
