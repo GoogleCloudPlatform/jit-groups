@@ -117,7 +117,23 @@ final class SlackMessages {
     blocks.add(ContextBlock.builder()
       .elements(List.of(markdown(
         ":eyes: Approval is final — review the request carefully. "
-          + "Approving opens the JIT page where you confirm.")))
+          + "Approving opens the JIT page where you confirm.\n"
+          //
+          // IAP roundtrip caveat — the first click in a fresh browser
+          // session can drop the action URL's query string during the
+          // Google sign-in redirect, landing the reviewer on the JIT
+          // homepage instead of the proposal-acceptance view. Clicking
+          // the Slack button a second time replays the URL with a
+          // valid IAP cookie and works. Documenting this inline because
+          // we don't control the IAP redirect contract; until Google
+          // preserves query strings reliably across the OAuth roundtrip
+          // (or we add frontend detection of "homepage but came from
+          // accounts.google.com"), telling reviewers to click again is
+          // the cheapest fix.
+          + ":information_source: First click after a long break may "
+          + "land you on the JIT homepage instead of the approval page "
+          + "(IAP login). If so, just click \"Approve in JIT\" again "
+          + "from this message — your IAP cookie is now fresh.")))
       .build());
 
     return blocks;
