@@ -190,7 +190,7 @@ public class ApplicationConfiguration extends AbstractConfiguration {
       .map(CustomerId::new)
       .orElseThrow(() -> new IllegalStateException(
         "The environment variable 'CUSTOMER_ID' must contain the customer ID " +
-          "of a Cloud Identity or Workspace account, see" +
+          "of a Cloud Identity or Workspace account, see " +
           "https://support.google.com/a/answer/10070793"));
     this.primaryDomain = readStringSetting("PRIMARY_DOMAIN")
       .map(d -> new Domain(d, Domain.Type.PRIMARY))
