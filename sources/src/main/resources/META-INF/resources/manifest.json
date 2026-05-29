@@ -1,0 +1,21 @@
+{
+  "name": "JIT Groups",
+  "short_name": "JIT Groups",
+  "start_url": "/",
+  "display": "minimal-ui",
+  "background_color": "#ffffff",
+  "theme_color": "#006CBE",
+  "description": "Self-service access management for Google Cloud",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "logo-144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    }
+  ]
+}
