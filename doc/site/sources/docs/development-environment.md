@@ -1,14 +1,14 @@
 
 JIT Groups is a standalone Java application that's based on [Quarkus :octicons-link-external-16:](https://quarkus.io/) 
 and designed to run in the
-[App Engine Java 17 Standard Environment :octicons-link-external-16:](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
+[App Engine Java 25 Standard Environment :octicons-link-external-16:](https://cloud.google.com/appengine/docs/standard/java-gen2/runtime)
 or on Cloud Run.
 
 ## Prerequisites
 
 To build and run the application locally, you need:
 
-* JDK 17 or later
+* JDK 25 or later
 * [Apache Maven :octicons-link-external-16:](https://maven.apache.org/download.cgi)
 
 Make sure both `java` and `mvn` are available in your `PATH`.

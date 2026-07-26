@@ -34,7 +34,7 @@ RUN mvn clean package -DskipTests -Dquarkus.package.output-name=jitaccess
 #
 # Package stage.
 #
-FROM gcr.io/distroless/java17-debian12
+FROM gcr.io/distroless/java25-debian13
 WORKDIR /app
 
 COPY --from=build /app/target/jitaccess-runner.jar .
