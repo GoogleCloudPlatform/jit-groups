@@ -99,6 +99,12 @@
     </dependency>
     <dependency>
       <groupId>com.google.apis</groupId>
+      <artifactId>google-api-services-parametermanager</artifactId>
+      <version>v1-rev20260629-2.0.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-admin-directory</artifactId>
       <version>directory_v1-rev20251124-2.0.0</version>
     </dependency>

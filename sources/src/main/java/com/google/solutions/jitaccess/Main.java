@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess;
 import com.google.solutions.jitaccess.apis.StructuredLogger;
 import com.google.solutions.jitaccess.apis.clients.CloudIdentityGroupsClient;
 import com.google.solutions.jitaccess.apis.clients.IamCredentialsClient;
+import com.google.solutions.jitaccess.apis.clients.ParameterManagerClient;
 import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
 import com.google.solutions.jitaccess.common.Exceptions;
 import com.google.solutions.jitaccess.web.Application;
@@ -59,6 +60,7 @@ public class Main implements QuarkusApplication {
       var runtime = ApplicationRuntime.detect(new HashSet<>(List.of(
         IamCredentialsClient.OAUTH_SCOPE,
         SecretManagerClient.OAUTH_SCOPE,
+        ParameterManagerClient.OAUTH_SCOPE,
         CloudIdentityGroupsClient.OAUTH_GROUPS_SCOPE,
         CloudIdentityGroupsClient.OAUTH_SETTINGS_SCOPE)));
 

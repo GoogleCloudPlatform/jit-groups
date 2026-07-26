@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -23,10 +23,8 @@ package com.google.solutions.jitaccess.apis.clients;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.services.secretmanager.v1.SecretManager;
-import com.google.api.services.secretmanager.v1.model.Automatic;
-import com.google.api.services.secretmanager.v1.model.Replication;
-import com.google.api.services.secretmanager.v1.model.Secret;
+import com.google.api.services.parametermanager.v1.ParameterManager;
+import com.google.api.services.parametermanager.v1.model.Parameter;
 import com.google.auth.http.HttpCredentialsAdapter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,18 +34,18 @@ import java.security.GeneralSecurityException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ITestSecretManagerClient {
-  private static final String SECRET_NAME = "testsecret";
-  private static final String SECRET_PATH = String.format(
-    "projects/%s/secrets/%s",
+public class ITestParameterManagerClient {
+  private static final String PARAMETER_NAME = "testparameter";
+  private static final String PARAMETER_PATH = String.format(
+    "projects/%s/locations/global/parameters/%s",
     ITestEnvironment.PROJECT_ID,
-    SECRET_NAME);
-  private static final String SECRET_LATEST_VERSION_PATH = String.format(
+    PARAMETER_NAME);
+  private static final String PARAMETER_LATEST_VERSION_PATH = String.format(
     "%s/versions/latest",
-    SECRET_PATH);
+    PARAMETER_PATH);
 
-  private static SecretManager createClient() throws GeneralSecurityException, IOException {
-    return new SecretManager.Builder(
+  private static ParameterManager createClient() throws GeneralSecurityException, IOException {
+    return new ParameterManager.Builder(
       HttpTransport.newTransport(),
       new GsonFactory(),
       new HttpCredentialsAdapter(ITestEnvironment.APPLICATION_CREDENTIALS))
@@ -55,16 +53,17 @@ public class ITestSecretManagerClient {
   }
 
   @BeforeAll
-  public static void recreateSecret() throws GeneralSecurityException, IOException {
+  public static void recreateParameter() throws GeneralSecurityException, IOException {
     var client = createClient();
     //
-    // Delete existing secret if it exists.
+    // Delete existing parameter if it exists.
     //
     try {
       client
         .projects()
-        .secrets()
-        .delete(SECRET_PATH)
+        .locations()
+        .parameters()
+        .delete(PARAMETER_PATH)
         .execute();
     }
     catch (GoogleJsonResponseException e)
@@ -75,67 +74,67 @@ public class ITestSecretManagerClient {
     }
 
     //
-    // Create new secret.
+    // Create new parameter.
     //
     client
       .projects()
-      .secrets()
-      .create(String.format("projects/%s", ITestEnvironment.PROJECT_ID),
-        new Secret().setReplication(new Replication().setAutomatic(new Automatic()))
-      )
-      .setSecretId(SECRET_NAME)
+      .locations()
+      .parameters()
+      .create(String.format("projects/%s/locations/global", ITestEnvironment.PROJECT_ID),
+        new Parameter().setFormat("YAML")
+      ).setParameterId(PARAMETER_NAME)
       .execute();
   }
 
   //---------------------------------------------------------------------
-  // accessSecret.
+  // render.
   //---------------------------------------------------------------------
 
   @Test
-  public void accessSecret_whenUnauthenticated_thenThrowsException() {
-    var adapter = new SecretManagerClient(
+  public void render_whenUnauthenticated_thenThrowsException() {
+    var adapter = new ParameterManagerClient(
       ITestEnvironment.INVALID_CREDENTIAL,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       NotAuthenticatedException.class,
-      () -> adapter.accessSecret(SECRET_LATEST_VERSION_PATH));
+      () -> adapter.render(PARAMETER_LATEST_VERSION_PATH));
   }
 
   @Test
-  public void accessSecret_whenCallerLacksPermission_thenThrowsException() {
-    var adapter = new SecretManagerClient(
+  public void render_whenCallerLacksPermission_thenThrowsException() {
+    var adapter = new ParameterManagerClient(
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       AccessDeniedException.class,
-      () -> adapter.accessSecret(SECRET_LATEST_VERSION_PATH));
+      () -> adapter.render(PARAMETER_LATEST_VERSION_PATH));
   }
 
   @Test
-  public void accessSecret_whenSecretNotFoundPermission_thenThrowsException() {
-    var adapter = new SecretManagerClient(
+  public void render_whenParameterNotFondPermission_thenThrowsException() {
+    var adapter = new ParameterManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
-      () -> adapter.accessSecret(String.format(
-        "projects/%s/secrets/doesnotexist/versions/latest",
+      () -> adapter.render(String.format(
+        "projects/%s/locations/global/parameters/doesnotexist/versions/latest",
         ITestEnvironment.PROJECT_ID)));
   }
 
   @Test
-  public void accessSecret_whenSecretVersionNotFondPermission_thenThrowsException() {
-    var adapter = new SecretManagerClient(
+  public void render_whenParameterVersionNotFondPermission_thenThrowsException() {
+    var adapter = new ParameterManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
       ResourceNotFoundException.class,
-      () -> adapter.accessSecret(String.format(
+      () -> adapter.render(String.format(
         "%s/versions/99",
-        SECRET_PATH)));
+        PARAMETER_PATH)));
   }
 }
