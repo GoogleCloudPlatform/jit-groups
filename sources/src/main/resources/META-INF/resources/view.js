@@ -517,7 +517,8 @@ class AppBar {
      * Load model based on the hashbang of the current location.
      */
     async loadModel() {
-        this.model = window.location.host.startsWith("localhost:")
+        const hostname = window.location.hostname;
+        this.model = hostname === "localhost" || hostname === "127.0.0.1"
             ? new DebugModel()
             : new Model();
 
