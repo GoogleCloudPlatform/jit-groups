@@ -403,7 +403,7 @@ resource "google_app_engine_standard_app_version" "appengine_app_version" {
     version_id                 = "rev-${substr(data.archive_file.sources_zip.output_sha256, 0, 16)}"
     service                    = "default"
     project                    = var.project_id
-    runtime                    = "java17"
+    runtime                    = "java25"
     instance_class             = "F2"
     service_account            = google_service_account.jitgroups.email
     env_variables              = merge({
