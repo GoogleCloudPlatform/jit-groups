@@ -26,7 +26,6 @@ import com.google.api.services.parametermanager.v1.ParameterManager;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
 import com.google.solutions.jitaccess.apis.RegionId;
-import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

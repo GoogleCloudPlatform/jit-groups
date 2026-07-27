@@ -108,7 +108,6 @@ public class TestEnvironmentConfiguration {
         new ServiceAccountId("no-prefix", new ProjectId("project-1")),
         new ServiceAccountId("app", new ProjectId("project-1")),
         Mockito.mock(GoogleCredentials.class),
-        new RegionId("us-somewhere1"),
         HttpTransport.Options.DEFAULT));
   }
 
@@ -118,7 +117,6 @@ public class TestEnvironmentConfiguration {
       new ServiceAccountId("jit-environment", new ProjectId("project-1")),
       new ServiceAccountId("app", new ProjectId("project-1")),
       Mockito.mock(GoogleCredentials.class),
-      new RegionId("us-somewhere1"),
       HttpTransport.Options.DEFAULT);
 
     assertEquals("environment", configuration.name());

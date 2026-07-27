@@ -50,7 +50,6 @@ public class ApplicationRuntime {
 
   private final @NotNull ProjectId projectId;
   private final @NotNull String projectNumber;
-  private final @NotNull RegionId regionId;
   private final @NotNull GoogleCredentials applicationCredentials;
   private final @NotNull ServiceAccountId applicationPrincipal;
   private final @NotNull ApplicationRuntime.Type type;
@@ -59,14 +58,12 @@ public class ApplicationRuntime {
     @NotNull ApplicationRuntime.Type type,
     @NotNull ProjectId projectId,
     @NotNull String projectNumber,
-    @NotNull RegionId regionId,
     @NotNull GoogleCredentials applicationCredentials,
     @NotNull ServiceAccountId applicationPrincipal
   ) {
     this.type = type;
     this.projectId = projectId;
     this.projectNumber = projectNumber;
-    this.regionId = regionId;
     this.applicationCredentials = applicationCredentials;
     this.applicationPrincipal = applicationPrincipal;
   }
@@ -121,11 +118,6 @@ public class ApplicationRuntime {
       var projectId = (String)projectMetadata.get("projectId");
       var projectNumber = projectMetadata.get("numericProjectId").toString();
 
-      var instanceMetadata = getMetadata("instance").parseAs(GenericData.class);
-      var instanceRegion = RegionId
-        .parse((String)instanceMetadata.get("region"))
-        .orElseThrow(() -> new IllegalArgumentException("The region found in runtime metadata is invalid"));
-
       var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
       var applicationPrincipal = ServiceAccountId
         .parse(ServiceAccountId.TYPE + ":" + defaultCredentials.getAccount())
@@ -157,7 +149,6 @@ public class ApplicationRuntime {
         isRunningOnAppEngine() ? Type.APPENGINE : Type.CLOUDRUN,
         new ProjectId(projectId),
         projectNumber,
-        instanceRegion,
         applicationCredentials,
         applicationPrincipal);
     }
@@ -220,7 +211,6 @@ public class ApplicationRuntime {
         Type.DEVELOPMENT,
         new ProjectId(System.getProperty(CONFIG_PROJECT, "dev")),
         "0",
-        new RegionId(System.getProperty(CONFIG_REGION, "us-central1")),
         applicationCredentials,
         applicationPrincipal);
     }
@@ -235,13 +225,6 @@ public class ApplicationRuntime {
    */
   public @NotNull ProjectId projectId() {
     return this.projectId;
-  }
-
-  /**
-   * Region the application is deployed in.
-   */
-  public @NotNull RegionId regionId() {
-    return this.regionId;
   }
 
   /**

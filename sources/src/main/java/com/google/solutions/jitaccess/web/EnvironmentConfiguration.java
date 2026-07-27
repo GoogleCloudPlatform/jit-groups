@@ -190,7 +190,6 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
     @NotNull ServiceAccountId serviceAccountId,
     @NotNull ServiceAccountId applicationPrincipal,
     @NotNull GoogleCredentials applicationCredentials,
-    @NotNull RegionId region,
     @NotNull HttpTransport.Options httpOptions
   ) {
     //
@@ -262,52 +261,6 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
         }
 
         //
-        // Try to load policy from Parameter Manager. The path is based on a
-        // convention and can't be customized.
-        //
-        // NB. Storing policies in PM is only supported since v2.4.
-        //
-        var parameterPath = String.format(
-          "projects/%s/locations/%s/parameters/jit-%s/versions/latest",
-          serviceAccountId.projectId,
-          region.id(),
-          environmentName);
-
-        try {
-          var parameterManagerClient = new ParameterManagerClient(
-            environmentCredentials,
-            region,
-            httpOptions);
-
-          //
-          // Set default environment name in metadata so that
-          // the YAML itself doesn't need to specify a name.
-          //
-          var metadata = new Policy.Metadata(
-            parameterPath,
-            Instant.now(),
-            null,
-            environmentName);
-
-          return PolicyDocumentSource.fromString(
-            parameterManagerClient.render(parameterPath),
-            metadata);
-        }
-        catch (ResourceNotFoundException | AccessDeniedException e)
-        {
-          //
-          // Parameter not found or API not enabled. Proceed with Secret Manager.
-          //
-        }
-        catch (Exception e) {
-          throw new UncheckedExecutionException(
-            String.format(
-              "The policy stored in '%s' is invalid or cannot be read",
-              parameterPath),
-            e);
-        }
-
-        //
         // Try to load policy from Secret Manager. The path is based on a
         // convention and can't be customized.
         //
@@ -334,11 +287,59 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             secretClient.accessSecret(secretPath),
             metadata);
         }
+        catch (ResourceNotFoundException | AccessDeniedException e)
+        {
+          //
+          // Parameter not found or API not enabled. Proceed with Parameter Manager.
+          //
+        }
         catch (Exception e) {
           throw new UncheckedExecutionException(
             String.format(
               "The policy stored in '%s' is invalid or cannot be read",
               secretPath),
+            e);
+        }
+
+        //
+        // Try to load policy from Parameter Manager instead.
+        //
+        // NB. Storing policies in PM is only supported since v2.4, and
+        //     we only support global parameters for now, primarily because
+        //     regional PM isn't available in many regions yet.
+        //
+        var parameterRegionId = RegionId.GLOBAL;
+        var parameterPath = String.format(
+          "projects/%s/locations/%s/parameters/jit-%s/versions/latest",
+          serviceAccountId.projectId,
+          parameterRegionId.id(),
+          environmentName);
+
+        try {
+          var parameterManagerClient = new ParameterManagerClient(
+            environmentCredentials,
+            parameterRegionId,
+            httpOptions);
+
+          //
+          // Set default environment name in metadata so that
+          // the YAML itself doesn't need to specify a name.
+          //
+          var metadata = new Policy.Metadata(
+            parameterPath,
+            Instant.now(),
+            null,
+            environmentName);
+
+          return PolicyDocumentSource.fromString(
+            parameterManagerClient.render(parameterPath),
+            metadata);
+        }
+        catch (Exception e) {
+          throw new UncheckedExecutionException(
+            String.format(
+              "The policy stored in '%s' is invalid or cannot be read",
+              parameterPath),
             e);
         }
       }

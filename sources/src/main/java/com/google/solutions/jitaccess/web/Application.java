@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.solutions.jitaccess.ApplicationRuntime;
 import com.google.solutions.jitaccess.apis.Logger;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.*;
 import com.google.solutions.jitaccess.catalog.Catalog;
@@ -374,7 +375,6 @@ public class Application {
             ServiceAccountId.parse(environment).get(),
             runtime.applicationPrincipal(),
             runtime.applicationCredentials(),
-            runtime.regionId(),
             produceHttpTransportOptions()));
         }
         catch (Exception e) {

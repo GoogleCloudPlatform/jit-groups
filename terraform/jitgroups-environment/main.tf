@@ -47,19 +47,19 @@ variable "application_service_account" {
     }
 }     
 
-variable "location" {
-    description                = "Region of the parameter"
+variable "secret_location" {
+    description                = "Region to replicate secrets to. If this variable is set, automatic replication is used."
     type                       = string
-    default                    = "global"
+    default                    = null
 }
 
 #------------------------------------------------------------------------------
 # Required APIs.
 #------------------------------------------------------------------------------
 
-resource "google_project_service" "parametermanager" {
+resource "google_project_service" "secretmanager" {
     project                    = var.project_id
-    service                    = "parametermanager.googleapis.com"
+    service                    = "secretmanager.googleapis.com"
     disable_on_destroy         = false
 }
 
@@ -93,32 +93,44 @@ resource "google_service_account_iam_member" "service_account_member" {
 }
 
 #------------------------------------------------------------------------------
-# Parameter containing the policy.
+# Secret containing the policy.
 #------------------------------------------------------------------------------
 
 #
-# Parameter to store the policy in.
+# Secret to store the policy in.
 #
-resource "google_parameter_manager_regional_parameter" "policy" {
-    depends_on                 = [ google_project_service.parametermanager ]
-    project                    = var.project_id
-    location                   = var.location
-    parameter_id               = "jit-${var.name}"
-    format                     = "YAML"
+resource "google_secret_manager_secret" "policy" {
+    depends_on                 = [ google_project_service.secretmanager ]
+    secret_id                  = "jit-${var.name}"
+
+    replication {
+        dynamic "auto" {
+            for_each = var.secret_location == null ? [1] : []
+            content {}
+        }
+
+        dynamic "user_managed" {
+            for_each = var.secret_location != null ? [1] : []
+            content {
+                replicas {
+                    location = var.secret_location
+                }
+            }
+        }
+    }
+}
+resource "google_secret_manager_secret_version" "v1" {
+    secret                     = google_secret_manager_secret.policy.id
+    secret_data                = var.policy
 }
 
-resource "google_parameter_manager_regional_parameter_version" "v1" {
-    parameter                  = google_parameter_manager_regional_parameter.policy.parameter_id
-    parameter_version_id       = formatdate("vYYYYMMDDhhmmss", timestamp())
-    parameter_data             = var.policy
-}
-
 #
-# Allow the environment service account to access the parameter.
+# Allow the environment service account to access the secret.
 #
-resource "google_project_iam_member" "parameter_binding" {
-    project                    = var.project_id
-    role                       = "roles/parametermanager.parameterAccessor"
+resource "google_secret_manager_secret_iam_member" "secret_binding" {
+    project                    = google_secret_manager_secret.policy.project
+    secret_id                  = google_secret_manager_secret.policy.secret_id
+    role                       = "roles/secretmanager.secretAccessor"
     member                     = "serviceAccount:${google_service_account.environment.email}"
 }
 

@@ -34,6 +34,11 @@ import java.util.stream.Gatherers;
  * Identifier for a Google Cloud region.
  */
 public record RegionId(@NotNull String id) {
+  /**
+   * The "global" pseudo-region.
+   */
+  public static final RegionId GLOBAL = new RegionId("global");
+
 
   public RegionId {
     Preconditions.checkNotNull(id, "id");
