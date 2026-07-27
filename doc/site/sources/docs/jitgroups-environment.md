@@ -1,23 +1,23 @@
 JIT Groups lets you configure one or more [environments](jitgroups-concepts.md#environment).
-Environments correspond to segments of your Google Cloud organizational hierarchy, 
+Environments correspond to segments of your Google Cloud organizational hierarchy,
 and you can use environments to delegate the management of
 these resources to different teams or business units.
 
 For each environment, JIT Access maintains:
 
-+   A [policy document](policy-reference.md) that defines the groups for this environment. 
-+   A Parameter Manager parameter that contains the policy document. 
-+   A service account that's used to provision IAM bindings for resources in this environment. 
++   A [policy document](policy-reference.md) that defines the groups for this environment.
++   A Secret Manger secret that contains the policy document.
++   A service account that's used to provision IAM bindings for resources in this environment.
 
-If you're planning to use a single environment, it's best to create the parameter and service account in the
+If you're planning to use a single environment, it's best to create the secret and service account in the
 project that contains the JIT Groups application. If you're planning to use multiple environments, and delegate the
 administration of these environments to different teams, then it's best to create a dedicated project for each
-environment and create the parameter and service account there.
+environment and create the secret and service account there.
 
 
 ## Register the environment
 
-The steps to register an environment differ depending on whether you're using the project that contains the 
+The steps to register an environment differ depending on whether you're using the project that contains the
 JIT Groups application or a separate project:
 
 === "Same project"
@@ -28,43 +28,49 @@ JIT Groups application or a separate project:
     cp target/sources/src/main/resources/oobe/policy.yaml environment.yaml
     ```
 
-   1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
+1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="4 9-22"
-       module "application" {
-           ...
-           environments                = [ # List of environments, identified by service account
-               "serviceAccount:${module.environment.service_account}"
-           ]
-           ...
-       }
+    ```hcl  hl_lines="4 9-22"
+    module "application" {
+        ...
+        environments                = [ # List of environments, identified by service account
+            "serviceAccount:${module.environment.service_account}"
+        ]
+        ...
+    }
 
-       module "environment" {
-           source                      = "./target/terraform/jitgroups-environment"
-           project_id                  = local.project_id
-           application_service_account = module.application.service_account
-    
-           name                        = "NAME"
-           policy                      = file("environment.yaml")
-       }
+    module "environment" {
+        source                      = "./target/terraform/jitgroups-environment"
+        project_id                  = local.project_id
+        application_service_account = module.application.service_account
+ 
+        name                        = "NAME"
+        policy                      = file("environment.yaml")
+        
+        # secret_location           = "SECRET_LOCATION"
+    }
 
-       output "environment"  {
-           value                       = module.environment.service_account
-       }
+    output "environment"  {
+        value                       = module.environment.service_account
+    }
 
-       output "url" {
-           value                       = module.application.url
-       }
+    output "url" {
+        value                       = module.application.url
+    }
 
-       output "service_account" {
-           value                       = module.application.service_account
-       }
-       ```
+    output "service_account" {
+        value                       = module.application.service_account
+    }
+    ```
 
-    
+
+
     Replace values of the following variables:
     
-    +   `name`: the name of the environment.  
+    +   `name`: the name of the environment.
+    +   `secret_location` (optional): the region to [replicate Secret Manager secrets to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
+        By default, the secrets used for storing policy documents are replicated automatically.
+    
 
     The application uses the environment name as unique identifier and 
     incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
@@ -85,7 +91,7 @@ JIT Groups application or a separate project:
     ```sh
     gcloud auth application-default login
     ```
-    
+
 1.  Reinitialize Terraform and apply the configuration change:
 
     ```sh
@@ -103,7 +109,7 @@ service account, `jit.NAME@PROJECT.iam.gserviceaccount.com` where `NAME` is the 
 `PROJECT` is the project ID.
 
 You must grant this service account permission to modify IAM policies of the resources that the environment
-corresponds to. Because this step might require privileged access to these resources, 
+corresponds to. Because this step might require privileged access to these resources,
 it's not performed automatically by Terraform.
 
 For example, if the environment corresponds to the `development` folder of your Google Cloud
@@ -162,7 +168,7 @@ organization, then you must grant the service account permission to modify the I
 
 ### Grant access to the VPC Service Controls perimeter
 
-If you're using the environment to manage access to projects that are part of a 
+If you're using the environment to manage access to projects that are part of a
 VPC Service Controls perimeter, then you must create an ingress rule that permits
 JIT Groups to access the perimeter:
 
@@ -189,7 +195,7 @@ To customize the policy document of your environment, do the following:
 
 !!!note
 
-    JIT Groups doesn't have permission to modify the Parameter Manager parameter and therefore
+    JIT Groups doesn't have permission to modify the Secret Manager secret and therefore
     doesn't let you save or apply the policy changes in the web interface.
 
 To save and apply your policy changes, do the following:
@@ -206,5 +212,4 @@ To save and apply your policy changes, do the following:
 
 [Set up continuous deployment :material-arrow-right:](jitgroups-continuous-deployment.md){ .md-button }
 [Customize your policy document :material-arrow-right:](policy-reference.md){ .md-button }
-
 
