@@ -374,6 +374,7 @@ public class Application {
             ServiceAccountId.parse(environment).get(),
             runtime.applicationPrincipal(),
             runtime.applicationCredentials(),
+            runtime.regionId(),
             produceHttpTransportOptions()));
         }
         catch (Exception e) {

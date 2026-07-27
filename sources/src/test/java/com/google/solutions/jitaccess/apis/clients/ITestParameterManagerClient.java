@@ -94,6 +94,7 @@ public class ITestParameterManagerClient {
   public void render_whenUnauthenticated_thenThrowsException() {
     var adapter = new ParameterManagerClient(
       ITestEnvironment.INVALID_CREDENTIAL,
+      ITestEnvironment.REGION_ID,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -105,6 +106,7 @@ public class ITestParameterManagerClient {
   public void render_whenCallerLacksPermission_thenThrowsException() {
     var adapter = new ParameterManagerClient(
       ITestEnvironment.NO_ACCESS_CREDENTIALS,
+      ITestEnvironment.REGION_ID,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -116,6 +118,7 @@ public class ITestParameterManagerClient {
   public void render_whenParameterNotFondPermission_thenThrowsException() {
     var adapter = new ParameterManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.REGION_ID,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(
@@ -129,6 +132,7 @@ public class ITestParameterManagerClient {
   public void render_whenParameterVersionNotFondPermission_thenThrowsException() {
     var adapter = new ParameterManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
+      ITestEnvironment.REGION_ID,
       HttpTransport.Options.DEFAULT);
 
     assertThrows(

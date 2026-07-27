@@ -25,6 +25,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.parametermanager.v1.ParameterManager;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.common.base.Preconditions;
+import com.google.solutions.jitaccess.apis.RegionId;
 import jakarta.inject.Singleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,28 +35,35 @@ import java.io.IOException;
 /**
  * Client for the Parameter Manager API.
  */
-@Singleton
-public  class ParameterManagerClient {
+public class ParameterManagerClient {
   private static final String PARAMETER_CHARSET = "UTF-8";
   public static final String OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
   private final @NotNull GoogleCredentials credentials;
+  private final @NotNull RegionId regionId;
   private final @NotNull HttpTransport.Options httpOptions;
 
   public ParameterManagerClient(
     @NotNull GoogleCredentials credentials,
+    @NotNull RegionId regionId,
     @NotNull HttpTransport.Options httpOptions
   ) {
     Preconditions.checkNotNull(credentials, "credentials");
+    Preconditions.checkNotNull(regionId, "regionId");
     Preconditions.checkNotNull(httpOptions, "httpOptions");
 
     this.credentials = credentials;
+    this.regionId = regionId;
     this.httpOptions = httpOptions;
   }
 
   private @NotNull ParameterManager createClient() throws IOException {
+    //
+    // NB. Regional parameters are only accessible via the REP endpoint.
+    //
     return Builders
       .newBuilder(ParameterManager.Builder::new, this.credentials, this.httpOptions)
+      .setRootUrl(String.format("https://parametermanager.%s.rep.googleapis.com/", this.regionId.id()))
       .build();
   }
 

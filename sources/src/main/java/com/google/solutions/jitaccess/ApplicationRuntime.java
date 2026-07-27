@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,9 +46,11 @@ public class ApplicationRuntime {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
   private static final String CONFIG_PROJECT = "jitaccess.project";
+  private static final String CONFIG_REGION = "jitaccess.region";
 
   private final @NotNull ProjectId projectId;
   private final @NotNull String projectNumber;
+  private final @NotNull RegionId regionId;
   private final @NotNull GoogleCredentials applicationCredentials;
   private final @NotNull ServiceAccountId applicationPrincipal;
   private final @NotNull ApplicationRuntime.Type type;
@@ -56,12 +59,14 @@ public class ApplicationRuntime {
     @NotNull ApplicationRuntime.Type type,
     @NotNull ProjectId projectId,
     @NotNull String projectNumber,
+    @NotNull RegionId regionId,
     @NotNull GoogleCredentials applicationCredentials,
     @NotNull ServiceAccountId applicationPrincipal
   ) {
     this.type = type;
     this.projectId = projectId;
     this.projectNumber = projectNumber;
+    this.regionId = regionId;
     this.applicationCredentials = applicationCredentials;
     this.applicationPrincipal = applicationPrincipal;
   }
@@ -78,10 +83,10 @@ public class ApplicationRuntime {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
-  private static HttpResponse getMetadata() throws IOException {
+  private static HttpResponse getMetadata(String stanza) throws IOException {
     var genericUrl = new GenericUrl(
       ComputeEngineCredentials.getMetadataServerUrl() +
-        "/computeMetadata/v1/project/?recursive=true");
+        String.format("/computeMetadata/v1/%s/?recursive=true", stanza));
 
     var request = new NetHttpTransport()
       .createRequestFactory()
@@ -112,9 +117,12 @@ public class ApplicationRuntime {
       //
       // Initialize using service account attached to AppEngine or Cloud Run.
       //
-      var projectMetadata = getMetadata().parseAs(GenericData.class);
-      var projectId = (String) projectMetadata.get("projectId");
+      var projectMetadata = getMetadata("project").parseAs(GenericData.class);
+      var projectId = (String)projectMetadata.get("projectId");
       var projectNumber = projectMetadata.get("numericProjectId").toString();
+
+      var instanceMetadata = getMetadata("project").parseAs(GenericData.class);
+      var instanceRegion = new RegionId((String)instanceMetadata.get("region"));
 
       var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
       var applicationPrincipal = ServiceAccountId
@@ -147,6 +155,7 @@ public class ApplicationRuntime {
         isRunningOnAppEngine() ? Type.APPENGINE : Type.CLOUDRUN,
         new ProjectId(projectId),
         projectNumber,
+        instanceRegion,
         applicationCredentials,
         applicationPrincipal);
     }
@@ -209,6 +218,7 @@ public class ApplicationRuntime {
         Type.DEVELOPMENT,
         new ProjectId(System.getProperty(CONFIG_PROJECT, "dev")),
         "0",
+        new RegionId(System.getProperty(CONFIG_REGION, "us-central1")),
         applicationCredentials,
         applicationPrincipal);
     }
@@ -223,6 +233,13 @@ public class ApplicationRuntime {
    */
   public @NotNull ProjectId projectId() {
     return this.projectId;
+  }
+
+  /**
+   * Region the application is deployed in.
+   */
+  public @NotNull RegionId regionId() {
+    return this.regionId;
   }
 
   /**

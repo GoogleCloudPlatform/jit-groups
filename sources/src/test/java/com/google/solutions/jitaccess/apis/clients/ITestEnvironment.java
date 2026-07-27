@@ -27,6 +27,7 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.base.Strings;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,6 +90,8 @@ public class ITestEnvironment {
 
   public static final PubSubTopic PUBSUB_TOPIC;
 
+  public static final RegionId REGION_ID;
+
   static {
     //
     // Open test settings file.
@@ -110,6 +113,7 @@ public class ITestEnvironment {
       PROJECT_ID = new ProjectId(getMandatory(settings, "test.project"));
       CLOUD_IDENTITY_ACCOUNT_ID = new CustomerId(getMandatory(settings, "test.cloudIdentity.accountId"));
       CLOUD_IDENTITY_DOMAIN = getMandatory(settings, "test.cloudIdentity.domain");
+      REGION_ID = new RegionId(getOptional(settings, "test.region","us-central1"));
 
       //
       // User settings.

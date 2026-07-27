@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,7 @@ public class TestEnvironmentConfiguration {
         new ServiceAccountId("no-prefix", new ProjectId("project-1")),
         new ServiceAccountId("app", new ProjectId("project-1")),
         Mockito.mock(GoogleCredentials.class),
+        new RegionId("us-somewhere1"),
         HttpTransport.Options.DEFAULT));
   }
 
@@ -116,6 +118,7 @@ public class TestEnvironmentConfiguration {
       new ServiceAccountId("jit-environment", new ProjectId("project-1")),
       new ServiceAccountId("app", new ProjectId("project-1")),
       Mockito.mock(GoogleCredentials.class),
+      new RegionId("us-somewhere1"),
       HttpTransport.Options.DEFAULT);
 
     assertEquals("environment", configuration.name());

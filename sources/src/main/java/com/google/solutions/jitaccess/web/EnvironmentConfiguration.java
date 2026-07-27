@@ -25,6 +25,7 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
@@ -189,6 +190,7 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
     @NotNull ServiceAccountId serviceAccountId,
     @NotNull ServiceAccountId applicationPrincipal,
     @NotNull GoogleCredentials applicationCredentials,
+    @NotNull RegionId region,
     @NotNull HttpTransport.Options httpOptions
   ) {
     //
@@ -267,12 +269,14 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
         //
         try {
           var parameterPath = String.format(
-            "projects/%s/locations/global/parameters/jit-%s/versions/latest", // TODO: regionalize
+            "projects/%s/locations/%s/parameters/jit-%s/versions/latest",
             serviceAccountId.projectId,
+            region.id(),
             environmentName);
 
           var parameterManagerClient = new ParameterManagerClient(
             environmentCredentials,
+            region,
             httpOptions);
 
           //
