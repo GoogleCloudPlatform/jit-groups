@@ -267,13 +267,13 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
         //
         // NB. Storing policies in PM is only supported since v2.4.
         //
-        try {
-          var parameterPath = String.format(
-            "projects/%s/locations/%s/parameters/jit-%s/versions/latest",
-            serviceAccountId.projectId,
-            region.id(),
-            environmentName);
+        var parameterPath = String.format(
+          "projects/%s/locations/%s/parameters/jit-%s/versions/latest",
+          serviceAccountId.projectId,
+          region.id(),
+          environmentName);
 
+        try {
           var parameterManagerClient = new ParameterManagerClient(
             environmentCredentials,
             region,
@@ -300,19 +300,22 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
           //
         }
         catch (Exception e) {
-          throw new UncheckedExecutionException(e);
+          throw new UncheckedExecutionException(
+            String.format(
+              "The policy stored in '%s' is invalid or cannot be read",
+              parameterPath),
+            e);
         }
 
         //
         // Try to load policy from Secret Manager. The path is based on a
         // convention and can't be customized.
         //
+        var secretPath = String.format(
+          "projects/%s/secrets/jit-%s/versions/latest",
+          serviceAccountId.projectId,
+          environmentName);
         try {
-          var secretPath = String.format(
-            "projects/%s/secrets/jit-%s/versions/latest",
-            serviceAccountId.projectId,
-            environmentName);
-
           var secretClient = new SecretManagerClient(
             environmentCredentials,
             httpOptions);
@@ -332,7 +335,11 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
             metadata);
         }
         catch (Exception e) {
-          throw new UncheckedExecutionException(e);
+          throw new UncheckedExecutionException(
+            String.format(
+              "The policy stored in '%s' is invalid or cannot be read",
+              secretPath),
+            e);
         }
       }
     };

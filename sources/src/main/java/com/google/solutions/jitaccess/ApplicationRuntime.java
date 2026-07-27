@@ -122,7 +122,9 @@ public class ApplicationRuntime {
       var projectNumber = projectMetadata.get("numericProjectId").toString();
 
       var instanceMetadata = getMetadata("instance").parseAs(GenericData.class);
-      var instanceRegion = new RegionId((String)instanceMetadata.get("region"));
+      var instanceRegion = RegionId
+        .parse((String)instanceMetadata.get("region"))
+        .orElseThrow(() -> new IllegalArgumentException("The region found in runtime metadata is invalid"));
 
       var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
       var applicationPrincipal = ServiceAccountId
