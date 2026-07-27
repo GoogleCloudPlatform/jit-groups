@@ -426,7 +426,7 @@ resource "google_cloud_run_v2_service" "service" {
 resource "google_cloud_run_v2_service_iam_member" "iap_invoker" {
     project                    = var.project_id
     location                   = var.location
-    name                       = google_cloud_run_v2_service.app.name
+    name                       = google_cloud_run_v2_service.service.name
     role                       = "roles/run.invoker"
     member                     = google_project_service_identity.iap.member
 }
