@@ -453,7 +453,13 @@ output "url" {
     description                = "URL to application"  
     value                      = "https://${google_app_engine_application.appengine_app.default_hostname}/"
 }
+
 output "service_account" {
     description                = "Service account used by the application"  
     value                      = google_service_account.jitgroups.email
+}
+
+output "location" {
+    description                = "Location of the application"  
+    value                      = var.location
 }

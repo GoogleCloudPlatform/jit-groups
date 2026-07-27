@@ -6,13 +6,13 @@ these resources to different teams or business units.
 For each environment, JIT Access maintains:
 
 +   A [policy document](policy-reference.md) that defines the groups for this environment. 
-+   A Secret Manger secret that contains the policy document. 
++   A Parameter Manager parameter that contains the policy document. 
 +   A service account that's used to provision IAM bindings for resources in this environment. 
 
-If you're planning to use a single environment, it's best to create the secret and service account in the
+If you're planning to use a single environment, it's best to create the parameter and service account in the
 project that contains the JIT Groups application. If you're planning to use multiple environments, and delegate the
 administration of these environments to different teams, then it's best to create a dedicated project for each
-environment and create the secret and service account there.
+environment and create the parameter and service account there.
 
 
 ## Register the environment
@@ -43,11 +43,10 @@ JIT Groups application or a separate project:
            source                      = "./target/terraform/jitgroups-environment"
            project_id                  = local.project_id
            application_service_account = module.application.service_account
+           location                    = module.application.location
     
            name                        = "NAME"
            policy                      = file("environment.yaml")
-           
-           # secret_location           = "SECRET_LOCATION"
        }
 
        output "environment"  {
@@ -63,14 +62,10 @@ JIT Groups application or a separate project:
        }
        ```
 
-
     
     Replace values of the following variables:
     
-    +   `name`: the name of the environment.
-    +   `secret_location` (optional): the region to [replicate Secret Manager secrets to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
-        By default, the secrets used for storing policy documents are replicated automatically.
-    
+    +   `name`: the name of the environment.  
 
     The application uses the environment name as unique identifier and 
     incorporates it into the name of Cloud Identity groups. Names must therefore comply with the following
@@ -195,7 +190,7 @@ To customize the policy document of your environment, do the following:
 
 !!!note
 
-    JIT Groups doesn't have permission to modify the Secret Manager secret and therefore
+    JIT Groups doesn't have permission to modify the Parameter Manager parameter and therefore
     doesn't let you save or apply the policy changes in the web interface.
 
 To save and apply your policy changes, do the following:
