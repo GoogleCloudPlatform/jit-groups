@@ -247,28 +247,6 @@ resource "google_service_account_iam_member" "service_account_member" {
 #------------------------------------------------------------------------------
 
 #
-# Create an OAuth consent screen for IAP.
-#
-resource "google_iap_brand" "iap_brand" {
-    depends_on                 = [ google_project_service.iap ]
-    project                    = var.project_id
-    support_email              = var.admin_email
-    application_title          = "JIT Groups"
-    lifecycle {
-        # This resource can't be deleted.
-        prevent_destroy = true
-    }
-}
-
-#
-# Create an OAuth client ID for IAP.
-#
-resource "google_iap_client" "iap_client" {
-    display_name               = "JIT Groups"
-    brand                      = google_iap_brand.iap_brand.name
-}
-
-#
 # Allow users to access IAP.
 #
 resource "google_project_iam_binding" "iap_binding_users" {
@@ -327,8 +305,6 @@ resource "google_app_engine_application" "appengine_app" {
     location_id                = var.location
     iap {
         enabled                = true
-        oauth2_client_id       = google_iap_client.iap_client.client_id
-        oauth2_client_secret   = google_iap_client.iap_client.secret
     }
 }
 
