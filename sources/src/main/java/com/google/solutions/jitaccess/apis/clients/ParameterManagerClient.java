@@ -58,13 +58,17 @@ public class ParameterManagerClient {
   }
 
   private @NotNull ParameterManager createClient() throws IOException {
-    //
-    // NB. Regional parameters are only accessible via the REP endpoint.
-    //
-    return Builders
-      .newBuilder(ParameterManager.Builder::new, this.credentials, this.httpOptions)
-      .setRootUrl(String.format("https://parametermanager.%s.rep.googleapis.com/", this.regionId.id()))
-      .build();
+    var builder = Builders
+      .newBuilder(ParameterManager.Builder::new, this.credentials, this.httpOptions);
+
+    if (!this.regionId.isGlobal()) {
+      //
+      // NB. Regional parameters are only accessible via the REP endpoint.
+      //
+      builder.setRootUrl(String.format("https://parametermanager.%s.rep.googleapis.com/", this.regionId.id()));
+    }
+
+    return builder.build();
   }
 
   /**

@@ -47,18 +47,10 @@ variable "application_service_account" {
     }
 }     
 
-#
-# This variable is required as of version 2.4. Configure it as follows:
-#
-#       module "environment" {
-#           source                      = "./target/terraform/jitgroups-environment"
-#           location                    = module.application.location
-#           ...
-#       }
-#
 variable "location" {
-    description                = "Region of the parameter (required as of version 2.4)"
+    description                = "Region of the parameter"
     type                       = string
+    default                    = "global"
 }
 
 #------------------------------------------------------------------------------

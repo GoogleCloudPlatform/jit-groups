@@ -37,7 +37,6 @@ public record RegionId(@NotNull String id) {
 
   public RegionId {
     Preconditions.checkNotNull(id, "id");
-    Preconditions.checkArgument(!"global".equals(id));
     assert !id.startsWith("//");
     assert !id.contains("/");
   }
@@ -57,7 +56,7 @@ public record RegionId(@NotNull String id) {
       return Optional.empty();
     }
 
-    s = s.trim();
+    s = s.trim().toLowerCase();
 
     if (Strings.isNullOrEmpty(s)) {
       return Optional.empty();
@@ -80,6 +79,10 @@ public record RegionId(@NotNull String id) {
     else {
       return Optional.empty();
     }
+  }
+
+  public boolean isGlobal() {
+    return "global".equals(this.id);
   }
 
   @Override

@@ -43,7 +43,6 @@ JIT Groups application or a separate project:
            source                      = "./target/terraform/jitgroups-environment"
            project_id                  = local.project_id
            application_service_account = module.application.service_account
-           location                    = module.application.location
     
            name                        = "NAME"
            policy                      = file("environment.yaml")
