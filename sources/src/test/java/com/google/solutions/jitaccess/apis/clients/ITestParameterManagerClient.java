@@ -37,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class ITestParameterManagerClient {
   private static final String PARAMETER_NAME = "testparameter";
   private static final String PARAMETER_PATH = String.format(
-    "projects/%s/locations/global/parameters/%s",
+    "projects/%s/locations/%s/parameters/%s",
     ITestEnvironment.PROJECT_ID,
+    ITestEnvironment.REGION_ID,
     PARAMETER_NAME);
   private static final String PARAMETER_LATEST_VERSION_PATH = String.format(
     "%s/versions/latest",
@@ -49,6 +50,8 @@ public class ITestParameterManagerClient {
       HttpTransport.newTransport(),
       new GsonFactory(),
       new HttpCredentialsAdapter(ITestEnvironment.APPLICATION_CREDENTIALS))
+      .setRootUrl(
+        String.format("https://parametermanager.%s.rep.googleapis.com/", ITestEnvironment.REGION_ID.id()))
       .build();
   }
 
@@ -80,7 +83,11 @@ public class ITestParameterManagerClient {
       .projects()
       .locations()
       .parameters()
-      .create(String.format("projects/%s/locations/global", ITestEnvironment.PROJECT_ID),
+      .create(
+        String.format(
+          "projects/%s/locations/%s",
+          ITestEnvironment.PROJECT_ID,
+          ITestEnvironment.REGION_ID),
         new Parameter().setFormat("YAML")
       ).setParameterId(PARAMETER_NAME)
       .execute();
@@ -115,7 +122,7 @@ public class ITestParameterManagerClient {
   }
 
   @Test
-  public void render_whenParameterNotFondPermission_thenThrowsException() {
+  public void render_whenParameterNotFoundPermission_thenThrowsException() {
     var adapter = new ParameterManagerClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       ITestEnvironment.REGION_ID,
@@ -124,8 +131,9 @@ public class ITestParameterManagerClient {
     assertThrows(
       ResourceNotFoundException.class,
       () -> adapter.render(String.format(
-        "projects/%s/locations/global/parameters/doesnotexist/versions/latest",
-        ITestEnvironment.PROJECT_ID)));
+        "projects/%s/locations/%s/parameters/doesnotexist/versions/latest",
+        ITestEnvironment.PROJECT_ID,
+        ITestEnvironment.REGION_ID)));
   }
 
   @Test

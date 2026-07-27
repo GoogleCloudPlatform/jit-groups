@@ -121,7 +121,7 @@ public class ApplicationRuntime {
       var projectId = (String)projectMetadata.get("projectId");
       var projectNumber = projectMetadata.get("numericProjectId").toString();
 
-      var instanceMetadata = getMetadata("project").parseAs(GenericData.class);
+      var instanceMetadata = getMetadata("instance").parseAs(GenericData.class);
       var instanceRegion = new RegionId((String)instanceMetadata.get("region"));
 
       var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
