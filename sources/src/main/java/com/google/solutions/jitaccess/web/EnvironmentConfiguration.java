@@ -25,9 +25,7 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.solutions.jitaccess.apis.clients.HttpTransport;
-import com.google.solutions.jitaccess.apis.clients.ResourceManagerClient;
-import com.google.solutions.jitaccess.apis.clients.SecretManagerClient;
+import com.google.solutions.jitaccess.apis.clients.*;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import com.google.solutions.jitaccess.catalog.policy.Policy;
 import com.google.solutions.jitaccess.catalog.policy.PolicyDocumentSource;
@@ -229,17 +227,6 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
       List.of(ResourceManagerClient.OAUTH_SCOPE), // No other scopes needed.
       0);
 
-    //
-    // Load policy from secret manager using the environment-specific
-    // credentials (not the application credentials!).
-    //
-    // The secret path is based on a convention and can't be customized.
-    //
-    var secretPath = String.format(
-      "projects/%s/secrets/jit-%s/versions/latest",
-      serviceAccountId.projectId,
-      environmentName);
-
     return new EnvironmentConfiguration(
       environmentName,
       DEFAULT_DESCRIPTION, // We don't know the description yet.
@@ -247,6 +234,9 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
     ) {
       @Override
       PolicyDocumentSource loadPolicy() {
+        //
+        // Load policy using the environment-specific credentials
+        // (not the application credentials!).
         //
         // If we lack impersonation permissions, ImpersonatedCredentials
         // will keep retrying until the call timeout expires. The effect
@@ -269,7 +259,56 @@ abstract class EnvironmentConfiguration implements PolicyHeader {
               serviceAccountId.email()));
         }
 
+        //
+        // Try to load policy from Parameter Manager. The path is based on a
+        // convention and can't be customized.
+        //
+        // NB. Storing policies in PM is only supported since v2.4.
+        //
         try {
+          var parameterPath = String.format(
+            "projects/%s/locations/global/parameters/jit-%s/versions/latest", // TODO: regionalize
+            serviceAccountId.projectId,
+            environmentName);
+
+          var parameterManagerClient = new ParameterManagerClient(
+            environmentCredentials,
+            httpOptions);
+
+          //
+          // Set default environment name in metadata so that
+          // the YAML itself doesn't need to specify a name.
+          //
+          var metadata = new Policy.Metadata(
+            parameterPath,
+            Instant.now(),
+            null,
+            environmentName);
+
+          return PolicyDocumentSource.fromString(
+            parameterManagerClient.render(parameterPath),
+            metadata);
+        }
+        catch (ResourceNotFoundException | AccessDeniedException e)
+        {
+          //
+          // Parameter not found or API not enabled. Proceed with Secret Manager.
+          //
+        }
+        catch (Exception e) {
+          throw new UncheckedExecutionException(e);
+        }
+
+        //
+        // Try to load policy from Secret Manager. The path is based on a
+        // convention and can't be customized.
+        //
+        try {
+          var secretPath = String.format(
+            "projects/%s/secrets/jit-%s/versions/latest",
+            serviceAccountId.projectId,
+            environmentName);
+
           var secretClient = new SecretManagerClient(
             environmentCredentials,
             httpOptions);
