@@ -102,7 +102,7 @@ resource "google_parameter_manager_parameter" "policy" {
 
 resource "google_parameter_manager_parameter_version" "v1" {
     parameter                  = google_parameter_manager_parameter.policy.id
-    parameter_version_id       = formatdate("YYYYMMDDhhmmss", timestamp())
+    parameter_version_id       = substr(sha256(var.policy), 0, 16)
     parameter_data             = var.policy
 }
 
