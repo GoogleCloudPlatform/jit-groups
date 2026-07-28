@@ -285,20 +285,6 @@ resource "google_service_account_iam_member" "service_account_member" {
 #------------------------------------------------------------------------------
 
 #
-# Create an OAuth consent screen for IAP.
-#
-resource "google_iap_brand" "iap_brand" {
-    depends_on                 = [ google_project_service.iap ]
-    project                    = var.project_id
-    support_email              = var.admin_email
-    application_title          = "JIT Groups"
-    lifecycle {
-        # This resource can't be deleted.
-        prevent_destroy = true
-    }
-}
-
-#
 # Allow users to access IAP.
 #
 resource "google_project_iam_binding" "iap_binding_users" {
@@ -397,15 +383,14 @@ resource "null_resource" "docker_image" {
 resource "google_cloud_run_v2_service" "service" {
     depends_on                 = [null_resource.docker_image, google_project_service.run]
     
-    provider = google-beta
     launch_stage               = "BETA"
     iap_enabled                = true
 
+    project                    = var.project_id
     location                   = var.location
     name                       = "default"
-    project                    = var.project_id
     ingress                    = "INGRESS_TRAFFIC_ALL"
-    
+
     template {
         service_account        = google_service_account.jitgroups.email
         execution_environment  = "EXECUTION_ENVIRONMENT_GEN2"
@@ -438,6 +423,17 @@ resource "google_cloud_run_v2_service" "service" {
             }
         }
     }
+}
+
+#
+# Allow the Google-managed IAP service agent to invoke Cloud Run.
+#
+resource "google_cloud_run_v2_service_iam_member" "iap_invoker" {
+    project                    = var.project_id
+    location                   = var.location
+    name                       = google_cloud_run_v2_service.service.name
+    role                       = "roles/run.invoker"
+    member                     = google_project_service_identity.iap.member
 }
 
 #------------------------------------------------------------------------------
