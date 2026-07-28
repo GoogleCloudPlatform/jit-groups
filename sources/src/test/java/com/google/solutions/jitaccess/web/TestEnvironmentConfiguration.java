@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.web;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.apis.clients.HttpTransport;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.junit.jupiter.api.Test;

@@ -32,6 +32,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.solutions.jitaccess.apis.ProjectId;
+import com.google.solutions.jitaccess.apis.RegionId;
 import com.google.solutions.jitaccess.auth.ServiceAccountId;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,6 +46,7 @@ public class ApplicationRuntime {
   private static final String CONFIG_IMPERSONATE_SA = "jitaccess.impersonateServiceAccount";
   private static final String CONFIG_DEBUG_MODE = "jitaccess.debug";
   private static final String CONFIG_PROJECT = "jitaccess.project";
+  private static final String CONFIG_REGION = "jitaccess.region";
 
   private final @NotNull ProjectId projectId;
   private final @NotNull String projectNumber;
@@ -78,10 +80,10 @@ public class ApplicationRuntime {
     return Boolean.getBoolean(CONFIG_DEBUG_MODE);
   }
 
-  private static HttpResponse getMetadata() throws IOException {
+  private static HttpResponse getMetadata(String stanza) throws IOException {
     var genericUrl = new GenericUrl(
       ComputeEngineCredentials.getMetadataServerUrl() +
-        "/computeMetadata/v1/project/?recursive=true");
+        String.format("/computeMetadata/v1/%s/?recursive=true", stanza));
 
     var request = new NetHttpTransport()
       .createRequestFactory()
@@ -112,8 +114,8 @@ public class ApplicationRuntime {
       //
       // Initialize using service account attached to AppEngine or Cloud Run.
       //
-      var projectMetadata = getMetadata().parseAs(GenericData.class);
-      var projectId = (String) projectMetadata.get("projectId");
+      var projectMetadata = getMetadata("project").parseAs(GenericData.class);
+      var projectId = (String)projectMetadata.get("projectId");
       var projectNumber = projectMetadata.get("numericProjectId").toString();
 
       var defaultCredentials = (ComputeEngineCredentials)GoogleCredentials.getApplicationDefault();
