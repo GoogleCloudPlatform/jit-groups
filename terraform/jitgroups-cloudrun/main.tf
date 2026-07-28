@@ -142,6 +142,10 @@ terraform {
     }
 }
 
+provider "google-beta" {
+    project                    = var.project_id
+}
+
 #------------------------------------------------------------------------------
 # Local variables.
 #------------------------------------------------------------------------------
@@ -294,6 +298,7 @@ resource "google_project_iam_binding" "iap_binding_users" {
 # but it doesn't.
 #
 resource "google_project_service_identity" "iap" {
+    provider                   = google-beta
     project                    = var.project_id
     service                    = "iap.googleapis.com"
 }
