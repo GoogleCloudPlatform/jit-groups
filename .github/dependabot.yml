@@ -4,11 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "maven"
     directory: "/sources"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7
   - package-ecosystem: "docker"
     directory: "/sources"
     schedule:
       interval: "daily"
+    cooldown:
+      default-days: 7

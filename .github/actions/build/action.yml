@@ -17,10 +17,15 @@ runs:
         cache: 'maven'
         
     - name: Set version
-      run: mvn versions:set -DnewVersion=${{ inputs.version }}.${{ github.run_number }} --file ${{ inputs.source-dir }}/pom.xml
+      run: mvn versions:set -DnewVersion=${INPUTS_VERSION}.${{ github.run_number }} --file ${INPUTS_SOURCE_DIR}/pom.xml
       shell: bash
+      env:
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_SOURCE_DIR: ${{ inputs.source-dir }}
       
     - name: Build
       # Run unit tests, but skip integration tests.
-      run: mvn -P release -B test -DskipITs=true --file ${{ inputs.source-dir }}/pom.xml
+      run: mvn -P release -B test -DskipITs=true --file ${INPUTS_SOURCE_DIR}/pom.xml
       shell: bash
+      env:
+        INPUTS_SOURCE_DIR: ${{ inputs.source-dir }}
