@@ -33,4 +33,4 @@ install:
 	@echo "=== Install mkdocs                                   ==="
 	@echo "========================================================"
     
-    python -m pip install  --upgrade --force-reinstall git+https://github.com/jpassing/mkdocs-material-smallscreen.git
+    python -m pip install --upgrade --force-reinstall git+https://github.com/jpassing/mkdocs-material-smallscreen.git
