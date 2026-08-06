@@ -5,22 +5,31 @@ these resources to different teams or business units.
 
 For each environment, JIT Access maintains:
 
-+   A [policy document](policy-reference.md) that defines the groups for this environment. 
-+   A Secret Manger secret that contains the policy document. 
-+   A service account that's used to provision IAM bindings for resources in this environment. 
+1.  A [policy document](policy-reference.md) that defines the groups for the environment. 
+2.  A [Secret Manager secret](https://docs.cloud.google.com/secret-manager/docs/overview) or 
+    [Parameter Manager parameter](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/overview)
+    that stores the policy document. You can choose whether to use Secret Manager or Parameter Manager.
+3.  A service account that's used to provision IAM bindings for resources in this environment. 
 
-If you're planning to use a single environment, it's best to create the secret and service account in the
-project that contains the JIT Groups application. If you're planning to use multiple environments, and delegate the
+If you're planning to use a single environment, it's best to create the secret/parameter and service account in the
+project that contains the JIT Groups application. If you're planning to use multiple environments and delegate the
 administration of these environments to different teams, then it's best to create a dedicated project for each
-environment and create the secret and service account there.
-
+environment and create the secret/parameter and service account there.
 
 ## Register the environment
 
-The steps to register an environment differ depending on whether you're using the project that contains the 
-JIT Groups application or a separate project:
+Before you set up an environment, you must decide whether to store the policy document 
+in Secret Manager or Parameter Manager:
 
-=== "Same project"
++   Parameter Manager lets you manage policy documents up to 1 MB in size while 
+    Secret Manager is limited to 64 KB. 
++   Parameter Manager and Secret Manager both replicate your data globally by default.
+    With Secret Manager, you can optionally [restrict replication :octicons-link-external-16:](https://docs.cloud.google.com/secret-manager/docs/choosing-replication)
+    to a single region.
+
+If you're unsure, we recommend you use Parameter Manager.
+
+To register the environment, do the following:
 
 1.  Copy the example policy document to a file `environment.yaml`:
 
@@ -28,47 +37,81 @@ JIT Groups application or a separate project:
     cp target/sources/src/main/resources/oobe/policy.yaml environment.yaml
     ```
 
-   1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
+1.  Open your [existing Terraform configuration](jitgroups-deploy.md) and add the following:
 
-       ```hcl  hl_lines="4 9-22"
-       module "application" {
-           ...
-           environments                = [ # List of environments, identified by service account
-               "serviceAccount:${module.environment.service_account}"
-           ]
-           ...
-       }
+    === "Parameter Manager"
 
-       module "environment" {
-           source                      = "./target/terraform/jitgroups-environment"
-           project_id                  = local.project_id
-           application_service_account = module.application.service_account
-    
-           name                        = "NAME"
-           policy                      = file("environment.yaml")
-           
-           # secret_location           = "SECRET_LOCATION"
-       }
+        ```hcl  hl_lines="4 9-20"
+        module "application" {
+            ...
+            environments                = [ # List of environments, identified by service account
+                "serviceAccount:${module.environment.service_account}"
+            ]
+            ...
+        }
+        
+        module "environment" {
+            source                      = "./target/terraform/jitgroups-environment-v2"
+            project_id                  = local.project_id
+            application_service_account = module.application.service_account
+        
+            name                        = "NAME"
+            policy                      = file("environment.yaml")
+        }
+        
+        output "environment"  {
+            value                       = module.environment.service_account
+        }
+        
+        output "url" {
+            value                       = module.application.url
+        }
+        
+        output "service_account" {
+            value                       = module.application.service_account
+        }
+        ```
 
-       output "environment"  {
-           value                       = module.environment.service_account
-       }
+    === "Secret Manager"
 
-       output "url" {
-           value                       = module.application.url
-       }
+        ```hcl  hl_lines="4 9-22"
+        module "application" {
+            ...
+            environments                = [ # List of environments, identified by service account
+                "serviceAccount:${module.environment.service_account}"
+            ]
+            ...
+        }
+        
+        module "environment" {
+            source                      = "./target/terraform/jitgroups-environment"
+            project_id                  = local.project_id
+            application_service_account = module.application.service_account
+        
+            name                        = "NAME"
+            policy                      = file("environment.yaml")
+            
+            # secret_location           = "SECRET_LOCATION"
+        }
+        
+        output "environment"  {
+            value                       = module.environment.service_account
+        }
+        
+        output "url" {
+            value                       = module.application.url
+        }
+        
+        output "service_account" {
+            value                       = module.application.service_account
+        }
+        ```
 
-       output "service_account" {
-           value                       = module.application.service_account
-       }
-       ```
-
-
-    
     Replace values of the following variables:
     
     +   `name`: the name of the environment.
-    +   `secret_location` (optional): the region to [replicate Secret Manager secrets to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
+    +   `secret_location` (Secret Manager only, optional): the region to 
+        [replicate Secret Manager secrets to :octicons-link-external-16:](https://cloud.google.com/secret-manager/docs/choosing-replication).
         By default, the secrets used for storing policy documents are replicated automatically.
     
 
