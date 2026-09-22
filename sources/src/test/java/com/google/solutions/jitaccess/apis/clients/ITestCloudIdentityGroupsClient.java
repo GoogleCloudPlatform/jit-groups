@@ -24,6 +24,7 @@ package com.google.solutions.jitaccess.apis.clients;
 import com.google.solutions.jitaccess.apis.CustomerId;
 import com.google.solutions.jitaccess.auth.EndUserId;
 import com.google.solutions.jitaccess.auth.GroupId;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -69,6 +70,32 @@ public class ITestCloudIdentityGroupsClient {
       //
       // Group doesn't exist, ok.
       //
+    }
+  }
+
+  /**
+   * Poll until the group becomes visible in the memberships API.
+   */
+  private void waitForGroup(
+    @NotNull CloudIdentityGroupsClient client,
+    @NotNull GroupId groupId
+  ) throws IOException, AccessException, InterruptedException {
+    int retry = 0;
+    while(true)
+    {
+      try {
+        client.listMemberships(groupId);
+        return;
+      }
+      catch (AccessDeniedException e) {
+        if (retry++ < 25) {
+          // Wait and retry.
+          Thread.sleep(200);
+        }
+        else {
+          throw e;
+        }
+      }
     }
   }
 
@@ -130,6 +157,7 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
 
     assertEquals(
       groupKey,
@@ -194,6 +222,7 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
     var group = client.getGroup(TEMPORARY_ACCESS_GROUP_EMAIL);
 
     assertEquals(TEMPORARY_ACCESS_GROUP_EMAIL.email, group.getGroupKey().getId());
@@ -259,6 +288,7 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       accessProfile);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
     client.deleteGroup(oldId);
 
     //
@@ -271,6 +301,7 @@ public class ITestCloudIdentityGroupsClient {
       "description",
       accessProfile);
     assertNotEquals(oldId, createdId);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
 
     //
     // Create again.
@@ -649,7 +680,7 @@ public class ITestCloudIdentityGroupsClient {
   //---------------------------------------------------------------------
 
   @Test
-  public void deleteMembership_byId_whenMembershipNotFound() throws AccessException, IOException {
+  public void deleteMembership_byId_whenMembershipNotFound() throws Exception {
     var client = new CloudIdentityGroupsClient(
       ITestEnvironment.APPLICATION_CREDENTIALS,
       new CloudIdentityGroupsClient.Options(
@@ -662,6 +693,7 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
 
     client.deleteMembership(groupId, ITestEnvironment.TEMPORARY_ACCESS_USER);
   }
@@ -722,6 +754,8 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
+
     var membershipExpiry = Instant.now().plusSeconds(300);
     client.addMembership(
       groupId,
@@ -835,6 +869,8 @@ public class ITestCloudIdentityGroupsClient {
       "name",
       "description",
       CloudIdentityGroupsClient.AccessProfile.Restricted);
+    waitForGroup(client, TEMPORARY_ACCESS_GROUP_EMAIL);
+
     var groups = client.searchGroupsByPrefix(
       "jitaccess-",
       true);
