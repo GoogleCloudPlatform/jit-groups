@@ -415,9 +415,13 @@ public class TestEnvironmentsResource {
         "Env 1",
         METADATA);
 
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of());
+
       var environmentView = Mockito.mock(EnvironmentContext.class);
       when(environmentView.policy()).thenReturn(environment);
       when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
 
       when(environmentView.canExport()).thenReturn(false);
       when(environmentView.canReconcile()).thenReturn(false);
@@ -435,9 +439,13 @@ public class TestEnvironmentsResource {
         "Env 1",
         METADATA);
 
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of());
+
       var environmentView = Mockito.mock(EnvironmentContext.class);
       when(environmentView.policy()).thenReturn(environment);
       when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
 
       when(environmentView.canExport()).thenReturn(true);
       when(environmentView.canReconcile()).thenReturn(true);
@@ -523,9 +531,13 @@ public class TestEnvironmentsResource {
         "env-1",
         "Env 1",
         METADATA);
+      var system = new SystemPolicy("sys-1", "System 1");
+      var group = new JitGroupPolicy("grp-1", "Group 1");
+      system.add(group);
+      environment.add(system);
 
       var expiredPrincipal = new Principal(
-        new JitGroupId("env-1", "sys-1", "grp-1"),
+        group.id(),
         Instant.now().minus(1, ChronoUnit.HOURS));
 
       var subject = Mockito.mock(Subject.class);

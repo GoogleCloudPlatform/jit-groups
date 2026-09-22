@@ -228,38 +228,35 @@ public class EnvironmentsResource {
       var envPolicy = environment.policy();
       var envName = envPolicy.name();
 
-      List<GroupsResource.GroupMembershipInfo> activeMemberships;
-      if (environment.subject() != null && environment.subject().principals() != null) {
-        activeMemberships = environment.subject().principals()
-          .stream()
-          .filter(p -> p.id() instanceof JitGroupId groupId &&
-            groupId.environment().equals(envName) &&
-            envPolicy
-              .system(groupId.system())
-              .flatMap(s -> s.group(groupId.name()))
-              .isPresent())
-          .map(p -> {
-            var groupId = (JitGroupId) p.id();
-            var system = envPolicy.system(groupId.system()).get();
-            var group = system.group(groupId.name()).get();
+      var activeMemberships = environment
+        .subject()
+        .principals()
+        .stream()
+        .filter(p -> p.isValid())
+        .filter(p -> p.id() instanceof JitGroupId groupId &&
+          groupId.environment().equals(envName) &&
+          envPolicy
+            .system(groupId.system())
+            .flatMap(s -> s.group(groupId.name()))
+            .isPresent())
+        .map(p -> {
+          var groupId = (JitGroupId) p.id();
+          var system = envPolicy.system(groupId.system()).get();
+          var group = system.group(groupId.name()).get();
 
-            return new GroupsResource.GroupMembershipInfo(
-              new Link("environments/%s/systems/%s/groups/%s", envName, groupId.system(), groupId.name()),
-              groupId.toString(),
-              groupId.name(),
-              group.displayName(),
-              group.description(),
-              SystemsResource.SystemInfo.createSummary(system),
-              new GroupsResource.MembershipInfo(
-                true,
-                p.expiry() != null ? p.expiry().getEpochSecond() : null));
-          })
-          .sorted(Comparator.comparing(m -> m.displayName()))
-          .toList();
-      }
-      else {
-        activeMemberships = List.of();
-      }
+          return new GroupsResource.GroupMembershipInfo(
+            new Link("environments/%s/systems/%s/groups/%s", envName, groupId.system(), groupId.name()),
+            groupId.toString(),
+            groupId.name(),
+            group.displayName(),
+            group.description(),
+            SystemsResource.SystemInfo.createSummary(system),
+            new GroupsResource.MembershipInfo(
+              true,
+              p.expiry() != null ? p.expiry().getEpochSecond() : null));
+        })
+        .sorted(Comparator.comparing(m -> m.displayName()))
+        .toList();
 
       return new EnvironmentInfo(
         new Link("environments/%s", envPolicy.name()),
