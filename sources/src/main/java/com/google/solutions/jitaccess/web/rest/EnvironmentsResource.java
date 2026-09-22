@@ -23,6 +23,8 @@ package com.google.solutions.jitaccess.web.rest;
 
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.Principal;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.JitGroupCompliance;
@@ -198,7 +200,8 @@ public class EnvironmentsResource {
     @NotNull String name,
     @NotNull String displayName,
     @NotNull String description,
-    @Nullable List<SystemsResource.SystemInfo> systems
+    @Nullable List<SystemsResource.SystemInfo> systems,
+    @Nullable List<GroupsResource.GroupMembershipInfo> memberships
   ) implements MediaInfo {
 
     /**
@@ -214,6 +217,7 @@ public class EnvironmentsResource {
         policy.name(),
         policy.name(),
         policy.description(),
+        null,
         null);
     }
 
@@ -221,22 +225,56 @@ public class EnvironmentsResource {
      * Create EnvironmentInfo with full details.
      */
     static EnvironmentInfo create(@NotNull EnvironmentContext environment) {
+      var envPolicy = environment.policy();
+      var envName = envPolicy.name();
+
+      var activeMemberships = environment
+        .subject()
+        .principals()
+        .stream()
+        .filter(p -> p.isValid())
+        .filter(p -> p.id() instanceof JitGroupId groupId &&
+          groupId.environment().equals(envName) &&
+          envPolicy
+            .system(groupId.system())
+            .flatMap(s -> s.group(groupId.name()))
+            .isPresent())
+        .map(p -> {
+          var groupId = (JitGroupId) p.id();
+          var system = envPolicy.system(groupId.system()).get();
+          var group = system.group(groupId.name()).get();
+
+          return new GroupsResource.GroupMembershipInfo(
+            new Link("environments/%s/systems/%s/groups/%s", envName, groupId.system(), groupId.name()),
+            groupId.toString(),
+            groupId.name(),
+            group.displayName(),
+            group.description(),
+            SystemsResource.SystemInfo.createSummary(system),
+            new GroupsResource.MembershipInfo(
+              true,
+              p.expiry() != null ? p.expiry().getEpochSecond() : null));
+        })
+        .sorted(Comparator.comparing(m -> m.displayName()))
+        .toList();
+
       return new EnvironmentInfo(
-        new Link("environments/%s", environment.policy().name()),
+        new Link("environments/%s", envPolicy.name()),
         environment.canExport()
-          ? new Link("environments/%s/policy", environment.policy().name())
+          ? new Link("environments/%s/policy", envPolicy.name())
           : null,
         environment.canReconcile()
-          ? new Link("environments/%s/compliance", environment.policy().name())
+          ? new Link("environments/%s/compliance", envPolicy.name())
           : null,
-        environment.policy().name(),
-        environment.policy().displayName(),
-        environment.policy().description(),
+        envPolicy.name(),
+        envPolicy.displayName(),
+        envPolicy.description(),
         environment.systems()
           .stream()
           .sorted(Comparator.comparing(sys -> sys.policy().displayName()))
           .map(sys -> SystemsResource.SystemInfo.createSummary(sys.policy()))
-          .toList());
+          .toList(),
+        activeMemberships);
     }
   }
 

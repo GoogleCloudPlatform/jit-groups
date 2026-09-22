@@ -24,6 +24,10 @@ package com.google.solutions.jitaccess.web.rest;
 import com.google.solutions.jitaccess.apis.Logger;
 import com.google.solutions.jitaccess.apis.clients.AccessDeniedException;
 import com.google.solutions.jitaccess.auth.EndUserId;
+import com.google.solutions.jitaccess.auth.GroupId;
+import com.google.solutions.jitaccess.auth.JitGroupId;
+import com.google.solutions.jitaccess.auth.Principal;
+import com.google.solutions.jitaccess.auth.Subject;
 import com.google.solutions.jitaccess.catalog.Catalog;
 import com.google.solutions.jitaccess.catalog.EnvironmentContext;
 import com.google.solutions.jitaccess.catalog.Environments;
@@ -36,8 +40,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -409,9 +415,13 @@ public class TestEnvironmentsResource {
         "Env 1",
         METADATA);
 
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of());
+
       var environmentView = Mockito.mock(EnvironmentContext.class);
       when(environmentView.policy()).thenReturn(environment);
       when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
 
       when(environmentView.canExport()).thenReturn(false);
       when(environmentView.canReconcile()).thenReturn(false);
@@ -429,9 +439,13 @@ public class TestEnvironmentsResource {
         "Env 1",
         METADATA);
 
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of());
+
       var environmentView = Mockito.mock(EnvironmentContext.class);
       when(environmentView.policy()).thenReturn(environment);
       when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
 
       when(environmentView.canExport()).thenReturn(true);
       when(environmentView.canReconcile()).thenReturn(true);
@@ -440,6 +454,185 @@ public class TestEnvironmentsResource {
 
       assertNotNull(info.policy());
       assertNotNull(info.reconcile());
+    }
+
+    @Test
+    public void create_whenSubjectHasActiveMembershipsInEnvironment() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+      var system = new SystemPolicy("sys-1", "System 1");
+      var group = new JitGroupPolicy("grp-1", "Group 1");
+      system.add(group);
+      environment.add(system);
+
+      var expiry = Instant.now().plus(1, ChronoUnit.HOURS);
+      var validPrincipal = new Principal(new JitGroupId("env-1", "sys-1", "grp-1"), expiry);
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(validPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertEquals(1, info.memberships().size());
+
+      var membership = info.memberships().get(0);
+      assertEquals("jit-group:env-1.sys-1.grp-1", membership.id());
+      assertNotNull(membership.system());
+      assertEquals("sys-1", membership.system().name());
+      assertEquals("sys-1", membership.system().displayName());
+      assertEquals("System 1", membership.system().description());
+      assertNull(membership.system().environment());
+      assertNull(membership.system().groups());
+      assertEquals("environments/env-1/systems/sys-1", membership.system().self().target());
+      assertEquals("grp-1", membership.name());
+      assertEquals("grp-1", membership.displayName());
+      assertEquals("Group 1", membership.description());
+      assertTrue(membership.membership().active());
+      assertEquals(expiry.getEpochSecond(), membership.membership().expiry());
+      assertEquals("environments/env-1/systems/sys-1/groups/grp-1", membership.link().target());
+    }
+
+    @Test
+    public void create_whenSubjectHasActiveMembershipsInOtherEnvironments_thenFilteredOut() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+
+      var otherEnvPrincipal = new Principal(
+        new JitGroupId("other-env", "sys-1", "grp-1"),
+        Instant.now().plus(1, ChronoUnit.HOURS));
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(otherEnvPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertTrue(info.memberships().isEmpty());
+    }
+
+    @Test
+    public void create_whenSubjectHasExpiredMemberships_thenFilteredOut() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+      var system = new SystemPolicy("sys-1", "System 1");
+      var group = new JitGroupPolicy("grp-1", "Group 1");
+      system.add(group);
+      environment.add(system);
+
+      var expiredPrincipal = new Principal(
+        group.id(),
+        Instant.now().minus(1, ChronoUnit.HOURS));
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(expiredPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertTrue(info.memberships().isEmpty());
+    }
+
+    @Test
+    public void create_whenSubjectHasNonJitGroupMemberships_thenFilteredOut() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+
+      var nonJitGroupPrincipal = new Principal(new GroupId("group@example.com"));
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(nonJitGroupPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertTrue(info.memberships().isEmpty());
+    }
+
+    @Test
+    public void create_whenSystemNotFoundInPolicy_thenFilteredOut() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+
+      var expiry = Instant.now().plus(1, ChronoUnit.HOURS);
+      var orphanedPrincipal = new Principal(new JitGroupId("env-1", "unknown-sys", "unknown-grp"), expiry);
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(orphanedPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertTrue(info.memberships().isEmpty());
+    }
+
+    @Test
+    public void create_whenGroupNotFoundInPolicy() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+      var system = new SystemPolicy("sys-1", "System 1");
+      environment.add(system);
+
+      var expiry = Instant.now().plus(1, ChronoUnit.HOURS);
+      var orphanedPrincipal = new Principal(new JitGroupId("env-1", "sys-1", "unknown-grp"), expiry);
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(orphanedPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
+      assertEquals(0, info.memberships().size());
+    }
+
+    @Test
+    public void createSummary_membershipsIsNull() {
+      var header = new EnvironmentPolicy("env-1", "Env 1", METADATA);
+      var info = EnvironmentsResource.EnvironmentInfo.createSummary(header);
+
+      assertNull(info.memberships());
     }
   }
 }

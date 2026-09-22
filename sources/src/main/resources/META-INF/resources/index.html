@@ -28,13 +28,14 @@
     <main class="mdc-top-app-bar--fixed-adjust">
         <!-- EnvironmentInfoView -->
         <div class='jit-view' id='jit-environmentinfo-view'>
-            <h1>Systems</h1>
+            <h1 class="jit-environment-name">Systems</h1>
             <div class="jit-card">
                 <span class="jit-environment-description"></span>
             </div>
-            <div class="mdc-data-table">
+            <h2>Systems</h2>
+            <div class="mdc-data-table jit-systems-table">
                 <div class="mdc-data-table__table-container">
-                    <table class="mdc-data-table__table">
+                    <table class="mdc-data-table__table jit-systems-table">
                         <thead>
                             <tr class="mdc-data-table__header-row">
                                 <th class="mdc-data-table__header-cell" role="columnheader" scope="col">System</th>
@@ -44,6 +45,26 @@
                         <tbody class="mdc-data-table__content">
                         </tbody>
                     </table>
+                </div>
+            </div>
+            <div class="jit-environment-memberships jit-hide-if-table-empty">
+                <h2>Active Memberships</h2>
+                <div class="mdc-data-table jit-environment-memberships-table">
+                    <div class="mdc-data-table__table-container">
+                        <table class="mdc-data-table__table jit-environment-memberships-table">
+                            <thead>
+                                <tr class="mdc-data-table__header-row">
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">System</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Group</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Description</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col">Membership</th>
+                                    <th class="mdc-data-table__header-cell" role="columnheader" scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="mdc-data-table__content">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="jit-card">
@@ -70,6 +91,7 @@
             <div class="jit-card">
                 <span class="jit-system-description"></span>
             </div>
+            <h2>Groups</h2>
             <div class="mdc-data-table">
                 <div class="mdc-data-table__table-container">
                     <table class="mdc-data-table__table">
@@ -322,10 +344,14 @@
 
                 console.assert(model);
 
-                this.table = new mdc.dataTable.MDCDataTable(this.select('table').get(0));
-                this.table.clearRows();
+                this.systemsTable = new mdc.dataTable.MDCDataTable(this.select('.jit-systems-table').get(0));
+                this.table = this.systemsTable;
+                this.systemsTable.clearRows();
 
-                this.select('h1').text(model.content.displayName);
+                this.membershipsTable = new mdc.dataTable.MDCDataTable(this.select('.jit-environment-memberships-table').get(0));
+                this.membershipsTable.clearRows();
+
+                this.select('.jit-environment-name').text(model.content.displayName);
                 this.select('.jit-environment-description').text(model.content.description);
 
                 this.select('.jit-button-policy')
@@ -337,11 +363,40 @@
 
                 if (model.content.systems) {
                     model.content.systems.forEach(item => {
-                        this.table.addRow(
+                        this.systemsTable.addRow(
                             item.id,
                             [
                                 { text: item.displayName, icon: 'deployed_code', href: `#!/${item.self.href}` },
                                 { text: item.description, maxLength: 60 }
+                            ],
+                            false);
+                    });
+                }
+
+                if (model.content.memberships) {
+                    model.content.memberships.forEach(item => {
+                        this.membershipsTable.addRow(
+                            item.id,
+                            [
+                                { text: item.system.displayName, icon: 'deployed_code', href: `#!/${item.system.self.href}` },
+                                { text: item.displayName, icon: 'group', href: `#!/${item.link.href}` },
+                                { text: item.description, maxLength: 60 },
+                                {
+                                    text: item.membership && item.membership.expiry ? `${Duration.untilUnixTime(item.membership.expiry).format()} left` : 'Active',
+                                    icon: 'check',
+                                    class: 'activated'
+                                },
+                                {
+                                    menu: [
+                                        { text: 'Details', href: `#!/${item.link.href}` },
+                                        {},
+                                        { text: 'Audit logs', href: `#!/${item.link.href}/link/cloud-logging` },
+                                        {},
+                                        { text: 'Open in Cloud Console', href: `#!/${item.link.href}/link/cloud-console` },
+                                        { text: 'Open in Admin Console', href: `#!/${item.link.href}/link/admin-console` },
+                                        { text: 'Open in Google Groups', href: `#!/${item.link.href}/link/groups-console` },
+                                    ]
+                                }
                             ],
                             false);
                     });

@@ -61,6 +61,13 @@ public class EnvironmentContext {
   }
 
   /**
+   * Get subject.
+   */
+  public @NotNull Subject subject() {
+    return this.subject;
+  }
+
+  /**
    * Check if the current user is allowed to export the policy.
    * <p>
    * Requires EXPORT access.

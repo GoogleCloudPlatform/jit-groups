@@ -420,6 +420,15 @@ public class GroupsResource {
     @Nullable Long expiry
   ) {}
 
+  public record GroupMembershipInfo(
+    @NotNull Link link,
+    @NotNull String id,
+    @NotNull String name,
+    @NotNull String displayName,
+    @NotNull String description,
+    @NotNull SystemsResource.SystemInfo system,
+    @NotNull MembershipInfo membership
+  ) {}
 
   public record ConstraintInfo(
     @NotNull String name,
