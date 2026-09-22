@@ -34,6 +34,7 @@
     <quarkus.version>3.39.4</quarkus.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc.outputDirectory>${project.build.directory}/javadoc</javadoc.outputDirectory>
+    <skipTests>false</skipTests>
   </properties>
 
   <dependencyManagement>
@@ -183,6 +184,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${surefire-plugin.version}</version>
+        <configuration>
+          <skipTests>${skipTests}</skipTests>
+        </configuration>
         <executions>
           <execution>
             <goals>
