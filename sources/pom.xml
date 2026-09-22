@@ -20,7 +20,7 @@
   under the License.
 -->
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.google.solutions</groupId>
   <artifactId>jitaccess</artifactId>
@@ -34,7 +34,6 @@
     <quarkus.version>3.39.4</quarkus.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javadoc.outputDirectory>${project.build.directory}/javadoc</javadoc.outputDirectory>
-    <skipTests>false</skipTests>
   </properties>
 
   <dependencyManagement>
@@ -185,7 +184,7 @@
         <artifactId>maven-failsafe-plugin</artifactId>
         <version>${surefire-plugin.version}</version>
         <configuration>
-          <skipTests>${skipTests}</skipTests>
+          <skipITs>${skipTests}</skipITs>
         </configuration>
         <executions>
           <execution>
@@ -204,8 +203,8 @@
         <configuration>
           <doctitle>JIT Groups</doctitle>
           <outputDirectory>${javadoc.outputDirectory}</outputDirectory> <addStylesheets>
-            <addStylesheet>javadoc.css</addStylesheet>
-          </addStylesheets>
+          <addStylesheet>javadoc.css</addStylesheet>
+        </addStylesheets>
           <noindex>true</noindex>
           <nonavbar>true</nonavbar>
           <top><![CDATA[
