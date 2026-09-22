@@ -382,7 +382,7 @@
                                 { text: item.displayName, icon: 'group', href: `#!/${item.link.href}` },
                                 { text: item.description, maxLength: 60 },
                                 {
-                                    text: item.expiry ? `${Duration.untilUnixTime(item.expiry).format()} left` : 'Active',
+                                    text: item.membership && item.membership.expiry ? `${Duration.untilUnixTime(item.membership.expiry).format()} left` : 'Active',
                                     icon: 'check',
                                     class: 'activated'
                                 },

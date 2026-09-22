@@ -423,13 +423,12 @@ public class GroupsResource {
   public record GroupMembershipInfo(
     @NotNull Link link,
     @NotNull String id,
-    @NotNull SystemsResource.SystemInfo system,
     @NotNull String name,
     @NotNull String displayName,
     @NotNull String description,
-    @Nullable Long expiry
+    @NotNull SystemsResource.SystemInfo system,
+    @NotNull MembershipInfo membership
   ) {}
-
 
   public record ConstraintInfo(
     @NotNull String name,

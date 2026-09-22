@@ -232,25 +232,29 @@ public class EnvironmentsResource {
       if (environment.subject() != null && environment.subject().principals() != null) {
         activeMemberships = environment.subject().principals()
           .stream()
-          .filter(Principal::isValid)
-          .filter(p -> p.id() instanceof JitGroupId)
-          .filter(p -> ((JitGroupId) p.id()).environment().equals(envName))
-          .filter(p -> envPolicy.system(((JitGroupId) p.id()).system()).isPresent())
+          .filter(p -> p.id() instanceof JitGroupId groupId &&
+            groupId.environment().equals(envName) &&
+            envPolicy
+              .system(groupId.system())
+              .flatMap(s -> s.group(groupId.name()))
+              .isPresent())
           .map(p -> {
             var groupId = (JitGroupId) p.id();
             var system = envPolicy.system(groupId.system()).get();
-            var group = system.group(groupId.name());
+            var group = system.group(groupId.name()).get();
 
             return new GroupsResource.GroupMembershipInfo(
               new Link("environments/%s/systems/%s/groups/%s", envName, groupId.system(), groupId.name()),
               groupId.toString(),
-              SystemsResource.SystemInfo.createSummary(system),
               groupId.name(),
-              group.map(g -> g.displayName()).orElse(groupId.name()),
-              group.map(g -> g.description()).orElse(""),
-              p.expiry() != null ? p.expiry().getEpochSecond() : null);
+              group.displayName(),
+              group.description(),
+              SystemsResource.SystemInfo.createSummary(system),
+              new GroupsResource.MembershipInfo(
+                true,
+                p.expiry() != null ? p.expiry().getEpochSecond() : null));
           })
-          .sorted(Comparator.comparing(m -> m.expiry() != null ? m.expiry() : Long.MAX_VALUE))
+          .sorted(Comparator.comparing(m -> m.displayName()))
           .toList();
       }
       else {

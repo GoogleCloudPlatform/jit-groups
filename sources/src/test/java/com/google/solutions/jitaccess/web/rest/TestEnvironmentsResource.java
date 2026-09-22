@@ -455,7 +455,7 @@ public class TestEnvironmentsResource {
         "Env 1",
         METADATA);
       var system = new SystemPolicy("sys-1", "System 1");
-      var group = new JitGroupPolicy("grp-1", "Group 1", "Description of group 1");
+      var group = new JitGroupPolicy("grp-1", "Group 1");
       system.add(group);
       environment.add(system);
 
@@ -482,12 +482,13 @@ public class TestEnvironmentsResource {
       assertEquals("System 1", membership.system().displayName());
       assertNull(membership.system().environment());
       assertNull(membership.system().groups());
-      assertEquals("environments/env-1/systems/sys-1", membership.system().self().href());
+      assertEquals("environments/env-1/systems/sys-1", membership.system().self().target());
       assertEquals("grp-1", membership.name());
       assertEquals("Group 1", membership.displayName());
       assertEquals("Description of group 1", membership.description());
-      assertEquals(expiry.getEpochSecond(), membership.expiry());
-      assertEquals("environments/env-1/systems/sys-1/groups/grp-1", membership.link().href());
+      assertTrue(membership.membership().active());
+      assertEquals(expiry.getEpochSecond(), membership.membership().expiry());
+      assertEquals("environments/env-1/systems/sys-1/groups/grp-1", membership.link().target());
     }
 
     @Test
@@ -618,7 +619,7 @@ public class TestEnvironmentsResource {
       assertEquals("System 1", membership.system().displayName());
       assertNull(membership.system().environment());
       assertNull(membership.system().groups());
-      assertEquals("environments/env-1/systems/sys-1", membership.system().self().href());
+      assertEquals("environments/env-1/systems/sys-1", membership.system().self().target());
       assertEquals("unknown-grp", membership.name());
       assertEquals("unknown-grp", membership.displayName());
       assertEquals("", membership.description());
