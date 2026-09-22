@@ -376,7 +376,7 @@
                         this.membershipsTable.addRow(
                             item.id,
                             [
-                                { text: item.systemDisplayName, icon: 'deployed_code', href: `#!/${model.content.self.href}/systems/${item.system}` },
+                                { text: item.system.displayName, icon: 'deployed_code', href: `#!/${item.system.self.href}` },
                                 { text: item.displayName, icon: 'group', href: `#!/${item.link.href}` },
                                 { text: item.description, maxLength: 60 },
                                 {

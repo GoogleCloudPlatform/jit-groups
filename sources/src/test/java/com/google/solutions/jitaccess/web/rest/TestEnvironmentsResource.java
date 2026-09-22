@@ -477,8 +477,12 @@ public class TestEnvironmentsResource {
 
       var membership = info.memberships().get(0);
       assertEquals("jit-group:env-1.sys-1.grp-1", membership.id());
-      assertEquals("sys-1", membership.system());
-      assertEquals("System 1", membership.systemDisplayName());
+      assertNotNull(membership.system());
+      assertEquals("sys-1", membership.system().name());
+      assertEquals("System 1", membership.system().displayName());
+      assertNull(membership.system().environment());
+      assertNull(membership.system().groups());
+      assertEquals("environments/env-1/systems/sys-1", membership.system().self().href());
       assertEquals("grp-1", membership.name());
       assertEquals("Group 1", membership.displayName());
       assertEquals("Description of group 1", membership.description());
@@ -560,7 +564,7 @@ public class TestEnvironmentsResource {
     }
 
     @Test
-    public void create_whenGroupNotFoundInPolicy_thenFallsBackToId() {
+    public void create_whenSystemNotFoundInPolicy_thenFilteredOut() {
       var environment = new EnvironmentPolicy(
         "env-1",
         "Env 1",
@@ -580,11 +584,41 @@ public class TestEnvironmentsResource {
       var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
 
       assertNotNull(info.memberships());
+      assertTrue(info.memberships().isEmpty());
+    }
+
+    @Test
+    public void create_whenGroupNotFoundInPolicy_thenFallsBackToId() {
+      var environment = new EnvironmentPolicy(
+        "env-1",
+        "Env 1",
+        METADATA);
+      var system = new SystemPolicy("sys-1", "System 1");
+      environment.add(system);
+
+      var expiry = Instant.now().plus(1, ChronoUnit.HOURS);
+      var orphanedPrincipal = new Principal(new JitGroupId("env-1", "sys-1", "unknown-grp"), expiry);
+
+      var subject = Mockito.mock(Subject.class);
+      when(subject.principals()).thenReturn(Set.of(orphanedPrincipal));
+
+      var environmentView = Mockito.mock(EnvironmentContext.class);
+      when(environmentView.policy()).thenReturn(environment);
+      when(environmentView.systems()).thenReturn(List.of());
+      when(environmentView.subject()).thenReturn(subject);
+
+      var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
+
+      assertNotNull(info.memberships());
       assertEquals(1, info.memberships().size());
 
       var membership = info.memberships().get(0);
-      assertEquals("unknown-sys", membership.system());
-      assertEquals("unknown-sys", membership.systemDisplayName());
+      assertNotNull(membership.system());
+      assertEquals("sys-1", membership.system().name());
+      assertEquals("System 1", membership.system().displayName());
+      assertNull(membership.system().environment());
+      assertNull(membership.system().groups());
+      assertEquals("environments/env-1/systems/sys-1", membership.system().self().href());
       assertEquals("unknown-grp", membership.name());
       assertEquals("unknown-grp", membership.displayName());
       assertEquals("", membership.description());

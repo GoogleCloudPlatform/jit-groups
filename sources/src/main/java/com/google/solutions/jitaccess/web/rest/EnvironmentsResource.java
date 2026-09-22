@@ -201,7 +201,7 @@ public class EnvironmentsResource {
     @NotNull String displayName,
     @NotNull String description,
     @Nullable List<SystemsResource.SystemInfo> systems,
-    @Nullable List<MembershipInfo> memberships
+    @Nullable List<GroupsResource.GroupMembershipInfo> memberships
   ) implements MediaInfo {
 
     /**
@@ -228,23 +228,23 @@ public class EnvironmentsResource {
       var envPolicy = environment.policy();
       var envName = envPolicy.name();
 
-      List<MembershipInfo> activeMemberships;
+      List<GroupsResource.GroupMembershipInfo> activeMemberships;
       if (environment.subject() != null && environment.subject().principals() != null) {
         activeMemberships = environment.subject().principals()
           .stream()
           .filter(Principal::isValid)
           .filter(p -> p.id() instanceof JitGroupId)
           .filter(p -> ((JitGroupId) p.id()).environment().equals(envName))
+          .filter(p -> envPolicy.system(((JitGroupId) p.id()).system()).isPresent())
           .map(p -> {
             var groupId = (JitGroupId) p.id();
-            var system = envPolicy.system(groupId.system());
-            var group = system.flatMap(s -> s.group(groupId.name()));
+            var system = envPolicy.system(groupId.system()).get();
+            var group = system.group(groupId.name());
 
-            return new MembershipInfo(
+            return new GroupsResource.GroupMembershipInfo(
               new Link("environments/%s/systems/%s/groups/%s", envName, groupId.system(), groupId.name()),
               groupId.toString(),
-              groupId.system(),
-              system.map(s -> s.displayName()).orElse(groupId.system()),
+              SystemsResource.SystemInfo.createSummary(system),
               groupId.name(),
               group.map(g -> g.displayName()).orElse(groupId.name()),
               group.map(g -> g.description()).orElse(""),
@@ -276,17 +276,6 @@ public class EnvironmentsResource {
         activeMemberships);
     }
   }
-
-  public record MembershipInfo(
-    @NotNull Link link,
-    @NotNull String id,
-    @NotNull String system,
-    @NotNull String systemDisplayName,
-    @NotNull String name,
-    @NotNull String displayName,
-    @NotNull String description,
-    @Nullable Long expiry
-  ) {}
 
   public record PolicyInfo(
     @NotNull Link self,
