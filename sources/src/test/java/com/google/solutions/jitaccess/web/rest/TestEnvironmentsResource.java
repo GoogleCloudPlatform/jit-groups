@@ -479,13 +479,14 @@ public class TestEnvironmentsResource {
       assertEquals("jit-group:env-1.sys-1.grp-1", membership.id());
       assertNotNull(membership.system());
       assertEquals("sys-1", membership.system().name());
-      assertEquals("System 1", membership.system().displayName());
+      assertEquals("sys-1", membership.system().displayName());
+      assertEquals("System 1", membership.system().description());
       assertNull(membership.system().environment());
       assertNull(membership.system().groups());
       assertEquals("environments/env-1/systems/sys-1", membership.system().self().target());
       assertEquals("grp-1", membership.name());
-      assertEquals("Group 1", membership.displayName());
-      assertEquals("Description of group 1", membership.description());
+      assertEquals("grp-1", membership.displayName());
+      assertEquals("Group 1", membership.description());
       assertTrue(membership.membership().active());
       assertEquals(expiry.getEpochSecond(), membership.membership().expiry());
       assertEquals("environments/env-1/systems/sys-1/groups/grp-1", membership.link().target());
@@ -589,7 +590,7 @@ public class TestEnvironmentsResource {
     }
 
     @Test
-    public void create_whenGroupNotFoundInPolicy_thenFallsBackToId() {
+    public void create_whenGroupNotFoundInPolicy() {
       var environment = new EnvironmentPolicy(
         "env-1",
         "Env 1",
@@ -611,18 +612,7 @@ public class TestEnvironmentsResource {
       var info = EnvironmentsResource.EnvironmentInfo.create(environmentView);
 
       assertNotNull(info.memberships());
-      assertEquals(1, info.memberships().size());
-
-      var membership = info.memberships().get(0);
-      assertNotNull(membership.system());
-      assertEquals("sys-1", membership.system().name());
-      assertEquals("System 1", membership.system().displayName());
-      assertNull(membership.system().environment());
-      assertNull(membership.system().groups());
-      assertEquals("environments/env-1/systems/sys-1", membership.system().self().target());
-      assertEquals("unknown-grp", membership.name());
-      assertEquals("unknown-grp", membership.displayName());
-      assertEquals("", membership.description());
+      assertEquals(0, info.memberships().size());
     }
 
     @Test
