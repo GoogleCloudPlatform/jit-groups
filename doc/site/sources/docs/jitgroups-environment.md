@@ -200,7 +200,7 @@ organization, then you must grant the service account permission to modify the I
     RESOURCE_ID=ORG_ID
     ENVIRONMENT_SERVICE_ACCOUNT=$(terraform output -raw environment)
     
-    gcloud resource-manager folders add-iam-policy-binding $RESOURCE_ID \
+    gcloud organizations add-iam-policy-binding $RESOURCE_ID \
       --member "serviceAccount:$ENVIRONMENT_SERVICE_ACCOUNT" \
       --role "roles/resourcemanager.projectIamAdmin" \
       --format "value(etag)" \
