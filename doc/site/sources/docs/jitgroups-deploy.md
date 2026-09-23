@@ -99,12 +99,6 @@ Create a Cloud Storage bucket and configure Terraform to use this Cloud Storage 
         bucket   = "$PROJECT_ID-state"
         prefix   = "terraform"
       }
-      required_providers {
-        google = {
-          source  = "hashicorp/google"
-          version = "< 8.0.0"
-        }
-      }
     }
 
     locals {

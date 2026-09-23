@@ -134,6 +134,14 @@ terraform {
     provider_meta "google" {
         module_name = "cloud-solutions/jitgroups-appengine-deploy-v2.0"
     }
+
+    # Use pre-8.x provider to remove IAP branding resources.
+    required_providers {
+        google = {
+            source  = "hashicorp/google"
+            version = "< 8.0.0"
+        }
+    }
 }
 
 #------------------------------------------------------------------------------
