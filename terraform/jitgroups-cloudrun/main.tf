@@ -284,6 +284,14 @@ resource "google_service_account_iam_member" "service_account_member" {
 # IAP.
 #------------------------------------------------------------------------------
 
+removed {
+    from = google_iap_brand.iap_brand
+
+    lifecycle {
+        destroy = false
+    }
+}
+
 #
 # Allow users to access IAP.
 #
