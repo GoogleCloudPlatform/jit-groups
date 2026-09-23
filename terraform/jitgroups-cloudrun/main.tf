@@ -141,6 +141,8 @@ terraform {
         module_name = "cloud-solutions/jitgroups-cloudrun-deploy-v2.0"
     }
 
+    required_version = ">= 1.7.0"
+
     # Use pre-8.x provider to remove IAP branding resources.
     required_providers {
         google = {
