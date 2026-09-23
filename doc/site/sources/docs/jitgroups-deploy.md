@@ -3,8 +3,7 @@
 This article describes how to deploy JIT Groups in your Google Cloud organization. The deployment uses Terraform
 and creates the following resources:
 
-+   An App Engine application that runs JIT Groups and can be accessed through Identity-Aware Proxy.
-+   An OAuth consent screen and client ID for Identity-Aware Proxy.
++   An application that runs JIT Groups and can be accessed through Identity-Aware Proxy.
 +   A service account that JIT Groups uses to access Google Cloud and Cloud Identity APIs. The service account
     is attached to the App Engine application.
 +   A Secret Manager secret to store credentials for your SMTP server.
@@ -294,6 +293,20 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
     When the command completes, it prints the URL of the application and the
     email address of the application's service account. You need this URL and email address
     later.
+
+1.  Enable Identity-Aware Proxy:
+
+    === "App Engine"
+
+        To enable Identity-Aware Proxy, run the following command:
+
+        ```sh
+        gcloud iap web enable --resource-type=app-engine
+        ```
+
+    === "Cloud Run"
+
+        Identity-Aware Proxy is enabled automatically by Terraform.
 
 ### Grant access to Cloud Identity/Workspace
 

@@ -140,6 +140,16 @@ terraform {
     provider_meta "google" {
         module_name = "cloud-solutions/jitgroups-cloudrun-deploy-v2.0"
     }
+
+    required_version = ">= 1.7.0"
+
+    # Use pre-8.x provider to remove IAP branding resources.
+    required_providers {
+        google = {
+            source  = "hashicorp/google"
+            version = "< 8.0.0"
+        }
+    }
 }
 
 provider "google-beta" {
@@ -283,6 +293,14 @@ resource "google_service_account_iam_member" "service_account_member" {
 #------------------------------------------------------------------------------
 # IAP.
 #------------------------------------------------------------------------------
+
+removed {
+    from = google_iap_brand.iap_brand
+
+    lifecycle {
+        destroy = false
+    }
+}
 
 #
 # Allow users to access IAP.

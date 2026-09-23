@@ -134,6 +134,16 @@ terraform {
     provider_meta "google" {
         module_name = "cloud-solutions/jitgroups-appengine-deploy-v2.0"
     }
+
+    required_version = ">= 1.7.0"
+
+    # Use pre-8.x provider to remove IAP branding resources.
+    required_providers {
+        google = {
+            source  = "hashicorp/google"
+            version = "< 8.0.0"
+        }
+    }
 }
 
 #------------------------------------------------------------------------------
@@ -246,26 +256,20 @@ resource "google_service_account_iam_member" "service_account_member" {
 # IAP.
 #------------------------------------------------------------------------------
 
-#
-# Create an OAuth consent screen for IAP.
-#
-resource "google_iap_brand" "iap_brand" {
-    depends_on                 = [ google_project_service.iap ]
-    project                    = var.project_id
-    support_email              = var.admin_email
-    application_title          = "JIT Groups"
+removed {
+    from = google_iap_brand.iap_brand
+
     lifecycle {
-        # This resource can't be deleted.
-        prevent_destroy = true
+        destroy = false
     }
 }
 
-#
-# Create an OAuth client ID for IAP.
-#
-resource "google_iap_client" "iap_client" {
-    display_name               = "JIT Groups"
-    brand                      = google_iap_brand.iap_brand.name
+removed {
+    from = google_iap_client.iap_client
+
+    lifecycle {
+        destroy = false
+    }
 }
 
 #
@@ -325,10 +329,13 @@ resource "google_secret_manager_secret_iam_member" "secret_binding" {
 resource "google_app_engine_application" "appengine_app" {
     project                    = var.project_id
     location_id                = var.location
-    iap {
-        enabled                = true
-        oauth2_client_id       = google_iap_client.iap_client.client_id
-        oauth2_client_secret   = google_iap_client.iap_client.secret
+
+    lifecycle {
+        #
+        # IAP is managed outside of Terraform (via Google Cloud Console
+        # or gcloud) to use a Google-managed OAuth client.
+        #
+        ignore_changes         = [iap]
     }
 }
 
