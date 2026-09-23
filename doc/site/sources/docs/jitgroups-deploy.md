@@ -271,13 +271,6 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
     
             If you encounter this error, rerun `terraform apply`.
 
-        After deploying, enable Identity-Aware Proxy for the App Engine application
-        in the Google Cloud Console (**Security > Identity-Aware Proxy**) or run:
-
-        ```sh
-        gcloud iap web enable --resource-type=app-engine
-        ```
-
     === "Cloud Run"
 
         !!!note
@@ -300,6 +293,20 @@ Use Terraform to deploy JIT Groups to App Engine or Cloud Run.
     When the command completes, it prints the URL of the application and the
     email address of the application's service account. You need this URL and email address
     later.
+
+1.  Enable Identity-Aware Proxy:
+
+    === "App Engine"
+
+        To enable Identity-Aware Proxy, run the following command:
+
+        ```sh
+        gcloud iap web enable --resource-type=app-engine
+        ```
+
+    === "Cloud Run"
+
+        Identity-Aware Proxy is enabled automatically by Terraform.
 
 ### Grant access to Cloud Identity/Workspace
 
