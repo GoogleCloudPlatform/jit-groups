@@ -31,10 +31,7 @@ import com.google.solutions.jitaccess.catalog.JitGroupContext;
 import com.google.solutions.jitaccess.catalog.Proposal;
 import com.google.solutions.jitaccess.catalog.policy.PolicyAnalysis;
 import com.google.solutions.jitaccess.catalog.policy.Property;
-import com.google.solutions.jitaccess.web.EventIds;
-import com.google.solutions.jitaccess.web.LogRequest;
-import com.google.solutions.jitaccess.web.OperationAuditTrail;
-import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.*;
 import com.google.solutions.jitaccess.web.proposal.ProposalHandler;
 import com.google.solutions.jitaccess.web.proposal.TokenObfuscator;
 import jakarta.enterprise.context.Dependent;
@@ -51,6 +48,7 @@ import java.util.List;
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
+@RequireXsrfHeader
 @LogRequest
 public class ProposalResource {
   private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(
