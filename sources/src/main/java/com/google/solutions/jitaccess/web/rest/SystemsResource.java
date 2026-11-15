@@ -29,6 +29,7 @@ import com.google.solutions.jitaccess.catalog.policy.SystemPolicy;
 import com.google.solutions.jitaccess.web.EventIds;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.RequireXsrfHeader;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -45,6 +46,7 @@ import java.util.List;
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
+@RequireXsrfHeader
 @LogRequest
 public class SystemsResource {
   private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(

@@ -25,6 +25,7 @@ import com.google.solutions.jitaccess.ApplicationVersion;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequestContext;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.RequireXsrfHeader;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
+@RequireXsrfHeader
 @LogRequest
 public class UserResource {
 

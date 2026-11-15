@@ -53,6 +53,7 @@ import java.util.Optional;
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
+@RequireXsrfHeader
 @LogRequest
 public class GroupsResource {
   private static final AccessDeniedException NOT_FOUND = new AccessDeniedException(

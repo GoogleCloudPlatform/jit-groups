@@ -28,6 +28,7 @@ import com.google.solutions.jitaccess.common.Cast;
 import com.google.solutions.jitaccess.common.MoreStrings;
 import com.google.solutions.jitaccess.web.LogRequest;
 import com.google.solutions.jitaccess.web.RequireIapPrincipal;
+import com.google.solutions.jitaccess.web.RequireXsrfHeader;
 import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -43,6 +44,7 @@ import java.util.stream.Stream;
 @Dependent
 @Path("/api")
 @RequireIapPrincipal
+@RequireXsrfHeader
 @LogRequest
 public class PolicyResource {
   @Inject
